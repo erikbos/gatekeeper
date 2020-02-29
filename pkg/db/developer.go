@@ -28,8 +28,8 @@ func (d *Database) GetDevelopersByOrganization(organizationName string) ([]types
 //
 func (d *Database) GetDeveloperCountByOrganization(organizationName string) int {
 	var developerCount int
-	query := "SELECT count(*) FROM developers ALLOW FILTERING"
-	if err := d.cassandraSession.Query(query).Scan(&developerCount); err != nil {
+	query := "SELECT count(*) FROM developers WHERE organization_name = ? ALLOW FILTERING"
+	if err := d.cassandraSession.Query(query, organizationName).Scan(&developerCount); err != nil {
 		return -1
 	}
 	return developerCount
