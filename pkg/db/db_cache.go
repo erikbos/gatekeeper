@@ -5,6 +5,7 @@ import (
 	"encoding/gob"
 
 	"github.com/coocood/freecache"
+	"github.com/erikbos/apiauth/pkg/types"
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 )
@@ -109,8 +110,8 @@ func CacheInit(size, cachettl, negativettl int) *Cache {
 
 //GetAppCredentialCached retrieves entry from database (or cache if entry present)
 //
-func (c *Cache) GetAppCredentialCached(d *Database, key string) (AppCredential, error) {
-	var appcredential AppCredential
+func (c *Cache) GetAppCredentialCached(d *Database, key string) (types.AppCredential, error) {
+	var appcredential types.AppCredential
 	var err error
 
 	timer := prometheus.NewTimer(c.dbCacheLookupHistogram)
@@ -149,8 +150,8 @@ func (c *Cache) GetAppCredentialCached(d *Database, key string) (AppCredential, 
 
 //GetAPIProductCached retrieves entry from database (or cache if entry present)
 //
-func (c *Cache) GetAPIProductCached(d *Database, apiproductname string) (APIProduct, error) {
-	var apiproduct APIProduct
+func (c *Cache) GetAPIProductCached(d *Database, apiproductname string) (types.APIProduct, error) {
+	var apiproduct types.APIProduct
 	var err error
 
 	timer := prometheus.NewTimer(c.dbCacheLookupHistogram)
@@ -189,8 +190,8 @@ func (c *Cache) GetAPIProductCached(d *Database, apiproductname string) (APIProd
 
 //GetDeveloperAppCached retrieves entry from database (or cache if entry present)
 //
-func (c *Cache) GetDeveloperAppCached(d *Database, developerAppID string) (DeveloperApp, error) {
-	var developerapp DeveloperApp
+func (c *Cache) GetDeveloperAppCached(d *Database, developerAppID string) (types.DeveloperApp, error) {
+	var developerapp types.DeveloperApp
 	var err error
 
 	timer := prometheus.NewTimer(c.dbCacheLookupHistogram)

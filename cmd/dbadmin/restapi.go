@@ -3,7 +3,7 @@ package main
 import (
 	"net/http"
 
-	"github.com/erikbos/apiauth/pkg/db"
+	"github.com/erikbos/apiauth/pkg/types"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 )
@@ -189,7 +189,7 @@ func (e *env) GetDeveloperAppAttributeByName(c *gin.Context) {
 
 // PostCreateDeveloperDetails creates a new developer
 func (e *env) PostCreateDeveloper(c *gin.Context) {
-	var newDeveloper db.Developer
+	var newDeveloper types.Developer
 	if err := c.ShouldBindJSON(&newDeveloper); err != nil {
 		e.returnJSONMessage(c, http.StatusBadRequest, err.Error())
 		return
@@ -212,7 +212,7 @@ func (e *env) PostCreateDeveloper(c *gin.Context) {
 
 // PostUpdateDeveloper updates an existing developer
 func (e *env) PostUpdateDeveloper(c *gin.Context) {
-	var updatedDeveloper db.Developer
+	var updatedDeveloper types.Developer
 	if err := c.ShouldBindJSON(&updatedDeveloper); err != nil {
 		e.returnJSONMessage(c, http.StatusBadRequest, err.Error())
 		return
@@ -240,7 +240,7 @@ func (e *env) PostUpdateDeveloper(c *gin.Context) {
 // PostUpdateDeveloperAttributes updates attributes of developer
 func (e *env) PostUpdateDeveloperAttributes(c *gin.Context) {
 	var receivedAttributes struct {
-		Attributes []db.AttributeKeyValues `json:"attribute"`
+		Attributes []types.AttributeKeyValues `json:"attribute"`
 	}
 	if err := c.ShouldBindJSON(&receivedAttributes); err != nil {
 		e.returnJSONMessage(c, http.StatusBadRequest, err.Error())
@@ -268,7 +268,7 @@ func (e *env) PostUpdateDeveloperAttributes(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, gin.H{"attribute": updatedDeveloper.Attributes})
 }
 
-func findAttributePositionInAttributeArray(attributes []db.AttributeKeyValues, name string) int {
+func findAttributePositionInAttributeArray(attributes []types.AttributeKeyValues, name string) int {
 	for index, element := range attributes {
 		if element.Name == name {
 			return index
@@ -302,7 +302,7 @@ func (e *env) PostUpdateDeveloperAttributeByName(c *gin.Context) {
 	if attributeToUpdateIndex == -1 {
 		// We did not find exist attribute, so we cannot update its value
 		updatedDeveloper.Attributes = append(updatedDeveloper.Attributes,
-			db.AttributeKeyValues{Name: c.Param("attribute"), Value: receivedValue.Value})
+			types.AttributeKeyValues{Name: c.Param("attribute"), Value: receivedValue.Value})
 	} else {
 		updatedDeveloper.Attributes[attributeToUpdateIndex].Value = receivedValue.Value
 	}

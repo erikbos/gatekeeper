@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/erikbos/apiauth/pkg/db"
+	"github.com/erikbos/apiauth/pkg/types"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
@@ -120,10 +121,10 @@ func (e *env) getCurrentTimeMilliseconds() int64 {
 }
 
 // removeDuplicateAttributes removes duplicate attributes from array
-func (e *env) removeDuplicateAttributes(attributes []db.AttributeKeyValues) []db.AttributeKeyValues {
+func (e *env) removeDuplicateAttributes(attributes []types.AttributeKeyValues) []types.AttributeKeyValues {
 	// Use map to record duplicates as we find them.
 	encountered := map[string]bool{}
-	result := []db.AttributeKeyValues{}
+	result := []types.AttributeKeyValues{}
 
 	for v := range attributes {
 		if encountered[attributes[v].Name] == true {
