@@ -1,0 +1,141 @@
+package db
+
+//GetDeveloperByEmail retrieves a developer from database
+//
+func (d *Database) GetDeveloperByEmail(developerEmail string) (types.Developer, error) {
+	query := "SELECT * FROM developers WHERE email = ? LIMIT 1"
+	developers := d.runGetDeveloperQuery(query, developerEmail)
+	if len(developers) > 0 {
+		d.dbLookupHitsCounter.WithLabelValues(d.Hostname, "developers").Inc()
+		return developers[0], nil
+	}
+	d.dbLookupMissesCounter.WithLabelValues(d.Hostname, "developers").Inc()
+	return types.Developer{}, fmt.Errorf("Could not find developer (%s)", developerEmail)
+}
+
+//GetDeveloperByID retrieves a developer from database
+//
+func (d *Database) GetDeveloperByID(developerID string) (types.Developer, error) {
+	query := "SELECT * FROM developers WHERE key = ? LIMIT 1"
+	developers := d.runGetDeveloperQuery(query, developerID)
+	if len(developers) > 0 {
+		d.dbLookupHitsCounter.WithLabelValues(d.Hostname, "developers").Inc()
+		return developers[0], nil
+	}
+	d.dbLookupMissesCounter.WithLabelValues(d.Hostname, "developers").Inc()
+	return types.Developer{}, fmt.Errorf("Could not find developerId (%s)", developerID)
+}
+
+//GetDevelopersByOrganization retrieves all developer belonging to an organization
+//
+func (d *Database) GetDevelopersByOrganization(organizationName string) ([]types.Developer, error) {
+	query := "SELECT * FROM developers WHERE organization_name = ? LIMIT 10 ALLOW FILTERING"
+	developers := d.runGetDeveloperQuery(query, organizationName)
+	if len(developers) > 0 {
+		d.dbLookupHitsCounter.WithLabelValues(d.Hostname, "developers").Inc()
+		return developers, nil
+	}
+	d.dbLookupMissesCounter.WithLabelValues(d.Hostname, "developers").Inc()
+	return developers, errors.New("Could not retrieve list of developers")
+}
+
+// runDeveloperQuery executes CQL query and returns resultset
+//
+func (d *Database) runGetDeveloperQuery(query, queryParameter string) []types.Developer {
+	var developers []types.Developer
+
+	//Set timer to record how long this function run
+	timer := prometheus.NewTimer(d.dbLookupHistogram)
+	defer timer.ObserveDuration()
+
+	iterable := d.cassandraSession.Query(query, queryParameter).Iter()
+	m := make(map[string]interface{})
+
+	// from https://github.com/uber/cherami-server/blob/1de31a4ed1d0a9cd33ff64199f7e91f23e99c11e/cmd/tools/cmq/fix.go
+	//
+	// for iter.Scan(&uuid, &destinationUUID, &name, &status, &lockTimeoutSeconds, &maxDeliveryCount, &skipOlderMessagesSeconds,
+	// 	&deadLetterQueueDestinationUUID, &ownerEmail, &startFrom, &isMultiZone, &activeZone, &zoneConfigs, &delaySeconds, &options) {
+
+	for iterable.MapScan(m) {
+		developers = append(developers, types.Developer{
+			Apps:             d.unmarshallJSONArrayOfStrings(m["apps"].(string)),
+			Attributes:       d.unmarshallJSONArrayOfAttributes(m["attributes"].(string), false),
+			DeveloperID:      m["key"].(string),
+			CreatedAt:        m["created_at"].(int64),
+			CreatedBy:        m["created_by"].(string),
+			Email:            m["email"].(string),
+			FirstName:        m["first_name"].(string),
+			LastName:         m["last_name"].(string),
+			LastmodifiedAt:   m["lastmodified_at"].(int64),
+			LastmodifiedBy:   m["lastmodified_by"].(string),
+			OrganizationName: m["organization_name"].(string),
+			// password:          m["password"].(string),
+			Salt:     m["salt"].(string),
+			Status:   m["status"].(string),
+			UserName: m["user_name"].(string),
+		})
+		m = map[string]interface{}{}
+	}
+	return developers
+}
+
+//CreateDeveloper creates developer
+//
+func (d *Database) CreateDeveloper(updatedDeveloper types.Developer) error {
+	// generate new id, to stay backwards compatible
+	// keyformat = "test@@@OE6GkphWHYzkAIgd"
+	// we derive is from email address
+	updatedDeveloper.DeveloperID = "test@@@123"
+	// FIXME
+	return d.UpdateDeveloperByID(updatedDeveloper.DeveloperID, updatedDeveloper)
+}
+
+//UpdateDeveloperByEmail updates an existing developer
+//
+func (d *Database) UpdateDeveloperByEmail(developerEmail string, updatedDeveloper types.Developer) error {
+	// We first lookup the primary based upon email address
+	// updatedDeveloper.DeveloperID could be empty or wrong..
+	currentDeveloper, err := d.GetDeveloperByEmail(developerEmail)
+	if err != nil {
+		return err
+	}
+	updatedDeveloper.DeveloperID = currentDeveloper.DeveloperID
+	return d.UpdateDeveloperByID(updatedDeveloper.DeveloperID, updatedDeveloper)
+}
+
+// UpdateDeveloperByID UPSERTs a developer in database
+// Upsert is: In case a developer does not exist (primary key not matching) it will create a new row
+func (d *Database) UpdateDeveloperByID(developerID string, updatedDeveloper types.Developer) error {
+	query := "INSERT INTO developers (key,apps,attributes, " +
+		"created_at, created_by, email, " +
+		"first_name, last_name, lastmodified_at, " +
+		"lastmodified_by, organization_name, status, user_name)" +
+		"VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)"
+
+	Apps := d.MarshallArrayOfStringsToJSON(updatedDeveloper.Apps)
+	Attributes := d.marshallArrayOfAttributesToJSON(updatedDeveloper.Attributes, false)
+	// log.Printf("attributes: %s", updatedDeveloper.Attributes)
+
+	err := d.cassandraSession.Query(query,
+		updatedDeveloper.DeveloperID, Apps, Attributes,
+		updatedDeveloper.CreatedAt, updatedDeveloper.CreatedBy, updatedDeveloper.Email,
+		updatedDeveloper.FirstName, updatedDeveloper.LastName, updatedDeveloper.LastmodifiedAt,
+		updatedDeveloper.LastmodifiedBy, updatedDeveloper.OrganizationName, updatedDeveloper.Status,
+		updatedDeveloper.UserName).Exec()
+	if err == nil {
+		return nil
+	}
+	log.Printf("%+v", err)
+	return fmt.Errorf("Could not update developer (%v)", err)
+}
+
+//DeleteDeveloperByEmail deletes a developer from database
+//
+func (d *Database) DeleteDeveloperByEmail(developerEmail string) error {
+	developer, err := d.GetDeveloperByEmail(developerEmail)
+	if err != nil {
+		return err
+	}
+	query := "DELETE FROM developers WHERE key = ?"
+	return d.cassandraSession.Query(query, developer.DeveloperID).Exec()
+}
