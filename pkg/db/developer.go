@@ -1,15 +1,50 @@
 package db
 
+import (
+	"errors"
+	"fmt"
+
+	"github.com/erikbos/apiauth/pkg/types"
+	"github.com/prometheus/client_golang/prometheus"
+)
+
+//Prometheus label for metrics of db interactions
+const developerMetricLabel = "organizations"
+
+//GetDevelopersByOrganization retrieves all developer belonging to an organization
+//
+func (d *Database) GetDevelopersByOrganization(organizationName string) ([]types.Developer, error) {
+	query := "SELECT * FROM developers WHERE organization_name = ? LIMIT 10 ALLOW FILTERING"
+	developers := d.runGetDeveloperQuery(query, organizationName)
+	if len(developers) > 0 {
+		d.metricsQueryHit(developerMetricLabel)
+		return developers, nil
+	}
+	d.metricsQueryMiss(developerMetricLabel)
+	return developers, errors.New("Could not retrieve list of developers")
+}
+
+//GetDeveloperCountByOrganization retrieves number of developer belonging to an organization
+//
+func (d *Database) GetDeveloperCountByOrganization(organizationName string) int {
+	var developerCount int
+	query := "SELECT count(*) FROM developers ALLOW FILTERING"
+	if err := d.cassandraSession.Query(query).Scan(&developerCount); err != nil {
+		return -1
+	}
+	return developerCount
+}
+
 //GetDeveloperByEmail retrieves a developer from database
 //
 func (d *Database) GetDeveloperByEmail(developerEmail string) (types.Developer, error) {
 	query := "SELECT * FROM developers WHERE email = ? LIMIT 1"
 	developers := d.runGetDeveloperQuery(query, developerEmail)
 	if len(developers) > 0 {
-		d.dbLookupHitsCounter.WithLabelValues(d.Hostname, "developers").Inc()
+		d.metricsQueryHit(developerMetricLabel)
 		return developers[0], nil
 	}
-	d.dbLookupMissesCounter.WithLabelValues(d.Hostname, "developers").Inc()
+	d.metricsQueryMiss(developerMetricLabel)
 	return types.Developer{}, fmt.Errorf("Could not find developer (%s)", developerEmail)
 }
 
@@ -19,24 +54,11 @@ func (d *Database) GetDeveloperByID(developerID string) (types.Developer, error)
 	query := "SELECT * FROM developers WHERE key = ? LIMIT 1"
 	developers := d.runGetDeveloperQuery(query, developerID)
 	if len(developers) > 0 {
-		d.dbLookupHitsCounter.WithLabelValues(d.Hostname, "developers").Inc()
+		d.metricsQueryHit(developerMetricLabel)
 		return developers[0], nil
 	}
-	d.dbLookupMissesCounter.WithLabelValues(d.Hostname, "developers").Inc()
+	d.metricsQueryMiss(developerMetricLabel)
 	return types.Developer{}, fmt.Errorf("Could not find developerId (%s)", developerID)
-}
-
-//GetDevelopersByOrganization retrieves all developer belonging to an organization
-//
-func (d *Database) GetDevelopersByOrganization(organizationName string) ([]types.Developer, error) {
-	query := "SELECT * FROM developers WHERE organization_name = ? LIMIT 10 ALLOW FILTERING"
-	developers := d.runGetDeveloperQuery(query, organizationName)
-	if len(developers) > 0 {
-		d.dbLookupHitsCounter.WithLabelValues(d.Hostname, "developers").Inc()
-		return developers, nil
-	}
-	d.dbLookupMissesCounter.WithLabelValues(d.Hostname, "developers").Inc()
-	return developers, errors.New("Could not retrieve list of developers")
 }
 
 // runDeveloperQuery executes CQL query and returns resultset
@@ -125,11 +147,10 @@ func (d *Database) UpdateDeveloperByID(developerID string, updatedDeveloper type
 	if err == nil {
 		return nil
 	}
-	log.Printf("%+v", err)
 	return fmt.Errorf("Could not update developer (%v)", err)
 }
 
-//DeleteDeveloperByEmail deletes a developer from database
+//DeleteDeveloperByEmail deletes a developer
 //
 func (d *Database) DeleteDeveloperByEmail(developerEmail string) error {
 	developer, err := d.GetDeveloperByEmail(developerEmail)

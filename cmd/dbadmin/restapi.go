@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/erikbos/apiauth/pkg/types"
@@ -10,13 +11,18 @@ import (
 
 // registerDeveloperRouters registers all routes we handle
 func (e *env) registerDeveloperRouters(r *gin.Engine) {
+	r.GET("/v1/organizations", e.GetOrganizations)
+	r.POST("/v1/organizations", e.PostCreateOrganization)
+	r.GET("/v1/organizations/:organization", e.GetOrganizationByName)
+	r.DELETE("/v1/organizations/:organization", e.DeleteOrganizationByName)
+
 	r.GET("/v1/organizations/:organization/developers", e.GetAllDevelopers)
-	r.GET("/v1/organizations/:organization/developers/:developer", e.GetDeveloperByEmail)
-	r.GET("/v1/organizations/:organization/developers/:developer/attributes", e.GetDeveloperAttributes)
-	r.GET("/v1/organizations/:organization/developers/:developer/attributes/:attribute", e.GetDeveloperAttributeByName)
 	r.POST("/v1/organizations/:organization/developers", e.PostCreateDeveloper)
+	r.GET("/v1/organizations/:organization/developers/:developer", e.GetDeveloperByEmail)
 	r.POST("/v1/organizations/:organization/developers/:developer", e.PostUpdateDeveloper)
+	r.GET("/v1/organizations/:organization/developers/:developer/attributes", e.GetDeveloperAttributes)
 	r.POST("/v1/organizations/:organization/developers/:developer/attributes", e.PostUpdateDeveloperAttributes)
+	r.GET("/v1/organizations/:organization/developers/:developer/attributes/:attribute", e.GetDeveloperAttributeByName)
 	r.POST("/v1/organizations/:organization/developers/:developer/attributes/:attribute", e.PostUpdateDeveloperAttributeByName)
 	r.DELETE("/v1/organizations/:organization/developers/:developer", e.DeleteDeveloperByEmail)
 
@@ -28,6 +34,72 @@ func (e *env) registerDeveloperRouters(r *gin.Engine) {
 
 	// r.POST("/v1/organizations/:organization/developers/:developer/apps", e.PostAllDeveloperApps)
 	// r.POST("/v1/organizations/:organization/developers/:developer/apps/:application", e.PostOneDeveloperApp)
+}
+
+//////////////////////////////////////////////////////////////////////////
+// GetDeveloperByEmail returns full details of one developer
+func (e *env) GetOrganizations(c *gin.Context) {
+	organizations, err := e.db.GetOrganizations()
+	if err != nil {
+		e.returnJSONMessage(c, http.StatusNotFound, err.Error())
+		return
+	}
+	c.IndentedJSON(http.StatusOK, gin.H{"organizations": organizations})
+}
+
+// GetOrganizationByName returns full details of one developer
+func (e *env) GetOrganizationByName(c *gin.Context) {
+	organization, err := e.db.GetOrganizationByName(c.Param("organization"))
+	if err != nil {
+		e.returnJSONMessage(c, http.StatusNotFound, err.Error())
+		return
+	}
+	c.IndentedJSON(http.StatusOK, organization)
+}
+
+// PostCreateOrganization creates a new developer
+func (e *env) PostCreateOrganization(c *gin.Context) {
+	var newOrganization types.Organization
+	if err := c.ShouldBindJSON(&newOrganization); err != nil {
+		e.returnJSONMessage(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	// Automatically set default fields
+	newOrganization.Key = newOrganization.Name
+	newOrganization.Attributes = e.removeDuplicateAttributes(newOrganization.Attributes)
+	newOrganization.CreatedBy = e.whoAmI()
+	newOrganization.CreatedAt = e.getCurrentTimeMilliseconds()
+	newOrganization.LastmodifiedAt = newOrganization.CreatedAt
+	newOrganization.LastmodifiedBy = e.whoAmI()
+	if err := e.db.UpdateOrganizationByName(newOrganization); err != nil {
+		e.returnJSONMessage(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	c.IndentedJSON(http.StatusOK, newOrganization)
+}
+
+// DeleteOrganisationByName deletes of one developer
+func (e *env) DeleteOrganizationByName(c *gin.Context) {
+	organization, err := e.db.GetOrganizationByName(c.Param("organization"))
+	if err != nil {
+		e.returnJSONMessage(c, http.StatusNotFound, err.Error())
+		return
+	}
+	developerCount := e.db.GetDeveloperCountByOrganization(organization.Name)
+	switch developerCount {
+	case -1:
+		e.returnJSONMessage(c, http.StatusInternalServerError,
+			"could not retrieve number of developers in organization")
+	case 0:
+		// FIX ME not yet :-)
+		// e.db.DeleteOrganizationByName(organization.Name)
+		c.Status(http.StatusNoContent)
+		return
+	default:
+		e.returnJSONMessage(c, http.StatusForbidden,
+			fmt.Sprintf("Cannot delete organization %s with %d developers",
+				organization.Name, developerCount))
+	}
 }
 
 // GetAllDevelopers returns all developers in organization
@@ -187,7 +259,7 @@ func (e *env) GetDeveloperAppAttributeByName(c *gin.Context) {
 	e.returnJSONMessage(c, http.StatusNotFound, "Could not retrieve attributes")
 }
 
-// PostCreateDeveloperDetails creates a new developer
+// PostCreateDeveloper creates a new developer
 func (e *env) PostCreateDeveloper(c *gin.Context) {
 	var newDeveloper types.Developer
 	if err := c.ShouldBindJSON(&newDeveloper); err != nil {
@@ -201,7 +273,8 @@ func (e *env) PostCreateDeveloper(c *gin.Context) {
 	// New developers starts actived
 	newDeveloper.Status = "active"
 	newDeveloper.CreatedBy = e.whoAmI()
-	newDeveloper.LastmodifiedAt = e.getCurrentTimeMilliseconds()
+	newDeveloper.CreatedAt = e.getCurrentTimeMilliseconds()
+	newDeveloper.LastmodifiedAt = newDeveloper.CreatedAt
 	newDeveloper.LastmodifiedBy = e.whoAmI()
 	if err := e.db.CreateDeveloper(newDeveloper); err != nil {
 		e.returnJSONMessage(c, http.StatusBadRequest, err.Error())

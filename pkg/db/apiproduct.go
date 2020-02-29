@@ -1,5 +1,12 @@
 package db
 
+import (
+	"errors"
+
+	"github.com/erikbos/apiauth/pkg/types"
+	"github.com/prometheus/client_golang/prometheus"
+)
+
 //GetAPIProductByName returns an array with apiproduct details of a developer app
 //
 func (d *Database) GetAPIProductByName(apiproductname string) (types.APIProduct, error) {

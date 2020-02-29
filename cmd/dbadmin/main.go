@@ -112,7 +112,7 @@ func (e *env) GetReady(c *gin.Context) {
 
 // returnJSONMessage returns a structured (error) message in case we do not handle API request
 func (e *env) returnJSONMessage(c *gin.Context, statusCode int, message string) {
-	c.JSON(statusCode, gin.H{"message": message})
+	c.IndentedJSON(statusCode, gin.H{"message": message})
 }
 
 // getCurrentTimeMilliseconds returns current epoch time in milliseconds
@@ -120,7 +120,7 @@ func (e *env) getCurrentTimeMilliseconds() int64 {
 	return time.Now().UnixNano() / 1000000
 }
 
-// removeDuplicateAttributes removes duplicate attributes from array
+// removeDuplicateAttributes removes duplicate attributes from array.
 func (e *env) removeDuplicateAttributes(attributes []types.AttributeKeyValues) []types.AttributeKeyValues {
 	// Use map to record duplicates as we find them.
 	encountered := map[string]bool{}

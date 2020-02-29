@@ -3,14 +3,14 @@ package types
 //Organization contains everything about a Organization
 //
 type Organization struct {
-	Attributes       []AttributeKeyValues `json:"attributes"`
-	CreatedAt        int64                `json:"createdAt"`
-	CreatedBy        string               `json:"createdBy"`
-	DisplayName      string               `json:"displayName" binding:"required"`
-	Name             string               `json:"name" binding:"required"`
-	LastmodifiedAt   int64                `json:"lastmodifiedAt"`
-	LastmodifiedBy   string               `json:"lastmodifiedBy"`
-	OrganizationName string               `json:"organizationName"`
+	Attributes     []AttributeKeyValues `json:"attributes"`
+	CreatedAt      int64                `json:"createdAt"`
+	CreatedBy      string               `json:"createdBy"`
+	DisplayName    string               `json:"displayName"`
+	Key            string               `json:"key"`
+	LastmodifiedAt int64                `json:"lastmodifiedAt"`
+	LastmodifiedBy string               `json:"lastmodifiedBy"`
+	Name           string               `json:"name" binding:"required"`
 }
 
 //Developer contains everything about a Developer

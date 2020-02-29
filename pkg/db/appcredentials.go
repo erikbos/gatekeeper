@@ -1,3 +1,16 @@
+package db
+
+import (
+	"encoding/json"
+	"errors"
+
+	"github.com/erikbos/apiauth/pkg/types"
+	"github.com/prometheus/client_golang/prometheus"
+)
+
+//Prometheus label for metrics of db interactions
+const appCrendetialsMetricLabel = "appcredentials"
+
 //GetAppCredentialByKey returns details of a single apikey
 //
 func (d *Database) GetAppCredentialByKey(key string) (types.AppCredential, error) {
