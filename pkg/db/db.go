@@ -308,6 +308,7 @@ func (d *Database) CreateDeveloper(updatedDeveloper Developer) error {
 	// keyformat = "test@@@OE6GkphWHYzkAIgd"
 	// we derive is from email address
 	updatedDeveloper.DeveloperID = "test@@@123"
+	// FIXME
 	return d.UpdateDeveloperByID(updatedDeveloper.DeveloperID, updatedDeveloper)
 }
 
@@ -448,7 +449,7 @@ func (d *Database) GetAppCredentialByKey(key string) (AppCredential, error) {
 }
 
 //GetAppCredentialByDeveloperAppID returns an array with apikey details of a developer app
-//
+// FIXME contains LIMIT
 func (d *Database) GetAppCredentialByDeveloperAppID(organizationAppID string) ([]AppCredential, error) {
 	var appcredentials []AppCredential
 
@@ -501,7 +502,7 @@ func (d *Database) runGetAppCredentialQuery(query, queryParameter string) []AppC
 
 ///////////////////////////////////////////////////////////////////////////////
 
-//GetAPIProductByName returns an array with apikey details of a developer app
+//GetAPIProductByName returns an array with apiproduct details of a developer app
 //
 func (d *Database) GetAPIProductByName(apiproductname string) (APIProduct, error) {
 	query := "SELECT * FROM api_products WHERE name = ? LIMIT 1"
