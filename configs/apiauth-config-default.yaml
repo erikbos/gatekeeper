@@ -1,0 +1,23 @@
+# APIauth authentication daemon settings
+#
+# The address to listen on for APIAuth GRPC requests coming from Envoy
+auth_gprc_listen: 0.0.0.0:4000
+# The address to listen on for APIAuth Admin UI
+auth_admin_listen: 0.0.0.0:2113
+
+# Cassandra settings
+database_hostname: xxx.cassandra.cosmos.azure.com
+database_port: 10350
+database_username: xxx
+database_password: xxx
+database_keyspace: kms
+
+# database memory cache in bytes
+cache_size: 1048576
+# cache ttl for positive hits
+cache_ttl: 60
+# cache ttl for failed lookups
+cache_negative_ttl: 15
+
+# maxmind geoip database filename
+maxmind_filename: GeoIP2-City.mmdb
