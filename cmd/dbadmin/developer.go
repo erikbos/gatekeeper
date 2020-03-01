@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/sha1"
 	"fmt"
 	"net/http"
 
@@ -39,7 +40,7 @@ func (e *env) GetAllDevelopers(c *gin.Context) {
 
 // GetDeveloperByEmail returns full details of one developer
 func (e *env) GetDeveloperByEmail(c *gin.Context) {
-	developer, err := e.db.GetDeveloperByEmail(c.Param("developer"))
+	developer, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
 	if err != nil {
 		e.returnJSONMessage(c, http.StatusNotFound, err.Error())
 		return
@@ -49,7 +50,7 @@ func (e *env) GetDeveloperByEmail(c *gin.Context) {
 
 // GetDeveloperAttributes returns attributes of a developer
 func (e *env) GetDeveloperAttributes(c *gin.Context) {
-	developer, err := e.db.GetDeveloperByEmail(c.Param("developer"))
+	developer, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
 	if err != nil {
 		e.returnJSONMessage(c, http.StatusNotFound, err.Error())
 		return
@@ -59,7 +60,7 @@ func (e *env) GetDeveloperAttributes(c *gin.Context) {
 
 // GetDeveloperAttributeByName returns one particular attribute of a developer
 func (e *env) GetDeveloperAttributeByName(c *gin.Context) {
-	developer, err := e.db.GetDeveloperByEmail(c.Param("developer"))
+	developer, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
 	if err != nil {
 		e.returnJSONMessage(c, http.StatusNotFound, err.Error())
 		return
@@ -76,7 +77,7 @@ func (e *env) GetDeveloperAttributeByName(c *gin.Context) {
 
 // GetDeveloperAppAttributes returns attributes of a developer
 func (e *env) GetDeveloperAppAttributes(c *gin.Context) {
-	developer, err := e.db.GetDeveloperByEmail(c.Param("developer"))
+	developer, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
 	if err != nil {
 		e.returnJSONMessage(c, http.StatusNotFound, err.Error())
 		return
@@ -96,7 +97,7 @@ func (e *env) GetDeveloperAppAttributes(c *gin.Context) {
 
 // GetDeveloperAttributeByName returns one particular attribute of a developer
 func (e *env) GetDeveloperAppAttributeByName(c *gin.Context) {
-	developer, err := e.db.GetDeveloperByEmail(c.Param("developer"))
+	developer, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
 	if err != nil {
 		e.returnJSONMessage(c, http.StatusNotFound, err.Error())
 		return
@@ -121,6 +122,11 @@ func (e *env) GetDeveloperAppAttributeByName(c *gin.Context) {
 	e.returnJSONMessage(c, http.StatusNotFound, "Could not retrieve attributes")
 }
 
+// GeneratePrimaryKeyOfDeveloper creates unique primary key for developer db row
+func GeneratePrimaryKeyOfDeveloper(organization, developer string) string {
+	return (fmt.Sprintf("%s@@@%x", organization, sha1.Sum([]byte(developer))))
+}
+
 // PostCreateDeveloper creates a new developer
 func (e *env) PostCreateDeveloper(c *gin.Context) {
 	var newDeveloper types.Developer
@@ -129,7 +135,7 @@ func (e *env) PostCreateDeveloper(c *gin.Context) {
 		return
 	}
 	// we don't allow recreation of existing developer
-	existingDeveloper, err := e.db.GetDeveloperByEmail(newDeveloper.Email)
+	existingDeveloper, err := e.db.GetDeveloperByEmail(c.Param("organization"), newDeveloper.Email)
 	if err == nil {
 		e.returnJSONMessage(c, http.StatusUnauthorized,
 			fmt.Sprintf("Developer %s already exists", existingDeveloper.Email))
@@ -137,6 +143,9 @@ func (e *env) PostCreateDeveloper(c *gin.Context) {
 	}
 	// Automatically assign new developer to organization
 	newDeveloper.OrganizationName = c.Param("organization")
+	// Generate primary key for new row
+	newDeveloper.DeveloperID = GeneratePrimaryKeyOfDeveloper(newDeveloper.OrganizationName,
+		newDeveloper.Email)
 	// Dedup provided attributes
 	newDeveloper.Attributes = e.removeDuplicateAttributes(newDeveloper.Attributes)
 	// New developers starts actived
@@ -145,7 +154,7 @@ func (e *env) PostCreateDeveloper(c *gin.Context) {
 	newDeveloper.CreatedAt = e.getCurrentTimeMilliseconds()
 	newDeveloper.LastmodifiedAt = newDeveloper.CreatedAt
 	newDeveloper.LastmodifiedBy = e.whoAmI()
-	if err := e.db.CreateDeveloper(newDeveloper); err != nil {
+	if err := e.db.UpdateDeveloperByName(newDeveloper); err != nil {
 		e.returnJSONMessage(c, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -160,7 +169,7 @@ func (e *env) PostUpdateDeveloper(c *gin.Context) {
 		return
 	}
 	// Developer to update should exist
-	currentDeveloper, err := e.db.GetDeveloperByEmail(c.Param("developer"))
+	currentDeveloper, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
 	if err != nil {
 		e.returnJSONMessage(c, http.StatusBadRequest, err.Error())
 		return
@@ -172,7 +181,7 @@ func (e *env) PostUpdateDeveloper(c *gin.Context) {
 	updatedDeveloper.Attributes = e.removeDuplicateAttributes(updatedDeveloper.Attributes)
 	updatedDeveloper.LastmodifiedAt = e.getCurrentTimeMilliseconds()
 	updatedDeveloper.LastmodifiedBy = e.whoAmI()
-	if err := e.db.UpdateDeveloperByEmail(updatedDeveloper.Email, updatedDeveloper); err != nil {
+	if err := e.db.UpdateDeveloperByName(updatedDeveloper); err != nil {
 		e.returnJSONMessage(c, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -188,7 +197,7 @@ func (e *env) PostUpdateDeveloperAttributes(c *gin.Context) {
 		e.returnJSONMessage(c, http.StatusBadRequest, err.Error())
 		return
 	}
-	updatedDeveloper, err := e.db.GetDeveloperByEmail(c.Param("developer"))
+	updatedDeveloper, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
 	if err != nil {
 		e.returnJSONMessage(c, http.StatusNotFound, err.Error())
 		return
@@ -201,7 +210,7 @@ func (e *env) PostUpdateDeveloperAttributes(c *gin.Context) {
 	updatedDeveloper.Attributes = e.removeDuplicateAttributes(receivedAttributes.Attributes)
 	updatedDeveloper.LastmodifiedAt = e.getCurrentTimeMilliseconds()
 	updatedDeveloper.LastmodifiedBy = e.whoAmI()
-	if err := e.db.UpdateDeveloperByEmail(updatedDeveloper.Email, updatedDeveloper); err != nil {
+	if err := e.db.UpdateDeveloperByName(updatedDeveloper); err != nil {
 		e.returnJSONMessage(c, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -210,7 +219,7 @@ func (e *env) PostUpdateDeveloperAttributes(c *gin.Context) {
 
 // DeleteDeveloperAttributes updates attributes of developer
 func (e *env) DeleteDeveloperAttributes(c *gin.Context) {
-	updatedDeveloper, err := e.db.GetDeveloperByEmail(c.Param("developer"))
+	updatedDeveloper, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
 	if err != nil {
 		e.returnJSONMessage(c, http.StatusNotFound, err.Error())
 		return
@@ -223,11 +232,11 @@ func (e *env) DeleteDeveloperAttributes(c *gin.Context) {
 	updatedDeveloper.Attributes = nil
 	updatedDeveloper.LastmodifiedAt = e.getCurrentTimeMilliseconds()
 	updatedDeveloper.LastmodifiedBy = e.whoAmI()
-	if err := e.db.UpdateDeveloperByEmail(updatedDeveloper.Email, updatedDeveloper); err != nil {
+	if err := e.db.UpdateDeveloperByName(updatedDeveloper); err != nil {
 		e.returnJSONMessage(c, http.StatusBadRequest, err.Error())
 		return
 	}
-	c.IndentedJSON(http.StatusOK, gin.H{"attribute": updatedDeveloper.Attributes})
+	c.Status(http.StatusNoContent)
 }
 
 // PostUpdateDeveloperAttributeByName update an attribute of developer
@@ -239,7 +248,7 @@ func (e *env) PostUpdateDeveloperAttributeByName(c *gin.Context) {
 		e.returnJSONMessage(c, http.StatusBadRequest, err.Error())
 		return
 	}
-	updatedDeveloper, err := e.db.GetDeveloperByEmail(c.Param("developer"))
+	updatedDeveloper, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
 	if err != nil {
 		e.returnJSONMessage(c, http.StatusNotFound, err.Error())
 		return
@@ -261,7 +270,7 @@ func (e *env) PostUpdateDeveloperAttributeByName(c *gin.Context) {
 	}
 	updatedDeveloper.LastmodifiedBy = e.whoAmI()
 	updatedDeveloper.LastmodifiedAt = e.getCurrentTimeMilliseconds()
-	if err := e.db.UpdateDeveloperByEmail(updatedDeveloper.Email, updatedDeveloper); err != nil {
+	if err := e.db.UpdateDeveloperByName(updatedDeveloper); err != nil {
 		e.returnJSONMessage(c, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -270,7 +279,7 @@ func (e *env) PostUpdateDeveloperAttributeByName(c *gin.Context) {
 
 // DeleteDeveloperAttributeByName removes an attribute of developer
 func (e *env) DeleteDeveloperAttributeByName(c *gin.Context) {
-	updatedDeveloper, err := e.db.GetDeveloperByEmail(c.Param("developer"))
+	updatedDeveloper, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
 	if err != nil {
 		e.returnJSONMessage(c, http.StatusNotFound, err.Error())
 		return
@@ -285,6 +294,7 @@ func (e *env) DeleteDeveloperAttributeByName(c *gin.Context) {
 		updatedDeveloper.Attributes, c.Param("attribute"))
 	if attributeToRemoveIndex == -1 {
 		e.returnJSONMessage(c, http.StatusNotFound, "could not find attribute")
+		return
 	}
 	// remove attribute
 	updatedDeveloper.Attributes =
@@ -292,7 +302,7 @@ func (e *env) DeleteDeveloperAttributeByName(c *gin.Context) {
 			updatedDeveloper.Attributes[attributeToRemoveIndex+1:]...)
 	updatedDeveloper.LastmodifiedBy = e.whoAmI()
 	updatedDeveloper.LastmodifiedAt = e.getCurrentTimeMilliseconds()
-	if err := e.db.UpdateDeveloperByEmail(updatedDeveloper.Email, updatedDeveloper); err != nil {
+	if err := e.db.UpdateDeveloperByName(updatedDeveloper); err != nil {
 		e.returnJSONMessage(c, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -301,7 +311,7 @@ func (e *env) DeleteDeveloperAttributeByName(c *gin.Context) {
 
 // DeleteDeveloperByEmail deletes of one developer
 func (e *env) DeleteDeveloperByEmail(c *gin.Context) {
-	developer, err := e.db.GetDeveloperByEmail(c.Param("developer"))
+	developer, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
 	if err != nil {
 		e.returnJSONMessage(c, http.StatusNotFound, err.Error())
 		return
@@ -311,7 +321,7 @@ func (e *env) DeleteDeveloperByEmail(c *gin.Context) {
 		e.returnJSONMessage(c, http.StatusBadRequest, "Organization mismatch")
 		return
 	}
-	if err := e.db.DeleteDeveloperByEmail(developer.Email); err != nil {
+	if err := e.db.DeleteDeveloperByEmail(developer.OrganizationName, developer.Email); err != nil {
 		e.returnJSONMessage(c, http.StatusBadRequest, err.Error())
 		return
 	}

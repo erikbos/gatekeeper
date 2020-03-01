@@ -21,7 +21,7 @@ func (e *env) registerDeveloperAppRoutes(r *gin.Engine) {
 
 // GetDeveloperApps returns apps of a developer
 func (e *env) GetDeveloperApps(c *gin.Context) {
-	developer, err := e.db.GetDeveloperByEmail(c.Param("developer"))
+	developer, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
 	if err != nil {
 		e.returnJSONMessage(c, http.StatusNotFound, err.Error())
 		return
@@ -31,7 +31,7 @@ func (e *env) GetDeveloperApps(c *gin.Context) {
 
 // GetDeveloperAppByName returns one named app of a developer
 func (e *env) GetDeveloperAppByName(c *gin.Context) {
-	developer, err := e.db.GetDeveloperByEmail(c.Param("developer"))
+	developer, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
 	if err != nil {
 		e.returnJSONMessage(c, http.StatusNotFound, err.Error())
 		return
@@ -43,7 +43,7 @@ func (e *env) GetDeveloperAppByName(c *gin.Context) {
 	}
 	// Developer and DeveloperApp need to be linked to eachother #nosqlintegritycheck
 	if developer.DeveloperID != developerApp.ParentID {
-		e.returnJSONMessage(c, http.StatusNotFound, "Developer id wrong?")
+		e.returnJSONMessage(c, http.StatusNotFound, "Developer and application records do not have the same DevID!")
 		return
 	}
 	// All apikeys belonging to this developer app
@@ -58,7 +58,7 @@ func (e *env) GetDeveloperAppByName(c *gin.Context) {
 
 // GetDeveloperAppByKey returns keys of one particular developer application
 func (e *env) GetDeveloperAppByKey(c *gin.Context) {
-	developer, err := e.db.GetDeveloperByEmail(c.Param("developer"))
+	developer, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
 	if err != nil {
 		e.returnJSONMessage(c, http.StatusNotFound, err.Error())
 		return
@@ -70,7 +70,7 @@ func (e *env) GetDeveloperAppByKey(c *gin.Context) {
 	}
 	// Developer and DeveloperApp need to be linked to eachother #nosqlintegritycheck
 	if developer.DeveloperID != developerApp.ParentID {
-		e.returnJSONMessage(c, http.StatusNotFound, err.Error())
+		e.returnJSONMessage(c, http.StatusNotFound, "Developer and application records do not have the same DevID!")
 		return
 	}
 	AppCredential, err := e.db.GetAppCredentialByKey(c.Param("key"))

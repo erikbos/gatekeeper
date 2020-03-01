@@ -113,6 +113,14 @@ func (e *env) GetReady(c *gin.Context) {
 	e.returnJSONMessage(c, http.StatusOK, "Ready!")
 }
 
+// EnforeJSONContentType checks for json content-type
+func (e *env) EnforeJSONContentType(c *gin.Context) {
+	if c.Request.Header.Get("content-type") != "application/json" {
+		e.returnJSONMessage(c, http.StatusNotAcceptable, "content-type application/json required")
+		c.Abort()
+	}
+}
+
 // returnJSONMessage returns a structured (error) message in case we do not handle API request
 func (e *env) returnJSONMessage(c *gin.Context, statusCode int, message string) {
 	c.IndentedJSON(statusCode, gin.H{"message": message})

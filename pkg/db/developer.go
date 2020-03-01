@@ -37,11 +37,15 @@ func (d *Database) GetDeveloperCountByOrganization(organizationName string) int 
 
 //GetDeveloperByEmail retrieves a developer from database
 //
-func (d *Database) GetDeveloperByEmail(developerEmail string) (types.Developer, error) {
+func (d *Database) GetDeveloperByEmail(developerOrganization, developerEmail string) (types.Developer, error) {
 	query := "SELECT * FROM developers WHERE email = ? LIMIT 1"
 	developers := d.runGetDeveloperQuery(query, developerEmail)
 	if len(developers) > 0 {
 		d.metricsQueryHit(developerMetricLabel)
+		// Check of record of developer matches the required org
+		if developers[0].OrganizationName != developerOrganization {
+			return types.Developer{}, fmt.Errorf("Organization mismatch")
+		}
 		return developers[0], nil
 	}
 	d.metricsQueryMiss(developerMetricLabel)
@@ -101,33 +105,35 @@ func (d *Database) runGetDeveloperQuery(query, queryParameter string) []types.De
 	return developers
 }
 
-//CreateDeveloper creates developer
-//
-func (d *Database) CreateDeveloper(updatedDeveloper types.Developer) error {
-	// generate new id, to stay backwards compatible
-	// keyformat = "test@@@OE6GkphWHYzkAIgd"
-	// we derive is from email address
-	updatedDeveloper.DeveloperID = "test@@@123"
-	// FIXME
-	return d.UpdateDeveloperByID(updatedDeveloper.DeveloperID, updatedDeveloper)
-}
+// //CreateDeveloper creates developer
+// //
+// func (d *Database) CreateDeveloper(updatedDeveloper types.Developer) error {
+// 	// generate unique key based upon org & email address
+// 	// keyformat = "test@@@OE6GkphWHYzkAIgd"
+// 	if updatedDeveloper.Email != "" {
+// 		updatedDeveloper.DeveloperID = fmt.Sprintf("%s@@@%x",
+// 			updatedDeveloper.OrganizationName, sha1.Sum([]byte(updatedDeveloper.Email)))
+// 		return d.updateDeveloperByID(updatedDeveloper)
+// 	}
+// 	return errors.New("Cannot create developer without email address")
+// }
 
-//UpdateDeveloperByEmail updates an existing developer
-//
-func (d *Database) UpdateDeveloperByEmail(developerEmail string, updatedDeveloper types.Developer) error {
-	// We first lookup the primary based upon email address
-	// updatedDeveloper.DeveloperID could be empty or wrong..
-	currentDeveloper, err := d.GetDeveloperByEmail(developerEmail)
-	if err != nil {
-		return err
-	}
-	updatedDeveloper.DeveloperID = currentDeveloper.DeveloperID
-	return d.UpdateDeveloperByID(updatedDeveloper.DeveloperID, updatedDeveloper)
-}
+// //UpdateDeveloperByEmail updates an existing developer
+// //
+// func (d *Database) UpdateDeveloperByEmail(developerEmail string, updatedDeveloper types.Developer) error {
+// 	// We first lookup the primary based upon email address
+// 	// updatedDeveloper.DeveloperID could be empty or wrong..
+// 	currentDeveloper, err := d.GetDeveloperByEmail(developerEmail)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	updatedDeveloper.DeveloperID = currentDeveloper.DeveloperID
+// 	return d.updateDeveloperByID(updatedDeveloper)
+// }
 
-// UpdateDeveloperByID UPSERTs a developer in database
+// UpdateDeveloperByName UPSERTs a developer in database
 // Upsert is: In case a developer does not exist (primary key not matching) it will create a new row
-func (d *Database) UpdateDeveloperByID(developerID string, updatedDeveloper types.Developer) error {
+func (d *Database) UpdateDeveloperByName(updatedDeveloper types.Developer) error {
 	query := "INSERT INTO developers (key,apps,attributes, " +
 		"created_at, created_by, email, " +
 		"first_name, last_name, lastmodified_at, " +
@@ -152,8 +158,8 @@ func (d *Database) UpdateDeveloperByID(developerID string, updatedDeveloper type
 
 //DeleteDeveloperByEmail deletes a developer
 //
-func (d *Database) DeleteDeveloperByEmail(developerEmail string) error {
-	developer, err := d.GetDeveloperByEmail(developerEmail)
+func (d *Database) DeleteDeveloperByEmail(organizatioName, developerEmail string) error {
+	developer, err := d.GetDeveloperByEmail(organizatioName, developerEmail)
 	if err != nil {
 		return err
 	}

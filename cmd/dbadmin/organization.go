@@ -10,7 +10,7 @@ import (
 
 // registerOrganizationRoutes registers all routes we handle
 func (e *env) registerOrganizationRoutes(r *gin.Engine) {
-	r.GET("/v1/organizations", e.GetOrganizations)
+	r.GET("/v1/organizations", e.EnforeJSONContentType, e.GetOrganizations)
 	r.POST("/v1/organizations", e.PostCreateOrganization)
 	r.GET("/v1/organizations/:organization", e.GetOrganizationByName)
 	r.POST("/v1/organizations/:organization", e.PostUpdateOrganization)
@@ -242,7 +242,6 @@ func (e *env) DeleteOrganizationByName(c *gin.Context) {
 	case 0:
 		e.db.DeleteOrganizationByName(organization.Name)
 		c.Status(http.StatusNoContent)
-		return
 	default:
 		e.returnJSONMessage(c, http.StatusForbidden,
 			fmt.Sprintf("Cannot delete organization %s with %d developers",
