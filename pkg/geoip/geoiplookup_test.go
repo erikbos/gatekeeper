@@ -1,12 +1,12 @@
 package geoip
 
 import (
+	"fmt"
 	"log"
 	"testing"
 )
 
 func TestGeoLookupIPs(t *testing.T) {
-
 	testData := []struct {
 		ipsubnet string
 		country  string
@@ -17,16 +17,16 @@ func TestGeoLookupIPs(t *testing.T) {
 		{"this_ipaddress_cannot_exist", ""},
 	}
 
-	g, err := OpenDatabase("../GeoIP2-City.mmdb")
+	g, err := OpenDatabase("../../GeoIP2-City.mmdb")
 	if err != nil {
 		log.Fatalf("failed to open geoip database: %v", err)
 	}
-
-	for _, testSubnet := range testData {
-		country, _ := g.GetCountryAndState(testSubnet.ipsubnet)
-
-		if country != testSubnet.country {
-			t.Errorf("Lookup of (%s) was incorrect, got: %s, want: %s.", testSubnet.ipsubnet, country, testSubnet.country)
-		}
+	for index, testSubnet := range testData {
+		t.Run(fmt.Sprintf("%d", index), func(t *testing.T) {
+			country, _ := g.GetCountryAndState(testSubnet.ipsubnet)
+			if country != testSubnet.country {
+				t.Errorf("Lookup of (%s) was incorrect, got: %s, want: %s.", testSubnet.ipsubnet, country, testSubnet.country)
+			}
+		})
 	}
 }
