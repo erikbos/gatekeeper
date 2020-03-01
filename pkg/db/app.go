@@ -67,3 +67,38 @@ func (d *Database) runGetDeveloperAppQuery(query, queryParameter string) []types
 	}
 	return developerapps
 }
+
+// UpdateDeveloperAppByName UPSERTs a developer app in database
+func (d *Database) UpdateDeveloperAppByName(updatedDeveloper types.DeveloperApp) error {
+	// query := "INSERT INTO apps (key,apps,attributes, " +
+	// 	"created_at, created_by, email, " +
+	// 	"first_name, last_name, lastmodified_at, " +
+	// 	"lastmodified_by, organization_name, status, user_name)" +
+	// 	"VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)"
+
+	// Apps := d.marshallArrayOfStringsToJSON(updatedDeveloper.Apps)
+	// Attributes := d.marshallArrayOfAttributesToJSON(updatedDeveloper.Attributes, false)
+	// log.Printf("attributes: %s", updatedDeveloper.Attributes)
+
+	// err := d.cassandraSession.Query(query,
+	// 	updatedDeveloper.DeveloperID, Apps, Attributes,
+	// 	updatedDeveloper.CreatedAt, updatedDeveloper.CreatedBy, updatedDeveloper.Email,
+	// 	updatedDeveloper.FirstName, updatedDeveloper.LastName, updatedDeveloper.LastmodifiedAt,
+	// 	updatedDeveloper.LastmodifiedBy, updatedDeveloper.OrganizationName, updatedDeveloper.Status,
+	// 	updatedDeveloper.UserName).Exec()
+	// if err == nil {
+	// 	return nil
+	// }
+	// return fmt.Errorf("Could not update developer app (%v)", err)
+	return errors.New("Nope")
+}
+
+//DeleteDeveloperAppByName deletes an developer app
+func (d *Database) DeleteDeveloperAppByName(organizationName, developerAppName string) error {
+	_, err := d.GetDeveloperAppByName(organizationName, developerAppName)
+	if err != nil {
+		return err
+	}
+	query := "DELETE FROM apps WHERE key = ?"
+	return d.cassandraSession.Query(query, developerAppName).Exec()
+}

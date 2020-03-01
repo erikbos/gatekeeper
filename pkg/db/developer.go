@@ -105,32 +105,6 @@ func (d *Database) runGetDeveloperQuery(query, queryParameter string) []types.De
 	return developers
 }
 
-// //CreateDeveloper creates developer
-// //
-// func (d *Database) CreateDeveloper(updatedDeveloper types.Developer) error {
-// 	// generate unique key based upon org & email address
-// 	// keyformat = "test@@@OE6GkphWHYzkAIgd"
-// 	if updatedDeveloper.Email != "" {
-// 		updatedDeveloper.DeveloperID = fmt.Sprintf("%s@@@%x",
-// 			updatedDeveloper.OrganizationName, sha1.Sum([]byte(updatedDeveloper.Email)))
-// 		return d.updateDeveloperByID(updatedDeveloper)
-// 	}
-// 	return errors.New("Cannot create developer without email address")
-// }
-
-// //UpdateDeveloperByEmail updates an existing developer
-// //
-// func (d *Database) UpdateDeveloperByEmail(developerEmail string, updatedDeveloper types.Developer) error {
-// 	// We first lookup the primary based upon email address
-// 	// updatedDeveloper.DeveloperID could be empty or wrong..
-// 	currentDeveloper, err := d.GetDeveloperByEmail(developerEmail)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	updatedDeveloper.DeveloperID = currentDeveloper.DeveloperID
-// 	return d.updateDeveloperByID(updatedDeveloper)
-// }
-
 // UpdateDeveloperByName UPSERTs a developer in database
 // Upsert is: In case a developer does not exist (primary key not matching) it will create a new row
 func (d *Database) UpdateDeveloperByName(updatedDeveloper types.Developer) error {

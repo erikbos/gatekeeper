@@ -12,12 +12,15 @@ import (
 func (e *env) registerOrganizationRoutes(r *gin.Engine) {
 	r.GET("/v1/organizations", e.EnforeJSONContentType, e.GetOrganizations)
 	r.POST("/v1/organizations", e.PostCreateOrganization)
+
 	r.GET("/v1/organizations/:organization", e.GetOrganizationByName)
 	r.POST("/v1/organizations/:organization", e.PostUpdateOrganization)
 	r.DELETE("/v1/organizations/:organization", e.DeleteOrganizationByName)
+
 	r.GET("/v1/organizations/:organization/attributes", e.GetOrganizationAttributes)
 	r.POST("/v1/organizations/:organization/attributes", e.PostUpdateOrganizationAttributes)
 	r.DELETE("/v1/organizations/:organization/attributes", e.DeleteOrganizationAttributes)
+
 	r.GET("/v1/organizations/:organization/attributes/:attribute", e.GetOrganizationAttributeByName)
 	r.POST("/v1/organizations/:organization/attributes/:attribute", e.PostUpdateOrganizationAttributeByName)
 	r.DELETE("/v1/organizations/:organization/attributes/:attribute", e.DeleteOrganizationAttributeByName)
@@ -77,7 +80,6 @@ func (e *env) PostCreateOrganization(c *gin.Context) {
 		e.returnJSONMessage(c, http.StatusBadRequest, err.Error())
 		return
 	}
-	// we don't allow creation of an existing organization
 	existingOrganization, err := e.db.GetOrganizationByName(newOrganization.Name)
 	if err == nil {
 		e.returnJSONMessage(c, http.StatusUnauthorized,
@@ -100,14 +102,13 @@ func (e *env) PostCreateOrganization(c *gin.Context) {
 
 // PostUpdateOrganization updates an existing organization
 func (e *env) PostUpdateOrganization(c *gin.Context) {
-	var updatedOrganization types.Organization
-	if err := c.ShouldBindJSON(&updatedOrganization); err != nil {
+	currentOrganization, err := e.db.GetOrganizationByName(c.Param("organization"))
+	if err != nil {
 		e.returnJSONMessage(c, http.StatusBadRequest, err.Error())
 		return
 	}
-	// Organization to update should exist
-	currentOrganization, err := e.db.GetOrganizationByName(c.Param("organization"))
-	if err != nil {
+	var updatedOrganization types.Organization
+	if err := c.ShouldBindJSON(&updatedOrganization); err != nil {
 		e.returnJSONMessage(c, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -128,15 +129,15 @@ func (e *env) PostUpdateOrganization(c *gin.Context) {
 
 // PostUpdateOrganizationAttributes updates attributes of an organization
 func (e *env) PostUpdateOrganizationAttributes(c *gin.Context) {
+	updatedOrganization, err := e.db.GetOrganizationByName(c.Param("organization"))
+	if err != nil {
+		e.returnJSONMessage(c, http.StatusBadRequest, err.Error())
+		return
+	}
 	var receivedAttributes struct {
 		Attributes []types.AttributeKeyValues `json:"attribute"`
 	}
 	if err := c.ShouldBindJSON(&receivedAttributes); err != nil {
-		e.returnJSONMessage(c, http.StatusBadRequest, err.Error())
-		return
-	}
-	updatedOrganization, err := e.db.GetOrganizationByName(c.Param("organization"))
-	if err != nil {
 		e.returnJSONMessage(c, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -152,6 +153,11 @@ func (e *env) PostUpdateOrganizationAttributes(c *gin.Context) {
 
 // PostUpdateOrganizationAttributeByName update an attribute of developer
 func (e *env) PostUpdateOrganizationAttributeByName(c *gin.Context) {
+	updatedOrganization, err := e.db.GetOrganizationByName(c.Param("organization"))
+	if err != nil {
+		e.returnJSONMessage(c, http.StatusBadRequest, err.Error())
+		return
+	}
 	var receivedValue struct {
 		Value string `json:"value"`
 	}
@@ -159,16 +165,11 @@ func (e *env) PostUpdateOrganizationAttributeByName(c *gin.Context) {
 		e.returnJSONMessage(c, http.StatusBadRequest, err.Error())
 		return
 	}
-	updatedOrganization, err := e.db.GetOrganizationByName(c.Param("organization"))
-	if err != nil {
-		e.returnJSONMessage(c, http.StatusBadRequest, err.Error())
-		return
-	}
 	// Find & update existing attribute in array
 	attributeToUpdateIndex := e.findAttributePositionInAttributeArray(
 		updatedOrganization.Attributes, c.Param("attribute"))
 	if attributeToUpdateIndex == -1 {
-		// We did not find exist attribute, so we cannot update its value
+		// We did not find exist attribute, append new attribute
 		updatedOrganization.Attributes = append(updatedOrganization.Attributes,
 			types.AttributeKeyValues{Name: c.Param("attribute"), Value: receivedValue.Value})
 	} else {

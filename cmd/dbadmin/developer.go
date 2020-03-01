@@ -15,15 +15,15 @@ func (e *env) registerDeveloperRoutes(r *gin.Engine) {
 	r.POST("/v1/organizations/:organization/developers", e.PostCreateDeveloper)
 
 	r.GET("/v1/organizations/:organization/developers/:developer", e.GetDeveloperByEmail)
-	r.POST("/v1/organizations/:organization/developers/:developer", e.PostUpdateDeveloper)
+	r.POST("/v1/organizations/:organization/developers/:developer", e.PostDeveloper)
 	r.DELETE("/v1/organizations/:organization/developers/:developer", e.DeleteDeveloperByEmail)
 
 	r.GET("/v1/organizations/:organization/developers/:developer/attributes", e.GetDeveloperAttributes)
-	r.POST("/v1/organizations/:organization/developers/:developer/attributes", e.PostUpdateDeveloperAttributes)
+	r.POST("/v1/organizations/:organization/developers/:developer/attributes", e.PostDeveloperAttributes)
 	r.DELETE("/v1/organizations/:organization/developers/:developer/attributes", e.DeleteDeveloperAttributes)
 
 	r.GET("/v1/organizations/:organization/developers/:developer/attributes/:attribute", e.GetDeveloperAttributeByName)
-	r.POST("/v1/organizations/:organization/developers/:developer/attributes/:attribute", e.PostUpdateDeveloperAttributeByName)
+	r.POST("/v1/organizations/:organization/developers/:developer/attributes/:attribute", e.PostDeveloperAttributeByName)
 	r.DELETE("/v1/organizations/:organization/developers/:developer/attributes/:attribute", e.DeleteDeveloperAttributeByName)
 }
 
@@ -75,53 +75,6 @@ func (e *env) GetDeveloperAttributeByName(c *gin.Context) {
 	e.returnJSONMessage(c, http.StatusNotFound, "Could not retrieve attribute")
 }
 
-// GetDeveloperAppAttributes returns attributes of a developer
-func (e *env) GetDeveloperAppAttributes(c *gin.Context) {
-	developer, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
-	if err != nil {
-		e.returnJSONMessage(c, http.StatusNotFound, err.Error())
-		return
-	}
-	developerApp, err := e.db.GetDeveloperAppByName(c.Param("organization"), c.Param("application"))
-	if err != nil {
-		e.returnJSONMessage(c, http.StatusNotFound, err.Error())
-		return
-	}
-	// Developer and DeveloperApp need to be linked to eachother #nosqlintegritycheck
-	if developer.DeveloperID != developerApp.ParentID {
-		e.returnJSONMessage(c, http.StatusNotFound, err.Error())
-		return
-	}
-	c.IndentedJSON(http.StatusOK, gin.H{"attribute": developerApp.Attributes})
-}
-
-// GetDeveloperAttributeByName returns one particular attribute of a developer
-func (e *env) GetDeveloperAppAttributeByName(c *gin.Context) {
-	developer, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
-	if err != nil {
-		e.returnJSONMessage(c, http.StatusNotFound, err.Error())
-		return
-	}
-	developerApp, err := e.db.GetDeveloperAppByName(c.Param("organization"), c.Param("application"))
-	if err != nil {
-		e.returnJSONMessage(c, http.StatusNotFound, err.Error())
-		return
-	}
-	// Developer and DeveloperApp need to be linked to eachother #nosqlintegritycheck
-	if developer.DeveloperID != developerApp.ParentID {
-		e.returnJSONMessage(c, http.StatusNotFound, err.Error())
-		return
-	}
-	// lets find the attribute requested
-	for i := 0; i < len(developerApp.Attributes); i++ {
-		if developerApp.Attributes[i].Name == c.Param("attribute") {
-			c.IndentedJSON(http.StatusOK, developerApp.Attributes[i])
-			return
-		}
-	}
-	e.returnJSONMessage(c, http.StatusNotFound, "Could not retrieve attributes")
-}
-
 // GeneratePrimaryKeyOfDeveloper creates unique primary key for developer db row
 func GeneratePrimaryKeyOfDeveloper(organization, developer string) string {
 	return (fmt.Sprintf("%s@@@%x", organization, sha1.Sum([]byte(developer))))
@@ -161,16 +114,17 @@ func (e *env) PostCreateDeveloper(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, newDeveloper)
 }
 
-// PostUpdateDeveloper updates an existing developer
-func (e *env) PostUpdateDeveloper(c *gin.Context) {
-	var updatedDeveloper types.Developer
-	if err := c.ShouldBindJSON(&updatedDeveloper); err != nil {
-		e.returnJSONMessage(c, http.StatusBadRequest, err.Error())
-		return
-	}
+// PostDeveloper updates an existing developer
+func (e *env) PostDeveloper(c *gin.Context) {
 	// Developer to update should exist
 	currentDeveloper, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
 	if err != nil {
+		e.returnJSONMessage(c, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	var updatedDeveloper types.Developer
+	if err := c.ShouldBindJSON(&updatedDeveloper); err != nil {
 		e.returnJSONMessage(c, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -188,15 +142,8 @@ func (e *env) PostUpdateDeveloper(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, updatedDeveloper)
 }
 
-// PostUpdateDeveloperAttributes updates attributes of developer
-func (e *env) PostUpdateDeveloperAttributes(c *gin.Context) {
-	var receivedAttributes struct {
-		Attributes []types.AttributeKeyValues `json:"attribute"`
-	}
-	if err := c.ShouldBindJSON(&receivedAttributes); err != nil {
-		e.returnJSONMessage(c, http.StatusBadRequest, err.Error())
-		return
-	}
+// PostDeveloperAttributes updates attributes of developer
+func (e *env) PostDeveloperAttributes(c *gin.Context) {
 	updatedDeveloper, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
 	if err != nil {
 		e.returnJSONMessage(c, http.StatusNotFound, err.Error())
@@ -205,6 +152,14 @@ func (e *env) PostUpdateDeveloperAttributes(c *gin.Context) {
 	// We don't allow updating developer whom is member of a different organization
 	if c.Param("organization") != updatedDeveloper.OrganizationName {
 		e.returnJSONMessage(c, http.StatusBadRequest, "Organization mismatch")
+		return
+	}
+
+	var receivedAttributes struct {
+		Attributes []types.AttributeKeyValues `json:"attribute"`
+	}
+	if err := c.ShouldBindJSON(&receivedAttributes); err != nil {
+		e.returnJSONMessage(c, http.StatusBadRequest, err.Error())
 		return
 	}
 	updatedDeveloper.Attributes = e.removeDuplicateAttributes(receivedAttributes.Attributes)
@@ -239,15 +194,8 @@ func (e *env) DeleteDeveloperAttributes(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
-// PostUpdateDeveloperAttributeByName update an attribute of developer
-func (e *env) PostUpdateDeveloperAttributeByName(c *gin.Context) {
-	var receivedValue struct {
-		Value string `json:"value"`
-	}
-	if err := c.ShouldBindJSON(&receivedValue); err != nil {
-		e.returnJSONMessage(c, http.StatusBadRequest, err.Error())
-		return
-	}
+// PostDeveloperAttributeByName update an attribute of developer
+func (e *env) PostDeveloperAttributeByName(c *gin.Context) {
 	updatedDeveloper, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
 	if err != nil {
 		e.returnJSONMessage(c, http.StatusNotFound, err.Error())
@@ -258,11 +206,19 @@ func (e *env) PostUpdateDeveloperAttributeByName(c *gin.Context) {
 		e.returnJSONMessage(c, http.StatusBadRequest, "Organization mismatch")
 		return
 	}
+
+	var receivedValue struct {
+		Value string `json:"value"`
+	}
+	if err := c.ShouldBindJSON(&receivedValue); err != nil {
+		e.returnJSONMessage(c, http.StatusBadRequest, err.Error())
+		return
+	}
 	// Find & update existing attribute in array
 	attributeToUpdateIndex := e.findAttributePositionInAttributeArray(
 		updatedDeveloper.Attributes, c.Param("attribute"))
 	if attributeToUpdateIndex == -1 {
-		// We did not find exist attribute, so we cannot update its value
+		// We did not find exist attribute, append new attribute
 		updatedDeveloper.Attributes = append(updatedDeveloper.Attributes,
 			types.AttributeKeyValues{Name: c.Param("attribute"), Value: receivedValue.Value})
 	} else {
