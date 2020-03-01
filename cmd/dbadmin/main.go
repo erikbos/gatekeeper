@@ -80,7 +80,10 @@ func startRESTAPIServer(listenport string, db *db.Database) {
 	// Store database handle so we can use it when answering apicalls
 	e := &env{}
 	e.db = db
-	e.registerDeveloperRouters(r)
+
+	e.registerOrganizationRoutes(r)
+	e.registerDeveloperRoutes(r)
+	e.registerDeveloperAppRoutes(r)
 	// r.GET("/metrics", promhttp.HandlerFor(prometheus.DefaultGatherer, promhttp.HandlerOpts{}).ServeHTTP)
 	r.GET("/ready", e.GetReady)
 	r.Run(listenport)
@@ -118,6 +121,16 @@ func (e *env) returnJSONMessage(c *gin.Context, statusCode int, message string) 
 // getCurrentTimeMilliseconds returns current epoch time in milliseconds
 func (e *env) getCurrentTimeMilliseconds() int64 {
 	return time.Now().UnixNano() / 1000000
+}
+
+// findAttributePositionInAttributeArray find attribute in slice
+func (e *env) findAttributePositionInAttributeArray(attributes []types.AttributeKeyValues, name string) int {
+	for index, element := range attributes {
+		if element.Name == name {
+			return index
+		}
+	}
+	return -1
 }
 
 // removeDuplicateAttributes removes duplicate attributes from array.

@@ -46,18 +46,20 @@ func (d *Database) runGetOrganizationQuery(query, queryParameter string) []types
 	//Set timer to record how long this function run
 	timer := prometheus.NewTimer(d.dbLookupHistogram)
 	defer timer.ObserveDuration()
-
+	log.Printf("q: %s, %s", query, queryParameter)
 	iterable := d.cassandraSession.Query(query, queryParameter).Iter()
 	m := make(map[string]interface{})
+	log.Printf("Iterable: %+v", iterable)
 	for iterable.MapScan(m) {
+		log.Printf("Q2: %+v", m)
 		organizations = append(organizations, types.Organization{
-			Attributes: d.unmarshallJSONArrayOfAttributes(m["attributes"].(string), false),
-			// CreatedAt:      m["created_at"].(int64),
-			// CreatedBy:      m["created_by"].(string),
-			DisplayName: m["display_name"].(string),
-			// LastmodifiedAt: m["lastmodified_at"].(int64),
-			// LastmodifiedBy: m["lastmodified_by"].(string),
-			Name: m["name"].(string),
+			Attributes:     d.unmarshallJSONArrayOfAttributes(m["attributes"].(string), false),
+			CreatedAt:      m["created_at"].(int64),
+			CreatedBy:      m["created_by"].(string),
+			DisplayName:    m["display_name"].(string),
+			LastmodifiedAt: m["lastmodified_at"].(int64),
+			LastmodifiedBy: m["lastmodified_by"].(string),
+			Name:           m["name"].(string),
 		})
 		m = map[string]interface{}{}
 	}
@@ -71,7 +73,6 @@ func (d *Database) UpdateOrganizationByName(updatedOrganization types.Organizati
 		"created_at, created_by, lastmodified_at, lastmodified_by) " +
 		"VALUES(?,?,?,?,?,?,?,?)"
 
-	log.Printf("%+v", updatedOrganization)
 	Attributes := d.marshallArrayOfAttributesToJSON(updatedOrganization.Attributes, false)
 	err := d.cassandraSession.Query(query,
 		updatedOrganization.Name, updatedOrganization.Name,

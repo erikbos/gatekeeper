@@ -134,7 +134,7 @@ func (d *Database) UpdateDeveloperByID(developerID string, updatedDeveloper type
 		"lastmodified_by, organization_name, status, user_name)" +
 		"VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)"
 
-	Apps := d.MarshallArrayOfStringsToJSON(updatedDeveloper.Apps)
+	Apps := d.marshallArrayOfStringsToJSON(updatedDeveloper.Apps)
 	Attributes := d.marshallArrayOfAttributesToJSON(updatedDeveloper.Attributes, false)
 	// log.Printf("attributes: %s", updatedDeveloper.Attributes)
 

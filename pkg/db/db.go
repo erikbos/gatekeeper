@@ -94,7 +94,7 @@ func (d *Database) unmarshallJSONArrayOfStrings(jsonArrayOfStrings string) []str
 // MarshallArrayOfStringsToJSON packs array of string into JSON
 // e.g. []string to [\"PetStore5\",\"PizzaShop1\"]
 //
-func (d *Database) MarshallArrayOfStringsToJSON(ArrayOfStrings []string) string {
+func (d *Database) marshallArrayOfStringsToJSON(ArrayOfStrings []string) string {
 	if len(ArrayOfStrings) > 0 {
 		ArrayOfStringsInJSON, err := json.Marshal(ArrayOfStrings)
 		if err == nil {

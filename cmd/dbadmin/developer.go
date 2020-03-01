@@ -6,100 +6,24 @@ import (
 
 	"github.com/erikbos/apiauth/pkg/types"
 	"github.com/gin-gonic/gin"
-	log "github.com/sirupsen/logrus"
 )
 
-// registerDeveloperRouters registers all routes we handle
-func (e *env) registerDeveloperRouters(r *gin.Engine) {
-	r.GET("/v1/organizations", e.GetOrganizations)
-	r.POST("/v1/organizations", e.PostCreateOrganization)
-	r.GET("/v1/organizations/:organization", e.GetOrganizationByName)
-	r.DELETE("/v1/organizations/:organization", e.DeleteOrganizationByName)
-
+// registerDeveloperRoutes registers all routes we handle
+func (e *env) registerDeveloperRoutes(r *gin.Engine) {
 	r.GET("/v1/organizations/:organization/developers", e.GetAllDevelopers)
 	r.POST("/v1/organizations/:organization/developers", e.PostCreateDeveloper)
+
 	r.GET("/v1/organizations/:organization/developers/:developer", e.GetDeveloperByEmail)
 	r.POST("/v1/organizations/:organization/developers/:developer", e.PostUpdateDeveloper)
-	r.GET("/v1/organizations/:organization/developers/:developer/attributes", e.GetDeveloperAttributes)
-	r.POST("/v1/organizations/:organization/developers/:developer/attributes", e.PostUpdateDeveloperAttributes)
-	r.GET("/v1/organizations/:organization/developers/:developer/attributes/:attribute", e.GetDeveloperAttributeByName)
-	r.POST("/v1/organizations/:organization/developers/:developer/attributes/:attribute", e.PostUpdateDeveloperAttributeByName)
 	r.DELETE("/v1/organizations/:organization/developers/:developer", e.DeleteDeveloperByEmail)
 
-	r.GET("/v1/organizations/:organization/developers/:developer/apps", e.GetDeveloperApps)
-	r.GET("/v1/organizations/:organization/developers/:developer/apps/:application", e.GetDeveloperAppByName)
-	r.GET("/v1/organizations/:organization/developers/:developer/apps/:application/attributes", e.GetDeveloperAppAttributes)
-	r.GET("/v1/organizations/:organization/developers/:developer/apps/:application/attributes/:attribute", e.GetDeveloperAppAttributeByName)
-	r.GET("/v1/organizations/:organization/developers/:developer/apps/:application/keys/:key", e.GetDeveloperAppByKey)
+	r.GET("/v1/organizations/:organization/developers/:developer/attributes", e.GetDeveloperAttributes)
+	r.POST("/v1/organizations/:organization/developers/:developer/attributes", e.PostUpdateDeveloperAttributes)
+	r.DELETE("/v1/organizations/:organization/developers/:developer/attributes", e.DeleteDeveloperAttributes)
 
-	// r.POST("/v1/organizations/:organization/developers/:developer/apps", e.PostAllDeveloperApps)
-	// r.POST("/v1/organizations/:organization/developers/:developer/apps/:application", e.PostOneDeveloperApp)
-}
-
-//////////////////////////////////////////////////////////////////////////
-// GetDeveloperByEmail returns full details of one developer
-func (e *env) GetOrganizations(c *gin.Context) {
-	organizations, err := e.db.GetOrganizations()
-	if err != nil {
-		e.returnJSONMessage(c, http.StatusNotFound, err.Error())
-		return
-	}
-	c.IndentedJSON(http.StatusOK, gin.H{"organizations": organizations})
-}
-
-// GetOrganizationByName returns full details of one developer
-func (e *env) GetOrganizationByName(c *gin.Context) {
-	organization, err := e.db.GetOrganizationByName(c.Param("organization"))
-	if err != nil {
-		e.returnJSONMessage(c, http.StatusNotFound, err.Error())
-		return
-	}
-	c.IndentedJSON(http.StatusOK, organization)
-}
-
-// PostCreateOrganization creates a new developer
-func (e *env) PostCreateOrganization(c *gin.Context) {
-	var newOrganization types.Organization
-	if err := c.ShouldBindJSON(&newOrganization); err != nil {
-		e.returnJSONMessage(c, http.StatusBadRequest, err.Error())
-		return
-	}
-	// Automatically set default fields
-	newOrganization.Key = newOrganization.Name
-	newOrganization.Attributes = e.removeDuplicateAttributes(newOrganization.Attributes)
-	newOrganization.CreatedBy = e.whoAmI()
-	newOrganization.CreatedAt = e.getCurrentTimeMilliseconds()
-	newOrganization.LastmodifiedAt = newOrganization.CreatedAt
-	newOrganization.LastmodifiedBy = e.whoAmI()
-	if err := e.db.UpdateOrganizationByName(newOrganization); err != nil {
-		e.returnJSONMessage(c, http.StatusBadRequest, err.Error())
-		return
-	}
-	c.IndentedJSON(http.StatusOK, newOrganization)
-}
-
-// DeleteOrganisationByName deletes of one developer
-func (e *env) DeleteOrganizationByName(c *gin.Context) {
-	organization, err := e.db.GetOrganizationByName(c.Param("organization"))
-	if err != nil {
-		e.returnJSONMessage(c, http.StatusNotFound, err.Error())
-		return
-	}
-	developerCount := e.db.GetDeveloperCountByOrganization(organization.Name)
-	switch developerCount {
-	case -1:
-		e.returnJSONMessage(c, http.StatusInternalServerError,
-			"could not retrieve number of developers in organization")
-	case 0:
-		// FIX ME not yet :-)
-		// e.db.DeleteOrganizationByName(organization.Name)
-		c.Status(http.StatusNoContent)
-		return
-	default:
-		e.returnJSONMessage(c, http.StatusForbidden,
-			fmt.Sprintf("Cannot delete organization %s with %d developers",
-				organization.Name, developerCount))
-	}
+	r.GET("/v1/organizations/:organization/developers/:developer/attributes/:attribute", e.GetDeveloperAttributeByName)
+	r.POST("/v1/organizations/:organization/developers/:developer/attributes/:attribute", e.PostUpdateDeveloperAttributeByName)
+	r.DELETE("/v1/organizations/:organization/developers/:developer/attributes/:attribute", e.DeleteDeveloperAttributeByName)
 }
 
 // GetAllDevelopers returns all developers in organization
@@ -121,68 +45,6 @@ func (e *env) GetDeveloperByEmail(c *gin.Context) {
 		return
 	}
 	c.IndentedJSON(http.StatusOK, developer)
-}
-
-// GetDeveloperApps returns apps of a developer
-func (e *env) GetDeveloperApps(c *gin.Context) {
-	developer, err := e.db.GetDeveloperByEmail(c.Param("developer"))
-	if err != nil {
-		e.returnJSONMessage(c, http.StatusNotFound, err.Error())
-		return
-	}
-	c.IndentedJSON(http.StatusOK, developer.Apps)
-}
-
-// GetDeveloperAppByName returns one named app of a developer
-func (e *env) GetDeveloperAppByName(c *gin.Context) {
-	developer, err := e.db.GetDeveloperByEmail(c.Param("developer"))
-	if err != nil {
-		e.returnJSONMessage(c, http.StatusNotFound, err.Error())
-		return
-	}
-	developerApp, err := e.db.GetDeveloperAppByName(c.Param("organization"), c.Param("application"))
-	if err != nil {
-		e.returnJSONMessage(c, http.StatusNotFound, err.Error())
-		return
-	}
-	// Developer and DeveloperApp need to be linked to eachother #nosqlintegritycheck
-	if developer.DeveloperID != developerApp.ParentID {
-		e.returnJSONMessage(c, http.StatusNotFound, "Developer id wrong?")
-		return
-	}
-	// All apikeys belonging to this developer app
-	AppCredentials, err := e.db.GetAppCredentialByDeveloperAppID(developerApp.Key)
-	if err != nil {
-		e.returnJSONMessage(c, http.StatusNotFound, err.Error())
-		return
-	}
-	developerApp.Credentials = AppCredentials
-	c.IndentedJSON(http.StatusOK, developerApp)
-}
-
-// GetDeveloperAppByKey returns keys of one particular developer application
-func (e *env) GetDeveloperAppByKey(c *gin.Context) {
-	developer, err := e.db.GetDeveloperByEmail(c.Param("developer"))
-	if err != nil {
-		e.returnJSONMessage(c, http.StatusNotFound, err.Error())
-		return
-	}
-	developerApp, err := e.db.GetDeveloperAppByName(c.Param("organization"), c.Param("application"))
-	if err != nil {
-		e.returnJSONMessage(c, http.StatusNotFound, err.Error())
-		return
-	}
-	// Developer and DeveloperApp need to be linked to eachother #nosqlintegritycheck
-	if developer.DeveloperID != developerApp.ParentID {
-		e.returnJSONMessage(c, http.StatusNotFound, err.Error())
-		return
-	}
-	AppCredential, err := e.db.GetAppCredentialByKey(c.Param("key"))
-	if err != nil {
-		e.returnJSONMessage(c, http.StatusNotFound, err.Error())
-		return
-	}
-	c.IndentedJSON(http.StatusOK, AppCredential)
 }
 
 // GetDeveloperAttributes returns attributes of a developer
@@ -266,6 +128,13 @@ func (e *env) PostCreateDeveloper(c *gin.Context) {
 		e.returnJSONMessage(c, http.StatusBadRequest, err.Error())
 		return
 	}
+	// we don't allow recreation of existing developer
+	existingDeveloper, err := e.db.GetDeveloperByEmail(newDeveloper.Email)
+	if err == nil {
+		e.returnJSONMessage(c, http.StatusUnauthorized,
+			fmt.Sprintf("Developer %s already exists", existingDeveloper.Email))
+		return
+	}
 	// Automatically assign new developer to organization
 	newDeveloper.OrganizationName = c.Param("organization")
 	// Dedup provided attributes
@@ -319,16 +188,14 @@ func (e *env) PostUpdateDeveloperAttributes(c *gin.Context) {
 		e.returnJSONMessage(c, http.StatusBadRequest, err.Error())
 		return
 	}
-	log.Printf("received array2: %+v", receivedAttributes)
-	log.Printf("received array len: %d", len(receivedAttributes.Attributes))
 	updatedDeveloper, err := e.db.GetDeveloperByEmail(c.Param("developer"))
 	if err != nil {
 		e.returnJSONMessage(c, http.StatusNotFound, err.Error())
 		return
 	}
-	// We don't allow updating developer who is member of different organization
+	// We don't allow updating developer whom is member of a different organization
 	if c.Param("organization") != updatedDeveloper.OrganizationName {
-		e.returnJSONMessage(c, http.StatusBadRequest, "Organisation mismatch")
+		e.returnJSONMessage(c, http.StatusBadRequest, "Organization mismatch")
 		return
 	}
 	updatedDeveloper.Attributes = e.removeDuplicateAttributes(receivedAttributes.Attributes)
@@ -341,13 +208,26 @@ func (e *env) PostUpdateDeveloperAttributes(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, gin.H{"attribute": updatedDeveloper.Attributes})
 }
 
-func findAttributePositionInAttributeArray(attributes []types.AttributeKeyValues, name string) int {
-	for index, element := range attributes {
-		if element.Name == name {
-			return index
-		}
+// DeleteDeveloperAttributes updates attributes of developer
+func (e *env) DeleteDeveloperAttributes(c *gin.Context) {
+	updatedDeveloper, err := e.db.GetDeveloperByEmail(c.Param("developer"))
+	if err != nil {
+		e.returnJSONMessage(c, http.StatusNotFound, err.Error())
+		return
 	}
-	return -1
+	// We don't allow updating developer whom is member of a different organization
+	if c.Param("organization") != updatedDeveloper.OrganizationName {
+		e.returnJSONMessage(c, http.StatusBadRequest, "Organization mismatch")
+		return
+	}
+	updatedDeveloper.Attributes = nil
+	updatedDeveloper.LastmodifiedAt = e.getCurrentTimeMilliseconds()
+	updatedDeveloper.LastmodifiedBy = e.whoAmI()
+	if err := e.db.UpdateDeveloperByEmail(updatedDeveloper.Email, updatedDeveloper); err != nil {
+		e.returnJSONMessage(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	c.IndentedJSON(http.StatusOK, gin.H{"attribute": updatedDeveloper.Attributes})
 }
 
 // PostUpdateDeveloperAttributeByName update an attribute of developer
@@ -370,7 +250,7 @@ func (e *env) PostUpdateDeveloperAttributeByName(c *gin.Context) {
 		return
 	}
 	// Find & update existing attribute in array
-	attributeToUpdateIndex := findAttributePositionInAttributeArray(
+	attributeToUpdateIndex := e.findAttributePositionInAttributeArray(
 		updatedDeveloper.Attributes, c.Param("attribute"))
 	if attributeToUpdateIndex == -1 {
 		// We did not find exist attribute, so we cannot update its value
@@ -386,6 +266,37 @@ func (e *env) PostUpdateDeveloperAttributeByName(c *gin.Context) {
 		return
 	}
 	c.IndentedJSON(http.StatusOK, receivedValue)
+}
+
+// DeleteDeveloperAttributeByName removes an attribute of developer
+func (e *env) DeleteDeveloperAttributeByName(c *gin.Context) {
+	updatedDeveloper, err := e.db.GetDeveloperByEmail(c.Param("developer"))
+	if err != nil {
+		e.returnJSONMessage(c, http.StatusNotFound, err.Error())
+		return
+	}
+	// We don't allow updating developer who is member of different organization
+	if c.Param("organization") != updatedDeveloper.OrganizationName {
+		e.returnJSONMessage(c, http.StatusBadRequest, "Organization mismatch")
+		return
+	}
+	// Find attribute in array
+	attributeToRemoveIndex := e.findAttributePositionInAttributeArray(
+		updatedDeveloper.Attributes, c.Param("attribute"))
+	if attributeToRemoveIndex == -1 {
+		e.returnJSONMessage(c, http.StatusNotFound, "could not find attribute")
+	}
+	// remove attribute
+	updatedDeveloper.Attributes =
+		append(updatedDeveloper.Attributes[:attributeToRemoveIndex],
+			updatedDeveloper.Attributes[attributeToRemoveIndex+1:]...)
+	updatedDeveloper.LastmodifiedBy = e.whoAmI()
+	updatedDeveloper.LastmodifiedAt = e.getCurrentTimeMilliseconds()
+	if err := e.db.UpdateDeveloperByEmail(updatedDeveloper.Email, updatedDeveloper); err != nil {
+		e.returnJSONMessage(c, http.StatusBadRequest, err.Error())
+		return
+	}
+	c.Status(http.StatusNoContent)
 }
 
 // DeleteDeveloperByEmail deletes of one developer

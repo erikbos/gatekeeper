@@ -81,7 +81,7 @@ func (a *authorizationServer) CheckAllowedPath(requestURIPath, apiKey string) (i
 			// FIX ME/TBC should we skip product if it deployed in different org?
 			// (very) unlikely scenario?
 			if appcredential.OrganizationName != apiproduct.OrganizationName {
-				log.Debugf("CheckPath() organisation mismatch: %s != %s",
+				log.Debugf("CheckPath() organization mismatch: %s != %s",
 					appcredential.OrganizationName, apiproduct.OrganizationName)
 				continue
 			}
