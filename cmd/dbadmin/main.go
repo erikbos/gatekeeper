@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -110,25 +111,30 @@ func (e *env) whoAmI() string {
 
 // restGetReady returns ready as readyness check
 func (e *env) GetReady(c *gin.Context) {
-	e.returnJSONMessage(c, http.StatusOK, "Ready!")
+	e.returnJSONMessage(c, http.StatusOK, errors.New("Ready"))
 }
 
-// EnforeJSONContentType checks for json content-type
-func (e *env) EnforeJSONContentType(c *gin.Context) {
+// CheckForJSONContentType checks for json content-type
+func (e *env) CheckForJSONContentType(c *gin.Context) {
 	if c.Request.Header.Get("content-type") != "application/json" {
-		e.returnJSONMessage(c, http.StatusNotAcceptable, "content-type application/json required")
+		e.returnJSONMessage(c, http.StatusUnsupportedMediaType,
+			errors.New("Content-type application/json required when submitting data"))
 		c.Abort()
 	}
 }
 
-// returnJSONMessage returns a structured (error) message in case we do not handle API request
-func (e *env) returnJSONMessage(c *gin.Context, statusCode int, message string) {
-	c.IndentedJSON(statusCode, gin.H{"message": message})
+func (e *env) SetLastModified(c *gin.Context, timeStamp int64) {
+	c.Header("Last-Modified", time.Unix(0, timeStamp*int64(time.Millisecond)).Format(http.TimeFormat))
+}
+
+// returnJSONMessage returns an error message in case we do not handle API request
+func (e *env) returnJSONMessage(c *gin.Context, statusCode int, errorMessage error) {
+	c.IndentedJSON(statusCode, gin.H{"message": fmt.Sprintf("%s", errorMessage)})
 }
 
 // getCurrentTimeMilliseconds returns current epoch time in milliseconds
 func (e *env) getCurrentTimeMilliseconds() int64 {
-	return time.Now().UnixNano() / 1000000
+	return time.Now().UTC().UnixNano() / 1000000
 }
 
 // findAttributePositionInAttributeArray find attribute in slice

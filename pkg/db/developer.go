@@ -44,7 +44,8 @@ func (d *Database) GetDeveloperByEmail(developerOrganization, developerEmail str
 		d.metricsQueryHit(developerMetricLabel)
 		// Check of record of developer matches the required org
 		if developers[0].OrganizationName != developerOrganization {
-			return types.Developer{}, fmt.Errorf("Organization mismatch")
+			return types.Developer{},
+				fmt.Errorf("Developer %s does not exist in org %s", developerEmail, developerOrganization)
 		}
 		return developers[0], nil
 	}
