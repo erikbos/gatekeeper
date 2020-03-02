@@ -68,7 +68,8 @@ func (e *env) GetDeveloperAttributeByName(c *gin.Context) {
 	// lets find the attribute requested
 	for i := 0; i < len(developer.Attributes); i++ {
 		if developer.Attributes[i].Name == c.Param("attribute") {
-			c.IndentedJSON(http.StatusOK, gin.H{"value": developer.Attributes[i].Value})
+			c.IndentedJSON(http.StatusOK, gin.H{"value": developer.Attributes[i]})
+			// c.IndentedJSON(http.StatusOK, gin.H{"value": developer.Attributes[i].Value})
 			return
 		}
 	}
@@ -206,7 +207,7 @@ func (e *env) PostDeveloperAttributeByName(c *gin.Context) {
 		e.returnJSONMessage(c, http.StatusBadRequest, "Organization mismatch")
 		return
 	}
-
+	attributeToUpdate := c.Param("attribute")
 	var receivedValue struct {
 		Value string `json:"value"`
 	}
@@ -216,11 +217,11 @@ func (e *env) PostDeveloperAttributeByName(c *gin.Context) {
 	}
 	// Find & update existing attribute in array
 	attributeToUpdateIndex := e.findAttributePositionInAttributeArray(
-		updatedDeveloper.Attributes, c.Param("attribute"))
+		updatedDeveloper.Attributes, attributeToUpdate)
 	if attributeToUpdateIndex == -1 {
 		// We did not find exist attribute, append new attribute
 		updatedDeveloper.Attributes = append(updatedDeveloper.Attributes,
-			types.AttributeKeyValues{Name: c.Param("attribute"), Value: receivedValue.Value})
+			types.AttributeKeyValues{Name: attributeToUpdate, Value: receivedValue.Value})
 	} else {
 		updatedDeveloper.Attributes[attributeToUpdateIndex].Value = receivedValue.Value
 	}
@@ -230,7 +231,9 @@ func (e *env) PostDeveloperAttributeByName(c *gin.Context) {
 		e.returnJSONMessage(c, http.StatusBadRequest, err.Error())
 		return
 	}
-	c.IndentedJSON(http.StatusOK, receivedValue)
+	// c.IndentedJSON(http.StatusOK, receivedValue)
+	c.IndentedJSON(http.StatusOK,
+		gin.H{"name": attributeToUpdate, "value": receivedValue.Value})
 }
 
 // DeleteDeveloperAttributeByName removes an attribute of developer
