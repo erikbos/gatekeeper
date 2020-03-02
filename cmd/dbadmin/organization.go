@@ -14,15 +14,15 @@ func (e *env) registerOrganizationRoutes(r *gin.Engine) {
 	r.POST("/v1/organizations", e.PostCreateOrganization)
 
 	r.GET("/v1/organizations/:organization", e.GetOrganizationByName)
-	r.POST("/v1/organizations/:organization", e.PostUpdateOrganization)
+	r.POST("/v1/organizations/:organization", e.PostOrganization)
 	r.DELETE("/v1/organizations/:organization", e.DeleteOrganizationByName)
 
 	r.GET("/v1/organizations/:organization/attributes", e.GetOrganizationAttributes)
-	r.POST("/v1/organizations/:organization/attributes", e.PostUpdateOrganizationAttributes)
+	r.POST("/v1/organizations/:organization/attributes", e.PostOrganizationAttributes)
 	r.DELETE("/v1/organizations/:organization/attributes", e.DeleteOrganizationAttributes)
 
 	r.GET("/v1/organizations/:organization/attributes/:attribute", e.GetOrganizationAttributeByName)
-	r.POST("/v1/organizations/:organization/attributes/:attribute", e.PostUpdateOrganizationAttributeByName)
+	r.POST("/v1/organizations/:organization/attributes/:attribute", e.PostOrganizationAttributeByName)
 	r.DELETE("/v1/organizations/:organization/attributes/:attribute", e.DeleteOrganizationAttributeByName)
 }
 
@@ -100,8 +100,8 @@ func (e *env) PostCreateOrganization(c *gin.Context) {
 	c.IndentedJSON(http.StatusCreated, newOrganization)
 }
 
-// PostUpdateOrganization updates an existing organization
-func (e *env) PostUpdateOrganization(c *gin.Context) {
+// PostOrganization updates an existing organization
+func (e *env) PostOrganization(c *gin.Context) {
 	currentOrganization, err := e.db.GetOrganizationByName(c.Param("organization"))
 	if err != nil {
 		e.returnJSONMessage(c, http.StatusBadRequest, err.Error())
@@ -127,8 +127,8 @@ func (e *env) PostUpdateOrganization(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, updatedOrganization)
 }
 
-// PostUpdateOrganizationAttributes updates attributes of an organization
-func (e *env) PostUpdateOrganizationAttributes(c *gin.Context) {
+// PostOrganizationAttributes updates attributes of an organization
+func (e *env) PostOrganizationAttributes(c *gin.Context) {
 	updatedOrganization, err := e.db.GetOrganizationByName(c.Param("organization"))
 	if err != nil {
 		e.returnJSONMessage(c, http.StatusBadRequest, err.Error())
@@ -151,8 +151,8 @@ func (e *env) PostUpdateOrganizationAttributes(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, gin.H{"attribute": updatedOrganization.Attributes})
 }
 
-// PostUpdateOrganizationAttributeByName update an attribute of developer
-func (e *env) PostUpdateOrganizationAttributeByName(c *gin.Context) {
+// PostOrganizationAttributeByName update an attribute of developer
+func (e *env) PostOrganizationAttributeByName(c *gin.Context) {
 	updatedOrganization, err := e.db.GetOrganizationByName(c.Param("organization"))
 	if err != nil {
 		e.returnJSONMessage(c, http.StatusBadRequest, err.Error())
