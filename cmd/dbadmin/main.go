@@ -125,7 +125,8 @@ func (e *env) CheckForJSONContentType(c *gin.Context) {
 }
 
 func (e *env) SetLastModified(c *gin.Context, timeStamp int64) {
-	c.Header("Last-Modified", time.Unix(0, timeStamp*int64(time.Millisecond)).UTC().Format(http.TimeFormat))
+	c.Header("Last-Modified",
+		time.Unix(0, timeStamp*int64(time.Millisecond)).UTC().Format(http.TimeFormat))
 }
 
 // returnJSONMessage returns an error message in case we do not handle API request
