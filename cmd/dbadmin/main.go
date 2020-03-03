@@ -85,6 +85,7 @@ func startRESTAPIServer(listenport string, db *db.Database) {
 	e.registerOrganizationRoutes(r)
 	e.registerDeveloperRoutes(r)
 	e.registerDeveloperAppRoutes(r)
+	e.registerCredentialRoutes(r)
 	// r.GET("/metrics", promhttp.HandlerFor(prometheus.DefaultGatherer, promhttp.HandlerOpts{}).ServeHTTP)
 	r.GET("/ready", e.GetReady)
 	r.Run(listenport)

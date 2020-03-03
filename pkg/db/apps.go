@@ -7,6 +7,19 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+//GetDeveloperAppsByOrganization retrieves all developer belonging to an organization
+// FIXME
+func (d *Database) GetDeveloperAppsByOrganization(organizationName string) ([]types.DeveloperApp, error) {
+	query := "SELECT * FROM apps WHERE organization_name = ? LIMIT 10 ALLOW FILTERING"
+	developerapps := d.runGetDeveloperAppQuery(query, organizationName)
+	if len(developerapps) > 0 {
+		d.dbLookupHitsCounter.WithLabelValues(d.Hostname, "apps").Inc()
+		return developerapps, nil
+	}
+	d.dbLookupMissesCounter.WithLabelValues(d.Hostname, "apps").Inc()
+	return developerapps, errors.New("Could not find developer by name")
+}
+
 //GetDeveloperAppByName returns details of a DeveloperApplication looked up by Name
 //
 func (d *Database) GetDeveloperAppByName(organization, developerAppName string) (types.DeveloperApp, error) {

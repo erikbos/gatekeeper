@@ -179,7 +179,7 @@ func (e *env) PostDeveloperAttributes(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, gin.H{"attribute": updatedDeveloper.Attributes})
 }
 
-// DeleteDeveloperAttributes updates attributes of developer
+// DeleteDeveloperAttributes delete attributes of developer
 func (e *env) DeleteDeveloperAttributes(c *gin.Context) {
 	updatedDeveloper, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
 	if err != nil {
@@ -238,7 +238,6 @@ func (e *env) PostDeveloperAttributeByName(c *gin.Context) {
 		e.returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
-	// c.IndentedJSON(http.StatusOK, receivedValue)
 	c.IndentedJSON(http.StatusOK,
 		gin.H{"name": attributeToUpdate, "value": receivedValue.Value})
 }
