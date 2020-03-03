@@ -254,7 +254,7 @@ func (e *env) DeleteOrganizationByName(c *gin.Context) {
 		c.Status(http.StatusNoContent)
 	default:
 		e.returnJSONMessage(c, http.StatusForbidden,
-			fmt.Errorf("Cannot delete organization '%s' with %d developers",
+			fmt.Errorf("Cannot delete organization '%s' with %d active developers",
 				organization.Name, developerCount))
 	}
 }
