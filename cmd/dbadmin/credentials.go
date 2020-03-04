@@ -13,7 +13,7 @@ func (e *env) registerCredentialRoutes(r *gin.Engine) {
 	r.POST("/v1/organizations/:organization/developers/:developer/apps/:application/keys", e.CheckForJSONContentType, e.PostCreateDeveloperAppKey)
 
 	r.GET("/v1/organizations/:organization/developers/:developer/apps/:application/keys/:key", e.GetDeveloperAppKeyByKey)
-	r.POST("/v1/organizations/:organization/developers/:developer/apps/:application/keys/:key", e.PostUpdateDeveloperAppKeyByKey)
+	r.POST("/v1/organizations/:organization/developers/:developer/apps/:application/keys/:key", e.CheckForJSONContentType, e.PostUpdateDeveloperAppKeyByKey)
 	r.DELETE("/v1/organizations/:organization/developers/:developer/apps/:application/keys/:key", e.DeleteDeveloperAppKeyByKey)
 }
 

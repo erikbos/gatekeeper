@@ -4,7 +4,7 @@ require (
 	github.com/bmatcuk/doublestar v1.2.2
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/coocood/freecache v1.1.0
-	github.com/dchest/uniuri v0.0.0-20200228104902-7aecb25e1fe5 // indirect
+	github.com/dchest/uniuri v0.0.0-20200228104902-7aecb25e1fe5
 	github.com/envoyproxy/go-control-plane v0.8.0
 	github.com/gin-gonic/gin v1.5.0
 	github.com/gocql/gocql v0.0.0-20191126110522-1982a06ad6b9
