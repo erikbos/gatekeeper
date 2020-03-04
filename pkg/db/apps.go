@@ -2,6 +2,8 @@ package db
 
 import (
 	"errors"
+	"fmt"
+	"log"
 
 	"github.com/erikbos/apiauth/pkg/types"
 	"github.com/prometheus/client_golang/prometheus"
@@ -82,28 +84,26 @@ func (d *Database) runGetDeveloperAppQuery(query, queryParameter string) []types
 }
 
 // UpdateDeveloperAppByName UPSERTs a developer app in database
-func (d *Database) UpdateDeveloperAppByName(updatedDeveloper types.DeveloperApp) error {
-	// query := "INSERT INTO apps (key,apps,attributes, " +
-	// 	"created_at, created_by, email, " +
-	// 	"first_name, last_name, lastmodified_at, " +
-	// 	"lastmodified_by, organization_name, status, user_name)" +
-	// 	"VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)"
+func (d *Database) UpdateDeveloperAppByName(updatedDeveloperApp types.DeveloperApp) error {
+	query := "INSERT INTO apps (key,app_id,attributes, " +
+		"created_at, created_by, display_name, " +
+		"lastmodified_at, lastmodified_by, name, " +
+		"organization_name, parent_id, parent_status, " +
+		"status) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)"
 
-	// Apps := d.marshallArrayOfStringsToJSON(updatedDeveloper.Apps)
-	// Attributes := d.marshallArrayOfAttributesToJSON(updatedDeveloper.Attributes, false)
-	// log.Printf("attributes: %s", updatedDeveloper.Attributes)
+	Attributes := d.marshallArrayOfAttributesToJSON(updatedDeveloperApp.Attributes, false)
+	log.Printf("attributes: %s", updatedDeveloperApp.Attributes)
 
-	// err := d.cassandraSession.Query(query,
-	// 	updatedDeveloper.DeveloperID, Apps, Attributes,
-	// 	updatedDeveloper.CreatedAt, updatedDeveloper.CreatedBy, updatedDeveloper.Email,
-	// 	updatedDeveloper.FirstName, updatedDeveloper.LastName, updatedDeveloper.LastmodifiedAt,
-	// 	updatedDeveloper.LastmodifiedBy, updatedDeveloper.OrganizationName, updatedDeveloper.Status,
-	// 	updatedDeveloper.UserName).Exec()
-	// if err == nil {
-	// 	return nil
-	// }
-	// return fmt.Errorf("Could not update developer app (%v)", err)
-	return errors.New("Nope")
+	err := d.cassandraSession.Query(query,
+		updatedDeveloperApp.Key, updatedDeveloperApp.AppID, Attributes,
+		updatedDeveloperApp.CreatedAt, updatedDeveloperApp.CreatedBy, updatedDeveloperApp.DisplayName,
+		updatedDeveloperApp.LastmodifiedAt, updatedDeveloperApp.LastmodifiedBy, updatedDeveloperApp.Name,
+		updatedDeveloperApp.OrganizationName, updatedDeveloperApp.ParentID, updatedDeveloperApp.ParentStatus,
+		updatedDeveloperApp.Status).Exec()
+	if err == nil {
+		return nil
+	}
+	return fmt.Errorf("Could not update developer app (%v)", err)
 }
 
 //DeleteDeveloperAppByName deletes an developer app
