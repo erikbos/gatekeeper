@@ -14,7 +14,7 @@ const developerMetricLabel = "organizations"
 //GetDevelopersByOrganization retrieves all developer belonging to an organization
 //
 func (d *Database) GetDevelopersByOrganization(organizationName string) ([]types.Developer, error) {
-	query := "SELECT * FROM developers WHERE organization_name = ? LIMIT 10 ALLOW FILTERING"
+	query := "SELECT * FROM developers WHERE organization_name = ? ALLOW FILTERING"
 	developers := d.runGetDeveloperQuery(query, organizationName)
 	if len(developers) > 0 {
 		d.metricsQueryHit(developerMetricLabel)
@@ -109,16 +109,14 @@ func (d *Database) runGetDeveloperQuery(query, queryParameter string) []types.De
 // UpdateDeveloperByName UPSERTs a developer in database
 // Upsert is: In case a developer does not exist (primary key not matching) it will create a new row
 func (d *Database) UpdateDeveloperByName(updatedDeveloper types.Developer) error {
-	query := "INSERT INTO developers (key,apps,attributes, " +
-		"created_at, created_by, email, " +
-		"first_name, last_name, lastmodified_at, " +
-		"lastmodified_by, organization_name, status, user_name)" +
+	query := "INSERT INTO developers (key,apps,attributes," +
+		"created_at,created_by, email," +
+		"first_name,last_name, lastmodified_at," +
+		"lastmodified_by,organization_name,status,user_name)" +
 		"VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)"
 
 	Apps := d.marshallArrayOfStringsToJSON(updatedDeveloper.Apps)
 	Attributes := d.marshallArrayOfAttributesToJSON(updatedDeveloper.Attributes, false)
-	// log.Printf("attributes: %s", updatedDeveloper.Attributes)
-
 	err := d.cassandraSession.Query(query,
 		updatedDeveloper.DeveloperID, Apps, Attributes,
 		updatedDeveloper.CreatedAt, updatedDeveloper.CreatedBy, updatedDeveloper.Email,
@@ -133,8 +131,8 @@ func (d *Database) UpdateDeveloperByName(updatedDeveloper types.Developer) error
 
 //DeleteDeveloperByEmail deletes a developer
 //
-func (d *Database) DeleteDeveloperByEmail(organizatioName, developerEmail string) error {
-	developer, err := d.GetDeveloperByEmail(organizatioName, developerEmail)
+func (d *Database) DeleteDeveloperByEmail(organizationName, developerEmail string) error {
+	developer, err := d.GetDeveloperByEmail(organizationName, developerEmail)
 	if err != nil {
 		return err
 	}

@@ -4,10 +4,12 @@ require (
 	github.com/bmatcuk/doublestar v1.2.2
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/coocood/freecache v1.1.0
+	github.com/dchest/uniuri v0.0.0-20200228104902-7aecb25e1fe5 // indirect
 	github.com/envoyproxy/go-control-plane v0.8.0
 	github.com/gin-gonic/gin v1.5.0
 	github.com/gocql/gocql v0.0.0-20191126110522-1982a06ad6b9
 	github.com/gogo/googleapis v1.2.0
+	github.com/google/uuid v1.1.1
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/mattn/go-isatty v0.0.12 // indirect
 	github.com/oschwald/maxminddb-golang v1.6.0

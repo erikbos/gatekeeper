@@ -130,3 +130,30 @@ func (d *Database) marshallArrayOfAttributesToJSON(ArrayOfAttributes []types.Att
 	}
 	return "[]"
 }
+
+// unmarshallJSONArrayOfAttributes unpacks JSON array of attribute bags
+// Example input: [{"name":"DisplayName","value":"erikbos teleporter"},{"name":"ErikbosTeleporterExtraAttribute","value":"42"}]
+//
+func (d *Database) unmarshallJSONArrayOfProductStatuses(jsonArrayOfAttributes string) []types.APIProductStatus {
+	if jsonArrayOfAttributes != "" {
+		var ResponseAttributes = make([]types.APIProductStatus, 0)
+		if err := json.Unmarshal([]byte(jsonArrayOfAttributes), &ResponseAttributes); err == nil {
+			return ResponseAttributes
+		}
+	}
+	return nil
+}
+
+// marshallArrayOfAttributesToJSON packs array of attributes into JSON
+// Example input: [{"name":"DisplayName","value":"erikbos teleporter"},{"name":"ErikbosTeleporterExtraAttribute","value":"42"}]
+//
+func (d *Database) marshallArrayOfProductStatusesToJSON(ArrayOfAttributes []types.APIProductStatus) string {
+
+	if len(ArrayOfAttributes) > 0 {
+		ArrayOfAttributesInJSON, err := json.Marshal(ArrayOfAttributes)
+		if err == nil {
+			return string(ArrayOfAttributesInJSON)
+		}
+	}
+	return "[]"
+}

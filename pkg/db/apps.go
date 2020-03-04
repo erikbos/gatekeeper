@@ -48,6 +48,17 @@ func (d *Database) GetDeveloperAppByID(organization, developerAppID string) (typ
 	return types.DeveloperApp{}, errors.New("Could not find developer by app id")
 }
 
+//GetDeveloperAppCountByDeveloperID retrieves number of apps belonging to a developer
+//
+func (d *Database) GetDeveloperAppCountByDeveloperID(organizationName string) int {
+	var developerAppCount int
+	query := "SELECT count(*) FROM apps WHERE parent_id = ?"
+	if err := d.cassandraSession.Query(query, organizationName).Scan(&developerAppCount); err != nil {
+		return -1
+	}
+	return developerAppCount
+}
+
 func (d *Database) runGetDeveloperAppQuery(query, queryParameter string) []types.DeveloperApp {
 	var developerapps []types.DeveloperApp
 
@@ -59,17 +70,16 @@ func (d *Database) runGetDeveloperAppQuery(query, queryParameter string) []types
 	m := make(map[string]interface{})
 	for iterable.MapScan(m) {
 		developerapps = append(developerapps, types.DeveloperApp{
-			AccessType:  m["access_type"].(string),
-			AppFamily:   m["app_family"].(string),
-			AppID:       m["app_id"].(string),
-			AppType:     m["app_type"].(string),
-			Attributes:  d.unmarshallJSONArrayOfAttributes(m["attributes"].(string), false),
-			CallbackURL: m["callback_url"].(string),
-			CreatedAt:   m["created_at"].(int64),
-			CreatedBy:   m["created_by"].(string),
-			// DeveloperAppID:   developerAppID,
+			AccessType:       m["access_type"].(string),
+			AppFamily:        m["app_family"].(string),
+			AppID:            m["app_id"].(string),
+			AppType:          m["app_type"].(string),
+			Attributes:       d.unmarshallJSONArrayOfAttributes(m["attributes"].(string), false),
+			CallbackURL:      m["callback_url"].(string),
+			CreatedAt:        m["created_at"].(int64),
+			CreatedBy:        m["created_by"].(string),
+			DeveloperAppID:   m["key"].(string),
 			DisplayName:      m["display_name"].(string),
-			Key:              m["key"].(string),
 			LastmodifiedAt:   m["lastmodified_at"].(int64),
 			LastmodifiedBy:   m["lastmodified_by"].(string),
 			Name:             m["name"].(string),
@@ -85,10 +95,10 @@ func (d *Database) runGetDeveloperAppQuery(query, queryParameter string) []types
 
 // UpdateDeveloperAppByName UPSERTs a developer app in database
 func (d *Database) UpdateDeveloperAppByName(updatedDeveloperApp types.DeveloperApp) error {
-	query := "INSERT INTO apps (key,app_id,attributes, " +
-		"created_at, created_by, display_name, " +
-		"lastmodified_at, lastmodified_by, name, " +
-		"organization_name, parent_id, parent_status, " +
+	query := "INSERT INTO apps (key,app_id,attributes," +
+		"created_at,created_by, display_name," +
+		"lastmodified_at,lastmodified_by,name," +
+		"organization_name,parent_id,parent_status," +
 		"status) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)"
 
 	Attributes := d.marshallArrayOfAttributesToJSON(updatedDeveloperApp.Attributes, false)

@@ -9,9 +9,11 @@ import (
 	"os"
 	"time"
 
+	"github.com/dchest/uniuri"
 	"github.com/erikbos/apiauth/pkg/db"
 	"github.com/erikbos/apiauth/pkg/types"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 )
@@ -166,4 +168,29 @@ func (e *env) removeDuplicateAttributes(attributes []types.AttributeKeyValues) [
 		}
 	}
 	return result
+}
+
+// GeneratePrimaryKeyOfDeveloper creates unique primary key for developer db row
+func (e *env) GeneratePrimaryKeyOfDeveloper(organization, developer string) string {
+	return (fmt.Sprintf("%s@@@%x", organization, uniuri.New()))
+}
+
+// GenerateDeveloperAppPrimaryKey creates unique primary key for developer app row
+func (e *env) GenerateDeveloperAppPrimaryKey() string {
+	return (fmt.Sprintf("%s", uuid.New()))
+}
+
+// GeneratePrimaryKeyOfDeveloper creates unique primary key for developer db row
+func (e *env) GenerateDeveloperAppID(organization, primaryKey string) string {
+	return (fmt.Sprintf("%s@@@%x", organization, primaryKey))
+}
+
+// GenerateCredentialConsumerKey returns a random key (32 character base62)
+func (e *env) GenerateCredentialConsumerKey() string {
+	return uniuri.NewLen(32)
+}
+
+// GenerateCredentialConsumerSecret returns a random key (16 character base62)
+func (e *env) GenerateCredentialConsumerSecret() string {
+	return uniuri.New()
 }

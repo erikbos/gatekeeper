@@ -35,7 +35,7 @@ type Developer struct {
 //DeveloperApp contains everything about a Developer Application
 //
 type DeveloperApp struct {
-	// DeveloperAppID   string               `json:"developer_app_id"`
+	DeveloperAppID   string               `json:"developer_app_id"`
 	AccessType       string               `json:"accessType"`
 	AppFamily        string               `json:"appFamily"`
 	AppID            string               `json:"appId"`
@@ -59,20 +59,20 @@ type DeveloperApp struct {
 //AppCredential contains an apikey entitlement
 //
 type AppCredential struct {
-	ConsumerKey       string             `json:"key"`
-	APIProducts       []APIProductStatus `json:"apiProducts"`
-	AppStatus         string             `json:"appStatus"`
-	Attributes        string             `json:"attributes"`
-	CompanyStatus     string             `json:"companyStatus"`
-	ConsumerSecret    string             `json:"consumerSecret"`
-	CredentialMethod  string             `json:"credentialMethod"`
-	DeveloperStatus   string             `json:"developerStatus"`
-	ExpiresAt         int64              `json:"expiresAt"`
-	IssuedAt          int64              `json:"issuesAt"`
-	OrganizationAppID string             `json:"organizationAppId"`
-	OrganizationName  string             `json:"organizationName"`
-	Scopes            string             `json:"scopes"`
-	Status            string             `json:"status"`
+	ConsumerKey       string               `json:"key"`
+	APIProducts       []APIProductStatus   `json:"apiProducts"`
+	AppStatus         string               `json:"appStatus"`
+	Attributes        []AttributeKeyValues `json:"attributes"`
+	CompanyStatus     string               `json:"companyStatus"`
+	ConsumerSecret    string               `json:"consumerSecret"`
+	CredentialMethod  string               `json:"credentialMethod"`
+	DeveloperStatus   string               `json:"developerStatus"`
+	ExpiresAt         int64                `json:"expiresAt"`
+	IssuedAt          int64                `json:"issuesAt"`
+	OrganizationAppID string               `json:"organizationAppId"`
+	OrganizationName  string               `json:"organizationName"`
+	Scopes            string               `json:"scopes"`
+	Status            string               `json:"status"`
 }
 
 // APIProductStatus contains whether an apikey's assigned apiproduct has been approved

@@ -251,7 +251,7 @@ func (e *env) DeleteOrganizationByName(c *gin.Context) {
 			fmt.Errorf("Could not retrieve number of developers in organization"))
 	case 0:
 		e.db.DeleteOrganizationByName(organization.Name)
-		c.Status(http.StatusNoContent)
+		c.IndentedJSON(http.StatusOK, organization)
 	default:
 		e.returnJSONMessage(c, http.StatusForbidden,
 			fmt.Errorf("Cannot delete organization '%s' with %d active developers",

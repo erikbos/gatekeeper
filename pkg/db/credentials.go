@@ -2,7 +2,7 @@ package db
 
 import (
 	"encoding/json"
-	"errors"
+	"fmt"
 
 	"github.com/erikbos/apiauth/pkg/types"
 	"github.com/prometheus/client_golang/prometheus"
@@ -23,7 +23,7 @@ func (d *Database) GetAppCredentialByKey(key string) (types.AppCredential, error
 		return appcredentials[0], nil
 	}
 	d.dbLookupMissesCounter.WithLabelValues(d.Hostname, "app_credentials").Inc()
-	return types.AppCredential{}, errors.New("Could not find apikey")
+	return types.AppCredential{}, fmt.Errorf("Could not find apikey '%s'", key)
 }
 
 //GetAppCredentialByDeveloperAppID returns an array with apikey details of a developer app
@@ -32,14 +32,25 @@ func (d *Database) GetAppCredentialByDeveloperAppID(organizationAppID string) ([
 	var appcredentials []types.AppCredential
 
 	// FIXME hardcoded row limit
-	query := "SELECT * FROM app_credentials WHERE organization_app_id = ? LIMIT 1000"
+	query := "SELECT * FROM app_credentials WHERE organization_app_id = ?"
 	appcredentials = d.runGetAppCredentialQuery(query, organizationAppID)
 	if len(appcredentials) > 0 {
 		d.dbLookupHitsCounter.WithLabelValues(d.Hostname, "app_credentials").Inc()
 		return appcredentials, nil
 	}
 	d.dbLookupMissesCounter.WithLabelValues(d.Hostname, "app_credentials").Inc()
-	return appcredentials, errors.New("Could not find apikeys of developer app")
+	return appcredentials, fmt.Errorf("Could not find apikeys of developer app '%s'", organizationAppID)
+}
+
+//GetAppCredentialCountByDeveloperAppID retrieves number of keys beloning to developer app
+//
+func (d *Database) GetAppCredentialCountByDeveloperAppID(developerAppID string) int {
+	var AppCredentialCount int
+	query := "SELECT count(*) FROM app_credentials WHERE organization_app_id = ?"
+	if err := d.cassandraSession.Query(query, developerAppID).Scan(&AppCredentialCount); err != nil {
+		return -1
+	}
+	return AppCredentialCount
 }
 
 //runAppCredentialQuery executes CQL query and returns resulset
@@ -56,7 +67,7 @@ func (d *Database) runGetAppCredentialQuery(query, queryParameter string) []type
 		appcredential := types.AppCredential{
 			ConsumerKey:       m["key"].(string),
 			AppStatus:         m["app_status"].(string),
-			Attributes:        m["attributes"].(string),
+			Attributes:        d.unmarshallJSONArrayOfAttributes(m["attributes"].(string), false),
 			CompanyStatus:     m["company_status"].(string),
 			ConsumerSecret:    m["consumer_secret"].(string),
 			CredentialMethod:  m["credential_method"].(string),
@@ -76,4 +87,36 @@ func (d *Database) runGetAppCredentialQuery(query, queryParameter string) []type
 		m = map[string]interface{}{}
 	}
 	return appcredentials
+}
+
+// UpdateAppCredentialByKey UPSERTs appcredentials in database
+// Upsert is: In case a developer does not exist (primary key not matching) it will create a new row
+func (d *Database) UpdateAppCredentialByKey(updatedAppCredential types.AppCredential) error {
+	query := "INSERT INTO app_credentials (key,api_products,attributes," +
+		"consumer_secret,expires_at,issued_at," +
+		"organization_app_id,organization_name,status)" +
+		"VALUES(?,?,?,?,?,?,?,?,?)"
+
+	APIProducts := d.marshallArrayOfProductStatusesToJSON(updatedAppCredential.APIProducts)
+	Attributes := d.marshallArrayOfAttributesToJSON(updatedAppCredential.Attributes, false)
+	err := d.cassandraSession.Query(query,
+		updatedAppCredential.ConsumerKey, APIProducts, Attributes,
+		updatedAppCredential.ConsumerSecret, -1, updatedAppCredential.IssuedAt,
+		updatedAppCredential.OrganizationAppID, updatedAppCredential.OrganizationName,
+		updatedAppCredential.Status).Exec()
+	if err == nil {
+		return nil
+	}
+	return fmt.Errorf("Could not update appcredential (%v)", err)
+}
+
+//DeleteAppCredentialByKey deletes a developer
+//
+func (d *Database) DeleteAppCredentialByKey(consumerKey string) error {
+	_, err := d.GetAppCredentialByKey(consumerKey)
+	if err != nil {
+		return err
+	}
+	query := "DELETE FROM app_credentials WHERE key = ?"
+	return d.cassandraSession.Query(query, consumerKey).Exec()
 }

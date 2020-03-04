@@ -1,12 +1,12 @@
 package main
 
 import (
-	"crypto/sha1"
 	"fmt"
 	"net/http"
 
 	"github.com/erikbos/apiauth/pkg/types"
 	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 )
 
 // registerDeveloperRoutes registers all routes we handle
@@ -79,11 +79,6 @@ func (e *env) GetDeveloperAttributeByName(c *gin.Context) {
 		fmt.Errorf("Could not retrieve attribute '%s'", c.Param("attribute")))
 }
 
-// GeneratePrimaryKeyOfDeveloper creates unique primary key for developer db row
-func GeneratePrimaryKeyOfDeveloper(organization, developer string) string {
-	return (fmt.Sprintf("%s@@@%x", organization, sha1.Sum([]byte(developer))))
-}
-
 // PostCreateDeveloper creates a new developer
 func (e *env) PostCreateDeveloper(c *gin.Context) {
 	var newDeveloper types.Developer
@@ -101,7 +96,7 @@ func (e *env) PostCreateDeveloper(c *gin.Context) {
 	// Automatically assign new developer to organization
 	newDeveloper.OrganizationName = c.Param("organization")
 	// Generate primary key for new row
-	newDeveloper.DeveloperID = GeneratePrimaryKeyOfDeveloper(newDeveloper.OrganizationName,
+	newDeveloper.DeveloperID = e.GeneratePrimaryKeyOfDeveloper(newDeveloper.OrganizationName,
 		newDeveloper.Email)
 	// Dedup provided attributes
 	newDeveloper.Attributes = e.removeDuplicateAttributes(newDeveloper.Attributes)
@@ -289,9 +284,20 @@ func (e *env) DeleteDeveloperByEmail(c *gin.Context) {
 			fmt.Errorf("Developer '%s' does not exist in org '%s'", c.Param("developer"), c.Param("organization")))
 		return
 	}
-	if err := e.db.DeleteDeveloperByEmail(developer.OrganizationName, developer.Email); err != nil {
-		e.returnJSONMessage(c, http.StatusBadRequest, err)
-		return
+	developerAppCount := e.db.GetDeveloperAppCountByDeveloperID(developer.DeveloperID)
+	log.Printf("count: %d", developerAppCount)
+	switch developerAppCount {
+	case -1:
+		e.returnJSONMessage(c, http.StatusInternalServerError,
+			fmt.Errorf("Could not retrieve number of developerapps of developer (%s)",
+				developer.Email))
+	case 0:
+		// Not yet
+		// e.db.DeleteDeveloperByEmail(c.Param("organization"), developer.Email)
+		c.IndentedJSON(http.StatusOK, developer)
+	default:
+		e.returnJSONMessage(c, http.StatusForbidden,
+			fmt.Errorf("Cannot delete developer '%s' with %d developer apps",
+				developer.Email, developerAppCount))
 	}
-	c.IndentedJSON(http.StatusOK, developer)
 }
