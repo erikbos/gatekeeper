@@ -3,7 +3,6 @@ package db
 import (
 	"errors"
 	"fmt"
-	"log"
 
 	"github.com/erikbos/apiauth/pkg/types"
 	"github.com/prometheus/client_golang/prometheus"
@@ -102,10 +101,8 @@ func (d *Database) UpdateDeveloperAppByName(updatedDeveloperApp types.DeveloperA
 		"status) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)"
 
 	Attributes := d.marshallArrayOfAttributesToJSON(updatedDeveloperApp.Attributes, false)
-	log.Printf("attributes: %s", updatedDeveloperApp.Attributes)
-
 	err := d.cassandraSession.Query(query,
-		updatedDeveloperApp.Key, updatedDeveloperApp.AppID, Attributes,
+		updatedDeveloperApp.DeveloperAppID, updatedDeveloperApp.AppID, Attributes,
 		updatedDeveloperApp.CreatedAt, updatedDeveloperApp.CreatedBy, updatedDeveloperApp.DisplayName,
 		updatedDeveloperApp.LastmodifiedAt, updatedDeveloperApp.LastmodifiedBy, updatedDeveloperApp.Name,
 		updatedDeveloperApp.OrganizationName, updatedDeveloperApp.ParentID, updatedDeveloperApp.ParentStatus,

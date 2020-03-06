@@ -74,7 +74,7 @@ func (e *env) GetDeveloperAppByName(c *gin.Context) {
 		return
 	}
 	// All apikeys belonging to this developer app
-	AppCredentials, err := e.db.GetAppCredentialByDeveloperAppID(developerApp.Key)
+	AppCredentials, err := e.db.GetAppCredentialByDeveloperAppID(developerApp.DeveloperAppID)
 	if err != nil {
 		e.returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -193,10 +193,9 @@ func (e *env) PostDeveloperApp(c *gin.Context) {
 		return
 	}
 	// We don't allow POSTing to update developer X while body says to update developer Y
-	updatedDeveloperApp.Key = currentDeveloperApp.Key
-	updatedDeveloperApp.Name = currentDeveloperApp.Name
 	updatedDeveloperApp.AppID = currentDeveloperApp.AppID
 	updatedDeveloperApp.DeveloperAppID = currentDeveloperApp.DeveloperAppID
+	updatedDeveloperApp.Name = currentDeveloperApp.Name
 	updatedDeveloperApp.ParentID = currentDeveloperApp.ParentID
 	updatedDeveloperApp.ParentStatus = currentDeveloperApp.ParentStatus
 
@@ -234,7 +233,6 @@ func (e *env) PostDeveloperAppAttributes(c *gin.Context) {
 		e.returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
-	log.Printf("QQQ")
 	developerApp.Attributes = e.removeDuplicateAttributes(receivedAttributes.Attributes)
 	developerApp.LastmodifiedAt = e.getCurrentTimeMilliseconds()
 	developerApp.LastmodifiedBy = e.whoAmI()

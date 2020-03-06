@@ -35,7 +35,7 @@ func (e *env) GetDeveloperAppKeys(c *gin.Context) {
 			fmt.Errorf("Developer and application records do not have the same DevID"))
 		return
 	}
-	AppCredentials, err := e.db.GetAppCredentialByDeveloperAppID(developerApp.Key)
+	AppCredentials, err := e.db.GetAppCredentialByDeveloperAppID(developerApp.DeveloperAppID)
 	if err != nil {
 		e.returnJSONMessage(c, http.StatusNotFound, err)
 		return

@@ -35,7 +35,7 @@ type Developer struct {
 //DeveloperApp contains everything about a Developer Application
 //
 type DeveloperApp struct {
-	DeveloperAppID   string               `json:"developer_app_id"`
+	DeveloperAppID   string               `json:"key"`
 	AccessType       string               `json:"accessType"`
 	AppFamily        string               `json:"appFamily"`
 	AppID            string               `json:"appId"`
@@ -46,7 +46,6 @@ type DeveloperApp struct {
 	CreatedBy        string               `json:"createdBy"`
 	Credentials      []AppCredential      `json:"credentials"`
 	DisplayName      string               `json:"displayName" binding:"required"`
-	Key              string               `json:"DeveloperAppID"`
 	LastmodifiedAt   int64                `json:"lastmodifiedAt"`
 	LastmodifiedBy   string               `json:"lastmodifiedBy"`
 	Name             string               `json:"name" binding:"required"`
@@ -54,6 +53,7 @@ type DeveloperApp struct {
 	ParentID         string               `json:"parentId"`
 	ParentStatus     string               `json:"parentStatus"`
 	Status           string               `json:"status"`
+	// Key              string               `json:"DeveloperAppID"`
 }
 
 //AppCredential contains an apikey entitlement

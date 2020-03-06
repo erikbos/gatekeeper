@@ -123,7 +123,9 @@ func (e *env) PostDeveloper(c *gin.Context) {
 	}
 	// We don't allow updating developer whom is member of a different organization
 	if c.Param("organization") != currentDeveloper.OrganizationName {
-		e.returnJSONMessage(c, http.StatusNotFound, fmt.Errorf("Developer '%s' does not exist in org '%s'", c.Param("developer"), c.Param("organization")))
+		e.returnJSONMessage(c, http.StatusNotFound,
+			fmt.Errorf("Developer '%s' does not exist in org '%s'",
+				c.Param("developer"), c.Param("organization")))
 		return
 	}
 	var updatedDeveloper types.Developer
@@ -154,7 +156,9 @@ func (e *env) PostDeveloperAttributes(c *gin.Context) {
 	}
 	// We don't allow updating developer whom is member of a different organization
 	if c.Param("organization") != updatedDeveloper.OrganizationName {
-		e.returnJSONMessage(c, http.StatusNotFound, fmt.Errorf("Developer '%s' does not exist in org '%s'", c.Param("developer"), c.Param("organization")))
+		e.returnJSONMessage(c, http.StatusNotFound,
+			fmt.Errorf("Developer '%s' does not exist in org '%s'",
+				c.Param("developer"), c.Param("organization")))
 		return
 	}
 	var receivedAttributes struct {
