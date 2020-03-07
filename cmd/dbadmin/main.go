@@ -172,7 +172,7 @@ func (e *env) removeDuplicateAttributes(attributes []types.AttributeKeyValues) [
 
 // GeneratePrimaryKeyOfDeveloper creates unique primary key for developer db row
 func (e *env) GeneratePrimaryKeyOfDeveloper(organization, developer string) string {
-	return (fmt.Sprintf("%s@@@%x", organization, uniuri.New()))
+	return (fmt.Sprintf("%s@@@%s", organization, uniuri.New()))
 }
 
 // GenerateDeveloperAppPrimaryKey creates unique primary key for developer app row
@@ -182,15 +182,15 @@ func (e *env) GenerateDeveloperAppPrimaryKey() string {
 
 // GeneratePrimaryKeyOfDeveloper creates unique primary key for developer db row
 func (e *env) GenerateDeveloperAppID(organization, primaryKey string) string {
-	return (fmt.Sprintf("%s@@@%x", organization, primaryKey))
+	return (fmt.Sprintf("%s@@@%s", organization, primaryKey))
 }
 
-// GenerateCredentialConsumerKey returns a random key (32 character base62)
+// GenerateCredentialConsumerKey returns a random string to be used as apikey (32 character base62)
 func (e *env) GenerateCredentialConsumerKey() string {
 	return uniuri.NewLen(32)
 }
 
-// GenerateCredentialConsumerSecret returns a random key (16 character base62)
+// GenerateCredentialConsumerSecret returns a random string to be used as consumer key (16 character base62)
 func (e *env) GenerateCredentialConsumerSecret() string {
 	return uniuri.New()
 }

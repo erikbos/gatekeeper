@@ -22,7 +22,7 @@ func (d *Database) GetOrganizations() ([]types.Organization, error) {
 		return organizations, nil
 	}
 	d.metricsQueryMiss(organizationMetricLabel)
-	return organizations, errors.New("Could not retrieve list of organization")
+	return organizations, errors.New("Can not retrieve list of organizations")
 }
 
 //GetOrganizationByName retrieves an organization from database
@@ -35,7 +35,8 @@ func (d *Database) GetOrganizationByName(organizationName string) (types.Organiz
 		return organizations[0], nil
 	}
 	d.metricsQueryMiss(organizationMetricLabel)
-	return types.Organization{}, fmt.Errorf("Could not find organization")
+	return types.Organization{},
+		fmt.Errorf("Can not find organization (%s)", organizationName)
 }
 
 // runGetOrganizationQuery executes CQL query and returns resultset
@@ -82,7 +83,7 @@ func (d *Database) UpdateOrganizationByName(updatedOrganization types.Organizati
 	if err == nil {
 		return nil
 	}
-	return fmt.Errorf("Could not update organization (%v)", err)
+	return fmt.Errorf("Can not update organization (%v)", err)
 }
 
 //DeleteOrganizationByName deletes an organization

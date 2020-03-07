@@ -45,7 +45,7 @@ type DeveloperApp struct {
 	CreatedAt        int64                `json:"createdAt"`
 	CreatedBy        string               `json:"createdBy"`
 	Credentials      []AppCredential      `json:"credentials"`
-	DisplayName      string               `json:"displayName" binding:"required"`
+	DisplayName      string               `json:"displayName"`
 	LastmodifiedAt   int64                `json:"lastmodifiedAt"`
 	LastmodifiedBy   string               `json:"lastmodifiedBy"`
 	Name             string               `json:"name" binding:"required"`

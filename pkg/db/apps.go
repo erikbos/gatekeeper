@@ -1,7 +1,6 @@
 package db
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/erikbos/apiauth/pkg/types"
@@ -18,7 +17,8 @@ func (d *Database) GetDeveloperAppsByOrganization(organizationName string) ([]ty
 		return developerapps, nil
 	}
 	d.dbLookupMissesCounter.WithLabelValues(d.Hostname, "apps").Inc()
-	return developerapps, errors.New("Could not find developer by name")
+	return developerapps,
+		fmt.Errorf("Can not find developers in organization %s", organizationName)
 }
 
 //GetDeveloperAppByName returns details of a DeveloperApplication looked up by Name
@@ -31,7 +31,8 @@ func (d *Database) GetDeveloperAppByName(organization, developerAppName string) 
 		return developerapps[0], nil
 	}
 	d.dbLookupMissesCounter.WithLabelValues(d.Hostname, "apps").Inc()
-	return types.DeveloperApp{}, errors.New("Could not find developer by name")
+	return types.DeveloperApp{},
+		fmt.Errorf("Can not find developer app (%s)", developerAppName)
 }
 
 //GetDeveloperAppByID returns details of a DeveloperApplication looked up by ID
@@ -44,7 +45,8 @@ func (d *Database) GetDeveloperAppByID(organization, developerAppID string) (typ
 		return developerapps[0], nil
 	}
 	d.dbLookupMissesCounter.WithLabelValues(d.Hostname, "apps").Inc()
-	return types.DeveloperApp{}, errors.New("Could not find developer by app id")
+	return types.DeveloperApp{},
+		fmt.Errorf("Can not find developer app id (%s)", developerAppID)
 }
 
 //GetDeveloperAppCountByDeveloperID retrieves number of apps belonging to a developer
@@ -110,15 +112,15 @@ func (d *Database) UpdateDeveloperAppByName(updatedDeveloperApp types.DeveloperA
 	if err == nil {
 		return nil
 	}
-	return fmt.Errorf("Could not update developer app (%v)", err)
+	return fmt.Errorf("Can not update developer app (%v)", err)
 }
 
-//DeleteDeveloperAppByName deletes an developer app
-func (d *Database) DeleteDeveloperAppByName(organizationName, developerAppName string) error {
-	_, err := d.GetDeveloperAppByName(organizationName, developerAppName)
+//DeleteDeveloperAppByID deletes an developer app
+func (d *Database) DeleteDeveloperAppByID(organizationName, developerAppID string) error {
+	_, err := d.GetDeveloperAppByID(organizationName, developerAppID)
 	if err != nil {
 		return err
 	}
 	query := "DELETE FROM apps WHERE key = ?"
-	return d.cassandraSession.Query(query, developerAppName).Exec()
+	return d.cassandraSession.Query(query, developerAppID).Exec()
 }

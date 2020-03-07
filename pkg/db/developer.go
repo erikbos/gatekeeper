@@ -1,7 +1,6 @@
 package db
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/erikbos/apiauth/pkg/types"
@@ -21,7 +20,9 @@ func (d *Database) GetDevelopersByOrganization(organizationName string) ([]types
 		return developers, nil
 	}
 	d.metricsQueryMiss(developerMetricLabel)
-	return developers, errors.New("Could not retrieve list of developers")
+	return developers,
+		fmt.Errorf("Could not retrieve list of developers in organization %s",
+			organizationName)
 }
 
 //GetDeveloperCountByOrganization retrieves number of developer belonging to an organization
@@ -50,7 +51,7 @@ func (d *Database) GetDeveloperByEmail(developerOrganization, developerEmail str
 		return developers[0], nil
 	}
 	d.metricsQueryMiss(developerMetricLabel)
-	return types.Developer{}, fmt.Errorf("Could not find developer (%s)", developerEmail)
+	return types.Developer{}, fmt.Errorf("Can not find developer (%s)", developerEmail)
 }
 
 //GetDeveloperByID retrieves a developer from database
@@ -63,7 +64,7 @@ func (d *Database) GetDeveloperByID(developerID string) (types.Developer, error)
 		return developers[0], nil
 	}
 	d.metricsQueryMiss(developerMetricLabel)
-	return types.Developer{}, fmt.Errorf("Could not find developerId (%s)", developerID)
+	return types.Developer{}, fmt.Errorf("Can not find developerId (%s)", developerID)
 }
 
 // runDeveloperQuery executes CQL query and returns resultset
@@ -126,7 +127,7 @@ func (d *Database) UpdateDeveloperByName(updatedDeveloper types.Developer) error
 	if err == nil {
 		return nil
 	}
-	return fmt.Errorf("Could not update developer (%v)", err)
+	return fmt.Errorf("Can not update developer (%v)", err)
 }
 
 //DeleteDeveloperByEmail deletes a developer

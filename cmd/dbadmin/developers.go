@@ -100,6 +100,8 @@ func (e *env) PostCreateDeveloper(c *gin.Context) {
 		newDeveloper.Email)
 	// Dedup provided attributes
 	newDeveloper.Attributes = e.removeDuplicateAttributes(newDeveloper.Attributes)
+	// Developer starts without any apps
+	newDeveloper.Apps = nil
 	// New developers starts actived
 	newDeveloper.Status = "active"
 	newDeveloper.CreatedBy = e.whoAmI()
@@ -296,8 +298,10 @@ func (e *env) DeleteDeveloperByEmail(c *gin.Context) {
 			fmt.Errorf("Could not retrieve number of developerapps of developer (%s)",
 				developer.Email))
 	case 0:
-		// Not yet
-		// e.db.DeleteDeveloperByEmail(c.Param("organization"), developer.Email)
+		if err := e.db.DeleteDeveloperByEmail(c.Param("organization"), developer.Email); err != nil {
+			e.returnJSONMessage(c, http.StatusBadRequest, err)
+			return
+		}
 		c.IndentedJSON(http.StatusOK, developer)
 	default:
 		e.returnJSONMessage(c, http.StatusForbidden,

@@ -2,9 +2,8 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
-
-	log "github.com/sirupsen/logrus"
 
 	"github.com/erikbos/apiauth/pkg/types"
 	"github.com/gin-gonic/gin"
@@ -136,7 +135,7 @@ func (e *env) GetDeveloperAppAttributeByName(c *gin.Context) {
 		fmt.Errorf("Could not retrieve attribute '%s'", c.Param("attribute")))
 }
 
-// PostCreateDeveloperApp updates an existing developer
+// PostCreateDeveloperApp creates a developer application
 func (e *env) PostCreateDeveloperApp(c *gin.Context) {
 	var newDeveloperApp types.DeveloperApp
 	if err := c.ShouldBindJSON(&newDeveloperApp); err != nil {
@@ -162,8 +161,8 @@ func (e *env) PostCreateDeveloperApp(c *gin.Context) {
 	newDeveloperApp.Attributes = e.removeDuplicateAttributes(newDeveloperApp.Attributes)
 	// New developers starts actived
 	newDeveloperApp.Status = "active"
-	newDeveloperApp.CreatedBy = e.whoAmI()
 	newDeveloperApp.CreatedAt = e.getCurrentTimeMilliseconds()
+	newDeveloperApp.CreatedBy = e.whoAmI()
 	newDeveloperApp.LastmodifiedAt = newDeveloperApp.CreatedAt
 	newDeveloperApp.LastmodifiedBy = e.whoAmI()
 	newDeveloperApp.ParentID = developer.DeveloperID
@@ -172,18 +171,31 @@ func (e *env) PostCreateDeveloperApp(c *gin.Context) {
 		e.returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
+	// Update developer.apps entry with new app
+	developer.Apps = append(developer.Apps, newDeveloperApp.Name)
+	developer.LastmodifiedAt = e.getCurrentTimeMilliseconds()
+	developer.LastmodifiedBy = e.whoAmI()
+	if err := e.db.UpdateDeveloperByName(developer); err != nil {
+		e.returnJSONMessage(c, http.StatusBadRequest, err)
+		return
+	}
 	c.IndentedJSON(http.StatusOK, newDeveloperApp)
 }
 
 // PostDeveloperApp updates an existing developer
 func (e *env) PostDeveloperApp(c *gin.Context) {
+	developer, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
+	if err != nil {
+		e.returnJSONMessage(c, http.StatusNotFound, err)
+		return
+	}
 	currentDeveloperApp, err := e.db.GetDeveloperAppByName(c.Param("organization"), c.Param("application"))
 	if err != nil {
 		e.returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
 	// Developer and DeveloperApp need to be linked to eachother #nosqlintegritycheck
-	if c.Param("developer") != currentDeveloperApp.ParentID {
+	if developer.DeveloperID != currentDeveloperApp.ParentID {
 		e.returnJSONMessage(c, http.StatusNotFound, fmt.Errorf("Developer and application records do not have the same DevID"))
 		return
 	}
@@ -195,10 +207,10 @@ func (e *env) PostDeveloperApp(c *gin.Context) {
 	// We don't allow POSTing to update developer X while body says to update developer Y
 	updatedDeveloperApp.AppID = currentDeveloperApp.AppID
 	updatedDeveloperApp.DeveloperAppID = currentDeveloperApp.DeveloperAppID
-	updatedDeveloperApp.Name = currentDeveloperApp.Name
 	updatedDeveloperApp.ParentID = currentDeveloperApp.ParentID
 	updatedDeveloperApp.ParentStatus = currentDeveloperApp.ParentStatus
 
+	updatedDeveloperApp.Name = currentDeveloperApp.Name
 	updatedDeveloperApp.Attributes = e.removeDuplicateAttributes(updatedDeveloperApp.Attributes)
 	updatedDeveloperApp.LastmodifiedAt = e.getCurrentTimeMilliseconds()
 	updatedDeveloperApp.LastmodifiedBy = e.whoAmI()
@@ -366,19 +378,36 @@ func (e *env) DeleteDeveloperAppByName(c *gin.Context) {
 		return
 	}
 	AppCredentialCount := e.db.GetAppCredentialCountByDeveloperAppID(developerApp.DeveloperAppID)
-	log.Printf("apikey count: %d", AppCredentialCount)
-	switch AppCredentialCount {
-	case -1:
+	if AppCredentialCount == -1 {
 		e.returnJSONMessage(c, http.StatusInternalServerError,
 			fmt.Errorf("Could not retrieve number of developerapps of developer (%s)",
 				developer.Email))
-	case 0:
-		// Not yet
-		// e.db.DeleteDeveloperAppByName(developerApp.OrganizationName, developerApp.Name)
-		c.IndentedJSON(http.StatusOK, developerApp)
-	default:
+		return
+	}
+	if AppCredentialCount > 0 {
 		e.returnJSONMessage(c, http.StatusForbidden,
 			fmt.Errorf("Cannot delete developer app '%s' with %d apikeys",
 				developerApp.Name, AppCredentialCount))
+		return
 	}
+	err = e.db.DeleteDeveloperAppByID(developerApp.OrganizationName, developerApp.DeveloperAppID)
+	if err != nil {
+		e.returnJSONMessage(c, http.StatusBadRequest, err)
+		return
+	}
+	log.Printf("Do it")
+	// Remove app from developer.apps array and update developer
+	for i := 0; i < len(developer.Apps); i++ {
+		if developer.Apps[i] == c.Param("application") {
+			developer.Apps = append(developer.Apps[:i], developer.Apps[i+1:]...)
+			i-- // form the remove item index to start iterate next item
+		}
+	}
+	developerApp.LastmodifiedAt = e.getCurrentTimeMilliseconds()
+	developerApp.LastmodifiedBy = e.whoAmI()
+	if err := e.db.UpdateDeveloperByName(developer); err != nil {
+		e.returnJSONMessage(c, http.StatusBadRequest, err)
+		return
+	}
+	c.IndentedJSON(http.StatusOK, developerApp)
 }

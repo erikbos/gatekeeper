@@ -23,11 +23,10 @@ func (d *Database) GetAppCredentialByKey(key string) (types.AppCredential, error
 		return appcredentials[0], nil
 	}
 	d.dbLookupMissesCounter.WithLabelValues(d.Hostname, "app_credentials").Inc()
-	return types.AppCredential{}, fmt.Errorf("Could not find apikey '%s'", key)
+	return types.AppCredential{}, fmt.Errorf("Can not find apikey '%s'", key)
 }
 
 //GetAppCredentialByDeveloperAppID returns an array with apikey details of a developer app
-// FIXME contains LIMIT
 func (d *Database) GetAppCredentialByDeveloperAppID(organizationAppID string) ([]types.AppCredential, error) {
 	var appcredentials []types.AppCredential
 
@@ -39,7 +38,7 @@ func (d *Database) GetAppCredentialByDeveloperAppID(organizationAppID string) ([
 		return appcredentials, nil
 	}
 	d.dbLookupMissesCounter.WithLabelValues(d.Hostname, "app_credentials").Inc()
-	return appcredentials, fmt.Errorf("Could not find apikeys of developer app '%s'", organizationAppID)
+	return appcredentials, nil
 }
 
 //GetAppCredentialCountByDeveloperAppID retrieves number of keys beloning to developer app
@@ -107,7 +106,7 @@ func (d *Database) UpdateAppCredentialByKey(updatedAppCredential types.AppCreden
 	if err == nil {
 		return nil
 	}
-	return fmt.Errorf("Could not update appcredential (%v)", err)
+	return fmt.Errorf("Can not update appcredential (%v)", err)
 }
 
 //DeleteAppCredentialByKey deletes a developer
