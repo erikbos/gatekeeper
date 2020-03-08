@@ -42,6 +42,7 @@ func (e *env) GetAllDevelopers(c *gin.Context) {
 func (e *env) GetDeveloperByEmail(c *gin.Context) {
 	developer, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
 	if err != nil {
+		log.Printf("e %s", err)
 		e.returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
@@ -123,19 +124,12 @@ func (e *env) PostDeveloper(c *gin.Context) {
 		e.returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
-	// We don't allow updating developer whom is member of a different organization
-	if c.Param("organization") != currentDeveloper.OrganizationName {
-		e.returnJSONMessage(c, http.StatusNotFound,
-			fmt.Errorf("Developer '%s' does not exist in org '%s'",
-				c.Param("developer"), c.Param("organization")))
-		return
-	}
 	var updatedDeveloper types.Developer
 	if err := c.ShouldBindJSON(&updatedDeveloper); err != nil {
 		e.returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
-	// We don't allow POSTing to update developer X while body says to update developer Y
+	// We don't allow POSTing to update developer X while body says to update developer Y ;-)
 	updatedDeveloper.Email = currentDeveloper.Email
 	updatedDeveloper.DeveloperID = currentDeveloper.DeveloperID
 	updatedDeveloper.OrganizationName = currentDeveloper.OrganizationName
@@ -154,13 +148,6 @@ func (e *env) PostDeveloperAttributes(c *gin.Context) {
 	updatedDeveloper, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
 	if err != nil {
 		e.returnJSONMessage(c, http.StatusNotFound, err)
-		return
-	}
-	// We don't allow updating developer whom is member of a different organization
-	if c.Param("organization") != updatedDeveloper.OrganizationName {
-		e.returnJSONMessage(c, http.StatusNotFound,
-			fmt.Errorf("Developer '%s' does not exist in org '%s'",
-				c.Param("developer"), c.Param("organization")))
 		return
 	}
 	var receivedAttributes struct {
@@ -187,11 +174,6 @@ func (e *env) DeleteDeveloperAttributes(c *gin.Context) {
 		e.returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
-	// We don't allow updating developer whom is member of a different organization
-	if c.Param("organization") != updatedDeveloper.OrganizationName {
-		e.returnJSONMessage(c, http.StatusNotFound, fmt.Errorf("Developer '%s' does not exist in org '%s'", c.Param("developer"), c.Param("organization")))
-		return
-	}
 	deletedAttributes := updatedDeveloper.Attributes
 	updatedDeveloper.Attributes = nil
 	updatedDeveloper.LastmodifiedAt = e.getCurrentTimeMilliseconds()
@@ -210,11 +192,6 @@ func (e *env) PostDeveloperAttributeByName(c *gin.Context) {
 		e.returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
-	// We don't allow updating developer whom is member of a different organization
-	if c.Param("organization") != updatedDeveloper.OrganizationName {
-		e.returnJSONMessage(c, http.StatusNotFound, fmt.Errorf("Developer '%s' does not exist in org '%s'", c.Param("developer"), c.Param("organization")))
-		return
-	}
 	attributeToUpdate := c.Param("attribute")
 	var receivedValue struct {
 		Value string `json:"value"`
@@ -227,7 +204,7 @@ func (e *env) PostDeveloperAttributeByName(c *gin.Context) {
 	attributeToUpdateIndex := e.findAttributePositionInAttributeArray(
 		updatedDeveloper.Attributes, attributeToUpdate)
 	if attributeToUpdateIndex == -1 {
-		// We did not find exist attribute, append new attribute
+		// We did not find existing attribute, append new attribute
 		updatedDeveloper.Attributes = append(updatedDeveloper.Attributes,
 			types.AttributeKeyValues{Name: attributeToUpdate, Value: receivedValue.Value})
 	} else {
@@ -248,11 +225,6 @@ func (e *env) DeleteDeveloperAttributeByName(c *gin.Context) {
 	updatedDeveloper, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
 	if err != nil {
 		e.returnJSONMessage(c, http.StatusNotFound, err)
-		return
-	}
-	// We don't allow updating developer whom is member of a different organization
-	if c.Param("organization") != updatedDeveloper.OrganizationName {
-		e.returnJSONMessage(c, http.StatusNotFound, fmt.Errorf("Developer '%s' does not exist in org '%s'", c.Param("developer"), c.Param("organization")))
 		return
 	}
 	// Find attribute in array
@@ -284,21 +256,14 @@ func (e *env) DeleteDeveloperByEmail(c *gin.Context) {
 		e.returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
-	// We don't allow updating developer whom is member of a different organization
-	if c.Param("organization") != developer.OrganizationName {
-		e.returnJSONMessage(c, http.StatusNotFound,
-			fmt.Errorf("Developer '%s' does not exist in org '%s'", c.Param("developer"), c.Param("organization")))
-		return
-	}
 	developerAppCount := e.db.GetDeveloperAppCountByDeveloperID(developer.DeveloperID)
-	log.Printf("count: %d", developerAppCount)
 	switch developerAppCount {
 	case -1:
 		e.returnJSONMessage(c, http.StatusInternalServerError,
 			fmt.Errorf("Could not retrieve number of developerapps of developer (%s)",
 				developer.Email))
 	case 0:
-		if err := e.db.DeleteDeveloperByEmail(c.Param("organization"), developer.Email); err != nil {
+		if err := e.db.DeleteDeveloperByEmail(developer.OrganizationName, developer.Email); err != nil {
 			e.returnJSONMessage(c, http.StatusBadRequest, err)
 			return
 		}

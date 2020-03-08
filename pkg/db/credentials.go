@@ -8,16 +8,15 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-//Prometheus label for metrics of db interactions
+// Prometheus label for metrics of db interactions
 const appCrendetialsMetricLabel = "appcredentials"
 
-//GetAppCredentialByKey returns details of a single apikey
-//
-func (d *Database) GetAppCredentialByKey(key string) (types.AppCredential, error) {
+// GetAppCredentialByKey returns details of a single apikey
+func (d *Database) GetAppCredentialByKey(organizationName, key string) (types.AppCredential, error) {
 	var appcredentials []types.AppCredential
 
-	query := "SELECT * FROM app_credentials WHERE key = ? LIMIT 1"
-	appcredentials = d.runGetAppCredentialQuery(query, key)
+	query := "SELECT * FROM app_credentials WHERE key = ? AND organization_name = ? LIMIT 1"
+	appcredentials = d.runGetAppCredentialQuery(query, key, organizationName)
 	if len(appcredentials) == 0 {
 		d.metricsQueryMiss(appCrendetialsMetricLabel)
 		return types.AppCredential{}, fmt.Errorf("Can not find apikey '%s'", key)
@@ -26,11 +25,10 @@ func (d *Database) GetAppCredentialByKey(key string) (types.AppCredential, error
 	return appcredentials[0], nil
 }
 
-//GetAppCredentialByDeveloperAppID returns an array with apikey details of a developer app
+// GetAppCredentialByDeveloperAppID returns an array with apikey details of a developer app
 func (d *Database) GetAppCredentialByDeveloperAppID(organizationAppID string) ([]types.AppCredential, error) {
 	var appcredentials []types.AppCredential
 
-	// FIXME hardcoded row limit
 	query := "SELECT * FROM app_credentials WHERE organization_app_id = ?"
 	appcredentials = d.runGetAppCredentialQuery(query, organizationAppID)
 	if len(appcredentials) == 0 {
@@ -42,8 +40,7 @@ func (d *Database) GetAppCredentialByDeveloperAppID(organizationAppID string) ([
 	return appcredentials, nil
 }
 
-//GetAppCredentialCountByDeveloperAppID retrieves number of keys beloning to developer app
-//
+// GetAppCredentialCountByDeveloperAppID retrieves number of keys beloning to developer app
 func (d *Database) GetAppCredentialCountByDeveloperAppID(developerAppID string) int {
 	var AppCredentialCount int
 	query := "SELECT count(*) FROM app_credentials WHERE organization_app_id = ?"
@@ -55,15 +52,14 @@ func (d *Database) GetAppCredentialCountByDeveloperAppID(developerAppID string) 
 	return AppCredentialCount
 }
 
-//runAppCredentialQuery executes CQL query and returns resulset
-//
-func (d *Database) runGetAppCredentialQuery(query, queryParameter string) []types.AppCredential {
+// runAppCredentialQuery executes CQL query and returns resulset
+func (d *Database) runGetAppCredentialQuery(query string, queryParameters ...interface{}) []types.AppCredential {
 	var appcredentials []types.AppCredential
 
 	timer := prometheus.NewTimer(d.dbLookupHistogram)
 	defer timer.ObserveDuration()
 
-	iterable := d.cassandraSession.Query(query, queryParameter).Iter()
+	iterable := d.cassandraSession.Query(query, queryParameters...).Iter()
 	m := make(map[string]interface{})
 	for iterable.MapScan(m) {
 		appcredential := types.AppCredential{
@@ -92,7 +88,6 @@ func (d *Database) runGetAppCredentialQuery(query, queryParameter string) []type
 }
 
 // UpdateAppCredentialByKey UPSERTs appcredentials in database
-// Upsert is: In case a developer does not exist (primary key not matching) it will create a new row
 func (d *Database) UpdateAppCredentialByKey(updatedAppCredential types.AppCredential) error {
 	query := "INSERT INTO app_credentials (key,api_products,attributes," +
 		"consumer_secret,expires_at,issued_at," +
@@ -111,10 +106,9 @@ func (d *Database) UpdateAppCredentialByKey(updatedAppCredential types.AppCreden
 	return nil
 }
 
-//DeleteAppCredentialByKey deletes a developer
-//
-func (d *Database) DeleteAppCredentialByKey(consumerKey string) error {
-	_, err := d.GetAppCredentialByKey(consumerKey)
+// DeleteAppCredentialByKey deletes a developer
+func (d *Database) DeleteAppCredentialByKey(organizationName, consumerKey string) error {
+	_, err := d.GetAppCredentialByKey(organizationName, consumerKey)
 	if err != nil {
 		return err
 	}

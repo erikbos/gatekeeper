@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/erikbos/apiauth/pkg/types"
@@ -17,9 +16,9 @@ func (e *env) registerCredentialRoutes(r *gin.Engine) {
 	r.DELETE("/v1/organizations/:organization/developers/:developer/apps/:application/keys/:key", e.DeleteDeveloperAppKeyByKey)
 }
 
-// GetDeveloperAppByKey returns keys of one particular developer application
+// GetDeveloperAppByKey returns all keys of one particular developer application
 func (e *env) GetDeveloperAppKeys(c *gin.Context) {
-	developer, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
+	_, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
 	if err != nil {
 		e.returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -27,12 +26,6 @@ func (e *env) GetDeveloperAppKeys(c *gin.Context) {
 	developerApp, err := e.db.GetDeveloperAppByName(c.Param("organization"), c.Param("application"))
 	if err != nil {
 		e.returnJSONMessage(c, http.StatusNotFound, err)
-		return
-	}
-	// Developer and DeveloperApp need to be linked to eachother #nosqlintegritycheck
-	if developer.DeveloperID != developerApp.ParentID {
-		e.returnJSONMessage(c, http.StatusNotFound,
-			fmt.Errorf("Developer and application records do not have the same DevID"))
 		return
 	}
 	AppCredentials, err := e.db.GetAppCredentialByDeveloperAppID(developerApp.DeveloperAppID)
@@ -43,25 +36,19 @@ func (e *env) GetDeveloperAppKeys(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, gin.H{"credentials": AppCredentials})
 }
 
-// GetDeveloperAppByKey returns keys of one particular developer application
+// GetDeveloperAppByKey returns one key of one particular developer application
 func (e *env) GetDeveloperAppKeyByKey(c *gin.Context) {
-	developer, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
+	_, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
 	if err != nil {
 		e.returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
-	developerApp, err := e.db.GetDeveloperAppByName(c.Param("organization"), c.Param("application"))
+	_, err = e.db.GetDeveloperAppByName(c.Param("organization"), c.Param("application"))
 	if err != nil {
 		e.returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
-	// Developer and DeveloperApp need to be linked to eachother #nosqlintegritycheck
-	if developer.DeveloperID != developerApp.ParentID {
-		e.returnJSONMessage(c, http.StatusNotFound,
-			fmt.Errorf("Developer and application records do not have the same DevID"))
-		return
-	}
-	AppCredential, err := e.db.GetAppCredentialByKey(c.Param("key"))
+	AppCredential, err := e.db.GetAppCredentialByKey(c.Param("organization"), c.Param("key"))
 	if err != nil {
 		e.returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -79,20 +66,9 @@ func (e *env) PostCreateDeveloperAppKey(c *gin.Context) {
 	// 	e.returnJSONMessage(c, http.StatusBadRequest, err)
 	// 	return
 	// }
-	developer, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
-	if err != nil {
-		e.returnJSONMessage(c, http.StatusNotFound, err)
-		return
-	}
 	developerApp, err := e.db.GetDeveloperAppByName(c.Param("organization"), c.Param("application"))
 	if err != nil {
 		e.returnJSONMessage(c, http.StatusNotFound, err)
-		return
-	}
-	// Developer and DeveloperApp need to be linked to eachother #nosqlintegritycheck
-	if developer.DeveloperID != developerApp.ParentID {
-		e.returnJSONMessage(c, http.StatusNotFound,
-			fmt.Errorf("Developer and application records do not have the same DevID"))
 		return
 	}
 	var newAppCredential types.AppCredential
@@ -119,23 +95,7 @@ func (e *env) PostUpdateDeveloperAppKeyByKey(c *gin.Context) {
 		e.returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
-	developer, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
-	if err != nil {
-		e.returnJSONMessage(c, http.StatusNotFound, err)
-		return
-	}
-	developerApp, err := e.db.GetDeveloperAppByName(c.Param("organization"), c.Param("application"))
-	if err != nil {
-		e.returnJSONMessage(c, http.StatusNotFound, err)
-		return
-	}
-	// Developer and DeveloperApp need to be linked to eachother #nosqlintegritycheck
-	if developer.DeveloperID != developerApp.ParentID {
-		e.returnJSONMessage(c, http.StatusNotFound,
-			fmt.Errorf("Developer and application records do not have the same DevID"))
-		return
-	}
-	AppCredential, err := e.db.GetAppCredentialByKey(c.Param("key"))
+	AppCredential, err := e.db.GetAppCredentialByKey(c.Param("organization"), c.Param("key"))
 	if err != nil {
 		e.returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -154,12 +114,12 @@ func (e *env) PostUpdateDeveloperAppKeyByKey(c *gin.Context) {
 
 // DeleteDeveloperAppKeyByKey deletes apikey of developer app
 func (e *env) DeleteDeveloperAppKeyByKey(c *gin.Context) {
-	AppCredential, err := e.db.GetAppCredentialByKey(c.Param("key"))
+	AppCredential, err := e.db.GetAppCredentialByKey(c.Param("organization"), c.Param("key"))
 	if err != nil {
 		e.returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
-	if err := e.db.DeleteAppCredentialByKey(c.Param("key")); err != nil {
+	if err := e.db.DeleteAppCredentialByKey(c.Param("organization"), c.Param("key")); err != nil {
 		e.returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}

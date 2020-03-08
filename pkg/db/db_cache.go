@@ -15,8 +15,7 @@ import (
 // - cleaner way to wrap the real db look functions?
 // - uses one freecache instance to store developer, app, appcredentials
 
-//Cache holds all details of our cached database records and cache performance counters
-//
+// Cache holds all details of our cached database records and cache performance counters
 type Cache struct {
 	cache                  *freecache.Cache
 	cacheTTL               int
@@ -110,7 +109,7 @@ func CacheInit(size, cachettl, negativettl int) *Cache {
 
 //GetAppCredentialCached retrieves entry from database (or cache if entry present)
 //
-func (c *Cache) GetAppCredentialCached(d *Database, key string) (types.AppCredential, error) {
+func (c *Cache) GetAppCredentialCached(d *Database, organization, key string) (types.AppCredential, error) {
 	var appcredential types.AppCredential
 	var err error
 
@@ -131,7 +130,7 @@ func (c *Cache) GetAppCredentialCached(d *Database, key string) (types.AppCreden
 	}
 
 	// No previous cache entry, let's fetch it from database
-	appcredential, err = d.GetAppCredentialByKey(key)
+	appcredential, err = d.GetAppCredentialByKey(organization, key)
 	if err != nil {
 		c.dbCacheMissesCounter.WithLabelValues("app_credentials").Inc()
 		return appcredential, nil

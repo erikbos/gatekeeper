@@ -7,11 +7,10 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-//Prometheus label for metrics of db interactions
+// Prometheus label for metrics of db interactions
 const developerMetricLabel = "developers"
 
-//GetDevelopersByOrganization retrieves all developer belonging to an organization
-//
+// GetDevelopersByOrganization retrieves all developer belonging to an organization
 func (d *Database) GetDevelopersByOrganization(organizationName string) ([]types.Developer, error) {
 	query := "SELECT * FROM developers WHERE organization_name = ? LIMIT 100 ALLOW FILTERING"
 	developers := d.runGetDeveloperQuery(query, organizationName)
@@ -24,11 +23,10 @@ func (d *Database) GetDevelopersByOrganization(organizationName string) ([]types
 	return developers, nil
 }
 
-//GetDeveloperCountByOrganization retrieves number of developer belonging to an organization
-//
+// GetDeveloperCountByOrganization retrieves number of developer belonging to an organization
 func (d *Database) GetDeveloperCountByOrganization(organizationName string) int {
 	var developerCount int
-	query := "SELECT count(*) FROM developers WHERE organization_name = ? LIMIT 10 ALLOW FILTERING"
+	query := "SELECT count(*) FROM developers WHERE organization_name = ? ALLOW FILTERING"
 	if err := d.cassandraSession.Query(query, organizationName).Scan(&developerCount); err != nil {
 		d.metricsQueryMiss(developerMetricLabel)
 		return -1
@@ -37,26 +35,19 @@ func (d *Database) GetDeveloperCountByOrganization(organizationName string) int 
 	return developerCount
 }
 
-//GetDeveloperByEmail retrieves a developer from database
-//
+// GetDeveloperByEmail retrieves a developer from database
 func (d *Database) GetDeveloperByEmail(developerOrganization, developerEmail string) (types.Developer, error) {
-	query := "SELECT * FROM developers WHERE email = ? LIMIT 1"
-	developers := d.runGetDeveloperQuery(query, developerEmail)
+	query := "SELECT * FROM developers WHERE organization_name = ? AND email = ? LIMIT 1 ALLOW FILTERING"
+	developers := d.runGetDeveloperQuery(query, developerOrganization, developerEmail)
 	if len(developers) == 0 {
 		d.metricsQueryMiss(developerMetricLabel)
 		return types.Developer{}, fmt.Errorf("Can not find developer (%s)", developerEmail)
 	}
 	d.metricsQueryHit(developerMetricLabel)
-	// Check of record of developer matches the required org
-	if developers[0].OrganizationName != developerOrganization {
-		return types.Developer{},
-			fmt.Errorf("Developer %s does not exist in org %s", developerEmail, developerOrganization)
-	}
 	return developers[0], nil
 }
 
-//GetDeveloperByID retrieves a developer from database
-//
+// GetDeveloperByID retrieves a developer from database
 func (d *Database) GetDeveloperByID(developerID string) (types.Developer, error) {
 	query := "SELECT * FROM developers WHERE key = ? LIMIT 1"
 	developers := d.runGetDeveloperQuery(query, developerID)
@@ -69,15 +60,14 @@ func (d *Database) GetDeveloperByID(developerID string) (types.Developer, error)
 }
 
 // runDeveloperQuery executes CQL query and returns resultset
-//
-func (d *Database) runGetDeveloperQuery(query, queryParameter string) []types.Developer {
+func (d *Database) runGetDeveloperQuery(query string, queryParameters ...interface{}) []types.Developer {
 	var developers []types.Developer
 
 	timer := prometheus.NewTimer(d.dbLookupHistogram)
 	defer timer.ObserveDuration()
 
 	// Run query, and transfer in 100 row chunks
-	iterable := d.cassandraSession.Query(query, queryParameter).PageSize(100).Iter()
+	iterable := d.cassandraSession.Query(query, queryParameters...).PageSize(100).Iter()
 	m := make(map[string]interface{})
 
 	// from https://github.com/uber/cherami-server/blob/1de31a4ed1d0a9cd33ff64199f7e91f23e99c11e/cmd/tools/cmq/fix.go
@@ -109,7 +99,6 @@ func (d *Database) runGetDeveloperQuery(query, queryParameter string) []types.De
 }
 
 // UpdateDeveloperByName UPSERTs a developer in database
-// Upsert is: In case a developer does not exist (primary key not matching) it will create a new row
 func (d *Database) UpdateDeveloperByName(updatedDeveloper types.Developer) error {
 	query := "INSERT INTO developers (key,apps,attributes," +
 		"created_at,created_by, email," +
@@ -130,8 +119,7 @@ func (d *Database) UpdateDeveloperByName(updatedDeveloper types.Developer) error
 	return nil
 }
 
-//DeleteDeveloperByEmail deletes a developer
-//
+// DeleteDeveloperByEmail deletes a developer
 func (d *Database) DeleteDeveloperByEmail(organizationName, developerEmail string) error {
 	developer, err := d.GetDeveloperByEmail(organizationName, developerEmail)
 	if err != nil {

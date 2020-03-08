@@ -7,13 +7,12 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-//Prometheus label for metrics of db interactions
+// Prometheus label for metrics of db interactions
 const appsMetricLabel = "apps"
 
-//GetDeveloperAppsByOrganization retrieves all developer belonging to an organization
-// FIXME
+// GetDeveloperAppsByOrganization retrieves all developer apps belonging to an organization
 func (d *Database) GetDeveloperAppsByOrganization(organizationName string) ([]types.DeveloperApp, error) {
-	query := "SELECT * FROM apps WHERE organization_name = ? LIMIT 10 ALLOW FILTERING"
+	query := "SELECT * FROM apps WHERE organization_name = ? ALLOW FILTERING"
 	developerapps := d.runGetDeveloperAppQuery(query, organizationName)
 	if len(developerapps) == 0 {
 		d.metricsQueryMiss(appsMetricLabel)
@@ -24,11 +23,10 @@ func (d *Database) GetDeveloperAppsByOrganization(organizationName string) ([]ty
 	return developerapps, nil
 }
 
-//GetDeveloperAppByName returns details of a DeveloperApplication looked up by Name
-//
+// GetDeveloperAppByName returns details of a developer app
 func (d *Database) GetDeveloperAppByName(organization, developerAppName string) (types.DeveloperApp, error) {
-	query := "SELECT * FROM apps WHERE name = ? LIMIT 1"
-	developerapps := d.runGetDeveloperAppQuery(query, developerAppName)
+	query := "SELECT * FROM apps WHERE organization_name = ? AND name = ? LIMIT 1"
+	developerapps := d.runGetDeveloperAppQuery(query, organization, developerAppName)
 	if len(developerapps) == 0 {
 		d.metricsQueryMiss(appsMetricLabel)
 		return types.DeveloperApp{},
@@ -38,8 +36,7 @@ func (d *Database) GetDeveloperAppByName(organization, developerAppName string) 
 	return developerapps[0], nil
 }
 
-//GetDeveloperAppByID returns details of a DeveloperApplication looked up by ID
-//
+// GetDeveloperAppByID returns details of a developer app
 func (d *Database) GetDeveloperAppByID(organization, developerAppID string) (types.DeveloperApp, error) {
 	query := "SELECT * FROM apps WHERE key = ? LIMIT 1"
 	developerapps := d.runGetDeveloperAppQuery(query, developerAppID)
@@ -52,8 +49,7 @@ func (d *Database) GetDeveloperAppByID(organization, developerAppID string) (typ
 	return developerapps[0], nil
 }
 
-//GetDeveloperAppCountByDeveloperID retrieves number of apps belonging to a developer
-//
+// GetDeveloperAppCountByDeveloperID retrieves number of apps belonging to a developer
 func (d *Database) GetDeveloperAppCountByDeveloperID(organizationName string) int {
 	var developerAppCount int
 	query := "SELECT count(*) FROM apps WHERE parent_id = ?"
@@ -65,13 +61,14 @@ func (d *Database) GetDeveloperAppCountByDeveloperID(organizationName string) in
 	return developerAppCount
 }
 
-func (d *Database) runGetDeveloperAppQuery(query, queryParameter string) []types.DeveloperApp {
+// runGetDeveloperAppQuery executes CQL query and returns resulset
+func (d *Database) runGetDeveloperAppQuery(query string, queryParameters ...interface{}) []types.DeveloperApp {
 	var developerapps []types.DeveloperApp
 
 	timer := prometheus.NewTimer(d.dbLookupHistogram)
 	defer timer.ObserveDuration()
 
-	iterable := d.cassandraSession.Query(query, queryParameter).Iter()
+	iterable := d.cassandraSession.Query(query, queryParameters...).Iter()
 	m := make(map[string]interface{})
 	for iterable.MapScan(m) {
 		developerapps = append(developerapps, types.DeveloperApp{
@@ -119,7 +116,7 @@ func (d *Database) UpdateDeveloperAppByName(updatedDeveloperApp types.DeveloperA
 	return fmt.Errorf("Can not update developer app (%v)", err)
 }
 
-//DeleteDeveloperAppByID deletes an developer app
+// DeleteDeveloperAppByID deletes an developer app
 func (d *Database) DeleteDeveloperAppByID(organizationName, developerAppID string) error {
 	_, err := d.GetDeveloperAppByID(organizationName, developerAppID)
 	if err != nil {

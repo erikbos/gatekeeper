@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/erikbos/apiauth/pkg/types"
@@ -37,7 +36,7 @@ func (e *env) GetAllDevelopersApps(c *gin.Context) {
 		e.returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
-	// Should we return full details or just an array with names?
+	// Should we return an array with names or full details?
 	if c.Query("expand") == "true" {
 		c.IndentedJSON(http.StatusOK, gin.H{"apps": developerapps})
 	} else {
@@ -66,12 +65,6 @@ func (e *env) GetDeveloperAppByName(c *gin.Context) {
 		e.returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
-	// Developer and DeveloperApp need to be linked to eachother #nosqlintegritycheck
-	if developerApp.OrganizationName != c.Param("organization") {
-		e.returnJSONMessage(c, http.StatusNotFound,
-			fmt.Errorf("Organization (%s) does not match with developerapp's organization", c.Param("organization")))
-		return
-	}
 	// All apikeys belonging to this developer app
 	AppCredentials, err := e.db.GetAppCredentialByDeveloperAppID(developerApp.DeveloperAppID)
 	if err != nil {
@@ -85,20 +78,14 @@ func (e *env) GetDeveloperAppByName(c *gin.Context) {
 
 // GetDeveloperAppAttributes returns attributes of a developer
 func (e *env) GetDeveloperAppAttributes(c *gin.Context) {
-	developer, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
-	if err != nil {
-		e.returnJSONMessage(c, http.StatusNotFound, err)
-		return
-	}
+	// developer, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
+	// if err != nil {
+	// 	e.returnJSONMessage(c, http.StatusNotFound, err)
+	// 	return
+	// }
 	developerApp, err := e.db.GetDeveloperAppByName(c.Param("organization"), c.Param("application"))
 	if err != nil {
 		e.returnJSONMessage(c, http.StatusNotFound, err)
-		return
-	}
-	// Developer and DeveloperApp need to be linked to eachother #nosqlintegritycheck
-	if developer.DeveloperID != developerApp.ParentID {
-		e.returnJSONMessage(c, http.StatusNotFound,
-			fmt.Errorf("Developer and application records do not have the same DevID"))
 		return
 	}
 	e.SetLastModified(c, developerApp.LastmodifiedAt)
@@ -107,20 +94,14 @@ func (e *env) GetDeveloperAppAttributes(c *gin.Context) {
 
 // GetDeveloperAttributeByName returns one particular attribute of a developer
 func (e *env) GetDeveloperAppAttributeByName(c *gin.Context) {
-	developer, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
-	if err != nil {
-		e.returnJSONMessage(c, http.StatusNotFound, err)
-		return
-	}
+	// developer, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
+	// if err != nil {
+	// 	e.returnJSONMessage(c, http.StatusNotFound, err)
+	// 	return
+	// }
 	developerApp, err := e.db.GetDeveloperAppByName(c.Param("organization"), c.Param("application"))
 	if err != nil {
 		e.returnJSONMessage(c, http.StatusNotFound, err)
-		return
-	}
-	// Developer and DeveloperApp need to be linked to eachother #nosqlintegritycheck
-	if developer.DeveloperID != developerApp.ParentID {
-		e.returnJSONMessage(c, http.StatusNotFound,
-			fmt.Errorf("Developer and application records do not have the same DevID"))
 		return
 	}
 	// lets find the attribute requested
@@ -184,21 +165,21 @@ func (e *env) PostCreateDeveloperApp(c *gin.Context) {
 
 // PostDeveloperApp updates an existing developer
 func (e *env) PostDeveloperApp(c *gin.Context) {
-	developer, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
-	if err != nil {
-		e.returnJSONMessage(c, http.StatusNotFound, err)
-		return
-	}
+	// developer, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
+	// if err != nil {
+	// 	e.returnJSONMessage(c, http.StatusNotFound, err)
+	// 	return
+	// }
 	currentDeveloperApp, err := e.db.GetDeveloperAppByName(c.Param("organization"), c.Param("application"))
 	if err != nil {
 		e.returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
-	// Developer and DeveloperApp need to be linked to eachother #nosqlintegritycheck
-	if developer.DeveloperID != currentDeveloperApp.ParentID {
-		e.returnJSONMessage(c, http.StatusNotFound, fmt.Errorf("Developer and application records do not have the same DevID"))
-		return
-	}
+	// // Developer and DeveloperApp need to be linked to eachother #nosqlintegritycheck
+	// if developer.DeveloperID != currentDeveloperApp.ParentID {
+	// 	e.returnJSONMessage(c, http.StatusNotFound, fmt.Errorf("Developer and application records do not have the same DevID"))
+	// 	return
+	// }
 	var updatedDeveloperApp types.DeveloperApp
 	if err := c.ShouldBindJSON(&updatedDeveloperApp); err != nil {
 		e.returnJSONMessage(c, http.StatusBadRequest, err)
@@ -223,21 +204,21 @@ func (e *env) PostDeveloperApp(c *gin.Context) {
 
 // PostDeveloperAppAttributes updates attribute of one particular app
 func (e *env) PostDeveloperAppAttributes(c *gin.Context) {
-	developer, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
-	if err != nil {
-		e.returnJSONMessage(c, http.StatusNotFound, err)
-		return
-	}
+	// developer, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
+	// if err != nil {
+	// 	e.returnJSONMessage(c, http.StatusNotFound, err)
+	// 	return
+	// }
 	developerApp, err := e.db.GetDeveloperAppByName(c.Param("organization"), c.Param("application"))
 	if err != nil {
 		e.returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
-	// Developer and DeveloperApp need to be linked to eachother #nosqlintegritycheck
-	if developer.DeveloperID != developerApp.ParentID {
-		e.returnJSONMessage(c, http.StatusNotFound, fmt.Errorf("Developer and application records do not have the same DevID"))
-		return
-	}
+	// // Developer and DeveloperApp need to be linked to eachother #nosqlintegritycheck
+	// if developer.DeveloperID != developerApp.ParentID {
+	// 	e.returnJSONMessage(c, http.StatusNotFound, fmt.Errorf("Developer and application records do not have the same DevID"))
+	// 	return
+	// }
 	var receivedAttributes struct {
 		Attributes []types.AttributeKeyValues `json:"attribute"`
 	}
@@ -257,21 +238,21 @@ func (e *env) PostDeveloperAppAttributes(c *gin.Context) {
 
 // DeleteDeveloperAppAttributes delete attributes of developer app
 func (e *env) DeleteDeveloperAppAttributes(c *gin.Context) {
-	developer, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
-	if err != nil {
-		e.returnJSONMessage(c, http.StatusNotFound, err)
-		return
-	}
+	// developer, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
+	// if err != nil {
+	// 	e.returnJSONMessage(c, http.StatusNotFound, err)
+	// 	return
+	// }
 	developerApp, err := e.db.GetDeveloperAppByName(c.Param("organization"), c.Param("application"))
 	if err != nil {
 		e.returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
-	// Developer and DeveloperApp need to be linked to eachother #nosqlintegritycheck
-	if developer.DeveloperID != developerApp.ParentID {
-		e.returnJSONMessage(c, http.StatusNotFound, fmt.Errorf("Developer and application records do not have the same DevID"))
-		return
-	}
+	// // Developer and DeveloperApp need to be linked to eachother #nosqlintegritycheck
+	// if developer.DeveloperID != developerApp.ParentID {
+	// 	e.returnJSONMessage(c, http.StatusNotFound, fmt.Errorf("Developer and application records do not have the same DevID"))
+	// 	return
+	// }
 	deletedAttributes := developerApp.Attributes
 	developerApp.Attributes = nil
 	developerApp.LastmodifiedAt = e.getCurrentTimeMilliseconds()
@@ -291,12 +272,12 @@ func (e *env) PostDeveloperAppAttributeByName(c *gin.Context) {
 		e.returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
-	// Developer and DeveloperApp need to be linked to eachother #nosqlintegritycheck
-	if updatedDeveloperApp.OrganizationName != c.Param("organization") {
-		e.returnJSONMessage(c, http.StatusNotFound,
-			fmt.Errorf("Organization (%s) does not match with developerapp's organization", c.Param("organization")))
-		return
-	}
+	// // Developer and DeveloperApp need to be linked to eachother #nosqlintegritycheck
+	// if updatedDeveloperApp.OrganizationName != c.Param("organization") {
+	// 	e.returnJSONMessage(c, http.StatusNotFound,
+	// 		fmt.Errorf("Organization (%s) does not match with developerapp's organization", c.Param("organization")))
+	// 	return
+	// }
 	attributeToUpdate := c.Param("attribute")
 	var receivedValue struct {
 		Value string `json:"value"`
@@ -332,12 +313,13 @@ func (e *env) DeleteDeveloperAppAttributeByName(c *gin.Context) {
 		e.returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
-	// Developer and DeveloperApp need to be linked to eachother #nosqlintegritycheck
-	if updatedDeveloperApp.OrganizationName != c.Param("organization") {
-		e.returnJSONMessage(c, http.StatusNotFound,
-			fmt.Errorf("Organization (%s) does not match with developerapp's organization", c.Param("organization")))
-		return
-	}
+	// // Developer and DeveloperApp need to be linked to eachother #nosqlintegritycheck
+	// if updatedDeveloperApp.OrganizationName != c.Param("organization") {
+	// 	e.returnJSONMessage(c, http.StatusNotFound,
+	// 		fmt.Errorf("Organization (%s) does not match with developerapp's organization", c.Param("organization")))
+	// 	return
+	// }
+
 	// Find attribute in array
 	attributeToRemoveIndex := e.findAttributePositionInAttributeArray(
 		updatedDeveloperApp.Attributes, c.Param("attribute"))
@@ -360,7 +342,7 @@ func (e *env) DeleteDeveloperAppAttributeByName(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, deletedAttribute)
 }
 
-// DeleteDeveloperAppByName deletes of one developer
+// DeleteDeveloperAppByName deletes a developer app
 func (e *env) DeleteDeveloperAppByName(c *gin.Context) {
 	developer, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
 	if err != nil {
@@ -370,11 +352,6 @@ func (e *env) DeleteDeveloperAppByName(c *gin.Context) {
 	developerApp, err := e.db.GetDeveloperAppByName(c.Param("organization"), c.Param("application"))
 	if err != nil {
 		e.returnJSONMessage(c, http.StatusNotFound, err)
-		return
-	}
-	// Developer and DeveloperApp need to be linked to eachother #nosqlintegritycheck
-	if developer.DeveloperID != developerApp.ParentID {
-		e.returnJSONMessage(c, http.StatusNotFound, fmt.Errorf("Developer and application records do not have the same DevID"))
 		return
 	}
 	AppCredentialCount := e.db.GetAppCredentialCountByDeveloperAppID(developerApp.DeveloperAppID)
@@ -395,8 +372,8 @@ func (e *env) DeleteDeveloperAppByName(c *gin.Context) {
 		e.returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
-	log.Printf("Do it")
-	// Remove app from developer.apps array and update developer
+
+	// Remove app from the apps field in developer entry as well
 	for i := 0; i < len(developer.Apps); i++ {
 		if developer.Apps[i] == c.Param("application") {
 			developer.Apps = append(developer.Apps[:i], developer.Apps[i+1:]...)

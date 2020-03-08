@@ -8,11 +8,10 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-//Prometheus label for metrics of db interactions
+// Prometheus label for metrics of db interactions
 const organizationMetricLabel = "organizations"
 
-//GetOrganizations retrieves all organizations
-//
+// GetOrganizations retrieves all organizations
 func (d *Database) GetOrganizations() ([]types.Organization, error) {
 	query := "SELECT * FROM organizations WHERE key != ? ALLOW FILTERING"
 	organizations := d.runGetOrganizationQuery(query, "")
@@ -24,8 +23,7 @@ func (d *Database) GetOrganizations() ([]types.Organization, error) {
 	return organizations, nil
 }
 
-//GetOrganizationByName retrieves an organization from database
-//
+// GetOrganizationByName retrieves an organization from database
 func (d *Database) GetOrganizationByName(organizationName string) (types.Organization, error) {
 	query := "SELECT * FROM organizations WHERE name = ? LIMIT 1"
 	organizations := d.runGetOrganizationQuery(query, organizationName)
@@ -39,7 +37,6 @@ func (d *Database) GetOrganizationByName(organizationName string) (types.Organiz
 }
 
 // runGetOrganizationQuery executes CQL query and returns resultset
-//
 func (d *Database) runGetOrganizationQuery(query, queryParameter string) []types.Organization {
 	var organizations []types.Organization
 
@@ -64,7 +61,6 @@ func (d *Database) runGetOrganizationQuery(query, queryParameter string) []types
 }
 
 // UpdateOrganizationByName UPSERTs an organization in database
-// Upsert is: In case an organization does not exist (primary key not matching) it will create a new row
 func (d *Database) UpdateOrganizationByName(updatedOrganization types.Organization) error {
 	query := "INSERT INTO organizations (key, name, display_name, attributes, " +
 		"created_at, created_by, lastmodified_at, lastmodified_by) " +
@@ -81,8 +77,7 @@ func (d *Database) UpdateOrganizationByName(updatedOrganization types.Organizati
 	return nil
 }
 
-//DeleteOrganizationByName deletes an organization
-//
+// DeleteOrganizationByName deletes an organization
 func (d *Database) DeleteOrganizationByName(organizationToDelete string) error {
 	_, err := d.GetOrganizationByName(organizationToDelete)
 	if err != nil {
