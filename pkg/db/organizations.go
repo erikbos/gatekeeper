@@ -3,7 +3,6 @@ package db
 import (
 	"errors"
 	"fmt"
-	"log"
 
 	"github.com/erikbos/apiauth/pkg/types"
 	"github.com/prometheus/client_golang/prometheus"
@@ -17,12 +16,12 @@ const organizationMetricLabel = "organizations"
 func (d *Database) GetOrganizations() ([]types.Organization, error) {
 	query := "SELECT * FROM organizations WHERE key != ? ALLOW FILTERING"
 	organizations := d.runGetOrganizationQuery(query, "")
-	if len(organizations) > 0 {
-		d.metricsQueryHit(organizationMetricLabel)
-		return organizations, nil
+	if len(organizations) == 0 {
+		d.metricsQueryMiss(organizationMetricLabel)
+		return organizations, errors.New("Can not retrieve list of organizations")
 	}
-	d.metricsQueryMiss(organizationMetricLabel)
-	return organizations, errors.New("Can not retrieve list of organizations")
+	d.metricsQueryHit(organizationMetricLabel)
+	return organizations, nil
 }
 
 //GetOrganizationByName retrieves an organization from database
@@ -30,13 +29,13 @@ func (d *Database) GetOrganizations() ([]types.Organization, error) {
 func (d *Database) GetOrganizationByName(organizationName string) (types.Organization, error) {
 	query := "SELECT * FROM organizations WHERE name = ? LIMIT 1"
 	organizations := d.runGetOrganizationQuery(query, organizationName)
-	if len(organizations) > 0 {
-		d.metricsQueryHit(organizationMetricLabel)
-		return organizations[0], nil
+	if len(organizations) == 0 {
+		d.metricsQueryMiss(organizationMetricLabel)
+		return types.Organization{},
+			fmt.Errorf("Can not find organization (%s)", organizationName)
 	}
-	d.metricsQueryMiss(organizationMetricLabel)
-	return types.Organization{},
-		fmt.Errorf("Can not find organization (%s)", organizationName)
+	d.metricsQueryHit(organizationMetricLabel)
+	return organizations[0], nil
 }
 
 // runGetOrganizationQuery executes CQL query and returns resultset
@@ -44,15 +43,12 @@ func (d *Database) GetOrganizationByName(organizationName string) (types.Organiz
 func (d *Database) runGetOrganizationQuery(query, queryParameter string) []types.Organization {
 	var organizations []types.Organization
 
-	//Set timer to record how long this function run
 	timer := prometheus.NewTimer(d.dbLookupHistogram)
 	defer timer.ObserveDuration()
-	log.Printf("q: %s, %s", query, queryParameter)
+
 	iterable := d.cassandraSession.Query(query, queryParameter).Iter()
 	m := make(map[string]interface{})
-	log.Printf("Iterable: %+v", iterable)
 	for iterable.MapScan(m) {
-		log.Printf("Q2: %+v", m)
 		organizations = append(organizations, types.Organization{
 			Attributes:     d.unmarshallJSONArrayOfAttributes(m["attributes"].(string), false),
 			CreatedAt:      m["created_at"].(int64),
@@ -75,15 +71,14 @@ func (d *Database) UpdateOrganizationByName(updatedOrganization types.Organizati
 		"VALUES(?,?,?,?,?,?,?,?)"
 
 	Attributes := d.marshallArrayOfAttributesToJSON(updatedOrganization.Attributes, false)
-	err := d.cassandraSession.Query(query,
+	if err := d.cassandraSession.Query(query,
 		updatedOrganization.Name, updatedOrganization.Name,
-		updatedOrganization.DisplayName, Attributes,
-		updatedOrganization.CreatedAt, updatedOrganization.CreatedBy,
-		updatedOrganization.LastmodifiedAt, updatedOrganization.LastmodifiedBy).Exec()
-	if err == nil {
-		return nil
+		updatedOrganization.DisplayName, Attributes, updatedOrganization.CreatedAt,
+		updatedOrganization.CreatedBy, updatedOrganization.LastmodifiedAt,
+		updatedOrganization.LastmodifiedBy).Exec(); err != nil {
+		return fmt.Errorf("Can not update organization (%v)", err)
 	}
-	return fmt.Errorf("Can not update organization (%v)", err)
+	return nil
 }
 
 //DeleteOrganizationByName deletes an organization

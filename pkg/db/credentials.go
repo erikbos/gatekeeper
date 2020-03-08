@@ -18,12 +18,12 @@ func (d *Database) GetAppCredentialByKey(key string) (types.AppCredential, error
 
 	query := "SELECT * FROM app_credentials WHERE key = ? LIMIT 1"
 	appcredentials = d.runGetAppCredentialQuery(query, key)
-	if len(appcredentials) > 0 {
-		d.dbLookupHitsCounter.WithLabelValues(d.Hostname, "app_credentials").Inc()
-		return appcredentials[0], nil
+	if len(appcredentials) == 0 {
+		d.metricsQueryMiss(appCrendetialsMetricLabel)
+		return types.AppCredential{}, fmt.Errorf("Can not find apikey '%s'", key)
 	}
-	d.dbLookupMissesCounter.WithLabelValues(d.Hostname, "app_credentials").Inc()
-	return types.AppCredential{}, fmt.Errorf("Can not find apikey '%s'", key)
+	d.metricsQueryHit(appCrendetialsMetricLabel)
+	return appcredentials[0], nil
 }
 
 //GetAppCredentialByDeveloperAppID returns an array with apikey details of a developer app
@@ -33,11 +33,12 @@ func (d *Database) GetAppCredentialByDeveloperAppID(organizationAppID string) ([
 	// FIXME hardcoded row limit
 	query := "SELECT * FROM app_credentials WHERE organization_app_id = ?"
 	appcredentials = d.runGetAppCredentialQuery(query, organizationAppID)
-	if len(appcredentials) > 0 {
-		d.dbLookupHitsCounter.WithLabelValues(d.Hostname, "app_credentials").Inc()
+	if len(appcredentials) == 0 {
+		d.metricsQueryMiss(appCrendetialsMetricLabel)
+		// Not being able to find a developer is not an error
 		return appcredentials, nil
 	}
-	d.dbLookupMissesCounter.WithLabelValues(d.Hostname, "app_credentials").Inc()
+	d.metricsQueryHit(appCrendetialsMetricLabel)
 	return appcredentials, nil
 }
 
@@ -47,8 +48,10 @@ func (d *Database) GetAppCredentialCountByDeveloperAppID(developerAppID string) 
 	var AppCredentialCount int
 	query := "SELECT count(*) FROM app_credentials WHERE organization_app_id = ?"
 	if err := d.cassandraSession.Query(query, developerAppID).Scan(&AppCredentialCount); err != nil {
+		d.metricsQueryMiss(appCrendetialsMetricLabel)
 		return -1
 	}
+	d.metricsQueryHit(appCrendetialsMetricLabel)
 	return AppCredentialCount
 }
 
@@ -98,15 +101,14 @@ func (d *Database) UpdateAppCredentialByKey(updatedAppCredential types.AppCreden
 
 	APIProducts := d.marshallArrayOfProductStatusesToJSON(updatedAppCredential.APIProducts)
 	Attributes := d.marshallArrayOfAttributesToJSON(updatedAppCredential.Attributes, false)
-	err := d.cassandraSession.Query(query,
+	if err := d.cassandraSession.Query(query,
 		updatedAppCredential.ConsumerKey, APIProducts, Attributes,
 		updatedAppCredential.ConsumerSecret, -1, updatedAppCredential.IssuedAt,
 		updatedAppCredential.OrganizationAppID, updatedAppCredential.OrganizationName,
-		updatedAppCredential.Status).Exec()
-	if err == nil {
-		return nil
+		updatedAppCredential.Status).Exec(); err != nil {
+		return fmt.Errorf("Can not update appcredential (%v)", err)
 	}
-	return fmt.Errorf("Can not update appcredential (%v)", err)
+	return nil
 }
 
 //DeleteAppCredentialByKey deletes a developer

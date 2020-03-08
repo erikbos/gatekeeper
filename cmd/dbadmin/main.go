@@ -14,6 +14,7 @@ import (
 	"github.com/erikbos/apiauth/pkg/types"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 )
@@ -84,11 +85,15 @@ func startRESTAPIServer(listenport string, db *db.Database) {
 	e := &env{}
 	e.db = db
 
+	r.Static("/assets", "./assets")
+
 	e.registerOrganizationRoutes(r)
 	e.registerDeveloperRoutes(r)
 	e.registerDeveloperAppRoutes(r)
 	e.registerCredentialRoutes(r)
-	// r.GET("/metrics", promhttp.HandlerFor(prometheus.DefaultGatherer, promhttp.HandlerOpts{}).ServeHTTP)
+
+	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
+	// r.GET("/metrics", gin.WrapH(promhttp.HandlerFor(prometheus.DefaultGatherer, promhttp.HandlerOpts{}).ServeHTTP))
 	r.GET("/ready", e.GetReady)
 	r.Run(listenport)
 }

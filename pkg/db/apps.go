@@ -7,18 +7,21 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+//Prometheus label for metrics of db interactions
+const appsMetricLabel = "apps"
+
 //GetDeveloperAppsByOrganization retrieves all developer belonging to an organization
 // FIXME
 func (d *Database) GetDeveloperAppsByOrganization(organizationName string) ([]types.DeveloperApp, error) {
 	query := "SELECT * FROM apps WHERE organization_name = ? LIMIT 10 ALLOW FILTERING"
 	developerapps := d.runGetDeveloperAppQuery(query, organizationName)
-	if len(developerapps) > 0 {
-		d.dbLookupHitsCounter.WithLabelValues(d.Hostname, "apps").Inc()
-		return developerapps, nil
+	if len(developerapps) == 0 {
+		d.metricsQueryMiss(appsMetricLabel)
+		return developerapps,
+			fmt.Errorf("Can not find developers in organization %s", organizationName)
 	}
-	d.dbLookupMissesCounter.WithLabelValues(d.Hostname, "apps").Inc()
-	return developerapps,
-		fmt.Errorf("Can not find developers in organization %s", organizationName)
+	d.metricsQueryHit(appsMetricLabel)
+	return developerapps, nil
 }
 
 //GetDeveloperAppByName returns details of a DeveloperApplication looked up by Name
@@ -26,13 +29,13 @@ func (d *Database) GetDeveloperAppsByOrganization(organizationName string) ([]ty
 func (d *Database) GetDeveloperAppByName(organization, developerAppName string) (types.DeveloperApp, error) {
 	query := "SELECT * FROM apps WHERE name = ? LIMIT 1"
 	developerapps := d.runGetDeveloperAppQuery(query, developerAppName)
-	if len(developerapps) > 0 {
-		d.dbLookupHitsCounter.WithLabelValues(d.Hostname, "apps").Inc()
-		return developerapps[0], nil
+	if len(developerapps) == 0 {
+		d.metricsQueryMiss(appsMetricLabel)
+		return types.DeveloperApp{},
+			fmt.Errorf("Can not find developer app (%s)", developerAppName)
 	}
-	d.dbLookupMissesCounter.WithLabelValues(d.Hostname, "apps").Inc()
-	return types.DeveloperApp{},
-		fmt.Errorf("Can not find developer app (%s)", developerAppName)
+	d.metricsQueryHit(appsMetricLabel)
+	return developerapps[0], nil
 }
 
 //GetDeveloperAppByID returns details of a DeveloperApplication looked up by ID
@@ -40,13 +43,13 @@ func (d *Database) GetDeveloperAppByName(organization, developerAppName string) 
 func (d *Database) GetDeveloperAppByID(organization, developerAppID string) (types.DeveloperApp, error) {
 	query := "SELECT * FROM apps WHERE key = ? LIMIT 1"
 	developerapps := d.runGetDeveloperAppQuery(query, developerAppID)
-	if len(developerapps) > 0 {
-		d.dbLookupHitsCounter.WithLabelValues(d.Hostname, "apps").Inc()
-		return developerapps[0], nil
+	if len(developerapps) == 0 {
+		d.metricsQueryMiss(appsMetricLabel)
+		return types.DeveloperApp{},
+			fmt.Errorf("Can not find developer app id (%s)", developerAppID)
 	}
-	d.dbLookupMissesCounter.WithLabelValues(d.Hostname, "apps").Inc()
-	return types.DeveloperApp{},
-		fmt.Errorf("Can not find developer app id (%s)", developerAppID)
+	d.metricsQueryHit(appsMetricLabel)
+	return developerapps[0], nil
 }
 
 //GetDeveloperAppCountByDeveloperID retrieves number of apps belonging to a developer
@@ -55,15 +58,16 @@ func (d *Database) GetDeveloperAppCountByDeveloperID(organizationName string) in
 	var developerAppCount int
 	query := "SELECT count(*) FROM apps WHERE parent_id = ?"
 	if err := d.cassandraSession.Query(query, organizationName).Scan(&developerAppCount); err != nil {
+		d.metricsQueryMiss(appsMetricLabel)
 		return -1
 	}
+	d.metricsQueryHit(appsMetricLabel)
 	return developerAppCount
 }
 
 func (d *Database) runGetDeveloperAppQuery(query, queryParameter string) []types.DeveloperApp {
 	var developerapps []types.DeveloperApp
 
-	//Set timer to record how long this function run
 	timer := prometheus.NewTimer(d.dbLookupHistogram)
 	defer timer.ObserveDuration()
 
