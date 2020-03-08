@@ -86,15 +86,14 @@ func startRESTAPIServer(listenport string, db *db.Database) {
 	e.db = db
 
 	r.Static("/assets", "./assets")
-
 	e.registerOrganizationRoutes(r)
 	e.registerDeveloperRoutes(r)
 	e.registerDeveloperAppRoutes(r)
 	e.registerCredentialRoutes(r)
-
+	e.registerAPIProductRoutes(r)
 	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
-	// r.GET("/metrics", gin.WrapH(promhttp.HandlerFor(prometheus.DefaultGatherer, promhttp.HandlerOpts{}).ServeHTTP))
 	r.GET("/ready", e.GetReady)
+
 	r.Run(listenport)
 }
 
@@ -131,7 +130,7 @@ func (e *env) CheckForJSONContentType(c *gin.Context) {
 	}
 }
 
-func (e *env) SetLastModified(c *gin.Context, timeStamp int64) {
+func (e *env) SetLastModifiedHeader(c *gin.Context, timeStamp int64) {
 	c.Header("Last-Modified",
 		time.Unix(0, timeStamp*int64(time.Millisecond)).UTC().Format(http.TimeFormat))
 }
@@ -188,6 +187,11 @@ func (e *env) GenerateDeveloperAppPrimaryKey() string {
 // GeneratePrimaryKeyOfDeveloper creates unique primary key for developer db row
 func (e *env) GenerateDeveloperAppID(organization, primaryKey string) string {
 	return (fmt.Sprintf("%s@@@%s", organization, primaryKey))
+}
+
+// GeneratePrimaryKeyOfAPIProduct creates unique primary key for apiproduct row
+func (e *env) GeneratePrimaryKeyOfAPIProduct(organization, name string) string {
+	return (fmt.Sprintf("%s@@@%s", organization, name))
 }
 
 // GenerateCredentialConsumerKey returns a random string to be used as apikey (32 character base62)

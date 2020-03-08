@@ -149,7 +149,7 @@ func (c *Cache) GetAppCredentialCached(d *Database, organization, key string) (t
 
 //GetAPIProductCached retrieves entry from database (or cache if entry present)
 //
-func (c *Cache) GetAPIProductCached(d *Database, apiproductname string) (types.APIProduct, error) {
+func (c *Cache) GetAPIProductCached(d *Database, organization, apiproductname string) (types.APIProduct, error) {
 	var apiproduct types.APIProduct
 	var err error
 
@@ -170,7 +170,7 @@ func (c *Cache) GetAPIProductCached(d *Database, apiproductname string) (types.A
 	}
 
 	// No cache entry, let's fetch it from database
-	apiproduct, err = d.GetAPIProductByName(apiproductname)
+	apiproduct, err = d.GetAPIProductByName(organization, apiproductname)
 	if err != nil {
 		c.dbCacheMissesCounter.WithLabelValues("api_products").Inc()
 		return apiproduct, nil

@@ -43,7 +43,7 @@ func (e *env) GetOrganizationByName(c *gin.Context) {
 		e.returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
-	e.SetLastModified(c, organization.LastmodifiedAt)
+	e.SetLastModifiedHeader(c, organization.LastmodifiedAt)
 	c.IndentedJSON(http.StatusOK, organization)
 }
 
@@ -54,7 +54,7 @@ func (e *env) GetOrganizationAttributes(c *gin.Context) {
 		e.returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
-	e.SetLastModified(c, organization.LastmodifiedAt)
+	e.SetLastModifiedHeader(c, organization.LastmodifiedAt)
 	c.IndentedJSON(http.StatusOK, gin.H{"attribute": organization.Attributes})
 }
 
@@ -68,11 +68,11 @@ func (e *env) GetOrganizationAttributeByName(c *gin.Context) {
 	// lets find the attribute requested
 	for i := 0; i < len(organization.Attributes); i++ {
 		if organization.Attributes[i].Name == c.Param("attribute") {
+			e.SetLastModifiedHeader(c, organization.LastmodifiedAt)
 			c.IndentedJSON(http.StatusOK, organization.Attributes[i])
 			return
 		}
 	}
-	e.SetLastModified(c, organization.LastmodifiedAt)
 	e.returnJSONMessage(c, http.StatusNotFound,
 		fmt.Errorf("Could not retrieve attribute '%s'", c.Param("attribute")))
 }

@@ -6,7 +6,6 @@ import (
 
 	"github.com/erikbos/apiauth/pkg/types"
 	"github.com/gin-gonic/gin"
-	log "github.com/sirupsen/logrus"
 )
 
 // registerDeveloperRoutes registers all routes we handle
@@ -42,11 +41,10 @@ func (e *env) GetAllDevelopers(c *gin.Context) {
 func (e *env) GetDeveloperByEmail(c *gin.Context) {
 	developer, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
 	if err != nil {
-		log.Printf("e %s", err)
 		e.returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
-	e.SetLastModified(c, developer.LastmodifiedAt)
+	e.SetLastModifiedHeader(c, developer.LastmodifiedAt)
 	c.IndentedJSON(http.StatusOK, developer)
 }
 
@@ -57,7 +55,7 @@ func (e *env) GetDeveloperAttributes(c *gin.Context) {
 		e.returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
-	e.SetLastModified(c, developer.LastmodifiedAt)
+	e.SetLastModifiedHeader(c, developer.LastmodifiedAt)
 	c.IndentedJSON(http.StatusOK, gin.H{"attribute": developer.Attributes})
 }
 
@@ -71,7 +69,7 @@ func (e *env) GetDeveloperAttributeByName(c *gin.Context) {
 	// lets find the attribute requested
 	for i := 0; i < len(developer.Attributes); i++ {
 		if developer.Attributes[i].Name == c.Param("attribute") {
-			e.SetLastModified(c, developer.LastmodifiedAt)
+			e.SetLastModifiedHeader(c, developer.LastmodifiedAt)
 			c.IndentedJSON(http.StatusOK, developer.Attributes[i])
 			return
 		}
