@@ -74,7 +74,7 @@ func (d *Database) metricsQueryHit(metricLabel string) {
 }
 
 func (d *Database) metricsQueryMiss(metricLabel string) {
-	d.dbLookupMissesCounter.WithLabelValues(d.Hostname, "apps").Inc()
+	d.dbLookupMissesCounter.WithLabelValues(d.Hostname, metricLabel).Inc()
 }
 
 // unmarshallJSONArrayOfStrings unpacks JSON array of strings
