@@ -22,6 +22,4 @@ require (
 	gopkg.in/yaml.v2 v2.2.8
 )
 
-replace github.com/erikbos/apiauth/pkg/db => ../apiauth/pkg/db
-
 go 1.13
