@@ -33,7 +33,11 @@ func (e *env) GetAllAPIProducts(c *gin.Context) {
 		e.returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
-	c.IndentedJSON(http.StatusOK, gin.H{"apiproducts": apiproducts})
+	var apiproductNames []string
+	for _, product := range apiproducts {
+		apiproductNames = append(apiproductNames, product.Name)
+	}
+	c.IndentedJSON(http.StatusOK, gin.H{"apiproducts": apiproductNames})
 }
 
 // GetAPIProductByName returns full details of one APIProduct

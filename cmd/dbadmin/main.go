@@ -72,29 +72,32 @@ func (c *RESTAPIConfig) loadConfiguration(filename string) *RESTAPIConfig {
 }
 
 type env struct {
-	db *db.Database
+	db     *db.Database
+	router *gin.Engine
 }
 
 func startRESTAPIServer(listenport string, db *db.Database) {
-	r := gin.New()
-
-	// r.Use(gin.Logger())
-	r.Use(gin.LoggerWithFormatter(logRequstparam))
-
 	// Store database handle so we can use it when answering apicalls
+
 	e := &env{}
 	e.db = db
 
-	r.Static("/assets", "./assets")
-	e.registerOrganizationRoutes(r)
-	e.registerDeveloperRoutes(r)
-	e.registerDeveloperAppRoutes(r)
-	e.registerCredentialRoutes(r)
-	e.registerAPIProductRoutes(r)
-	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
-	r.GET("/ready", e.GetReady)
+	e.router = gin.New()
 
-	r.Run(listenport)
+	// r.Use(gin.Logger())
+	e.router.Use(gin.LoggerWithFormatter(logRequstparam))
+
+	e.router.Static("/assets", "./assets")
+	e.registerOrganizationRoutes(e.router)
+	e.registerDeveloperRoutes(e.router)
+	e.registerDeveloperAppRoutes(e.router)
+	e.registerCredentialRoutes(e.router)
+	e.registerAPIProductRoutes(e.router)
+	e.router.GET("/metrics", gin.WrapH(promhttp.Handler()))
+	e.router.GET("/dump_routes", e.dumpRoutes)
+	e.router.GET("/ready", e.GetReady)
+
+	e.router.Run(listenport)
 }
 
 func logRequstparam(param gin.LogFormatterParams) string {
@@ -119,6 +122,15 @@ func (e *env) whoAmI() string {
 // restGetReady returns ready as readyness check
 func (e *env) GetReady(c *gin.Context) {
 	e.returnJSONMessage(c, http.StatusOK, errors.New("Ready"))
+}
+
+// restGetReady returns ready as readyness check
+func (e *env) dumpRoutes(c *gin.Context) {
+	routes := e.router.Routes()
+	for _, v := range routes {
+		log.Printf("%+v", v)
+	}
+	// c.IndentedJSON(http.StatusOK, gin.H{"routes": routes})
 }
 
 // CheckForJSONContentType checks for json content-type

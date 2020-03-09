@@ -1,0 +1,5 @@
+dbadmin
+- add auditlog for every http call done, plus api to retrieve
+- add create tables cmdline option
+- change database format: remove duplicate developer_app_id & app_id
+- ui should have breadcrums

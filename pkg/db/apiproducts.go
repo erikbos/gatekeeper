@@ -2,7 +2,6 @@ package db
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/erikbos/apiauth/pkg/types"
 	"github.com/prometheus/client_golang/prometheus"
@@ -27,7 +26,6 @@ func (d *Database) GetAPIProductsByOrganization(organizationName string) ([]type
 // GetAPIProductByName returns an apiproduct
 func (d *Database) GetAPIProductByName(organizationName, apiproductName string) (types.APIProduct, error) {
 	query := "SELECT * FROM api_products WHERE organization_name = ? AND name = ? LIMIT 1"
-	log.Printf("%s - %s", organizationName, apiproductName)
 	apiproducts := d.runGetAPIProductQuery(query, organizationName, apiproductName)
 	if len(apiproducts) == 0 {
 		d.metricsQueryMiss(apiProductsMetricLabel)

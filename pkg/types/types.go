@@ -101,6 +101,24 @@ type APIProduct struct {
 	Scopes           string               `json:"scopes"`
 }
 
+//APIProxy contains mapping of paths to upstream
+//
+type APIProxy struct {
+	Key              string               `json:"key"`
+	Policies         []string             `json:"policies"`
+	Attributes       []AttributeKeyValues `json:"attributes"`
+	CreatedAt        int64                `json:"created_at"`
+	CreatedBy        string               `json:"created_by"`
+	Description      string               `json:"description"`
+	DisplayName      string               `json:"display_name"`
+	LastmodifiedAt   int64                `json:"lastmodified_at"`
+	LastmodifiedBy   string               `json:"lastmodified_by"`
+	Name             string               `json:"name"`
+	OrganizationName string               `json:"organization_name"`
+	Proxies          []string             `json:"proxies"`
+	Scopes           string               `json:"scopes"`
+}
+
 //AttributeKeyValues is an array with attributes of developer or developer app
 //
 type AttributeKeyValues struct {
