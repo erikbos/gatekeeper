@@ -12,7 +12,7 @@ const developerMetricLabel = "developers"
 
 // GetDevelopersByOrganization retrieves all developer belonging to an organization
 func (d *Database) GetDevelopersByOrganization(organizationName string) ([]types.Developer, error) {
-	query := "SELECT * FROM developers WHERE organization_name = ? LIMIT 100 ALLOW FILTERING"
+	query := "SELECT * FROM developers WHERE organization_name = ? ALLOW FILTERING"
 	developers := d.runGetDeveloperQuery(query, organizationName)
 	if len(developers) == 0 {
 		d.metricsQueryMiss(developerMetricLabel)
