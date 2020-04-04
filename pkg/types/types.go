@@ -104,24 +104,67 @@ type APIProduct struct {
 //APIProxy contains mapping of paths to upstream
 //
 type APIProxy struct {
-	Key              string               `json:"key"`
+	Name             string               `json:"name"`
+	DisplayName      string               `json:"display_name"`
+	OrganizationName string               `json:"organization_name"`
 	Policies         []string             `json:"policies"`
 	Attributes       []AttributeKeyValues `json:"attributes"`
 	CreatedAt        int64                `json:"created_at"`
 	CreatedBy        string               `json:"created_by"`
-	Description      string               `json:"description"`
-	DisplayName      string               `json:"display_name"`
 	LastmodifiedAt   int64                `json:"lastmodified_at"`
 	LastmodifiedBy   string               `json:"lastmodified_by"`
-	Name             string               `json:"name"`
-	OrganizationName string               `json:"organization_name"`
-	Proxies          []string             `json:"proxies"`
-	Scopes           string               `json:"scopes"`
+	BasePath         string
+	Routes           []struct {
+		prefix   string
+		upstream string
+	}
+	VirtualHosts []string `json:"virtual_hosts"`
 }
 
 //AttributeKeyValues is an array with attributes of developer or developer app
-//
 type AttributeKeyValues struct {
 	Name  string `json:"name"`
 	Value string `json:"value"`
+}
+
+// bla
+type VirtualHost struct {
+	Name              string   `json:"name"`
+	DisplayName       string   `json:"display_name"`
+	Description       string   `json:"description"`
+	VirtualHosts      []string `json:"virtual_hosts"`
+	TLSCipherSuites   string
+	TLSMinimumVersion string
+}
+
+// func initialize() {
+// 	// vhosts := make([]VirtualHost, 50)
+// 	vhosts := []VirtualHost{
+// 		VirtualHost{
+// 			Name: "test1",
+// 			VirtualHosts: []string{
+// 				"nozomi.sievie.com",
+// 			},
+// 			TLSMinimumVersion: "TLSv1_2",
+// 			TLSCipherSuites: "[ECDHE-RSA-CHACHA20-POLY1305|ECDHE-RSA-AES256-GCM-SHA384|ECDHE-RSA-AES128-GCM-SHA256]",
+// 		},
+// 		VirtualHost{
+// 			Name: "test2",
+// 			VirtualHosts: []string{
+// 				"nozomi.sievie.be",
+// 			},
+// 		},
+// 	}
+// }
+
+// Cluster holds configuration of an upstream cluster
+type Cluster struct {
+	Name           string `json:"name"`
+	DisplayName    string `json:"displayName"`
+	HostName       string `json:"hostName"`
+	HostPort       int16  `json:"hostPort"`
+	CreatedAt      int64  `json:"createdAt"`
+	CreatedBy      string `json:"createdBy"`
+	LastmodifiedAt int64  `json:"lastmodifiedAt"`
+	LastmodifiedBy string `json:"lastmodifiedBy"`
 }

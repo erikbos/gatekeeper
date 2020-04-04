@@ -53,7 +53,6 @@ func (e *env) PostCreateCluster(c *gin.Context) {
 		return
 	}
 	// Automatically set default fields
-	newCluster.Key = newCluster.Name
 	newCluster.CreatedBy = e.whoAmI()
 	newCluster.CreatedAt = e.getCurrentTimeMilliseconds()
 	newCluster.LastmodifiedAt = newCluster.CreatedAt
@@ -78,7 +77,7 @@ func (e *env) PostCluster(c *gin.Context) {
 		return
 	}
 	// We don't allow POSTing to update cluster X while body says to update cluster Y
-	updatedCluster.Key = currentCluster.Key
+	updatedCluster.Name = currentCluster.Name
 	updatedCluster.CreatedBy = currentCluster.CreatedBy
 	updatedCluster.CreatedAt = currentCluster.CreatedAt
 	updatedCluster.LastmodifiedAt = e.getCurrentTimeMilliseconds()

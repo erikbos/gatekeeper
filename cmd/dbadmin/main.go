@@ -87,12 +87,14 @@ func startRESTAPIServer(listenport string, db *db.Database) {
 	// r.Use(gin.Logger())
 	e.router.Use(gin.LoggerWithFormatter(logRequstparam))
 
-	e.router.Static("/assets", "./assets")
 	e.registerOrganizationRoutes(e.router)
 	e.registerDeveloperRoutes(e.router)
 	e.registerDeveloperAppRoutes(e.router)
 	e.registerCredentialRoutes(e.router)
 	e.registerAPIProductRoutes(e.router)
+	e.registerClusterRoutes(e.router)
+
+	e.router.Static("/assets", "./assets")
 	e.router.GET("/metrics", gin.WrapH(promhttp.Handler()))
 	e.router.GET("/dump_routes", e.dumpRoutes)
 	e.router.GET("/ready", e.GetReady)
