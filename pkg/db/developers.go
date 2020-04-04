@@ -100,15 +100,14 @@ func (d *Database) runGetDeveloperQuery(query string, queryParameters ...interfa
 
 // UpdateDeveloperByName UPSERTs a developer in database
 func (d *Database) UpdateDeveloperByName(updatedDeveloper types.Developer) error {
-	query := "INSERT INTO developers (key,apps,attributes," +
-		"created_at,created_by, email," +
-		"first_name,last_name, lastmodified_at," +
-		"lastmodified_by,organization_name,status,user_name)" +
-		"VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)"
-
 	Apps := d.marshallArrayOfStringsToJSON(updatedDeveloper.Apps)
 	Attributes := d.marshallArrayOfAttributesToJSON(updatedDeveloper.Attributes, false)
-	if err := d.cassandraSession.Query(query,
+	if err := d.cassandraSession.Query(
+		"INSERT INTO developers (key, apps, attributes, "+
+			"created_at, created_by, email, "+
+			"first_name, last_name, lastmodified_at, "+
+			"lastmodified_by, organization_name, status, user_name) "+
+			"VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)",
 		updatedDeveloper.DeveloperID, Apps, Attributes,
 		updatedDeveloper.CreatedAt, updatedDeveloper.CreatedBy, updatedDeveloper.Email,
 		updatedDeveloper.FirstName, updatedDeveloper.LastName, updatedDeveloper.LastmodifiedAt,

@@ -62,12 +62,11 @@ func (d *Database) runGetOrganizationQuery(query, queryParameter string) []types
 
 // UpdateOrganizationByName UPSERTs an organization in database
 func (d *Database) UpdateOrganizationByName(updatedOrganization types.Organization) error {
-	query := "INSERT INTO organizations (key, name, display_name, attributes, " +
-		"created_at, created_by, lastmodified_at, lastmodified_by) " +
-		"VALUES(?,?,?,?,?,?,?,?)"
-
 	Attributes := d.marshallArrayOfAttributesToJSON(updatedOrganization.Attributes, false)
-	if err := d.cassandraSession.Query(query,
+	if err := d.cassandraSession.Query(
+		"INSERT INTO organizations (key, name, display_name, attributes, "+
+			"created_at, created_by, lastmodified_at, lastmodified_by) "+
+			"VALUES(?,?,?,?,?,?,?,?)",
 		updatedOrganization.Name, updatedOrganization.Name,
 		updatedOrganization.DisplayName, Attributes, updatedOrganization.CreatedAt,
 		updatedOrganization.CreatedBy, updatedOrganization.LastmodifiedAt,

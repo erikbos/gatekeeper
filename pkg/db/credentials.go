@@ -89,14 +89,13 @@ func (d *Database) runGetAppCredentialQuery(query string, queryParameters ...int
 
 // UpdateAppCredentialByKey UPSERTs appcredentials in database
 func (d *Database) UpdateAppCredentialByKey(updatedAppCredential types.AppCredential) error {
-	query := "INSERT INTO app_credentials (key,api_products,attributes," +
-		"consumer_secret,expires_at,issued_at," +
-		"organization_app_id,organization_name,status)" +
-		"VALUES(?,?,?,?,?,?,?,?,?)"
-
 	APIProducts := d.marshallArrayOfProductStatusesToJSON(updatedAppCredential.APIProducts)
 	Attributes := d.marshallArrayOfAttributesToJSON(updatedAppCredential.Attributes, false)
-	if err := d.cassandraSession.Query(query,
+	if err := d.cassandraSession.Query(
+		"INSERT INTO app_credentials (key, api_products, attributes, "+
+			"consumer_secret, expires_at, issued_at,"+
+			"organization_app_id, organization_name, status)"+
+			"VALUES(?,?,?,?,?,?,?,?,?)",
 		updatedAppCredential.ConsumerKey, APIProducts, Attributes,
 		updatedAppCredential.ConsumerSecret, -1, updatedAppCredential.IssuedAt,
 		updatedAppCredential.OrganizationAppID, updatedAppCredential.OrganizationName,

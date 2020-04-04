@@ -97,23 +97,21 @@ func (d *Database) runGetDeveloperAppQuery(query string, queryParameters ...inte
 
 // UpdateDeveloperAppByName UPSERTs a developer app in database
 func (d *Database) UpdateDeveloperAppByName(updatedDeveloperApp types.DeveloperApp) error {
-	query := "INSERT INTO apps (key,app_id,attributes," +
-		"created_at,created_by, display_name," +
-		"lastmodified_at,lastmodified_by,name," +
-		"organization_name,parent_id,parent_status," +
-		"status) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)"
-
 	Attributes := d.marshallArrayOfAttributesToJSON(updatedDeveloperApp.Attributes, false)
-	err := d.cassandraSession.Query(query,
+	if err := d.cassandraSession.Query(
+		"INSERT INTO apps (key, app_id, attributes, "+
+			"created_at, created_by, display_name, "+
+			"lastmodified_at, lastmodified_by, name, "+
+			"organization_name, parent_id, parent_status, "+
+			"status) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)",
 		updatedDeveloperApp.DeveloperAppID, updatedDeveloperApp.AppID, Attributes,
 		updatedDeveloperApp.CreatedAt, updatedDeveloperApp.CreatedBy, updatedDeveloperApp.DisplayName,
 		updatedDeveloperApp.LastmodifiedAt, updatedDeveloperApp.LastmodifiedBy, updatedDeveloperApp.Name,
 		updatedDeveloperApp.OrganizationName, updatedDeveloperApp.ParentID, updatedDeveloperApp.ParentStatus,
-		updatedDeveloperApp.Status).Exec()
-	if err == nil {
-		return nil
+		updatedDeveloperApp.Status).Exec(); err != nil {
+		return fmt.Errorf("Can not update developer app (%v)", err)
 	}
-	return fmt.Errorf("Can not update developer app (%v)", err)
+	return nil
 }
 
 // DeleteDeveloperAppByID deletes an developer app

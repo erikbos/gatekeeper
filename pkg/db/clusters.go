@@ -63,16 +63,16 @@ func (d *Database) runGetClusterQuery(query string, queryParameters ...interface
 
 // UpdateClusterByName UPSERTs an cluster in database
 func (d *Database) UpdateClusterByName(updatedCluster types.Cluster) error {
-	query := "INSERT INTO clusters (key, display_name, " +
-		"host_name, host_port, " +
-		"created_at, created_by, lastmodified_at, lastmodified_by) " +
-		"VALUES(?,?,?,?,?,?,?,?)"
-
-	if err := d.cassandraSession.Query(query,
+	if err := d.cassandraSession.Query(
+		"INSERT INTO clusters (key, display_name, "+
+			"host_name, host_port, "+
+			"created_at, created_by, lastmodified_at, lastmodified_by) "+
+			"VALUES(?,?,?,?,?,?,?,?)",
 		updatedCluster.Name, updatedCluster.DisplayName,
 		updatedCluster.HostName, updatedCluster.HostPort,
 		updatedCluster.CreatedAt, updatedCluster.CreatedBy,
-		updatedCluster.LastmodifiedAt, updatedCluster.LastmodifiedBy).Exec(); err != nil {
+		updatedCluster.LastmodifiedAt,
+		updatedCluster.LastmodifiedBy).Exec(); err != nil {
 		return fmt.Errorf("Can not update cluster (%v)", err)
 	}
 	return nil
