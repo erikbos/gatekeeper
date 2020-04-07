@@ -61,18 +61,14 @@ func runManagementServer(server xds.Server, GRPCPort string) {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
+	log.Info("Starting GRPC XDS on ", GRPCPort)
+
 	grpcServer := grpc.NewServer()
-
-	log.Info("running management server")
-
 	discovery.RegisterAggregatedDiscoveryServiceServer(grpcServer, server)
 	v2.RegisterEndpointDiscoveryServiceServer(grpcServer, server)
 	v2.RegisterClusterDiscoveryServiceServer(grpcServer, server)
 	v2.RegisterRouteDiscoveryServiceServer(grpcServer, server)
 	v2.RegisterListenerDiscoveryServiceServer(grpcServer, server)
-
-	//gateway
-	//go proxy.Call()
 
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("failed to start GRPC server: %v", err)
@@ -81,7 +77,7 @@ func runManagementServer(server xds.Server, GRPCPort string) {
 
 func runManagementGateway(srv xds.Server, HTTPPort string) {
 
-	log.Info("running gateway")
+	log.Info("Starting HTTP XDS on ", HTTPPort)
 	err := http.ListenAndServe(HTTPPort, &xds.HTTPGateway{Server: srv})
 	if err != nil {
 		log.Fatalf("failed to HTTP serve: %v", err)
