@@ -140,6 +140,7 @@ func (e *env) CheckForJSONContentType(c *gin.Context) {
 	if c.Request.Header.Get("content-type") != "application/json" {
 		e.returnJSONMessage(c, http.StatusUnsupportedMediaType,
 			errors.New("Content-type application/json required when submitting data"))
+		// do not continue request handling
 		c.Abort()
 	}
 }

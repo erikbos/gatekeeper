@@ -2,12 +2,10 @@ package main
 
 import (
 	"io/ioutil"
-
-	"gopkg.in/yaml.v2"
+	"os"
 
 	log "github.com/sirupsen/logrus"
-
-	"os"
+	"gopkg.in/yaml.v2"
 )
 
 //EnvoyCPConfig contains our startup configuration data

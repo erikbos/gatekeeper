@@ -1,10 +1,15 @@
 package main
 
 import (
-	"bufio"
 	"flag"
 	"fmt"
+	"net"
 	"net/http"
+	"os"
+	"sync/atomic"
+	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/erikbos/apiauth/pkg/db"
 	// "github.com/erikbos/apiauth/pkg/types"
@@ -19,12 +24,7 @@ import (
 	xds "github.com/envoyproxy/go-control-plane/pkg/server"
 	"github.com/envoyproxy/go-control-plane/pkg/util"
 	"github.com/gogo/protobuf/types"
-	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
-
-	"net"
-	"os"
-	"sync/atomic"
 )
 
 var (
@@ -101,7 +101,6 @@ func main() {
 	})
 	log.SetLevel(log.DebugLevel)
 
-	// var err error
 	db, err := db.Connect(config.DatabaseHostname, config.DatabasePort,
 		config.DatabaseUsername, config.DatabasePassword, config.DatabaseKeyspace)
 	if err != nil {
@@ -109,7 +108,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	//ctx := context.Background()
 	EnvoyConfig := cache.NewSnapshotCache(true, Hasher{}, logger{})
 	//config := cache.NewSnapshotCache(false, hash{}, logger{})
 	signal := make(chan struct{})
@@ -122,110 +120,119 @@ func main() {
 	go runManagementServer(srv, config.GRPCXDSListen)
 	go runManagementGateway(srv, config.HTTPXDSListen)
 
+	go getClusterConfigFromDatabase(db)
+
+	var LastConfigurationDeployment int64
+
 	for {
-		var clusterName = "service_google"
-		// var remoteHost = "www.google.com"
-		// var sni = "www.google.com"
-		log.Infof(">>>>>>>>>>>>>>>>>>> creating cluster " + clusterName)
+		now := getCurrentTimeMilliseconds()
 
-		//c := []cache.Resource{resource.MakeCluster(resource.Ads, clusterName)}
-		/*h := &core.Address{Address: &core.Address_SocketAddress{
-			SocketAddress: &core.SocketAddress{
-				Address:  remoteHost,
-				Protocol: core.TCP,
-				PortSpecifier: &core.SocketAddress_PortValue{
-					PortValue: uint32(443),
-				},
-			},
-		}}*/
+		if clustersLastUpdate > LastConfigurationDeployment {
+			log.Infof("starting configuration compilation")
 
-		EnvoyClusters, err := getClusterConfig(db)
+			var clusterName = "service_google"
+			// log.Infof(">>>>>>>>>>>>>>>>>>> creating cluster " + clusterName)
 
-		var listenerName = "listener_0"
-		var targetHost = "www.google.com"
-		var targetPrefix = "/"
-		var virtualHostName = "local_service"
-		var routeConfigName = "local_route"
-		log.Infof(">>>>>>>>>>>>>>>>>>> creating listener " + listenerName)
-		//virtual host (inside http filter)
-		v := route.VirtualHost{
-			Name:    virtualHostName,
-			Domains: []string{"*"},
-			Routes: []route.Route{{
-				Match: route.RouteMatch{
-					PathSpecifier: &route.RouteMatch_Prefix{
-						Prefix: targetPrefix,
+			//c := []cache.Resource{resource.MakeCluster(resource.Ads, clusterName)}
+			/*h := &core.Address{Address: &core.Address_SocketAddress{
+				SocketAddress: &core.SocketAddress{
+					Address:  remoteHost,
+					Protocol: core.TCP,
+					PortSpecifier: &core.SocketAddress_PortValue{
+						PortValue: uint32(443),
 					},
 				},
-				Action: &route.Route_Route{
-					Route: &route.RouteAction{
-						HostRewriteSpecifier: &route.RouteAction_HostRewrite{
-							HostRewrite: targetHost,
-						},
-						ClusterSpecifier: &route.RouteAction_Cluster{
-							Cluster: clusterName,
+			}}*/
+
+			EnvoyClusters, err := getClusterConfig(db)
+
+			var listenerName = "listener_0"
+			var targetHost = "www.google.com"
+			var targetPrefix = "/"
+			var virtualHostName = "local_service"
+			var routeConfigName = "local_route"
+			// log.Infof(">>>>>>>>>>>>>>>>>>> creating listener " + listenerName)
+			//virtual host (inside http filter)
+			v := route.VirtualHost{
+				Name:    virtualHostName,
+				Domains: []string{"*"},
+				Routes: []route.Route{{
+					Match: route.RouteMatch{
+						PathSpecifier: &route.RouteMatch_Prefix{
+							Prefix: targetPrefix,
 						},
 					},
-				},
-			}},
-		}
-
-		//http filter (inside listener)
-		manager := &hcm.HttpConnectionManager{
-			StatPrefix: "ingress_http",
-			RouteSpecifier: &hcm.HttpConnectionManager_RouteConfig{
-				RouteConfig: &v2.RouteConfiguration{
-					Name:         routeConfigName,
-					VirtualHosts: []route.VirtualHost{v},
-				},
-			},
-			HttpFilters: []*hcm.HttpFilter{{
-				Name: util.Router,
-			}},
-		}
-		pbst, err := types.MarshalAny(manager)
-		if err != nil {
-			fmt.Println("yellow")
-			panic(err)
-		}
-		fmt.Println(pbst.TypeUrl)
-
-		//create listener
-		var l = []cache.Resource{
-			&v2.Listener{
-				Name: listenerName,
-				Address: core.Address{
-					Address: &core.Address_SocketAddress{
-						SocketAddress: &core.SocketAddress{
-							Protocol: core.TCP,
-							Address:  localhost,
-							PortSpecifier: &core.SocketAddress_PortValue{
-								PortValue: 10000,
+					Action: &route.Route_Route{
+						Route: &route.RouteAction{
+							HostRewriteSpecifier: &route.RouteAction_HostRewrite{
+								HostRewrite: targetHost,
+							},
+							ClusterSpecifier: &route.RouteAction_Cluster{
+								Cluster: clusterName,
 							},
 						},
 					},
-				},
-				FilterChains: []listener.FilterChain{{
-					Filters: []listener.Filter{{
-						Name: util.HTTPConnectionManager,
-						ConfigType: &listener.Filter_TypedConfig{
-							TypedConfig: pbst,
-						},
-					}},
 				}},
-			}}
+			}
 
-		log.Printf("%+v", l)
-		atomic.AddInt32(&version, 1)
-		//nodeId := config.GetStatusKeys()[1]
+			//http filter (inside listener)
+			manager := &hcm.HttpConnectionManager{
+				StatPrefix: "ingress_http",
+				RouteSpecifier: &hcm.HttpConnectionManager_RouteConfig{
+					RouteConfig: &v2.RouteConfiguration{
+						Name:         routeConfigName,
+						VirtualHosts: []route.VirtualHost{v},
+					},
+				},
+				HttpFilters: []*hcm.HttpFilter{{
+					Name: util.Router,
+				}},
+			}
+			pbst, err := types.MarshalAny(manager)
+			if err != nil {
+				fmt.Println("yellow")
+				panic(err)
+			}
+			fmt.Println(pbst.TypeUrl)
 
-		log.Infof(">>>>>>>>>>>>>>>>>>> creating snapshot Version " + fmt.Sprint(version))
-		snap := cache.NewSnapshot(fmt.Sprint(version), nil, EnvoyClusters, nil, l)
+			//create listener
+			var l = []cache.Resource{
+				&v2.Listener{
+					Name: listenerName,
+					Address: core.Address{
+						Address: &core.Address_SocketAddress{
+							SocketAddress: &core.SocketAddress{
+								Protocol: core.TCP,
+								Address:  localhost,
+								PortSpecifier: &core.SocketAddress_PortValue{
+									PortValue: 10000,
+								},
+							},
+						},
+					},
+					FilterChains: []listener.FilterChain{{
+						Filters: []listener.Filter{{
+							Name: util.HTTPConnectionManager,
+							ConfigType: &listener.Filter_TypedConfig{
+								TypedConfig: pbst,
+							},
+						}},
+					}},
+				}}
 
-		_ = EnvoyConfig.SetSnapshot("jenny", snap)
+			log.Printf("l: %+v", l)
+			log.Printf("v: %+v", v)
+			log.Printf("c: %+v", EnvoyClusters)
+			atomic.AddInt32(&version, 1)
+			//nodeId := config.GetStatusKeys()[1]
 
-		reader := bufio.NewReader(os.Stdin)
-		_, _ = reader.ReadString('\n')
+			log.Infof("Creating config version " + fmt.Sprint(version))
+			snap := cache.NewSnapshot(fmt.Sprint(version), nil, EnvoyClusters, nil, l)
+
+			_ = EnvoyConfig.SetSnapshot("jenny", snap)
+
+			LastConfigurationDeployment = now
+		}
+		time.Sleep(1 * time.Second)
 	}
-
 }

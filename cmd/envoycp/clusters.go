@@ -1,8 +1,7 @@
 package main
 
 import (
-	"errors"
-	"fmt"
+	"sync"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -13,21 +12,47 @@ import (
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/endpoint"
 	"github.com/envoyproxy/go-control-plane/pkg/cache"
 	"github.com/erikbos/apiauth/pkg/db"
+	"github.com/erikbos/apiauth/pkg/types"
 )
 
-func getClusterConfig(db *db.Database) ([]cache.Resource, error) {
-	// FIXME this should be retrieve asynchronously
-	clusters, err := db.GetClusters()
-	if err != nil {
-		msg := fmt.Sprintf("Could not retrieve clusters from database %v", err)
-		log.Error(msg)
-		return nil, errors.New(msg)
-	}
+var clusters []types.Cluster
+var clustersLastUpdate int64
+var mux sync.Mutex
 
-	EnvoyClusters := []cache.Resource{}
-	for i, s := range clusters {
-		fmt.Println(i, s)
-		EnvoyClusters = append(EnvoyClusters,
+// getCurrentTimeMilliseconds returns current epoch time in milliseconds
+func getCurrentTimeMilliseconds() int64 {
+	return time.Now().UTC().UnixNano() / 1000000
+}
+
+// FIXME this should be implemented using channels
+// FIXME this does not detect removed records
+
+// getClusterConfigFromDatabase continously gets the current configuration
+func getClusterConfigFromDatabase(db *db.Database) {
+	for {
+		newClusterList, err := db.GetClusters()
+		if err != nil {
+			log.Errorf("Could not retrieve clusters from database %v", err)
+		} else {
+			for _, s := range newClusterList {
+				// Is a cluster updated since last time we stored it?
+				if s.LastmodifiedAt > clustersLastUpdate {
+					now := getCurrentTimeMilliseconds()
+					mux.Lock()
+					clusters = newClusterList
+					clustersLastUpdate = now
+					mux.Unlock()
+				}
+			}
+		}
+		time.Sleep(2 * time.Second)
+	}
+}
+
+func getClusterConfig(db *db.Database) ([]cache.Resource, error) {
+	envoyClusters := []cache.Resource{}
+	for _, s := range clusters {
+		envoyClusters = append(envoyClusters,
 			&v2.Cluster{
 				Name:           s.Name,
 				ConnectTimeout: 1 * time.Second,
@@ -68,5 +93,5 @@ func getClusterConfig(db *db.Database) ([]cache.Resource, error) {
 			},
 		)
 	}
-	return EnvoyClusters, nil
+	return envoyClusters, nil
 }
