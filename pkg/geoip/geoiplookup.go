@@ -2,7 +2,6 @@ package geoip
 
 import (
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"net"
 
 	"github.com/oschwald/maxminddb-golang"
@@ -16,8 +15,6 @@ type Lookup struct {
 // GetCountryAndState returns country and state of the location of an ip address
 //
 func (l *Lookup) GetCountryAndState(ipaddress string) (string, string) {
-	log.Printf("%v", l)
-
 	if l.mdb != nil {
 		ip := net.ParseIP(ipaddress)
 		if ip != nil {
