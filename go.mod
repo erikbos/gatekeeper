@@ -9,6 +9,7 @@ require (
 	github.com/gin-gonic/gin v1.5.0
 	github.com/gocql/gocql v0.0.0-20191126110522-1982a06ad6b9
 	github.com/gogo/googleapis v1.2.0
+	github.com/gogo/protobuf v1.2.1
 	github.com/google/uuid v1.1.1
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/mattn/go-isatty v0.0.12 // indirect
