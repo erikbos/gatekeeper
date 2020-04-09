@@ -31,7 +31,6 @@ func main() {
 		a.config.DatabaseUsername, a.config.DatabasePassword, a.config.DatabaseKeyspace)
 	if err != nil {
 		log.Fatalf("Database connect failed: %v", err)
-		os.Exit(1)
 	}
 
 	a.c = db.CacheInit(a.config.CacheSize, a.config.CacheTTL, a.config.CacheNegativeTTL)

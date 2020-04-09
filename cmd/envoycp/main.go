@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"os"
 	"sync/atomic"
 	"time"
 
@@ -29,9 +28,7 @@ import (
 
 var (
 	localhost = "127.0.0.1"
-	//	port        = ":9901"
-	//	gatewayPort = ":9902"
-	version int32
+	version   int32
 )
 
 type logger struct{}
@@ -56,13 +53,11 @@ func (h Hasher) ID(node *core.Node) string {
 }
 
 func runManagementServer(server xds.Server, GRPCPort string) {
+	log.Info("Starting GRPC XDS on ", GRPCPort)
 	lis, err := net.Listen("tcp", GRPCPort)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
-
-	log.Info("Starting GRPC XDS on ", GRPCPort)
-
 	grpcServer := grpc.NewServer()
 	discovery.RegisterAggregatedDiscoveryServiceServer(grpcServer, server)
 	v2.RegisterEndpointDiscoveryServiceServer(grpcServer, server)
@@ -76,7 +71,6 @@ func runManagementServer(server xds.Server, GRPCPort string) {
 }
 
 func runManagementGateway(srv xds.Server, HTTPPort string) {
-
 	log.Info("Starting HTTP XDS on ", HTTPPort)
 	err := http.ListenAndServe(HTTPPort, &xds.HTTPGateway{Server: srv})
 	if err != nil {
@@ -101,7 +95,6 @@ func main() {
 		config.DatabaseUsername, config.DatabasePassword, config.DatabaseKeyspace)
 	if err != nil {
 		log.Fatalf("Database connect failed: %v", err)
-		os.Exit(1)
 	}
 
 	EnvoyConfig := cache.NewSnapshotCache(true, Hasher{}, logger{})

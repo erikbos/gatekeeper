@@ -37,7 +37,6 @@ func main() {
 	db, err := db.Connect(config.DatabaseHostname, config.DatabasePort, config.DatabaseUsername, config.DatabasePassword, config.DatabaseKeyspace)
 	if err != nil {
 		log.Fatalf("Database connect failed: %v", err)
-		os.Exit(1)
 	}
 
 	startRESTAPIServer(config.RESTAPIListen, db)
