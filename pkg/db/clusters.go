@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/erikbos/apiauth/pkg/types"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -43,9 +45,12 @@ func (d *Database) runGetClusterQuery(query string, queryParameters ...interface
 	timer := prometheus.NewTimer(d.dbLookupHistogram)
 	defer timer.ObserveDuration()
 
-	iterable := d.cassandraSession.Query(query, queryParameters...).Iter()
+	iter := d.cassandraSession.Query(query, queryParameters...).Iter()
+	log.Printf("%+v", iterable)
+	log.Printf("error: %s", iterable.Warnings())
+
 	m := make(map[string]interface{})
-	for iterable.MapScan(m) {
+	for iter.MapScan(m) {
 		clusters = append(clusters, types.Cluster{
 			Name:           m["key"].(string),
 			HostName:       m["host_name"].(string),
@@ -57,6 +62,9 @@ func (d *Database) runGetClusterQuery(query string, queryParameters ...interface
 			LastmodifiedBy: m["lastmodified_by"].(string),
 		})
 		m = map[string]interface{}{}
+	}
+	if err := iter.Close(); err != nil {
+		log.Error(err)
 	}
 	return clusters
 }
@@ -78,12 +86,12 @@ func (d *Database) UpdateClusterByName(updatedCluster types.Cluster) error {
 	return nil
 }
 
-// DeleteClusterByName deletes an cluster
+// DeleteClusterByName deletes a cluster
 func (d *Database) DeleteClusterByName(clusterToDelete string) error {
 	_, err := d.GetClusterByName(clusterToDelete)
 	if err != nil {
 		return err
 	}
 	query := "DELETE FROM clusters WHERE key = ?"
-	return d.cassandraSession.Query(query, clusterToDelete).Exec()
+	return d.cassandraSession.Query("DELETE FROM clusters WHERE key = ?", clusterToDelete).Exec()
 }

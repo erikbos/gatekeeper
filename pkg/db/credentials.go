@@ -6,6 +6,7 @@ import (
 
 	"github.com/erikbos/apiauth/pkg/types"
 	"github.com/prometheus/client_golang/prometheus"
+	log "github.com/sirupsen/logrus"
 )
 
 // Prometheus label for metrics of db interactions
@@ -83,6 +84,9 @@ func (d *Database) runGetAppCredentialQuery(query string, queryParameters ...int
 		}
 		appcredentials = append(appcredentials, appcredential)
 		m = map[string]interface{}{}
+	}
+	if err := iterable.Close(); err != nil {
+		log.Error(err)
 	}
 	return appcredentials
 }
