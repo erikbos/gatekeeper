@@ -5,7 +5,7 @@ require (
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/coocood/freecache v1.1.0
 	github.com/dchest/uniuri v0.0.0-20200228104902-7aecb25e1fe5
-	github.com/envoyproxy/go-control-plane v0.8.0
+	github.com/envoyproxy/go-control-plane v0.9.5
 	github.com/gin-gonic/gin v1.5.0
 	github.com/gocql/gocql v0.0.0-20191126110522-1982a06ad6b9
 	github.com/gogo/googleapis v1.2.0
@@ -18,9 +18,11 @@ require (
 	github.com/sirupsen/logrus v1.4.2
 	golang.org/x/net v0.0.0-20190620200207-3b0461eec859 // indirect
 	golang.org/x/sys v0.0.0-20200219091948-cb0a6d8edb6c // indirect
-	google.golang.org/grpc v1.21.0
+	golang.org/x/text v0.3.2 // indirect
+	google.golang.org/grpc v1.25.1
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 	gopkg.in/yaml.v2 v2.2.8
+	istio.io/gogo-genproto v0.0.0-20190124151557-6d926a6e6feb // indirect
 )
 
 go 1.13
