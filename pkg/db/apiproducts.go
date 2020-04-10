@@ -87,9 +87,9 @@ func (d *Database) UpdateAPIProductByName(updatedAPIProduct types.APIProduct) er
 		"lastmodified_at,lastmodified_by,organization_name) " +
 		"VALUES(?,?,?,?,?, ?,?,?,?,?)"
 
-	Attributes := d.marshallArrayOfAttributesToJSON(updatedAPIProduct.Attributes, false)
+	attributes := d.marshallArrayOfAttributesToJSON(updatedAPIProduct.Attributes, false)
 	err := d.cassandraSession.Query(query,
-		updatedAPIProduct.Key, updatedAPIProduct.Name, updatedAPIProduct.DisplayName, Attributes,
+		updatedAPIProduct.Key, updatedAPIProduct.Name, updatedAPIProduct.DisplayName, attributes,
 		updatedAPIProduct.CreatedAt, updatedAPIProduct.CreatedBy, updatedAPIProduct.APIResources,
 		updatedAPIProduct.LastmodifiedAt, updatedAPIProduct.LastmodifiedBy,
 		updatedAPIProduct.OrganizationName).Exec()

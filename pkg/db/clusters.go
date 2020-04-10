@@ -52,12 +52,9 @@ func (d *Database) runGetClusterQuery(query string, queryParameters ...interface
 	defer timer.ObserveDuration()
 
 	iter := d.cassandraSession.Query(query, queryParameters...).Iter()
-	// log.Printf("%+v", iter)
-	// log.Printf("error: %s", iter.Warnings())
-
 	m := make(map[string]interface{})
 	for iter.MapScan(m) {
-		clusters = append(clusters, types.Cluster{
+		newCluster := types.Cluster{
 			Name:           m["key"].(string),
 			HostName:       m["host_name"].(string),
 			HostPort:       m["host_port"].(int16),
@@ -66,7 +63,11 @@ func (d *Database) runGetClusterQuery(query string, queryParameters ...interface
 			DisplayName:    m["display_name"].(string),
 			LastmodifiedAt: m["lastmodified_at"].(int64),
 			LastmodifiedBy: m["lastmodified_by"].(string),
-		})
+		}
+		if m["attributes"] != nil {
+			newCluster.Attributes = d.unmarshallJSONArrayOfAttributes(m["attributes"].(string), true)
+		}
+		clusters = append(clusters, newCluster)
 		m = map[string]interface{}{}
 	}
 	// In case query failed we return query error
@@ -79,13 +80,14 @@ func (d *Database) runGetClusterQuery(query string, queryParameters ...interface
 
 // UpdateClusterByName UPSERTs an cluster in database
 func (d *Database) UpdateClusterByName(updatedCluster types.Cluster) error {
-	if err := d.cassandraSession.Query(
-		"INSERT INTO clusters (key, display_name, "+
-			"host_name, host_port, "+
-			"created_at, created_by, lastmodified_at, lastmodified_by) "+
-			"VALUES(?,?,?,?,?,?,?,?)",
+	query := "INSERT INTO clusters (key, display_name, " +
+		"host_name, host_port, attributes, " +
+		"created_at, created_by, lastmodified_at, lastmodified_by) " +
+		"VALUES(?,?,?,?,?,?,?,?,?)"
+	attributes := d.marshallArrayOfAttributesToJSON(updatedCluster.Attributes, false)
+	if err := d.cassandraSession.Query(query,
 		updatedCluster.Name, updatedCluster.DisplayName,
-		updatedCluster.HostName, updatedCluster.HostPort,
+		updatedCluster.HostName, updatedCluster.HostPort, attributes,
 		updatedCluster.CreatedAt, updatedCluster.CreatedBy,
 		updatedCluster.LastmodifiedAt,
 		updatedCluster.LastmodifiedBy).Exec(); err != nil {

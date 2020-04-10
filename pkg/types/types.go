@@ -159,12 +159,13 @@ type VirtualHost struct {
 
 // Cluster holds configuration of an upstream cluster
 type Cluster struct {
-	Name           string `json:"name"`
-	DisplayName    string `json:"displayName"`
-	HostName       string `json:"hostName"`
-	HostPort       int16  `json:"hostPort"`
-	CreatedAt      int64  `json:"createdAt"`
-	CreatedBy      string `json:"createdBy"`
-	LastmodifiedAt int64  `json:"lastmodifiedAt"`
-	LastmodifiedBy string `json:"lastmodifiedBy"`
+	Name           string               `json:"name"`
+	DisplayName    string               `json:"displayName"`
+	HostName       string               `json:"hostName"`
+	HostPort       int16                `json:"hostPort"`
+	Attributes     []AttributeKeyValues `json:"attributes"`
+	CreatedAt      int64                `json:"createdAt"`
+	CreatedBy      string               `json:"createdBy"`
+	LastmodifiedAt int64                `json:"lastmodifiedAt"`
+	LastmodifiedBy string               `json:"lastmodifiedBy"`
 }

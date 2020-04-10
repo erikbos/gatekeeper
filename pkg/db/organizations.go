@@ -1,7 +1,6 @@
 package db
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/erikbos/apiauth/pkg/types"
@@ -19,13 +18,13 @@ func (d *Database) GetOrganizations() ([]types.Organization, error) {
 	query := "SELECT * FROM organizations ALLOW FILTERING"
 	organizations, err := d.runGetOrganizationQuery(query, "")
 	if err != nil {
-		return []types.Organization{}, err
+		return []types.Organization{}, fmt.Errorf("Cannot retrieve list of organizations (%s)", err)
 	}
 	if len(organizations) == 0 {
 		d.metricsQueryMiss(organizationMetricLabel)
-		return []types.Organization{}, errors.New("Can not retrieve list of organizations")
+	} else {
+		d.metricsQueryHit(organizationMetricLabel)
 	}
-	d.metricsQueryHit(organizationMetricLabel)
 	return organizations, nil
 }
 
