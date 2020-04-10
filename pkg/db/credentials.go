@@ -10,7 +10,7 @@ import (
 )
 
 // Prometheus label for metrics of db interactions
-const appCrendetialsMetricLabel = "appcredentials"
+const appCredentialsMetricLabel = "appcredentials"
 
 // GetAppCredentialByKey returns details of a single apikey
 func (d *Database) GetAppCredentialByKey(organizationName, key string) (types.AppCredential, error) {
@@ -20,10 +20,10 @@ func (d *Database) GetAppCredentialByKey(organizationName, key string) (types.Ap
 		return types.AppCredential{}, err
 	}
 	if len(appcredentials) == 0 {
-		d.metricsQueryMiss(appCrendetialsMetricLabel)
+		d.metricsQueryMiss(appCredentialsMetricLabel)
 		return types.AppCredential{}, fmt.Errorf("Can not find apikey '%s'", key)
 	}
-	d.metricsQueryHit(appCrendetialsMetricLabel)
+	d.metricsQueryHit(appCredentialsMetricLabel)
 	return appcredentials[0], nil
 }
 
@@ -35,11 +35,11 @@ func (d *Database) GetAppCredentialByDeveloperAppID(organizationAppID string) ([
 		return []types.AppCredential{}, err
 	}
 	if len(appcredentials) == 0 {
-		d.metricsQueryMiss(appCrendetialsMetricLabel)
+		d.metricsQueryMiss(appCredentialsMetricLabel)
 		// Not being able to find a developer is not an error
 		return appcredentials, nil
 	}
-	d.metricsQueryHit(appCrendetialsMetricLabel)
+	d.metricsQueryHit(appCredentialsMetricLabel)
 	return appcredentials, nil
 }
 
@@ -48,10 +48,10 @@ func (d *Database) GetAppCredentialCountByDeveloperAppID(developerAppID string) 
 	var AppCredentialCount int
 	query := "SELECT count(*) FROM app_credentials WHERE organization_app_id = ?"
 	if err := d.cassandraSession.Query(query, developerAppID).Scan(&AppCredentialCount); err != nil {
-		d.metricsQueryMiss(appCrendetialsMetricLabel)
+		d.metricsQueryMiss(appCredentialsMetricLabel)
 		return -1
 	}
-	d.metricsQueryHit(appCrendetialsMetricLabel)
+	d.metricsQueryHit(appCredentialsMetricLabel)
 	return AppCredentialCount
 }
 
