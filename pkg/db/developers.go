@@ -14,7 +14,10 @@ const developerMetricLabel = "developers"
 // GetDevelopersByOrganization retrieves all developer belonging to an organization
 func (d *Database) GetDevelopersByOrganization(organizationName string) ([]types.Developer, error) {
 	query := "SELECT * FROM developers WHERE organization_name = ? ALLOW FILTERING"
-	developers := d.runGetDeveloperQuery(query, organizationName)
+	developers, err := d.runGetDeveloperQuery(query, organizationName)
+	if err != nil {
+		return []types.Developer{}, err
+	}
 	if len(developers) == 0 {
 		d.metricsQueryMiss(developerMetricLabel)
 		return developers,
@@ -39,7 +42,10 @@ func (d *Database) GetDeveloperCountByOrganization(organizationName string) int 
 // GetDeveloperByEmail retrieves a developer from database
 func (d *Database) GetDeveloperByEmail(developerOrganization, developerEmail string) (types.Developer, error) {
 	query := "SELECT * FROM developers WHERE organization_name = ? AND email = ? LIMIT 1 ALLOW FILTERING"
-	developers := d.runGetDeveloperQuery(query, developerOrganization, developerEmail)
+	developers, err := d.runGetDeveloperQuery(query, developerOrganization, developerEmail)
+	if err != nil {
+		return types.Developer{}, err
+	}
 	if len(developers) == 0 {
 		d.metricsQueryMiss(developerMetricLabel)
 		return types.Developer{}, fmt.Errorf("Can not find developer (%s)", developerEmail)
@@ -51,7 +57,10 @@ func (d *Database) GetDeveloperByEmail(developerOrganization, developerEmail str
 // GetDeveloperByID retrieves a developer from database
 func (d *Database) GetDeveloperByID(developerID string) (types.Developer, error) {
 	query := "SELECT * FROM developers WHERE key = ? LIMIT 1"
-	developers := d.runGetDeveloperQuery(query, developerID)
+	developers, err := d.runGetDeveloperQuery(query, developerID)
+	if err != nil {
+		return types.Developer{}, err
+	}
 	if len(developers) == 0 {
 		d.metricsQueryMiss(developerMetricLabel)
 		return types.Developer{}, fmt.Errorf("Can not find developerId (%s)", developerID)
@@ -61,21 +70,15 @@ func (d *Database) GetDeveloperByID(developerID string) (types.Developer, error)
 }
 
 // runDeveloperQuery executes CQL query and returns resultset
-func (d *Database) runGetDeveloperQuery(query string, queryParameters ...interface{}) []types.Developer {
+func (d *Database) runGetDeveloperQuery(query string, queryParameters ...interface{}) ([]types.Developer, error) {
 	var developers []types.Developer
 
 	timer := prometheus.NewTimer(d.dbLookupHistogram)
 	defer timer.ObserveDuration()
 
-	// Run query, and transfer in 100 row chunks
+	// Run query, and transfer in batches of 100 rows
 	iterable := d.cassandraSession.Query(query, queryParameters...).PageSize(100).Iter()
 	m := make(map[string]interface{})
-
-	// from https://github.com/uber/cherami-server/blob/1de31a4ed1d0a9cd33ff64199f7e91f23e99c11e/cmd/tools/cmq/fix.go
-	//
-	// for iter.Scan(&uuid, &destinationUUID, &name, &status, &lockTimeoutSeconds, &maxDeliveryCount, &skipOlderMessagesSeconds,
-	// 	&deadLetterQueueDestinationUUID, &ownerEmail, &startFrom, &isMultiZone, &activeZone, &zoneConfigs, &delaySeconds, &options) {
-
 	for iterable.MapScan(m) {
 		developers = append(developers, types.Developer{
 			Apps:             d.unmarshallJSONArrayOfStrings(m["apps"].(string)),
@@ -98,8 +101,9 @@ func (d *Database) runGetDeveloperQuery(query string, queryParameters ...interfa
 	}
 	if err := iterable.Close(); err != nil {
 		log.Error(err)
+		return []types.Developer{}, err
 	}
-	return developers
+	return developers, nil
 }
 
 // UpdateDeveloperByName UPSERTs a developer in database

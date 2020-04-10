@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/erikbos/apiauth/pkg/types"
+	"github.com/gocql/gocql"
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 )
@@ -14,11 +15,15 @@ const organizationMetricLabel = "organizations"
 
 // GetOrganizations retrieves all organizations
 func (d *Database) GetOrganizations() ([]types.Organization, error) {
-	query := "SELECT * FROM organizations WHERE key != ? ALLOW FILTERING"
-	organizations := d.runGetOrganizationQuery(query, "")
+	// FIXME this ugly workaround to have to pass an argument
+	query := "SELECT * FROM organizations ALLOW FILTERING"
+	organizations, err := d.runGetOrganizationQuery(query, "")
+	if err != nil {
+		return []types.Organization{}, err
+	}
 	if len(organizations) == 0 {
 		d.metricsQueryMiss(organizationMetricLabel)
-		return organizations, errors.New("Can not retrieve list of organizations")
+		return []types.Organization{}, errors.New("Can not retrieve list of organizations")
 	}
 	d.metricsQueryHit(organizationMetricLabel)
 	return organizations, nil
@@ -27,7 +32,10 @@ func (d *Database) GetOrganizations() ([]types.Organization, error) {
 // GetOrganizationByName retrieves an organization from database
 func (d *Database) GetOrganizationByName(organizationName string) (types.Organization, error) {
 	query := "SELECT * FROM organizations WHERE name = ? LIMIT 1"
-	organizations := d.runGetOrganizationQuery(query, organizationName)
+	organizations, err := d.runGetOrganizationQuery(query, organizationName)
+	if err != nil {
+		return types.Organization{}, err
+	}
 	if len(organizations) == 0 {
 		d.metricsQueryMiss(organizationMetricLabel)
 		return types.Organization{},
@@ -38,13 +46,18 @@ func (d *Database) GetOrganizationByName(organizationName string) (types.Organiz
 }
 
 // runGetOrganizationQuery executes CQL query and returns resultset
-func (d *Database) runGetOrganizationQuery(query, queryParameter string) []types.Organization {
+func (d *Database) runGetOrganizationQuery(query, queryParameter string) ([]types.Organization, error) {
 	var organizations []types.Organization
 
 	timer := prometheus.NewTimer(d.dbLookupHistogram)
 	defer timer.ObserveDuration()
 
-	iterable := d.cassandraSession.Query(query, queryParameter).Iter()
+	var iterable *gocql.Iter
+	if queryParameter == "" {
+		iterable = d.cassandraSession.Query(query).Iter()
+	} else {
+		iterable = d.cassandraSession.Query(query, queryParameter).Iter()
+	}
 	m := make(map[string]interface{})
 	for iterable.MapScan(m) {
 		organizations = append(organizations, types.Organization{
@@ -60,8 +73,9 @@ func (d *Database) runGetOrganizationQuery(query, queryParameter string) []types
 	}
 	if err := iterable.Close(); err != nil {
 		log.Error(err)
+		return []types.Organization{}, err
 	}
-	return organizations
+	return organizations, nil
 }
 
 // UpdateOrganizationByName UPSERTs an organization in database
@@ -80,7 +94,7 @@ func (d *Database) UpdateOrganizationByName(updatedOrganization types.Organizati
 	return nil
 }
 
-// DeleteOrganizationByName deletes an organization
+// DeleteOrganizationByName deletes an organization from database
 func (d *Database) DeleteOrganizationByName(organizationToDelete string) error {
 	_, err := d.GetOrganizationByName(organizationToDelete)
 	if err != nil {

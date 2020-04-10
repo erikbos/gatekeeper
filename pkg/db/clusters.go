@@ -16,10 +16,13 @@ const clusterMetricLabel = "clusters"
 // GetClusters retrieves all clusters
 func (d *Database) GetClusters() ([]types.Cluster, error) {
 	query := "SELECT * FROM clusters"
-	clusters := d.runGetClusterQuery(query)
+	clusters, err := d.runGetClusterQuery(query)
+	if err != nil {
+		return []types.Cluster{}, err
+	}
 	if len(clusters) == 0 {
 		d.metricsQueryMiss(clusterMetricLabel)
-		return clusters, errors.New("Can not retrieve list of clusters")
+		return []types.Cluster{}, errors.New("Can not retrieve list of clusters")
 	}
 	d.metricsQueryHit(clusterMetricLabel)
 	return clusters, nil
@@ -28,7 +31,10 @@ func (d *Database) GetClusters() ([]types.Cluster, error) {
 // GetClusterByName retrieves a cluster from database
 func (d *Database) GetClusterByName(clusterName string) (types.Cluster, error) {
 	query := "SELECT * FROM clusters WHERE key = ? LIMIT 1"
-	clusters := d.runGetClusterQuery(query, clusterName)
+	clusters, err := d.runGetClusterQuery(query, clusterName)
+	if err != nil {
+		return types.Cluster{}, err
+	}
 	if len(clusters) == 0 {
 		d.metricsQueryMiss(clusterMetricLabel)
 		return types.Cluster{},
@@ -39,15 +45,15 @@ func (d *Database) GetClusterByName(clusterName string) (types.Cluster, error) {
 }
 
 // runGetClusterQuery executes CQL query and returns resultset
-func (d *Database) runGetClusterQuery(query string, queryParameters ...interface{}) []types.Cluster {
+func (d *Database) runGetClusterQuery(query string, queryParameters ...interface{}) ([]types.Cluster, error) {
 	var clusters []types.Cluster
 
 	timer := prometheus.NewTimer(d.dbLookupHistogram)
 	defer timer.ObserveDuration()
 
 	iter := d.cassandraSession.Query(query, queryParameters...).Iter()
-	log.Printf("%+v", iterable)
-	log.Printf("error: %s", iterable.Warnings())
+	// log.Printf("%+v", iter)
+	// log.Printf("error: %s", iter.Warnings())
 
 	m := make(map[string]interface{})
 	for iter.MapScan(m) {
@@ -63,10 +69,12 @@ func (d *Database) runGetClusterQuery(query string, queryParameters ...interface
 		})
 		m = map[string]interface{}{}
 	}
+	// In case query failed we return query error
 	if err := iter.Close(); err != nil {
 		log.Error(err)
+		return []types.Cluster{}, err
 	}
-	return clusters
+	return clusters, nil
 }
 
 // UpdateClusterByName UPSERTs an cluster in database
@@ -93,5 +101,5 @@ func (d *Database) DeleteClusterByName(clusterToDelete string) error {
 		return err
 	}
 	query := "DELETE FROM clusters WHERE key = ?"
-	return d.cassandraSession.Query("DELETE FROM clusters WHERE key = ?", clusterToDelete).Exec()
+	return d.cassandraSession.Query(query, clusterToDelete).Exec()
 }

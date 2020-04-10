@@ -14,10 +14,11 @@ const appCrendetialsMetricLabel = "appcredentials"
 
 // GetAppCredentialByKey returns details of a single apikey
 func (d *Database) GetAppCredentialByKey(organizationName, key string) (types.AppCredential, error) {
-	var appcredentials []types.AppCredential
-
 	query := "SELECT * FROM app_credentials WHERE key = ? AND organization_name = ? LIMIT 1"
-	appcredentials = d.runGetAppCredentialQuery(query, key, organizationName)
+	appcredentials, err := d.runGetAppCredentialQuery(query, key, organizationName)
+	if err != nil {
+		return types.AppCredential{}, err
+	}
 	if len(appcredentials) == 0 {
 		d.metricsQueryMiss(appCrendetialsMetricLabel)
 		return types.AppCredential{}, fmt.Errorf("Can not find apikey '%s'", key)
@@ -28,10 +29,11 @@ func (d *Database) GetAppCredentialByKey(organizationName, key string) (types.Ap
 
 // GetAppCredentialByDeveloperAppID returns an array with apikey details of a developer app
 func (d *Database) GetAppCredentialByDeveloperAppID(organizationAppID string) ([]types.AppCredential, error) {
-	var appcredentials []types.AppCredential
-
 	query := "SELECT * FROM app_credentials WHERE organization_app_id = ?"
-	appcredentials = d.runGetAppCredentialQuery(query, organizationAppID)
+	appcredentials, err := d.runGetAppCredentialQuery(query, organizationAppID)
+	if err != nil {
+		return []types.AppCredential{}, err
+	}
 	if len(appcredentials) == 0 {
 		d.metricsQueryMiss(appCrendetialsMetricLabel)
 		// Not being able to find a developer is not an error
@@ -54,7 +56,7 @@ func (d *Database) GetAppCredentialCountByDeveloperAppID(developerAppID string) 
 }
 
 // runAppCredentialQuery executes CQL query and returns resulset
-func (d *Database) runGetAppCredentialQuery(query string, queryParameters ...interface{}) []types.AppCredential {
+func (d *Database) runGetAppCredentialQuery(query string, queryParameters ...interface{}) ([]types.AppCredential, error) {
 	var appcredentials []types.AppCredential
 
 	timer := prometheus.NewTimer(d.dbLookupHistogram)
@@ -85,10 +87,12 @@ func (d *Database) runGetAppCredentialQuery(query string, queryParameters ...int
 		appcredentials = append(appcredentials, appcredential)
 		m = map[string]interface{}{}
 	}
+	// In case query failed we return query error
 	if err := iterable.Close(); err != nil {
 		log.Error(err)
+		return []types.AppCredential{}, err
 	}
-	return appcredentials
+	return appcredentials, nil
 }
 
 // UpdateAppCredentialByKey UPSERTs appcredentials in database

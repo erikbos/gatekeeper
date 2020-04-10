@@ -14,7 +14,10 @@ const apiProductsMetricLabel = "apiproducts"
 // GetAPIProductsByOrganization retrieves all api products belonging to an organization
 func (d *Database) GetAPIProductsByOrganization(organizationName string) ([]types.APIProduct, error) {
 	query := "SELECT * FROM api_products WHERE organization_name = ? ALLOW FILTERING"
-	apiproducts := d.runGetAPIProductQuery(query, organizationName)
+	apiproducts, err := d.runGetAPIProductQuery(query, organizationName)
+	if err != nil {
+		return []types.APIProduct{}, err
+	}
 	if len(apiproducts) == 0 {
 		d.metricsQueryMiss(appsMetricLabel)
 		return apiproducts,
@@ -27,7 +30,10 @@ func (d *Database) GetAPIProductsByOrganization(organizationName string) ([]type
 // GetAPIProductByName returns an apiproduct
 func (d *Database) GetAPIProductByName(organizationName, apiproductName string) (types.APIProduct, error) {
 	query := "SELECT * FROM api_products WHERE organization_name = ? AND name = ? LIMIT 1"
-	apiproducts := d.runGetAPIProductQuery(query, organizationName, apiproductName)
+	apiproducts, err := d.runGetAPIProductQuery(query, organizationName, apiproductName)
+	if err != nil {
+		return types.APIProduct{}, err
+	}
 	if len(apiproducts) == 0 {
 		d.metricsQueryMiss(apiProductsMetricLabel)
 		return types.APIProduct{},
@@ -38,7 +44,7 @@ func (d *Database) GetAPIProductByName(organizationName, apiproductName string) 
 }
 
 // runAPIProductQuery executes CQL query and returns resultset
-func (d *Database) runGetAPIProductQuery(query string, queryParameters ...interface{}) []types.APIProduct {
+func (d *Database) runGetAPIProductQuery(query string, queryParameters ...interface{}) ([]types.APIProduct, error) {
 	var apiproducts []types.APIProduct
 
 	timer := prometheus.NewTimer(d.dbLookupHistogram)
@@ -69,8 +75,9 @@ func (d *Database) runGetAPIProductQuery(query string, queryParameters ...interf
 	}
 	if err := iterable.Close(); err != nil {
 		log.Error(err)
+		return []types.APIProduct{}, err
 	}
-	return apiproducts
+	return apiproducts, nil
 }
 
 // UpdateAPIProductByName UPSERTs an apiproduct in database

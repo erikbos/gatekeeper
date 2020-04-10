@@ -32,7 +32,7 @@ func getClusterConfigFromDatabase(db *db.Database) {
 	for {
 		newClusterList, err := db.GetClusters()
 		if err != nil {
-			log.Errorf("Could not retrieve clusters from database %v", err)
+			log.Errorf("Could not retrieve clusters from database (%s)", err)
 		} else {
 			for _, s := range newClusterList {
 				// Is a cluster updated since last time we stored it?

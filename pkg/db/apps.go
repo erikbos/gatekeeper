@@ -14,7 +14,10 @@ const appsMetricLabel = "apps"
 // GetDeveloperAppsByOrganization retrieves all developer apps belonging to an organization
 func (d *Database) GetDeveloperAppsByOrganization(organizationName string) ([]types.DeveloperApp, error) {
 	query := "SELECT * FROM apps WHERE organization_name = ? ALLOW FILTERING"
-	developerapps := d.runGetDeveloperAppQuery(query, organizationName)
+	developerapps, err := d.runGetDeveloperAppQuery(query, organizationName)
+	if err != nil {
+		return []types.DeveloperApp{}, err
+	}
 	if len(developerapps) == 0 {
 		d.metricsQueryMiss(appsMetricLabel)
 		return developerapps,
@@ -27,7 +30,10 @@ func (d *Database) GetDeveloperAppsByOrganization(organizationName string) ([]ty
 // GetDeveloperAppByName returns details of a developer app
 func (d *Database) GetDeveloperAppByName(organization, developerAppName string) (types.DeveloperApp, error) {
 	query := "SELECT * FROM apps WHERE organization_name = ? AND name = ? LIMIT 1"
-	developerapps := d.runGetDeveloperAppQuery(query, organization, developerAppName)
+	developerapps, err := d.runGetDeveloperAppQuery(query, organization, developerAppName)
+	if err != nil {
+		return types.DeveloperApp{}, err
+	}
 	if len(developerapps) == 0 {
 		d.metricsQueryMiss(appsMetricLabel)
 		return types.DeveloperApp{},
@@ -40,7 +46,10 @@ func (d *Database) GetDeveloperAppByName(organization, developerAppName string) 
 // GetDeveloperAppByID returns details of a developer app
 func (d *Database) GetDeveloperAppByID(organization, developerAppID string) (types.DeveloperApp, error) {
 	query := "SELECT * FROM apps WHERE key = ? LIMIT 1"
-	developerapps := d.runGetDeveloperAppQuery(query, developerAppID)
+	developerapps, err := d.runGetDeveloperAppQuery(query, developerAppID)
+	if err != nil {
+		return types.DeveloperApp{}, err
+	}
 	if len(developerapps) == 0 {
 		d.metricsQueryMiss(appsMetricLabel)
 		return types.DeveloperApp{},
@@ -63,7 +72,7 @@ func (d *Database) GetDeveloperAppCountByDeveloperID(organizationName string) in
 }
 
 // runGetDeveloperAppQuery executes CQL query and returns resulset
-func (d *Database) runGetDeveloperAppQuery(query string, queryParameters ...interface{}) []types.DeveloperApp {
+func (d *Database) runGetDeveloperAppQuery(query string, queryParameters ...interface{}) ([]types.DeveloperApp, error) {
 	var developerapps []types.DeveloperApp
 
 	timer := prometheus.NewTimer(d.dbLookupHistogram)
@@ -93,10 +102,12 @@ func (d *Database) runGetDeveloperAppQuery(query string, queryParameters ...inte
 		})
 		m = map[string]interface{}{}
 	}
+	// In case query failed we return query error
 	if err := iterable.Close(); err != nil {
 		log.Error(err)
+		return []types.DeveloperApp{}, err
 	}
-	return developerapps
+	return developerapps, nil
 }
 
 // UpdateDeveloperAppByName UPSERTs a developer app in database
