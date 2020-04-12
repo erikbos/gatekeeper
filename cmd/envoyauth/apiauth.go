@@ -9,13 +9,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/erikbos/apiauth/pkg/db"
+	"github.com/erikbos/apiauth/pkg/types"
+
 	"github.com/bmatcuk/doublestar"
 	core "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	auth "github.com/envoyproxy/go-control-plane/envoy/service/auth/v2"
 	envoy_type "github.com/envoyproxy/go-control-plane/envoy/type"
-	"github.com/erikbos/apiauth/pkg/db"
-	"github.com/erikbos/apiauth/pkg/geoip"
-	"github.com/erikbos/apiauth/pkg/types"
 	"github.com/gogo/googleapis/google/rpc"
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
@@ -162,7 +162,7 @@ type authorizationServer struct {
 	db                   *db.Database
 	c                    *db.Cache
 	config               APIAuthConfig
-	g                    *geoip.Lookup
+	g                    *types.Geoip
 	authLatencyHistogram prometheus.Summary
 }
 

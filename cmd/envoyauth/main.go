@@ -7,6 +7,7 @@ import (
 
 	"github.com/erikbos/apiauth/pkg/db"
 	"github.com/erikbos/apiauth/pkg/types"
+
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 )
