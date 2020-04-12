@@ -17,7 +17,7 @@ func TestGeoLookupIPs(t *testing.T) {
 		{"this_ipaddress_cannot_exist", ""},
 	}
 
-	g, err := OpenDatabase("../../GeoIP2-City.mmdb")
+	g, err := OpenGeoipDatabase("../../GeoIP2-City.mmdb")
 	if err != nil {
 		log.Fatalf("failed to open geoip database: %v", err)
 	}

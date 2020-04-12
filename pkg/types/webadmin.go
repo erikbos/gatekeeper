@@ -8,8 +8,8 @@ import (
 )
 
 //ShowIndexPage produces the index page based upon all registered routes
-func ShowIndexPage(c *gin.Context, e *gin.Engine) {
-	body := adminIndexHTMLheader
+func ShowIndexPage(c *gin.Context, e *gin.Engine, name string) {
+	body := fmt.Sprintf(adminIndexHTMLheader, name, name)
 	for _, v := range e.Routes() {
 		body += fmt.Sprintf(`<tr class='home-row'>
 		<td class='home-data'>%s</td>
@@ -27,7 +27,7 @@ func ShowIndexPage(c *gin.Context, e *gin.Engine) {
 
 const adminIndexHTMLheader = `
 <head>
-<title>APIAuth Admin</title>
+<title>%s</title>
 <style>
 .home-table {
   font-family: sans-serif;
@@ -52,7 +52,7 @@ const adminIndexHTMLheader = `
 
 </head>
 <body>
-<h1>APIAuth Admin</h1>
+<h1>%s</h1>
 <table class='home-table'>
 <thead>
 	<th class='home-data'>Method</th>

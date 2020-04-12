@@ -9,7 +9,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/erikbos/apiauth/pkg/db"
 	"github.com/erikbos/apiauth/pkg/types"
 
 	"github.com/bmatcuk/doublestar"
@@ -158,14 +157,6 @@ func getQPSQuotaKeyAndLimit(apiKey string, apiproduct types.APIProduct, develope
 //
 // message: body to return by auth module to HTTP requestor
 
-type authorizationServer struct {
-	db                   *db.Database
-	c                    *db.Cache
-	config               APIAuthConfig
-	g                    *types.Geoip
-	authLatencyHistogram prometheus.Summary
-}
-
 func startGRPCAuthenticationServer(a authorizationServer) {
 	a.authLatencyHistogram = prometheus.NewSummary(
 		prometheus.SummaryOpts{
@@ -175,7 +166,7 @@ func startGRPCAuthenticationServer(a authorizationServer) {
 		})
 	prometheus.MustRegister(a.authLatencyHistogram)
 
-	lis, err := net.Listen("tcp", a.config.GRPCAuthListen)
+	lis, err := net.Listen("tcp", a.config.AuthGRPCListen)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}

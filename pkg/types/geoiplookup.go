@@ -39,9 +39,9 @@ func (g *Geoip) GetCountryAndState(ipaddress string) (string, string) {
 	return "", ""
 }
 
-// OpenDatabase opens a Maxmind geoip database
+// OpenGeoipDatabase opens a Maxmind geoip database
 //
-func OpenDatabase(filename string) (*Geoip, error) {
+func OpenGeoipDatabase(filename string) (*Geoip, error) {
 	var err error
 	g := Geoip{}
 	g.mdb, err = maxminddb.Open(filename)

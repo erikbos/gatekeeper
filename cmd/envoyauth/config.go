@@ -9,16 +9,18 @@ import (
 )
 
 const (
-	defaultConfigFilename = "dbadmin-config.yaml"
+	defaultConfigFilename = "envoyauth-config.yaml"
 	defaultLogLevel       = "info"
 	defaultWebAdminListen = "0.0.0.0:7777"
+	defaultAuthGRPCListen = "0.0.0.0:7778"
 )
 
-//DBAdminConfig contains our startup configuration data
+//APIAuthConfig contains our startup configuration data
 //
-type DBAdminConfig struct {
+type APIAuthConfig struct {
 	LogLevel       string `yaml:"loglevel"`
 	WebAdminListen string `yaml:"webadminlisten"`
+	AuthGRPCListen string `yaml:"authgrpclisten"`
 	Database       struct {
 		Hostname string `yaml:"hostname"`
 		Port     int    `yaml:"port"`
@@ -26,16 +28,25 @@ type DBAdminConfig struct {
 		Password string `yaml:"password"`
 		Keyspace string `yaml:"keyspace"`
 	} `yaml:"database"`
+	Cache struct {
+		Size        int `yaml:"size"`
+		TTL         int `yaml:"ttl"`
+		NegativeTTL int `yaml:"negativettl"`
+	} `yaml:"cache"`
+	Geoip struct {
+		Filename string `yaml:"filename"`
+	} `yaml:"geoip"`
 }
 
-func loadConfiguration() *DBAdminConfig {
+func loadConfiguration() *APIAuthConfig {
 	filename := flag.String("config", defaultConfigFilename, "Configuration filename")
 	flag.Parse()
 
 	// default configuration
-	config := DBAdminConfig{
+	config := APIAuthConfig{
 		LogLevel:       defaultLogLevel,
 		WebAdminListen: defaultWebAdminListen,
+		AuthGRPCListen: defaultAuthGRPCListen,
 	}
 
 	file, err := os.Open(*filename)
