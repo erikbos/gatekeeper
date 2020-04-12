@@ -45,5 +45,6 @@ func main() {
 	}
 
 	StartWebAdminServer(&a)
+	a.readyness.Up()
 	startGRPCAuthenticationServer(a)
 }

@@ -1,6 +1,10 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
+	"net/http"
+
 	"github.com/erikbos/apiauth/pkg/types"
 	"github.com/gin-gonic/gin"
 
@@ -24,12 +28,11 @@ func StartWebAdminServer(e *env) {
 	e.registerAPIProductRoutes(e.ginEngine)
 	e.registerClusterRoutes(e.ginEngine)
 
-	e.ginEngine.Static("/assets", "./assets")
-	e.ginEngine.GET("/metrics", gin.WrapH(promhttp.Handler()))
 	e.ginEngine.GET("/", e.ShowWebAdminHomePage)
 	e.ginEngine.GET("/ready", e.readyness.DisplayReadyness)
-
-	e.readyness.Up()
+	e.ginEngine.GET("/metrics", gin.WrapH(promhttp.Handler()))
+	e.ginEngine.GET("/config_dump", e.configDump)
+	e.ginEngine.Static("/assets", "./assets")
 
 	log.Info("Webadmin listening on ", e.config.WebAdminListen)
 	e.ginEngine.Run(e.config.WebAdminListen)
@@ -39,4 +42,23 @@ func StartWebAdminServer(e *env) {
 func (e *env) ShowWebAdminHomePage(c *gin.Context) {
 	// FIXME feels like hack, is there a better way to pass gin engine context?
 	types.ShowIndexPage(c, e.ginEngine, myName)
+}
+
+//configDump pretty prints the active configuration
+//
+func (e *env) configDump(c *gin.Context) {
+	// We must remove db password from configuration struct before showing
+	configToPrint := e.config
+	configToPrint.Database.Password = ""
+
+	buffer := new(bytes.Buffer)
+	encoder := json.NewEncoder(buffer)
+	encoder.SetIndent("", "\t")
+	err := encoder.Encode(configToPrint)
+	if err != nil {
+		return
+	}
+
+	c.Header("Content-type", "text/json")
+	c.String(http.StatusOK, buffer.String())
 }

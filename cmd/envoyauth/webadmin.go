@@ -26,8 +26,6 @@ func StartWebAdminServer(a *authorizationServer) {
 	a.ginEngine.GET("/metrics", gin.WrapH(promhttp.Handler()))
 	a.ginEngine.GET("/config_dump", a.configDump)
 
-	a.readyness.Up()
-
 	log.Info("Webadmin listening on ", a.config.WebAdminListen)
 	go func() {
 		a.ginEngine.Run(a.config.WebAdminListen)
