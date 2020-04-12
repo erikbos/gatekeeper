@@ -15,7 +15,7 @@ const clusterMetricLabel = "clusters"
 
 // GetClusters retrieves all clusters
 func (d *Database) GetClusters() ([]types.Cluster, error) {
-	query := "SELECT * FROM clusters"
+	query := "SELECT * FROM clusterz"
 	clusters, err := d.runGetClusterQuery(query)
 	if err != nil {
 		return []types.Cluster{}, err
@@ -30,7 +30,7 @@ func (d *Database) GetClusters() ([]types.Cluster, error) {
 
 // GetClusterByName retrieves a cluster from database
 func (d *Database) GetClusterByName(clusterName string) (types.Cluster, error) {
-	query := "SELECT * FROM clusters WHERE key = ? LIMIT 1"
+	query := "SELECT * FROM clusterz WHERE key = ? LIMIT 1"
 	clusters, err := d.runGetClusterQuery(query, clusterName)
 	if err != nil {
 		return types.Cluster{}, err
@@ -57,7 +57,7 @@ func (d *Database) runGetClusterQuery(query string, queryParameters ...interface
 		newCluster := types.Cluster{
 			Name:           m["key"].(string),
 			HostName:       m["host_name"].(string),
-			HostPort:       m["host_port"].(int16),
+			Port:           m["port"].(int),
 			CreatedAt:      m["created_at"].(int64),
 			CreatedBy:      m["created_by"].(string),
 			DisplayName:    m["display_name"].(string),
@@ -80,8 +80,8 @@ func (d *Database) runGetClusterQuery(query string, queryParameters ...interface
 
 // UpdateClusterByName UPSERTs an cluster in database
 func (d *Database) UpdateClusterByName(updatedCluster *types.Cluster) error {
-	query := "INSERT INTO clusters (key, display_name, " +
-		"host_name, host_port, attributes, " +
+	query := "INSERT INTO clusterz (key, display_name, " +
+		"host_name, port, attributes, " +
 		"created_at, created_by, lastmodified_at, lastmodified_by) " +
 		"VALUES(?,?,?,?,?,?,?,?,?)"
 	updatedCluster.Attributes = types.TidyAttributes(updatedCluster.Attributes)
@@ -89,7 +89,7 @@ func (d *Database) UpdateClusterByName(updatedCluster *types.Cluster) error {
 	updatedCluster.LastmodifiedAt = types.GetCurrentTimeMilliseconds()
 	if err := d.cassandraSession.Query(query,
 		updatedCluster.Name, updatedCluster.DisplayName,
-		updatedCluster.HostName, updatedCluster.HostPort, attributes,
+		updatedCluster.HostName, updatedCluster.Port, attributes,
 		updatedCluster.CreatedAt, updatedCluster.CreatedBy,
 		updatedCluster.LastmodifiedAt,
 		updatedCluster.LastmodifiedBy).Exec(); err != nil {
@@ -104,6 +104,6 @@ func (d *Database) DeleteClusterByName(clusterToDelete string) error {
 	if err != nil {
 		return err
 	}
-	query := "DELETE FROM clusters WHERE key = ?"
+	query := "DELETE FROM clusterz WHERE key = ?"
 	return d.cassandraSession.Query(query, clusterToDelete).Exec()
 }

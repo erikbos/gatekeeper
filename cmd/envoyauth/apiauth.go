@@ -18,6 +18,7 @@ import (
 	"github.com/gogo/googleapis/google/rpc"
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
+	"google.golang.org/genproto/googleapis/rpc/status"
 	"google.golang.org/grpc"
 )
 
@@ -231,7 +232,7 @@ func (a *authorizationServer) Check(ctx context.Context, req *auth.CheckRequest)
 
 func allowCall(message string) (*auth.CheckResponse, error) {
 	return &auth.CheckResponse{
-		Status: &rpc.Status{
+		Status: &status.Status{
 			Code: int32(rpc.OK),
 		},
 		HttpResponse: &auth.CheckResponse_OkResponse{
@@ -262,7 +263,7 @@ func rejectCall(statusCode envoy_type.StatusCode, message string) (*auth.CheckRe
 	errorPayload := fmt.Sprintf("{ %s }", message)
 
 	return &auth.CheckResponse{
-		Status: &rpc.Status{
+		Status: &status.Status{
 			Code: int32(rpc.UNAUTHENTICATED),
 		},
 		HttpResponse: &auth.CheckResponse_DeniedResponse{

@@ -1,6 +1,7 @@
 package types
 
 import (
+	"errors"
 	"strings"
 	"time"
 )
@@ -132,6 +133,16 @@ type AttributeKeyValues struct {
 	Value string `json:"value"`
 }
 
+//GetAttribute find one named attribute in array of attributes (developer or developerapp)
+func GetAttribute(attributes []AttributeKeyValues, requestedAttributeName string) (string, error) {
+	for attributeIndex := range attributes {
+		if attributes[attributeIndex].Name == requestedAttributeName {
+			return attributes[attributeIndex].Value, nil
+		}
+	}
+	return "", errors.New("Attribute not found")
+}
+
 //FindIndexOfAttribute find index of attribute in slice
 func FindIndexOfAttribute(attributes []AttributeKeyValues, name string) int {
 	for index, element := range attributes {
@@ -211,7 +222,7 @@ type Cluster struct {
 	Name           string               `json:"name"`
 	DisplayName    string               `json:"displayName"`
 	HostName       string               `json:"hostName"`
-	HostPort       int16                `json:"hostPort"`
+	Port           int                  `json:"port"`
 	Attributes     []AttributeKeyValues `json:"attributes"`
 	CreatedAt      int64                `json:"createdAt"`
 	CreatedBy      string               `json:"createdBy"`
