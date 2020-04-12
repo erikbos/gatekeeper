@@ -1,12 +1,13 @@
-# REST API daemon settings
+# DBAdmin daemon settings
 #
 # The address to listen on for REST API
-rest_api_listen: 0.0.0.0:3333
+webadminlisten: 0.0.0.0:3333
 
 # Cassandra settings
-database_hostname: xx.cassandra.cosmos.azure.com
-database_port: 10350
-database_username: xx
-database_password: xx
-database_keyspace: kms
+database:
+  hostname: xx.cassandra.cosmos.azure.com
+  port: 10350
+  username: xx
+  password: xx
+  keyspace: kms
 
