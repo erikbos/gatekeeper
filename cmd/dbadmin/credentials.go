@@ -3,16 +3,17 @@ package main
 import (
 	"net/http"
 
+	"github.com/dchest/uniuri"
 	"github.com/erikbos/apiauth/pkg/types"
 	"github.com/gin-gonic/gin"
 )
 
 func (e *env) registerCredentialRoutes(r *gin.Engine) {
 	r.GET("/v1/organizations/:organization/developers/:developer/apps/:application/keys", e.GetDeveloperAppKeys)
-	r.POST("/v1/organizations/:organization/developers/:developer/apps/:application/keys", e.CheckForJSONContentType, e.PostCreateDeveloperAppKey)
+	r.POST("/v1/organizations/:organization/developers/:developer/apps/:application/keys", types.AbortIfContentTypeNotJSON, e.PostCreateDeveloperAppKey)
 
 	r.GET("/v1/organizations/:organization/developers/:developer/apps/:application/keys/:key", e.GetDeveloperAppKeyByKey)
-	r.POST("/v1/organizations/:organization/developers/:developer/apps/:application/keys/:key", e.CheckForJSONContentType, e.PostUpdateDeveloperAppKeyByKey)
+	r.POST("/v1/organizations/:organization/developers/:developer/apps/:application/keys/:key", types.AbortIfContentTypeNotJSON, e.PostUpdateDeveloperAppKeyByKey)
 	r.DELETE("/v1/organizations/:organization/developers/:developer/apps/:application/keys/:key", e.DeleteDeveloperAppKeyByKey)
 }
 
@@ -20,17 +21,17 @@ func (e *env) registerCredentialRoutes(r *gin.Engine) {
 func (e *env) GetDeveloperAppKeys(c *gin.Context) {
 	_, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
 	if err != nil {
-		e.returnJSONMessage(c, http.StatusNotFound, err)
+		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
 	developerApp, err := e.db.GetDeveloperAppByName(c.Param("organization"), c.Param("application"))
 	if err != nil {
-		e.returnJSONMessage(c, http.StatusNotFound, err)
+		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
 	AppCredentials, err := e.db.GetAppCredentialByDeveloperAppID(developerApp.DeveloperAppID)
 	if err != nil {
-		e.returnJSONMessage(c, http.StatusNotFound, err)
+		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
 	c.IndentedJSON(http.StatusOK, gin.H{"credentials": AppCredentials})
@@ -40,17 +41,17 @@ func (e *env) GetDeveloperAppKeys(c *gin.Context) {
 func (e *env) GetDeveloperAppKeyByKey(c *gin.Context) {
 	_, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
 	if err != nil {
-		e.returnJSONMessage(c, http.StatusNotFound, err)
+		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
 	_, err = e.db.GetDeveloperAppByName(c.Param("organization"), c.Param("application"))
 	if err != nil {
-		e.returnJSONMessage(c, http.StatusNotFound, err)
+		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
 	AppCredential, err := e.db.GetAppCredentialByKey(c.Param("organization"), c.Param("key"))
 	if err != nil {
-		e.returnJSONMessage(c, http.StatusNotFound, err)
+		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
 	c.IndentedJSON(http.StatusOK, AppCredential)
@@ -63,26 +64,26 @@ func (e *env) PostCreateDeveloperAppKey(c *gin.Context) {
 	// 	ConsumerSecret string `json:"ConsumerSecret"`
 	// }
 	// if err := c.ShouldBindJSON(&receivedKeypair); err != nil {
-	// 	e.returnJSONMessage(c, http.StatusBadRequest, err)
+	// 	returnJSONMessage(c, http.StatusBadRequest, err)
 	// 	return
 	// }
 	developerApp, err := e.db.GetDeveloperAppByName(c.Param("organization"), c.Param("application"))
 	if err != nil {
-		e.returnJSONMessage(c, http.StatusNotFound, err)
+		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
 	var newAppCredential types.AppCredential
-	newAppCredential.ConsumerKey = e.GenerateCredentialConsumerKey()
+	newAppCredential.ConsumerKey = generateCredentialConsumerKey()
 	//	newAppCredential.APIProducts = []types.APIProductStatus{"status": "approved", "apiproduct", "teleporter2020"}
-	newAppCredential.ConsumerSecret = e.GenerateCredentialConsumerSecret()
+	newAppCredential.ConsumerSecret = generateCredentialConsumerSecret()
 	newAppCredential.ExpiresAt = -1
-	newAppCredential.IssuedAt = e.getCurrentTimeMilliseconds()
+	newAppCredential.IssuedAt = types.GetCurrentTimeMilliseconds()
 	newAppCredential.OrganizationAppID = developerApp.DeveloperAppID
 	newAppCredential.OrganizationName = developerApp.OrganizationName
 	newAppCredential.Status = "approved"
 
 	if err := e.db.UpdateAppCredentialByKey(&newAppCredential); err != nil {
-		e.returnJSONMessage(c, http.StatusBadRequest, err)
+		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
 	c.IndentedJSON(http.StatusCreated, newAppCredential)
@@ -92,12 +93,12 @@ func (e *env) PostCreateDeveloperAppKey(c *gin.Context) {
 func (e *env) PostUpdateDeveloperAppKeyByKey(c *gin.Context) {
 	var receivedAppCredential types.AppCredential
 	if err := c.ShouldBindJSON(&receivedAppCredential); err != nil {
-		e.returnJSONMessage(c, http.StatusBadRequest, err)
+		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
 	AppCredential, err := e.db.GetAppCredentialByKey(c.Param("organization"), c.Param("key"))
 	if err != nil {
-		e.returnJSONMessage(c, http.StatusNotFound, err)
+		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
 	AppCredential.ConsumerSecret = receivedAppCredential.ConsumerSecret
@@ -106,7 +107,7 @@ func (e *env) PostUpdateDeveloperAppKeyByKey(c *gin.Context) {
 	AppCredential.ExpiresAt = receivedAppCredential.ExpiresAt
 	AppCredential.Status = receivedAppCredential.Status
 	if err := e.db.UpdateAppCredentialByKey(&AppCredential); err != nil {
-		e.returnJSONMessage(c, http.StatusBadRequest, err)
+		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
 	c.IndentedJSON(http.StatusCreated, AppCredential)
@@ -116,12 +117,22 @@ func (e *env) PostUpdateDeveloperAppKeyByKey(c *gin.Context) {
 func (e *env) DeleteDeveloperAppKeyByKey(c *gin.Context) {
 	AppCredential, err := e.db.GetAppCredentialByKey(c.Param("organization"), c.Param("key"))
 	if err != nil {
-		e.returnJSONMessage(c, http.StatusNotFound, err)
+		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
 	if err := e.db.DeleteAppCredentialByKey(c.Param("organization"), c.Param("key")); err != nil {
-		e.returnJSONMessage(c, http.StatusBadRequest, err)
+		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
 	c.IndentedJSON(http.StatusOK, AppCredential)
+}
+
+// GenerateCredentialConsumerKey returns a random string to be used as apikey (32 character base62)
+func generateCredentialConsumerKey() string {
+	return uniuri.NewLen(32)
+}
+
+// GenerateCredentialConsumerSecret returns a random string to be used as consumer key (16 character base62)
+func generateCredentialConsumerSecret() string {
+	return uniuri.New()
 }

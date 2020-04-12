@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/erikbos/apiauth/pkg/db"
-	"github.com/erikbos/apiauth/pkg/geoip"
+	"github.com/erikbos/apiauth/pkg/types"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 )
@@ -35,7 +35,7 @@ func main() {
 
 	a.c = db.CacheInit(a.config.CacheSize, a.config.CacheTTL, a.config.CacheNegativeTTL)
 
-	a.g, err = geoip.OpenDatabase(a.config.MaxMindFilename)
+	a.g, err = types.OpenDatabase(a.config.MaxMindFilename)
 	if err != nil {
 		log.Fatalf("Geoip db load failed: %v", err)
 	}

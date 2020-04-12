@@ -11,18 +11,18 @@ import (
 // registerOrganizationRoutes registers all routes we handle
 func (e *env) registerOrganizationRoutes(r *gin.Engine) {
 	r.GET("/v1/organizations", e.GetOrganizations)
-	r.POST("/v1/organizations", e.CheckForJSONContentType, e.PostCreateOrganization)
+	r.POST("/v1/organizations", types.AbortIfContentTypeNotJSON, e.PostCreateOrganization)
 
 	r.GET("/v1/organizations/:organization", e.GetOrganizationByName)
-	r.POST("/v1/organizations/:organization", e.CheckForJSONContentType, e.PostOrganization)
+	r.POST("/v1/organizations/:organization", types.AbortIfContentTypeNotJSON, e.PostOrganization)
 	r.DELETE("/v1/organizations/:organization", e.DeleteOrganizationByName)
 
 	r.GET("/v1/organizations/:organization/attributes", e.GetOrganizationAttributes)
-	r.POST("/v1/organizations/:organization/attributes", e.CheckForJSONContentType, e.PostOrganizationAttributes)
+	r.POST("/v1/organizations/:organization/attributes", types.AbortIfContentTypeNotJSON, e.PostOrganizationAttributes)
 	r.DELETE("/v1/organizations/:organization/attributes", e.DeleteOrganizationAttributes)
 
 	r.GET("/v1/organizations/:organization/attributes/:attribute", e.GetOrganizationAttributeByName)
-	r.POST("/v1/organizations/:organization/attributes/:attribute", e.CheckForJSONContentType, e.PostOrganizationAttributeByName)
+	r.POST("/v1/organizations/:organization/attributes/:attribute", types.AbortIfContentTypeNotJSON, e.PostOrganizationAttributeByName)
 	r.DELETE("/v1/organizations/:organization/attributes/:attribute", e.DeleteOrganizationAttributeByName)
 }
 
@@ -30,7 +30,7 @@ func (e *env) registerOrganizationRoutes(r *gin.Engine) {
 func (e *env) GetOrganizations(c *gin.Context) {
 	organizations, err := e.db.GetOrganizations()
 	if err != nil {
-		e.returnJSONMessage(c, http.StatusNotFound, err)
+		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
 	c.IndentedJSON(http.StatusOK, gin.H{"organizations": organizations})
@@ -40,10 +40,10 @@ func (e *env) GetOrganizations(c *gin.Context) {
 func (e *env) GetOrganizationByName(c *gin.Context) {
 	organization, err := e.db.GetOrganizationByName(c.Param("organization"))
 	if err != nil {
-		e.returnJSONMessage(c, http.StatusNotFound, err)
+		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
-	e.SetLastModifiedHeader(c, organization.LastmodifiedAt)
+	setLastModifiedHeader(c, organization.LastmodifiedAt)
 	c.IndentedJSON(http.StatusOK, organization)
 }
 
@@ -51,10 +51,10 @@ func (e *env) GetOrganizationByName(c *gin.Context) {
 func (e *env) GetOrganizationAttributes(c *gin.Context) {
 	organization, err := e.db.GetOrganizationByName(c.Param("organization"))
 	if err != nil {
-		e.returnJSONMessage(c, http.StatusNotFound, err)
+		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
-	e.SetLastModifiedHeader(c, organization.LastmodifiedAt)
+	setLastModifiedHeader(c, organization.LastmodifiedAt)
 	c.IndentedJSON(http.StatusOK, gin.H{"attribute": organization.Attributes})
 }
 
@@ -62,18 +62,18 @@ func (e *env) GetOrganizationAttributes(c *gin.Context) {
 func (e *env) GetOrganizationAttributeByName(c *gin.Context) {
 	organization, err := e.db.GetOrganizationByName(c.Param("organization"))
 	if err != nil {
-		e.returnJSONMessage(c, http.StatusNotFound, err)
+		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
 	// lets find the attribute requested
 	for i := 0; i < len(organization.Attributes); i++ {
 		if organization.Attributes[i].Name == c.Param("attribute") {
-			e.SetLastModifiedHeader(c, organization.LastmodifiedAt)
+			setLastModifiedHeader(c, organization.LastmodifiedAt)
 			c.IndentedJSON(http.StatusOK, organization.Attributes[i])
 			return
 		}
 	}
-	e.returnJSONMessage(c, http.StatusNotFound,
+	returnJSONMessage(c, http.StatusNotFound,
 		fmt.Errorf("Could not retrieve attribute '%s'", c.Param("attribute")))
 }
 
@@ -81,22 +81,22 @@ func (e *env) GetOrganizationAttributeByName(c *gin.Context) {
 func (e *env) PostCreateOrganization(c *gin.Context) {
 	var newOrganization types.Organization
 	if err := c.ShouldBindJSON(&newOrganization); err != nil {
-		e.returnJSONMessage(c, http.StatusBadRequest, err)
+		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
 	existingOrganization, err := e.db.GetOrganizationByName(newOrganization.Name)
 	if err == nil {
-		e.returnJSONMessage(c, http.StatusBadRequest,
+		returnJSONMessage(c, http.StatusBadRequest,
 			fmt.Errorf("Organization '%s' already exists", existingOrganization.Name))
 		return
 	}
 	// Automatically set default fields
 	newOrganization.Key = newOrganization.Name
 	newOrganization.CreatedBy = e.whoAmI()
-	newOrganization.CreatedAt = e.getCurrentTimeMilliseconds()
+	newOrganization.CreatedAt = types.GetCurrentTimeMilliseconds()
 	newOrganization.LastmodifiedBy = e.whoAmI()
 	if err := e.db.UpdateOrganizationByName(&newOrganization); err != nil {
-		e.returnJSONMessage(c, http.StatusBadRequest, err)
+		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
 	c.IndentedJSON(http.StatusCreated, newOrganization)
@@ -106,12 +106,12 @@ func (e *env) PostCreateOrganization(c *gin.Context) {
 func (e *env) PostOrganization(c *gin.Context) {
 	currentOrganization, err := e.db.GetOrganizationByName(c.Param("organization"))
 	if err != nil {
-		e.returnJSONMessage(c, http.StatusBadRequest, err)
+		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
 	var updatedOrganization types.Organization
 	if err := c.ShouldBindJSON(&updatedOrganization); err != nil {
-		e.returnJSONMessage(c, http.StatusBadRequest, err)
+		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
 	// We don't allow POSTing to update organization X while body says to update organization Y
@@ -121,7 +121,7 @@ func (e *env) PostOrganization(c *gin.Context) {
 	updatedOrganization.CreatedAt = currentOrganization.CreatedAt
 	updatedOrganization.LastmodifiedBy = e.whoAmI()
 	if err := e.db.UpdateOrganizationByName(&updatedOrganization); err != nil {
-		e.returnJSONMessage(c, http.StatusBadRequest, err)
+		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
 	c.IndentedJSON(http.StatusOK, updatedOrganization)
@@ -131,20 +131,20 @@ func (e *env) PostOrganization(c *gin.Context) {
 func (e *env) PostOrganizationAttributes(c *gin.Context) {
 	updatedOrganization, err := e.db.GetOrganizationByName(c.Param("organization"))
 	if err != nil {
-		e.returnJSONMessage(c, http.StatusBadRequest, err)
+		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
 	var receivedAttributes struct {
 		Attributes []types.AttributeKeyValues `json:"attribute"`
 	}
 	if err := c.ShouldBindJSON(&receivedAttributes); err != nil {
-		e.returnJSONMessage(c, http.StatusBadRequest, err)
+		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
 	updatedOrganization.Attributes = receivedAttributes.Attributes
 	updatedOrganization.LastmodifiedBy = e.whoAmI()
 	if err := e.db.UpdateOrganizationByName(&updatedOrganization); err != nil {
-		e.returnJSONMessage(c, http.StatusBadRequest, err)
+		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
 	c.IndentedJSON(http.StatusOK, gin.H{"attribute": updatedOrganization.Attributes})
@@ -154,7 +154,7 @@ func (e *env) PostOrganizationAttributes(c *gin.Context) {
 func (e *env) PostOrganizationAttributeByName(c *gin.Context) {
 	updatedOrganization, err := e.db.GetOrganizationByName(c.Param("organization"))
 	if err != nil {
-		e.returnJSONMessage(c, http.StatusBadRequest, err)
+		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
 	attributeToUpdate := c.Param("attribute")
@@ -162,7 +162,7 @@ func (e *env) PostOrganizationAttributeByName(c *gin.Context) {
 		Value string `json:"value"`
 	}
 	if err := c.ShouldBindJSON(&receivedValue); err != nil {
-		e.returnJSONMessage(c, http.StatusBadRequest, err)
+		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
 	// Find & update existing attribute in array
@@ -177,7 +177,7 @@ func (e *env) PostOrganizationAttributeByName(c *gin.Context) {
 	}
 	updatedOrganization.LastmodifiedBy = e.whoAmI()
 	if err := e.db.UpdateOrganizationByName(&updatedOrganization); err != nil {
-		e.returnJSONMessage(c, http.StatusBadRequest, err)
+		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
 	c.IndentedJSON(http.StatusOK,
@@ -188,20 +188,20 @@ func (e *env) PostOrganizationAttributeByName(c *gin.Context) {
 func (e *env) DeleteOrganizationAttributeByName(c *gin.Context) {
 	updatedOrganization, err := e.db.GetOrganizationByName(c.Param("organization"))
 	if err != nil {
-		e.returnJSONMessage(c, http.StatusBadRequest, err)
+		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
 	attributeToDelete := c.Param("attribute")
 	updatedAttributes, index, oldValue := types.DeleteAttribute(updatedOrganization.Attributes, attributeToDelete)
 	if index == -1 {
-		e.returnJSONMessage(c, http.StatusNotFound,
+		returnJSONMessage(c, http.StatusNotFound,
 			fmt.Errorf("Could not find attribute '%s'", attributeToDelete))
 		return
 	}
 	updatedOrganization.Attributes = updatedAttributes
 	updatedOrganization.LastmodifiedBy = e.whoAmI()
 	if err := e.db.UpdateOrganizationByName(&updatedOrganization); err != nil {
-		e.returnJSONMessage(c, http.StatusBadRequest, err)
+		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
 	c.IndentedJSON(http.StatusOK,
@@ -212,14 +212,14 @@ func (e *env) DeleteOrganizationAttributeByName(c *gin.Context) {
 func (e *env) DeleteOrganizationAttributes(c *gin.Context) {
 	updatedOrganization, err := e.db.GetOrganizationByName(c.Param("organization"))
 	if err != nil {
-		e.returnJSONMessage(c, http.StatusBadRequest, err)
+		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
 	DeleteDeveloperAttributes := updatedOrganization.Attributes
 	updatedOrganization.Attributes = nil
 	updatedOrganization.LastmodifiedBy = e.whoAmI()
 	if err := e.db.UpdateOrganizationByName(&updatedOrganization); err != nil {
-		e.returnJSONMessage(c, http.StatusBadRequest, err)
+		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
 	c.IndentedJSON(http.StatusOK, gin.H{"attribute": DeleteDeveloperAttributes})
@@ -229,19 +229,19 @@ func (e *env) DeleteOrganizationAttributes(c *gin.Context) {
 func (e *env) DeleteOrganizationByName(c *gin.Context) {
 	organization, err := e.db.GetOrganizationByName(c.Param("organization"))
 	if err != nil {
-		e.returnJSONMessage(c, http.StatusNotFound, err)
+		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
 	developerCount := e.db.GetDeveloperCountByOrganization(organization.Name)
 	switch developerCount {
 	case -1:
-		e.returnJSONMessage(c, http.StatusInternalServerError,
+		returnJSONMessage(c, http.StatusInternalServerError,
 			fmt.Errorf("Could not retrieve number of developers in organization"))
 	case 0:
 		e.db.DeleteOrganizationByName(organization.Name)
 		c.IndentedJSON(http.StatusOK, organization)
 	default:
-		e.returnJSONMessage(c, http.StatusForbidden,
+		returnJSONMessage(c, http.StatusForbidden,
 			fmt.Errorf("Cannot delete organization '%s' with %d active developers",
 				organization.Name, developerCount))
 	}

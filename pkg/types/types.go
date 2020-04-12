@@ -176,7 +176,7 @@ func DeleteAttribute(attributes []AttributeKeyValues, attributeName string) ([]A
 	return attributes, 0, valueOfDeletedAttribute
 }
 
-// bla
+// VirtualHost bla
 type VirtualHost struct {
 	Name              string   `json:"name"`
 	DisplayName       string   `json:"display_name"`

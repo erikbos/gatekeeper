@@ -19,11 +19,6 @@ var clusters []types.Cluster
 var clustersLastUpdate int64
 var mux sync.Mutex
 
-// getCurrentTimeMilliseconds returns current epoch time in milliseconds
-func getCurrentTimeMilliseconds() int64 {
-	return time.Now().UTC().UnixNano() / 1000000
-}
-
 // FIXME this should be implemented using channels
 // FIXME this does not detect removed records
 
@@ -37,7 +32,7 @@ func getClusterConfigFromDatabase(db *db.Database) {
 			for _, s := range newClusterList {
 				// Is a cluster updated since last time we stored it?
 				if s.LastmodifiedAt > clustersLastUpdate {
-					now := getCurrentTimeMilliseconds()
+					now := types.GetCurrentTimeMilliseconds()
 					mux.Lock()
 					clusters = newClusterList
 					clustersLastUpdate = now

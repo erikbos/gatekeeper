@@ -1,4 +1,4 @@
-package geoip
+package types
 
 import (
 	"fmt"

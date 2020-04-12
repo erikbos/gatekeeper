@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -9,10 +8,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/dchest/uniuri"
 	"github.com/erikbos/apiauth/pkg/db"
+	"github.com/erikbos/apiauth/pkg/types"
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
@@ -70,8 +68,9 @@ func (c *RESTAPIConfig) loadConfiguration(filename string) *RESTAPIConfig {
 }
 
 type env struct {
-	db     *db.Database
-	router *gin.Engine
+	db        *db.Database
+	router    *gin.Engine
+	readyness types.Readyness
 }
 
 func startRESTAPIServer(listenport string, db *db.Database) {
@@ -79,7 +78,6 @@ func startRESTAPIServer(listenport string, db *db.Database) {
 
 	e := &env{}
 	e.db = db
-
 	e.router = gin.New()
 
 	// r.Use(gin.Logger())
@@ -95,7 +93,7 @@ func startRESTAPIServer(listenport string, db *db.Database) {
 	e.router.Static("/assets", "./assets")
 	e.router.GET("/metrics", gin.WrapH(promhttp.Handler()))
 	e.router.GET("/dump_routes", e.dumpRoutes)
-	e.router.GET("/ready", e.GetReady)
+	e.router.GET("/ready", e.readyness.DisplayReadyness)
 
 	e.router.Run(listenport)
 }
@@ -120,11 +118,6 @@ func (e *env) whoAmI() string {
 }
 
 // restGetReady returns ready as readyness check
-func (e *env) GetReady(c *gin.Context) {
-	e.returnJSONMessage(c, http.StatusOK, errors.New("Ready"))
-}
-
-// restGetReady returns ready as readyness check
 func (e *env) dumpRoutes(c *gin.Context) {
 	routes := e.router.Routes()
 	for _, v := range routes {
@@ -133,57 +126,12 @@ func (e *env) dumpRoutes(c *gin.Context) {
 	// c.IndentedJSON(http.StatusOK, gin.H{"routes": routes})
 }
 
-// CheckForJSONContentType checks for json content-type
-func (e *env) CheckForJSONContentType(c *gin.Context) {
-	if c.Request.Header.Get("content-type") != "application/json" {
-		e.returnJSONMessage(c, http.StatusUnsupportedMediaType,
-			errors.New("Content-type application/json required when submitting data"))
-		// do not continue request handling
-		c.Abort()
-	}
-}
-
-func (e *env) SetLastModifiedHeader(c *gin.Context, timeStamp int64) {
+func setLastModifiedHeader(c *gin.Context, timeStamp int64) {
 	c.Header("Last-Modified",
 		time.Unix(0, timeStamp*int64(time.Millisecond)).UTC().Format(http.TimeFormat))
 }
 
 // returnJSONMessage returns an error message in case we do not handle API request
-func (e *env) returnJSONMessage(c *gin.Context, statusCode int, errorMessage error) {
+func returnJSONMessage(c *gin.Context, statusCode int, errorMessage error) {
 	c.IndentedJSON(statusCode, gin.H{"message": fmt.Sprintf("%s", errorMessage)})
-}
-
-// getCurrentTimeMilliseconds returns current epoch time in milliseconds
-func (e *env) getCurrentTimeMilliseconds() int64 {
-	return time.Now().UTC().UnixNano() / 1000000
-}
-
-// GeneratePrimaryKeyOfDeveloper creates unique primary key for developer db row
-func (e *env) GeneratePrimaryKeyOfDeveloper(organization, developer string) string {
-	return (fmt.Sprintf("%s@@@%s", organization, uniuri.New()))
-}
-
-// GenerateDeveloperAppPrimaryKey creates unique primary key for developer app row
-func (e *env) GenerateDeveloperAppPrimaryKey() string {
-	return (fmt.Sprintf("%s", uuid.New()))
-}
-
-// GeneratePrimaryKeyOfDeveloper creates unique primary key for developer db row
-func (e *env) GenerateDeveloperAppID(organization, primaryKey string) string {
-	return (fmt.Sprintf("%s@@@%s", organization, primaryKey))
-}
-
-// GeneratePrimaryKeyOfAPIProduct creates unique primary key for apiproduct row
-func (e *env) GeneratePrimaryKeyOfAPIProduct(organization, name string) string {
-	return (fmt.Sprintf("%s@@@%s", organization, name))
-}
-
-// GenerateCredentialConsumerKey returns a random string to be used as apikey (32 character base62)
-func (e *env) GenerateCredentialConsumerKey() string {
-	return uniuri.NewLen(32)
-}
-
-// GenerateCredentialConsumerSecret returns a random string to be used as consumer key (16 character base62)
-func (e *env) GenerateCredentialConsumerSecret() string {
-	return uniuri.New()
 }
