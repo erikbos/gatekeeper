@@ -100,13 +100,10 @@ func (e *env) PostCreateAPIProduct(c *gin.Context) {
 	// Generate primary key for new row
 	newAPIProduct.Key = e.GeneratePrimaryKeyOfAPIProduct(newAPIProduct.OrganizationName,
 		newAPIProduct.Name)
-	// Dedup provided attributes
-	newAPIProduct.Attributes = e.removeDuplicateAttributes(newAPIProduct.Attributes)
 	newAPIProduct.CreatedBy = e.whoAmI()
 	newAPIProduct.CreatedAt = e.getCurrentTimeMilliseconds()
-	newAPIProduct.LastmodifiedAt = newAPIProduct.CreatedAt
 	newAPIProduct.LastmodifiedBy = e.whoAmI()
-	if err := e.db.UpdateAPIProductByName(newAPIProduct); err != nil {
+	if err := e.db.UpdateAPIProductByName(&newAPIProduct); err != nil {
 		e.returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -130,10 +127,8 @@ func (e *env) PostAPIProduct(c *gin.Context) {
 	updatedAPIProduct.Name = currentAPIProduct.Name
 	updatedAPIProduct.Key = currentAPIProduct.Key
 	updatedAPIProduct.OrganizationName = currentAPIProduct.OrganizationName
-	updatedAPIProduct.Attributes = e.removeDuplicateAttributes(updatedAPIProduct.Attributes)
-	updatedAPIProduct.LastmodifiedAt = e.getCurrentTimeMilliseconds()
 	updatedAPIProduct.LastmodifiedBy = e.whoAmI()
-	if err := e.db.UpdateAPIProductByName(updatedAPIProduct); err != nil {
+	if err := e.db.UpdateAPIProductByName(&updatedAPIProduct); err != nil {
 		e.returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -154,10 +149,9 @@ func (e *env) PostAPIProductAttributes(c *gin.Context) {
 		e.returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
-	updatedAPIProduct.Attributes = e.removeDuplicateAttributes(receivedAttributes.Attributes)
-	updatedAPIProduct.LastmodifiedAt = e.getCurrentTimeMilliseconds()
+	updatedAPIProduct.Attributes = receivedAttributes.Attributes
 	updatedAPIProduct.LastmodifiedBy = e.whoAmI()
-	if err := e.db.UpdateAPIProductByName(updatedAPIProduct); err != nil {
+	if err := e.db.UpdateAPIProductByName(&updatedAPIProduct); err != nil {
 		e.returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -173,9 +167,8 @@ func (e *env) DeleteAPIProductAttributes(c *gin.Context) {
 	}
 	deletedAttributes := updatedAPIProduct.Attributes
 	updatedAPIProduct.Attributes = nil
-	updatedAPIProduct.LastmodifiedAt = e.getCurrentTimeMilliseconds()
 	updatedAPIProduct.LastmodifiedBy = e.whoAmI()
-	if err := e.db.UpdateAPIProductByName(updatedAPIProduct); err != nil {
+	if err := e.db.UpdateAPIProductByName(&updatedAPIProduct); err != nil {
 		e.returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -198,7 +191,7 @@ func (e *env) PostAPIProductAttributeByName(c *gin.Context) {
 		return
 	}
 	// Find & update existing attribute in array
-	attributeToUpdateIndex := e.findAttributePositionInAttributeArray(
+	attributeToUpdateIndex := types.FindIndexOfAttribute(
 		updatedAPIProduct.Attributes, attributeToUpdate)
 	if attributeToUpdateIndex == -1 {
 		// We did not find existing attribute, append new attribute
@@ -208,8 +201,7 @@ func (e *env) PostAPIProductAttributeByName(c *gin.Context) {
 		updatedAPIProduct.Attributes[attributeToUpdateIndex].Value = receivedValue.Value
 	}
 	updatedAPIProduct.LastmodifiedBy = e.whoAmI()
-	updatedAPIProduct.LastmodifiedAt = e.getCurrentTimeMilliseconds()
-	if err := e.db.UpdateAPIProductByName(updatedAPIProduct); err != nil {
+	if err := e.db.UpdateAPIProductByName(&updatedAPIProduct); err != nil {
 		e.returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -224,26 +216,22 @@ func (e *env) DeleteAPIProductAttributeByName(c *gin.Context) {
 		e.returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
-	// Find attribute in array
-	attributeToRemoveIndex := e.findAttributePositionInAttributeArray(
-		updatedAPIProduct.Attributes, c.Param("attribute"))
-	if attributeToRemoveIndex == -1 {
+	attributeToDelete := c.Param("attribute")
+	updatedAttributes, index, oldValue :=
+		types.DeleteAttribute(updatedAPIProduct.Attributes, attributeToDelete)
+	if index == -1 {
 		e.returnJSONMessage(c, http.StatusNotFound,
-			fmt.Errorf("Could not find attribute '%s'", c.Param("attribute")))
+			fmt.Errorf("Could not find attribute '%s'", attributeToDelete))
 		return
 	}
-	deletedAttribute := updatedAPIProduct.Attributes[attributeToRemoveIndex]
-	// remove attribute
-	updatedAPIProduct.Attributes =
-		append(updatedAPIProduct.Attributes[:attributeToRemoveIndex],
-			updatedAPIProduct.Attributes[attributeToRemoveIndex+1:]...)
+	updatedAPIProduct.Attributes = updatedAttributes
 	updatedAPIProduct.LastmodifiedBy = e.whoAmI()
-	updatedAPIProduct.LastmodifiedAt = e.getCurrentTimeMilliseconds()
-	if err := e.db.UpdateAPIProductByName(updatedAPIProduct); err != nil {
+	if err := e.db.UpdateAPIProductByName(&updatedAPIProduct); err != nil {
 		e.returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
-	c.IndentedJSON(http.StatusOK, deletedAttribute)
+	c.IndentedJSON(http.StatusOK,
+		gin.H{"name": attributeToDelete, "value": oldValue})
 }
 
 // DeleteAPIProductByName deletes of one APIProduct

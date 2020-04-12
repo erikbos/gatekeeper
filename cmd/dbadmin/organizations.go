@@ -92,12 +92,10 @@ func (e *env) PostCreateOrganization(c *gin.Context) {
 	}
 	// Automatically set default fields
 	newOrganization.Key = newOrganization.Name
-	newOrganization.Attributes = e.removeDuplicateAttributes(newOrganization.Attributes)
 	newOrganization.CreatedBy = e.whoAmI()
 	newOrganization.CreatedAt = e.getCurrentTimeMilliseconds()
-	newOrganization.LastmodifiedAt = newOrganization.CreatedAt
 	newOrganization.LastmodifiedBy = e.whoAmI()
-	if err := e.db.UpdateOrganizationByName(newOrganization); err != nil {
+	if err := e.db.UpdateOrganizationByName(&newOrganization); err != nil {
 		e.returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -121,10 +119,8 @@ func (e *env) PostOrganization(c *gin.Context) {
 	updatedOrganization.Key = currentOrganization.Key
 	updatedOrganization.CreatedBy = currentOrganization.CreatedBy
 	updatedOrganization.CreatedAt = currentOrganization.CreatedAt
-	updatedOrganization.Attributes = e.removeDuplicateAttributes(updatedOrganization.Attributes)
-	updatedOrganization.LastmodifiedAt = e.getCurrentTimeMilliseconds()
 	updatedOrganization.LastmodifiedBy = e.whoAmI()
-	if err := e.db.UpdateOrganizationByName(updatedOrganization); err != nil {
+	if err := e.db.UpdateOrganizationByName(&updatedOrganization); err != nil {
 		e.returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -145,10 +141,9 @@ func (e *env) PostOrganizationAttributes(c *gin.Context) {
 		e.returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
-	updatedOrganization.Attributes = e.removeDuplicateAttributes(receivedAttributes.Attributes)
-	updatedOrganization.LastmodifiedAt = e.getCurrentTimeMilliseconds()
+	updatedOrganization.Attributes = receivedAttributes.Attributes
 	updatedOrganization.LastmodifiedBy = e.whoAmI()
-	if err := e.db.UpdateOrganizationByName(updatedOrganization); err != nil {
+	if err := e.db.UpdateOrganizationByName(&updatedOrganization); err != nil {
 		e.returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -171,7 +166,7 @@ func (e *env) PostOrganizationAttributeByName(c *gin.Context) {
 		return
 	}
 	// Find & update existing attribute in array
-	attributeToUpdateIndex := e.findAttributePositionInAttributeArray(
+	attributeToUpdateIndex := types.FindIndexOfAttribute(
 		updatedOrganization.Attributes, attributeToUpdate)
 	if attributeToUpdateIndex == -1 {
 		// We did not find exist attribute, append new attribute
@@ -180,9 +175,8 @@ func (e *env) PostOrganizationAttributeByName(c *gin.Context) {
 	} else {
 		updatedOrganization.Attributes[attributeToUpdateIndex].Value = receivedValue.Value
 	}
-	updatedOrganization.LastmodifiedAt = e.getCurrentTimeMilliseconds()
 	updatedOrganization.LastmodifiedBy = e.whoAmI()
-	if err := e.db.UpdateOrganizationByName(updatedOrganization); err != nil {
+	if err := e.db.UpdateOrganizationByName(&updatedOrganization); err != nil {
 		e.returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -197,26 +191,21 @@ func (e *env) DeleteOrganizationAttributeByName(c *gin.Context) {
 		e.returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
-	// Find attribute in array
-	attributeToRemoveIndex := e.findAttributePositionInAttributeArray(
-		updatedOrganization.Attributes, c.Param("attribute"))
-	if attributeToRemoveIndex == -1 {
+	attributeToDelete := c.Param("attribute")
+	updatedAttributes, index, oldValue := types.DeleteAttribute(updatedOrganization.Attributes, attributeToDelete)
+	if index == -1 {
 		e.returnJSONMessage(c, http.StatusNotFound,
-			fmt.Errorf("Could not find attribute '%s'", c.Param("attribute")))
+			fmt.Errorf("Could not find attribute '%s'", attributeToDelete))
 		return
 	}
-	deletedAttribute := updatedOrganization.Attributes[attributeToRemoveIndex]
-	// remove attribute
-	updatedOrganization.Attributes =
-		append(updatedOrganization.Attributes[:attributeToRemoveIndex],
-			updatedOrganization.Attributes[attributeToRemoveIndex+1:]...)
-	updatedOrganization.LastmodifiedAt = e.getCurrentTimeMilliseconds()
+	updatedOrganization.Attributes = updatedAttributes
 	updatedOrganization.LastmodifiedBy = e.whoAmI()
-	if err := e.db.UpdateOrganizationByName(updatedOrganization); err != nil {
+	if err := e.db.UpdateOrganizationByName(&updatedOrganization); err != nil {
 		e.returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
-	c.IndentedJSON(http.StatusOK, deletedAttribute)
+	c.IndentedJSON(http.StatusOK,
+		gin.H{"name": attributeToDelete, "value": oldValue})
 }
 
 // DeleteOrganizationAttributes removes all attribute of an organization
@@ -228,9 +217,8 @@ func (e *env) DeleteOrganizationAttributes(c *gin.Context) {
 	}
 	DeleteDeveloperAttributes := updatedOrganization.Attributes
 	updatedOrganization.Attributes = nil
-	updatedOrganization.LastmodifiedAt = e.getCurrentTimeMilliseconds()
 	updatedOrganization.LastmodifiedBy = e.whoAmI()
-	if err := e.db.UpdateOrganizationByName(updatedOrganization); err != nil {
+	if err := e.db.UpdateOrganizationByName(&updatedOrganization); err != nil {
 		e.returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}

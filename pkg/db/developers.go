@@ -82,7 +82,7 @@ func (d *Database) runGetDeveloperQuery(query string, queryParameters ...interfa
 	for iterable.MapScan(m) {
 		developers = append(developers, types.Developer{
 			Apps:             d.unmarshallJSONArrayOfStrings(m["apps"].(string)),
-			Attributes:       d.unmarshallJSONArrayOfAttributes(m["attributes"].(string), false),
+			Attributes:       d.unmarshallJSONArrayOfAttributes(m["attributes"].(string)),
 			DeveloperID:      m["key"].(string),
 			CreatedAt:        m["created_at"].(int64),
 			CreatedBy:        m["created_by"].(string),
@@ -107,9 +107,11 @@ func (d *Database) runGetDeveloperQuery(query string, queryParameters ...interfa
 }
 
 // UpdateDeveloperByName UPSERTs a developer in database
-func (d *Database) UpdateDeveloperByName(updatedDeveloper types.Developer) error {
+func (d *Database) UpdateDeveloperByName(updatedDeveloper *types.Developer) error {
 	Apps := d.marshallArrayOfStringsToJSON(updatedDeveloper.Apps)
-	Attributes := d.marshallArrayOfAttributesToJSON(updatedDeveloper.Attributes, false)
+	updatedDeveloper.Attributes = types.TidyAttributes(updatedDeveloper.Attributes)
+	Attributes := d.marshallArrayOfAttributesToJSON(updatedDeveloper.Attributes)
+	updatedDeveloper.LastmodifiedAt = types.GetCurrentTimeMilliseconds()
 	if err := d.cassandraSession.Query(
 		"INSERT INTO developers (key, apps, attributes, "+
 			"created_at, created_by, email, "+

@@ -11,7 +11,6 @@ import (
 
 	"github.com/dchest/uniuri"
 	"github.com/erikbos/apiauth/pkg/db"
-	"github.com/erikbos/apiauth/pkg/types"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -157,35 +156,6 @@ func (e *env) returnJSONMessage(c *gin.Context, statusCode int, errorMessage err
 // getCurrentTimeMilliseconds returns current epoch time in milliseconds
 func (e *env) getCurrentTimeMilliseconds() int64 {
 	return time.Now().UTC().UnixNano() / 1000000
-}
-
-// findAttributePositionInAttributeArray find attribute in slice
-func (e *env) findAttributePositionInAttributeArray(attributes []types.AttributeKeyValues, name string) int {
-	for index, element := range attributes {
-		if element.Name == name {
-			return index
-		}
-	}
-	return -1
-}
-
-// removeDuplicateAttributes removes duplicate attributes from array.
-func (e *env) removeDuplicateAttributes(attributes []types.AttributeKeyValues) []types.AttributeKeyValues {
-	// Use map to record duplicates as we find them.
-	encountered := map[string]bool{}
-	result := []types.AttributeKeyValues{}
-
-	for v := range attributes {
-		if encountered[attributes[v].Name] == true {
-			// Do not add duplicate.
-		} else {
-			// Record this element as an encountered element.
-			encountered[attributes[v].Name] = true
-			// Append to result slice.
-			result = append(result, attributes[v])
-		}
-	}
-	return result
 }
 
 // GeneratePrimaryKeyOfDeveloper creates unique primary key for developer db row

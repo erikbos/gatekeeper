@@ -86,7 +86,7 @@ func (d *Database) runGetDeveloperAppQuery(query string, queryParameters ...inte
 			AppFamily:        m["app_family"].(string),
 			AppID:            m["app_id"].(string),
 			AppType:          m["app_type"].(string),
-			Attributes:       d.unmarshallJSONArrayOfAttributes(m["attributes"].(string), false),
+			Attributes:       d.unmarshallJSONArrayOfAttributes(m["attributes"].(string)),
 			CallbackURL:      m["callback_url"].(string),
 			CreatedAt:        m["created_at"].(int64),
 			CreatedBy:        m["created_by"].(string),
@@ -111,14 +111,16 @@ func (d *Database) runGetDeveloperAppQuery(query string, queryParameters ...inte
 }
 
 // UpdateDeveloperAppByName UPSERTs a developer app in database
-func (d *Database) UpdateDeveloperAppByName(updatedDeveloperApp types.DeveloperApp) error {
-	Attributes := d.marshallArrayOfAttributesToJSON(updatedDeveloperApp.Attributes, false)
-	if err := d.cassandraSession.Query(
-		"INSERT INTO apps (key, app_id, attributes, "+
-			"created_at, created_by, display_name, "+
-			"lastmodified_at, lastmodified_by, name, "+
-			"organization_name, parent_id, parent_status, "+
-			"status) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)",
+func (d *Database) UpdateDeveloperAppByName(updatedDeveloperApp *types.DeveloperApp) error {
+	query := "INSERT INTO apps (key, app_id, attributes, " +
+		"created_at, created_by, display_name, " +
+		"lastmodified_at, lastmodified_by, name, " +
+		"organization_name, parent_id, parent_status, " +
+		"status) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)"
+	updatedDeveloperApp.Attributes = types.TidyAttributes(updatedDeveloperApp.Attributes)
+	Attributes := d.marshallArrayOfAttributesToJSON(updatedDeveloperApp.Attributes)
+	updatedDeveloperApp.LastmodifiedAt = types.GetCurrentTimeMilliseconds()
+	if err := d.cassandraSession.Query(query,
 		updatedDeveloperApp.DeveloperAppID, updatedDeveloperApp.AppID, Attributes,
 		updatedDeveloperApp.CreatedAt, updatedDeveloperApp.CreatedBy, updatedDeveloperApp.DisplayName,
 		updatedDeveloperApp.LastmodifiedAt, updatedDeveloperApp.LastmodifiedBy, updatedDeveloperApp.Name,

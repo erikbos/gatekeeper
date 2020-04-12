@@ -139,8 +139,6 @@ func (e *env) PostCreateDeveloperApp(c *gin.Context) {
 	newDeveloperApp.DeveloperAppID = e.GenerateDeveloperAppID(c.Param("organization"), newDeveloperApp.AppID)
 	// Automatically assign new developer to organization
 	newDeveloperApp.OrganizationName = c.Param("organization")
-	// Dedup provided attributes
-	newDeveloperApp.Attributes = e.removeDuplicateAttributes(newDeveloperApp.Attributes)
 	// New developers starts actived
 	newDeveloperApp.Status = "active"
 	newDeveloperApp.CreatedAt = e.getCurrentTimeMilliseconds()
@@ -149,15 +147,14 @@ func (e *env) PostCreateDeveloperApp(c *gin.Context) {
 	newDeveloperApp.LastmodifiedBy = e.whoAmI()
 	newDeveloperApp.ParentID = developer.DeveloperID
 	newDeveloperApp.ParentStatus = developer.Status
-	if err := e.db.UpdateDeveloperAppByName(newDeveloperApp); err != nil {
+	if err := e.db.UpdateDeveloperAppByName(&newDeveloperApp); err != nil {
 		e.returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
 	// Update developer.apps entry with new app
 	developer.Apps = append(developer.Apps, newDeveloperApp.Name)
-	developer.LastmodifiedAt = e.getCurrentTimeMilliseconds()
 	developer.LastmodifiedBy = e.whoAmI()
-	if err := e.db.UpdateDeveloperByName(developer); err != nil {
+	if err := e.db.UpdateDeveloperByName(&developer); err != nil {
 		e.returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -187,10 +184,8 @@ func (e *env) PostDeveloperApp(c *gin.Context) {
 	updatedDeveloperApp.ParentStatus = currentDeveloperApp.ParentStatus
 
 	updatedDeveloperApp.Name = currentDeveloperApp.Name
-	updatedDeveloperApp.Attributes = e.removeDuplicateAttributes(updatedDeveloperApp.Attributes)
-	updatedDeveloperApp.LastmodifiedAt = e.getCurrentTimeMilliseconds()
 	updatedDeveloperApp.LastmodifiedBy = e.whoAmI()
-	if err := e.db.UpdateDeveloperAppByName(updatedDeveloperApp); err != nil {
+	if err := e.db.UpdateDeveloperAppByName(&updatedDeveloperApp); err != nil {
 		e.returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -215,10 +210,9 @@ func (e *env) PostDeveloperAppAttributes(c *gin.Context) {
 		e.returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
-	developerApp.Attributes = e.removeDuplicateAttributes(receivedAttributes.Attributes)
-	developerApp.LastmodifiedAt = e.getCurrentTimeMilliseconds()
+	developerApp.Attributes = receivedAttributes.Attributes
 	developerApp.LastmodifiedBy = e.whoAmI()
-	if err := e.db.UpdateDeveloperAppByName(developerApp); err != nil {
+	if err := e.db.UpdateDeveloperAppByName(&developerApp); err != nil {
 		e.returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -238,9 +232,8 @@ func (e *env) DeleteDeveloperAppAttributes(c *gin.Context) {
 	}
 	deletedAttributes := developerApp.Attributes
 	developerApp.Attributes = nil
-	developerApp.LastmodifiedAt = e.getCurrentTimeMilliseconds()
 	developerApp.LastmodifiedBy = e.whoAmI()
-	if err := e.db.UpdateDeveloperAppByName(developerApp); err != nil {
+	if err := e.db.UpdateDeveloperAppByName(&developerApp); err != nil {
 		e.returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -268,7 +261,7 @@ func (e *env) PostDeveloperAppAttributeByName(c *gin.Context) {
 		return
 	}
 	// Find & update existing attribute in array
-	attributeToUpdateIndex := e.findAttributePositionInAttributeArray(
+	attributeToUpdateIndex := types.FindIndexOfAttribute(
 		updatedDeveloperApp.Attributes, attributeToUpdate)
 	if attributeToUpdateIndex == -1 {
 		// We did not find exist attribute, append new attribute
@@ -278,8 +271,7 @@ func (e *env) PostDeveloperAppAttributeByName(c *gin.Context) {
 		updatedDeveloperApp.Attributes[attributeToUpdateIndex].Value = receivedValue.Value
 	}
 	updatedDeveloperApp.LastmodifiedBy = e.whoAmI()
-	updatedDeveloperApp.LastmodifiedAt = e.getCurrentTimeMilliseconds()
-	if err := e.db.UpdateDeveloperAppByName(updatedDeveloperApp); err != nil {
+	if err := e.db.UpdateDeveloperAppByName(&updatedDeveloperApp); err != nil {
 		e.returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -298,26 +290,21 @@ func (e *env) DeleteDeveloperAppAttributeByName(c *gin.Context) {
 		e.returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
-	// Find attribute in array
-	attributeToRemoveIndex := e.findAttributePositionInAttributeArray(
-		updatedDeveloperApp.Attributes, c.Param("attribute"))
-	if attributeToRemoveIndex == -1 {
+	attributeToDelete := c.Param("attribute")
+	updatedAttributes, index, oldValue := types.DeleteAttribute(updatedDeveloperApp.Attributes, attributeToDelete)
+	if index == -1 {
 		e.returnJSONMessage(c, http.StatusNotFound,
-			fmt.Errorf("Could not find attribute '%s'", c.Param("attribute")))
+			fmt.Errorf("Could not find attribute '%s'", attributeToDelete))
 		return
 	}
-	deletedAttribute := updatedDeveloperApp.Attributes[attributeToRemoveIndex]
-	// remove attribute
-	updatedDeveloperApp.Attributes =
-		append(updatedDeveloperApp.Attributes[:attributeToRemoveIndex],
-			updatedDeveloperApp.Attributes[attributeToRemoveIndex+1:]...)
+	updatedDeveloperApp.Attributes = updatedAttributes
 	updatedDeveloperApp.LastmodifiedBy = e.whoAmI()
-	updatedDeveloperApp.LastmodifiedAt = e.getCurrentTimeMilliseconds()
-	if err := e.db.UpdateDeveloperAppByName(updatedDeveloperApp); err != nil {
+	if err := e.db.UpdateDeveloperAppByName(&updatedDeveloperApp); err != nil {
 		e.returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
-	c.IndentedJSON(http.StatusOK, deletedAttribute)
+	c.IndentedJSON(http.StatusOK,
+		gin.H{"name": attributeToDelete, "value": oldValue})
 }
 
 // DeleteDeveloperAppByName deletes a developer app
@@ -357,9 +344,8 @@ func (e *env) DeleteDeveloperAppByName(c *gin.Context) {
 			i-- // form the remove item index to start iterate next item
 		}
 	}
-	developerApp.LastmodifiedAt = e.getCurrentTimeMilliseconds()
 	developerApp.LastmodifiedBy = e.whoAmI()
-	if err := e.db.UpdateDeveloperByName(developer); err != nil {
+	if err := e.db.UpdateDeveloperByName(&developer); err != nil {
 		e.returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}

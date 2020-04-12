@@ -68,7 +68,7 @@ func (d *Database) runGetAppCredentialQuery(query string, queryParameters ...int
 		appcredential := types.AppCredential{
 			ConsumerKey:       m["key"].(string),
 			AppStatus:         m["app_status"].(string),
-			Attributes:        d.unmarshallJSONArrayOfAttributes(m["attributes"].(string), false),
+			Attributes:        d.unmarshallJSONArrayOfAttributes(m["attributes"].(string)),
 			CompanyStatus:     m["company_status"].(string),
 			ConsumerSecret:    m["consumer_secret"].(string),
 			CredentialMethod:  m["credential_method"].(string),
@@ -96,9 +96,10 @@ func (d *Database) runGetAppCredentialQuery(query string, queryParameters ...int
 }
 
 // UpdateAppCredentialByKey UPSERTs appcredentials in database
-func (d *Database) UpdateAppCredentialByKey(updatedAppCredential types.AppCredential) error {
+func (d *Database) UpdateAppCredentialByKey(updatedAppCredential *types.AppCredential) error {
 	APIProducts := d.marshallArrayOfProductStatusesToJSON(updatedAppCredential.APIProducts)
-	Attributes := d.marshallArrayOfAttributesToJSON(updatedAppCredential.Attributes, false)
+	updatedAppCredential.Attributes = types.TidyAttributes(updatedAppCredential.Attributes)
+	Attributes := d.marshallArrayOfAttributesToJSON(updatedAppCredential.Attributes)
 	if err := d.cassandraSession.Query(
 		"INSERT INTO app_credentials (key, api_products, attributes, "+
 			"consumer_secret, expires_at, issued_at,"+

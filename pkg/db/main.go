@@ -107,7 +107,7 @@ func (d *Database) marshallArrayOfStringsToJSON(ArrayOfStrings []string) string 
 // unmarshallJSONArrayOfAttributes unpacks JSON array of attribute bags
 // Example input: [{"name":"DisplayName","value":"erikbos teleporter"},{"name":"ErikbosTeleporterExtraAttribute","value":"42"}]
 //
-func (d *Database) unmarshallJSONArrayOfAttributes(jsonArrayOfAttributes string, ignoreMintAttributes bool) []types.AttributeKeyValues {
+func (d *Database) unmarshallJSONArrayOfAttributes(jsonArrayOfAttributes string) []types.AttributeKeyValues {
 	if jsonArrayOfAttributes != "" {
 		var ResponseAttributes = make([]types.AttributeKeyValues, 0)
 		if err := json.Unmarshal([]byte(jsonArrayOfAttributes), &ResponseAttributes); err == nil {
@@ -120,7 +120,7 @@ func (d *Database) unmarshallJSONArrayOfAttributes(jsonArrayOfAttributes string,
 // marshallArrayOfAttributesToJSON packs array of attributes into JSON
 // Example input: [{"name":"DisplayName","value":"erikbos teleporter"},{"name":"ErikbosTeleporterExtraAttribute","value":"42"}]
 //
-func (d *Database) marshallArrayOfAttributesToJSON(ArrayOfAttributes []types.AttributeKeyValues, ignoreMintAttributes bool) string {
+func (d *Database) marshallArrayOfAttributesToJSON(ArrayOfAttributes []types.AttributeKeyValues) string {
 
 	if len(ArrayOfAttributes) > 0 {
 		ArrayOfAttributesInJSON, err := json.Marshal(ArrayOfAttributes)

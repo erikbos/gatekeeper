@@ -1,5 +1,10 @@
 package types
 
+import (
+	"strings"
+	"time"
+)
+
 //Organization contains everything about a Organization
 //
 type Organization struct {
@@ -127,6 +132,50 @@ type AttributeKeyValues struct {
 	Value string `json:"value"`
 }
 
+//FindIndexOfAttribute find index of attribute in slice
+func FindIndexOfAttribute(attributes []AttributeKeyValues, name string) int {
+	for index, element := range attributes {
+		if element.Name == name {
+			return index
+		}
+	}
+	return -1
+}
+
+//TidyAttributes removes duplicate attributes from slice, and trims all values
+func TidyAttributes(attributes []AttributeKeyValues) []AttributeKeyValues {
+	// Use map to record duplicates as we find them.
+	encountered := map[string]bool{}
+	result := []AttributeKeyValues{}
+
+	for v := range attributes {
+		if encountered[strings.TrimSpace(attributes[v].Name)] == true {
+			// Do not add duplicate.
+		} else {
+			// Trim whitespace we like tidy
+			attributes[v].Name = strings.TrimSpace(attributes[v].Name)
+			attributes[v].Value = strings.TrimSpace(attributes[v].Value)
+			// Record this element as an encountered element.
+			encountered[attributes[v].Name] = true
+			// Append to result slice.
+			result = append(result, attributes[v])
+		}
+	}
+	return result
+}
+
+// DeleteAttribute removes attribute from slice. returns slice, index of deleted value, deleted value
+func DeleteAttribute(attributes []AttributeKeyValues, attributeName string) ([]AttributeKeyValues, int, string) {
+	// Find attribute in array
+	index := FindIndexOfAttribute(attributes, attributeName)
+	if index == -1 {
+		return attributes, -1, ""
+	}
+	valueOfDeletedAttribute := attributes[index].Value
+	attributes = append(attributes[:index], attributes[index+1:]...)
+	return attributes, 0, valueOfDeletedAttribute
+}
+
 // bla
 type VirtualHost struct {
 	Name              string   `json:"name"`
@@ -168,4 +217,9 @@ type Cluster struct {
 	CreatedBy      string               `json:"createdBy"`
 	LastmodifiedAt int64                `json:"lastmodifiedAt"`
 	LastmodifiedBy string               `json:"lastmodifiedBy"`
+}
+
+// GetCurrentTimeMilliseconds returns current epoch time in milliseconds
+func GetCurrentTimeMilliseconds() int64 {
+	return time.Now().UTC().UnixNano() / 1000000
 }

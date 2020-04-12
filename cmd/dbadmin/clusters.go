@@ -91,11 +91,10 @@ func (e *env) PostCreateCluster(c *gin.Context) {
 		return
 	}
 	// Automatically set default fields
-	newCluster.CreatedBy = e.whoAmI()
 	newCluster.CreatedAt = e.getCurrentTimeMilliseconds()
-	newCluster.LastmodifiedAt = newCluster.CreatedAt
+	newCluster.CreatedBy = e.whoAmI()
 	newCluster.LastmodifiedBy = e.whoAmI()
-	if err := e.db.UpdateClusterByName(newCluster); err != nil {
+	if err := e.db.UpdateClusterByName(&newCluster); err != nil {
 		e.returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -118,9 +117,8 @@ func (e *env) PostCluster(c *gin.Context) {
 	updatedCluster.Name = currentCluster.Name
 	updatedCluster.CreatedBy = currentCluster.CreatedBy
 	updatedCluster.CreatedAt = currentCluster.CreatedAt
-	updatedCluster.LastmodifiedAt = e.getCurrentTimeMilliseconds()
 	updatedCluster.LastmodifiedBy = e.whoAmI()
-	if err := e.db.UpdateClusterByName(updatedCluster); err != nil {
+	if err := e.db.UpdateClusterByName(&updatedCluster); err != nil {
 		e.returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -141,10 +139,9 @@ func (e *env) PostClusterAttributes(c *gin.Context) {
 		e.returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
-	updatedCluster.Attributes = e.removeDuplicateAttributes(receivedAttributes.Attributes)
-	updatedCluster.LastmodifiedAt = e.getCurrentTimeMilliseconds()
+	updatedCluster.Attributes = receivedAttributes.Attributes
 	updatedCluster.LastmodifiedBy = e.whoAmI()
-	if err := e.db.UpdateClusterByName(updatedCluster); err != nil {
+	if err := e.db.UpdateClusterByName(&updatedCluster); err != nil {
 		e.returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -160,9 +157,8 @@ func (e *env) DeleteClusterAttributes(c *gin.Context) {
 	}
 	deletedAttributes := updatedCluster.Attributes
 	updatedCluster.Attributes = nil
-	updatedCluster.LastmodifiedAt = e.getCurrentTimeMilliseconds()
 	updatedCluster.LastmodifiedBy = e.whoAmI()
-	if err := e.db.UpdateClusterByName(updatedCluster); err != nil {
+	if err := e.db.UpdateClusterByName(&updatedCluster); err != nil {
 		e.returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -185,7 +181,7 @@ func (e *env) PostClusterAttributeByName(c *gin.Context) {
 		return
 	}
 	// Find & update existing attribute in array
-	attributeToUpdateIndex := e.findAttributePositionInAttributeArray(
+	attributeToUpdateIndex := types.FindIndexOfAttribute(
 		updatedCluster.Attributes, attributeToUpdate)
 	if attributeToUpdateIndex == -1 {
 		// We did not find existing attribute, append new attribute
@@ -195,8 +191,7 @@ func (e *env) PostClusterAttributeByName(c *gin.Context) {
 		updatedCluster.Attributes[attributeToUpdateIndex].Value = receivedValue.Value
 	}
 	updatedCluster.LastmodifiedBy = e.whoAmI()
-	updatedCluster.LastmodifiedAt = e.getCurrentTimeMilliseconds()
-	if err := e.db.UpdateClusterByName(updatedCluster); err != nil {
+	if err := e.db.UpdateClusterByName(&updatedCluster); err != nil {
 		e.returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -204,33 +199,28 @@ func (e *env) PostClusterAttributeByName(c *gin.Context) {
 		gin.H{"name": attributeToUpdate, "value": receivedValue.Value})
 }
 
-// DeleteClusterAttributeByName removes an attribute of APIProduct
+// DeleteClusterAttributeByName removes an attribute of cluster
 func (e *env) DeleteClusterAttributeByName(c *gin.Context) {
 	updatedCluster, err := e.db.GetClusterByName(c.Param("cluster"))
 	if err != nil {
 		e.returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
-	// Find attribute in array
-	attributeToRemoveIndex := e.findAttributePositionInAttributeArray(
-		updatedCluster.Attributes, c.Param("attribute"))
-	if attributeToRemoveIndex == -1 {
+	attributeToDelete := c.Param("attribute")
+	updatedAttributes, index, oldValue := types.DeleteAttribute(updatedCluster.Attributes, attributeToDelete)
+	if index == -1 {
 		e.returnJSONMessage(c, http.StatusNotFound,
-			fmt.Errorf("Could not find attribute '%s'", c.Param("attribute")))
+			fmt.Errorf("Could not find attribute '%s'", attributeToDelete))
 		return
 	}
-	deletedAttribute := updatedCluster.Attributes[attributeToRemoveIndex]
-	// remove attribute
-	updatedCluster.Attributes =
-		append(updatedCluster.Attributes[:attributeToRemoveIndex],
-			updatedCluster.Attributes[attributeToRemoveIndex+1:]...)
+	updatedCluster.Attributes = updatedAttributes
 	updatedCluster.LastmodifiedBy = e.whoAmI()
-	updatedCluster.LastmodifiedAt = e.getCurrentTimeMilliseconds()
-	if err := e.db.UpdateClusterByName(updatedCluster); err != nil {
+	if err := e.db.UpdateClusterByName(&updatedCluster); err != nil {
 		e.returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
-	c.IndentedJSON(http.StatusOK, deletedAttribute)
+	c.IndentedJSON(http.StatusOK,
+		gin.H{"name": attributeToDelete, "value": oldValue})
 }
 
 // DeleteClusterByName deletes a cluster

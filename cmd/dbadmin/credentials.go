@@ -81,7 +81,7 @@ func (e *env) PostCreateDeveloperAppKey(c *gin.Context) {
 	newAppCredential.OrganizationName = developerApp.OrganizationName
 	newAppCredential.Status = "approved"
 
-	if err := e.db.UpdateAppCredentialByKey(newAppCredential); err != nil {
+	if err := e.db.UpdateAppCredentialByKey(&newAppCredential); err != nil {
 		e.returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -105,7 +105,7 @@ func (e *env) PostUpdateDeveloperAppKeyByKey(c *gin.Context) {
 	AppCredential.Attributes = receivedAppCredential.Attributes
 	AppCredential.ExpiresAt = receivedAppCredential.ExpiresAt
 	AppCredential.Status = receivedAppCredential.Status
-	if err := e.db.UpdateAppCredentialByKey(AppCredential); err != nil {
+	if err := e.db.UpdateAppCredentialByKey(&AppCredential); err != nil {
 		e.returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}

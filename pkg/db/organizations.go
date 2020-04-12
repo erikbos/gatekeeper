@@ -60,7 +60,7 @@ func (d *Database) runGetOrganizationQuery(query, queryParameter string) ([]type
 	m := make(map[string]interface{})
 	for iterable.MapScan(m) {
 		organizations = append(organizations, types.Organization{
-			Attributes:     d.unmarshallJSONArrayOfAttributes(m["attributes"].(string), false),
+			Attributes:     d.unmarshallJSONArrayOfAttributes(m["attributes"].(string)),
 			CreatedAt:      m["created_at"].(int64),
 			CreatedBy:      m["created_by"].(string),
 			DisplayName:    m["display_name"].(string),
@@ -78,8 +78,10 @@ func (d *Database) runGetOrganizationQuery(query, queryParameter string) ([]type
 }
 
 // UpdateOrganizationByName UPSERTs an organization in database
-func (d *Database) UpdateOrganizationByName(updatedOrganization types.Organization) error {
-	Attributes := d.marshallArrayOfAttributesToJSON(updatedOrganization.Attributes, false)
+func (d *Database) UpdateOrganizationByName(updatedOrganization *types.Organization) error {
+	updatedOrganization.Attributes = types.TidyAttributes(updatedOrganization.Attributes)
+	Attributes := d.marshallArrayOfAttributesToJSON(updatedOrganization.Attributes)
+	updatedOrganization.LastmodifiedAt = types.GetCurrentTimeMilliseconds()
 	if err := d.cassandraSession.Query(
 		"INSERT INTO organizations (key, name, display_name, attributes, "+
 			"created_at, created_by, lastmodified_at, lastmodified_by) "+

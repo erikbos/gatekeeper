@@ -69,7 +69,7 @@ func (d *Database) runGetAPIProductQuery(query string, queryParameters ...interf
 		}
 		apiproduct.APIResources = d.unmarshallJSONArrayOfStrings(m["api_resources"].(string))
 		apiproduct.Proxies = d.unmarshallJSONArrayOfStrings(m["proxies"].(string))
-		apiproduct.Attributes = d.unmarshallJSONArrayOfAttributes(m["attributes"].(string), true)
+		apiproduct.Attributes = d.unmarshallJSONArrayOfAttributes(m["attributes"].(string))
 		apiproducts = append(apiproducts, apiproduct)
 		m = map[string]interface{}{}
 	}
@@ -81,13 +81,14 @@ func (d *Database) runGetAPIProductQuery(query string, queryParameters ...interf
 }
 
 // UpdateAPIProductByName UPSERTs an apiproduct in database
-func (d *Database) UpdateAPIProductByName(updatedAPIProduct types.APIProduct) error {
+func (d *Database) UpdateAPIProductByName(updatedAPIProduct *types.APIProduct) error {
 	query := "INSERT INTO api_products (key,name,display_name, attributes," +
 		"created_at,created_by, api_resources," +
 		"lastmodified_at,lastmodified_by,organization_name) " +
 		"VALUES(?,?,?,?,?, ?,?,?,?,?)"
-
-	attributes := d.marshallArrayOfAttributesToJSON(updatedAPIProduct.Attributes, false)
+	updatedAPIProduct.Attributes = types.TidyAttributes(updatedAPIProduct.Attributes)
+	attributes := d.marshallArrayOfAttributesToJSON(updatedAPIProduct.Attributes)
+	updatedAPIProduct.LastmodifiedAt = types.GetCurrentTimeMilliseconds()
 	err := d.cassandraSession.Query(query,
 		updatedAPIProduct.Key, updatedAPIProduct.Name, updatedAPIProduct.DisplayName, attributes,
 		updatedAPIProduct.CreatedAt, updatedAPIProduct.CreatedBy, updatedAPIProduct.APIResources,

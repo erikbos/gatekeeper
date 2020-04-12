@@ -65,7 +65,7 @@ func (d *Database) runGetClusterQuery(query string, queryParameters ...interface
 			LastmodifiedBy: m["lastmodified_by"].(string),
 		}
 		if m["attributes"] != nil {
-			newCluster.Attributes = d.unmarshallJSONArrayOfAttributes(m["attributes"].(string), true)
+			newCluster.Attributes = d.unmarshallJSONArrayOfAttributes(m["attributes"].(string))
 		}
 		clusters = append(clusters, newCluster)
 		m = map[string]interface{}{}
@@ -79,12 +79,14 @@ func (d *Database) runGetClusterQuery(query string, queryParameters ...interface
 }
 
 // UpdateClusterByName UPSERTs an cluster in database
-func (d *Database) UpdateClusterByName(updatedCluster types.Cluster) error {
+func (d *Database) UpdateClusterByName(updatedCluster *types.Cluster) error {
 	query := "INSERT INTO clusters (key, display_name, " +
 		"host_name, host_port, attributes, " +
 		"created_at, created_by, lastmodified_at, lastmodified_by) " +
 		"VALUES(?,?,?,?,?,?,?,?,?)"
-	attributes := d.marshallArrayOfAttributesToJSON(updatedCluster.Attributes, false)
+	updatedCluster.Attributes = types.TidyAttributes(updatedCluster.Attributes)
+	attributes := d.marshallArrayOfAttributesToJSON(updatedCluster.Attributes)
+	updatedCluster.LastmodifiedAt = types.GetCurrentTimeMilliseconds()
 	if err := d.cassandraSession.Query(query,
 		updatedCluster.Name, updatedCluster.DisplayName,
 		updatedCluster.HostName, updatedCluster.HostPort, attributes,
