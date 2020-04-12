@@ -20,7 +20,7 @@ func (r *Readyness) DisplayReadyness(c *gin.Context) {
 	}
 }
 
-// we should use failureThreshold and successThreshold before determining whether we are up or down
+// FIX we should use failureThreshold and successThreshold before determining whether we are up or down
 
 // Down changes status to down
 func (r *Readyness) Down() {

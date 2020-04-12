@@ -69,7 +69,7 @@ func (c *RESTAPIConfig) loadConfiguration(filename string) *RESTAPIConfig {
 
 type env struct {
 	db        *db.Database
-	router    *gin.Engine
+	ginEngine *gin.Engine
 	readyness types.Readyness
 }
 
@@ -78,24 +78,26 @@ func startRESTAPIServer(listenport string, db *db.Database) {
 
 	e := &env{}
 	e.db = db
-	e.router = gin.New()
+	e.ginEngine = gin.New()
 
 	// r.Use(gin.Logger())
-	e.router.Use(gin.LoggerWithFormatter(logRequstparam))
+	e.ginEngine.Use(gin.LoggerWithFormatter(logRequstparam))
 
-	e.registerOrganizationRoutes(e.router)
-	e.registerDeveloperRoutes(e.router)
-	e.registerDeveloperAppRoutes(e.router)
-	e.registerCredentialRoutes(e.router)
-	e.registerAPIProductRoutes(e.router)
-	e.registerClusterRoutes(e.router)
+	e.registerOrganizationRoutes(e.ginEngine)
+	e.registerDeveloperRoutes(e.ginEngine)
+	e.registerDeveloperAppRoutes(e.ginEngine)
+	e.registerCredentialRoutes(e.ginEngine)
+	e.registerAPIProductRoutes(e.ginEngine)
+	e.registerClusterRoutes(e.ginEngine)
 
-	e.router.Static("/assets", "./assets")
-	e.router.GET("/metrics", gin.WrapH(promhttp.Handler()))
-	e.router.GET("/dump_routes", e.dumpRoutes)
-	e.router.GET("/ready", e.readyness.DisplayReadyness)
+	e.ginEngine.Static("/assets", "./assets")
+	e.ginEngine.GET("/metrics", gin.WrapH(promhttp.Handler()))
+	e.ginEngine.GET("/", e.ShowWebAdminHomePage)
+	e.ginEngine.GET("/ready", e.readyness.DisplayReadyness)
 
-	e.router.Run(listenport)
+	e.readyness.Up()
+
+	e.ginEngine.Run(listenport)
 }
 
 func logRequstparam(param gin.LogFormatterParams) string {
@@ -117,13 +119,10 @@ func (e *env) whoAmI() string {
 	return "rest-api@test"
 }
 
-// restGetReady returns ready as readyness check
-func (e *env) dumpRoutes(c *gin.Context) {
-	routes := e.router.Routes()
-	for _, v := range routes {
-		log.Printf("%+v", v)
-	}
-	// c.IndentedJSON(http.StatusOK, gin.H{"routes": routes})
+// ShowWebAdminHomePage shows home page
+func (e *env) ShowWebAdminHomePage(c *gin.Context) {
+	// FIXME feels like hack, is there a better way to pass gin engine context?
+	types.ShowIndexPage(c, e.ginEngine)
 }
 
 func setLastModifiedHeader(c *gin.Context, timeStamp int64) {
