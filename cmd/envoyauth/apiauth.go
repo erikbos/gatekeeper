@@ -43,8 +43,8 @@ var apiProxyBasePaths = map[string][]string{
 // loading all known paths in a radix tree
 // radix tree entry contains path property struct { whichproduct, enabled, etc}
 //
-func (a *authorizationServer) CheckAllowedPath(requestURIPath, apiKey string) (int, types.AppCredential, types.DeveloperApp, types.APIProduct, error) {
-	appcredential, err := a.c.GetAppCredentialCached(a.db, apiKey)
+func (a *authorizationServer) CheckAllowedPath(requestURIPath, organization, apiKey string) (int, types.AppCredential, types.DeveloperApp, types.APIProduct, error) {
+	appcredential, err := a.c.GetAppCredentialCached(a.db, organization, apiKey)
 	if err != nil {
 		return 403, types.AppCredential{}, types.DeveloperApp{}, types.APIProduct{}, errors.New("Could not find apikey")
 	}
@@ -71,7 +71,7 @@ func (a *authorizationServer) CheckAllowedPath(requestURIPath, apiKey string) (i
 		// Check if product has been approved
 		if appcredential.APIProducts[productIndex].Status == "approved" {
 			// retrieve each api product
-			apiproduct, err := a.c.GetAPIProductCached(a.db, appcredential.APIProducts[productIndex].Apiproduct)
+			apiproduct, err := a.c.GetAPIProductCached(a.db, organization, appcredential.APIProducts[productIndex].Apiproduct)
 			log.Debugf("CheckPath() evaluation apiproduct: %+v\n", appcredential.APIProducts[productIndex].Apiproduct)
 
 			if err != nil {
@@ -216,8 +216,9 @@ func (a *authorizationServer) Check(ctx context.Context, req *auth.CheckRequest)
 
 	log.Printf("Query String: %v", req.GetAttributes().GetRequest().GetHttp().GetQuery())
 
+	// We staticly pass "petstore" as organization (should be derived from vhost -> org mapping)
 	// Lookup apikey, developApp, and apiproduct and try to path match URL with allowed paths
-	statusCode, appCrendentials, developerApp, APIProduct, err := a.CheckAllowedPath(URL.Path, apiKey)
+	statusCode, appCrendentials, developerApp, APIProduct, err := a.CheckAllowedPath("petstore", URL.Path, apiKey)
 
 	log.Debugf("Check() statuscode: %d", statusCode)
 	log.Debugf("Check() appCrendentials: %+v\n", appCrendentials)

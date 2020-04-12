@@ -11,7 +11,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/erikbos/apiauth/pkg/db"
-	// "github.com/erikbos/apiauth/pkg/types"
+	"github.com/erikbos/apiauth/pkg/types"
 
 	v2 "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
@@ -22,7 +22,8 @@ import (
 	"github.com/envoyproxy/go-control-plane/pkg/cache"
 	xds "github.com/envoyproxy/go-control-plane/pkg/server"
 	"github.com/envoyproxy/go-control-plane/pkg/util"
-	"github.com/gogo/protobuf/types"
+
+	proto_types "github.com/gogo/protobuf/types"
 	"google.golang.org/grpc"
 )
 
@@ -114,7 +115,7 @@ func main() {
 	var LastConfigurationDeployment int64
 
 	for {
-		now := getCurrentTimeMilliseconds()
+		now := types.GetCurrentTimeMilliseconds()
 
 		if clustersLastUpdate > LastConfigurationDeployment {
 			log.Infof("starting configuration compilation")
@@ -177,7 +178,7 @@ func main() {
 					Name: util.Router,
 				}},
 			}
-			pbst, err := types.MarshalAny(manager)
+			pbst, err := proto_types.MarshalAny(manager)
 			if err != nil {
 				fmt.Println("yellow")
 				panic(err)
