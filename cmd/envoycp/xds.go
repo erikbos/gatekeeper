@@ -76,7 +76,7 @@ func (s *server) XDSMainloop() {
 		now := types.GetCurrentTimeMilliseconds()
 
 		if clustersLastUpdate > lastConfigurationDeployment {
-			log.Infof("starting configuration compilation")
+			log.Infof("Starting configuration compilation")
 
 			// var clusterName = "service_google"
 			// log.Infof(">>>>>>>>>>>>>>>>>>> creating cluster " + clusterName)
