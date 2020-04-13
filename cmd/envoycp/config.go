@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/erikbos/apiauth/pkg/db"
+
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 )

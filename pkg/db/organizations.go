@@ -3,7 +3,8 @@ package db
 import (
 	"fmt"
 
-	"github.com/erikbos/apiauth/pkg/types"
+	"github.com/erikbos/apiauth/pkg/shared"
+
 	"github.com/gocql/gocql"
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
@@ -13,12 +14,12 @@ import (
 const organizationMetricLabel = "organizations"
 
 // GetOrganizations retrieves all organizations
-func (d *Database) GetOrganizations() ([]types.Organization, error) {
+func (d *Database) GetOrganizations() ([]shared.Organization, error) {
 	// FIXME this ugly workaround to have to pass an argument
 	query := "SELECT * FROM organizations ALLOW FILTERING"
 	organizations, err := d.runGetOrganizationQuery(query, "")
 	if err != nil {
-		return []types.Organization{}, fmt.Errorf("Cannot retrieve list of organizations (%s)", err)
+		return []shared.Organization{}, fmt.Errorf("Cannot retrieve list of organizations (%s)", err)
 	}
 	if len(organizations) == 0 {
 		d.metricsQueryMiss(organizationMetricLabel)
@@ -29,15 +30,15 @@ func (d *Database) GetOrganizations() ([]types.Organization, error) {
 }
 
 // GetOrganizationByName retrieves an organization from database
-func (d *Database) GetOrganizationByName(organizationName string) (types.Organization, error) {
+func (d *Database) GetOrganizationByName(organizationName string) (shared.Organization, error) {
 	query := "SELECT * FROM organizations WHERE name = ? LIMIT 1"
 	organizations, err := d.runGetOrganizationQuery(query, organizationName)
 	if err != nil {
-		return types.Organization{}, err
+		return shared.Organization{}, err
 	}
 	if len(organizations) == 0 {
 		d.metricsQueryMiss(organizationMetricLabel)
-		return types.Organization{},
+		return shared.Organization{},
 			fmt.Errorf("Can not find organization (%s)", organizationName)
 	}
 	d.metricsQueryHit(organizationMetricLabel)
@@ -45,8 +46,8 @@ func (d *Database) GetOrganizationByName(organizationName string) (types.Organiz
 }
 
 // runGetOrganizationQuery executes CQL query and returns resultset
-func (d *Database) runGetOrganizationQuery(query, queryParameter string) ([]types.Organization, error) {
-	var organizations []types.Organization
+func (d *Database) runGetOrganizationQuery(query, queryParameter string) ([]shared.Organization, error) {
+	var organizations []shared.Organization
 
 	timer := prometheus.NewTimer(d.dbLookupHistogram)
 	defer timer.ObserveDuration()
@@ -59,7 +60,7 @@ func (d *Database) runGetOrganizationQuery(query, queryParameter string) ([]type
 	}
 	m := make(map[string]interface{})
 	for iterable.MapScan(m) {
-		organizations = append(organizations, types.Organization{
+		organizations = append(organizations, shared.Organization{
 			Attributes:     d.unmarshallJSONArrayOfAttributes(m["attributes"].(string)),
 			CreatedAt:      m["created_at"].(int64),
 			CreatedBy:      m["created_by"].(string),
@@ -72,16 +73,16 @@ func (d *Database) runGetOrganizationQuery(query, queryParameter string) ([]type
 	}
 	if err := iterable.Close(); err != nil {
 		log.Error(err)
-		return []types.Organization{}, err
+		return []shared.Organization{}, err
 	}
 	return organizations, nil
 }
 
 // UpdateOrganizationByName UPSERTs an organization in database
-func (d *Database) UpdateOrganizationByName(updatedOrganization *types.Organization) error {
-	updatedOrganization.Attributes = types.TidyAttributes(updatedOrganization.Attributes)
+func (d *Database) UpdateOrganizationByName(updatedOrganization *shared.Organization) error {
+	updatedOrganization.Attributes = shared.TidyAttributes(updatedOrganization.Attributes)
 	Attributes := d.marshallArrayOfAttributesToJSON(updatedOrganization.Attributes)
-	updatedOrganization.LastmodifiedAt = types.GetCurrentTimeMilliseconds()
+	updatedOrganization.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
 	if err := d.cassandraSession.Query(
 		"INSERT INTO organizations (key, name, display_name, attributes, "+
 			"created_at, created_by, lastmodified_at, lastmodified_by) "+

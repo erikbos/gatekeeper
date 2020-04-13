@@ -3,7 +3,8 @@ package db
 import (
 	"fmt"
 
-	"github.com/erikbos/apiauth/pkg/types"
+	"github.com/erikbos/apiauth/pkg/shared"
+
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 )
@@ -12,11 +13,11 @@ import (
 const apiProductsMetricLabel = "apiproducts"
 
 // GetAPIProductsByOrganization retrieves all api products belonging to an organization
-func (d *Database) GetAPIProductsByOrganization(organizationName string) ([]types.APIProduct, error) {
+func (d *Database) GetAPIProductsByOrganization(organizationName string) ([]shared.APIProduct, error) {
 	query := "SELECT * FROM api_products WHERE organization_name = ? ALLOW FILTERING"
 	apiproducts, err := d.runGetAPIProductQuery(query, organizationName)
 	if err != nil {
-		return []types.APIProduct{}, err
+		return []shared.APIProduct{}, err
 	}
 	if len(apiproducts) == 0 {
 		d.metricsQueryMiss(appsMetricLabel)
@@ -28,15 +29,15 @@ func (d *Database) GetAPIProductsByOrganization(organizationName string) ([]type
 }
 
 // GetAPIProductByName returns an apiproduct
-func (d *Database) GetAPIProductByName(organizationName, apiproductName string) (types.APIProduct, error) {
+func (d *Database) GetAPIProductByName(organizationName, apiproductName string) (shared.APIProduct, error) {
 	query := "SELECT * FROM api_products WHERE organization_name = ? AND name = ? LIMIT 1"
 	apiproducts, err := d.runGetAPIProductQuery(query, organizationName, apiproductName)
 	if err != nil {
-		return types.APIProduct{}, err
+		return shared.APIProduct{}, err
 	}
 	if len(apiproducts) == 0 {
 		d.metricsQueryMiss(apiProductsMetricLabel)
-		return types.APIProduct{},
+		return shared.APIProduct{},
 			fmt.Errorf("Could not find apiproduct (%s)", apiproductName)
 	}
 	d.metricsQueryHit(apiProductsMetricLabel)
@@ -44,8 +45,8 @@ func (d *Database) GetAPIProductByName(organizationName, apiproductName string) 
 }
 
 // runAPIProductQuery executes CQL query and returns resultset
-func (d *Database) runGetAPIProductQuery(query string, queryParameters ...interface{}) ([]types.APIProduct, error) {
-	var apiproducts []types.APIProduct
+func (d *Database) runGetAPIProductQuery(query string, queryParameters ...interface{}) ([]shared.APIProduct, error) {
+	var apiproducts []shared.APIProduct
 
 	timer := prometheus.NewTimer(d.dbLookupHistogram)
 	defer timer.ObserveDuration()
@@ -53,7 +54,7 @@ func (d *Database) runGetAPIProductQuery(query string, queryParameters ...interf
 	iterable := d.cassandraSession.Query(query, queryParameters...).Iter()
 	m := make(map[string]interface{})
 	for iterable.MapScan(m) {
-		apiproduct := types.APIProduct{
+		apiproduct := shared.APIProduct{
 			Key:              m["key"].(string),
 			ApprovalType:     m["approval_type"].(string),
 			CreatedAt:        m["created_at"].(int64),
@@ -75,20 +76,20 @@ func (d *Database) runGetAPIProductQuery(query string, queryParameters ...interf
 	}
 	if err := iterable.Close(); err != nil {
 		log.Error(err)
-		return []types.APIProduct{}, err
+		return []shared.APIProduct{}, err
 	}
 	return apiproducts, nil
 }
 
 // UpdateAPIProductByName UPSERTs an apiproduct in database
-func (d *Database) UpdateAPIProductByName(updatedAPIProduct *types.APIProduct) error {
+func (d *Database) UpdateAPIProductByName(updatedAPIProduct *shared.APIProduct) error {
 	query := "INSERT INTO api_products (key,name,display_name, attributes," +
 		"created_at,created_by, api_resources," +
 		"lastmodified_at,lastmodified_by,organization_name) " +
 		"VALUES(?,?,?,?,?, ?,?,?,?,?)"
-	updatedAPIProduct.Attributes = types.TidyAttributes(updatedAPIProduct.Attributes)
+	updatedAPIProduct.Attributes = shared.TidyAttributes(updatedAPIProduct.Attributes)
 	attributes := d.marshallArrayOfAttributesToJSON(updatedAPIProduct.Attributes)
-	updatedAPIProduct.LastmodifiedAt = types.GetCurrentTimeMilliseconds()
+	updatedAPIProduct.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
 	err := d.cassandraSession.Query(query,
 		updatedAPIProduct.Key, updatedAPIProduct.Name, updatedAPIProduct.DisplayName, attributes,
 		updatedAPIProduct.CreatedAt, updatedAPIProduct.CreatedBy, updatedAPIProduct.APIResources,

@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/erikbos/apiauth/pkg/types"
+	"github.com/erikbos/apiauth/pkg/shared"
 
 	api "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	auth "github.com/envoyproxy/go-control-plane/envoy/api/v2/auth"
@@ -16,7 +16,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-var clusters []types.Cluster
+var clusters []shared.Cluster
 var clustersLastUpdate int64
 var clusterMutex sync.Mutex
 
@@ -33,7 +33,7 @@ func (s *server) GetClusterConfigFromDatabase() {
 			for _, s := range newClusterList {
 				// Is a cluster updated since last time we stored it?
 				if s.LastmodifiedAt > clustersLastUpdate {
-					now := types.GetCurrentTimeMilliseconds()
+					now := shared.GetCurrentTimeMilliseconds()
 					clusterMutex.Lock()
 					clusters = newClusterList
 					clustersLastUpdate = now
@@ -55,7 +55,7 @@ func getEnvoyClusterConfig() ([]cache.Resource, error) {
 }
 
 // buildEnvoyClusterConfig buils one envoy cluster configuration
-func buildEnvoyClusterConfig(clusterConfig types.Cluster) *api.Cluster {
+func buildEnvoyClusterConfig(clusterConfig shared.Cluster) *api.Cluster {
 	address := coreAddress(clusterConfig.HostName, clusterConfig.Port)
 	cluster := &api.Cluster{
 		Name:           clusterConfig.Name,
@@ -83,7 +83,7 @@ func buildEnvoyClusterConfig(clusterConfig types.Cluster) *api.Cluster {
 		},
 	}
 
-	value, err := types.GetAttribute(clusterConfig.Attributes, "HTTP2Enabled")
+	value, err := shared.GetAttribute(clusterConfig.Attributes, "HTTP2Enabled")
 	if err == nil && value == "True" {
 		cluster.Http2ProtocolOptions = &core.Http2ProtocolOptions{}
 		cluster.TransportSocket = transportSocket(clusterConfig.HostName, true)
@@ -101,18 +101,18 @@ func buildEnvoyClusterConfig(clusterConfig types.Cluster) *api.Cluster {
 }
 
 // buildHealthCheckConfig builds health configuration for a cluster
-func buildHealthCheckConfig(clusterConfig types.Cluster) []*core.HealthCheck {
+func buildHealthCheckConfig(clusterConfig shared.Cluster) []*core.HealthCheck {
 	healthChecks := []*core.HealthCheck{}
 
-	healthCheckPath, err := types.GetAttribute(clusterConfig.Attributes, "HealthCheckPath")
+	healthCheckPath, err := shared.GetAttribute(clusterConfig.Attributes, "HealthCheckPath")
 	if err == nil && healthCheckPath != "" {
-		healthCheckInterval, err := types.GetAttribute(clusterConfig.Attributes, "HealthCheckInterval")
+		healthCheckInterval, err := shared.GetAttribute(clusterConfig.Attributes, "HealthCheckInterval")
 		healthcheckIntervalAsDuration, err := time.ParseDuration(healthCheckInterval)
 		if err != nil {
 			healthcheckIntervalAsDuration = 30 * time.Second
 		}
 
-		healthCheckTimeout, err := types.GetAttribute(clusterConfig.Attributes, "HealthCheckTimeout")
+		healthCheckTimeout, err := shared.GetAttribute(clusterConfig.Attributes, "HealthCheckTimeout")
 		healthcheckTimeoutAsDuration, err := time.ParseDuration(healthCheckTimeout)
 		if err != nil {
 			healthcheckTimeoutAsDuration = 30 * time.Second

@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/erikbos/apiauth/pkg/types"
+	"github.com/erikbos/apiauth/pkg/shared"
 
 	"github.com/bmatcuk/doublestar"
 	core "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
@@ -43,27 +43,27 @@ var apiProxyBasePaths = map[string][]string{
 // loading all known paths in a radix tree
 // radix tree entry contains path property struct { whichproduct, enabled, etc}
 //
-func (a *authorizationServer) CheckAllowedPath(requestURIPath, organization, apiKey string) (int, types.AppCredential, types.DeveloperApp, types.APIProduct, error) {
+func (a *authorizationServer) CheckAllowedPath(requestURIPath, organization, apiKey string) (int, shared.AppCredential, shared.DeveloperApp, shared.APIProduct, error) {
 	appcredential, err := a.c.GetAppCredentialCached(a.db, organization, apiKey)
 	if err != nil {
-		return 403, types.AppCredential{}, types.DeveloperApp{}, types.APIProduct{}, errors.New("Could not find apikey")
+		return 403, shared.AppCredential{}, shared.DeveloperApp{}, shared.APIProduct{}, errors.New("Could not find apikey")
 	}
 
 	// we immediately lookup developer app as we always needs its information
 	// (e.g. logging with as much customer detail as possible)
 	developerApp, err := a.c.GetDeveloperAppCached(a.db, appcredential.OrganizationAppID)
 	if err != nil {
-		return 403, appcredential, types.DeveloperApp{}, types.APIProduct{}, errors.New("Could not find developer app of apikey")
+		return 403, appcredential, shared.DeveloperApp{}, shared.APIProduct{}, errors.New("Could not find developer app of apikey")
 	}
 	if appcredential.Status != "approved" {
-		return 403, appcredential, developerApp, types.APIProduct{}, errors.New("Unapproved apikey")
+		return 403, appcredential, developerApp, shared.APIProduct{}, errors.New("Unapproved apikey")
 	}
 	if appcredential.ExpiresAt != -1 {
 		currentTime := time.Now().UnixNano() / 1000000
 		// fmt.Printf("Current time: %d\n", currentTime)
 		// fmt.Printf("Expires time: %d\n", appcredential.expires_at)
 		if currentTime > appcredential.ExpiresAt {
-			return 403, appcredential, developerApp, types.APIProduct{}, errors.New("Expired apikey")
+			return 403, appcredential, developerApp, shared.APIProduct{}, errors.New("Expired apikey")
 		}
 	}
 	// iterate over this key's apiproducts entitlement
@@ -76,7 +76,7 @@ func (a *authorizationServer) CheckAllowedPath(requestURIPath, organization, api
 
 			if err != nil {
 				// FIXME should we continue in case a single product is not retrievable?
-				return 503, appcredential, developerApp, types.APIProduct{}, errors.New("Cannot retrieve product(s) of apikey")
+				return 503, appcredential, developerApp, shared.APIProduct{}, errors.New("Cannot retrieve product(s) of apikey")
 			}
 			// FIX ME/TBC should we skip product if it deployed in different org?
 			// (very) unlikely scenario?
@@ -112,22 +112,22 @@ func (a *authorizationServer) CheckAllowedPath(requestURIPath, organization, api
 					// in case none of the resource paths matches, but the basepath is the prefix of the uri..
 					// (could also exact match on base path!)
 					if strings.HasPrefix(requestURIPath, basePaths[basePathIndex]) {
-						return 404, appcredential, developerApp, types.APIProduct{}, errors.New("access to product endpoint denied")
+						return 404, appcredential, developerApp, shared.APIProduct{}, errors.New("access to product endpoint denied")
 					}
 				}
 			} else {
-				return 503, appcredential, developerApp, types.APIProduct{}, errors.New("Cannot find basepath of product(s) of apikey")
+				return 503, appcredential, developerApp, shared.APIProduct{}, errors.New("Cannot find basepath of product(s) of apikey")
 			}
 		} else {
 			// Skipping unapproved product included in apikey
 		}
 	}
-	return 404, appcredential, developerApp, types.APIProduct{}, errors.New("Cannot find product")
+	return 404, appcredential, developerApp, shared.APIProduct{}, errors.New("Cannot find product")
 }
 
 //lookUpAttribute find one named attribute in array of attributes (developer or developerapp)
 
-func lookUpAttribute(attributes []types.AttributeKeyValues, requestedAttributeName string) string {
+func lookUpAttribute(attributes []shared.AttributeKeyValues, requestedAttributeName string) string {
 	for attributeIndex := range attributes {
 		if attributes[attributeIndex].Name == requestedAttributeName {
 			return attributes[attributeIndex].Value
@@ -139,7 +139,7 @@ func lookUpAttribute(attributes []types.AttributeKeyValues, requestedAttributeNa
 // getQPSQuotaKeyAndLimit returns QPS quotakey to be used by Lyft ratelimiter
 // QPS set as developer app attribute has priority over quota set as product attribute
 //
-func getQPSQuotaKeyAndLimit(apiKey string, apiproduct types.APIProduct, developerapp types.DeveloperApp) (string, string) {
+func getQPSQuotaKeyAndLimit(apiKey string, apiproduct shared.APIProduct, developerapp shared.DeveloperApp) (string, string) {
 	quotaAttributeName := apiproduct.Name + "_quotaPerSecond"
 	// QPS set as developer app attribute has priority over quota set as product attribute
 

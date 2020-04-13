@@ -4,25 +4,26 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/erikbos/apiauth/pkg/types"
+	"github.com/erikbos/apiauth/pkg/shared"
+
 	"github.com/gin-gonic/gin"
 )
 
 // registerClusterRoutes registers all routes we handle
 func (e *env) registerClusterRoutes(r *gin.Engine) {
 	r.GET("/v1/clusters", e.GetClusters)
-	r.POST("/v1/clusters", types.AbortIfContentTypeNotJSON, e.PostCreateCluster)
+	r.POST("/v1/clusters", shared.AbortIfContentTypeNotJSON, e.PostCreateCluster)
 
 	r.GET("/v1/clusters/:cluster", e.GetClusterByName)
-	r.POST("/v1/clusters/:cluster", types.AbortIfContentTypeNotJSON, e.PostCluster)
+	r.POST("/v1/clusters/:cluster", shared.AbortIfContentTypeNotJSON, e.PostCluster)
 	r.DELETE("/v1/clusters/:cluster", e.DeleteClusterByName)
 
 	r.GET("/v1/clusters/:cluster/attributes", e.GetClusterAttributes)
-	r.POST("/v1/clusters/:cluster/attributes", types.AbortIfContentTypeNotJSON, e.PostClusterAttributes)
+	r.POST("/v1/clusters/:cluster/attributes", shared.AbortIfContentTypeNotJSON, e.PostClusterAttributes)
 	r.DELETE("/v1/clusters/:cluster/attributes", e.DeleteClusterAttributes)
 
 	r.GET("/v1/clusters/:cluster/attributes/:attribute", e.GetClusterAttributeByName)
-	r.POST("/v1/clusters/:cluster/attributes/:attribute", types.AbortIfContentTypeNotJSON, e.PostClusterAttributeByName)
+	r.POST("/v1/clusters/:cluster/attributes/:attribute", shared.AbortIfContentTypeNotJSON, e.PostClusterAttributeByName)
 	r.DELETE("/v1/clusters/:cluster/attributes/:attribute", e.DeleteClusterAttributeByName)
 }
 
@@ -79,7 +80,7 @@ func (e *env) GetClusterAttributeByName(c *gin.Context) {
 
 // PostCreateCluster creates a cluster
 func (e *env) PostCreateCluster(c *gin.Context) {
-	var newCluster types.Cluster
+	var newCluster shared.Cluster
 	if err := c.ShouldBindJSON(&newCluster); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
@@ -91,7 +92,7 @@ func (e *env) PostCreateCluster(c *gin.Context) {
 		return
 	}
 	// Automatically set default fields
-	newCluster.CreatedAt = types.GetCurrentTimeMilliseconds()
+	newCluster.CreatedAt = shared.GetCurrentTimeMilliseconds()
 	newCluster.CreatedBy = e.whoAmI()
 	newCluster.LastmodifiedBy = e.whoAmI()
 	if err := e.db.UpdateClusterByName(&newCluster); err != nil {
@@ -108,7 +109,7 @@ func (e *env) PostCluster(c *gin.Context) {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
-	var updatedCluster types.Cluster
+	var updatedCluster shared.Cluster
 	if err := c.ShouldBindJSON(&updatedCluster); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
@@ -133,7 +134,7 @@ func (e *env) PostClusterAttributes(c *gin.Context) {
 		return
 	}
 	var receivedAttributes struct {
-		Attributes []types.AttributeKeyValues `json:"attribute"`
+		Attributes []shared.AttributeKeyValues `json:"attribute"`
 	}
 	if err := c.ShouldBindJSON(&receivedAttributes); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
@@ -181,12 +182,12 @@ func (e *env) PostClusterAttributeByName(c *gin.Context) {
 		return
 	}
 	// Find & update existing attribute in array
-	attributeToUpdateIndex := types.FindIndexOfAttribute(
+	attributeToUpdateIndex := shared.FindIndexOfAttribute(
 		updatedCluster.Attributes, attributeToUpdate)
 	if attributeToUpdateIndex == -1 {
 		// We did not find existing attribute, append new attribute
 		updatedCluster.Attributes = append(updatedCluster.Attributes,
-			types.AttributeKeyValues{Name: attributeToUpdate, Value: receivedValue.Value})
+			shared.AttributeKeyValues{Name: attributeToUpdate, Value: receivedValue.Value})
 	} else {
 		updatedCluster.Attributes[attributeToUpdateIndex].Value = receivedValue.Value
 	}
@@ -207,7 +208,7 @@ func (e *env) DeleteClusterAttributeByName(c *gin.Context) {
 		return
 	}
 	attributeToDelete := c.Param("attribute")
-	updatedAttributes, index, oldValue := types.DeleteAttribute(updatedCluster.Attributes, attributeToDelete)
+	updatedAttributes, index, oldValue := shared.DeleteAttribute(updatedCluster.Attributes, attributeToDelete)
 	if index == -1 {
 		returnJSONMessage(c, http.StatusNotFound,
 			fmt.Errorf("Could not find attribute '%s'", attributeToDelete))

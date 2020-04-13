@@ -3,7 +3,8 @@ package db
 import (
 	"fmt"
 
-	"github.com/erikbos/apiauth/pkg/types"
+	"github.com/erikbos/apiauth/pkg/shared"
+
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 )
@@ -12,11 +13,11 @@ import (
 const developerMetricLabel = "developers"
 
 // GetDevelopersByOrganization retrieves all developer belonging to an organization
-func (d *Database) GetDevelopersByOrganization(organizationName string) ([]types.Developer, error) {
+func (d *Database) GetDevelopersByOrganization(organizationName string) ([]shared.Developer, error) {
 	query := "SELECT * FROM developers WHERE organization_name = ? ALLOW FILTERING"
 	developers, err := d.runGetDeveloperQuery(query, organizationName)
 	if err != nil {
-		return []types.Developer{}, err
+		return []shared.Developer{}, err
 	}
 	if len(developers) == 0 {
 		d.metricsQueryMiss(developerMetricLabel)
@@ -40,38 +41,38 @@ func (d *Database) GetDeveloperCountByOrganization(organizationName string) int 
 }
 
 // GetDeveloperByEmail retrieves a developer from database
-func (d *Database) GetDeveloperByEmail(developerOrganization, developerEmail string) (types.Developer, error) {
+func (d *Database) GetDeveloperByEmail(developerOrganization, developerEmail string) (shared.Developer, error) {
 	query := "SELECT * FROM developers WHERE organization_name = ? AND email = ? LIMIT 1 ALLOW FILTERING"
 	developers, err := d.runGetDeveloperQuery(query, developerOrganization, developerEmail)
 	if err != nil {
-		return types.Developer{}, err
+		return shared.Developer{}, err
 	}
 	if len(developers) == 0 {
 		d.metricsQueryMiss(developerMetricLabel)
-		return types.Developer{}, fmt.Errorf("Can not find developer (%s)", developerEmail)
+		return shared.Developer{}, fmt.Errorf("Can not find developer (%s)", developerEmail)
 	}
 	d.metricsQueryHit(developerMetricLabel)
 	return developers[0], nil
 }
 
 // GetDeveloperByID retrieves a developer from database
-func (d *Database) GetDeveloperByID(developerID string) (types.Developer, error) {
+func (d *Database) GetDeveloperByID(developerID string) (shared.Developer, error) {
 	query := "SELECT * FROM developers WHERE key = ? LIMIT 1"
 	developers, err := d.runGetDeveloperQuery(query, developerID)
 	if err != nil {
-		return types.Developer{}, err
+		return shared.Developer{}, err
 	}
 	if len(developers) == 0 {
 		d.metricsQueryMiss(developerMetricLabel)
-		return types.Developer{}, fmt.Errorf("Can not find developerId (%s)", developerID)
+		return shared.Developer{}, fmt.Errorf("Can not find developerId (%s)", developerID)
 	}
 	d.metricsQueryHit(developerMetricLabel)
 	return developers[0], nil
 }
 
 // runDeveloperQuery executes CQL query and returns resultset
-func (d *Database) runGetDeveloperQuery(query string, queryParameters ...interface{}) ([]types.Developer, error) {
-	var developers []types.Developer
+func (d *Database) runGetDeveloperQuery(query string, queryParameters ...interface{}) ([]shared.Developer, error) {
+	var developers []shared.Developer
 
 	timer := prometheus.NewTimer(d.dbLookupHistogram)
 	defer timer.ObserveDuration()
@@ -80,7 +81,7 @@ func (d *Database) runGetDeveloperQuery(query string, queryParameters ...interfa
 	iterable := d.cassandraSession.Query(query, queryParameters...).PageSize(100).Iter()
 	m := make(map[string]interface{})
 	for iterable.MapScan(m) {
-		developers = append(developers, types.Developer{
+		developers = append(developers, shared.Developer{
 			Apps:             d.unmarshallJSONArrayOfStrings(m["apps"].(string)),
 			Attributes:       d.unmarshallJSONArrayOfAttributes(m["attributes"].(string)),
 			DeveloperID:      m["key"].(string),
@@ -101,17 +102,17 @@ func (d *Database) runGetDeveloperQuery(query string, queryParameters ...interfa
 	}
 	if err := iterable.Close(); err != nil {
 		log.Error(err)
-		return []types.Developer{}, err
+		return []shared.Developer{}, err
 	}
 	return developers, nil
 }
 
 // UpdateDeveloperByName UPSERTs a developer in database
-func (d *Database) UpdateDeveloperByName(updatedDeveloper *types.Developer) error {
+func (d *Database) UpdateDeveloperByName(updatedDeveloper *shared.Developer) error {
 	Apps := d.marshallArrayOfStringsToJSON(updatedDeveloper.Apps)
-	updatedDeveloper.Attributes = types.TidyAttributes(updatedDeveloper.Attributes)
+	updatedDeveloper.Attributes = shared.TidyAttributes(updatedDeveloper.Attributes)
 	Attributes := d.marshallArrayOfAttributesToJSON(updatedDeveloper.Attributes)
-	updatedDeveloper.LastmodifiedAt = types.GetCurrentTimeMilliseconds()
+	updatedDeveloper.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
 	if err := d.cassandraSession.Query(
 		"INSERT INTO developers (key, apps, attributes, "+
 			"created_at, created_by, email, "+

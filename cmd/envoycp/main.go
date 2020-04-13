@@ -1,13 +1,13 @@
 package main
 
 import (
+	"github.com/erikbos/apiauth/pkg/db"
+	"github.com/erikbos/apiauth/pkg/shared"
+
 	"github.com/envoyproxy/go-control-plane/pkg/cache"
 	xds "github.com/envoyproxy/go-control-plane/pkg/server"
-	"github.com/erikbos/apiauth/pkg/db"
-	"github.com/erikbos/apiauth/pkg/types"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus"
-
 	log "github.com/sirupsen/logrus"
 )
 
@@ -22,7 +22,7 @@ type server struct {
 	xds                  xds.Server
 	xdsCache             cache.SnapshotCache
 	authLatencyHistogram prometheus.Summary
-	readyness            types.Readyness
+	readyness            shared.Readyness
 }
 
 func main() {
@@ -30,7 +30,7 @@ func main() {
 	s.config = loadConfiguration()
 	// FIXME we should check if we have all required parameters (use viper package?)
 
-	types.SetLoggingConfiguration(s.config.LogLevel)
+	shared.SetLoggingConfiguration(s.config.LogLevel)
 
 	var err error
 	s.db, err = db.Connect(s.config.Database, myName)

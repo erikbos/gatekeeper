@@ -4,7 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/erikbos/apiauth/pkg/types"
+	"github.com/erikbos/apiauth/pkg/shared"
+
 	"github.com/gocql/gocql"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -116,9 +117,9 @@ func (d *Database) marshallArrayOfStringsToJSON(ArrayOfStrings []string) string 
 // unmarshallJSONArrayOfAttributes unpacks JSON array of attribute bags
 // Example input: [{"name":"DisplayName","value":"erikbos teleporter"},{"name":"ErikbosTeleporterExtraAttribute","value":"42"}]
 //
-func (d *Database) unmarshallJSONArrayOfAttributes(jsonArrayOfAttributes string) []types.AttributeKeyValues {
+func (d *Database) unmarshallJSONArrayOfAttributes(jsonArrayOfAttributes string) []shared.AttributeKeyValues {
 	if jsonArrayOfAttributes != "" {
-		var ResponseAttributes = make([]types.AttributeKeyValues, 0)
+		var ResponseAttributes = make([]shared.AttributeKeyValues, 0)
 		if err := json.Unmarshal([]byte(jsonArrayOfAttributes), &ResponseAttributes); err == nil {
 			return ResponseAttributes
 		}
@@ -129,7 +130,7 @@ func (d *Database) unmarshallJSONArrayOfAttributes(jsonArrayOfAttributes string)
 // marshallArrayOfAttributesToJSON packs array of attributes into JSON
 // Example input: [{"name":"DisplayName","value":"erikbos teleporter"},{"name":"ErikbosTeleporterExtraAttribute","value":"42"}]
 //
-func (d *Database) marshallArrayOfAttributesToJSON(ArrayOfAttributes []types.AttributeKeyValues) string {
+func (d *Database) marshallArrayOfAttributesToJSON(ArrayOfAttributes []shared.AttributeKeyValues) string {
 
 	if len(ArrayOfAttributes) > 0 {
 		ArrayOfAttributesInJSON, err := json.Marshal(ArrayOfAttributes)
@@ -143,9 +144,9 @@ func (d *Database) marshallArrayOfAttributesToJSON(ArrayOfAttributes []types.Att
 // unmarshallJSONArrayOfAttributes unpacks JSON array of attribute bags
 // Example input: [{"name":"DisplayName","value":"erikbos teleporter"},{"name":"ErikbosTeleporterExtraAttribute","value":"42"}]
 //
-func (d *Database) unmarshallJSONArrayOfProductStatuses(jsonArrayOfAttributes string) []types.APIProductStatus {
+func (d *Database) unmarshallJSONArrayOfProductStatuses(jsonArrayOfAttributes string) []shared.APIProductStatus {
 	if jsonArrayOfAttributes != "" {
-		var ResponseAttributes = make([]types.APIProductStatus, 0)
+		var ResponseAttributes = make([]shared.APIProductStatus, 0)
 		if err := json.Unmarshal([]byte(jsonArrayOfAttributes), &ResponseAttributes); err == nil {
 			return ResponseAttributes
 		}
@@ -156,7 +157,7 @@ func (d *Database) unmarshallJSONArrayOfProductStatuses(jsonArrayOfAttributes st
 // marshallArrayOfAttributesToJSON packs array of attributes into JSON
 // Example input: [{"name":"DisplayName","value":"erikbos teleporter"},{"name":"ErikbosTeleporterExtraAttribute","value":"42"}]
 //
-func (d *Database) marshallArrayOfProductStatusesToJSON(ArrayOfAttributes []types.APIProductStatus) string {
+func (d *Database) marshallArrayOfProductStatusesToJSON(ArrayOfAttributes []shared.APIProductStatus) string {
 
 	if len(ArrayOfAttributes) > 0 {
 		ArrayOfAttributesInJSON, err := json.Marshal(ArrayOfAttributes)

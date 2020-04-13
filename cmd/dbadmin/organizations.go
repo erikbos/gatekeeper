@@ -4,25 +4,26 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/erikbos/apiauth/pkg/types"
+	"github.com/erikbos/apiauth/pkg/shared"
+
 	"github.com/gin-gonic/gin"
 )
 
 // registerOrganizationRoutes registers all routes we handle
 func (e *env) registerOrganizationRoutes(r *gin.Engine) {
 	r.GET("/v1/organizations", e.GetOrganizations)
-	r.POST("/v1/organizations", types.AbortIfContentTypeNotJSON, e.PostCreateOrganization)
+	r.POST("/v1/organizations", shared.AbortIfContentTypeNotJSON, e.PostCreateOrganization)
 
 	r.GET("/v1/organizations/:organization", e.GetOrganizationByName)
-	r.POST("/v1/organizations/:organization", types.AbortIfContentTypeNotJSON, e.PostOrganization)
+	r.POST("/v1/organizations/:organization", shared.AbortIfContentTypeNotJSON, e.PostOrganization)
 	r.DELETE("/v1/organizations/:organization", e.DeleteOrganizationByName)
 
 	r.GET("/v1/organizations/:organization/attributes", e.GetOrganizationAttributes)
-	r.POST("/v1/organizations/:organization/attributes", types.AbortIfContentTypeNotJSON, e.PostOrganizationAttributes)
+	r.POST("/v1/organizations/:organization/attributes", shared.AbortIfContentTypeNotJSON, e.PostOrganizationAttributes)
 	r.DELETE("/v1/organizations/:organization/attributes", e.DeleteOrganizationAttributes)
 
 	r.GET("/v1/organizations/:organization/attributes/:attribute", e.GetOrganizationAttributeByName)
-	r.POST("/v1/organizations/:organization/attributes/:attribute", types.AbortIfContentTypeNotJSON, e.PostOrganizationAttributeByName)
+	r.POST("/v1/organizations/:organization/attributes/:attribute", shared.AbortIfContentTypeNotJSON, e.PostOrganizationAttributeByName)
 	r.DELETE("/v1/organizations/:organization/attributes/:attribute", e.DeleteOrganizationAttributeByName)
 }
 
@@ -79,7 +80,7 @@ func (e *env) GetOrganizationAttributeByName(c *gin.Context) {
 
 // PostCreateOrganization creates an organization
 func (e *env) PostCreateOrganization(c *gin.Context) {
-	var newOrganization types.Organization
+	var newOrganization shared.Organization
 	if err := c.ShouldBindJSON(&newOrganization); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
@@ -93,7 +94,7 @@ func (e *env) PostCreateOrganization(c *gin.Context) {
 	// Automatically set default fields
 	newOrganization.Key = newOrganization.Name
 	newOrganization.CreatedBy = e.whoAmI()
-	newOrganization.CreatedAt = types.GetCurrentTimeMilliseconds()
+	newOrganization.CreatedAt = shared.GetCurrentTimeMilliseconds()
 	newOrganization.LastmodifiedBy = e.whoAmI()
 	if err := e.db.UpdateOrganizationByName(&newOrganization); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
@@ -109,7 +110,7 @@ func (e *env) PostOrganization(c *gin.Context) {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
-	var updatedOrganization types.Organization
+	var updatedOrganization shared.Organization
 	if err := c.ShouldBindJSON(&updatedOrganization); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
@@ -135,7 +136,7 @@ func (e *env) PostOrganizationAttributes(c *gin.Context) {
 		return
 	}
 	var receivedAttributes struct {
-		Attributes []types.AttributeKeyValues `json:"attribute"`
+		Attributes []shared.AttributeKeyValues `json:"attribute"`
 	}
 	if err := c.ShouldBindJSON(&receivedAttributes); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
@@ -166,12 +167,12 @@ func (e *env) PostOrganizationAttributeByName(c *gin.Context) {
 		return
 	}
 	// Find & update existing attribute in array
-	attributeToUpdateIndex := types.FindIndexOfAttribute(
+	attributeToUpdateIndex := shared.FindIndexOfAttribute(
 		updatedOrganization.Attributes, attributeToUpdate)
 	if attributeToUpdateIndex == -1 {
 		// We did not find exist attribute, append new attribute
 		updatedOrganization.Attributes = append(updatedOrganization.Attributes,
-			types.AttributeKeyValues{Name: attributeToUpdate, Value: receivedValue.Value})
+			shared.AttributeKeyValues{Name: attributeToUpdate, Value: receivedValue.Value})
 	} else {
 		updatedOrganization.Attributes[attributeToUpdateIndex].Value = receivedValue.Value
 	}
@@ -192,7 +193,7 @@ func (e *env) DeleteOrganizationAttributeByName(c *gin.Context) {
 		return
 	}
 	attributeToDelete := c.Param("attribute")
-	updatedAttributes, index, oldValue := types.DeleteAttribute(updatedOrganization.Attributes, attributeToDelete)
+	updatedAttributes, index, oldValue := shared.DeleteAttribute(updatedOrganization.Attributes, attributeToDelete)
 	if index == -1 {
 		returnJSONMessage(c, http.StatusNotFound,
 			fmt.Errorf("Could not find attribute '%s'", attributeToDelete))

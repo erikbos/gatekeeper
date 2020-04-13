@@ -6,7 +6,8 @@ import (
 	"time"
 
 	"github.com/erikbos/apiauth/pkg/db"
-	"github.com/erikbos/apiauth/pkg/types"
+	"github.com/erikbos/apiauth/pkg/shared"
+
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 )
@@ -19,7 +20,7 @@ type env struct {
 	config    *DBAdminConfig
 	db        *db.Database
 	ginEngine *gin.Engine
-	readyness types.Readyness
+	readyness shared.Readyness
 }
 
 func main() {
@@ -27,7 +28,7 @@ func main() {
 	e.config = loadConfiguration()
 	// FIXME we should check if we have all required parameters (use viper package?)
 
-	types.SetLoggingConfiguration(e.config.LogLevel)
+	shared.SetLoggingConfiguration(e.config.LogLevel)
 
 	var err error
 	e.db, err = db.Connect(e.config.Database, myName)

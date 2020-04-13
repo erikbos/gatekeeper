@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/erikbos/apiauth/pkg/types"
+	"github.com/erikbos/apiauth/pkg/shared"
 
 	api "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	route "github.com/envoyproxy/go-control-plane/envoy/api/v2/route"
@@ -12,7 +12,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-var routes []types.Route
+var routes []shared.Route
 
 var routeLastUpdate int64
 var routeMutex sync.Mutex
@@ -31,7 +31,7 @@ func (s *server) GetRouteConfigFromDatabase() {
 			for _, s := range newRouteList {
 				// Is a cluster updated since last time we stored it?
 				if s.LastmodifiedAt > clustersLastUpdate || 1 == 1 {
-					now := types.GetCurrentTimeMilliseconds()
+					now := shared.GetCurrentTimeMilliseconds()
 					routeMutex.Lock()
 					routes = newRouteList
 					routeLastUpdate = now

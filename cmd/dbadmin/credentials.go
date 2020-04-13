@@ -3,17 +3,18 @@ package main
 import (
 	"net/http"
 
+	"github.com/erikbos/apiauth/pkg/shared"
+
 	"github.com/dchest/uniuri"
-	"github.com/erikbos/apiauth/pkg/types"
 	"github.com/gin-gonic/gin"
 )
 
 func (e *env) registerCredentialRoutes(r *gin.Engine) {
 	r.GET("/v1/organizations/:organization/developers/:developer/apps/:application/keys", e.GetDeveloperAppKeys)
-	r.POST("/v1/organizations/:organization/developers/:developer/apps/:application/keys", types.AbortIfContentTypeNotJSON, e.PostCreateDeveloperAppKey)
+	r.POST("/v1/organizations/:organization/developers/:developer/apps/:application/keys", shared.AbortIfContentTypeNotJSON, e.PostCreateDeveloperAppKey)
 
 	r.GET("/v1/organizations/:organization/developers/:developer/apps/:application/keys/:key", e.GetDeveloperAppKeyByKey)
-	r.POST("/v1/organizations/:organization/developers/:developer/apps/:application/keys/:key", types.AbortIfContentTypeNotJSON, e.PostUpdateDeveloperAppKeyByKey)
+	r.POST("/v1/organizations/:organization/developers/:developer/apps/:application/keys/:key", shared.AbortIfContentTypeNotJSON, e.PostUpdateDeveloperAppKeyByKey)
 	r.DELETE("/v1/organizations/:organization/developers/:developer/apps/:application/keys/:key", e.DeleteDeveloperAppKeyByKey)
 }
 
@@ -72,12 +73,12 @@ func (e *env) PostCreateDeveloperAppKey(c *gin.Context) {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
-	var newAppCredential types.AppCredential
+	var newAppCredential shared.AppCredential
 	newAppCredential.ConsumerKey = generateCredentialConsumerKey()
-	//	newAppCredential.APIProducts = []types.APIProductStatus{"status": "approved", "apiproduct", "teleporter2020"}
+	//	newAppCredential.APIProducts = []shared.APIProductStatus{"status": "approved", "apiproduct", "teleporter2020"}
 	newAppCredential.ConsumerSecret = generateCredentialConsumerSecret()
 	newAppCredential.ExpiresAt = -1
-	newAppCredential.IssuedAt = types.GetCurrentTimeMilliseconds()
+	newAppCredential.IssuedAt = shared.GetCurrentTimeMilliseconds()
 	newAppCredential.OrganizationAppID = developerApp.DeveloperAppID
 	newAppCredential.OrganizationName = developerApp.OrganizationName
 	newAppCredential.Status = "approved"
@@ -91,7 +92,7 @@ func (e *env) PostCreateDeveloperAppKey(c *gin.Context) {
 
 // PostUpdateDeveloperAppKeyByKey creates key for developerapp
 func (e *env) PostUpdateDeveloperAppKeyByKey(c *gin.Context) {
-	var receivedAppCredential types.AppCredential
+	var receivedAppCredential shared.AppCredential
 	if err := c.ShouldBindJSON(&receivedAppCredential); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return

@@ -4,26 +4,27 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/erikbos/apiauth/pkg/shared"
+
 	"github.com/dchest/uniuri"
-	"github.com/erikbos/apiauth/pkg/types"
 	"github.com/gin-gonic/gin"
 )
 
 // registerDeveloperRoutes registers all routes we handle
 func (e *env) registerDeveloperRoutes(r *gin.Engine) {
 	r.GET("/v1/organizations/:organization/developers", e.GetAllDevelopers)
-	r.POST("/v1/organizations/:organization/developers", types.AbortIfContentTypeNotJSON, e.PostCreateDeveloper)
+	r.POST("/v1/organizations/:organization/developers", shared.AbortIfContentTypeNotJSON, e.PostCreateDeveloper)
 
 	r.GET("/v1/organizations/:organization/developers/:developer", e.GetDeveloperByEmail)
-	r.POST("/v1/organizations/:organization/developers/:developer", types.AbortIfContentTypeNotJSON, e.PostDeveloper)
+	r.POST("/v1/organizations/:organization/developers/:developer", shared.AbortIfContentTypeNotJSON, e.PostDeveloper)
 	r.DELETE("/v1/organizations/:organization/developers/:developer", e.DeleteDeveloperByEmail)
 
 	r.GET("/v1/organizations/:organization/developers/:developer/attributes", e.GetDeveloperAttributes)
-	r.POST("/v1/organizations/:organization/developers/:developer/attributes", types.AbortIfContentTypeNotJSON, e.PostDeveloperAttributes)
+	r.POST("/v1/organizations/:organization/developers/:developer/attributes", shared.AbortIfContentTypeNotJSON, e.PostDeveloperAttributes)
 	r.DELETE("/v1/organizations/:organization/developers/:developer/attributes", e.DeleteDeveloperAttributes)
 
 	r.GET("/v1/organizations/:organization/developers/:developer/attributes/:attribute", e.GetDeveloperAttributeByName)
-	r.POST("/v1/organizations/:organization/developers/:developer/attributes/:attribute", types.AbortIfContentTypeNotJSON, e.PostDeveloperAttributeByName)
+	r.POST("/v1/organizations/:organization/developers/:developer/attributes/:attribute", shared.AbortIfContentTypeNotJSON, e.PostDeveloperAttributeByName)
 	r.DELETE("/v1/organizations/:organization/developers/:developer/attributes/:attribute", e.DeleteDeveloperAttributeByName)
 }
 
@@ -81,7 +82,7 @@ func (e *env) GetDeveloperAttributeByName(c *gin.Context) {
 
 // PostCreateDeveloper creates a new developer
 func (e *env) PostCreateDeveloper(c *gin.Context) {
-	var newDeveloper types.Developer
+	var newDeveloper shared.Developer
 	if err := c.ShouldBindJSON(&newDeveloper); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
@@ -103,7 +104,7 @@ func (e *env) PostCreateDeveloper(c *gin.Context) {
 	// New developers starts actived
 	newDeveloper.Status = "active"
 	newDeveloper.CreatedBy = e.whoAmI()
-	newDeveloper.CreatedAt = types.GetCurrentTimeMilliseconds()
+	newDeveloper.CreatedAt = shared.GetCurrentTimeMilliseconds()
 	newDeveloper.LastmodifiedBy = e.whoAmI()
 	if err := e.db.UpdateDeveloperByName(&newDeveloper); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
@@ -120,7 +121,7 @@ func (e *env) PostDeveloper(c *gin.Context) {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
-	var updatedDeveloper types.Developer
+	var updatedDeveloper shared.Developer
 	if err := c.ShouldBindJSON(&updatedDeveloper); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
@@ -145,7 +146,7 @@ func (e *env) PostDeveloperAttributes(c *gin.Context) {
 		return
 	}
 	var receivedAttributes struct {
-		Attributes []types.AttributeKeyValues `json:"attribute"`
+		Attributes []shared.AttributeKeyValues `json:"attribute"`
 	}
 	if err := c.ShouldBindJSON(&receivedAttributes); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
@@ -193,12 +194,12 @@ func (e *env) PostDeveloperAttributeByName(c *gin.Context) {
 		return
 	}
 	// Find & update existing attribute in array
-	attributeToUpdateIndex := types.FindIndexOfAttribute(
+	attributeToUpdateIndex := shared.FindIndexOfAttribute(
 		updatedDeveloper.Attributes, attributeToUpdate)
 	if attributeToUpdateIndex == -1 {
 		// We did not find existing attribute, append new attribute
 		updatedDeveloper.Attributes = append(updatedDeveloper.Attributes,
-			types.AttributeKeyValues{Name: attributeToUpdate, Value: receivedValue.Value})
+			shared.AttributeKeyValues{Name: attributeToUpdate, Value: receivedValue.Value})
 	} else {
 		updatedDeveloper.Attributes[attributeToUpdateIndex].Value = receivedValue.Value
 	}
@@ -219,7 +220,7 @@ func (e *env) DeleteDeveloperAttributeByName(c *gin.Context) {
 		return
 	}
 	attributeToDelete := c.Param("attribute")
-	updatedAttributes, index, oldValue := types.DeleteAttribute(updatedDeveloper.Attributes, attributeToDelete)
+	updatedAttributes, index, oldValue := shared.DeleteAttribute(updatedDeveloper.Attributes, attributeToDelete)
 	if index == -1 {
 		returnJSONMessage(c, http.StatusNotFound,
 			fmt.Errorf("Could not find attribute '%s'", attributeToDelete))

@@ -4,25 +4,26 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/erikbos/apiauth/pkg/types"
+	"github.com/erikbos/apiauth/pkg/shared"
+
 	"github.com/gin-gonic/gin"
 )
 
 // registerAPIProductRoutes registers all routes we handle
 func (e *env) registerAPIProductRoutes(r *gin.Engine) {
 	r.GET("/v1/organizations/:organization/apiproducts", e.GetAllAPIProducts)
-	r.POST("/v1/organizations/:organization/apiproducts", types.AbortIfContentTypeNotJSON, e.PostCreateAPIProduct)
+	r.POST("/v1/organizations/:organization/apiproducts", shared.AbortIfContentTypeNotJSON, e.PostCreateAPIProduct)
 
 	r.GET("/v1/organizations/:organization/apiproducts/:apiproduct", e.GetAPIProductByName)
-	r.POST("/v1/organizations/:organization/apiproducts/:apiproduct", types.AbortIfContentTypeNotJSON, e.PostAPIProduct)
+	r.POST("/v1/organizations/:organization/apiproducts/:apiproduct", shared.AbortIfContentTypeNotJSON, e.PostAPIProduct)
 	r.DELETE("/v1/organizations/:organization/apiproducts/:apiproduct", e.DeleteAPIProductByName)
 
 	r.GET("/v1/organizations/:organization/apiproducts/:apiproduct/attributes", e.GetAPIProductAttributes)
-	r.POST("/v1/organizations/:organization/apiproducts/:apiproduct/attributes", types.AbortIfContentTypeNotJSON, e.PostAPIProductAttributes)
+	r.POST("/v1/organizations/:organization/apiproducts/:apiproduct/attributes", shared.AbortIfContentTypeNotJSON, e.PostAPIProductAttributes)
 	r.DELETE("/v1/organizations/:organization/apiproducts/:apiproduct/attributes", e.DeleteAPIProductAttributes)
 
 	r.GET("/v1/organizations/:organization/apiproducts/:apiproduct/attributes/:attribute", e.GetAPIProductAttributeByName)
-	r.POST("/v1/organizations/:organization/apiproducts/:apiproduct/attributes/:attribute", types.AbortIfContentTypeNotJSON, e.PostAPIProductAttributeByName)
+	r.POST("/v1/organizations/:organization/apiproducts/:apiproduct/attributes/:attribute", shared.AbortIfContentTypeNotJSON, e.PostAPIProductAttributeByName)
 	r.DELETE("/v1/organizations/:organization/apiproducts/:apiproduct/attributes/:attribute", e.DeleteAPIProductAttributeByName)
 }
 
@@ -83,7 +84,7 @@ func (e *env) GetAPIProductAttributeByName(c *gin.Context) {
 
 // PostCreateAPIProduct creates a new APIProduct
 func (e *env) PostCreateAPIProduct(c *gin.Context) {
-	var newAPIProduct types.APIProduct
+	var newAPIProduct shared.APIProduct
 	if err := c.ShouldBindJSON(&newAPIProduct); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
@@ -101,7 +102,7 @@ func (e *env) PostCreateAPIProduct(c *gin.Context) {
 	newAPIProduct.Key = generatePrimaryKeyOfAPIProduct(newAPIProduct.OrganizationName,
 		newAPIProduct.Name)
 	newAPIProduct.CreatedBy = e.whoAmI()
-	newAPIProduct.CreatedAt = types.GetCurrentTimeMilliseconds()
+	newAPIProduct.CreatedAt = shared.GetCurrentTimeMilliseconds()
 	newAPIProduct.LastmodifiedBy = e.whoAmI()
 	if err := e.db.UpdateAPIProductByName(&newAPIProduct); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
@@ -118,7 +119,7 @@ func (e *env) PostAPIProduct(c *gin.Context) {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
-	var updatedAPIProduct types.APIProduct
+	var updatedAPIProduct shared.APIProduct
 	if err := c.ShouldBindJSON(&updatedAPIProduct); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
@@ -143,7 +144,7 @@ func (e *env) PostAPIProductAttributes(c *gin.Context) {
 		return
 	}
 	var receivedAttributes struct {
-		Attributes []types.AttributeKeyValues `json:"attribute"`
+		Attributes []shared.AttributeKeyValues `json:"attribute"`
 	}
 	if err := c.ShouldBindJSON(&receivedAttributes); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
@@ -191,12 +192,12 @@ func (e *env) PostAPIProductAttributeByName(c *gin.Context) {
 		return
 	}
 	// Find & update existing attribute in array
-	attributeToUpdateIndex := types.FindIndexOfAttribute(
+	attributeToUpdateIndex := shared.FindIndexOfAttribute(
 		updatedAPIProduct.Attributes, attributeToUpdate)
 	if attributeToUpdateIndex == -1 {
 		// We did not find existing attribute, append new attribute
 		updatedAPIProduct.Attributes = append(updatedAPIProduct.Attributes,
-			types.AttributeKeyValues{Name: attributeToUpdate, Value: receivedValue.Value})
+			shared.AttributeKeyValues{Name: attributeToUpdate, Value: receivedValue.Value})
 	} else {
 		updatedAPIProduct.Attributes[attributeToUpdateIndex].Value = receivedValue.Value
 	}
@@ -218,7 +219,7 @@ func (e *env) DeleteAPIProductAttributeByName(c *gin.Context) {
 	}
 	attributeToDelete := c.Param("attribute")
 	updatedAttributes, index, oldValue :=
-		types.DeleteAttribute(updatedAPIProduct.Attributes, attributeToDelete)
+		shared.DeleteAttribute(updatedAPIProduct.Attributes, attributeToDelete)
 	if index == -1 {
 		returnJSONMessage(c, http.StatusNotFound,
 			fmt.Errorf("Could not find attribute '%s'", attributeToDelete))

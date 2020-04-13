@@ -4,7 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/erikbos/apiauth/pkg/types"
+	"github.com/erikbos/apiauth/pkg/shared"
+
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 )
@@ -13,26 +14,26 @@ import (
 const appCredentialsMetricLabel = "appcredentials"
 
 // GetAppCredentialByKey returns details of a single apikey
-func (d *Database) GetAppCredentialByKey(organizationName, key string) (types.AppCredential, error) {
+func (d *Database) GetAppCredentialByKey(organizationName, key string) (shared.AppCredential, error) {
 	query := "SELECT * FROM app_credentials WHERE key = ? AND organization_name = ? LIMIT 1"
 	appcredentials, err := d.runGetAppCredentialQuery(query, key, organizationName)
 	if err != nil {
-		return types.AppCredential{}, err
+		return shared.AppCredential{}, err
 	}
 	if len(appcredentials) == 0 {
 		d.metricsQueryMiss(appCredentialsMetricLabel)
-		return types.AppCredential{}, fmt.Errorf("Can not find apikey '%s'", key)
+		return shared.AppCredential{}, fmt.Errorf("Can not find apikey '%s'", key)
 	}
 	d.metricsQueryHit(appCredentialsMetricLabel)
 	return appcredentials[0], nil
 }
 
 // GetAppCredentialByDeveloperAppID returns an array with apikey details of a developer app
-func (d *Database) GetAppCredentialByDeveloperAppID(organizationAppID string) ([]types.AppCredential, error) {
+func (d *Database) GetAppCredentialByDeveloperAppID(organizationAppID string) ([]shared.AppCredential, error) {
 	query := "SELECT * FROM app_credentials WHERE organization_app_id = ?"
 	appcredentials, err := d.runGetAppCredentialQuery(query, organizationAppID)
 	if err != nil {
-		return []types.AppCredential{}, err
+		return []shared.AppCredential{}, err
 	}
 	if len(appcredentials) == 0 {
 		d.metricsQueryMiss(appCredentialsMetricLabel)
@@ -56,8 +57,8 @@ func (d *Database) GetAppCredentialCountByDeveloperAppID(developerAppID string) 
 }
 
 // runAppCredentialQuery executes CQL query and returns resulset
-func (d *Database) runGetAppCredentialQuery(query string, queryParameters ...interface{}) ([]types.AppCredential, error) {
-	var appcredentials []types.AppCredential
+func (d *Database) runGetAppCredentialQuery(query string, queryParameters ...interface{}) ([]shared.AppCredential, error) {
+	var appcredentials []shared.AppCredential
 
 	timer := prometheus.NewTimer(d.dbLookupHistogram)
 	defer timer.ObserveDuration()
@@ -65,7 +66,7 @@ func (d *Database) runGetAppCredentialQuery(query string, queryParameters ...int
 	iterable := d.cassandraSession.Query(query, queryParameters...).Iter()
 	m := make(map[string]interface{})
 	for iterable.MapScan(m) {
-		appcredential := types.AppCredential{
+		appcredential := shared.AppCredential{
 			ConsumerKey:       m["key"].(string),
 			AppStatus:         m["app_status"].(string),
 			Attributes:        d.unmarshallJSONArrayOfAttributes(m["attributes"].(string)),
@@ -81,7 +82,7 @@ func (d *Database) runGetAppCredentialQuery(query string, queryParameters ...int
 			Status:            m["status"].(string),
 		}
 		if m["api_products"].(string) != "" {
-			appcredential.APIProducts = make([]types.APIProductStatus, 0)
+			appcredential.APIProducts = make([]shared.APIProductStatus, 0)
 			json.Unmarshal([]byte(m["api_products"].(string)), &appcredential.APIProducts)
 		}
 		appcredentials = append(appcredentials, appcredential)
@@ -90,15 +91,15 @@ func (d *Database) runGetAppCredentialQuery(query string, queryParameters ...int
 	// In case query failed we return query error
 	if err := iterable.Close(); err != nil {
 		log.Error(err)
-		return []types.AppCredential{}, err
+		return []shared.AppCredential{}, err
 	}
 	return appcredentials, nil
 }
 
 // UpdateAppCredentialByKey UPSERTs appcredentials in database
-func (d *Database) UpdateAppCredentialByKey(updatedAppCredential *types.AppCredential) error {
+func (d *Database) UpdateAppCredentialByKey(updatedAppCredential *shared.AppCredential) error {
 	APIProducts := d.marshallArrayOfProductStatusesToJSON(updatedAppCredential.APIProducts)
-	updatedAppCredential.Attributes = types.TidyAttributes(updatedAppCredential.Attributes)
+	updatedAppCredential.Attributes = shared.TidyAttributes(updatedAppCredential.Attributes)
 	Attributes := d.marshallArrayOfAttributesToJSON(updatedAppCredential.Attributes)
 	if err := d.cassandraSession.Query(
 		"INSERT INTO app_credentials (key, api_products, attributes, "+

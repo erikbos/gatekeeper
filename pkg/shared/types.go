@@ -1,12 +1,11 @@
-package types
+package shared
 
 import (
 	"errors"
 	"strings"
 )
 
-//Organization contains everything about a Organization
-//
+// Organization contains everything about a Organization
 type Organization struct {
 	Attributes     []AttributeKeyValues `json:"attributes"`
 	CreatedAt      int64                `json:"createdAt"`
@@ -18,8 +17,7 @@ type Organization struct {
 	Name           string               `json:"name" binding:"required"`
 }
 
-//Developer contains everything about a Developer
-//
+// Developer contains everything about a Developer
 type Developer struct {
 	DeveloperID      string               `json:"developerId"`
 	Apps             []string             `json:"apps"`
@@ -37,8 +35,7 @@ type Developer struct {
 	UserName         string               `json:"userName" binding:"required"`
 }
 
-//DeveloperApp contains everything about a Developer Application
-//
+// DeveloperApp contains everything about a Developer Application
 type DeveloperApp struct {
 	DeveloperAppID   string               `json:"key"`
 	AccessType       string               `json:"accessType"`
@@ -61,8 +58,7 @@ type DeveloperApp struct {
 	// Key              string               `json:"DeveloperAppID"`
 }
 
-//AppCredential contains an apikey entitlement
-//
+// AppCredential contains an apikey entitlement
 type AppCredential struct {
 	ConsumerKey       string               `json:"key"`
 	APIProducts       []APIProductStatus   `json:"apiProducts"`
@@ -86,8 +82,7 @@ type APIProductStatus struct {
 	Apiproduct string `json:"apiProduct"`
 }
 
-//APIProduct type contains everything about an API product
-//
+// APIProduct type contains everything about an API product
 type APIProduct struct {
 	Key              string               `json:"key"`
 	APIResources     []string             `json:"api_resources"`
@@ -106,8 +101,7 @@ type APIProduct struct {
 	Scopes           string               `json:"scopes"`
 }
 
-//APIProxy contains mapping of paths to upstream
-//
+// APIProxy contains mapping of paths to upstream
 type APIProxy struct {
 	Name             string               `json:"name"`
 	DisplayName      string               `json:"display_name"`
@@ -126,13 +120,13 @@ type APIProxy struct {
 	VirtualHosts []string `json:"virtual_hosts"`
 }
 
-//AttributeKeyValues is an array with attributes of developer or developer app
+// AttributeKeyValues is an array with attributes of developer or developer app
 type AttributeKeyValues struct {
 	Name  string `json:"name"`
 	Value string `json:"value"`
 }
 
-//GetAttribute find one named attribute in array of attributes (developer or developerapp)
+// GetAttribute find one named attribute in array of attributes (developer or developerapp)
 func GetAttribute(attributes []AttributeKeyValues, requestedAttributeName string) (string, error) {
 	for attributeIndex := range attributes {
 		if attributes[attributeIndex].Name == requestedAttributeName {
@@ -142,7 +136,7 @@ func GetAttribute(attributes []AttributeKeyValues, requestedAttributeName string
 	return "", errors.New("Attribute not found")
 }
 
-//FindIndexOfAttribute find index of attribute in slice
+// FindIndexOfAttribute find index of attribute in slice
 func FindIndexOfAttribute(attributes []AttributeKeyValues, name string) int {
 	for index, element := range attributes {
 		if element.Name == name {
@@ -152,7 +146,7 @@ func FindIndexOfAttribute(attributes []AttributeKeyValues, name string) int {
 	return -1
 }
 
-//TidyAttributes removes duplicate attributes from slice, and trims all values
+// TidyAttributes removes duplicate attributes and trims  all names & values
 func TidyAttributes(attributes []AttributeKeyValues) []AttributeKeyValues {
 	// Use map to record duplicates as we find them.
 	encountered := map[string]bool{}

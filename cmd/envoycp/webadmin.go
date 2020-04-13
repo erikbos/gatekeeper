@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/erikbos/apiauth/pkg/types"
-	"github.com/gin-gonic/gin"
+	"github.com/erikbos/apiauth/pkg/shared"
 
+	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 )
@@ -18,7 +18,7 @@ func (s *server) StartWebAdminServer() {
 		gin.SetMode(gin.ReleaseMode)
 	}
 	s.ginEngine = gin.New()
-	s.ginEngine.Use(gin.LoggerWithFormatter(types.LogHTTPRequest))
+	s.ginEngine.Use(gin.LoggerWithFormatter(shared.LogHTTPRequest))
 
 	s.ginEngine.GET("/", s.ShowWebAdminHomePage)
 	s.ginEngine.GET("/ready", s.readyness.DisplayReadyness)
@@ -32,7 +32,7 @@ func (s *server) StartWebAdminServer() {
 // ShowWebAdminHomePage shows home page
 func (s *server) ShowWebAdminHomePage(c *gin.Context) {
 	// FIXME feels like hack, is there a better way to pass gin engine context?
-	types.ShowIndexPage(c, s.ginEngine, myName)
+	shared.ShowIndexPage(c, s.ginEngine, myName)
 }
 
 // configDump pretty prints the active configuration

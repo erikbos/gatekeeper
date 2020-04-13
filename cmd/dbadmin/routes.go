@@ -4,25 +4,26 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/erikbos/apiauth/pkg/types"
+	"github.com/erikbos/apiauth/pkg/shared"
+
 	"github.com/gin-gonic/gin"
 )
 
 // registerRouteRoutes registers all routes we handle
 func (e *env) registerRouteRoutes(r *gin.Engine) {
 	r.GET("/v1/routes", e.GetRoutes)
-	r.POST("/v1/routes", types.AbortIfContentTypeNotJSON, e.PostCreateRoute)
+	r.POST("/v1/routes", shared.AbortIfContentTypeNotJSON, e.PostCreateRoute)
 
 	r.GET("/v1/routes/:route", e.GetRouteByName)
-	r.POST("/v1/routes/:route", types.AbortIfContentTypeNotJSON, e.PostRoute)
+	r.POST("/v1/routes/:route", shared.AbortIfContentTypeNotJSON, e.PostRoute)
 	r.DELETE("/v1/routes/:route", e.DeleteRouteByName)
 
 	r.GET("/v1/routes/:route/attributes", e.GetRouteAttributes)
-	r.POST("/v1/routes/:route/attributes", types.AbortIfContentTypeNotJSON, e.PostRouteAttributes)
+	r.POST("/v1/routes/:route/attributes", shared.AbortIfContentTypeNotJSON, e.PostRouteAttributes)
 	r.DELETE("/v1/routes/:route/attributes", e.DeleteRouteAttributes)
 
 	r.GET("/v1/routes/:route/attributes/:attribute", e.GetRouteAttributeByName)
-	r.POST("/v1/routes/:route/attributes/:attribute", types.AbortIfContentTypeNotJSON, e.PostRouteAttributeByName)
+	r.POST("/v1/routes/:route/attributes/:attribute", shared.AbortIfContentTypeNotJSON, e.PostRouteAttributeByName)
 	r.DELETE("/v1/routes/:route/attributes/:attribute", e.DeleteRouteAttributeByName)
 }
 
@@ -79,7 +80,7 @@ func (e *env) GetRouteAttributeByName(c *gin.Context) {
 
 // PostCreateRoute creates a route
 func (e *env) PostCreateRoute(c *gin.Context) {
-	var newRoute types.Route
+	var newRoute shared.Route
 	if err := c.ShouldBindJSON(&newRoute); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
@@ -91,7 +92,7 @@ func (e *env) PostCreateRoute(c *gin.Context) {
 		return
 	}
 	// Automatically set default fields
-	newRoute.CreatedAt = types.GetCurrentTimeMilliseconds()
+	newRoute.CreatedAt = shared.GetCurrentTimeMilliseconds()
 	newRoute.CreatedBy = e.whoAmI()
 	newRoute.LastmodifiedBy = e.whoAmI()
 	if err := e.db.UpdateRouteByName(&newRoute); err != nil {
@@ -108,7 +109,7 @@ func (e *env) PostRoute(c *gin.Context) {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
-	var updatedRoute types.Route
+	var updatedRoute shared.Route
 	if err := c.ShouldBindJSON(&updatedRoute); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
@@ -133,7 +134,7 @@ func (e *env) PostRouteAttributes(c *gin.Context) {
 		return
 	}
 	var receivedAttributes struct {
-		Attributes []types.AttributeKeyValues `json:"attribute"`
+		Attributes []shared.AttributeKeyValues `json:"attribute"`
 	}
 	if err := c.ShouldBindJSON(&receivedAttributes); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
@@ -181,12 +182,12 @@ func (e *env) PostRouteAttributeByName(c *gin.Context) {
 		return
 	}
 	// Find & update existing attribute in array
-	attributeToUpdateIndex := types.FindIndexOfAttribute(
+	attributeToUpdateIndex := shared.FindIndexOfAttribute(
 		updatedRoute.Attributes, attributeToUpdate)
 	if attributeToUpdateIndex == -1 {
 		// We did not find existing attribute, append new attribute
 		updatedRoute.Attributes = append(updatedRoute.Attributes,
-			types.AttributeKeyValues{Name: attributeToUpdate, Value: receivedValue.Value})
+			shared.AttributeKeyValues{Name: attributeToUpdate, Value: receivedValue.Value})
 	} else {
 		updatedRoute.Attributes[attributeToUpdateIndex].Value = receivedValue.Value
 	}
@@ -207,7 +208,7 @@ func (e *env) DeleteRouteAttributeByName(c *gin.Context) {
 		return
 	}
 	attributeToDelete := c.Param("attribute")
-	updatedAttributes, index, oldValue := types.DeleteAttribute(updatedRoute.Attributes, attributeToDelete)
+	updatedAttributes, index, oldValue := shared.DeleteAttribute(updatedRoute.Attributes, attributeToDelete)
 	if index == -1 {
 		returnJSONMessage(c, http.StatusNotFound,
 			fmt.Errorf("Could not find attribute '%s'", attributeToDelete))

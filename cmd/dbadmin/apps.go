@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/erikbos/apiauth/pkg/types"
+	"github.com/erikbos/apiauth/pkg/shared"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -14,18 +15,18 @@ func (e *env) registerDeveloperAppRoutes(r *gin.Engine) {
 	r.GET("/v1/organizations/:organization/apps/:application", e.GetDeveloperAppByName)
 
 	r.GET("/v1/organizations/:organization/developers/:developer/apps", e.GetDeveloperAppsByDeveloperEmail)
-	r.POST("/v1/organizations/:organization/developers/:developer/apps", types.AbortIfContentTypeNotJSON, e.PostCreateDeveloperApp)
+	r.POST("/v1/organizations/:organization/developers/:developer/apps", shared.AbortIfContentTypeNotJSON, e.PostCreateDeveloperApp)
 
 	r.GET("/v1/organizations/:organization/developers/:developer/apps/:application", e.GetDeveloperAppByName)
-	r.POST("/v1/organizations/:organization/developers/:developer/apps/:application", types.AbortIfContentTypeNotJSON, e.PostDeveloperApp)
+	r.POST("/v1/organizations/:organization/developers/:developer/apps/:application", shared.AbortIfContentTypeNotJSON, e.PostDeveloperApp)
 	r.DELETE("/v1/organizations/:organization/developers/:developer/apps/:application", e.DeleteDeveloperAppByName)
 
 	r.GET("/v1/organizations/:organization/developers/:developer/apps/:application/attributes", e.GetDeveloperAppAttributes)
-	r.POST("/v1/organizations/:organization/developers/:developer/apps/:application/attributes", types.AbortIfContentTypeNotJSON, e.PostDeveloperAppAttributes)
+	r.POST("/v1/organizations/:organization/developers/:developer/apps/:application/attributes", shared.AbortIfContentTypeNotJSON, e.PostDeveloperAppAttributes)
 	r.DELETE("/v1/organizations/:organization/developers/:developer/apps/:application/attributes", e.DeleteDeveloperAppAttributes)
 
 	r.GET("/v1/organizations/:organization/developers/:developer/apps/:application/attributes/:attribute", e.GetDeveloperAppAttributeByName)
-	r.POST("/v1/organizations/:organization/developers/:developer/apps/:application/attributes/:attribute", types.AbortIfContentTypeNotJSON, e.PostDeveloperAppAttributeByName)
+	r.POST("/v1/organizations/:organization/developers/:developer/apps/:application/attributes/:attribute", shared.AbortIfContentTypeNotJSON, e.PostDeveloperAppAttributeByName)
 	r.DELETE("/v1/organizations/:organization/developers/:developer/apps/:application/attributes/:attribute", e.DeleteDeveloperAppAttributeByName)
 }
 
@@ -120,7 +121,7 @@ func (e *env) GetDeveloperAppAttributeByName(c *gin.Context) {
 
 // PostCreateDeveloperApp creates a developer application
 func (e *env) PostCreateDeveloperApp(c *gin.Context) {
-	var newDeveloperApp types.DeveloperApp
+	var newDeveloperApp shared.DeveloperApp
 	if err := c.ShouldBindJSON(&newDeveloperApp); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
@@ -142,7 +143,7 @@ func (e *env) PostCreateDeveloperApp(c *gin.Context) {
 	newDeveloperApp.OrganizationName = c.Param("organization")
 	// New developers starts actived
 	newDeveloperApp.Status = "active"
-	newDeveloperApp.CreatedAt = types.GetCurrentTimeMilliseconds()
+	newDeveloperApp.CreatedAt = shared.GetCurrentTimeMilliseconds()
 	newDeveloperApp.CreatedBy = e.whoAmI()
 	newDeveloperApp.LastmodifiedAt = newDeveloperApp.CreatedAt
 	newDeveloperApp.LastmodifiedBy = e.whoAmI()
@@ -173,7 +174,7 @@ func (e *env) PostDeveloperApp(c *gin.Context) {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
-	var updatedDeveloperApp types.DeveloperApp
+	var updatedDeveloperApp shared.DeveloperApp
 	if err := c.ShouldBindJSON(&updatedDeveloperApp); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
@@ -205,7 +206,7 @@ func (e *env) PostDeveloperAppAttributes(c *gin.Context) {
 		return
 	}
 	var receivedAttributes struct {
-		Attributes []types.AttributeKeyValues `json:"attribute"`
+		Attributes []shared.AttributeKeyValues `json:"attribute"`
 	}
 	if err := c.ShouldBindJSON(&receivedAttributes); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
@@ -262,12 +263,12 @@ func (e *env) PostDeveloperAppAttributeByName(c *gin.Context) {
 		return
 	}
 	// Find & update existing attribute in array
-	attributeToUpdateIndex := types.FindIndexOfAttribute(
+	attributeToUpdateIndex := shared.FindIndexOfAttribute(
 		updatedDeveloperApp.Attributes, attributeToUpdate)
 	if attributeToUpdateIndex == -1 {
 		// We did not find exist attribute, append new attribute
 		updatedDeveloperApp.Attributes = append(updatedDeveloperApp.Attributes,
-			types.AttributeKeyValues{Name: attributeToUpdate, Value: receivedValue.Value})
+			shared.AttributeKeyValues{Name: attributeToUpdate, Value: receivedValue.Value})
 	} else {
 		updatedDeveloperApp.Attributes[attributeToUpdateIndex].Value = receivedValue.Value
 	}
@@ -292,7 +293,7 @@ func (e *env) DeleteDeveloperAppAttributeByName(c *gin.Context) {
 		return
 	}
 	attributeToDelete := c.Param("attribute")
-	updatedAttributes, index, oldValue := types.DeleteAttribute(updatedDeveloperApp.Attributes, attributeToDelete)
+	updatedAttributes, index, oldValue := shared.DeleteAttribute(updatedDeveloperApp.Attributes, attributeToDelete)
 	if index == -1 {
 		returnJSONMessage(c, http.StatusNotFound,
 			fmt.Errorf("Could not find attribute '%s'", attributeToDelete))

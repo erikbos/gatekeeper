@@ -8,7 +8,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/erikbos/apiauth/pkg/types"
+	"github.com/erikbos/apiauth/pkg/shared"
 
 	v2 "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	discovery "github.com/envoyproxy/go-control-plane/envoy/service/discovery/v2"
@@ -70,7 +70,7 @@ func (s *server) XDSMainloop() {
 	var lastConfigurationDeployment int64
 
 	for {
-		now := types.GetCurrentTimeMilliseconds()
+		now := shared.GetCurrentTimeMilliseconds()
 
 		if clustersLastUpdate > lastConfigurationDeployment {
 			log.Infof("Starting configuration compilation")

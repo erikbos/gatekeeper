@@ -4,40 +4,40 @@ import (
 	"errors"
 	"fmt"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/erikbos/apiauth/pkg/shared"
 
-	"github.com/erikbos/apiauth/pkg/types"
 	"github.com/prometheus/client_golang/prometheus"
+	log "github.com/sirupsen/logrus"
 )
 
 // Prometheus label for metrics of db interactions
 const clusterMetricLabel = "clusters"
 
 // GetClusters retrieves all clusters
-func (d *Database) GetClusters() ([]types.Cluster, error) {
+func (d *Database) GetClusters() ([]shared.Cluster, error) {
 	query := "SELECT * FROM clusterz"
 	clusters, err := d.runGetClusterQuery(query)
 	if err != nil {
-		return []types.Cluster{}, err
+		return []shared.Cluster{}, err
 	}
 	if len(clusters) == 0 {
 		d.metricsQueryMiss(clusterMetricLabel)
-		return []types.Cluster{}, errors.New("Can not retrieve list of clusters")
+		return []shared.Cluster{}, errors.New("Can not retrieve list of clusters")
 	}
 	d.metricsQueryHit(clusterMetricLabel)
 	return clusters, nil
 }
 
 // GetClusterByName retrieves a cluster from database
-func (d *Database) GetClusterByName(clusterName string) (types.Cluster, error) {
+func (d *Database) GetClusterByName(clusterName string) (shared.Cluster, error) {
 	query := "SELECT * FROM clusterz WHERE key = ? LIMIT 1"
 	clusters, err := d.runGetClusterQuery(query, clusterName)
 	if err != nil {
-		return types.Cluster{}, err
+		return shared.Cluster{}, err
 	}
 	if len(clusters) == 0 {
 		d.metricsQueryMiss(clusterMetricLabel)
-		return types.Cluster{},
+		return shared.Cluster{},
 			fmt.Errorf("Can not find cluster (%s)", clusterName)
 	}
 	d.metricsQueryHit(clusterMetricLabel)
@@ -45,8 +45,8 @@ func (d *Database) GetClusterByName(clusterName string) (types.Cluster, error) {
 }
 
 // runGetClusterQuery executes CQL query and returns resultset
-func (d *Database) runGetClusterQuery(query string, queryParameters ...interface{}) ([]types.Cluster, error) {
-	var clusters []types.Cluster
+func (d *Database) runGetClusterQuery(query string, queryParameters ...interface{}) ([]shared.Cluster, error) {
+	var clusters []shared.Cluster
 
 	timer := prometheus.NewTimer(d.dbLookupHistogram)
 	defer timer.ObserveDuration()
@@ -54,7 +54,7 @@ func (d *Database) runGetClusterQuery(query string, queryParameters ...interface
 	iter := d.cassandraSession.Query(query, queryParameters...).Iter()
 	m := make(map[string]interface{})
 	for iter.MapScan(m) {
-		newCluster := types.Cluster{
+		newCluster := shared.Cluster{
 			Name:           m["key"].(string),
 			HostName:       m["host_name"].(string),
 			Port:           m["port"].(int),
@@ -73,20 +73,20 @@ func (d *Database) runGetClusterQuery(query string, queryParameters ...interface
 	// In case query failed we return query error
 	if err := iter.Close(); err != nil {
 		log.Error(err)
-		return []types.Cluster{}, err
+		return []shared.Cluster{}, err
 	}
 	return clusters, nil
 }
 
 // UpdateClusterByName UPSERTs an cluster in database
-func (d *Database) UpdateClusterByName(updatedCluster *types.Cluster) error {
+func (d *Database) UpdateClusterByName(updatedCluster *shared.Cluster) error {
 	query := "INSERT INTO clusterz (key, display_name, " +
 		"host_name, port, attributes, " +
 		"created_at, created_by, lastmodified_at, lastmodified_by) " +
 		"VALUES(?,?,?,?,?,?,?,?,?)"
-	updatedCluster.Attributes = types.TidyAttributes(updatedCluster.Attributes)
+	updatedCluster.Attributes = shared.TidyAttributes(updatedCluster.Attributes)
 	attributes := d.marshallArrayOfAttributesToJSON(updatedCluster.Attributes)
-	updatedCluster.LastmodifiedAt = types.GetCurrentTimeMilliseconds()
+	updatedCluster.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
 	if err := d.cassandraSession.Query(query,
 		updatedCluster.Name, updatedCluster.DisplayName,
 		updatedCluster.HostName, updatedCluster.Port, attributes,
