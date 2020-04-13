@@ -1,0 +1,29 @@
+# Envoyauth authentication daemon settings
+#
+loglevel: info
+# The address to listen on for GRPC requests coming from Envoy
+xdsgrpclisten: 0.0.0.0:4000
+# The address to listen on for HTTP requests coming from Envoy
+xdshttplisten: 0.0.0.0:4001
+# The address to listen on for Admin UI
+webadminlisten: 0.0.0.0:2113
+
+# Cassandra settings
+database:
+  hostname: x.cassandra.cosmos.azure.com
+  port: 10350
+  username: x
+  password: x
+  keyspace: x
+
+cache:
+# database memory cache in bytes
+  size: 1048576
+# cache ttl for positive hits
+  ttl: 60
+# cache ttl for failed lookups
+  negativettl: 15
+
+# maxmind geoip database filename
+geoip:
+  filename: GeoIP2-City.mmdb

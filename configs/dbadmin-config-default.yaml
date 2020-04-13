@@ -7,7 +7,6 @@ webadminlisten: 0.0.0.0:3333
 database:
   hostname: xx.cassandra.cosmos.azure.com
   port: 10350
-  username: xx
-  password: xx
-  keyspace: kms
-
+  username: x
+  password: x
+  keyspace: x

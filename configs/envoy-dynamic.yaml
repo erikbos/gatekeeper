@@ -1,7 +1,10 @@
 admin:
   access_log_path: /tmp/admin_access.log
   address:
-    socket_address: { address: 127.0.0.1, port_value: 9900 }
+    socket_address: { 
+      address: 127.0.0.1, 
+      port_value: 9900 
+      }
 
 node:
   cluster: service_greeter
@@ -27,23 +30,61 @@ dynamic_resources:
           cluster_name: xds_cluster
 
 static_resources:
+  listeners:
+  - name: listener_0
+
+    address:
+      socket_address: { 
+        address: 0.0.0.0,
+        port_value: 10000 
+        }
+
+    listener_filters:
+      - name: "envoy.listener.tls_inspector"
+        typed_config: {}
+
+    filter_chains:
+    - filter_chain_match:
+        server_names: ["www.example.com"]
+ 
+      transport_socket:
+        name: envoy.transport_sockets.tls
+        typed_config:
+          "@type": type.googleapis.com/envoy.api.v2.auth.DownstreamTlsContext
+          common_tls_context:
+            alpn_protocols:
+              - h2
+              - http/1.1
+            tls_certificates:
+            - certificate_chain:
+                filename: "selfsigned.crt"
+              private_key:
+                filename: "selfsigned.key"
+            tls_params:
+#              tls_minimum_protocol_version: "TLSv1_2"
+#              cipher_suites: "[ECDHE-RSA-CHACHA20-POLY1305|ECDHE-RSA-AES256-GCM-SHA384|ECDHE-RSA-AES128-GCM-SHA256]"
+
+      filters:
+      - name: envoy.http_connection_manager
+        typed_config:
+          "@type": type.googleapis.com/envoy.config.filter.network.http_connection_manager.v2.HttpConnectionManager
+          codec_type: auto
+          stat_prefix: ingress_http
+          use_remote_address: true
+          rds:
+            route_config_name: generic_route
+            config_source:
+              api_config_source:
+                api_type: GRPC
+                transport_api_version: V2
+                grpc_services:
+                  envoy_grpc:
+                    cluster_name: xds_cluster
+
+          http_filters:          
+          - name: envoy.router
+
   clusters:
-      #- name: service_google
-    #connect_timeout: 0.25s
-    #type: LOGICAL_DNS
-    #dns_lookup_family: V4_ONLY
-    #lb_policy: ROUND_ROBIN
-    #load_assignment:
-    #  cluster_name: service_google
-    #  endpoints:
-    #  - lb_endpoints:
-    #    - endpoint:
-    #        address:
-    #          socket_address:
-    #            address: www.google.com
-    #            port_value: 443
-    #tls_context:
-    #  sni: www.google.com
   - name: xds_cluster
     connect_timeout: 0.25s
     type: STATIC
