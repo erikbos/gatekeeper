@@ -18,7 +18,7 @@ import (
 
 var clusters []types.Cluster
 var clustersLastUpdate int64
-var mux sync.Mutex
+var clusterMutex sync.Mutex
 
 // FIXME this should be implemented using channels
 // FIXME this does not detect removed records
@@ -34,10 +34,10 @@ func (s *server) GetClusterConfigFromDatabase() {
 				// Is a cluster updated since last time we stored it?
 				if s.LastmodifiedAt > clustersLastUpdate {
 					now := types.GetCurrentTimeMilliseconds()
-					mux.Lock()
+					clusterMutex.Lock()
 					clusters = newClusterList
 					clustersLastUpdate = now
-					mux.Unlock()
+					clusterMutex.Unlock()
 				}
 			}
 		}
@@ -45,7 +45,7 @@ func (s *server) GetClusterConfigFromDatabase() {
 	}
 }
 
-// getClusterConfig returns array of all envoyclusters
+// getClusterConfig returns array of all envoy clusters
 func getEnvoyClusterConfig() ([]cache.Resource, error) {
 	envoyClusters := []cache.Resource{}
 	for _, s := range clusters {

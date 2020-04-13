@@ -32,6 +32,7 @@ func (s *server) StartXDS() {
 	go s.GRPCManagementServer()
 	go s.HTTPManagementGateway()
 	go s.GetClusterConfigFromDatabase()
+	go s.GetRouteConfigFromDatabase()
 
 	s.XDSMainloop()
 }

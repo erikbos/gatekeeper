@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,4 +22,9 @@ func AbortIfContentTypeNotJSON(c *gin.Context) {
 		// do not continue request handling
 		c.Abort()
 	}
+}
+
+// GetCurrentTimeMilliseconds returns current epoch time in milliseconds
+func GetCurrentTimeMilliseconds() int64 {
+	return time.Now().UTC().UnixNano() / 1000000
 }

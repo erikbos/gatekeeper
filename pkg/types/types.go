@@ -3,7 +3,6 @@ package types
 import (
 	"errors"
 	"strings"
-	"time"
 )
 
 //Organization contains everything about a Organization
@@ -197,25 +196,22 @@ type VirtualHost struct {
 	TLSMinimumVersion string
 }
 
-// func initialize() {
-// 	// vhosts := make([]VirtualHost, 50)
-// 	vhosts := []VirtualHost{
-// 		VirtualHost{
-// 			Name: "test1",
-// 			VirtualHosts: []string{
-// 				"nozomi.sievie.com",
-// 			},
-// 			TLSMinimumVersion: "TLSv1_2",
-// 			TLSCipherSuites: "[ECDHE-RSA-CHACHA20-POLY1305|ECDHE-RSA-AES256-GCM-SHA384|ECDHE-RSA-AES128-GCM-SHA256]",
-// 		},
-// 		VirtualHost{
-// 			Name: "test2",
-// 			VirtualHosts: []string{
-// 				"nozomi.sievie.be",
-// 			},
-// 		},
-// 	}
-// }
+// Route holds configuration of one or more routes
+type Route struct {
+	Name                 string               `json:"name"`
+	DisplayName          string               `json:"displayName"`
+	Attributes           []AttributeKeyValues `json:"attributes"`
+	MatchPrefix          string               `json:"matchprefix"`
+	PrefixRewrite        string               `json:"prefixrewrite"`
+	Cluster              string               `json:"cluster"`
+	HostRewrite          string               `json:"hostrewrite"`
+	DirectResponseBody   string               `json:"directresponsebody"`
+	DirectResponseStatus int64                `json:"directresponsestatus"`
+	CreatedAt            int64                `json:"createdAt"`
+	CreatedBy            string               `json:"createdBy"`
+	LastmodifiedAt       int64                `json:"lastmodifiedAt"`
+	LastmodifiedBy       string               `json:"lastmodifiedBy"`
+}
 
 // Cluster holds configuration of an upstream cluster
 type Cluster struct {
@@ -228,9 +224,4 @@ type Cluster struct {
 	CreatedBy      string               `json:"createdBy"`
 	LastmodifiedAt int64                `json:"lastmodifiedAt"`
 	LastmodifiedBy string               `json:"lastmodifiedBy"`
-}
-
-// GetCurrentTimeMilliseconds returns current epoch time in milliseconds
-func GetCurrentTimeMilliseconds() int64 {
-	return time.Now().UTC().UnixNano() / 1000000
 }

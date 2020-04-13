@@ -12,8 +12,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-//StartWebAdminServer starts the admin web UI
-//
+// StartWebAdminServer starts the admin web UI
 func StartWebAdminServer(e *env) {
 	if e.config.LogLevel != "debug" {
 		gin.SetMode(gin.ReleaseMode)
@@ -27,11 +26,12 @@ func StartWebAdminServer(e *env) {
 	e.registerCredentialRoutes(e.ginEngine)
 	e.registerAPIProductRoutes(e.ginEngine)
 	e.registerClusterRoutes(e.ginEngine)
+	e.registerRouteRoutes(e.ginEngine)
 
 	e.ginEngine.GET("/", e.ShowWebAdminHomePage)
 	e.ginEngine.GET("/ready", e.readyness.DisplayReadyness)
 	e.ginEngine.GET("/metrics", gin.WrapH(promhttp.Handler()))
-	e.ginEngine.GET("/config_dump", e.configDump)
+	e.ginEngine.GET("/config_dump", e.ConfigDump)
 	e.ginEngine.Static("/assets", "./assets")
 
 	log.Info("Webadmin listening on ", e.config.WebAdminListen)
@@ -44,9 +44,8 @@ func (e *env) ShowWebAdminHomePage(c *gin.Context) {
 	types.ShowIndexPage(c, e.ginEngine, myName)
 }
 
-//configDump pretty prints the active configuration
-//
-func (e *env) configDump(c *gin.Context) {
+// configDump pretty prints the active configuration
+func (e *env) ConfigDump(c *gin.Context) {
 	// We must remove db password from configuration struct before showing
 	configToPrint := e.config
 	configToPrint.Database.Password = ""

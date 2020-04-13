@@ -24,7 +24,7 @@ func StartWebAdminServer(a *authorizationServer) {
 	a.ginEngine.GET("/", a.ShowWebAdminHomePage)
 	a.ginEngine.GET("/ready", a.readyness.DisplayReadyness)
 	a.ginEngine.GET("/metrics", gin.WrapH(promhttp.Handler()))
-	a.ginEngine.GET("/config_dump", a.configDump)
+	a.ginEngine.GET("/config_dump", a.ConfigDump)
 
 	log.Info("Webadmin listening on ", a.config.WebAdminListen)
 	go func() {
@@ -40,7 +40,7 @@ func (a *authorizationServer) ShowWebAdminHomePage(c *gin.Context) {
 
 //configDump pretty prints the active configuration
 //
-func (a *authorizationServer) configDump(c *gin.Context) {
+func (a *authorizationServer) ConfigDump(c *gin.Context) {
 	// We must remove db password from configuration struct before showing
 	configToPrint := a.config
 	configToPrint.Database.Password = ""
