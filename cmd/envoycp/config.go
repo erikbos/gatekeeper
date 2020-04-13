@@ -1,34 +1,59 @@
 package main
 
 import (
-	"io/ioutil"
+	"flag"
 	"os"
 
+	"github.com/erikbos/apiauth/pkg/db"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 )
 
+const (
+	defaultConfigFilename = "envoycp-config.yaml"
+	defaultLogLevel       = "info"
+	defaultWebAdminListen = "0.0.0.0:9902"
+	defaultXDSGRPCListen  = "0.0.0.0:9901"
+	defaultXDSHTTPListen  = "0.0.0.0:9903"
+)
+
 //EnvoyCPConfig contains our startup configuration data
 type EnvoyCPConfig struct {
-	GRPCXDSListen    string `yaml:"envoy_control_plane_gprc_listen"`
-	HTTPXDSListen    string `yaml:"envoy_control_plane_http_listen"`
-	DatabaseHostname string `yaml:"database_hostname"`
-	DatabasePort     int    `yaml:"database_port"`
-	DatabaseUsername string `yaml:"database_username"`
-	DatabasePassword string `yaml:"database_password"`
-	DatabaseKeyspace string `yaml:"database_keyspace"`
+	LogLevel       string `yaml:"loglevel"`
+	WebAdminListen string `yaml:"webadminlisten"`
+	XDSGRPCListen  string `yaml:"xdsgrpclisten"`
+	XDSHTTPListen  string `yaml:"xdshttplisten"`
+	Database       db.DatabaseConfig
+
+	// Database struct {
+	// 	Hostname string `yaml:"hostname"`
+	// 	Port     int    `yaml:"port"`
+	// 	Username string `yaml:"username"`
+	// 	Password string `yaml:"password"`
+	// 	Keyspace string `yaml:"keyspace"`
+	// } `yaml:"database"`
 }
 
-func loadConfiguration(filename string) *EnvoyCPConfig {
-	var c EnvoyCPConfig
-	yamlFile, err := ioutil.ReadFile(filename)
-	if err != nil {
-		log.Printf("Cannot load configuration file: #%v", err)
+func loadConfiguration() *EnvoyCPConfig {
+	filename := flag.String("config", defaultConfigFilename, "Configuration filename")
+	flag.Parse()
+
+	// default configuration
+	config := EnvoyCPConfig{
+		LogLevel:       defaultLogLevel,
+		WebAdminListen: defaultWebAdminListen,
+		XDSGRPCListen:  defaultXDSGRPCListen,
+		XDSHTTPListen:  defaultXDSHTTPListen,
 	}
-	err = yaml.Unmarshal(yamlFile, &c)
+
+	file, err := os.Open(*filename)
 	if err != nil {
-		log.Fatalf("Could not parse configuration file contents: %v", err)
-		os.Exit(1)
+		log.Fatalf("Cannot load configuration file: #%v", err)
 	}
-	return &c
+	defer file.Close()
+
+	if err := yaml.NewDecoder(file).Decode(&config); err != nil {
+		log.Fatalf("Cannot decode configuration file: #%v", err)
+	}
+	return &config
 }

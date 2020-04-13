@@ -25,9 +25,9 @@ var mux sync.Mutex
 // FIXME this does not detect removed records
 
 // getClusterConfigFromDatabase continously gets the current configuration
-func getClusterConfigFromDatabase(db *db.Database) {
+func (s *server) GetClusterConfigFromDatabase() {
 	for {
-		newClusterList, err := db.GetClusters()
+		newClusterList, err := s.db.GetClusters()
 		if err != nil {
 			log.Errorf("Could not retrieve clusters from database (%s)", err)
 		} else {
@@ -46,16 +46,17 @@ func getClusterConfigFromDatabase(db *db.Database) {
 	}
 }
 
-// getClusterConfig returns array of envoyclusters
+// getClusterConfig returns array of all envoyclusters
 func getEnvoyClusterConfig(db *db.Database) ([]cache.Resource, error) {
 	envoyClusters := []cache.Resource{}
 	for _, s := range clusters {
-		envoyClusters = append(envoyClusters, buildEnvoyClusterConfigV2(s))
+		envoyClusters = append(envoyClusters, buildEnvoyClusterConfig(s))
 	}
 	return envoyClusters, nil
 }
 
-func buildEnvoyClusterConfigV2(clusterConfig types.Cluster) *api.Cluster {
+// buildEnvoyClusterConfig buils one envoy cluster configuration
+func buildEnvoyClusterConfig(clusterConfig types.Cluster) *api.Cluster {
 	address := returnCoreAddress(clusterConfig.HostName, clusterConfig.Port)
 	envoyCluster := &api.Cluster{
 		Name:           clusterConfig.Name,
@@ -94,6 +95,7 @@ func buildEnvoyClusterConfigV2(clusterConfig types.Cluster) *api.Cluster {
 	return envoyCluster
 }
 
+// buildHealthCheckConfig builds health configuration for a cluster
 func buildHealthCheckConfig(clusterConfig types.Cluster) []*core.HealthCheck {
 	healthChecks := []*core.HealthCheck{}
 

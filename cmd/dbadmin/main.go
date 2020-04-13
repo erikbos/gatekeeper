@@ -30,8 +30,7 @@ func main() {
 	types.SetLoggingConfiguration(e.config.LogLevel)
 
 	var err error
-	e.db, err = db.Connect(e.config.Database.Hostname, e.config.Database.Port,
-		e.config.Database.Username, e.config.Database.Password, e.config.Database.Keyspace)
+	e.db, err = db.Connect(e.config.Database, myName)
 	if err != nil {
 		log.Fatalf("Database connect failed: %v", err)
 	}

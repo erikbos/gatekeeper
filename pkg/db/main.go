@@ -9,35 +9,44 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-//Database holds all our database connection information and performance counters
-//
+// Database holds all our database connection information and performance counters
 type Database struct {
-	Hostname              string
+	ServiceName           string
+	Config                DatabaseConfig
 	cassandraSession      *gocql.Session
 	dbLookupHitsCounter   *prometheus.CounterVec
 	dbLookupMissesCounter *prometheus.CounterVec
 	dbLookupHistogram     prometheus.Summary
 }
 
-//Connect setups up connectivity to Cassandra
-//
-func Connect(hostname string, port int, username, password, keyspace string) (*Database, error) {
-	var err error
-	d := Database{}
+// DatabaseConfig holds configuration configuration
+type DatabaseConfig struct {
+	Hostname string `yaml:"hostname"`
+	Port     int    `yaml:"port"`
+	Username string `yaml:"username"`
+	Password string `yaml:"password"`
+	Keyspace string `yaml:"keyspace"`
+}
 
-	d.Hostname = hostname
-	cluster := gocql.NewCluster(hostname)
-	cluster.Port = port
+// Connect setups up connectivity to Cassandra
+func Connect(config DatabaseConfig, serviceName string) (*Database, error) {
+	var err error
+	d := Database{
+		ServiceName: serviceName,
+		Config:      config,
+	}
+	cluster := gocql.NewCluster(d.Config.Hostname)
+	cluster.Port = d.Config.Port
 	cluster.SslOpts = &gocql.SslOptions{
 		CertPath:               "selfsigned.crt",
 		KeyPath:                "selfsigned.key",
 		EnableHostVerification: false,
 	}
 	cluster.Authenticator = gocql.PasswordAuthenticator{
-		Username: username,
-		Password: password,
+		Username: d.Config.Username,
+		Password: d.Config.Password,
 	}
-	cluster.Keyspace = keyspace
+	cluster.Keyspace = d.Config.Keyspace
 
 	d.cassandraSession, err = cluster.CreateSession()
 	if err != nil {
@@ -46,21 +55,21 @@ func Connect(hostname string, port int, username, password, keyspace string) (*D
 
 	d.dbLookupHitsCounter = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: "apiauth_database_lookup_hits_total",
+			Name: d.ServiceName + "_database_lookup_hits_total",
 			Help: "Number of successful database lookups.",
 		}, []string{"hostname", "table"})
 	prometheus.MustRegister(d.dbLookupHitsCounter)
 
 	d.dbLookupMissesCounter = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: "apiauth_database_lookup_misses_total",
+			Name: d.ServiceName + "database_lookup_misses_total",
 			Help: "Number of unsuccesful database lookups.",
 		}, []string{"hostname", "table"})
 	prometheus.MustRegister(d.dbLookupMissesCounter)
 
 	d.dbLookupHistogram = prometheus.NewSummary(
 		prometheus.SummaryOpts{
-			Name:       "apiauth_database_lookup_latency",
+			Name:       d.ServiceName + "_database_lookup_latency",
 			Help:       "Database lookup latency in seconds.",
 			Objectives: map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001},
 		})
@@ -70,11 +79,11 @@ func Connect(hostname string, port int, username, password, keyspace string) (*D
 }
 
 func (d *Database) metricsQueryHit(metricLabel string) {
-	d.dbLookupHitsCounter.WithLabelValues(d.Hostname, metricLabel).Inc()
+	d.dbLookupHitsCounter.WithLabelValues(d.Config.Hostname, metricLabel).Inc()
 }
 
 func (d *Database) metricsQueryMiss(metricLabel string) {
-	d.dbLookupMissesCounter.WithLabelValues(d.Hostname, metricLabel).Inc()
+	d.dbLookupMissesCounter.WithLabelValues(d.Config.Hostname, metricLabel).Inc()
 }
 
 // unmarshallJSONArrayOfStrings unpacks JSON array of strings

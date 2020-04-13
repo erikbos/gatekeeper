@@ -31,8 +31,7 @@ func main() {
 	types.SetLoggingConfiguration(a.config.LogLevel)
 
 	var err error
-	a.db, err = db.Connect(a.config.Database.Hostname, a.config.Database.Port,
-		a.config.Database.Username, a.config.Database.Password, a.config.Database.Keyspace)
+	a.db, err = db.Connect(a.config.Database, myName)
 	if err != nil {
 		log.Fatalf("Database connect failed: %v", err)
 	}
