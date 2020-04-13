@@ -4,7 +4,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/erikbos/apiauth/pkg/db"
 	"github.com/erikbos/apiauth/pkg/types"
 
 	api "github.com/envoyproxy/go-control-plane/envoy/api/v2"
@@ -47,7 +46,7 @@ func (s *server) GetClusterConfigFromDatabase() {
 }
 
 // getClusterConfig returns array of all envoyclusters
-func getEnvoyClusterConfig(db *db.Database) ([]cache.Resource, error) {
+func getEnvoyClusterConfig() ([]cache.Resource, error) {
 	envoyClusters := []cache.Resource{}
 	for _, s := range clusters {
 		envoyClusters = append(envoyClusters, buildEnvoyClusterConfig(s))
@@ -57,10 +56,10 @@ func getEnvoyClusterConfig(db *db.Database) ([]cache.Resource, error) {
 
 // buildEnvoyClusterConfig buils one envoy cluster configuration
 func buildEnvoyClusterConfig(clusterConfig types.Cluster) *api.Cluster {
-	address := returnCoreAddress(clusterConfig.HostName, clusterConfig.Port)
-	envoyCluster := &api.Cluster{
+	address := coreAddress(clusterConfig.HostName, clusterConfig.Port)
+	cluster := &api.Cluster{
 		Name:           clusterConfig.Name,
-		ConnectTimeout: ptypes.DurationProto(1 * time.Second),
+		ConnectTimeout: ptypes.DurationProto(2 * time.Second),
 		ClusterDiscoveryType: &api.Cluster_Type{
 			Type: api.Cluster_LOGICAL_DNS,
 		},
@@ -83,16 +82,22 @@ func buildEnvoyClusterConfig(clusterConfig types.Cluster) *api.Cluster {
 			},
 		},
 	}
-	envoyCluster.TransportSocket = returnTransportSocket(clusterConfig.HostName)
-	envoyCluster.HealthChecks = buildHealthCheckConfig(clusterConfig)
 
 	value, err := types.GetAttribute(clusterConfig.Attributes, "HTTP2Enabled")
 	if err == nil && value == "True" {
-		envoyCluster.Http2ProtocolOptions = &core.Http2ProtocolOptions{}
+		cluster.Http2ProtocolOptions = &core.Http2ProtocolOptions{}
+		cluster.TransportSocket = transportSocket(clusterConfig.HostName, true)
+	} else {
+		cluster.TransportSocket = transportSocket(clusterConfig.HostName, false)
 	}
 
-	log.Debugf("buildEnvoyClusterConfigV2: %v", envoyCluster)
-	return envoyCluster
+	cluster.HealthChecks = buildHealthCheckConfig(clusterConfig)
+
+	// FIXME add circuit breaker support
+	// cluster.CircuitBreakers = ...
+
+	log.Debugf("buildEnvoyClusterConfig: %+v", cluster)
+	return cluster
 }
 
 // buildHealthCheckConfig builds health configuration for a cluster
@@ -130,7 +135,8 @@ func buildHealthCheckConfig(clusterConfig types.Cluster) []*core.HealthCheck {
 	return healthChecks
 }
 
-func returnCoreAddress(hostname string, port int) *core.Address {
+// coreAddress builds an Envoy Address to connect to
+func coreAddress(hostname string, port int) *core.Address {
 	return &core.Address{Address: &core.Address_SocketAddress{
 		SocketAddress: &core.SocketAddress{
 			Address:  hostname,
@@ -142,12 +148,23 @@ func returnCoreAddress(hostname string, port int) *core.Address {
 	}}
 }
 
-func returnTransportSocket(sniHostname string) *core.TransportSocket {
-	tlsContext, err := ptypes.MarshalAny(&auth.UpstreamTlsContext{
+// transportSocket builds an Envoy TransportSocket sets HTTP protocol(s) to be used
+func transportSocket(sniHostname string, http2Enabled bool) *core.TransportSocket {
+	TLSContext := &auth.UpstreamTlsContext{
 		Sni: sniHostname,
-	})
+	}
+	if http2Enabled {
+		TLSContext.CommonTlsContext = &auth.CommonTlsContext{
+			AlpnProtocols: []string{"h2", "http/1.1"},
+		}
+	} else {
+		TLSContext.CommonTlsContext = &auth.CommonTlsContext{
+			AlpnProtocols: []string{"http/1.1"},
+		}
+	}
+	tlsContext, err := ptypes.MarshalAny(TLSContext)
 	if err != nil {
-		panic(err)
+		return nil
 	}
 	return &core.TransportSocket{
 		Name: "tls",
