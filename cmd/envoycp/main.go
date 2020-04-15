@@ -11,6 +11,11 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+var (
+	version   string
+	buildTime string
+)
+
 const (
 	myName = "envoycp"
 )
@@ -26,6 +31,8 @@ type server struct {
 }
 
 func main() {
+	shared.StartLogging(myName, version, buildTime)
+
 	s := server{}
 	s.config = loadConfiguration()
 	// FIXME we should check if we have all required parameters (use viper package?)

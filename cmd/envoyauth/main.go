@@ -9,6 +9,11 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+var (
+	version   string
+	buildTime string
+)
+
 const (
 	myName = "envoyauth"
 )
@@ -24,6 +29,8 @@ type authorizationServer struct {
 }
 
 func main() {
+	shared.StartLogging(myName, version, buildTime)
+
 	a := authorizationServer{}
 	a.config = loadConfiguration()
 	// FIXME we should check if we have all required parameters (use viper package?)

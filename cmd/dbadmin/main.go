@@ -12,6 +12,11 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+var (
+	version   string
+	buildTime string
+)
+
 const (
 	myName = "dbadmin"
 )
@@ -24,6 +29,8 @@ type env struct {
 }
 
 func main() {
+	shared.StartLogging(myName, version, buildTime)
+
 	e := &env{}
 	e.config = loadConfiguration()
 	// FIXME we should check if we have all required parameters (use viper package?)

@@ -49,12 +49,12 @@ func loadConfiguration() *EnvoyCPConfig {
 
 	file, err := os.Open(*filename)
 	if err != nil {
-		log.Fatalf("Cannot load configuration file: #%v", err)
+		log.Fatalf("Cannot load configuration file: %v", err)
 	}
 	defer file.Close()
 
 	if err := yaml.NewDecoder(file).Decode(&config); err != nil {
-		log.Fatalf("Cannot decode configuration file: #%v", err)
+		log.Fatalf("Cannot decode configuration file: %v", err)
 	}
 	return &config
 }
