@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	defaultConfigFilename = "dbadmin-config.yaml"
+	defaultConfigFilename = "config/dbadmin-config.yaml"
 	defaultLogLevel       = "info"
 	defaultWebAdminListen = "0.0.0.0:7777"
 )

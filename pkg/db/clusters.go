@@ -15,7 +15,7 @@ const clusterMetricLabel = "clusters"
 
 // GetClusters retrieves all clusters
 func (d *Database) GetClusters() ([]shared.Cluster, error) {
-	query := "SELECT * FROM clusterz"
+	query := "SELECT * FROM clusters"
 	clusters, err := d.runGetClusterQuery(query)
 	if err != nil {
 		return []shared.Cluster{}, err
@@ -30,7 +30,7 @@ func (d *Database) GetClusters() ([]shared.Cluster, error) {
 
 // GetClusterByName retrieves a cluster from database
 func (d *Database) GetClusterByName(clusterName string) (shared.Cluster, error) {
-	query := "SELECT * FROM clusterz WHERE key = ? LIMIT 1"
+	query := "SELECT * FROM clusters WHERE key = ? LIMIT 1"
 	clusters, err := d.runGetClusterQuery(query, clusterName)
 	if err != nil {
 		return shared.Cluster{}, err
@@ -80,7 +80,7 @@ func (d *Database) runGetClusterQuery(query string, queryParameters ...interface
 
 // UpdateClusterByName UPSERTs an cluster in database
 func (d *Database) UpdateClusterByName(updatedCluster *shared.Cluster) error {
-	query := "INSERT INTO clusterz (key, display_name, " +
+	query := "INSERT INTO clusters (key, display_name, " +
 		"host_name, port, attributes, " +
 		"created_at, created_by, lastmodified_at, lastmodified_by) " +
 		"VALUES(?,?,?,?,?,?,?,?,?)"
@@ -104,6 +104,6 @@ func (d *Database) DeleteClusterByName(clusterToDelete string) error {
 	if err != nil {
 		return err
 	}
-	query := "DELETE FROM clusterz WHERE key = ?"
+	query := "DELETE FROM clusters WHERE key = ?"
 	return d.cassandraSession.Query(query, clusterToDelete).Exec()
 }
