@@ -17,5 +17,5 @@ jobs:
     - name: golangci-lint
       uses: actions-contrib/golangci-lint@v1
 
-    - name: Build docker images
+    - name: Build Docker images
       run: docker build . --file Dockerfile --tag my-image-name:$(date +%s)
