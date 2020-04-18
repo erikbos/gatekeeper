@@ -25,7 +25,7 @@ type authorizationServer struct {
 	c                    *db.Cache
 	g                    *shared.Geoip
 	authLatencyHistogram prometheus.Summary
-	readyness            shared.Readyness
+	readiness            shared.Readiness
 }
 
 func main() {
@@ -50,7 +50,7 @@ func main() {
 		log.Fatalf("Geoip db load failed: %v", err)
 	}
 
-	StartWebAdminServer(&a)
-	a.readyness.Up()
+	go StartWebAdminServer(&a)
+	a.readiness.Up()
 	startGRPCAuthenticationServer(a)
 }

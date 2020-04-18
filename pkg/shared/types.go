@@ -153,7 +153,7 @@ func TidyAttributes(attributes []AttributeKeyValues) []AttributeKeyValues {
 	result := []AttributeKeyValues{}
 
 	for v := range attributes {
-		if encountered[strings.TrimSpace(attributes[v].Name)] == true {
+		if encountered[strings.TrimSpace(attributes[v].Name)] {
 			// Do not add duplicate.
 		} else {
 			// Trim whitespace we like tidy

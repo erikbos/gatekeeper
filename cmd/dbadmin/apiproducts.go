@@ -242,6 +242,7 @@ func (e *env) DeleteAPIProductByName(c *gin.Context) {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
+	// FIX ME (we probably allow deletion only in case no dev app uses the product)
 	// if err := e.db.DeleteAPIProductByName(apiproduct.OrganizationName, apiproduct.Name); err != nil {
 	// 	returnJSONMessage(c, http.StatusBadRequest, err)
 	// 	return

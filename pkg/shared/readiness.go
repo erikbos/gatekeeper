@@ -6,14 +6,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// Readyness contains the readyness of the application
-type Readyness struct {
+// Readiness contains the rreadiness of the application
+type Readiness struct {
 	status bool
 }
 
-// DisplayReadyness returns readyness status
-func (r *Readyness) DisplayReadyness(c *gin.Context) {
-	if r.status == true {
+// DisplayStatus returns rreadiness status
+func (r *Readiness) DisplayStatus(c *gin.Context) {
+	if r.status {
 		c.JSON(http.StatusOK, "Ready")
 	} else {
 		c.JSON(http.StatusServiceUnavailable, "Not ready")
@@ -23,11 +23,11 @@ func (r *Readyness) DisplayReadyness(c *gin.Context) {
 // FIX we should use failureThreshold and successThreshold before determining whether we are up or down
 
 // Down changes status to down
-func (r *Readyness) Down() {
+func (r *Readiness) Down() {
 	r.status = false
 }
 
 // Up changes status to up
-func (r *Readyness) Up() {
+func (r *Readiness) Up() {
 	r.status = true
 }

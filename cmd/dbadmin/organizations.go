@@ -239,7 +239,9 @@ func (e *env) DeleteOrganizationByName(c *gin.Context) {
 		returnJSONMessage(c, http.StatusInternalServerError,
 			fmt.Errorf("Could not retrieve number of developers in organization"))
 	case 0:
-		e.db.DeleteOrganizationByName(organization.Name)
+		if err := e.db.DeleteOrganizationByName(organization.Name); err != nil {
+			returnJSONMessage(c, http.StatusServiceUnavailable, err)
+		}
 		c.IndentedJSON(http.StatusOK, organization)
 	default:
 		returnJSONMessage(c, http.StatusForbidden,

@@ -22,14 +22,14 @@ func StartWebAdminServer(a *authorizationServer) {
 	a.ginEngine.Use(gin.LoggerWithFormatter(shared.LogHTTPRequest))
 
 	a.ginEngine.GET("/", a.ShowWebAdminHomePage)
-	a.ginEngine.GET("/ready", a.readyness.DisplayReadyness)
+	a.ginEngine.GET("/ready", a.readiness.DisplayStatus)
 	a.ginEngine.GET("/metrics", gin.WrapH(promhttp.Handler()))
 	a.ginEngine.GET("/config_dump", a.ConfigDump)
 
 	log.Info("Webadmin listening on ", a.config.WebAdminListen)
-	go func() {
-		a.ginEngine.Run(a.config.WebAdminListen)
-	}()
+	if err := a.ginEngine.Run(a.config.WebAdminListen); err != nil {
+		log.Fatal(err)
+	}
 }
 
 // ShowWebAdminHomePage shows home page

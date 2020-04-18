@@ -167,7 +167,7 @@ func (c *Cache) GetAPIProductCached(d *Database, organization, apiproductname st
 			c.dbCacheHitsCounter.WithLabelValues("api_products").Inc()
 			return apiproduct, nil
 		}
-		log.Info("GetAPIProductCached, could not decode cache entry of %s", apiproductname)
+		log.Infof("GetAPIProductCached, could not decode cache entry of %s", apiproductname)
 	}
 
 	// No cache entry, let's fetch it from database

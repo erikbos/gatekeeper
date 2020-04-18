@@ -251,7 +251,7 @@ func (e *env) DeleteDeveloperByEmail(c *gin.Context) {
 				developer.Email))
 	case 0:
 		if err := e.db.DeleteDeveloperByEmail(developer.OrganizationName, developer.Email); err != nil {
-			returnJSONMessage(c, http.StatusBadRequest, err)
+			returnJSONMessage(c, http.StatusServiceUnavailable, err)
 			return
 		}
 		c.IndentedJSON(http.StatusOK, developer)

@@ -27,7 +27,7 @@ type server struct {
 	xds                  xds.Server
 	xdsCache             cache.SnapshotCache
 	authLatencyHistogram prometheus.Summary
-	readyness            shared.Readyness
+	readiness            shared.Readiness
 }
 
 func main() {
@@ -46,7 +46,7 @@ func main() {
 	}
 
 	go s.StartWebAdminServer()
-	s.readyness.Up()
+	s.readiness.Up()
 
 	s.StartXDS()
 }

@@ -25,7 +25,7 @@ type env struct {
 	config    *DBAdminConfig
 	db        *db.Database
 	ginEngine *gin.Engine
-	readyness shared.Readyness
+	readiness shared.Readiness
 }
 
 func main() {
@@ -42,7 +42,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Database connect failed: %v", err)
 	}
-	e.readyness.Up()
+	e.readiness.Up()
 	StartWebAdminServer(e)
 }
 

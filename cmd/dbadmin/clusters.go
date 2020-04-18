@@ -231,6 +231,8 @@ func (e *env) DeleteClusterByName(c *gin.Context) {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
-	e.db.DeleteClusterByName(cluster.Name)
+	if err := e.db.DeleteClusterByName(cluster.Name); err != nil {
+		returnJSONMessage(c, http.StatusServiceUnavailable, err)
+	}
 	c.IndentedJSON(http.StatusOK, cluster)
 }

@@ -29,13 +29,15 @@ func StartWebAdminServer(e *env) {
 	e.registerRouteRoutes(e.ginEngine)
 
 	e.ginEngine.GET("/", e.ShowWebAdminHomePage)
-	e.ginEngine.GET("/ready", e.readyness.DisplayReadyness)
+	e.ginEngine.GET("/ready", e.readiness.DisplayStatus)
 	e.ginEngine.GET("/metrics", gin.WrapH(promhttp.Handler()))
 	e.ginEngine.GET("/config_dump", e.ConfigDump)
 	e.ginEngine.Static("/assets", "./assets")
 
 	log.Info("Webadmin listening on ", e.config.WebAdminListen)
-	e.ginEngine.Run(e.config.WebAdminListen)
+	if err := e.ginEngine.Run(e.config.WebAdminListen); err != nil {
+		log.Fatal(err)
+	}
 }
 
 // ShowWebAdminHomePage shows home page

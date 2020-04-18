@@ -21,12 +21,14 @@ func (s *server) StartWebAdminServer() {
 	s.ginEngine.Use(gin.LoggerWithFormatter(shared.LogHTTPRequest))
 
 	s.ginEngine.GET("/", s.ShowWebAdminHomePage)
-	s.ginEngine.GET("/ready", s.readyness.DisplayReadyness)
+	s.ginEngine.GET("/ready", s.readiness.DisplayStatus)
 	s.ginEngine.GET("/metrics", gin.WrapH(promhttp.Handler()))
 	s.ginEngine.GET("/config_dump", s.ConfigDump)
 
 	log.Info("Webadmin listening on ", s.config.WebAdminListen)
-	s.ginEngine.Run(s.config.WebAdminListen)
+	if err := s.ginEngine.Run(s.config.WebAdminListen); err != nil {
+		log.Fatal(err)
+	}
 }
 
 // ShowWebAdminHomePage shows home page

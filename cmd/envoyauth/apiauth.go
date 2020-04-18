@@ -118,9 +118,8 @@ func (a *authorizationServer) CheckAllowedPath(requestURIPath, organization, api
 			} else {
 				return 503, appcredential, developerApp, shared.APIProduct{}, errors.New("Cannot find basepath of product(s) of apikey")
 			}
-		} else {
-			// Skipping unapproved product included in apikey
 		}
+		// Else, skipping unapproved product included in apikey
 	}
 	return 404, appcredential, developerApp, shared.APIProduct{}, errors.New("Cannot find product")
 }

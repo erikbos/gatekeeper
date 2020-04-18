@@ -336,7 +336,7 @@ func (e *env) DeleteDeveloperAppByName(c *gin.Context) {
 	}
 	err = e.db.DeleteDeveloperAppByID(developerApp.OrganizationName, developerApp.DeveloperAppID)
 	if err != nil {
-		returnJSONMessage(c, http.StatusBadRequest, err)
+		returnJSONMessage(c, http.StatusServiceUnavailable, err)
 		return
 	}
 	// Remove app from the apps field in developer entry as well
@@ -356,7 +356,7 @@ func (e *env) DeleteDeveloperAppByName(c *gin.Context) {
 
 // GenerateDeveloperAppPrimaryKey creates unique primary key for developer app row
 func generateDeveloperAppPrimaryKey() string {
-	return (fmt.Sprintf("%s", uuid.New()))
+	return (uuid.New().String())
 }
 
 // GeneratePrimaryKeyOfDeveloper creates unique primary key for developer db row

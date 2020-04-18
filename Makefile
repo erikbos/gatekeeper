@@ -9,7 +9,7 @@ all: dbadmin envoyauth envoycp
 
 dbadmin:
 	mkdir -p $(BIN)
-	CGO_ENABLED=0 go build -o $(BIN)/dbadmin $(LDFLAGS) cmd/dbadmin/*.go
+	go build -o $(BIN)/dbadmin $(LDFLAGS) cmd/dbadmin/*.go
 
 envoyauth:
 	mkdir -p $(BIN)

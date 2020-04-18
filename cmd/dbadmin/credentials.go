@@ -122,7 +122,7 @@ func (e *env) DeleteDeveloperAppKeyByKey(c *gin.Context) {
 		return
 	}
 	if err := e.db.DeleteAppCredentialByKey(c.Param("organization"), c.Param("key")); err != nil {
-		returnJSONMessage(c, http.StatusBadRequest, err)
+		returnJSONMessage(c, http.StatusServiceUnavailable, err)
 		return
 	}
 	c.IndentedJSON(http.StatusOK, AppCredential)
