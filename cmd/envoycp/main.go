@@ -7,7 +7,6 @@ import (
 	"github.com/envoyproxy/go-control-plane/pkg/cache"
 	xds "github.com/envoyproxy/go-control-plane/pkg/server"
 	"github.com/gin-gonic/gin"
-	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -21,13 +20,13 @@ const (
 )
 
 type server struct {
-	config               *EnvoyCPConfig
-	ginEngine            *gin.Engine
-	db                   *db.Database
-	xds                  xds.Server
-	xdsCache             cache.SnapshotCache
-	authLatencyHistogram prometheus.Summary
-	readiness            shared.Readiness
+	config    *EnvoyCPConfig
+	ginEngine *gin.Engine
+	db        *db.Database
+	xds       xds.Server
+	xdsCache  cache.SnapshotCache
+	// authLatencyHistogram prometheus.Summary
+	readiness shared.Readiness
 }
 
 func main() {

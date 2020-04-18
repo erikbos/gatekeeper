@@ -14,7 +14,7 @@ import (
 
 var routes []shared.Route
 
-var routeLastUpdate int64
+// var routeLastUpdate int64
 var routeMutex sync.Mutex
 
 // // FIXME this should be implemented using channels
@@ -31,10 +31,10 @@ func (s *server) GetRouteConfigFromDatabase() {
 			for _, s := range newRouteList {
 				// Is a cluster updated since last time we stored it?
 				if s.LastmodifiedAt > clustersLastUpdate || 1 == 1 {
-					now := shared.GetCurrentTimeMilliseconds()
+					// now := shared.GetCurrentTimeMilliseconds()
 					routeMutex.Lock()
 					routes = newRouteList
-					routeLastUpdate = now
+					// routeLastUpdate = now
 					routeMutex.Unlock()
 				}
 			}

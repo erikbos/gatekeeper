@@ -231,6 +231,8 @@ func (e *env) DeleteRouteByName(c *gin.Context) {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
-	e.db.DeleteRouteByName(route.Name)
+	if err := e.db.DeleteRouteByName(route.Name); err != nil {
+		returnJSONMessage(c, http.StatusServiceUnavailable, err)
+	}
 	c.IndentedJSON(http.StatusOK, route)
 }

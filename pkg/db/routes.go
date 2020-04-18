@@ -7,7 +7,7 @@ import (
 )
 
 // Prometheus label for metrics of db interactions
-const routeMetricLabel = "routes"
+// const routeMetricLabel = "routes"
 
 // temp
 var routes = []shared.Route{
@@ -71,41 +71,41 @@ func (d *Database) GetRouteByName(routeName string) (shared.Route, error) {
 }
 
 // runGetRouteQuery executes CQL query and returns resultset
-func (d *Database) runGetRouteQuery(query string, queryParameters ...interface{}) ([]shared.Route, error) {
-	// 	var routes []shared.Route
+// func (d *Database) runGetRouteQuery(query string, queryParameters ...interface{}) ([]shared.Route, error) {
+// 		var routes []shared.Route
 
-	// 	timer := prometheus.NewTimer(d.dbLookupHistogram)
-	// 	defer timer.ObserveDuration()
+// 		timer := prometheus.NewTimer(d.dbLookupHistogram)
+// 		defer timer.ObserveDuration()
 
-	// 	iter := d.cassandraSession.Query(query, queryParameters...).Iter()
-	// 	m := make(map[string]interface{})
-	// 	for iter.MapScan(m) {
-	// 		newRoute := shared.Route{
-	// 			Name:           m["key"].(string),
-	// 			MatchPrefix:       m["host_name"].(string),
-	// 			Port:           m["port"].(int),
-	// 			Cluster:        m["cluster"].(string),
-	// 			PrefixRewrite:  m["PrefixRewrite"].(string),
-	// 			CreatedAt:      m["created_at"].(int64),
-	// 			CreatedBy:      m["created_by"].(string),
-	// 			DisplayName:    m["display_name"].(string),
-	// 			LastmodifiedAt: m["lastmodified_at"].(int64),
-	// 			LastmodifiedBy: m["lastmodified_by"].(string),
-	// 		}
-	// 		if m["attributes"] != nil {
-	// 			newRoute.Attributes = d.unmarshallJSONArrayOfAttributes(m["attributes"].(string))
-	// 		}
-	// 		routes = append(routes, newRoute)
-	// 		m = map[string]interface{}{}
-	// 	}
-	// 	// In case query failed we return query error
-	// 	if err := iter.Close(); err != nil {
-	// 		log.Error(err)
-	// 		return []shared.Route{}, err
-	// 	}
-	// 	return routes, nil
-	return routes, nil
-}
+// 		iter := d.cassandraSession.Query(query, queryParameters...).Iter()
+// 		m := make(map[string]interface{})
+// 		for iter.MapScan(m) {
+// 			newRoute := shared.Route{
+// 				Name:           m["key"].(string),
+// 				MatchPrefix:       m["host_name"].(string),
+// 				Port:           m["port"].(int),
+// 				Cluster:        m["cluster"].(string),
+// 				PrefixRewrite:  m["PrefixRewrite"].(string),
+// 				CreatedAt:      m["created_at"].(int64),
+// 				CreatedBy:      m["created_by"].(string),
+// 				DisplayName:    m["display_name"].(string),
+// 				LastmodifiedAt: m["lastmodified_at"].(int64),
+// 				LastmodifiedBy: m["lastmodified_by"].(string),
+// 			}
+// 			if m["attributes"] != nil {
+// 				newRoute.Attributes = d.unmarshallJSONArrayOfAttributes(m["attributes"].(string))
+// 			}
+// 			routes = append(routes, newRoute)
+// 			m = map[string]interface{}{}
+// 		}
+// 		// In case query failed we return query error
+// 		if err := iter.Close(); err != nil {
+// 			log.Error(err)
+// 			return []shared.Route{}, err
+// 		}
+// 		return routes, nil
+// 	return routes, nil
+// }
 
 // UpdateRouteByName UPSERTs an route in database
 func (d *Database) UpdateRouteByName(updatedRoute *shared.Route) error {

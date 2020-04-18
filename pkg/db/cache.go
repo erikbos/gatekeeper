@@ -27,7 +27,6 @@ type Cache struct {
 }
 
 // CacheInit initializes in memory cache and registers metrics
-//
 func CacheInit(size, cachettl, negativettl int) *Cache {
 	c := Cache{}
 
@@ -108,8 +107,7 @@ func CacheInit(size, cachettl, negativettl int) *Cache {
 	return &c
 }
 
-//GetAppCredentialCached retrieves entry from database (or cache if entry present)
-//
+// GetAppCredentialCached retrieves entry from database (or cache if entry present)
 func (c *Cache) GetAppCredentialCached(d *Database, organization, key string) (shared.AppCredential, error) {
 	var appcredential shared.AppCredential
 	var err error
@@ -142,14 +140,15 @@ func (c *Cache) GetAppCredentialCached(d *Database, organization, key string) (s
 	encode := gob.NewEncoder(&buf)
 	err = encode.Encode(appcredential)
 	if err == nil {
-		c.cache.Set([]byte(key), buf.Bytes(), c.cacheTTL)
+		if err := c.cache.Set([]byte(key), buf.Bytes(), c.cacheTTL); err != nil {
+			log.Warnf("Could not store key %s in cache", appcredential.ConsumerKey[0:4])
+		}
 	}
 	c.dbCacheMissesCounter.WithLabelValues("app_credentials").Inc()
 	return appcredential, nil
 }
 
-//GetAPIProductCached retrieves entry from database (or cache if entry present)
-//
+// GetAPIProductCached retrieves entry from database (or cache if entry present)
 func (c *Cache) GetAPIProductCached(d *Database, organization, apiproductname string) (shared.APIProduct, error) {
 	var apiproduct shared.APIProduct
 	var err error
@@ -182,14 +181,15 @@ func (c *Cache) GetAPIProductCached(d *Database, organization, apiproductname st
 	encode := gob.NewEncoder(&buf)
 	err = encode.Encode(apiproduct)
 	if err == nil {
-		c.cache.Set([]byte(apiproductname), buf.Bytes(), c.cacheTTL)
+		if err := c.cache.Set([]byte(apiproductname), buf.Bytes(), c.cacheTTL); err != nil {
+			log.Warnf("Could not store apiproduct %s in cache", apiproduct.Name)
+		}
 	}
 	c.dbCacheMissesCounter.WithLabelValues("api_products").Inc()
 	return apiproduct, nil
 }
 
-//GetDeveloperAppCached retrieves entry from database (or cache if entry present)
-//
+// GetDeveloperAppCached retrieves entry from database (or cache if entry present)
 func (c *Cache) GetDeveloperAppCached(d *Database, developerAppID string) (shared.DeveloperApp, error) {
 	var developerapp shared.DeveloperApp
 	var err error
@@ -222,6 +222,9 @@ func (c *Cache) GetDeveloperAppCached(d *Database, developerAppID string) (share
 	err = encode.Encode(developerapp)
 	if err == nil {
 		c.cache.Set([]byte(developerAppID), buf.Bytes(), c.cacheTTL)
+		if err := c.cache.Set([]byte(developerAppID), buf.Bytes(), c.cacheTTL); err != nil {
+			log.Warnf("Could not store devapp %s in cache", developerapp.Name)
+		}
 	}
 	c.dbCacheMissesCounter.WithLabelValues("apps").Inc()
 	return developerapp, nil

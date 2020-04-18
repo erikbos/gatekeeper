@@ -20,7 +20,7 @@ envoycp:
 	go build -o $(BIN)/envoycp $(LDFLAGS) cmd/envoycp/*.go
 
 
-docker: docker-dbadmin docker-envoyauth docker-envoycp
+docker-images: docker-dbadmin docker-envoyauth docker-envoycp
 
 docker-dbadmin:
 	 docker build -t apiedge/dbadmin:$(VERSION) . -f Dockerfile.dbman
