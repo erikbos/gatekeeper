@@ -1,3 +1,7 @@
 linters:
  disable:
    - unused
+
+run:
+  issues-exit-code: 0
+  
