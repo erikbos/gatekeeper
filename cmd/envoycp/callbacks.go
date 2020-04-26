@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	v2 "github.com/envoyproxy/go-control-plane/envoy/api/v2"
@@ -24,19 +25,29 @@ func (cb *callbacks) Report() {
 // OnStreamOpen is called once an xDS stream is open with a stream ID and the type URL (or "" for ADS).
 // Returning an error will end processing and close the stream. OnStreamClosed will still be called.
 func (cb *callbacks) OnStreamOpen(ctx context.Context, id int64, typ string) error {
-	log.Infof("OnStreamOpen %d open for %s", id, typ)
+	log.WithFields(log.Fields{"stream": id, "type": typ}).Info("OnStreamOpen")
 	return nil
 }
 
 // OnStreamClosed is called immediately prior to closing an xDS stream with a stream ID.
 func (cb *callbacks) OnStreamClosed(id int64) {
-	log.Infof("OnStreamClosed %d closed", id)
+	log.WithFields(log.Fields{"stream": id}).Info("OnStreamClosed")
 }
 
 // OnStreamRequest is called once a request is received on a stream.
 // Returning an error will end processing and close the stream. OnStreamClosed will still be called.
-func (cb *callbacks) OnStreamRequest(int64, *v2.DiscoveryRequest) error {
-	log.Infof("OnStreamRequest")
+func (cb *callbacks) OnStreamRequest(id int64, request *v2.DiscoveryRequest) error {
+	fields := log.Fields{
+		"stream":    id,
+		"useragent": request.Node.UserAgentName,
+		"cluster":   request.Node.Cluster,
+		"id":        request.Node.Id,
+		"version": fmt.Sprintf("%d.%d.%d", request.Node.GetUserAgentBuildVersion().Version.MajorNumber,
+			request.Node.GetUserAgentBuildVersion().Version.MinorNumber,
+			request.Node.GetUserAgentBuildVersion().Version.Patch),
+	}
+	log.WithFields(fields).Info("OnStreamRequest")
+
 	cb.mu.Lock()
 	defer cb.mu.Unlock()
 	cb.requests++
@@ -48,15 +59,15 @@ func (cb *callbacks) OnStreamRequest(int64, *v2.DiscoveryRequest) error {
 }
 
 // OnStreamResponse is called immediately prior to sending a response on a stream.
-func (cb *callbacks) OnStreamResponse(int64, *v2.DiscoveryRequest, *v2.DiscoveryResponse) {
-	log.Infof("OnStreamResponse...")
+func (cb *callbacks) OnStreamResponse(id int64, request *v2.DiscoveryRequest, response *v2.DiscoveryResponse) {
+	log.WithFields(log.Fields{"stream": id}).Info("OnStreamResponse")
 	cb.Report()
 }
 
 // OnFetchRequest is called for each Fetch request. Returning an error will end processing of the
 // request and respond with an error.
-func (cb *callbacks) OnFetchRequest(ctx context.Context, req *v2.DiscoveryRequest) error {
-	log.Infof("OnFetchRequest...")
+func (cb *callbacks) OnFetchRequest(ctx context.Context, request *v2.DiscoveryRequest) error {
+	log.WithFields(log.Fields{}).Info("OnFetchRequest")
 	cb.mu.Lock()
 	defer cb.mu.Unlock()
 	cb.fetches++
@@ -69,5 +80,5 @@ func (cb *callbacks) OnFetchRequest(ctx context.Context, req *v2.DiscoveryReques
 
 // OnFetchResponse is called immediately prior to sending a response.
 func (cb *callbacks) OnFetchResponse(*v2.DiscoveryRequest, *v2.DiscoveryResponse) {
-	log.Infof("OnFetchResponse...")
+	log.Infof("OnFetchResponse")
 }
