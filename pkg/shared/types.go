@@ -182,12 +182,20 @@ func DeleteAttribute(attributes []AttributeKeyValues, attributeName string) ([]A
 
 // VirtualHost bla
 type VirtualHost struct {
-	Name              string   `json:"name"`
-	DisplayName       string   `json:"display_name"`
-	Description       string   `json:"description"`
-	VirtualHosts      []string `json:"virtual_hosts"`
-	TLSCipherSuites   string
-	TLSMinimumVersion string
+	Name           string               `json:"name"`
+	DisplayName    string               `json:"display_name"`
+	Description    string               `json:"description"`
+	Port           int                  `json:"port"`
+	VirtualHosts   []string             `json:"virtual_hosts"`
+	Attributes     []AttributeKeyValues `json:"attributes"`
+	CreatedAt      int64                `json:"createdAt"`
+	CreatedBy      string               `json:"createdBy"`
+	LastmodifiedAt int64                `json:"lastmodifiedAt"`
+	LastmodifiedBy string               `json:"lastmodifiedBy"`
+	// Certificate       string               `json:"Certificate"`
+	// CertificateKey    string               `json:"Certificate_key"`
+	// TLSCipherSuites   string               `json:"TLSCipher_suites"`
+	// TLSMinimumVersion string               `json:"tls_minimum_version"`
 }
 
 // Route holds configuration of one or more routes

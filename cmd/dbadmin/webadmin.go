@@ -27,6 +27,7 @@ func StartWebAdminServer(e *env) {
 	e.registerAPIProductRoutes(e.ginEngine)
 	e.registerClusterRoutes(e.ginEngine)
 	e.registerRouteRoutes(e.ginEngine)
+	e.registerVirtualHostRoutes(e.ginEngine)
 
 	e.ginEngine.GET("/", e.ShowWebAdminHomePage)
 	e.ginEngine.GET("/ready", e.readiness.DisplayStatus)
