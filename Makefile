@@ -30,3 +30,6 @@ docker-envoyauth:
 
 docker-envoycp:
 	 docker build -t apiedge/envoycp:$(VERSION) . -f Dockerfile.envoycp
+
+clean:
+	rm -f $(BIN)/dbadmin $(BIN)/envoyauth $(BIN)/envoycp
