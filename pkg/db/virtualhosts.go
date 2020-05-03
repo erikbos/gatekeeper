@@ -15,19 +15,22 @@ var virtualhosts = []shared.VirtualHost{
 		Name:         "nozomi",
 		DisplayName:  "Erik home testsetup 0",
 		Port:         80,
-		VirtualHosts: []string{"nozomi.sievie.be"},
+		VirtualHosts: []string{"nozomi.sievie.nl"},
+		RouteSet:     "routes_80",
 		Attributes: []shared.AttributeKeyValues{
 			{
 				Name:  "bla",
 				Value: "42",
 			},
 		},
+		LastmodifiedAt: 10000,
 	},
 	{
 		Name:         "nozomi",
 		DisplayName:  "Erik home testsetup 1",
 		Port:         443,
 		VirtualHosts: []string{"nozomi.sievie.be"},
+		RouteSet:     "routes_443",
 		Attributes: []shared.AttributeKeyValues{
 			{
 				Name:  "Certificate",
@@ -46,12 +49,14 @@ var virtualhosts = []shared.VirtualHost{
 				Value: "TLSv1_2",
 			},
 		},
+		LastmodifiedAt: 10000,
 	},
 	{
 		Name:         "nozomi",
 		DisplayName:  "Erik home testsetup 2",
-		Port:         10000,
-		VirtualHosts: []string{"nozomi.sievie.be"},
+		Port:         443,
+		VirtualHosts: []string{"nozomi.sievie.com"},
+		RouteSet:     "routes_443",
 		Attributes: []shared.AttributeKeyValues{
 			{
 				Name:  "Certificate",
@@ -70,6 +75,7 @@ var virtualhosts = []shared.VirtualHost{
 				Value: "TLSv1_2",
 			},
 		},
+		LastmodifiedAt: 10000,
 	},
 }
 

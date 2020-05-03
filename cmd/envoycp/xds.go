@@ -33,6 +33,7 @@ func (s *server) StartXDS() {
 	go s.HTTPManagementGateway()
 	go s.GetClusterConfigFromDatabase()
 	go s.GetRouteConfigFromDatabase()
+	go s.GetVirtualHostConfigFromDatabase()
 
 	s.XDSMainloop()
 }
@@ -77,10 +78,11 @@ func (s *server) XDSMainloop() {
 
 			EnvoyClusters, _ := getEnvoyClusterConfig()
 			EnvoyRoutes, _ := getEnvoyRouteConfig()
+			EnvoyListeners, _ := getEnvoyListenerConfig()
 
 			atomic.AddInt32(&version, 1)
 			log.Infof("Creating config version " + fmt.Sprint(version))
-			snap := cache.NewSnapshot(fmt.Sprint(version), nil, EnvoyClusters, EnvoyRoutes, nil, nil)
+			snap := cache.NewSnapshot(fmt.Sprint(version), nil, EnvoyClusters, EnvoyRoutes, EnvoyListeners, nil)
 			_ = s.xdsCache.SetSnapshot("jenny", snap)
 
 			lastConfigurationDeployment = now

@@ -183,10 +183,11 @@ func DeleteAttribute(attributes []AttributeKeyValues, attributeName string) ([]A
 // VirtualHost bla
 type VirtualHost struct {
 	Name           string               `json:"name"`
-	DisplayName    string               `json:"display_name"`
+	DisplayName    string               `json:"displayName"`
 	Description    string               `json:"description"`
+	VirtualHosts   []string             `json:"virtualHosts"`
 	Port           int                  `json:"port"`
-	VirtualHosts   []string             `json:"virtual_hosts"`
+	RouteSet       string               `json:"routeSet"`
 	Attributes     []AttributeKeyValues `json:"attributes"`
 	CreatedAt      int64                `json:"createdAt"`
 	CreatedBy      string               `json:"createdBy"`
@@ -200,19 +201,18 @@ type VirtualHost struct {
 
 // Route holds configuration of one or more routes
 type Route struct {
-	Name                 string               `json:"name"`
-	DisplayName          string               `json:"displayName"`
-	Attributes           []AttributeKeyValues `json:"attributes"`
-	MatchPrefix          string               `json:"matchprefix"`
-	PrefixRewrite        string               `json:"prefixrewrite"`
-	Cluster              string               `json:"cluster"`
-	HostRewrite          string               `json:"hostrewrite"`
-	DirectResponseBody   string               `json:"directresponsebody"`
-	DirectResponseStatus int64                `json:"directresponsestatus"`
-	CreatedAt            int64                `json:"createdAt"`
-	CreatedBy            string               `json:"createdBy"`
-	LastmodifiedAt       int64                `json:"lastmodifiedAt"`
-	LastmodifiedBy       string               `json:"lastmodifiedBy"`
+	Name           string               `json:"name"`
+	DisplayName    string               `json:"displayName"`
+	RouteSet       string               `json:"routeSet"`
+	MatchPrefix    string               `json:"matchPrefix"`
+	PrefixRewrite  string               `json:"prefixRewrite"`
+	Cluster        string               `json:"cluster"`
+	HostRewrite    string               `json:"hostRewrite"`
+	Attributes     []AttributeKeyValues `json:"attributes"`
+	CreatedAt      int64                `json:"createdAt"`
+	CreatedBy      string               `json:"createdBy"`
+	LastmodifiedAt int64                `json:"lastmodifiedAt"`
+	LastmodifiedBy string               `json:"lastmodifiedBy"`
 }
 
 // Cluster holds configuration of an upstream cluster

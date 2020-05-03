@@ -12,21 +12,67 @@ import (
 // temp
 var routes = []shared.Route{
 	{
-		Name:        "people",
-		MatchPrefix: "/people",
-		Cluster:     "people",
+		Name:           "people",
+		RouteSet:       "routes_443",
+		LastmodifiedAt: 10000,
+		MatchPrefix:    "/people",
+		Cluster:        "people",
 	},
 	{
-		Name:        "google",
-		MatchPrefix: "/google/",
-		Cluster:     "google",
-		HostRewrite: "www.google.com",
+		Name:           "google",
+		RouteSet:       "routes_443",
+		LastmodifiedAt: 10000,
+		MatchPrefix:    "/google/",
+		Cluster:        "google",
+		HostRewrite:    "www.google.com",
 	},
 	{
-		Name:                 "default",
-		MatchPrefix:          "/",
-		DirectResponseBody:   "Nobody home!",
-		DirectResponseStatus: 404,
+		Name:           "default403",
+		RouteSet:       "routes_443",
+		LastmodifiedAt: 10000,
+		MatchPrefix:    "/403",
+		Attributes: []shared.AttributeKeyValues{
+			{
+				Name:  "DirectResponseStatusCode",
+				Value: "403",
+			},
+			{
+				Name:  "DirectResponseBody",
+				Value: "Forbidden\n",
+			},
+		},
+	},
+	{
+		Name:           "default404",
+		RouteSet:       "routes_443",
+		LastmodifiedAt: 10000,
+		MatchPrefix:    "/404",
+		Attributes: []shared.AttributeKeyValues{
+			{
+				Name:  "DirectResponseStatusCode",
+				Value: "404",
+			},
+			{
+				Name:  "DirectResponseBody",
+				Value: "Nobody home\n",
+			},
+		},
+	},
+	{
+		Name:           "default80",
+		RouteSet:       "routes_80",
+		LastmodifiedAt: 10000,
+		MatchPrefix:    "/",
+		Attributes: []shared.AttributeKeyValues{
+			{
+				Name:  "DirectResponseStatusCode",
+				Value: "200",
+			},
+			{
+				Name:  "DirectResponseBody",
+				Value: "Hello world on 80\n",
+			},
+		},
 	},
 }
 

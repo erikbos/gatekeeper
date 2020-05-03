@@ -25,14 +25,10 @@ type EnvoyCPConfig struct {
 	XDSGRPCListen  string `yaml:"xdsgrpclisten"`
 	XDSHTTPListen  string `yaml:"xdshttplisten"`
 	Database       db.DatabaseConfig
-
-	// Database struct {
-	// 	Hostname string `yaml:"hostname"`
-	// 	Port     int    `yaml:"port"`
-	// 	Username string `yaml:"username"`
-	// 	Password string `yaml:"password"`
-	// 	Keyspace string `yaml:"keyspace"`
-	// } `yaml:"database"`
+	EnvoyLogging   struct {
+		Filename string            `yaml:"filename"`
+		Fields   map[string]string `yaml:"fields"`
+	} `yaml:"envoylogging"`
 }
 
 func loadConfiguration() *EnvoyCPConfig {
