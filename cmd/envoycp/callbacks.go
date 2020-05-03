@@ -19,19 +19,31 @@ type callbacks struct {
 func (cb *callbacks) Report() {
 	cb.mu.Lock()
 	defer cb.mu.Unlock()
-	log.WithFields(log.Fields{"fetches": cb.fetches, "requests": cb.requests}).Info("cb.Report() callbacks")
+
+	fields := log.Fields{
+		"fetches":  cb.fetches,
+		"requests": cb.requests,
+	}
+	log.WithFields(fields).Info("OnstreamReport")
 }
 
 // OnStreamOpen is called once an xDS stream is open with a stream ID and the type URL (or "" for ADS).
 // Returning an error will end processing and close the stream. OnStreamClosed will still be called.
 func (cb *callbacks) OnStreamOpen(ctx context.Context, id int64, typ string) error {
-	log.WithFields(log.Fields{"stream": id, "type": typ}).Info("OnStreamOpen")
+	fields := log.Fields{
+		"stream": id,
+		"type":   typ,
+	}
+	log.WithFields(fields).Info("OnStreamOpen")
 	return nil
 }
 
 // OnStreamClosed is called immediately prior to closing an xDS stream with a stream ID.
 func (cb *callbacks) OnStreamClosed(id int64) {
-	log.WithFields(log.Fields{"stream": id}).Info("OnStreamClosed")
+	fields := log.Fields{
+		"stream": id,
+	}
+	log.WithFields(fields).Info("OnStreamClosed")
 }
 
 // OnStreamRequest is called once a request is received on a stream.
@@ -60,7 +72,11 @@ func (cb *callbacks) OnStreamRequest(id int64, request *v2.DiscoveryRequest) err
 
 // OnStreamResponse is called immediately prior to sending a response on a stream.
 func (cb *callbacks) OnStreamResponse(id int64, request *v2.DiscoveryRequest, response *v2.DiscoveryResponse) {
-	log.WithFields(log.Fields{"stream": id}).Info("OnStreamResponse")
+	fields := log.Fields{
+		"stream": id,
+		"type":   response.TypeUrl,
+	}
+	log.WithFields(fields).Info("OnStreamResponse")
 	cb.Report()
 }
 
@@ -68,6 +84,7 @@ func (cb *callbacks) OnStreamResponse(id int64, request *v2.DiscoveryRequest, re
 // request and respond with an error.
 func (cb *callbacks) OnFetchRequest(ctx context.Context, request *v2.DiscoveryRequest) error {
 	log.WithFields(log.Fields{}).Info("OnFetchRequest")
+
 	cb.mu.Lock()
 	defer cb.mu.Unlock()
 	cb.fetches++
