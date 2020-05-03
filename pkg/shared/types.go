@@ -180,11 +180,10 @@ func DeleteAttribute(attributes []AttributeKeyValues, attributeName string) ([]A
 	return attributes, 0, valueOfDeletedAttribute
 }
 
-// VirtualHost bla
+// VirtualHost contains everything about downstream configuration of virtual hosts
 type VirtualHost struct {
 	Name           string               `json:"name"`
 	DisplayName    string               `json:"displayName"`
-	Description    string               `json:"description"`
 	VirtualHosts   []string             `json:"virtualHosts"`
 	Port           int                  `json:"port"`
 	RouteSet       string               `json:"routeSet"`
@@ -193,10 +192,6 @@ type VirtualHost struct {
 	CreatedBy      string               `json:"createdBy"`
 	LastmodifiedAt int64                `json:"lastmodifiedAt"`
 	LastmodifiedBy string               `json:"lastmodifiedBy"`
-	// Certificate       string               `json:"Certificate"`
-	// CertificateKey    string               `json:"Certificate_key"`
-	// TLSCipherSuites   string               `json:"TLSCipher_suites"`
-	// TLSMinimumVersion string               `json:"tls_minimum_version"`
 }
 
 // Route holds configuration of one or more routes
