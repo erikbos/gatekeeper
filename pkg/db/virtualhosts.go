@@ -11,7 +11,7 @@ import (
 )
 
 // Prometheus label for metrics of db interactions
-const routeMetricLabel = "virtualhosts"
+const virtualHostMetricLabel = "virtualhosts"
 
 // GetVirtualHosts retrieves all virtualhosts
 func (d *Database) GetVirtualHosts() ([]shared.VirtualHost, error) {
@@ -23,11 +23,11 @@ func (d *Database) GetVirtualHosts() ([]shared.VirtualHost, error) {
 	}
 
 	if len(virtualhosts) == 0 {
-		d.metricsQueryMiss(routeMetricLabel)
+		d.metricsQueryMiss(virtualHostMetricLabel)
 		return []shared.VirtualHost{}, errors.New("Can not retrieve list of virtualhosts")
 	}
 
-	d.metricsQueryHit(routeMetricLabel)
+	d.metricsQueryHit(virtualHostMetricLabel)
 	return virtualhosts, nil
 }
 
@@ -41,12 +41,12 @@ func (d *Database) GetVirtualHostByName(virtualHost string) (shared.VirtualHost,
 	}
 
 	if len(virtualhosts) == 0 {
-		d.metricsQueryMiss(routeMetricLabel)
+		d.metricsQueryMiss(virtualHostMetricLabel)
 		return shared.VirtualHost{},
 			fmt.Errorf("Can not find route (%s)", virtualHost)
 	}
 
-	d.metricsQueryHit(routeMetricLabel)
+	d.metricsQueryHit(virtualHostMetricLabel)
 	return virtualhosts[0], nil
 }
 
@@ -116,10 +116,12 @@ func (d *Database) UpdateVirtualHostByName(updatedVirtualHost *shared.VirtualHos
 
 // DeleteVirtualHostByName deletes a virtualhost
 func (d *Database) DeleteVirtualHostByName(virtualHostToDelete string) error {
+
 	_, err := d.GetVirtualHostByName(virtualHostToDelete)
 	if err != nil {
 		return err
 	}
+
 	query := "DELETE FROM virtualhosts WHERE key = ?"
 	return d.cassandraSession.Query(query, virtualHostToDelete).Exec()
 }
