@@ -14,17 +14,17 @@ func (e *env) registerVirtualHostRoutes(r *gin.Engine) {
 	r.GET("/v1/virtualhosts", e.GetVirtualHosts)
 	r.POST("/v1/virtualhosts", shared.AbortIfContentTypeNotJSON, e.PostCreateVirtualHost)
 
-	r.GET("/v1/virtualhosts/:route", e.GetVirtualHostByName)
-	r.POST("/v1/virtualhosts/:route", shared.AbortIfContentTypeNotJSON, e.PostVirtualHost)
-	r.DELETE("/v1/virtualhosts/:route", e.DeleteVirtualHostByName)
+	r.GET("/v1/virtualhosts/:virtualhost", e.GetVirtualHostByName)
+	r.POST("/v1/virtualhosts/:virtualhost", shared.AbortIfContentTypeNotJSON, e.PostVirtualHost)
+	r.DELETE("/v1/virtualhosts/:virtualhost", e.DeleteVirtualHostByName)
 
-	r.GET("/v1/virtualhosts/:route/attributes", e.GetVirtualHostAttributes)
-	r.POST("/v1/virtualhosts/:route/attributes", shared.AbortIfContentTypeNotJSON, e.PostVirtualHostAttributes)
-	r.DELETE("/v1/virtualhosts/:route/attributes", e.DeleteVirtualHostAttributes)
+	r.GET("/v1/virtualhosts/:virtualhost/attributes", e.GetVirtualHostAttributes)
+	r.POST("/v1/virtualhosts/:virtualhost/attributes", shared.AbortIfContentTypeNotJSON, e.PostVirtualHostAttributes)
+	r.DELETE("/v1/virtualhosts/:virtualhost/attributes", e.DeleteVirtualHostAttributes)
 
-	r.GET("/v1/virtualhosts/:route/attributes/:attribute", e.GetVirtualHostAttributeByName)
-	r.POST("/v1/virtualhosts/:route/attributes/:attribute", shared.AbortIfContentTypeNotJSON, e.PostVirtualHostAttributeByName)
-	r.DELETE("/v1/virtualhosts/:route/attributes/:attribute", e.DeleteVirtualHostAttributeByName)
+	r.GET("/v1/virtualhosts/:virtualhost/attributes/:attribute", e.GetVirtualHostAttributeByName)
+	r.POST("/v1/virtualhosts/:virtualhost/attributes/:attribute", shared.AbortIfContentTypeNotJSON, e.PostVirtualHostAttributeByName)
+	r.DELETE("/v1/virtualhosts/:virtualhost/attributes/:attribute", e.DeleteVirtualHostAttributeByName)
 }
 
 // GetVirtualHosts returns all virtualhosts
@@ -39,7 +39,7 @@ func (e *env) GetVirtualHosts(c *gin.Context) {
 
 // GetVirtualHostByName returns details of an route
 func (e *env) GetVirtualHostByName(c *gin.Context) {
-	route, err := e.db.GetVirtualHostByName(c.Param("route"))
+	route, err := e.db.GetVirtualHostByName(c.Param("virtualhost"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -50,7 +50,7 @@ func (e *env) GetVirtualHostByName(c *gin.Context) {
 
 // GetVirtualHostAttributes returns attributes of a route
 func (e *env) GetVirtualHostAttributes(c *gin.Context) {
-	route, err := e.db.GetVirtualHostByName(c.Param("route"))
+	route, err := e.db.GetVirtualHostByName(c.Param("virtualhost"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -61,7 +61,7 @@ func (e *env) GetVirtualHostAttributes(c *gin.Context) {
 
 // GetVirtualHostAttributeByName returns one particular attribute of a route
 func (e *env) GetVirtualHostAttributeByName(c *gin.Context) {
-	route, err := e.db.GetVirtualHostByName(c.Param("route"))
+	route, err := e.db.GetVirtualHostByName(c.Param("virtualhost"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -104,7 +104,7 @@ func (e *env) PostCreateVirtualHost(c *gin.Context) {
 
 // PostVirtualHost updates an existing route
 func (e *env) PostVirtualHost(c *gin.Context) {
-	currentVirtualHost, err := e.db.GetVirtualHostByName(c.Param("route"))
+	currentVirtualHost, err := e.db.GetVirtualHostByName(c.Param("virtualhost"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
@@ -128,7 +128,7 @@ func (e *env) PostVirtualHost(c *gin.Context) {
 
 // PostVirtualHostAttributes updates attributes of a route
 func (e *env) PostVirtualHostAttributes(c *gin.Context) {
-	updatedVirtualHost, err := e.db.GetVirtualHostByName(c.Param("route"))
+	updatedVirtualHost, err := e.db.GetVirtualHostByName(c.Param("virtualhost"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -151,7 +151,7 @@ func (e *env) PostVirtualHostAttributes(c *gin.Context) {
 
 // DeleteVirtualHostAttributes delete attributes of APIProduct
 func (e *env) DeleteVirtualHostAttributes(c *gin.Context) {
-	updatedVirtualHost, err := e.db.GetVirtualHostByName(c.Param("route"))
+	updatedVirtualHost, err := e.db.GetVirtualHostByName(c.Param("virtualhost"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -168,7 +168,7 @@ func (e *env) DeleteVirtualHostAttributes(c *gin.Context) {
 
 // PostVirtualHostAttributeByName update an attribute of APIProduct
 func (e *env) PostVirtualHostAttributeByName(c *gin.Context) {
-	updatedVirtualHost, err := e.db.GetVirtualHostByName(c.Param("route"))
+	updatedVirtualHost, err := e.db.GetVirtualHostByName(c.Param("virtualhost"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -202,7 +202,7 @@ func (e *env) PostVirtualHostAttributeByName(c *gin.Context) {
 
 // DeleteVirtualHostAttributeByName removes an attribute of route
 func (e *env) DeleteVirtualHostAttributeByName(c *gin.Context) {
-	updatedVirtualHost, err := e.db.GetVirtualHostByName(c.Param("route"))
+	updatedVirtualHost, err := e.db.GetVirtualHostByName(c.Param("virtualhost"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -226,7 +226,7 @@ func (e *env) DeleteVirtualHostAttributeByName(c *gin.Context) {
 
 // DeleteVirtualHostByName deletes a route
 func (e *env) DeleteVirtualHostByName(c *gin.Context) {
-	route, err := e.db.GetVirtualHostByName(c.Param("route"))
+	route, err := e.db.GetVirtualHostByName(c.Param("virtualhost"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
