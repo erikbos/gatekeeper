@@ -16,14 +16,12 @@ import (
 
 var routes []shared.Route
 
-// var routeLastUpdate int64
-var routeMutex sync.Mutex
-
-// // FIXME this should be implemented using channels
-// // FIXME this does not detect removed records
-
+// FIXME this does not detect removed records
 // GetRouteConfigFromDatabase continously gets the current configuration
 func (s *server) GetRouteConfigFromDatabase() {
+	var routesLastUpdate int64
+	var routeMutex sync.Mutex
+
 	for {
 		newRouteList, err := s.db.GetRoutes()
 		if err != nil {
@@ -31,12 +29,16 @@ func (s *server) GetRouteConfigFromDatabase() {
 		} else {
 			for _, s := range newRouteList {
 				// Is a cluster updated since last time we stored it?
-				if s.LastmodifiedAt > clustersLastUpdate || 1 == 1 {
-					// now := shared.GetCurrentTimeMilliseconds()
+				if s.LastmodifiedAt > routesLastUpdate || 1 == 1 {
+					now := shared.GetCurrentTimeMilliseconds()
+
 					routeMutex.Lock()
 					routes = newRouteList
-					// routeLastUpdate = now
+					routesLastUpdate = now
 					routeMutex.Unlock()
+
+					// FIXME this should be notification via channel
+					// xdsLastUpdate = now
 				}
 			}
 		}
@@ -50,7 +52,7 @@ func getEnvoyRouteConfig() ([]cache.Resource, error) {
 
 	RouteSetNames := getRouteSetNames(routes)
 	for routeSetName := range RouteSetNames {
-		log.Infof("adding routeset %s", routeSetName)
+		log.Infof("Adding routeset %s", routeSetName)
 		envoyRoutes = append(envoyRoutes, buildEnvoyRouteConfig(routeSetName, routes))
 	}
 
@@ -128,6 +130,5 @@ func buildEnvoyRouteConfig(routeSet string, routes []shared.Route) *api.RouteCon
 			},
 		},
 	}
-	log.Infof("buildEnvoyRouteConfig: %+v", envoyRouteConfig)
 	return envoyRouteConfig
 }

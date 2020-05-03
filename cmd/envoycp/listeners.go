@@ -25,27 +25,31 @@ import (
 
 var virtualhosts []shared.VirtualHost
 
-// var listenersMutex int64
-var virtualHostsMutex sync.Mutex
-
-// // FIXME this should be implemented using channels
-// // FIXME this does not detect removed records
+// FIXME this does not detect removed records
 
 // GetVirtualHostConfigFromDatabase continously gets the current configuration
 func (s *server) GetVirtualHostConfigFromDatabase() {
+	var virtualHostsLastUpdate int64
+	var virtualHostsMutex sync.Mutex
+
 	for {
 		newVirtualHosts, err := s.db.GetVirtualHosts()
 		if err != nil {
 			log.Errorf("Could not retrieve virtualhosts from database (%s)", err)
 		} else {
 			for _, s := range newVirtualHosts {
-				// Is a cluster updated since last time we stored it?
-				if s.LastmodifiedAt > clustersLastUpdate || 1 == 1 {
-					// now := shared.GetCurrentTimeMilliseconds()
+				// Is a virtualhosts updated since last time we stored it?
+				if s.LastmodifiedAt > virtualHostsLastUpdate {
+					log.Info("Virtual hosts config changed!")
+					now := shared.GetCurrentTimeMilliseconds()
+
 					virtualHostsMutex.Lock()
 					virtualhosts = newVirtualHosts
-					// routeLastUpdate = now
+					virtualHostsLastUpdate = now
 					virtualHostsMutex.Unlock()
+
+					// FIXME this should be notification via channel
+					xdsLastUpdate = now
 				}
 			}
 		}
@@ -143,8 +147,8 @@ func buildFilterChainEntry(l *api.Listener, v shared.VirtualHost) *listener.Filt
 	// Configure TLS in case when we have a certificate + key
 	var tlsContext *any.Any
 
-	certificate, error1 := shared.GetAttribute(v.Attributes, "Certificate")
-	certificateKey, error2 := shared.GetAttribute(v.Attributes, "CertificateKey")
+	certificate, error1 := shared.GetAttribute(v.Attributes, "TLSCertificate")
+	certificateKey, error2 := shared.GetAttribute(v.Attributes, "TLSCertificateKey")
 
 	// No certificate details, return and do not enable TLS
 	if error1 != nil && error2 != nil {
@@ -186,7 +190,7 @@ func buildFilterChainEntry(l *api.Listener, v shared.VirtualHost) *listener.Filt
 	}
 
 	// Enable HTTP/2
-	if value, err := shared.GetAttribute(v.Attributes, "HTTPEnabled"); err == nil {
+	if value, err := shared.GetAttribute(v.Attributes, "HTTP2Enabled"); err == nil {
 		if value == "true" {
 			downStreamTLSConfig.CommonTlsContext.AlpnProtocols = []string{"h2", "http/1.1"}
 		}

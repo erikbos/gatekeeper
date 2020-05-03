@@ -17,14 +17,14 @@ import (
 )
 
 var clusters []shared.Cluster
-var clustersLastUpdate int64
-var clusterMutex sync.Mutex
 
-// FIXME this should be implemented using channels
 // FIXME this does not detect removed records
 
 // getClusterConfigFromDatabase continously gets the current configuration
 func (s *server) GetClusterConfigFromDatabase() {
+	var clustersLastUpdate int64
+	var clusterMutex sync.Mutex
+
 	for {
 		newClusterList, err := s.db.GetClusters()
 		if err != nil {
@@ -34,10 +34,14 @@ func (s *server) GetClusterConfigFromDatabase() {
 				// Is a cluster updated since last time we stored it?
 				if s.LastmodifiedAt > clustersLastUpdate {
 					now := shared.GetCurrentTimeMilliseconds()
+
 					clusterMutex.Lock()
 					clusters = newClusterList
 					clustersLastUpdate = now
 					clusterMutex.Unlock()
+
+					// FIXME this should be notification via channel
+					xdsLastUpdate = now
 				}
 			}
 		}
@@ -84,7 +88,7 @@ func buildEnvoyClusterConfig(clusterConfig shared.Cluster) *api.Cluster {
 	}
 
 	value, err := shared.GetAttribute(clusterConfig.Attributes, "HTTP2Enabled")
-	if err == nil && value == "True" {
+	if err == nil && value == "true" {
 		cluster.Http2ProtocolOptions = &core.Http2ProtocolOptions{}
 		cluster.TransportSocket = transportSocket(clusterConfig.HostName, true)
 	} else {

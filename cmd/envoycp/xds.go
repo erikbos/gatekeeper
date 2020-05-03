@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"sync/atomic"
 	"time"
 
 	"github.com/erikbos/apiauth/pkg/shared"
@@ -66,23 +65,26 @@ func (s *server) HTTPManagementGateway() {
 	}
 }
 
+var xdsLastUpdate int64
+
 func (s *server) XDSMainloop() {
-	var version int32
 	var lastConfigurationDeployment int64
 
 	for {
-		now := shared.GetCurrentTimeMilliseconds()
-
-		if clustersLastUpdate > lastConfigurationDeployment {
+		if xdsLastUpdate > lastConfigurationDeployment {
+			log.Infof("xdsLastUpdate: %d", xdsLastUpdate)
+			log.Infof("lastConfigurationDeployment: %d", lastConfigurationDeployment)
 			log.Infof("Starting configuration compilation")
 
 			EnvoyClusters, _ := getEnvoyClusterConfig()
 			EnvoyRoutes, _ := getEnvoyRouteConfig()
 			EnvoyListeners, _ := getEnvoyListenerConfig()
 
-			atomic.AddInt32(&version, 1)
-			log.Infof("Creating config version " + fmt.Sprint(version))
-			snap := cache.NewSnapshot(fmt.Sprint(version), nil, EnvoyClusters, EnvoyRoutes, EnvoyListeners, nil)
+			now := shared.GetCurrentTimeMilliseconds()
+			version := fmt.Sprint(now)
+
+			log.Infof("Creating config version %s", version)
+			snap := cache.NewSnapshot(version, nil, EnvoyClusters, EnvoyRoutes, EnvoyListeners, nil)
 			_ = s.xdsCache.SetSnapshot("jenny", snap)
 
 			lastConfigurationDeployment = now
