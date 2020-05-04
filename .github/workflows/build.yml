@@ -32,7 +32,7 @@ jobs:
       run: |
        echo ${{ github.sha }}
 
-       VERSION = $(shell git describe --tags --always --dirty)
+       VERSION = $(git describe --tags --always --dirty)
        docker tag apiedge/dbadmin:$VERSION testerbs.azurecr.io/dbadmin
        docker tag apiedge/envoyauth:$VERSION testerbs.azurecr.io/envoyauth
        docker tag apiedge/envoycp:$VERSION testerbs.azurecr.io/envoycp
