@@ -29,7 +29,7 @@ jobs:
         password: ${{ secrets.acr_password }}
 
     - name: Docker tag & push
-    - run: |
+      run: |
        echo ${{ github.sha }}
 
        VERSION = $(shell git describe --tags --always --dirty)
