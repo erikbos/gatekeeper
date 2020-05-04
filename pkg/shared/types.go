@@ -200,14 +200,14 @@ type Route struct {
 	DisplayName    string               `json:"displayName"`
 	RouteSet       string               `json:"routeSet"`
 	MatchPrefix    string               `json:"matchPrefix"`
-	PrefixRewrite  string               `json:"prefixRewrite"`
 	Cluster        string               `json:"cluster"`
-	HostRewrite    string               `json:"hostRewrite"`
 	Attributes     []AttributeKeyValues `json:"attributes"`
 	CreatedAt      int64                `json:"createdAt"`
 	CreatedBy      string               `json:"createdBy"`
 	LastmodifiedAt int64                `json:"lastmodifiedAt"`
 	LastmodifiedBy string               `json:"lastmodifiedBy"`
+	//	PrefixRewrite  string               `json:"prefixRewrite"`
+	//	HostRewrite    string               `json:"hostRewrite"`
 }
 
 // Cluster holds configuration of an upstream cluster

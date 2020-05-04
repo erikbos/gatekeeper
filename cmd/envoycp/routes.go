@@ -38,7 +38,7 @@ func (s *server) GetRouteConfigFromDatabase() {
 					routeMutex.Unlock()
 
 					// FIXME this should be notification via channel
-					// xdsLastUpdate = now
+					xdsLastUpdate = now
 				}
 			}
 		}
@@ -87,10 +87,10 @@ func buildEnvoyRouteConfig(routeSet string, routes []shared.Route) *api.RouteCon
 						ClusterSpecifier: &route.RouteAction_Cluster{
 							Cluster: value.Cluster,
 						},
-						PrefixRewrite: "/",
-						HostRewriteSpecifier: &route.RouteAction_HostRewrite{
-							HostRewrite: value.HostRewrite,
-						},
+						// PrefixRewrite: "/",
+						// HostRewriteSpecifier: &route.RouteAction_HostRewrite{
+						// 	HostRewrite: value.HostRewrite,
+						// },
 					},
 				}
 			}

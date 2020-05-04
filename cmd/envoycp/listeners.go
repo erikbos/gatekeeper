@@ -129,7 +129,7 @@ func buildFilterChainEntry(l *api.Listener, v shared.VirtualHost) *listener.Filt
 	manager := buildConnectionManager(httpFilter, v)
 	pbst, err := ptypes.MarshalAny(manager)
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 
 	FilterChainEntry := &listener.FilterChain{
@@ -185,7 +185,6 @@ func buildFilterChainEntry(l *api.Listener, v shared.VirtualHost) *listener.Filt
 					},
 				},
 			},
-			AlpnProtocols: []string{"http/1.1"},
 		},
 	}
 
@@ -194,11 +193,14 @@ func buildFilterChainEntry(l *api.Listener, v shared.VirtualHost) *listener.Filt
 		if value == "true" {
 			downStreamTLSConfig.CommonTlsContext.AlpnProtocols = []string{"h2", "http/1.1"}
 		}
+	} else {
+		// by default we will do http/1.1
+		downStreamTLSConfig.CommonTlsContext.AlpnProtocols = []string{"http/1.1"}
 	}
 
 	tlsContext, err = ptypes.MarshalAny(downStreamTLSConfig)
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 	FilterChainEntry.TransportSocket =
 		&core.TransportSocket{
@@ -274,7 +276,7 @@ func buildAccessLog(logFilename string, fieldFormats map[string]string) []*filte
 	}
 	accessLogTypedConf, err := ptypes.MarshalAny(accessLogConf)
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 	return []*filterAccessLog.AccessLog{{
 		Name:       "envoy.file_access_log",
