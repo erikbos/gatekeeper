@@ -4,6 +4,7 @@ import (
 	"flag"
 	"os"
 
+	"github.com/erikbos/apiauth/pkg/db"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 )
@@ -21,14 +22,8 @@ type APIAuthConfig struct {
 	LogLevel       string `yaml:"loglevel"`
 	WebAdminListen string `yaml:"webadminlisten"`
 	AuthGRPCListen string `yaml:"authgrpclisten"`
-	Database       struct {
-		Hostname string `yaml:"hostname"`
-		Port     int    `yaml:"port"`
-		Username string `yaml:"username"`
-		Password string `yaml:"password"`
-		Keyspace string `yaml:"keyspace"`
-	} `yaml:"database"`
-	Cache struct {
+	Database       db.DatabaseConfig
+	Cache          struct {
 		Size        int `yaml:"size"`
 		TTL         int `yaml:"ttl"`
 		NegativeTTL int `yaml:"negativettl"`

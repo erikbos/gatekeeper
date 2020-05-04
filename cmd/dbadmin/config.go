@@ -4,6 +4,7 @@ import (
 	"flag"
 	"os"
 
+	"github.com/erikbos/apiauth/pkg/db"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 )
@@ -19,13 +20,7 @@ const (
 type DBAdminConfig struct {
 	LogLevel       string `yaml:"loglevel"`
 	WebAdminListen string `yaml:"webadminlisten"`
-	Database       struct {
-		Hostname string `yaml:"hostname"`
-		Port     int    `yaml:"port"`
-		Username string `yaml:"username"`
-		Password string `yaml:"password"`
-		Keyspace string `yaml:"keyspace"`
-	} `yaml:"database"`
+	Database       db.DatabaseConfig
 }
 
 func loadConfiguration() *DBAdminConfig {

@@ -3,6 +3,7 @@ package db
 import (
 	"encoding/json"
 	"errors"
+	"time"
 
 	"github.com/erikbos/apiauth/pkg/shared"
 
@@ -27,6 +28,7 @@ type DatabaseConfig struct {
 	Username string `yaml:"username"`
 	Password string `yaml:"password"`
 	Keyspace string `yaml:"keyspace"`
+	Timeout  string `yaml:"timeout"`
 }
 
 // Connect setups up connectivity to Cassandra
@@ -49,11 +51,26 @@ func Connect(config DatabaseConfig, serviceName string) (*Database, error) {
 	}
 	cluster.Keyspace = d.Config.Keyspace
 
+	if d.Config.Timeout != "" {
+		timeout, err := time.ParseDuration(d.Config.Timeout)
+		if err != nil {
+			return nil, err
+		}
+		cluster.Timeout = timeout
+	}
+	// cluster.RetryPolicy = &gocql.SimpleRetryPolicy{NumRetries: 3}
+
 	d.cassandraSession, err = cluster.CreateSession()
 	if err != nil {
 		return nil, errors.New("Could not connect to database")
 	}
 
+	d.metricsRegister()
+
+	return &d, nil
+}
+
+func (d *Database) metricsRegister() {
 	d.dbLookupHitsCounter = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: d.ServiceName + "_database_lookup_hits_total",
@@ -75,8 +92,6 @@ func Connect(config DatabaseConfig, serviceName string) (*Database, error) {
 			Objectives: map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001},
 		})
 	prometheus.MustRegister(d.dbLookupHistogram)
-
-	return &d, nil
 }
 
 func (d *Database) metricsQueryHit(metricLabel string) {
