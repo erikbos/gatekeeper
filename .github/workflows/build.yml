@@ -1,9 +1,7 @@
-name: Docker Image CI
+name: Build
 
 on:
   push:
-    branches: [ master ]
-  pull_request:
     branches: [ master ]
 
 jobs:
@@ -22,3 +20,23 @@ jobs:
 
     - name: Build Docker images
       run: make docker-images
+
+    - name: Docker Login
+      uses: azure/docker-login@v1
+      with: 
+        login-server: testerbs.azurecr.io
+        username: ${{ secrets.acr_username }}
+        password: ${{ secrets.acr_password }}
+
+    - name: Docker tag & push
+    - run: |
+       echo ${{ github.sha }}
+
+       VERSION = $(shell git describe --tags --always --dirty)
+       docker tag apiedge/dbadmin:$VERSION testerbs.azurecr.io/dbadmin
+       docker tag apiedge/envoyauth:$VERSION testerbs.azurecr.io/envoyauth
+       docker tag apiedge/envoycp:$VERSION testerbs.azurecr.io/envoycp
+       docker push testerbs.azurecr.io/dbadmin
+       docker push testerbs.azurecr.io/envoyauth
+       docker push testerbs.azurecr.io/envoycp
+       
