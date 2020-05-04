@@ -28,9 +28,13 @@ jobs:
         username: ${{ secrets.acr_username }}
         password: ${{ secrets.acr_password }}
 
+    - name: put git version in env
+      run: echo ::set-env name=VERSION::$(git describe --tags --always --dirty)
+
     - name: Docker tag & push
       run: |
        echo ${{ github.sha }}
+       echo $VERSION
 
        VERSION = $(git describe --tags --always --dirty)
        docker tag apiedge/dbadmin:$VERSION testerbs.azurecr.io/dbadmin
