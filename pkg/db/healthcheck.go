@@ -12,7 +12,6 @@ const (
 
 // HealthCheckStatus state of our healthiness
 type HealthCheckStatus struct {
-	healthy       bool
 	listenAddress string
 	clusterName   string
 	dataCenter    string
@@ -27,8 +26,7 @@ func (d *Database) runHealthCheck(interval time.Duration) {
 	}
 
 	for {
-		peers, err := d.HealthCheckQuery()
-		if err == nil {
+		if peers, err := d.HealthCheckQuery(); err == nil {
 			d.readiness.Up()
 
 			if !connected {
@@ -43,7 +41,7 @@ func (d *Database) runHealthCheck(interval time.Duration) {
 			log.Infof("Database healthcheck failed (%s)", err)
 			connected = false
 		}
-		time.Sleep(interval * time.Second)
+		time.Sleep(interval)
 	}
 }
 
