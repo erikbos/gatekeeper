@@ -14,6 +14,10 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+const (
+	routeRefreshInterval = 2
+)
+
 var routes []shared.Route
 
 // FIXME this does not detect removed records
@@ -29,7 +33,7 @@ func (s *server) GetRouteConfigFromDatabase() {
 		} else {
 			for _, s := range newRouteList {
 				// Is a cluster updated since last time we stored it?
-				if s.LastmodifiedAt > routesLastUpdate || 1 == 1 {
+				if s.LastmodifiedAt > routesLastUpdate {
 					now := shared.GetCurrentTimeMilliseconds()
 
 					routeMutex.Lock()
@@ -42,7 +46,7 @@ func (s *server) GetRouteConfigFromDatabase() {
 				}
 			}
 		}
-		time.Sleep(2 * time.Second)
+		time.Sleep(routeRefreshInterval * time.Second)
 	}
 }
 

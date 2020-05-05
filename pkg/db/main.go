@@ -9,6 +9,7 @@ import (
 
 	"github.com/gocql/gocql"
 	"github.com/prometheus/client_golang/prometheus"
+	log "github.com/sirupsen/logrus"
 )
 
 // Database holds all our database connection information and performance counters
@@ -56,6 +57,7 @@ func Connect(config DatabaseConfig, serviceName string) (*Database, error) {
 		if err != nil {
 			return nil, err
 		}
+		log.Debugf("Setting db session timeout to %d", timeout)
 		cluster.Timeout = timeout
 	}
 	// cluster.RetryPolicy = &gocql.SimpleRetryPolicy{NumRetries: 3}

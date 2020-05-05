@@ -37,11 +37,11 @@ func (s *server) ShowWebAdminHomePage(c *gin.Context) {
 	shared.ShowIndexPage(c, s.ginEngine, myName)
 }
 
-// configDump pretty prints the active configuration
+// configDump pretty prints the active configuration (without password)
 func (s *server) ConfigDump(c *gin.Context) {
 	// We must remove db password from configuration struct before showing
 	configToPrint := s.config
-	configToPrint.Database.Password = ""
+	configToPrint.Database.Password = "[redacted]"
 
 	buffer := new(bytes.Buffer)
 	encoder := json.NewEncoder(buffer)

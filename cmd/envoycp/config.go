@@ -18,7 +18,7 @@ const (
 	defaultXDSHTTPListen  = "0.0.0.0:9903"
 )
 
-//EnvoyCPConfig contains our startup configuration data
+// EnvoyCPConfig contains our startup configuration data
 type EnvoyCPConfig struct {
 	LogLevel       string `yaml:"loglevel"`
 	WebAdminListen string `yaml:"webadminlisten"`

@@ -23,6 +23,10 @@ import (
 	"github.com/golang/protobuf/ptypes/wrappers"
 )
 
+const (
+	virtualHostRefreshInterval = 2
+)
+
 var virtualhosts []shared.VirtualHost
 
 // FIXME this does not detect removed records
@@ -53,7 +57,7 @@ func (s *server) GetVirtualHostConfigFromDatabase() {
 				}
 			}
 		}
-		time.Sleep(2 * time.Second)
+		time.Sleep(virtualHostRefreshInterval * time.Second)
 	}
 }
 
@@ -127,7 +131,7 @@ func buildFilterChainEntry(l *api.Listener, v shared.VirtualHost) *listener.Filt
 	httpFilter := buildFilter()
 
 	manager := buildConnectionManager(httpFilter, v)
-	pbst, err := ptypes.MarshalAny(manager)
+	managerProtoBuf, err := ptypes.MarshalAny(manager)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -139,7 +143,7 @@ func buildFilterChainEntry(l *api.Listener, v shared.VirtualHost) *listener.Filt
 		Filters: []*listener.Filter{{
 			Name: wellknown.HTTPConnectionManager,
 			ConfigType: &listener.Filter_TypedConfig{
-				TypedConfig: pbst,
+				TypedConfig: managerProtoBuf,
 			},
 		}},
 	}
