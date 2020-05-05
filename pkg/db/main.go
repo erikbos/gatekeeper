@@ -17,6 +17,7 @@ type Database struct {
 	ServiceName           string
 	Config                DatabaseConfig
 	cassandraSession      *gocql.Session
+	readiness             *shared.Readiness
 	dbLookupHitsCounter   *prometheus.CounterVec
 	dbLookupMissesCounter *prometheus.CounterVec
 	dbLookupHistogram     prometheus.Summary
@@ -24,20 +25,22 @@ type Database struct {
 
 // DatabaseConfig holds configuration configuration
 type DatabaseConfig struct {
-	Hostname string `yaml:"hostname"`
-	Port     int    `yaml:"port"`
-	Username string `yaml:"username"`
-	Password string `yaml:"password"`
-	Keyspace string `yaml:"keyspace"`
-	Timeout  string `yaml:"timeout"`
+	Hostname            string `yaml:"hostname"`
+	Port                int    `yaml:"port"`
+	Username            string `yaml:"username"`
+	Password            string `yaml:"password"`
+	Keyspace            string `yaml:"keyspace"`
+	Timeout             string `yaml:"timeout"`
+	HealthcheckInterval string `yaml:"healthcheckinterval"`
 }
 
 // Connect setups up connectivity to Cassandra
-func Connect(config DatabaseConfig, serviceName string) (*Database, error) {
+func Connect(config DatabaseConfig, r *shared.Readiness, serviceName string) (*Database, error) {
 	var err error
 	d := Database{
 		ServiceName: serviceName,
 		Config:      config,
+		readiness:   r,
 	}
 	cluster := gocql.NewCluster(d.Config.Hostname)
 	cluster.Port = d.Config.Port
@@ -55,9 +58,8 @@ func Connect(config DatabaseConfig, serviceName string) (*Database, error) {
 	if d.Config.Timeout != "" {
 		timeout, err := time.ParseDuration(d.Config.Timeout)
 		if err != nil {
-			return nil, err
+			log.Fatalf("Cannot parse database timeout %v", err)
 		}
-		log.Debugf("Setting db session timeout to %d", timeout)
 		cluster.Timeout = timeout
 	}
 	// cluster.RetryPolicy = &gocql.SimpleRetryPolicy{NumRetries: 3}
@@ -68,6 +70,13 @@ func Connect(config DatabaseConfig, serviceName string) (*Database, error) {
 	}
 
 	d.metricsRegister()
+
+	if d.Config.HealthcheckInterval != "" {
+		healthCheckInterval, err := time.ParseDuration(d.Config.HealthcheckInterval)
+		if err == nil {
+			go d.runHealthCheck(healthCheckInterval)
+		}
+	}
 
 	return &d, nil
 }

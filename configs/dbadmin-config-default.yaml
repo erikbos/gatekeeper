@@ -10,3 +10,5 @@ database:
   username: x
   password: x
   keyspace: x
+  timeout: 2s
+  healthcheckinterval: 5s

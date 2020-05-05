@@ -38,7 +38,7 @@ func main() {
 	shared.SetLoggingConfiguration(e.config.LogLevel)
 
 	var err error
-	e.db, err = db.Connect(e.config.Database, myName)
+	e.db, err = db.Connect(e.config.Database, &e.readiness, myName)
 	if err != nil {
 		log.Fatalf("Database connect failed: %v", err)
 	}

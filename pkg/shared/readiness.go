@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 )
 
 // Readiness contains the rreadiness of the application
@@ -25,9 +26,13 @@ func (r *Readiness) DisplayStatus(c *gin.Context) {
 // Down changes status to down
 func (r *Readiness) Down() {
 	r.status = false
+
+	log.Debugf("Setting readiness state to false")
 }
 
 // Up changes status to up
 func (r *Readiness) Up() {
 	r.status = true
+
+	log.Debugf("Setting readiness state to true")
 }
