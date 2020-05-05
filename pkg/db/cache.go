@@ -48,7 +48,7 @@ func CacheInit(size, cachettl, negativettl int) *Cache {
 		}, []string{"table"})
 	prometheus.MustRegister(c.dbCacheMissesCounter)
 
-	prometheus.Register(prometheus.NewGaugeFunc(
+	prometheus.MustRegister(prometheus.NewGaugeFunc(
 		prometheus.GaugeOpts{
 			Name: "apiauth_database_cache_entries",
 			Help: "Number of entries in database cache.",
@@ -56,7 +56,7 @@ func CacheInit(size, cachettl, negativettl int) *Cache {
 		func() float64 { return (float64(c.cache.EntryCount())) },
 	))
 
-	prometheus.Register(prometheus.NewGaugeFunc(
+	prometheus.MustRegister(prometheus.NewGaugeFunc(
 		prometheus.GaugeOpts{
 			Name: "apiauth_database_cache_hitratio",
 			Help: "Hitratio of database cache.",
@@ -64,7 +64,7 @@ func CacheInit(size, cachettl, negativettl int) *Cache {
 		func() float64 { return (c.cache.HitRate()) },
 	))
 
-	prometheus.Register(prometheus.NewCounterFunc(
+	prometheus.MustRegister(prometheus.NewCounterFunc(
 		prometheus.CounterOpts{
 			Name: "apiauth_database_cache_hits",
 			Help: "Number of database cache hits.",
@@ -72,7 +72,7 @@ func CacheInit(size, cachettl, negativettl int) *Cache {
 		func() float64 { return (float64(c.cache.HitCount())) },
 	))
 
-	prometheus.Register(prometheus.NewCounterFunc(
+	prometheus.MustRegister(prometheus.NewCounterFunc(
 		prometheus.CounterOpts{
 			Name: "apiauth_database_cache_misses",
 			Help: "Number of database cache misses.",
@@ -80,7 +80,7 @@ func CacheInit(size, cachettl, negativettl int) *Cache {
 		func() float64 { return (float64(c.cache.MissCount())) },
 	))
 
-	prometheus.Register(prometheus.NewGaugeFunc(
+	prometheus.MustRegister(prometheus.NewGaugeFunc(
 		prometheus.GaugeOpts{
 			Name: "apiauth_database_cache_evictions",
 			Help: "Number of database cache entries that where evicted.",
@@ -88,7 +88,7 @@ func CacheInit(size, cachettl, negativettl int) *Cache {
 		func() float64 { return (float64(c.cache.EvacuateCount())) },
 	))
 
-	prometheus.Register(prometheus.NewGaugeFunc(
+	prometheus.MustRegister(prometheus.NewGaugeFunc(
 		prometheus.GaugeOpts{
 			Name: "apiauth_database_cache_expired",
 			Help: "Number of database cache entries that expired.",
@@ -221,7 +221,6 @@ func (c *Cache) GetDeveloperAppCached(d *Database, developerAppID string) (share
 	encode := gob.NewEncoder(&buf)
 	err = encode.Encode(developerapp)
 	if err == nil {
-		c.cache.Set([]byte(developerAppID), buf.Bytes(), c.cacheTTL)
 		if err := c.cache.Set([]byte(developerAppID), buf.Bytes(), c.cacheTTL); err != nil {
 			log.Warnf("Could not store devapp %s in cache", developerapp.Name)
 		}
