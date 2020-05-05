@@ -3,7 +3,9 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 	"net/http"
+	"os"
 
 	"github.com/erikbos/apiauth/pkg/shared"
 
@@ -12,8 +14,17 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+type webAdminConfig struct {
+	Listen  string `yaml:"listen"`
+	LogFile string `yaml:"logfile"`
+}
+
 // StartWebAdminServer starts the admin web UI
 func (s *server) StartWebAdminServer() {
+	if logFile, err := os.Create(s.config.WebAdmin.LogFile); err == nil {
+		gin.DefaultWriter = io.MultiWriter(logFile)
+	}
+
 	if s.config.LogLevel != "debug" {
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -25,8 +36,8 @@ func (s *server) StartWebAdminServer() {
 	s.ginEngine.GET("/metrics", gin.WrapH(promhttp.Handler()))
 	s.ginEngine.GET("/config_dump", s.ConfigDump)
 
-	log.Info("Webadmin listening on ", s.config.WebAdminListen)
-	if err := s.ginEngine.Run(s.config.WebAdminListen); err != nil {
+	log.Info("Webadmin listening on ", s.config.WebAdmin.Listen)
+	if err := s.ginEngine.Run(s.config.WebAdmin.Listen); err != nil {
 		log.Fatal(err)
 	}
 }

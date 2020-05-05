@@ -10,18 +10,18 @@ import (
 )
 
 const (
-	defaultConfigFilename = "envoyauth-config.yaml"
-	defaultLogLevel       = "info"
-	defaultWebAdminListen = "0.0.0.0:7777"
-	defaultAuthGRPCListen = "0.0.0.0:7778"
+	defaultConfigFilename  = "envoyauth-config.yaml"
+	defaultLogLevel        = "info"
+	defaultWebAdminListen  = "0.0.0.0:7777"
+	defaultWebAdminLogFile = "envoyauth-admin.log"
+	defaultAuthGRPCListen  = "0.0.0.0:7778"
 )
 
-//APIAuthConfig contains our startup configuration data
-//
+// APIAuthConfig contains our startup configuration data
 type APIAuthConfig struct {
-	LogLevel       string `yaml:"loglevel"`
-	WebAdminListen string `yaml:"webadminlisten"`
-	AuthGRPCListen string `yaml:"authgrpclisten"`
+	LogLevel       string         `yaml:"loglevel"`
+	WebAdmin       webAdminConfig `yaml:"webadmin"`
+	AuthGRPCListen string         `yaml:"authgrpclisten"`
 	Database       db.DatabaseConfig
 	Cache          struct {
 		Size        int `yaml:"size"`
@@ -39,8 +39,11 @@ func loadConfiguration() *APIAuthConfig {
 
 	// default configuration
 	config := APIAuthConfig{
-		LogLevel:       defaultLogLevel,
-		WebAdminListen: defaultWebAdminListen,
+		LogLevel: defaultLogLevel,
+		WebAdmin: webAdminConfig{
+			Listen:  defaultWebAdminListen,
+			LogFile: defaultWebAdminLogFile,
+		},
 		AuthGRPCListen: defaultAuthGRPCListen,
 	}
 

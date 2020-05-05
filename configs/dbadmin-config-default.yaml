@@ -1,7 +1,9 @@
 # DBAdmin daemon settings
 #
 # The address to listen on for REST API
-webadminlisten: 0.0.0.0:3333
+webadmin:
+  listen: 0.0.0.0:7777
+  logfile: dbadmin-access.log
 
 # Cassandra settings
 database:

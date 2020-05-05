@@ -11,21 +11,22 @@ import (
 )
 
 const (
-	defaultConfigFilename = "envoycp-config.yaml"
-	defaultLogLevel       = "info"
-	defaultWebAdminListen = "0.0.0.0:9902"
-	defaultXDSGRPCListen  = "0.0.0.0:9901"
-	defaultXDSHTTPListen  = "0.0.0.0:9903"
+	defaultConfigFilename  = "envoycp-config.yaml"
+	defaultLogLevel        = "info"
+	defaultWebAdminListen  = "0.0.0.0:9902"
+	defaultWebAdminLogFile = "envoycp-admin.log"
+	defaultXDSGRPCListen   = "0.0.0.0:9901"
+	defaultXDSHTTPListen   = "0.0.0.0:9903"
 )
 
 // EnvoyCPConfig contains our startup configuration data
 type EnvoyCPConfig struct {
-	LogLevel       string `yaml:"loglevel"`
-	WebAdminListen string `yaml:"webadminlisten"`
-	XDSGRPCListen  string `yaml:"xdsgrpclisten"`
-	XDSHTTPListen  string `yaml:"xdshttplisten"`
-	Database       db.DatabaseConfig
-	EnvoyLogging   struct {
+	LogLevel      string         `yaml:"loglevel"`
+	WebAdmin      webAdminConfig `yaml:"webadmin"`
+	XDSGRPCListen string         `yaml:"xdsgrpclisten"`
+	XDSHTTPListen string         `yaml:"xdshttplisten"`
+	Database      db.DatabaseConfig
+	EnvoyLogging  struct {
 		Filename string            `yaml:"filename"`
 		Fields   map[string]string `yaml:"fields"`
 	} `yaml:"envoylogging"`
@@ -37,10 +38,13 @@ func loadConfiguration() *EnvoyCPConfig {
 
 	// default configuration
 	config := EnvoyCPConfig{
-		LogLevel:       defaultLogLevel,
-		WebAdminListen: defaultWebAdminListen,
-		XDSGRPCListen:  defaultXDSGRPCListen,
-		XDSHTTPListen:  defaultXDSHTTPListen,
+		LogLevel: defaultLogLevel,
+		WebAdmin: webAdminConfig{
+			Listen:  defaultWebAdminListen,
+			LogFile: defaultWebAdminLogFile,
+		},
+		XDSGRPCListen: defaultXDSGRPCListen,
+		XDSHTTPListen: defaultXDSHTTPListen,
 	}
 
 	file, err := os.Open(*filename)

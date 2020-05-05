@@ -5,8 +5,11 @@ loglevel: info
 xdsgrpclisten: 0.0.0.0:4000
 # The address to listen on for HTTP requests coming from Envoy
 xdshttplisten: 0.0.0.0:4001
+
 # The address to listen on for Admin UI
-webadminlisten: 0.0.0.0:2113
+webadmin:
+  listen: 0.0.0.0:2113
+  logfile: envoyauth-admin.log
 
 # Cassandra settings
 database:

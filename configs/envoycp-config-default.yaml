@@ -2,7 +2,9 @@
 #
 # The address to listen on for Envoy GRPC
 xdsgrpclisten: 0.0.0.0:9901
-webadminlisten: 0.0.0.0:9902
+webadmin:
+  listen: 0.0.0.0:9902
+  logfile: envoycp-admin.log
 xdshttplisten: 0.0.0.0:9903
 
 # Cassandra settings
