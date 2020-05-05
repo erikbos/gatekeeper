@@ -32,7 +32,7 @@ const (
 	attributeHealthCheckTimeout  = "HealthCheckTimeout"
 
 	attributeValueTrue  = "true"
-	attributeValueFalse = "false"
+	attributeValueHTTP  = "HTTP"
 	attributeValueTLS10 = "TLSv10"
 	attributeValueTLS11 = "TLSv11"
 	attributeValueTLS12 = "TLSv12"
@@ -159,7 +159,7 @@ func coreAddress(hostname string, port int) *core.Address {
 func clusterHealthCheckConfig(cluster shared.Cluster) []*core.HealthCheck {
 
 	value, err := shared.GetAttribute(cluster.Attributes, attributeHealthCheck)
-	if err == nil && value == "HTTP" {
+	if err == nil && value == attributeValueHTTP {
 		healthCheckPath, _ := shared.GetAttribute(cluster.Attributes, attributeHealthCheckPath)
 
 		healthCheckInterval, _ := shared.GetAttribute(cluster.Attributes, attributeHealthCheckInterval)
@@ -283,11 +283,11 @@ func tlsVersion(version string) auth.TlsParameters_TlsProtocol {
 	return auth.TlsParameters_TLS_AUTO
 }
 
-func u32nil(val uint32) *wrappers.UInt32Value {
-	switch val {
-	case 0:
-		return nil
-	default:
-		return &wrappers.UInt32Value{Value: val}
-	}
-}
+// func u32nil(val uint32) *wrappers.UInt32Value {
+// 	switch val {
+// 	case 0:
+// 		return nil
+// 	default:
+// 		return &wrappers.UInt32Value{Value: val}
+// 	}
+// }

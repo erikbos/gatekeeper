@@ -83,7 +83,7 @@ func (d *Database) runGetAppCredentialQuery(query string, queryParameters ...int
 		}
 		if m["api_products"].(string) != "" {
 			appcredential.APIProducts = make([]shared.APIProductStatus, 0)
-			json.Unmarshal([]byte(m["api_products"].(string)), &appcredential.APIProducts)
+			_ = json.Unmarshal([]byte(m["api_products"].(string)), &appcredential.APIProducts)
 		}
 		appcredentials = append(appcredentials, appcredential)
 		m = map[string]interface{}{}
