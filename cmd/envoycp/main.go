@@ -45,7 +45,6 @@ func main() {
 	}
 
 	go s.StartWebAdminServer()
-	s.readiness.Up()
 
 	s.StartXDS()
 }

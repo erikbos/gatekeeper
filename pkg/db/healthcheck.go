@@ -3,10 +3,12 @@ package db
 import (
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 )
 
 const (
+	healthCheckMetricLabel     = "system.local"
 	minimumHealthCheckInterval = 2 * time.Second
 )
 
@@ -48,6 +50,9 @@ func (d *Database) runHealthCheck(interval time.Duration) {
 func (d *Database) HealthCheckQuery() (HealthCheckStatus, error) {
 	var peers HealthCheckStatus
 
+	timer := prometheus.NewTimer(d.dbLookupHistogram)
+	defer timer.ObserveDuration()
+
 	query := "select * from system.local"
 	iter := d.cassandraSession.Query(query).Iter()
 	m := make(map[string]interface{})
@@ -60,7 +65,9 @@ func (d *Database) HealthCheckQuery() (HealthCheckStatus, error) {
 		}
 	}
 	if err := iter.Close(); err != nil {
+		d.metricsQueryMiss(healthCheckMetricLabel)
 		return HealthCheckStatus{}, err
 	}
+	d.metricsQueryHit(healthCheckMetricLabel)
 	return peers, nil
 }

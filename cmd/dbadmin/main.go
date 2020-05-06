@@ -42,7 +42,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Database connect failed: %v", err)
 	}
-	e.readiness.Up()
+
 	StartWebAdminServer(e)
 }
 
