@@ -23,7 +23,7 @@ envoycp:
 docker-images: docker-dbadmin docker-envoyauth docker-envoycp
 
 docker-dbadmin:
-	 docker build -t apiedge/dbadmin:$(VERSION) . -f Dockerfile.dbman
+	 docker build -t apiedge/dbadmin:$(VERSION) . -f Dockerfile.dbadmin
 
 docker-envoyauth:
 	 docker build -t apiedge/envoyauth:$(VERSION) . -f Dockerfile.envoyauth
