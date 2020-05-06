@@ -2,6 +2,7 @@ package shared
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
@@ -9,30 +10,38 @@ import (
 
 // Readiness contains the rreadiness of the application
 type Readiness struct {
-	status bool
+	Status          bool
+	LastStateChange time.Time
 }
 
 // DisplayStatus returns rreadiness status
 func (r *Readiness) DisplayStatus(c *gin.Context) {
-	if r.status {
-		c.JSON(http.StatusOK, "Ready")
+	if r.Status {
+		c.IndentedJSON(http.StatusOK, gin.H{"readiness": r})
 	} else {
-		c.JSON(http.StatusServiceUnavailable, "Not ready")
+		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"readiness": r})
 	}
 }
 
-// FIX we should use failureThreshold and successThreshold before determining whether we are up or down
-
 // Down changes status to down
 func (r *Readiness) Down() {
-	r.status = false
-
-	log.Debugf("Setting readiness state to false")
+	r.updateReadinessState(false)
 }
 
 // Up changes status to up
 func (r *Readiness) Up() {
-	r.status = true
+	r.updateReadinessState(true)
+}
 
-	log.Debugf("Setting readiness state to true")
+// TODO we should have a failureThreshold and successThreshold before determining whether we are up or down
+
+// updateReadinessState set current readiness state if it has changed
+func (r *Readiness) updateReadinessState(newState bool) {
+	// In case timestamp is zero (=startup) we always set state
+	if r.LastStateChange.IsZero() || r.Status != newState {
+		r.Status = newState
+		r.LastStateChange = time.Now().UTC()
+
+		log.Infof("Setting readiness state to %t", r.Status)
+	}
 }

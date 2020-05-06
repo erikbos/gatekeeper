@@ -27,19 +27,18 @@ func (d *Database) runHealthCheck(interval time.Duration) {
 
 	for {
 		if peers, err := d.HealthCheckQuery(); err == nil {
-			d.readiness.Up()
-
 			if !connected {
 				log.Infof("Database connected (%s, %s, %s, %s)",
 					peers.listenAddress, peers.clusterName, peers.dataCenter, peers.rack)
 				log.Infof("Database healthcheck ok")
 				connected = true
 			}
+			d.readiness.Up()
 		} else {
-			d.readiness.Down()
-
 			log.Infof("Database healthcheck failed (%s)", err)
 			connected = false
+
+			d.readiness.Down()
 		}
 		time.Sleep(interval)
 	}
