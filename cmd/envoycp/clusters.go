@@ -22,8 +22,9 @@ const (
 
 	attributeConnectTimeout      = "ConnectTimeout"
 	attributeIdleTimeout         = "IdleTimeout"
-	attributeMinimumTLSVersion   = "MinimumTLSVersion"
-	attributeMaximumTLSVersion   = "MaximumTLSVersion"
+	attributeTLSEnabled          = "TLSEnabled"
+	attributeTLSMinimumVersion   = "TLSMinimumVersion"
+	attributeTLSMaximumVersion   = "TLSMaximumVersion"
 	attributeHTTP2Enabled        = "HTTP2Enabled"
 	attributeSNIHostName         = "SNIHostName"
 	attributeHealthCheck         = "HealthCheck"
@@ -84,7 +85,7 @@ func getEnvoyClusterConfig() ([]cache.Resource, error) {
 // buildEnvoyClusterConfig builds one envoy cluster configuration
 func buildEnvoyClusterConfig(cluster shared.Cluster) *api.Cluster {
 
-	return &api.Cluster{
+	envoyCluster := &api.Cluster{
 		Name:                      cluster.Name,
 		ConnectTimeout:            clusterConnectTimeout(cluster),
 		ClusterDiscoveryType:      &api.Cluster_Type{Type: api.Cluster_LOGICAL_DNS},
@@ -93,12 +94,17 @@ func buildEnvoyClusterConfig(cluster shared.Cluster) *api.Cluster {
 		LoadAssignment:            clusterLoadAssignment(cluster),
 		HealthChecks:              clusterHealthCheckConfig(cluster),
 		CommonHttpProtocolOptions: clusterCommonHTTPProtocolOptions(cluster),
-		HttpProtocolOptions:       clusterHTTP1ProtocolOptions(cluster),
-		Http2ProtocolOptions:      clusterHTTP2ProtocolOptions(cluster),
-		TransportSocket:           clusterTransportSocket(cluster),
-		// Http1ProtocolOptions:  clusterHTTP1ProtocolOptions(cluster),
 		// CircuitBreakers:      clusterCircuitBreaker(cluster),
 	}
+
+	// Add TLS and HTTP/2 configuration options in case we want to
+	value, err := shared.GetAttribute(cluster.Attributes, attributeTLSEnabled)
+	if err == nil && value == attributeValueTrue {
+		envoyCluster.TransportSocket = clusterTransportSocket(cluster)
+		envoyCluster.Http2ProtocolOptions = clusterHTTP2ProtocolOptions(cluster)
+	}
+
+	return envoyCluster
 }
 
 func clusterConnectTimeout(cluster shared.Cluster) *duration.Duration {
@@ -111,29 +117,14 @@ func clusterConnectTimeout(cluster shared.Cluster) *duration.Duration {
 }
 
 func clusterLoadAssignment(cluster shared.Cluster) *api.ClusterLoadAssignment {
-	address := coreAddress(cluster.HostName, cluster.Port)
-
 	return &api.ClusterLoadAssignment{
 		ClusterName: cluster.Name,
-		Endpoints: []*endpoint.LocalityLbEndpoints{
-			{
-				LbEndpoints: []*endpoint.LbEndpoint{
-					{
-						HostIdentifier: &endpoint.LbEndpoint_Endpoint{
-							Endpoint: &endpoint.Endpoint{
-								Address: address,
-							},
-						},
-					},
-				},
-			},
-		},
+		Endpoints:   buildEndpoint(cluster.HostName, cluster.Port),
 	}
 }
 
-// coreAddress builds an Envoy address to connect to
-func coreAddress(hostname string, port int) *core.Address {
-	return &core.Address{Address: &core.Address_SocketAddress{
+func buildEndpoint(hostname string, port int) []*endpoint.LocalityLbEndpoints {
+	address := &core.Address{Address: &core.Address_SocketAddress{
 		SocketAddress: &core.SocketAddress{
 			Address:  hostname,
 			Protocol: core.SocketAddress_TCP,
@@ -142,6 +133,21 @@ func coreAddress(hostname string, port int) *core.Address {
 			},
 		},
 	}}
+
+	return []*endpoint.LocalityLbEndpoints{
+		{
+			LbEndpoints: []*endpoint.LbEndpoint{
+				{
+					HostIdentifier: &endpoint.LbEndpoint_Endpoint{
+						Endpoint: &endpoint.Endpoint{
+							Address: address,
+						},
+					},
+				},
+			},
+		},
+	}
+
 }
 
 // func clusterCircuitBreaker(cluster shared.Cluster) *envoy_cluster.CircuitBreakers {
@@ -203,11 +209,6 @@ func clusterCommonHTTPProtocolOptions(cluster shared.Cluster) *core.HttpProtocol
 	}
 }
 
-func clusterHTTP1ProtocolOptions(cluster shared.Cluster) *core.Http1ProtocolOptions {
-	return nil
-	// return &core.Http1ProtocolOptions{}
-}
-
 // clusterHTTP2ProtocolOptions returns HTTP/2 parameters
 // according to spec we need to return at least empty struct to enable HTTP/2
 func clusterHTTP2ProtocolOptions(cluster shared.Cluster) *core.Http2ProtocolOptions {
@@ -260,10 +261,10 @@ func clusterALPNOptions(cluster shared.Cluster) []string {
 // clusterALPNOptions sets TLS minimum and max cipher options
 func clusterTLSOptions(cluster shared.Cluster) *auth.TlsParameters {
 	tlsParameters := &auth.TlsParameters{}
-	if minVersion, err := shared.GetAttribute(cluster.Attributes, attributeMinimumTLSVersion); err == nil {
+	if minVersion, err := shared.GetAttribute(cluster.Attributes, attributeTLSMinimumVersion); err == nil {
 		tlsParameters.TlsMinimumProtocolVersion = tlsVersion(minVersion)
 	}
-	if maxVersion, err := shared.GetAttribute(cluster.Attributes, attributeMaximumTLSVersion); err == nil {
+	if maxVersion, err := shared.GetAttribute(cluster.Attributes, attributeTLSMaximumVersion); err == nil {
 		tlsParameters.TlsMaximumProtocolVersion = tlsVersion(maxVersion)
 	}
 	return tlsParameters

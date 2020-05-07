@@ -96,25 +96,10 @@ func getVirtualHostsOfRouteSet(routeSetName string) []string {
 
 func buildEnvoyListenerConfig(port int, vhosts []shared.VirtualHost) *api.Listener {
 
-	listenerName := fmt.Sprintf("port_%d", port)
 	newListener := &api.Listener{
-		Name: listenerName,
-		Address: &core.Address{
-			Address: &core.Address_SocketAddress{
-				SocketAddress: &core.SocketAddress{
-					Protocol: core.SocketAddress_TCP,
-					Address:  "0.0.0.0",
-					PortSpecifier: &core.SocketAddress_PortValue{
-						PortValue: uint32(port),
-					},
-				},
-			},
-		},
-		ListenerFilters: []*listener.ListenerFilter{
-			{
-				Name: "envoy.filters.listener.http_inspector",
-			},
-		},
+		Name:            fmt.Sprintf("port_%d", port),
+		Address:         buildAddress("0.0.0.0", port),
+		ListenerFilters: buildListenerFilterHTTP(),
 	}
 
 	// add all vhosts belonging to this listener's port
@@ -125,6 +110,27 @@ func buildEnvoyListenerConfig(port int, vhosts []shared.VirtualHost) *api.Listen
 	}
 
 	return newListener
+}
+
+// buildAddress builds an Envoy address to connect to
+func buildAddress(hostname string, port int) *core.Address {
+	return &core.Address{Address: &core.Address_SocketAddress{
+		SocketAddress: &core.SocketAddress{
+			Address:  hostname,
+			Protocol: core.SocketAddress_TCP,
+			PortSpecifier: &core.SocketAddress_PortValue{
+				PortValue: uint32(port),
+			},
+		},
+	}}
+}
+
+func buildListenerFilterHTTP() []*listener.ListenerFilter {
+	return []*listener.ListenerFilter{
+		{
+			Name: "envoy.filters.listener.http_inspector",
+		},
+	}
 }
 
 func buildFilterChainEntry(l *api.Listener, v shared.VirtualHost) *listener.FilterChain {
@@ -218,47 +224,53 @@ func buildFilterChainEntry(l *api.Listener, v shared.VirtualHost) *listener.Filt
 
 func buildConnectionManager(httpFilters []*hcm.HttpFilter, v shared.VirtualHost) *hcm.HttpConnectionManager {
 
-	// FIXME
-	// XdsCluster := "xds_cluster"
-
-	routeConfig := buildEnvoyRouteConfig(v.RouteSet, routes)
-
-	httpConnectionManager := &hcm.HttpConnectionManager{
+	return &hcm.HttpConnectionManager{
 		CodecType:        hcm.HttpConnectionManager_AUTO,
 		StatPrefix:       "ingress_http",
 		UseRemoteAddress: &wrappers.BoolValue{Value: true},
-
-		RouteSpecifier: &hcm.HttpConnectionManager_RouteConfig{
-			RouteConfig: routeConfig,
-		},
-
-		// RouteSpecifier: &hcm.HttpConnectionManager_Rds{
-		// 	Rds: &hcm.Rds{
-		// 		RouteConfigName: v.RouteSet,
-		// 		ConfigSource: &core.ConfigSource{
-		// 			ConfigSourceSpecifier: &core.ConfigSource_ApiConfigSource{
-		// 				ApiConfigSource: &core.ApiConfigSource{
-		// 					ApiType: core.ApiConfigSource_GRPC,
-		// 					GrpcServices: []*core.GrpcService{{
-		// 						TargetSpecifier: &core.GrpcService_EnvoyGrpc_{
-		// 							EnvoyGrpc: &core.GrpcService_EnvoyGrpc{ClusterName: XdsCluster},
-		// 						},
-		// 					}},
-		// 				},
-		// 			},
-		// 		},
-		// 	},
-		// },
-		HttpFilters: httpFilters,
-		AccessLog:   buildAccessLog("/dev/stdout", accessLogFields),
+		RouteSpecifier:   buildRouteSpecifier(v.RouteSet),
+		HttpFilters:      httpFilters,
+		// FIXME
+		AccessLog: buildAccessLog("/dev/stdout", accessLogFields),
 	}
-	return httpConnectionManager
 }
 
 func buildFilter() []*hcm.HttpFilter {
 	return []*hcm.HttpFilter{
 		{
+			Name: "envoy.filters.http.cors",
+		},
+		{
 			Name: "envoy.filters.http.router",
+		},
+	}
+}
+
+func buildRouteSpecifier(routeSet string) *hcm.HttpConnectionManager_RouteConfig {
+	return &hcm.HttpConnectionManager_RouteConfig{
+		RouteConfig: buildEnvoyVirtualHostRouteConfig(routeSet, routes),
+	}
+}
+
+func buildRouteSpecifierRDS(routeSet string) *hcm.HttpConnectionManager_Rds {
+	// FIXME
+	XdsCluster := "xds_cluster"
+
+	return &hcm.HttpConnectionManager_Rds{
+		Rds: &hcm.Rds{
+			RouteConfigName: routeSet,
+			ConfigSource: &core.ConfigSource{
+				ConfigSourceSpecifier: &core.ConfigSource_ApiConfigSource{
+					ApiConfigSource: &core.ApiConfigSource{
+						ApiType: core.ApiConfigSource_GRPC,
+						GrpcServices: []*core.GrpcService{{
+							TargetSpecifier: &core.GrpcService_EnvoyGrpc_{
+								EnvoyGrpc: &core.GrpcService_EnvoyGrpc{ClusterName: XdsCluster},
+							},
+						}},
+					},
+				},
+			},
 		},
 	}
 }
