@@ -199,7 +199,8 @@ type Route struct {
 	Name           string               `json:"name"`
 	DisplayName    string               `json:"displayName"`
 	RouteSet       string               `json:"routeSet"`
-	MatchPrefix    string               `json:"matchPrefix"`
+	Path           string               `json:"path"`
+	PathType       string               `json:"pathType"`
 	Cluster        string               `json:"cluster"`
 	Attributes     []AttributeKeyValues `json:"attributes"`
 	CreatedAt      int64                `json:"createdAt"`

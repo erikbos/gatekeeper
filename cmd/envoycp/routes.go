@@ -113,9 +113,15 @@ func buildEnvoyRoutes(routeSet string, routes []shared.Route) []*route.Route {
 
 // buildEnvoyRoute returns a single Envoy route
 func buildEnvoyRoute(routeEntry shared.Route) *route.Route {
+	routeMatch := buildRouteMatch(routeEntry)
+	if routeMatch == nil {
+		log.Warnf("Cannot build route config for route %s", routeEntry.Name)
+		return nil
+	}
+
 	envoyRoute := &route.Route{
 		Name:  routeEntry.Name,
-		Match: buildRouteMatch(routeEntry),
+		Match: routeMatch,
 	}
 
 	if routeEntry.Cluster != "" {
@@ -132,9 +138,40 @@ func buildEnvoyRoute(routeEntry shared.Route) *route.Route {
 
 // buildRouteActionCluster returns route config we match on
 func buildRouteMatch(routeEntry shared.Route) *route.RouteMatch {
+	switch routeEntry.PathType {
+	case "path":
+		return buildRouteMatchPath(routeEntry)
+	case "prefix":
+		return buildRouteMatchPrefix(routeEntry)
+	case "regexp":
+		return buildRouteMatchRegexp(routeEntry)
+	}
+	return nil
+}
+
+// buildRouteMatchPath returns prefix-based route-match config
+func buildRouteMatchPath(routeEntry shared.Route) *route.RouteMatch {
+	return &route.RouteMatch{
+		PathSpecifier: &route.RouteMatch_Path{
+			Path: routeEntry.Path,
+		},
+	}
+}
+
+// buildRouteMatchPrefix returns path-based route-match config
+func buildRouteMatchPrefix(routeEntry shared.Route) *route.RouteMatch {
 	return &route.RouteMatch{
 		PathSpecifier: &route.RouteMatch_Prefix{
-			Prefix: routeEntry.MatchPrefix,
+			Prefix: routeEntry.Path,
+		},
+	}
+}
+
+// buildRouteMatchPath returns prefix-based route-match config
+func buildRouteMatchRegexp(routeEntry shared.Route) *route.RouteMatch {
+	return &route.RouteMatch{
+		PathSpecifier: &route.RouteMatch_SafeRegex{
+			SafeRegex: buildRegexpMatcher(routeEntry.Path),
 		},
 	}
 }
@@ -192,25 +229,32 @@ func buildCorsPolicy(routeEntry shared.Route) *route.CorsPolicy {
 	}
 
 	if corsConfigured {
-		corsPolicy.AllowOriginStringMatch = buildStringMatcher(".")
+		stringMatch := make([]*envoymatcher.StringMatcher, 0, 1)
+		corsPolicy.AllowOriginStringMatch = append(stringMatch, buildStringMatcher("."))
 		return &corsPolicy
 	}
 	return nil
 }
 
-func buildStringMatcher(regexp string) []*envoymatcher.StringMatcher {
-	res := make([]*envoymatcher.StringMatcher, 0, 1)
-
-	res = append(res, &envoymatcher.StringMatcher{MatchPattern: &envoymatcher.StringMatcher_SafeRegex{
-		SafeRegex: &envoymatcher.RegexMatcher{
-			EngineType: &envoymatcher.RegexMatcher_GoogleRe2{
-				GoogleRe2: &envoymatcher.RegexMatcher_GoogleRE2{
-					MaxProgramSize: &wrappers.UInt32Value{Value: 100}}},
-			Regex: regexp,
+func buildStringMatcher(regexp string) *envoymatcher.StringMatcher {
+	return &envoymatcher.StringMatcher{
+		MatchPattern: &envoymatcher.StringMatcher_SafeRegex{
+			SafeRegex: buildRegexpMatcher(regexp),
 		},
-	},
-	})
-	return res
+	}
+}
+
+func buildRegexpMatcher(regexp string) *envoymatcher.RegexMatcher {
+	return &envoymatcher.RegexMatcher{
+		EngineType: &envoymatcher.RegexMatcher_GoogleRe2{
+			GoogleRe2: &envoymatcher.RegexMatcher_GoogleRE2{
+				MaxProgramSize: &wrappers.UInt32Value{
+					Value: 100,
+				},
+			},
+		},
+		Regex: regexp,
+	}
 }
 
 func buildRouteActionDirectResponse(routeEntry shared.Route) *route.Route_DirectResponse {

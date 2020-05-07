@@ -62,7 +62,8 @@ func (d *Database) runGetRouteQuery(query string, queryParameters ...interface{}
 			Name:           m["name"].(string),
 			DisplayName:    m["display_name"].(string),
 			RouteSet:       m["route_set"].(string),
-			MatchPrefix:    m["match_prefix"].(string),
+			Path:           m["path"].(string),
+			PathType:       m["path_type"].(string),
 			Cluster:        m["cluster"].(string),
 			CreatedAt:      m["created_at"].(int64),
 			CreatedBy:      m["created_by"].(string),
@@ -86,9 +87,9 @@ func (d *Database) runGetRouteQuery(query string, queryParameters ...interface{}
 // UpdateRouteByName UPSERTs an route in database
 func (d *Database) UpdateRouteByName(updatedRoute *shared.Route) error {
 	query := "INSERT INTO routes " +
-		"(name, display_name, route_set, match_prefix, cluster, attributes, " +
+		"(name, display_name, route_set, path, path_type, cluster, attributes, " +
 		"created_at, created_by, lastmodified_at, lastmodified_by) " +
-		"VALUES(?,?,?,?,?,?,?,?,?,?)"
+		"VALUES(?,?,?,?,?,?,?,?,?,?,?)"
 
 	updatedRoute.Attributes = shared.TidyAttributes(updatedRoute.Attributes)
 	attributes := d.marshallArrayOfAttributesToJSON(updatedRoute.Attributes)
@@ -96,7 +97,7 @@ func (d *Database) UpdateRouteByName(updatedRoute *shared.Route) error {
 	updatedRoute.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
 	err := d.cassandraSession.Query(query,
 		updatedRoute.Name, updatedRoute.DisplayName, updatedRoute.RouteSet,
-		updatedRoute.MatchPrefix, updatedRoute.Cluster, attributes,
+		updatedRoute.Path, updatedRoute.PathType, updatedRoute.Cluster, attributes,
 		updatedRoute.CreatedAt, updatedRoute.CreatedBy,
 		updatedRoute.LastmodifiedAt, updatedRoute.LastmodifiedBy).Exec()
 	if err != nil {
