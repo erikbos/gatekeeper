@@ -24,7 +24,7 @@ import (
 )
 
 const (
-	virtualHostRefreshInterval = 2
+	virtualHostRefreshInterval = 2 * time.Second
 )
 
 var virtualhosts []shared.VirtualHost
@@ -61,7 +61,7 @@ func (s *server) GetVirtualHostConfigFromDatabase() {
 			// Increase xds deployment metric
 			s.metricXdsDeployments.WithLabelValues("virtualhosts").Inc()
 		}
-		time.Sleep(virtualHostRefreshInterval * time.Second)
+		time.Sleep(virtualHostRefreshInterval)
 	}
 }
 
@@ -71,13 +71,13 @@ func (s *server) GetVirtualHostCount() float64 {
 }
 
 // getEnvoyListenerConfig returns array of envoy listeners
-func getEnvoyListenerConfig() ([]cache.Resource, error) {
+func (s *server) getEnvoyListenerConfig() ([]cache.Resource, error) {
 	envoyListeners := []cache.Resource{}
 
 	uniquePorts := getVirtualHostPorts(virtualhosts)
 	for port := range uniquePorts {
 		log.Infof("adding listener for port %d", port)
-		envoyListeners = append(envoyListeners, buildEnvoyListenerConfig(port, virtualhosts))
+		envoyListeners = append(envoyListeners, s.buildEnvoyListenerConfig(port, virtualhosts))
 	}
 	return envoyListeners, nil
 }
@@ -103,7 +103,7 @@ func getVirtualHostsOfRouteSet(routeSetName string) []string {
 	return virtualHostsInRouteSet
 }
 
-func buildEnvoyListenerConfig(port int, vhosts []shared.VirtualHost) *api.Listener {
+func (s *server) buildEnvoyListenerConfig(port int, vhosts []shared.VirtualHost) *api.Listener {
 
 	newListener := &api.Listener{
 		Name:            fmt.Sprintf("port_%d", port),
@@ -114,7 +114,7 @@ func buildEnvoyListenerConfig(port int, vhosts []shared.VirtualHost) *api.Listen
 	// add all vhosts belonging to this listener's port
 	for _, virtualhost := range vhosts {
 		if virtualhost.Port == port {
-			newListener.FilterChains = append(newListener.FilterChains, buildFilterChainEntry(newListener, virtualhost))
+			newListener.FilterChains = append(newListener.FilterChains, s.buildFilterChainEntry(newListener, virtualhost))
 		}
 	}
 
@@ -142,10 +142,10 @@ func buildListenerFilterHTTP() []*listener.ListenerFilter {
 	}
 }
 
-func buildFilterChainEntry(l *api.Listener, v shared.VirtualHost) *listener.FilterChain {
+func (s *server) buildFilterChainEntry(l *api.Listener, v shared.VirtualHost) *listener.FilterChain {
 	httpFilter := buildFilter()
 
-	manager := buildConnectionManager(httpFilter, v)
+	manager := s.buildConnectionManager(httpFilter, v)
 	managerProtoBuf, err := ptypes.MarshalAny(manager)
 	if err != nil {
 		log.Panic(err)
@@ -231,7 +231,7 @@ func buildFilterChainEntry(l *api.Listener, v shared.VirtualHost) *listener.Filt
 	return FilterChainEntry
 }
 
-func buildConnectionManager(httpFilters []*hcm.HttpFilter, v shared.VirtualHost) *hcm.HttpConnectionManager {
+func (s *server) buildConnectionManager(httpFilters []*hcm.HttpFilter, v shared.VirtualHost) *hcm.HttpConnectionManager {
 
 	return &hcm.HttpConnectionManager{
 		CodecType:        hcm.HttpConnectionManager_AUTO,
@@ -239,8 +239,7 @@ func buildConnectionManager(httpFilters []*hcm.HttpFilter, v shared.VirtualHost)
 		UseRemoteAddress: &wrappers.BoolValue{Value: true},
 		RouteSpecifier:   buildRouteSpecifier(v.RouteSet),
 		HttpFilters:      httpFilters,
-		// FIXME
-		AccessLog: buildAccessLog("/dev/stdout", accessLogFields),
+		AccessLog:        buildAccessLog(s.config.XDS.EnvoyLogFilename, s.config.XDS.EnvoyLogFields),
 	}
 }
 
@@ -307,34 +306,4 @@ func buildAccessLog(logFilename string, fieldFormats map[string]string) []*filte
 		Name:       "envoy.file_access_log",
 		ConfigType: &filterAccessLog.AccessLog_TypedConfig{TypedConfig: accessLogTypedConf},
 	}}
-}
-
-var accessLogFields map[string]string = map[string]string{
-	"start_time": "%START_TIME%",
-	"request_id": "%REQ(REQUEST-ID)%",
-	"caller":     "%REQ(CALLER)%",
-	// "request_method":                    "%REQ(:METHOD)%",
-	// "request_path":                      "%REQ(X-ENVOY-ORIGINAL-PATH?:PATH)%",
-	// "content_type":                      "%REQ(CONTENT-TYPE)%",
-	"protocol":       "%PROTOCOL%",
-	"response_code":  "%RESPONSE_CODE%",
-	"response_flags": "%RESPONSE_FLAGS%",
-	"bytes_sent":     "%BYTES_SENT%",
-	"bytes_received": "%BYTES_RECEIVED%",
-	// "request_duration":                  "%DURATION%",
-	// "response_duration":                 "%RESPONSE_DURATION%",
-	"upstream_response_time": "%RESP(X-ENVOY-UPSTREAM-SERVICE-TIME)%",
-	"client_address":         "%DOWNSTREAM_REMOTE_ADDRESS_WITHOUT_PORT%",
-	"x_forwarded_for":        "%REQ(X-FORWARDED-FOR)%",
-	"user_agent":             "%REQ(USER-AGENT)%",
-	// "http2_authority":                   "%REQ(:AUTHORITY)%",
-	"upstream_cluster":                  "%UPSTREAM_CLUSTER%",
-	"upstream_host":                     "%UPSTREAM_HOST%",
-	"route_name":                        "%ROUTE_NAME%",
-	"upstream_transport_failure_reason": "%UPSTREAM_TRANSPORT_FAILURE_REASON%",
-	"downstream_remote_address":         "%DOWNSTREAM_REMOTE_ADDRESS%",
-	"method":                            "%REQ(:METHOD)%",
-	"path":                              "%REQ(X-ENVOY-ORIGINAL-PATH?:PATH)%",
-	// "x-forwarded-for":                   "%REQ(X-FORWARDED-FOR)%",
-	"user-agent": "%REQ(USER-AGENT)%",
 }

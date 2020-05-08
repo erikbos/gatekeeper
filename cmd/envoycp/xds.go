@@ -18,6 +18,18 @@ import (
 	"google.golang.org/grpc"
 )
 
+const (
+	minimumXDSInterval = 2 * time.Second
+)
+
+type xdsConfig struct {
+	GRPCListen       string            `yaml:"xdsgrpclisten"`
+	HTTPListen       string            `yaml:"xdshttplisten"`
+	XDSInterval      string            `yaml:"xdsinterval"`
+	EnvoyLogFilename string            `yaml:"envoylogfilename"`
+	EnvoyLogFields   map[string]string `yaml:"envoylogfields"`
+}
+
 // StartXDS brings up XDS system
 func (s *server) StartXDS() {
 	s.registerMetrics()
@@ -42,8 +54,8 @@ func (s *server) StartXDS() {
 
 // GRPCManagementServer starts grpc xds listener
 func (s *server) GRPCManagementServer() {
-	log.Info("Starting GRPC XDS on ", s.config.XDSGRPCListen)
-	lis, err := net.Listen("tcp", s.config.XDSGRPCListen)
+	log.Info("Starting GRPC XDS on ", s.config.XDS.GRPCListen)
+	lis, err := net.Listen("tcp", s.config.XDS.GRPCListen)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
@@ -61,8 +73,8 @@ func (s *server) GRPCManagementServer() {
 
 // HTTPManagementGateway starts http xds listener
 func (s *server) HTTPManagementGateway() {
-	log.Info("Starting HTTP XDS on ", s.config.XDSHTTPListen)
-	err := http.ListenAndServe(s.config.XDSHTTPListen, &xds.HTTPGateway{Server: s.xds})
+	log.Info("Starting HTTP XDS on ", s.config.XDS.HTTPListen)
+	err := http.ListenAndServe(s.config.XDS.HTTPListen, &xds.HTTPGateway{Server: s.xds})
 	if err != nil {
 		log.Fatalf("failed to HTTP serve: %v", err)
 	}
@@ -71,17 +83,19 @@ func (s *server) HTTPManagementGateway() {
 var xdsLastUpdate int64
 
 func (s *server) XDSMainloop() {
-	var lastConfigurationDeployment int64
 
+	interval := getXDSInterval(s.config.XDS)
+
+	var lastConfigurationDeployment int64
 	for {
-		if xdsLastUpdate > lastConfigurationDeployment {
+		if lastConfigurationDeployment == 0 || xdsLastUpdate > lastConfigurationDeployment {
 			log.Info("lastConfigurationDeployment: ", shared.TimeMillisecondsToString(lastConfigurationDeployment))
 			log.Info("XdsLastUpdate: ", shared.TimeMillisecondsToString(xdsLastUpdate))
 			log.Info("Starting configuration compilation")
 
 			EnvoyClusters, _ := getEnvoyClusterConfig()
 			EnvoyRoutes, _ := getEnvoyRouteConfig()
-			EnvoyListeners, _ := getEnvoyListenerConfig()
+			EnvoyListeners, _ := s.getEnvoyListenerConfig()
 
 			now := shared.GetCurrentTimeMilliseconds()
 			version := fmt.Sprint(now)
@@ -92,8 +106,20 @@ func (s *server) XDSMainloop() {
 
 			lastConfigurationDeployment = now
 		}
-		time.Sleep(1 * time.Second)
+		time.Sleep(interval)
 	}
+}
+
+// getXDSInterval gets xds interval from configuration
+func getXDSInterval(config xdsConfig) time.Duration {
+	interval, err := time.ParseDuration(config.XDSInterval)
+	if err != nil {
+		log.Fatalf("Cannot parse XDSInterval '%s' (%s)", config.XDSInterval, err)
+	}
+	if interval < minimumXDSInterval {
+		log.Fatalf("xds refresh interval set to low, should be >= '%s'", minimumXDSInterval)
+	}
+	return interval
 }
 
 // registerMetrics registers xds' operational metrics

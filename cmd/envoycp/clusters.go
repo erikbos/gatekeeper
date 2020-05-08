@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	clusterRefreshInterval = 2
+	clusterRefreshInterval = 2 * time.Second
 
 	attributeConnectTimeout      = "ConnectTimeout"
 	attributeIdleTimeout         = "IdleTimeout"
@@ -74,7 +74,7 @@ func (s *server) GetClusterConfigFromDatabase() {
 			// Increase xds deployment metric
 			s.metricXdsDeployments.WithLabelValues("clusters").Inc()
 		}
-		time.Sleep(clusterRefreshInterval * time.Second)
+		time.Sleep(clusterRefreshInterval)
 	}
 }
 

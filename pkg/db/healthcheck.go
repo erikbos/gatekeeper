@@ -54,7 +54,7 @@ func (d *Database) getHealthCheckInterval(healthcheckInterval string) time.Durat
 			healthcheckInterval, err)
 	}
 	if interval < minimumHealthCheckInterval {
-		log.Fatalf("Db healthcheck interval lower than %s", minimumHealthCheckInterval)
+		log.Fatalf("Db healthcheck interval set to low, should be >= '%s'", minimumHealthCheckInterval)
 	}
 	return interval
 }

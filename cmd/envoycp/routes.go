@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	routeRefreshInterval = 2
+	routeRefreshInterval = 2 * time.Second
 
 	attributeDirectResponseStatusCode = "DirectResponseStatusCode"
 	attributeDirectResponseBody       = "DirectResponseBody"
@@ -62,7 +62,7 @@ func (s *server) GetRouteConfigFromDatabase() {
 			// Increase xds deployment metric
 			s.metricXdsDeployments.WithLabelValues("routes").Inc()
 		}
-		time.Sleep(routeRefreshInterval * time.Second)
+		time.Sleep(routeRefreshInterval)
 	}
 }
 

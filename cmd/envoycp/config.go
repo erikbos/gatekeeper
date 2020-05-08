@@ -21,15 +21,10 @@ const (
 
 // EnvoyCPConfig contains our startup configuration data
 type EnvoyCPConfig struct {
-	LogLevel      string         `yaml:"loglevel"`
-	WebAdmin      webAdminConfig `yaml:"webadmin"`
-	XDSGRPCListen string         `yaml:"xdsgrpclisten"`
-	XDSHTTPListen string         `yaml:"xdshttplisten"`
-	Database      db.DatabaseConfig
-	EnvoyLogging  struct {
-		Filename string            `yaml:"filename"`
-		Fields   map[string]string `yaml:"fields"`
-	} `yaml:"envoylogging"`
+	LogLevel string            `yaml:"loglevel"`
+	WebAdmin webAdminConfig    `yaml:"webadmin"`
+	Database db.DatabaseConfig `yaml:"database"`
+	XDS      xdsConfig         `yaml:"xds"`
 }
 
 func loadConfiguration() *EnvoyCPConfig {
@@ -43,8 +38,10 @@ func loadConfiguration() *EnvoyCPConfig {
 			Listen:  defaultWebAdminListen,
 			LogFile: defaultWebAdminLogFile,
 		},
-		XDSGRPCListen: defaultXDSGRPCListen,
-		XDSHTTPListen: defaultXDSHTTPListen,
+		XDS: xdsConfig{
+			GRPCListen: defaultXDSGRPCListen,
+			HTTPListen: defaultXDSHTTPListen,
+		},
 	}
 
 	file, err := os.Open(*filename)
