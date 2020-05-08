@@ -37,6 +37,8 @@ func (s *server) GetVirtualHostConfigFromDatabase() {
 	var virtualHostsMutex sync.Mutex
 
 	for {
+		var xdsPushNeeded bool
+
 		newVirtualHosts, err := s.db.GetVirtualHosts()
 		if err != nil {
 			log.Errorf("Could not retrieve virtualhosts from database (%s)", err)
@@ -44,26 +46,28 @@ func (s *server) GetVirtualHostConfigFromDatabase() {
 			for _, s := range newVirtualHosts {
 				// Is a virtualhosts updated since last time we stored it?
 				if s.LastmodifiedAt > virtualHostsLastUpdate {
-					log.Info("Virtual hosts config changed!")
-					now := shared.GetCurrentTimeMilliseconds()
-
 					virtualHostsMutex.Lock()
 					virtualhosts = newVirtualHosts
-					virtualHostsLastUpdate = now
 					virtualHostsMutex.Unlock()
 
-					// FIXME this should be notification via channel
-					xdsLastUpdate = now
+					virtualHostsLastUpdate = shared.GetCurrentTimeMilliseconds()
+					xdsPushNeeded = true
 				}
 			}
+		}
+		if xdsPushNeeded {
+			// FIXME this should be notification via channel
+			xdsLastUpdate = shared.GetCurrentTimeMilliseconds()
+			// Increase xds deployment metric
+			s.metricXdsDeployments.WithLabelValues("virtualhosts").Inc()
 		}
 		time.Sleep(virtualHostRefreshInterval * time.Second)
 	}
 }
 
 // GetVirtualHostCount returns number of virtualhosts
-func (s *server) GetVirtualHostCount() int {
-	return len(virtualhosts)
+func (s *server) GetVirtualHostCount() float64 {
+	return float64(len(virtualhosts))
 }
 
 // getEnvoyListenerConfig returns array of envoy listeners

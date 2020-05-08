@@ -38,6 +38,8 @@ func (s *server) GetRouteConfigFromDatabase() {
 	var routeMutex sync.Mutex
 
 	for {
+		var xdsPushNeeded bool
+
 		newRouteList, err := s.db.GetRoutes()
 		if err != nil {
 			log.Errorf("Could not retrieve routes from database (%s)", err)
@@ -45,25 +47,28 @@ func (s *server) GetRouteConfigFromDatabase() {
 			for _, s := range newRouteList {
 				// Is a cluster updated since last time we stored it?
 				if s.LastmodifiedAt > routesLastUpdate {
-					now := shared.GetCurrentTimeMilliseconds()
-
 					routeMutex.Lock()
 					routes = newRouteList
-					routesLastUpdate = now
 					routeMutex.Unlock()
 
-					// FIXME this should be notification via channel
-					xdsLastUpdate = now
+					routesLastUpdate = shared.GetCurrentTimeMilliseconds()
+					xdsPushNeeded = true
 				}
 			}
+		}
+		if xdsPushNeeded {
+			// FIXME this should be notification via channel
+			xdsLastUpdate = shared.GetCurrentTimeMilliseconds()
+			// Increase xds deployment metric
+			s.metricXdsDeployments.WithLabelValues("routes").Inc()
 		}
 		time.Sleep(routeRefreshInterval * time.Second)
 	}
 }
 
 // GetRouteCount returns number of routes
-func (s *server) GetRouteCount() int {
-	return len(routes)
+func (s *server) GetRouteCount() float64 {
+	return float64(len(routes))
 }
 
 // getEnvoyRouteConfig returns array of all envoy routes

@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/erikbos/apiauth/pkg/db"
 	"github.com/erikbos/apiauth/pkg/shared"
+	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/envoyproxy/go-control-plane/pkg/cache"
 	xds "github.com/envoyproxy/go-control-plane/pkg/server"
@@ -20,13 +21,14 @@ const (
 )
 
 type server struct {
-	config    *EnvoyCPConfig
-	ginEngine *gin.Engine
-	db        *db.Database
-	xds       xds.Server
-	xdsCache  cache.SnapshotCache
+	config               *EnvoyCPConfig
+	ginEngine            *gin.Engine
+	db                   *db.Database
+	xds                  xds.Server
+	xdsCache             cache.SnapshotCache
+	readiness            shared.Readiness
+	metricXdsDeployments *prometheus.CounterVec
 	// authLatencyHistogram prometheus.Summary
-	readiness shared.Readiness
 }
 
 func main() {

@@ -20,6 +20,8 @@ import (
 
 // StartXDS brings up XDS system
 func (s *server) StartXDS() {
+	s.registerMetrics()
+
 	s.xdsCache = cache.NewSnapshotCache(true, Hasher{}, logger{})
 	//config := cache.NewSnapshotCache(false, hash{}, logger{})
 	signal := make(chan struct{})
@@ -35,7 +37,6 @@ func (s *server) StartXDS() {
 	go s.GetRouteConfigFromDatabase()
 	go s.GetVirtualHostConfigFromDatabase()
 
-	s.registerMetrics()
 	s.XDSMainloop()
 }
 
@@ -95,38 +96,38 @@ func (s *server) XDSMainloop() {
 	}
 }
 
+// registerMetrics registers xds' operational metrics
 func (s *server) registerMetrics() {
-	configuredVirtualHosts := prometheus.NewGaugeFunc(
+	metricVirtualHostsCount := prometheus.NewGaugeFunc(
 		prometheus.GaugeOpts{
 			Name: myName + "_xds_virtualhosts",
 			Help: "Current number of clusters",
 		},
-		func() float64 {
-			return float64(s.GetVirtualHostCount())
-		},
-	)
+		s.GetVirtualHostCount)
 
-	configuredRoutes := prometheus.NewGaugeFunc(
+	metricRoutesCount := prometheus.NewGaugeFunc(
 		prometheus.GaugeOpts{
 			Name: myName + "_xds_routes",
 			Help: "Current number of routes",
 		},
-		func() float64 {
-			return float64(s.GetRouteCount())
-		},
-	)
+		s.GetRouteCount)
 
-	configuredClusters := prometheus.NewGaugeFunc(
+	metricClustersCount := prometheus.NewGaugeFunc(
 		prometheus.GaugeOpts{
 			Name: myName + "_xds_clusters",
 			Help: "Current number of clusters",
 		},
-		func() float64 {
-			return float64(s.GetClusterCount())
-		},
-	)
+		s.GetClusterCount)
 
-	prometheus.MustRegister(configuredVirtualHosts)
-	prometheus.MustRegister(configuredRoutes)
-	prometheus.MustRegister(configuredClusters)
+	s.metricXdsDeployments = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: myName + "_xds_deployments",
+			Help: "Current number of xds configuration deployments",
+		},
+		[]string{"resource"})
+
+	prometheus.MustRegister(metricVirtualHostsCount)
+	prometheus.MustRegister(metricRoutesCount)
+	prometheus.MustRegister(metricClustersCount)
+	prometheus.MustRegister(s.metricXdsDeployments)
 }

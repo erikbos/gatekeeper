@@ -50,6 +50,8 @@ func (s *server) GetClusterConfigFromDatabase() {
 	var clusterMutex sync.Mutex
 
 	for {
+		var xdsPushNeeded bool
+
 		newClusterList, err := s.db.GetClusters()
 		if err != nil {
 			log.Errorf("Could not retrieve clusters from database (%s)", err)
@@ -57,24 +59,28 @@ func (s *server) GetClusterConfigFromDatabase() {
 			// Is one of the cluster updated since last time pushed config to Envoy?
 			for _, s := range newClusterList {
 				if s.LastmodifiedAt > clustersLastUpdate {
-
 					clusterMutex.Lock()
 					clusters = newClusterList
 					clusterMutex.Unlock()
 
 					clustersLastUpdate = shared.GetCurrentTimeMilliseconds()
-
-					// FIXME this should be notification via channel
-					xdsLastUpdate = shared.GetCurrentTimeMilliseconds()
+					xdsPushNeeded = true
 				}
 			}
+		}
+		if xdsPushNeeded {
+			// FIXME this should be notification via channel
+			xdsLastUpdate = shared.GetCurrentTimeMilliseconds()
+			// Increase xds deployment metric
+			s.metricXdsDeployments.WithLabelValues("clusters").Inc()
 		}
 		time.Sleep(clusterRefreshInterval * time.Second)
 	}
 }
 
-func (s *server) GetClusterCount() int {
-	return len(clusters)
+// GetClusterCount returns number of clusters
+func (s *server) GetClusterCount() float64 {
+	return float64(len(clusters))
 }
 
 // getClusterConfig returns array of all envoy clusters
