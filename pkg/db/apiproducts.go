@@ -22,7 +22,7 @@ func (d *Database) GetAPIProductsByOrganization(organizationName string) ([]shar
 	if len(apiproducts) == 0 {
 		d.metricsQueryMiss(appsMetricLabel)
 		return apiproducts,
-			fmt.Errorf("Can not find developers in organization %s", organizationName)
+			fmt.Errorf("Can not find apiproducts in organization %s", organizationName)
 	}
 	d.metricsQueryHit(appsMetricLabel)
 	return apiproducts, nil
@@ -56,20 +56,18 @@ func (d *Database) runGetAPIProductQuery(query string, queryParameters ...interf
 	for iterable.MapScan(m) {
 		apiproduct := shared.APIProduct{
 			Key:              m["key"].(string),
-			ApprovalType:     m["approval_type"].(string),
-			CreatedAt:        m["created_at"].(int64),
-			CreatedBy:        m["created_by"].(string),
-			Description:      m["description"].(string),
-			DisplayName:      m["display_name"].(string),
-			Environments:     m["environments"].(string),
-			LastmodifiedAt:   m["lastmodified_at"].(int64),
-			LastmodifiedBy:   m["lastmodified_by"].(string),
 			Name:             m["name"].(string),
+			DisplayName:      m["display_name"].(string),
+			Description:      m["description"].(string),
+			RouteSet:         m["route_set"].(string),
 			OrganizationName: m["organization_name"].(string),
 			Scopes:           m["scopes"].(string),
+			CreatedAt:        m["created_at"].(int64),
+			CreatedBy:        m["created_by"].(string),
+			LastmodifiedAt:   m["lastmodified_at"].(int64),
+			LastmodifiedBy:   m["lastmodified_by"].(string),
 		}
 		apiproduct.APIResources = d.unmarshallJSONArrayOfStrings(m["api_resources"].(string))
-		apiproduct.Proxies = d.unmarshallJSONArrayOfStrings(m["proxies"].(string))
 		apiproduct.Attributes = d.unmarshallJSONArrayOfAttributes(m["attributes"].(string))
 		apiproducts = append(apiproducts, apiproduct)
 		m = map[string]interface{}{}
@@ -84,26 +82,33 @@ func (d *Database) runGetAPIProductQuery(query string, queryParameters ...interf
 // UpdateAPIProductByName UPSERTs an apiproduct in database
 func (d *Database) UpdateAPIProductByName(updatedAPIProduct *shared.APIProduct) error {
 	query := "INSERT INTO api_products (key,name,display_name, attributes," +
-		"created_at,created_by, api_resources," +
+		"created_at,created_by, route_set, api_resources," +
 		"lastmodified_at,lastmodified_by,organization_name) " +
-		"VALUES(?,?,?,?,?, ?,?,?,?,?)"
+		"VALUES(?,?,?,?,?,?,?,?,?,?,?)"
+
 	updatedAPIProduct.Attributes = shared.TidyAttributes(updatedAPIProduct.Attributes)
 	attributes := d.marshallArrayOfAttributesToJSON(updatedAPIProduct.Attributes)
+
+	apiResource := d.marshallArrayOfStringsToJSON(updatedAPIProduct.APIResources)
+
+	log.Printf(apiResource)
+
 	updatedAPIProduct.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
 	err := d.cassandraSession.Query(query,
 		updatedAPIProduct.Key, updatedAPIProduct.Name, updatedAPIProduct.DisplayName, attributes,
-		updatedAPIProduct.CreatedAt, updatedAPIProduct.CreatedBy, updatedAPIProduct.APIResources,
+		updatedAPIProduct.CreatedAt, updatedAPIProduct.CreatedBy, updatedAPIProduct.RouteSet,
+		apiResource,
 		updatedAPIProduct.LastmodifiedAt, updatedAPIProduct.LastmodifiedBy,
 		updatedAPIProduct.OrganizationName).Exec()
 	if err == nil {
 		return nil
 	}
-	return fmt.Errorf("Can not update api product (%v)", err)
+	return fmt.Errorf("Can not update apiproduct (%v)", err)
 }
 
 // DeleteAPIProductByName deletes an apiproduct
-func (d *Database) DeleteAPIProductByName(organizationName, developerEmail string) error {
-	apiproduct, err := d.GetAPIProductByName(organizationName, developerEmail)
+func (d *Database) DeleteAPIProductByName(organizationName, apiProduct string) error {
+	apiproduct, err := d.GetAPIProductByName(organizationName, apiProduct)
 	if err != nil {
 		return err
 	}

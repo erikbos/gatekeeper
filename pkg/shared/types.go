@@ -85,45 +85,66 @@ type APIProductStatus struct {
 // APIProduct type contains everything about an API product
 type APIProduct struct {
 	Key              string               `json:"key"`
-	APIResources     []string             `json:"api_resources"`
-	ApprovalType     string               `json:"approval_type"`
-	Attributes       []AttributeKeyValues `json:"attributes"`
-	CreatedAt        int64                `json:"created_at"`
-	CreatedBy        string               `json:"created_by"`
+	Name             string               `json:"name"`
+	DisplayName      string               `json:"displayName"`
 	Description      string               `json:"description"`
-	DisplayName      string               `json:"display_name"`
-	Environments     string               `json:"environments"`
-	LastmodifiedAt   int64                `json:"lastmodified_at"`
-	LastmodifiedBy   string               `json:"lastmodified_by"`
-	Name             string               `json:"name"`
-	OrganizationName string               `json:"organization_name"`
-	Proxies          []string             `json:"proxies"`
-	Scopes           string               `json:"scopes"`
-}
-
-// APIProxy contains mapping of paths to upstream
-type APIProxy struct {
-	Name             string               `json:"name"`
-	DisplayName      string               `json:"display_name"`
-	OrganizationName string               `json:"organization_name"`
-	Policies         []string             `json:"policies"`
+	RouteSet         string               `json:"routeSet"`
+	APIResources     []string             `json:"apiResources"`
 	Attributes       []AttributeKeyValues `json:"attributes"`
-	CreatedAt        int64                `json:"created_at"`
-	CreatedBy        string               `json:"created_by"`
-	LastmodifiedAt   int64                `json:"lastmodified_at"`
-	LastmodifiedBy   string               `json:"lastmodified_by"`
-	BasePath         string
-	Routes           []struct {
-		prefix   string
-		upstream string
-	}
-	VirtualHosts []string `json:"virtual_hosts"`
+	OrganizationName string               `json:"organizationName"`
+	Scopes           string               `json:"scopes"`
+	CreatedAt        int64                `json:"createdAt"`
+	CreatedBy        string               `json:"createdBy"`
+	LastmodifiedAt   int64                `json:"lastmodifiedAt"`
+	LastmodifiedBy   string               `json:"lastmodifiedBy"`
 }
 
 // AttributeKeyValues is an array with attributes of developer or developer app
 type AttributeKeyValues struct {
 	Name  string `json:"name"`
 	Value string `json:"value"`
+}
+
+// VirtualHost contains everything about downstream configuration of virtual hosts
+type VirtualHost struct {
+	Name           string               `json:"name"`
+	DisplayName    string               `json:"displayName"`
+	VirtualHosts   []string             `json:"virtualHosts"`
+	Port           int                  `json:"port"`
+	RouteSet       string               `json:"routeSet"`
+	Attributes     []AttributeKeyValues `json:"attributes"`
+	CreatedAt      int64                `json:"createdAt"`
+	CreatedBy      string               `json:"createdBy"`
+	LastmodifiedAt int64                `json:"lastmodifiedAt"`
+	LastmodifiedBy string               `json:"lastmodifiedBy"`
+}
+
+// Route holds configuration of one or more routes
+type Route struct {
+	Name           string               `json:"name"`
+	DisplayName    string               `json:"displayName"`
+	RouteSet       string               `json:"routeSet"`
+	Path           string               `json:"path"`
+	PathType       string               `json:"pathType"`
+	Cluster        string               `json:"cluster"`
+	Attributes     []AttributeKeyValues `json:"attributes"`
+	CreatedAt      int64                `json:"createdAt"`
+	CreatedBy      string               `json:"createdBy"`
+	LastmodifiedAt int64                `json:"lastmodifiedAt"`
+	LastmodifiedBy string               `json:"lastmodifiedBy"`
+}
+
+// Cluster holds configuration of an upstream cluster
+type Cluster struct {
+	Name           string               `json:"name"`
+	DisplayName    string               `json:"displayName"`
+	HostName       string               `json:"hostName"`
+	Port           int                  `json:"port"`
+	Attributes     []AttributeKeyValues `json:"attributes"`
+	CreatedAt      int64                `json:"createdAt"`
+	CreatedBy      string               `json:"createdBy"`
+	LastmodifiedAt int64                `json:"lastmodifiedAt"`
+	LastmodifiedBy string               `json:"lastmodifiedBy"`
 }
 
 // GetAttribute find one named attribute in array of attributes (developer or developerapp)
@@ -146,7 +167,7 @@ func FindIndexOfAttribute(attributes []AttributeKeyValues, name string) int {
 	return -1
 }
 
-// TidyAttributes removes duplicate attributes and trims  all names & values
+// TidyAttributes removes duplicate attributes and trims all names & values
 func TidyAttributes(attributes []AttributeKeyValues) []AttributeKeyValues {
 	// Use map to record duplicates as we find them.
 	encountered := map[string]bool{}
@@ -178,48 +199,4 @@ func DeleteAttribute(attributes []AttributeKeyValues, attributeName string) ([]A
 	valueOfDeletedAttribute := attributes[index].Value
 	attributes = append(attributes[:index], attributes[index+1:]...)
 	return attributes, 0, valueOfDeletedAttribute
-}
-
-// VirtualHost contains everything about downstream configuration of virtual hosts
-type VirtualHost struct {
-	Name           string               `json:"name"`
-	DisplayName    string               `json:"displayName"`
-	VirtualHosts   []string             `json:"virtualHosts"`
-	Port           int                  `json:"port"`
-	RouteSet       string               `json:"routeSet"`
-	Attributes     []AttributeKeyValues `json:"attributes"`
-	CreatedAt      int64                `json:"createdAt"`
-	CreatedBy      string               `json:"createdBy"`
-	LastmodifiedAt int64                `json:"lastmodifiedAt"`
-	LastmodifiedBy string               `json:"lastmodifiedBy"`
-}
-
-// Route holds configuration of one or more routes
-type Route struct {
-	Name           string               `json:"name"`
-	DisplayName    string               `json:"displayName"`
-	RouteSet       string               `json:"routeSet"`
-	Path           string               `json:"path"`
-	PathType       string               `json:"pathType"`
-	Cluster        string               `json:"cluster"`
-	Attributes     []AttributeKeyValues `json:"attributes"`
-	CreatedAt      int64                `json:"createdAt"`
-	CreatedBy      string               `json:"createdBy"`
-	LastmodifiedAt int64                `json:"lastmodifiedAt"`
-	LastmodifiedBy string               `json:"lastmodifiedBy"`
-	//	PrefixRewrite  string               `json:"prefixRewrite"`
-	//	HostRewrite    string               `json:"hostRewrite"`
-}
-
-// Cluster holds configuration of an upstream cluster
-type Cluster struct {
-	Name           string               `json:"name"`
-	DisplayName    string               `json:"displayName"`
-	HostName       string               `json:"hostName"`
-	Port           int                  `json:"port"`
-	Attributes     []AttributeKeyValues `json:"attributes"`
-	CreatedAt      int64                `json:"createdAt"`
-	CreatedBy      string               `json:"createdBy"`
-	LastmodifiedAt int64                `json:"lastmodifiedAt"`
-	LastmodifiedBy string               `json:"lastmodifiedBy"`
 }
