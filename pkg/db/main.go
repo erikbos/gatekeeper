@@ -69,20 +69,15 @@ func Connect(config DatabaseConfig, r *shared.Readiness, serviceName string) (*D
 		return nil, errors.New("Could not connect to database")
 	}
 
-	d.metricsRegister()
+	d.registerMetrics()
 
-	if d.Config.HealthcheckInterval != "" {
-		healthCheckInterval, err := time.ParseDuration(d.Config.HealthcheckInterval)
-		if err != nil {
-			log.Fatalf("Cannot parse database healthCheckInterval %v", err)
-		}
-		go d.runHealthCheck(healthCheckInterval)
-	}
+	go d.runHealthCheck(d.Config.HealthcheckInterval)
 
 	return &d, nil
 }
 
-func (d *Database) metricsRegister() {
+// registerMetrics registers database performance metrics
+func (d *Database) registerMetrics() {
 	d.dbLookupHitsCounter = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: d.ServiceName + "_database_lookup_hits_total",
@@ -99,9 +94,11 @@ func (d *Database) metricsRegister() {
 
 	d.dbLookupHistogram = prometheus.NewSummary(
 		prometheus.SummaryOpts{
-			Name:       d.ServiceName + "_database_lookup_latency",
-			Help:       "Database lookup latency in seconds.",
-			Objectives: map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001},
+			Name: d.ServiceName + "_database_lookup_latency",
+			Help: "Database lookup latency in seconds.",
+			Objectives: map[float64]float64{
+				0.5: 0.05, 0.9: 0.01, 0.99: 0.001, 0.999: 0.0001,
+			},
 		})
 	prometheus.MustRegister(d.dbLookupHistogram)
 }

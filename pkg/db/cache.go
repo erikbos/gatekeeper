@@ -98,9 +98,11 @@ func CacheInit(size, cachettl, negativettl int) *Cache {
 
 	c.dbCacheLookupHistogram = prometheus.NewSummary(
 		prometheus.SummaryOpts{
-			Name:       "apiauth_database_cache_latency",
-			Help:       "Database retrieval latency (cached & non-cached) in seconds.",
-			Objectives: map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001},
+			Name: "apiauth_database_cache_latency",
+			Help: "Database retrieval latency (cached & non-cached) in seconds.",
+			Objectives: map[float64]float64{
+				0.5: 0.05, 0.9: 0.01, 0.99: 0.001, 0.999: 0.0001,
+			},
 		})
 	prometheus.MustRegister(c.dbCacheLookupHistogram)
 

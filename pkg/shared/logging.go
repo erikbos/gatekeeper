@@ -1,10 +1,6 @@
 package shared
 
 import (
-	"fmt"
-	"time"
-
-	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -26,19 +22,4 @@ func SetLoggingConfiguration(loglevel string) {
 	}
 	log.SetLevel(level)
 	log.Info("Log level set to ", loglevel)
-}
-
-// LogHTTPRequest logs details of an HTTP request
-func LogHTTPRequest(param gin.LogFormatterParams) string {
-	return fmt.Sprintf("%s - - [%s] \"%s %s %s\" %d %d \"%s\" \"%s\"\n",
-		param.ClientIP,
-		param.TimeStamp.Format(time.RFC3339),
-		param.Method,
-		param.Path,
-		param.Request.Proto,
-		param.StatusCode,
-		param.Latency/time.Millisecond,
-		param.Request.UserAgent(),
-		param.ErrorMessage,
-	)
 }

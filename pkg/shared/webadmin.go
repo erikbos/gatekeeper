@@ -3,9 +3,25 @@ package shared
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
+
+// LogHTTPRequest logs details of an HTTP request
+func LogHTTPRequest(param gin.LogFormatterParams) string {
+	return fmt.Sprintf("%s - - [%s] \"%s %s %s\" %d %d \"%s\" \"%s\"\n",
+		param.ClientIP,
+		param.TimeStamp.Format(time.RFC3339),
+		param.Method,
+		param.Path,
+		param.Request.Proto,
+		param.StatusCode,
+		param.Latency/time.Millisecond,
+		param.Request.UserAgent(),
+		param.ErrorMessage,
+	)
+}
 
 //ShowIndexPage produces the index page based upon all registered routes
 func ShowIndexPage(c *gin.Context, e *gin.Engine, name string) {

@@ -8,7 +8,9 @@ import (
 )
 
 const (
-	healthCheckMetricLabel     = "system.local"
+	healthCheckMetricLabel = "system.local"
+	healthCheckCQLquery    = "select * from system.local"
+
 	minimumHealthCheckInterval = 2 * time.Second
 )
 
@@ -20,13 +22,11 @@ type HealthCheckStatus struct {
 	rack          string
 }
 
-func (d *Database) runHealthCheck(interval time.Duration) {
+// runHealthCheck runs continous query against databse to confirm connectivity
+func (d *Database) runHealthCheck(healthcheckInterval string) {
+	interval := d.getHealthCheckInterval(healthcheckInterval)
+
 	var connected bool
-
-	if interval < minimumHealthCheckInterval {
-		log.Fatalf("Db healthcheck interval lower than %s", minimumHealthCheckInterval)
-	}
-
 	for {
 		if peers, err := d.HealthCheckQuery(); err == nil {
 			if !connected {
@@ -46,6 +46,19 @@ func (d *Database) runHealthCheck(interval time.Duration) {
 	}
 }
 
+// getHealthCheckInterval parses config option to set db healthcheck interval
+func (d *Database) getHealthCheckInterval(healthcheckInterval string) time.Duration {
+	interval, err := time.ParseDuration(healthcheckInterval)
+	if err != nil {
+		log.Fatalf("Cannot parse database healthCheckInterval '%s' (%s)",
+			healthcheckInterval, err)
+	}
+	if interval < minimumHealthCheckInterval {
+		log.Fatalf("Db healthcheck interval lower than %s", minimumHealthCheckInterval)
+	}
+	return interval
+}
+
 // HealthCheckQuery checks Cassandra connectivity by reading table system.local
 func (d *Database) HealthCheckQuery() (HealthCheckStatus, error) {
 	var peers HealthCheckStatus
@@ -53,8 +66,7 @@ func (d *Database) HealthCheckQuery() (HealthCheckStatus, error) {
 	timer := prometheus.NewTimer(d.dbLookupHistogram)
 	defer timer.ObserveDuration()
 
-	query := "select * from system.local"
-	iter := d.cassandraSession.Query(query).Iter()
+	iter := d.cassandraSession.Query(healthCheckCQLquery).Iter()
 	m := make(map[string]interface{})
 	for iter.MapScan(m) {
 		peers = HealthCheckStatus{
