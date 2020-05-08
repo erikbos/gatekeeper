@@ -37,6 +37,7 @@ func main() {
 	// FIXME we should check if we have all required parameters (use viper package?)
 
 	shared.SetLoggingConfiguration(s.config.LogLevel)
+	s.readiness.RegisterMetrics(myName)
 
 	var err error
 	s.db, err = db.Connect(s.config.Database, &s.readiness, myName)

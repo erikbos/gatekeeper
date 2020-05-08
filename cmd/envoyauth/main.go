@@ -36,6 +36,7 @@ func main() {
 	// FIXME we should check if we have all required parameters (use viper package?)
 
 	shared.SetLoggingConfiguration(a.config.LogLevel)
+	a.readiness.RegisterMetrics(myName)
 
 	var err error
 	a.db, err = db.Connect(a.config.Database, &a.readiness, myName)
@@ -51,6 +52,5 @@ func main() {
 	}
 
 	go StartWebAdminServer(&a)
-	a.readiness.Up()
 	startGRPCAuthenticationServer(a)
 }

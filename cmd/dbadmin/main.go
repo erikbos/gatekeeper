@@ -36,6 +36,7 @@ func main() {
 	// FIXME we should check if we have all required parameters (use viper package?)
 
 	shared.SetLoggingConfiguration(e.config.LogLevel)
+	e.readiness.RegisterMetrics(myName)
 
 	var err error
 	e.db, err = db.Connect(e.config.Database, &e.readiness, myName)
@@ -58,5 +59,7 @@ func setLastModifiedHeader(c *gin.Context, timeStamp int64) {
 
 // returnJSONMessage returns an error message
 func returnJSONMessage(c *gin.Context, statusCode int, errorMessage error) {
-	c.IndentedJSON(statusCode, gin.H{"message": fmt.Sprintf("%s", errorMessage)})
+	c.IndentedJSON(statusCode, gin.H{
+		"message": fmt.Sprintf("%s", errorMessage),
+	})
 }
