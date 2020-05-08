@@ -73,9 +73,10 @@ func Connect(config DatabaseConfig, r *shared.Readiness, serviceName string) (*D
 
 	if d.Config.HealthcheckInterval != "" {
 		healthCheckInterval, err := time.ParseDuration(d.Config.HealthcheckInterval)
-		if err == nil {
-			go d.runHealthCheck(healthCheckInterval)
+		if err != nil {
+			log.Fatalf("Cannot parse database healthCheckInterval %v", err)
 		}
+		go d.runHealthCheck(healthCheckInterval)
 	}
 
 	return &d, nil
