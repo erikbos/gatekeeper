@@ -61,6 +61,11 @@ func (s *server) GetVirtualHostConfigFromDatabase() {
 	}
 }
 
+// GetVirtualHostCount returns number of virtualhosts
+func (s *server) GetVirtualHostCount() int {
+	return len(virtualhosts)
+}
+
 // getEnvoyListenerConfig returns array of envoy listeners
 func getEnvoyListenerConfig() ([]cache.Resource, error) {
 	envoyListeners := []cache.Resource{}

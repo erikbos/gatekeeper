@@ -61,6 +61,11 @@ func (s *server) GetRouteConfigFromDatabase() {
 	}
 }
 
+// GetRouteCount returns number of routes
+func (s *server) GetRouteCount() int {
+	return len(routes)
+}
+
 // getEnvoyRouteConfig returns array of all envoy routes
 func getEnvoyRouteConfig() ([]cache.Resource, error) {
 	var envoyRoutes []cache.Resource

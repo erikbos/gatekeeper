@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/erikbos/apiauth/pkg/shared"
+	"github.com/prometheus/client_golang/prometheus"
 
 	v2 "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	discovery "github.com/envoyproxy/go-control-plane/envoy/service/discovery/v2"
@@ -34,6 +35,7 @@ func (s *server) StartXDS() {
 	go s.GetRouteConfigFromDatabase()
 	go s.GetVirtualHostConfigFromDatabase()
 
+	s.registerMetrics()
 	s.XDSMainloop()
 }
 
@@ -72,9 +74,9 @@ func (s *server) XDSMainloop() {
 
 	for {
 		if xdsLastUpdate > lastConfigurationDeployment {
-			log.Infof("xdsLastUpdate: %d", xdsLastUpdate)
-			log.Infof("lastConfigurationDeployment: %d", lastConfigurationDeployment)
-			log.Infof("Starting configuration compilation")
+			log.Info("lastConfigurationDeployment: ", shared.TimeMillisecondsToString(lastConfigurationDeployment))
+			log.Info("XdsLastUpdate: ", shared.TimeMillisecondsToString(xdsLastUpdate))
+			log.Info("Starting configuration compilation")
 
 			EnvoyClusters, _ := getEnvoyClusterConfig()
 			EnvoyRoutes, _ := getEnvoyRouteConfig()
@@ -91,4 +93,40 @@ func (s *server) XDSMainloop() {
 		}
 		time.Sleep(1 * time.Second)
 	}
+}
+
+func (s *server) registerMetrics() {
+	configuredVirtualHosts := prometheus.NewGaugeFunc(
+		prometheus.GaugeOpts{
+			Name: myName + "_xds_virtualhosts",
+			Help: "Current number of clusters",
+		},
+		func() float64 {
+			return float64(s.GetVirtualHostCount())
+		},
+	)
+
+	configuredRoutes := prometheus.NewGaugeFunc(
+		prometheus.GaugeOpts{
+			Name: myName + "_xds_routes",
+			Help: "Current number of routes",
+		},
+		func() float64 {
+			return float64(s.GetRouteCount())
+		},
+	)
+
+	configuredClusters := prometheus.NewGaugeFunc(
+		prometheus.GaugeOpts{
+			Name: myName + "_xds_clusters",
+			Help: "Current number of clusters",
+		},
+		func() float64 {
+			return float64(s.GetClusterCount())
+		},
+	)
+
+	prometheus.MustRegister(configuredVirtualHosts)
+	prometheus.MustRegister(configuredRoutes)
+	prometheus.MustRegister(configuredClusters)
 }

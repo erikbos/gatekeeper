@@ -73,6 +73,10 @@ func (s *server) GetClusterConfigFromDatabase() {
 	}
 }
 
+func (s *server) GetClusterCount() int {
+	return len(clusters)
+}
+
 // getClusterConfig returns array of all envoy clusters
 func getEnvoyClusterConfig() ([]cache.Resource, error) {
 	envoyClusters := []cache.Resource{}

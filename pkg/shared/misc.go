@@ -28,3 +28,8 @@ func AbortIfContentTypeNotJSON(c *gin.Context) {
 func GetCurrentTimeMilliseconds() int64 {
 	return time.Now().UTC().UnixNano() / 1000000
 }
+
+// TimeMillisecondsToString return time as string
+func TimeMillisecondsToString(timestamp int64) string {
+	return time.Unix(0, timestamp*int64(time.Millisecond)).String()
+}
