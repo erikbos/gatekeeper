@@ -5,6 +5,7 @@ import (
 	"net"
 
 	"github.com/oschwald/maxminddb-golang"
+	log "github.com/sirupsen/logrus"
 )
 
 //Geoip bla
@@ -48,5 +49,6 @@ func OpenGeoipDatabase(filename string) (*Geoip, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Could not open %s", filename)
 	}
+	log.Printf("Geoip using database %s", filename)
 	return &g, nil
 }

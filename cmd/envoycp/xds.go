@@ -22,14 +22,6 @@ const (
 	minimumXDSInterval = 2 * time.Second
 )
 
-type xdsConfig struct {
-	GRPCListen       string            `yaml:"xdsgrpclisten"`
-	HTTPListen       string            `yaml:"xdshttplisten"`
-	XDSInterval      string            `yaml:"xdsinterval"`
-	EnvoyLogFilename string            `yaml:"envoylogfilename"`
-	EnvoyLogFields   map[string]string `yaml:"envoylogfields"`
-}
-
 // StartXDS brings up XDS system
 func (s *server) StartXDS() {
 	s.registerMetrics()

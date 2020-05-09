@@ -19,30 +19,36 @@ database:
 xds:
   grpclisten: 0.0.0.0:9901
   httplisten: 0.0.0.0:9903
-  envoylogfilename: /dev/stdout
-  envoylogfields:
-    request_id: '%REQ(REQUEST-ID)%'
-    start_time: '%START_TIME%'
-    caller: '%REQ(CALLER)%'
-    request_method: '%REQ(:METHOD)%'
-    request_path: '%REQ(X-ENVOY-ORIGINAL-PATH?:PATH)%'
-    content_type: '%REQ(CONTENT-TYPE)%'
-    protocol: '%PROTOCOL%'
-    response_code: '%RESPONSE_CODE%'
-    response_flags: '%RESPONSE_FLAGS%'
-    bytes_sent: '%BYTES_SENT%'
-    bytes_received: '%BYTES_RECEIVED%'
-    request_duration: '%DURATION%'
-    response_duration: '%RESPONSE_DURATION%'
-    upstream_response_time: '%RESP(X-ENVOY-UPSTREAM-SERVICE-TIME)%'
-    client_address: '%DOWNSTREAM_REMOTE_ADDRESS_WITHOUT_PORT%'
-    x_forwarded_for: '%REQ(X-FORWARDED-FOR)%'
-    user_agent: '%REQ(USER-AGENT)%'
-    http2_authority: '%REQ(:AUTHORITY)%'
-    upstream_cluster: '%UPSTREAM_CLUSTER%'
-    upstream_host: '%UPSTREAM_HOST%'
-    route_name: '%ROUTE_NAME%'
-    upstream_transport_failure_reason: '%UPSTREAM_TRANSPORT_FAILURE_REASON%'
-    downstream_remote_address: '%DOWNSTREAM_REMOTE_ADDRESS%'
-    method: '%REQ(:METHOD)%'
-    path: '%REQ(X-ENVOY-ORIGINAL-PATH?:PATH)%'
+  extauthz:
+      enabled: true
+      failuremodeallow: true
+      requestbodysize: 0
+
+  envoy:
+    logfilename: /dev/stdout
+    logfields:
+      request_id: '%REQ(REQUEST-ID)%'
+      start_time: '%START_TIME%'
+      caller: '%REQ(CALLER)%'
+      request_method: '%REQ(:METHOD)%'
+      request_path: '%REQ(X-ENVOY-ORIGINAL-PATH?:PATH)%'
+      content_type: '%REQ(CONTENT-TYPE)%'
+      protocol: '%PROTOCOL%'
+      response_code: '%RESPONSE_CODE%'
+      response_flags: '%RESPONSE_FLAGS%'
+      bytes_sent: '%BYTES_SENT%'
+      bytes_received: '%BYTES_RECEIVED%'
+      request_duration: '%DURATION%'
+      response_duration: '%RESPONSE_DURATION%'
+      upstream_response_time: '%RESP(X-ENVOY-UPSTREAM-SERVICE-TIME)%'
+      client_address: '%DOWNSTREAM_REMOTE_ADDRESS_WITHOUT_PORT%'
+      x_forwarded_for: '%REQ(X-FORWARDED-FOR)%'
+      user_agent: '%REQ(USER-AGENT)%'
+      http2_authority: '%REQ(:AUTHORITY)%'
+      upstream_cluster: '%UPSTREAM_CLUSTER%'
+      upstream_host: '%UPSTREAM_HOST%'
+      route_name: '%ROUTE_NAME%'
+      upstream_transport_failure_reason: '%UPSTREAM_TRANSPORT_FAILURE_REASON%'
+      downstream_remote_address: '%DOWNSTREAM_REMOTE_ADDRESS%'
+      method: '%REQ(:METHOD)%'
+      path: '%REQ(X-ENVOY-ORIGINAL-PATH?:PATH)%'

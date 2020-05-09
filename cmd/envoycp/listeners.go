@@ -26,6 +26,8 @@ import (
 
 const (
 	virtualHostDataRefreshInterval = 2 * time.Second
+
+	extAuthzTimeout = 100 * time.Millisecond
 )
 
 // FIXME this does not detect removed records
@@ -141,7 +143,7 @@ func buildListenerFilterHTTP() []*listener.ListenerFilter {
 }
 
 func (s *server) buildFilterChainEntry(l *api.Listener, v shared.VirtualHost) *listener.FilterChain {
-	httpFilter := buildFilter()
+	httpFilter := s.buildFilter()
 
 	manager := s.buildConnectionManager(httpFilter, v)
 	managerProtoBuf, err := ptypes.MarshalAny(manager)
@@ -233,16 +235,16 @@ func (s *server) buildConnectionManager(httpFilters []*hcm.HttpFilter, v shared.
 		UseRemoteAddress: &wrappers.BoolValue{Value: true},
 		RouteSpecifier:   s.buildRouteSpecifier(v.RouteSet),
 		HttpFilters:      httpFilters,
-		AccessLog:        buildAccessLog(s.config.XDS.EnvoyLogFilename, s.config.XDS.EnvoyLogFields),
+		AccessLog:        buildAccessLog(s.config.XDS.Envoy.LogFilename, s.config.XDS.Envoy.LogFields),
 	}
 }
 
-func buildFilter() []*hcm.HttpFilter {
+func (s *server) buildFilter() []*hcm.HttpFilter {
 	return []*hcm.HttpFilter{
 		{
 			Name: "envoy.ext_authz",
 			ConfigType: &hcm.HttpFilter_TypedConfig{
-				TypedConfig: buildExtAuthzFilterConnfig(),
+				TypedConfig: s.buildExtAuthzFilterConfig(),
 			},
 		},
 		{
@@ -253,29 +255,56 @@ func buildFilter() []*hcm.HttpFilter {
 		},
 	}
 }
-func buildExtAuthzFilterConnfig() *anypb.Any {
-	extAuthz := &extAuthz.ExtAuthz{
-		// FIXME should be configuration option
-		FailureModeAllow: false,
+func (s *server) buildExtAuthzFilterConfig() *anypb.Any {
+	if s.config.XDS.ExtAuthz.Cluster == "" {
+		return nil
+	}
 
+	extAuthz := &extAuthz.ExtAuthz{
+		FailureModeAllow: s.config.XDS.ExtAuthz.FailureModeAllow,
 		Services: &extAuthz.ExtAuthz_GrpcService{
-			GrpcService: &core.GrpcService{
-				// FIXME should be configuration option
-				Timeout: ptypes.DurationProto(3 * time.Second),
-				TargetSpecifier: &core.GrpcService_EnvoyGrpc_{
-					EnvoyGrpc: &core.GrpcService_EnvoyGrpc{
-						// FIXME should be configuration option
-						ClusterName: "authentication",
-					},
-				},
-			},
+			GrpcService: s.buildGRPCService(1),
 		},
+	}
+	if s.config.XDS.ExtAuthz.RequestBodySize > 0 {
+		extAuthz.WithRequestBody = s.extAuthzWithRequestBody()
 	}
 	extAuthzTypedConf, err := ptypes.MarshalAny(extAuthz)
 	if err != nil {
 		log.Panic(err)
 	}
 	return extAuthzTypedConf
+}
+
+func (s *server) extAuthzWithRequestBody() *extAuthz.BufferSettings {
+	if s.config.XDS.ExtAuthz.RequestBodySize > 0 {
+		return &extAuthz.BufferSettings{
+			MaxRequestBytes:     uint32(s.config.XDS.ExtAuthz.RequestBodySize),
+			AllowPartialMessage: false,
+		}
+	}
+	return nil
+}
+
+func (s *server) buildGRPCService(timeout time.Duration) *core.GrpcService {
+	return &core.GrpcService{
+		Timeout: ptypes.DurationProto(s.getAuthzTimeout()),
+		TargetSpecifier: &core.GrpcService_EnvoyGrpc_{
+			EnvoyGrpc: &core.GrpcService_EnvoyGrpc{
+				ClusterName: s.config.XDS.ExtAuthz.Cluster,
+			},
+		},
+	}
+}
+
+// getAuthTimeout gets extauthz timeout
+func (s *server) getAuthzTimeout() time.Duration {
+	interval, err := time.ParseDuration(s.config.XDS.ExtAuthz.Timeout)
+	if err != nil {
+		log.Warnf("Cannot parse '%s' as AuthzTimeout (%s)", s.config.XDS.ExtAuthz.Timeout, err)
+		return extAuthzTimeout
+	}
+	return interval
 }
 
 func (s *server) buildRouteSpecifier(routeSet string) *hcm.HttpConnectionManager_RouteConfig {

@@ -27,6 +27,27 @@ type EnvoyCPConfig struct {
 	XDS      xdsConfig         `yaml:"xds"`
 }
 
+type xdsConfig struct {
+	GRPCListen  string         `yaml:"xdsgrpclisten"`
+	HTTPListen  string         `yaml:"xdshttplisten"`
+	XDSInterval string         `yaml:"xdsinterval"`
+	Envoy       envoyConfig    `yaml:"envoy"`
+	ExtAuthz    extAuthzConfig `yaml:"extauthz"`
+}
+
+type envoyConfig struct {
+	LogFilename string            `yaml:"logfilename"`
+	LogFields   map[string]string `yaml:"logfields"`
+}
+
+type extAuthzConfig struct {
+	Enabled          bool   `yaml:"enabled"`
+	Cluster          string `yaml:"cluster"`
+	Timeout          string `yaml:"timeout"`
+	FailureModeAllow bool   `yaml:"failuremodeallow"`
+	RequestBodySize  int16  `yaml:"requestbodysize"`
+}
+
 func loadConfiguration() *EnvoyCPConfig {
 	filename := flag.String("config", defaultConfigFilename, "Configuration filename")
 	flag.Parse()
