@@ -5,7 +5,7 @@ on:
     branches: [ master ]
 
 jobs:
-  build:
+  build_containers:
     runs-on: ubuntu-latest
 
     steps:
@@ -15,15 +15,12 @@ jobs:
     - name: golangci-lint
       uses: actions-contrib/golangci-lint@v1
 
-    - name: Get the output time
-      run: echo "The time was ${{ steps.hello.outputs.time }}"
-
     - name: Build Docker images
       run: make docker-images
 
-    - name: Docker Login
+    - name: Docker login
       uses: azure/docker-login@v1
-      with: 
+      with:
         login-server: testerbs.azurecr.io
         username: ${{ secrets.acr_username }}
         password: ${{ secrets.acr_password }}
@@ -42,4 +39,3 @@ jobs:
        docker push testerbs.azurecr.io/dbadmin
        docker push testerbs.azurecr.io/envoyauth
        docker push testerbs.azurecr.io/envoycp
-       
