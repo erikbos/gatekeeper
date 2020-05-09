@@ -1,11 +1,10 @@
 # Envoy control plane daemon settings
-#
-# The address to listen on for Envoy GRPC
-xdsgrpclisten: 0.0.0.0:9901
+
+loglevel: info
+
 webadmin:
   listen: 0.0.0.0:9902
   logfile: envoycp-admin.log
-xdshttplisten: 0.0.0.0:9903
 
 # Cassandra settings
 database:
@@ -17,9 +16,11 @@ database:
   timeout: 2s
   healthcheckinterval: 5s
 
-envoylogging:
-  filename: /dev/stdout
-  fields:
+xds:
+  grpclisten: 0.0.0.0:9901
+  httplisten: 0.0.0.0:9903
+  envoylogfilename: /dev/stdout
+  envoylogfields:
     request_id: '%REQ(REQUEST-ID)%'
     start_time: '%START_TIME%'
     caller: '%REQ(CALLER)%'
@@ -42,6 +43,6 @@ envoylogging:
     upstream_host: '%UPSTREAM_HOST%'
     route_name: '%ROUTE_NAME%'
     upstream_transport_failure_reason: '%UPSTREAM_TRANSPORT_FAILURE_REASON%'
-    downstream_remote_address:    '%DOWNSTREAM_REMOTE_ADDRESS%'
+    downstream_remote_address: '%DOWNSTREAM_REMOTE_ADDRESS%'
     method: '%REQ(:METHOD)%'
     path: '%REQ(X-ENVOY-ORIGINAL-PATH?:PATH)%'
