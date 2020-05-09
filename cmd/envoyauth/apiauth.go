@@ -158,15 +158,15 @@ func getQPSQuotaKeyAndLimit(apiKey string, apiproduct shared.APIProduct, develop
 // message: body to return by auth module to HTTP requestor
 
 func startGRPCAuthenticationServer(a authorizationServer) {
-	a.authLatencyHistogram = prometheus.NewSummary(
+	a.metrics.authLatencyHistogram = prometheus.NewSummary(
 		prometheus.SummaryOpts{
-			Name: "apiauth_request_latency",
+			Name: myName + "_request_latency",
 			Help: "Authentication latency in seconds.",
 			Objectives: map[float64]float64{
 				0.5: 0.05, 0.9: 0.01, 0.99: 0.001, 0.999: 0.0001,
 			},
 		})
-	prometheus.MustRegister(a.authLatencyHistogram)
+	prometheus.MustRegister(a.metrics.authLatencyHistogram)
 
 	lis, err := net.Listen("tcp", a.config.AuthGRPCListen)
 	if err != nil {
@@ -185,7 +185,7 @@ func startGRPCAuthenticationServer(a authorizationServer) {
 //
 func (a *authorizationServer) Check(ctx context.Context, req *auth.CheckRequest) (*auth.CheckResponse, error) {
 
-	timer := prometheus.NewTimer(a.authLatencyHistogram)
+	timer := prometheus.NewTimer(a.metrics.authLatencyHistogram)
 	defer timer.ObserveDuration()
 
 	httpRequest := req.Attributes.Request.Http

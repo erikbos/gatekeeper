@@ -23,9 +23,9 @@ const (
 
 type env struct {
 	config    *DBAdminConfig
-	db        *db.Database
 	ginEngine *gin.Engine
 	readiness shared.Readiness
+	db        *db.Database
 }
 
 func main() {

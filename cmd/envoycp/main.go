@@ -21,14 +21,15 @@ const (
 )
 
 type server struct {
-	config               *EnvoyCPConfig
-	ginEngine            *gin.Engine
-	db                   *db.Database
-	xds                  xds.Server
-	xdsCache             cache.SnapshotCache
-	readiness            shared.Readiness
-	metricXdsDeployments *prometheus.CounterVec
-	// authLatencyHistogram prometheus.Summary
+	config    *EnvoyCPConfig
+	ginEngine *gin.Engine
+	db        *db.Database
+	readiness shared.Readiness
+	xds       xds.Server
+	xdsCache  cache.SnapshotCache
+	metrics   struct {
+		xdsDeployments *prometheus.CounterVec
+	}
 }
 
 func main() {

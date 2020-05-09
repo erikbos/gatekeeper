@@ -54,8 +54,8 @@ func (r *Readiness) updateReadinessState(newState bool) {
 func (r *Readiness) RegisterMetrics(serviceName string) {
 	r.transitionCounter = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: serviceName + "_readiness",
-			Help: "Number of readiness transitions.",
+			Name: serviceName + "_readiness_transitions_total",
+			Help: "Total number of readiness transitions.",
 		}, []string{"state"})
 
 	prometheus.MustRegister(r.transitionCounter)

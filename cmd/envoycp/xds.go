@@ -114,7 +114,7 @@ func (s *server) XDSMainloop() {
 func getXDSInterval(config xdsConfig) time.Duration {
 	interval, err := time.ParseDuration(config.XDSInterval)
 	if err != nil {
-		log.Fatalf("Cannot parse XDSInterval '%s' (%s)", config.XDSInterval, err)
+		log.Fatalf("Cannot parse '%s' as XDSInterval (%s)", config.XDSInterval, err)
 	}
 	if interval < minimumXDSInterval {
 		log.Fatalf("xds refresh interval set to low, should be >= '%s'", minimumXDSInterval)
@@ -126,34 +126,30 @@ func getXDSInterval(config xdsConfig) time.Duration {
 func (s *server) registerMetrics() {
 	metricVirtualHostsCount := prometheus.NewGaugeFunc(
 		prometheus.GaugeOpts{
-			Name: myName + "_xds_virtualhosts",
-			Help: "Current number of clusters",
-		},
-		s.GetVirtualHostCount)
+			Name: myName + "_xds_virtualhosts_total",
+			Help: "Total number of clusters.",
+		}, s.GetVirtualHostCount)
 
 	metricRoutesCount := prometheus.NewGaugeFunc(
 		prometheus.GaugeOpts{
-			Name: myName + "_xds_routes",
-			Help: "Current number of routes",
-		},
-		s.GetRouteCount)
+			Name: myName + "_xds_routes_total",
+			Help: "Total number of routes.",
+		}, s.GetRouteCount)
 
 	metricClustersCount := prometheus.NewGaugeFunc(
 		prometheus.GaugeOpts{
-			Name: myName + "_xds_clusters",
-			Help: "Current number of clusters",
-		},
-		s.GetClusterCount)
+			Name: myName + "_xds_clusters_total",
+			Help: "Total number of clusters.",
+		}, s.GetClusterCount)
 
-	s.metricXdsDeployments = prometheus.NewCounterVec(
+	s.metrics.xdsDeployments = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: myName + "_xds_deployments",
-			Help: "Current number of xds configuration deployments",
-		},
-		[]string{"resource"})
+			Name: myName + "_xds_deployments_total",
+			Help: "Total number of xds configuration deployments.",
+		}, []string{"resource"})
 
 	prometheus.MustRegister(metricVirtualHostsCount)
 	prometheus.MustRegister(metricRoutesCount)
 	prometheus.MustRegister(metricClustersCount)
-	prometheus.MustRegister(s.metricXdsDeployments)
+	prometheus.MustRegister(s.metrics.xdsDeployments)
 }

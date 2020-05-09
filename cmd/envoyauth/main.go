@@ -19,13 +19,15 @@ const (
 )
 
 type authorizationServer struct {
-	config               *APIAuthConfig
-	ginEngine            *gin.Engine
-	db                   *db.Database
-	c                    *db.Cache
-	g                    *shared.Geoip
-	authLatencyHistogram prometheus.Summary
-	readiness            shared.Readiness
+	config    *APIAuthConfig
+	ginEngine *gin.Engine
+	readiness shared.Readiness
+	db        *db.Database
+	c         *db.Cache
+	g         *shared.Geoip
+	metrics   struct {
+		authLatencyHistogram prometheus.Summary
+	}
 }
 
 func main() {

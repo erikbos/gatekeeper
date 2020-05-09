@@ -5,7 +5,7 @@ go 1.13
 require (
 	github.com/bmatcuk/doublestar v1.3.0
 	github.com/cespare/xxhash v1.1.0 // indirect
-	github.com/cncf/udpa/go v0.0.0-20200327203949-e8cd3a4bb307 // indirect
+	github.com/cncf/udpa/go v0.0.0-20200508205342-3b31d022a144 // indirect
 	github.com/coocood/freecache v1.1.0
 	github.com/dchest/uniuri v0.0.0-20200228104902-7aecb25e1fe5
 	github.com/envoyproxy/go-control-plane v0.9.4

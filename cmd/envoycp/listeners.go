@@ -59,7 +59,7 @@ func (s *server) GetVirtualHostConfigFromDatabase() {
 			// FIXME this should be notification via channel
 			xdsLastUpdate = shared.GetCurrentTimeMilliseconds()
 			// Increase xds deployment metric
-			s.metricXdsDeployments.WithLabelValues("virtualhosts").Inc()
+			s.metrics.xdsDeployments.WithLabelValues("virtualhosts").Inc()
 		}
 		time.Sleep(virtualHostRefreshInterval)
 	}

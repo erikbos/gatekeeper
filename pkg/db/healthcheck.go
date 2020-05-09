@@ -50,8 +50,7 @@ func (d *Database) runHealthCheck(healthcheckInterval string) {
 func (d *Database) getHealthCheckInterval(healthcheckInterval string) time.Duration {
 	interval, err := time.ParseDuration(healthcheckInterval)
 	if err != nil {
-		log.Fatalf("Cannot parse database healthCheckInterval '%s' (%s)",
-			healthcheckInterval, err)
+		log.Fatalf("Cannot parse '%s' as db healthCheckInterval (%s)", healthcheckInterval, err)
 	}
 	if interval < minimumHealthCheckInterval {
 		log.Fatalf("Db healthcheck interval set to low, should be >= '%s'", minimumHealthCheckInterval)

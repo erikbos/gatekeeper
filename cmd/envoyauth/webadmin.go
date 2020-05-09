@@ -53,7 +53,7 @@ func (a *authorizationServer) ShowWebAdminHomePage(c *gin.Context) {
 func (a *authorizationServer) ConfigDump(c *gin.Context) {
 	// We must remove db password from configuration struct before showing
 	configToPrint := a.config
-	configToPrint.Database.Password = ""
+	configToPrint.Database.Password = "[redacted]"
 
 	buffer := new(bytes.Buffer)
 	encoder := json.NewEncoder(buffer)

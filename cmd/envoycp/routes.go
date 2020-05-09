@@ -60,7 +60,7 @@ func (s *server) GetRouteConfigFromDatabase() {
 			// FIXME this should be notification via channel
 			xdsLastUpdate = shared.GetCurrentTimeMilliseconds()
 			// Increase xds deployment metric
-			s.metricXdsDeployments.WithLabelValues("routes").Inc()
+			s.metrics.xdsDeployments.WithLabelValues("routes").Inc()
 		}
 		time.Sleep(routeRefreshInterval)
 	}

@@ -72,7 +72,7 @@ func (s *server) GetClusterConfigFromDatabase() {
 			// FIXME this should be notification via channel
 			xdsLastUpdate = shared.GetCurrentTimeMilliseconds()
 			// Increase xds deployment metric
-			s.metricXdsDeployments.WithLabelValues("clusters").Inc()
+			s.metrics.xdsDeployments.WithLabelValues("clusters").Inc()
 		}
 		time.Sleep(clusterRefreshInterval)
 	}
