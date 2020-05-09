@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/erikbos/apiauth/pkg/shared"
-	log "github.com/sirupsen/logrus"
 
 	api "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	auth "github.com/envoyproxy/go-control-plane/envoy/api/v2/auth"
@@ -14,13 +13,15 @@ import (
 	listener "github.com/envoyproxy/go-control-plane/envoy/api/v2/listener"
 	accessLog "github.com/envoyproxy/go-control-plane/envoy/config/accesslog/v2"
 	filterAccessLog "github.com/envoyproxy/go-control-plane/envoy/config/filter/accesslog/v2"
+	extAuthz "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/ext_authz/v2"
 	hcm "github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2"
 	"github.com/envoyproxy/go-control-plane/pkg/cache"
 	"github.com/envoyproxy/go-control-plane/pkg/wellknown"
 	"github.com/golang/protobuf/ptypes"
-	"github.com/golang/protobuf/ptypes/any"
 	spb "github.com/golang/protobuf/ptypes/struct"
 	"github.com/golang/protobuf/ptypes/wrappers"
+	log "github.com/sirupsen/logrus"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
 const (
@@ -149,9 +150,6 @@ func (s *server) buildFilterChainEntry(l *api.Listener, v shared.VirtualHost) *l
 	}
 
 	FilterChainEntry := &listener.FilterChain{
-		// FilterChainMatch: &listener.FilterChainMatch{
-		// 	ServerNames: []string{v.VirtualHosts[0]},
-		// },
 		Filters: []*listener.Filter{{
 			Name: wellknown.HTTPConnectionManager,
 			ConfigType: &listener.Filter_TypedConfig{
@@ -161,8 +159,6 @@ func (s *server) buildFilterChainEntry(l *api.Listener, v shared.VirtualHost) *l
 	}
 
 	// Configure TLS in case when we have a certificate + key
-	var tlsContext *any.Any
-
 	certificate, error1 := shared.GetAttribute(v.Attributes, "TLSCertificate")
 	certificateKey, error2 := shared.GetAttribute(v.Attributes, "TLSCertificateKey")
 
@@ -178,9 +174,10 @@ func (s *server) buildFilterChainEntry(l *api.Listener, v shared.VirtualHost) *l
 		},
 	}
 
-	// Configure listener to do match SNI
+	// Configure listener to be able to match SNI
 	FilterChainEntry.FilterChainMatch =
 		&listener.FilterChainMatch{
+			// FIXME should work on multiple hostnames
 			ServerNames: []string{v.VirtualHosts[0]},
 		}
 
@@ -214,7 +211,7 @@ func (s *server) buildFilterChainEntry(l *api.Listener, v shared.VirtualHost) *l
 		downStreamTLSConfig.CommonTlsContext.AlpnProtocols = []string{"http/1.1"}
 	}
 
-	tlsContext, err = ptypes.MarshalAny(downStreamTLSConfig)
+	tlsContext, err := ptypes.MarshalAny(downStreamTLSConfig)
 	if err != nil {
 		log.Panic(err)
 	}
@@ -243,6 +240,12 @@ func (s *server) buildConnectionManager(httpFilters []*hcm.HttpFilter, v shared.
 func buildFilter() []*hcm.HttpFilter {
 	return []*hcm.HttpFilter{
 		{
+			Name: "envoy.ext_authz",
+			ConfigType: &hcm.HttpFilter_TypedConfig{
+				TypedConfig: buildExtAuthzFilterConnfig(),
+			},
+		},
+		{
 			Name: "envoy.filters.http.cors",
 		},
 		{
@@ -250,10 +253,34 @@ func buildFilter() []*hcm.HttpFilter {
 		},
 	}
 }
+func buildExtAuthzFilterConnfig() *anypb.Any {
+	extAuthz := &extAuthz.ExtAuthz{
+		// FIXME should be configuration option
+		FailureModeAllow: false,
+
+		Services: &extAuthz.ExtAuthz_GrpcService{
+			GrpcService: &core.GrpcService{
+				// FIXME should be configuration option
+				Timeout: ptypes.DurationProto(3 * time.Second),
+				TargetSpecifier: &core.GrpcService_EnvoyGrpc_{
+					EnvoyGrpc: &core.GrpcService_EnvoyGrpc{
+						// FIXME should be configuration option
+						ClusterName: "authentication",
+					},
+				},
+			},
+		},
+	}
+	extAuthzTypedConf, err := ptypes.MarshalAny(extAuthz)
+	if err != nil {
+		log.Panic(err)
+	}
+	return extAuthzTypedConf
+}
 
 func (s *server) buildRouteSpecifier(routeSet string) *hcm.HttpConnectionManager_RouteConfig {
 	return &hcm.HttpConnectionManager_RouteConfig{
-		RouteConfig: s.buildEnvoyVirtualHostRouteConfig(routeSet, routes),
+		RouteConfig: s.buildEnvoyVirtualHostRouteConfig(routeSet, s.routes),
 	}
 }
 
@@ -300,7 +327,9 @@ func buildAccessLog(logFilename string, fieldFormats map[string]string) []*filte
 		log.Panic(err)
 	}
 	return []*filterAccessLog.AccessLog{{
-		Name:       "envoy.file_access_log",
-		ConfigType: &filterAccessLog.AccessLog_TypedConfig{TypedConfig: accessLogTypedConf},
+		Name: "envoy.file_access_log",
+		ConfigType: &filterAccessLog.AccessLog_TypedConfig{
+			TypedConfig: accessLogTypedConf,
+		},
 	}}
 }

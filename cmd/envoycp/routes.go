@@ -29,8 +29,6 @@ const (
 	attributeCORSAllowCredentials     = "CORSAllowCredentials"
 )
 
-var routes []shared.Route
-
 // FIXME this does not detect removed records
 // GetRouteConfigFromDatabase continously gets the current configuration
 func (s *server) GetRouteConfigFromDatabase() {
@@ -44,11 +42,11 @@ func (s *server) GetRouteConfigFromDatabase() {
 		if err != nil {
 			log.Errorf("Could not retrieve routes from database (%s)", err)
 		} else {
-			for _, s := range newRouteList {
+			for _, route := range newRouteList {
 				// Is a cluster updated since last time we stored it?
-				if s.LastmodifiedAt > routesLastUpdate {
+				if route.LastmodifiedAt > routesLastUpdate {
 					routeMutex.Lock()
-					routes = newRouteList
+					s.routes = newRouteList
 					routeMutex.Unlock()
 
 					routesLastUpdate = shared.GetCurrentTimeMilliseconds()
@@ -68,26 +66,26 @@ func (s *server) GetRouteConfigFromDatabase() {
 
 // GetRouteCount returns number of routes
 func (s *server) GetRouteCount() float64 {
-	return float64(len(routes))
+	return float64(len(s.routes))
 }
 
 // getEnvoyRouteConfig returns array of all envoy routes
 func (s *server) getEnvoyRouteConfig() ([]cache.Resource, error) {
 	var envoyRoutes []cache.Resource
 
-	RouteSetNames := getRouteSetNames(routes)
+	RouteSetNames := s.getRouteSetNames(s.routes)
 	for routeSetName := range RouteSetNames {
 		log.Infof("Adding routeset %s", routeSetName)
-		envoyRoutes = append(envoyRoutes, s.buildEnvoyVirtualHostRouteConfig(routeSetName, routes))
+		envoyRoutes = append(envoyRoutes, s.buildEnvoyVirtualHostRouteConfig(routeSetName, s.routes))
 	}
 
 	return envoyRoutes, nil
 }
 
 // getVirtualHostPorts returns set of unique routeset names
-func getRouteSetNames(vhosts []shared.Route) map[string]bool {
+func (s *server) getRouteSetNames(vhosts []shared.Route) map[string]bool {
 	routeSetNames := map[string]bool{}
-	for _, routeEntry := range routes {
+	for _, routeEntry := range s.routes {
 		routeSetNames[routeEntry.RouteSet] = true
 	}
 	return routeSetNames
