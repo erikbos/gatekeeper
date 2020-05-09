@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	routeRefreshInterval = 2 * time.Second
+	routeDataRefreshInterval = 2 * time.Second
 
 	attributeDirectResponseStatusCode = "DirectResponseStatusCode"
 	attributeDirectResponseBody       = "DirectResponseBody"
@@ -62,7 +62,7 @@ func (s *server) GetRouteConfigFromDatabase() {
 			// Increase xds deployment metric
 			s.metrics.xdsDeployments.WithLabelValues("routes").Inc()
 		}
-		time.Sleep(routeRefreshInterval)
+		time.Sleep(routeDataRefreshInterval)
 	}
 }
 
@@ -72,13 +72,13 @@ func (s *server) GetRouteCount() float64 {
 }
 
 // getEnvoyRouteConfig returns array of all envoy routes
-func getEnvoyRouteConfig() ([]cache.Resource, error) {
+func (s *server) getEnvoyRouteConfig() ([]cache.Resource, error) {
 	var envoyRoutes []cache.Resource
 
 	RouteSetNames := getRouteSetNames(routes)
 	for routeSetName := range RouteSetNames {
 		log.Infof("Adding routeset %s", routeSetName)
-		envoyRoutes = append(envoyRoutes, buildEnvoyVirtualHostRouteConfig(routeSetName, routes))
+		envoyRoutes = append(envoyRoutes, s.buildEnvoyVirtualHostRouteConfig(routeSetName, routes))
 	}
 
 	return envoyRoutes, nil
@@ -94,7 +94,7 @@ func getRouteSetNames(vhosts []shared.Route) map[string]bool {
 }
 
 // buildEnvoyVirtualHostRouteConfig builds vhost and route configuration of one routeset
-func buildEnvoyVirtualHostRouteConfig(routeSet string,
+func (s *server) buildEnvoyVirtualHostRouteConfig(routeSet string,
 	routes []shared.Route) *api.RouteConfiguration {
 
 	return &api.RouteConfiguration{
@@ -102,27 +102,27 @@ func buildEnvoyVirtualHostRouteConfig(routeSet string,
 		VirtualHosts: []*route.VirtualHost{
 			{
 				Name:    routeSet,
-				Domains: getVirtualHostsOfRouteSet(routeSet),
-				Routes:  buildEnvoyRoutes(routeSet, routes),
+				Domains: s.getVirtualHostsOfRouteSet(routeSet),
+				Routes:  s.buildEnvoyRoutes(routeSet, routes),
 			},
 		},
 	}
 }
 
 // buildEnvoyRoute returns all Envoy routes belong to one routeset
-func buildEnvoyRoutes(routeSet string, routes []shared.Route) []*route.Route {
+func (s *server) buildEnvoyRoutes(routeSet string, routes []shared.Route) []*route.Route {
 	var envoyRoutes []*route.Route
 
 	for _, route := range routes {
 		if route.RouteSet == routeSet {
-			envoyRoutes = append(envoyRoutes, buildEnvoyRoute(route))
+			envoyRoutes = append(envoyRoutes, s.buildEnvoyRoute(route))
 		}
 	}
 	return envoyRoutes
 }
 
 // buildEnvoyRoute returns a single Envoy route
-func buildEnvoyRoute(routeEntry shared.Route) *route.Route {
+func (s *server) buildEnvoyRoute(routeEntry shared.Route) *route.Route {
 	routeMatch := buildRouteMatch(routeEntry)
 	if routeMatch == nil {
 		log.Warnf("Cannot build route config for route %s", routeEntry.Name)

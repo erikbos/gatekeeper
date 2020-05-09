@@ -24,13 +24,10 @@ import (
 )
 
 const (
-	virtualHostRefreshInterval = 2 * time.Second
+	virtualHostDataRefreshInterval = 2 * time.Second
 )
 
-var virtualhosts []shared.VirtualHost
-
 // FIXME this does not detect removed records
-
 // GetVirtualHostConfigFromDatabase continously gets the current configuration
 func (s *server) GetVirtualHostConfigFromDatabase() {
 	var virtualHostsLastUpdate int64
@@ -43,11 +40,11 @@ func (s *server) GetVirtualHostConfigFromDatabase() {
 		if err != nil {
 			log.Errorf("Could not retrieve virtualhosts from database (%s)", err)
 		} else {
-			for _, s := range newVirtualHosts {
+			for _, virtualhost := range newVirtualHosts {
 				// Is a virtualhosts updated since last time we stored it?
-				if s.LastmodifiedAt > virtualHostsLastUpdate {
+				if virtualhost.LastmodifiedAt > virtualHostsLastUpdate {
 					virtualHostsMutex.Lock()
-					virtualhosts = newVirtualHosts
+					s.virtualhosts = newVirtualHosts
 					virtualHostsMutex.Unlock()
 
 					virtualHostsLastUpdate = shared.GetCurrentTimeMilliseconds()
@@ -61,41 +58,41 @@ func (s *server) GetVirtualHostConfigFromDatabase() {
 			// Increase xds deployment metric
 			s.metrics.xdsDeployments.WithLabelValues("virtualhosts").Inc()
 		}
-		time.Sleep(virtualHostRefreshInterval)
+		time.Sleep(virtualHostDataRefreshInterval)
 	}
 }
 
 // GetVirtualHostCount returns number of virtualhosts
 func (s *server) GetVirtualHostCount() float64 {
-	return float64(len(virtualhosts))
+	return float64(len(s.virtualhosts))
 }
 
 // getEnvoyListenerConfig returns array of envoy listeners
 func (s *server) getEnvoyListenerConfig() ([]cache.Resource, error) {
 	envoyListeners := []cache.Resource{}
 
-	uniquePorts := getVirtualHostPorts(virtualhosts)
+	uniquePorts := s.getVirtualHostPorts()
 	for port := range uniquePorts {
 		log.Infof("adding listener for port %d", port)
-		envoyListeners = append(envoyListeners, s.buildEnvoyListenerConfig(port, virtualhosts))
+		envoyListeners = append(envoyListeners, s.buildEnvoyListenerConfig(port))
 	}
 	return envoyListeners, nil
 }
 
 // getVirtualHostPorts return unique set of ports from vhost configuration
-func getVirtualHostPorts(vhosts []shared.VirtualHost) map[int]bool {
+func (s *server) getVirtualHostPorts() map[int]bool {
 	listenerPorts := map[int]bool{}
-	for _, virtualhost := range vhosts {
+	for _, virtualhost := range s.virtualhosts {
 		listenerPorts[virtualhost.Port] = true
 	}
 	return listenerPorts
 }
 
 // getVirtualHostPorts return unique set of ports from vhost configuration
-func getVirtualHostsOfRouteSet(routeSetName string) []string {
+func (s *server) getVirtualHostsOfRouteSet(routeSetName string) []string {
 	var virtualHostsInRouteSet []string
 
-	for _, virtualhost := range virtualhosts {
+	for _, virtualhost := range s.virtualhosts {
 		if virtualhost.RouteSet == routeSetName {
 			virtualHostsInRouteSet = append(virtualHostsInRouteSet, virtualhost.VirtualHosts...)
 		}
@@ -103,7 +100,7 @@ func getVirtualHostsOfRouteSet(routeSetName string) []string {
 	return virtualHostsInRouteSet
 }
 
-func (s *server) buildEnvoyListenerConfig(port int, vhosts []shared.VirtualHost) *api.Listener {
+func (s *server) buildEnvoyListenerConfig(port int) *api.Listener {
 
 	newListener := &api.Listener{
 		Name:            fmt.Sprintf("port_%d", port),
@@ -112,7 +109,7 @@ func (s *server) buildEnvoyListenerConfig(port int, vhosts []shared.VirtualHost)
 	}
 
 	// add all vhosts belonging to this listener's port
-	for _, virtualhost := range vhosts {
+	for _, virtualhost := range s.virtualhosts {
 		if virtualhost.Port == port {
 			newListener.FilterChains = append(newListener.FilterChains, s.buildFilterChainEntry(newListener, virtualhost))
 		}
@@ -237,7 +234,7 @@ func (s *server) buildConnectionManager(httpFilters []*hcm.HttpFilter, v shared.
 		CodecType:        hcm.HttpConnectionManager_AUTO,
 		StatPrefix:       "ingress_http",
 		UseRemoteAddress: &wrappers.BoolValue{Value: true},
-		RouteSpecifier:   buildRouteSpecifier(v.RouteSet),
+		RouteSpecifier:   s.buildRouteSpecifier(v.RouteSet),
 		HttpFilters:      httpFilters,
 		AccessLog:        buildAccessLog(s.config.XDS.EnvoyLogFilename, s.config.XDS.EnvoyLogFields),
 	}
@@ -254,34 +251,34 @@ func buildFilter() []*hcm.HttpFilter {
 	}
 }
 
-func buildRouteSpecifier(routeSet string) *hcm.HttpConnectionManager_RouteConfig {
+func (s *server) buildRouteSpecifier(routeSet string) *hcm.HttpConnectionManager_RouteConfig {
 	return &hcm.HttpConnectionManager_RouteConfig{
-		RouteConfig: buildEnvoyVirtualHostRouteConfig(routeSet, routes),
+		RouteConfig: s.buildEnvoyVirtualHostRouteConfig(routeSet, routes),
 	}
 }
 
-func buildRouteSpecifierRDS(routeSet string) *hcm.HttpConnectionManager_Rds {
-	// FIXME
-	XdsCluster := "xds_cluster"
+// func buildRouteSpecifierRDS(routeSet string) *hcm.HttpConnectionManager_Rds {
+// 	// FIXME
+// 	XdsCluster := "xds_cluster"
 
-	return &hcm.HttpConnectionManager_Rds{
-		Rds: &hcm.Rds{
-			RouteConfigName: routeSet,
-			ConfigSource: &core.ConfigSource{
-				ConfigSourceSpecifier: &core.ConfigSource_ApiConfigSource{
-					ApiConfigSource: &core.ApiConfigSource{
-						ApiType: core.ApiConfigSource_GRPC,
-						GrpcServices: []*core.GrpcService{{
-							TargetSpecifier: &core.GrpcService_EnvoyGrpc_{
-								EnvoyGrpc: &core.GrpcService_EnvoyGrpc{ClusterName: XdsCluster},
-							},
-						}},
-					},
-				},
-			},
-		},
-	}
-}
+// 	return &hcm.HttpConnectionManager_Rds{
+// 		Rds: &hcm.Rds{
+// 			RouteConfigName: routeSet,
+// 			ConfigSource: &core.ConfigSource{
+// 				ConfigSourceSpecifier: &core.ConfigSource_ApiConfigSource{
+// 					ApiConfigSource: &core.ApiConfigSource{
+// 						ApiType: core.ApiConfigSource_GRPC,
+// 						GrpcServices: []*core.GrpcService{{
+// 							TargetSpecifier: &core.GrpcService_EnvoyGrpc_{
+// 								EnvoyGrpc: &core.GrpcService_EnvoyGrpc{ClusterName: XdsCluster},
+// 							},
+// 						}},
+// 					},
+// 				},
+// 			},
+// 		},
+// 	}
+// }
 
 func buildAccessLog(logFilename string, fieldFormats map[string]string) []*filterAccessLog.AccessLog {
 	jsonFormat := &spb.Struct{

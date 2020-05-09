@@ -18,7 +18,8 @@ import (
 )
 
 const (
-	clusterRefreshInterval = 2 * time.Second
+	clusterDataRefreshInterval   = 2 * time.Second
+	defaultClusterConnectTimeout = 2 * time.Second
 
 	attributeConnectTimeout      = "ConnectTimeout"
 	attributeIdleTimeout         = "IdleTimeout"
@@ -40,10 +41,7 @@ const (
 	attributeValueTLS13 = "TLSv13"
 )
 
-var clusters []shared.Cluster
-
 // FIXME this does not detect removed records
-
 // getClusterConfigFromDatabase continously gets the current configuration
 func (s *server) GetClusterConfigFromDatabase() {
 	var clustersLastUpdate int64
@@ -57,10 +55,10 @@ func (s *server) GetClusterConfigFromDatabase() {
 			log.Errorf("Could not retrieve clusters from database (%s)", err)
 		} else {
 			// Is one of the cluster updated since last time pushed config to Envoy?
-			for _, s := range newClusterList {
-				if s.LastmodifiedAt > clustersLastUpdate {
+			for _, cluster := range newClusterList {
+				if cluster.LastmodifiedAt > clustersLastUpdate {
 					clusterMutex.Lock()
-					clusters = newClusterList
+					s.clusters = newClusterList
 					clusterMutex.Unlock()
 
 					clustersLastUpdate = shared.GetCurrentTimeMilliseconds()
@@ -74,19 +72,19 @@ func (s *server) GetClusterConfigFromDatabase() {
 			// Increase xds deployment metric
 			s.metrics.xdsDeployments.WithLabelValues("clusters").Inc()
 		}
-		time.Sleep(clusterRefreshInterval)
+		time.Sleep(clusterDataRefreshInterval)
 	}
 }
 
 // GetClusterCount returns number of clusters
 func (s *server) GetClusterCount() float64 {
-	return float64(len(clusters))
+	return float64(len(s.clusters))
 }
 
 // getClusterConfig returns array of all envoy clusters
-func getEnvoyClusterConfig() ([]cache.Resource, error) {
+func (s *server) getEnvoyClusterConfig() ([]cache.Resource, error) {
 	envoyClusters := []cache.Resource{}
-	for _, s := range clusters {
+	for _, s := range s.clusters {
 		envoyClusters = append(envoyClusters, buildEnvoyClusterConfig(s))
 	}
 	return envoyClusters, nil
@@ -121,7 +119,7 @@ func clusterConnectTimeout(cluster shared.Cluster) *duration.Duration {
 	connectTimeout, _ := shared.GetAttribute(cluster.Attributes, attributeConnectTimeout)
 	connectTimeoutAsDuration, err := time.ParseDuration(connectTimeout)
 	if err != nil {
-		connectTimeoutAsDuration = 2 * time.Second
+		connectTimeoutAsDuration = defaultClusterConnectTimeout
 	}
 	return ptypes.DurationProto(connectTimeoutAsDuration)
 }

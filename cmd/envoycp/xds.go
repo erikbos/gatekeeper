@@ -54,7 +54,7 @@ func (s *server) StartXDS() {
 
 // GRPCManagementServer starts grpc xds listener
 func (s *server) GRPCManagementServer() {
-	log.Info("Starting GRPC XDS on ", s.config.XDS.GRPCListen)
+	log.Info("GRPC XDS listening on ", s.config.XDS.GRPCListen)
 	lis, err := net.Listen("tcp", s.config.XDS.GRPCListen)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
@@ -73,7 +73,7 @@ func (s *server) GRPCManagementServer() {
 
 // HTTPManagementGateway starts http xds listener
 func (s *server) HTTPManagementGateway() {
-	log.Info("Starting HTTP XDS on ", s.config.XDS.HTTPListen)
+	log.Info("HTTP XDS listening on ", s.config.XDS.HTTPListen)
 	err := http.ListenAndServe(s.config.XDS.HTTPListen, &xds.HTTPGateway{Server: s.xds})
 	if err != nil {
 		log.Fatalf("failed to HTTP serve: %v", err)
@@ -93,8 +93,8 @@ func (s *server) XDSMainloop() {
 			log.Info("XdsLastUpdate: ", shared.TimeMillisecondsToString(xdsLastUpdate))
 			log.Info("Starting configuration compilation")
 
-			EnvoyClusters, _ := getEnvoyClusterConfig()
-			EnvoyRoutes, _ := getEnvoyRouteConfig()
+			EnvoyClusters, _ := s.getEnvoyClusterConfig()
+			EnvoyRoutes, _ := s.getEnvoyRouteConfig()
 			EnvoyListeners, _ := s.getEnvoyListenerConfig()
 
 			now := shared.GetCurrentTimeMilliseconds()

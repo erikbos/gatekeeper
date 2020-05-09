@@ -21,13 +21,16 @@ const (
 )
 
 type server struct {
-	config    *EnvoyCPConfig
-	ginEngine *gin.Engine
-	db        *db.Database
-	readiness shared.Readiness
-	xds       xds.Server
-	xdsCache  cache.SnapshotCache
-	metrics   struct {
+	config       *EnvoyCPConfig
+	ginEngine    *gin.Engine
+	db           *db.Database
+	readiness    shared.Readiness
+	virtualhosts []shared.VirtualHost
+	routes       []shared.Route
+	clusters     []shared.Cluster
+	xds          xds.Server
+	xdsCache     cache.SnapshotCache
+	metrics      struct {
 		xdsDeployments *prometheus.CounterVec
 	}
 }
