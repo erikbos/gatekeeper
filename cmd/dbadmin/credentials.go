@@ -111,7 +111,7 @@ func (e *env) PostUpdateDeveloperAppKeyByKey(c *gin.Context) {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
-	c.IndentedJSON(http.StatusCreated, AppCredential)
+	c.IndentedJSON(http.StatusOK, AppCredential)
 }
 
 // DeleteDeveloperAppKeyByKey deletes apikey of developer app

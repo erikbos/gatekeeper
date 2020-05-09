@@ -88,10 +88,7 @@ func (d *Database) UpdateAPIProductByName(updatedAPIProduct *shared.APIProduct) 
 
 	updatedAPIProduct.Attributes = shared.TidyAttributes(updatedAPIProduct.Attributes)
 	attributes := d.marshallArrayOfAttributesToJSON(updatedAPIProduct.Attributes)
-
 	apiResource := d.marshallArrayOfStringsToJSON(updatedAPIProduct.APIResources)
-
-	log.Printf(apiResource)
 
 	updatedAPIProduct.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
 	err := d.cassandraSession.Query(query,
