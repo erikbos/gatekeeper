@@ -1,13 +1,12 @@
 package db
 
 import (
-	"encoding/json"
 	"fmt"
-
-	"github.com/erikbos/apiauth/pkg/shared"
 
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/erikbos/apiauth/pkg/shared"
 )
 
 // Prometheus label for metrics of db interactions
@@ -69,7 +68,6 @@ func (d *Database) runGetAppCredentialQuery(query string, queryParameters ...int
 		appcredential := shared.AppCredential{
 			ConsumerKey:       m["key"].(string),
 			AppStatus:         m["app_status"].(string),
-			Attributes:        d.unmarshallJSONArrayOfAttributes(m["attributes"].(string)),
 			CompanyStatus:     m["company_status"].(string),
 			ConsumerSecret:    m["consumer_secret"].(string),
 			CredentialMethod:  m["credential_method"].(string),
@@ -81,10 +79,13 @@ func (d *Database) runGetAppCredentialQuery(query string, queryParameters ...int
 			Scopes:            m["scopes"].(string),
 			Status:            m["status"].(string),
 		}
-		if m["api_products"].(string) != "" {
-			appcredential.APIProducts = make([]shared.APIProductStatus, 0)
-			_ = json.Unmarshal([]byte(m["api_products"].(string)), &appcredential.APIProducts)
+		if m["attributes"] != nil {
+			appcredential.Attributes = d.unmarshallJSONArrayOfAttributes(m["attributes"].(string))
 		}
+		if m["api_products"] != nil {
+			appcredential.APIProducts = d.unmarshallJSONArrayOfProductStatuses(m["api_products"].(string))
+		}
+
 		appcredentials = append(appcredentials, appcredential)
 		m = map[string]interface{}{}
 	}
@@ -98,9 +99,12 @@ func (d *Database) runGetAppCredentialQuery(query string, queryParameters ...int
 
 // UpdateAppCredentialByKey UPSERTs appcredentials in database
 func (d *Database) UpdateAppCredentialByKey(updatedAppCredential *shared.AppCredential) error {
+
 	APIProducts := d.marshallArrayOfProductStatusesToJSON(updatedAppCredential.APIProducts)
+
 	updatedAppCredential.Attributes = shared.TidyAttributes(updatedAppCredential.Attributes)
 	Attributes := d.marshallArrayOfAttributesToJSON(updatedAppCredential.Attributes)
+
 	if err := d.cassandraSession.Query(
 		"INSERT INTO app_credentials (key, api_products, attributes, "+
 			"consumer_secret, expires_at, issued_at,"+
