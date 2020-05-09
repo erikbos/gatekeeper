@@ -24,8 +24,6 @@ const (
 
 // StartXDS brings up XDS system
 func (s *server) StartXDS() {
-	s.registerMetrics()
-
 	s.xdsCache = cache.NewSnapshotCache(true, Hasher{}, logger{})
 	//config := cache.NewSnapshotCache(false, hash{}, logger{})
 	signal := make(chan struct{})
@@ -37,10 +35,6 @@ func (s *server) StartXDS() {
 
 	go s.GRPCManagementServer()
 	go s.HTTPManagementGateway()
-	go s.GetClusterConfigFromDatabase()
-	go s.GetRouteConfigFromDatabase()
-	go s.GetVirtualHostConfigFromDatabase()
-
 	s.XDSMainloop()
 }
 

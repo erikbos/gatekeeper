@@ -55,6 +55,9 @@ func (s *server) GetClusterConfigFromDatabase() {
 			log.Errorf("Could not retrieve clusters from database (%s)", err)
 		} else {
 			// Is one of the cluster updated since last time pushed config to Envoy?
+			if clustersLastUpdate == 0 {
+				log.Info("Initial load of clusters done")
+			}
 			for _, cluster := range newClusterList {
 				if cluster.LastmodifiedAt > clustersLastUpdate {
 					clusterMutex.Lock()

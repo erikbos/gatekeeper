@@ -42,6 +42,9 @@ func (s *server) GetRouteConfigFromDatabase() {
 		if err != nil {
 			log.Errorf("Could not retrieve routes from database (%s)", err)
 		} else {
+			if routesLastUpdate == 0 {
+				log.Info("Initial load of routes done")
+			}
 			for _, route := range newRouteList {
 				// Is a cluster updated since last time we stored it?
 				if route.LastmodifiedAt > routesLastUpdate {

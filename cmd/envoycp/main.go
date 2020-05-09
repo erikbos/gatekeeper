@@ -51,7 +51,10 @@ func main() {
 		log.Fatalf("Database connect failed: %v", err)
 	}
 
+	s.registerMetrics()
 	go s.StartWebAdminServer()
-
+	go s.GetVirtualHostConfigFromDatabase()
+	go s.GetRouteConfigFromDatabase()
+	go s.GetClusterConfigFromDatabase()
 	s.StartXDS()
 }

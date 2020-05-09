@@ -43,6 +43,9 @@ func (s *server) GetVirtualHostConfigFromDatabase() {
 		if err != nil {
 			log.Errorf("Could not retrieve virtualhosts from database (%s)", err)
 		} else {
+			if virtualHostsLastUpdate == 0 {
+				log.Info("Initial load of virtualhosts done")
+			}
 			for _, virtualhost := range newVirtualHosts {
 				// Is a virtualhosts updated since last time we stored it?
 				if virtualhost.LastmodifiedAt > virtualHostsLastUpdate {
@@ -179,8 +182,7 @@ func (s *server) buildFilterChainEntry(l *api.Listener, v shared.VirtualHost) *l
 	// Configure listener to be able to match SNI
 	FilterChainEntry.FilterChainMatch =
 		&listener.FilterChainMatch{
-			// FIXME should work on multiple hostnames
-			ServerNames: []string{v.VirtualHosts[0]},
+			ServerNames: v.VirtualHosts,
 		}
 
 	// Add TLS certifcate configuration
