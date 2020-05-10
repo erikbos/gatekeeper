@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"net/http"
 	"net/url"
 
 	"github.com/bmatcuk/doublestar"
@@ -20,14 +21,19 @@ import (
 	"github.com/erikbos/apiauth/pkg/shared"
 )
 
-type sessionState struct {
-	apikey        string
-	appCredential shared.AppCredential
-	developerApp  shared.DeveloperApp
-	developer     shared.Developer
-	APIProduct    shared.APIProduct
+// requestInfo holds all information of a request
+type requestInfo struct {
+	httpRequest     *auth.AttributeContext_HttpRequest
+	URL             *url.URL
+	queryParameters url.Values
+	apikey          string
+	developer       shared.Developer
+	developerApp    shared.DeveloperApp
+	appCredential   shared.AppCredential
+	APIProduct      shared.APIProduct
 }
 
+// startGRPCAuthorizationServer starts extauthz grpc listener
 func startGRPCAuthorizationServer(a authorizationServer) {
 	lis, err := net.Listen("tcp", a.config.AuthGRPCListen)
 	if err != nil {
@@ -44,47 +50,39 @@ func startGRPCAuthorizationServer(a authorizationServer) {
 }
 
 // Check (called by Envoy) to authenticate & authorize a HTTP request
-func (a *authorizationServer) Check(ctx context.Context, req *auth.CheckRequest) (*auth.CheckResponse, error) {
+func (a *authorizationServer) Check(ctx context.Context, authRequest *auth.CheckRequest) (*auth.CheckResponse, error) {
 
 	timer := prometheus.NewTimer(a.metrics.authLatencyHistogram)
 	defer timer.ObserveDuration()
 
-	httpRequest := req.Attributes.Request.Http
-	//	ttmethod, ok := httpRequest.Headers["ttmethod"]
-
-	URL, _ := url.ParseRequestURI(httpRequest.Path)
-	queryParameters, _ := url.ParseQuery(URL.RawQuery)
-	apiKey := queryParameters["apikey"][0]
-
-	log.Debugf("Check() rx path: %s", httpRequest.Path)
-	log.Debugf("Check() rx uri: %s", URL.Path)
-	log.Debugf("Check() rx apikey: %s", apiKey)
-	for k, v := range httpRequest.Headers {
-		log.Debugf("Check() rx header [%s] = %s", k, v)
+	request, err := getRequestInfo(authRequest)
+	if err != nil {
+		rejectRequest(http.StatusBadRequest, nil, fmt.Sprintf("%s", err))
 	}
+	logConnectionDebug(&request)
 
-	headers := make(map[string]string)
-	if value, ok := httpRequest.Headers["x-forwarded-for"]; ok {
+	upstreamHeaders := make(map[string]string)
+	if value, ok := request.httpRequest.Headers["x-forwarded-for"]; ok {
 		country, state := a.g.GetCountryAndState(value)
-		headers["geoip-country"] = country
-		headers["geoip-state"] = state
+		upstreamHeaders["geoip-country"] = country
+		upstreamHeaders["geoip-state"] = state
 		log.Debugf("Check() rx ip country: %s, state: %s", country, state)
 	}
 
-	log.Printf("Query String: %v", req.GetAttributes().GetRequest().GetHttp().GetQuery())
-
-	entitlement, err := a.CheckProductEntitlement("petstore", URL.Path, apiKey)
+	err = a.CheckProductEntitlement("petstore", &request)
 	if err != nil {
-		log.Debugf("Check() not allowed '%s' (%s)", URL.Path, err.Error())
-		return checkRejectCall(envoy_type.StatusCode_Forbidden, nil, err.Error())
+		log.Debugf("Check() not allowed '%s' (%s)", request.URL.Path, err.Error())
+		return rejectRequest(envoy_type.StatusCode_Forbidden, nil, err.Error())
 	}
-	if entitlement.APIProduct.Scopes != "" {
-		handlePolicies(entitlement, headers)
+	if request.APIProduct.Scopes != "" {
+		handlePolicies(&request, upstreamHeaders)
 	}
-	return checkAllowCall(headers)
+	// FIXME add increase counter for succesful product authorization
+	return allowRequest(upstreamHeaders)
 }
 
-func checkAllowCall(headers map[string]string) (*auth.CheckResponse, error) {
+// allowRequest authorizates customer request to go upstreadm
+func allowRequest(headers map[string]string) (*auth.CheckResponse, error) {
 	response := &auth.CheckResponse{
 		Status: &status.Status{
 			Code: int32(rpc.OK),
@@ -106,7 +104,7 @@ func checkAllowCall(headers map[string]string) (*auth.CheckResponse, error) {
 //				503 = envoy_type.StatusCode_ServiceUnavailable
 // (https://github.com/envoyproxy/envoy/blob/master/source/common/http/codes.cc)
 
-func checkRejectCall(statusCode envoy_type.StatusCode,
+func rejectRequest(statusCode envoy_type.StatusCode,
 	headers map[string]string, message string) (*auth.CheckResponse, error) {
 
 	response := &auth.CheckResponse{
@@ -145,58 +143,81 @@ func buildHeadersList(headers map[string]string) []*core.HeaderValueOption {
 	return headerList
 }
 
-// JSONErrorMessage is the format for our error messages
-const JSONErrorMessage = `{
- "message": "%s"
-}
-`
+// getRequestInfo returns HTTP data of a request
+func getRequestInfo(req *auth.CheckRequest) (requestInfo, error) {
 
-// returns a well structured JSON-formatted message
-func buildJSONErrorMessage(message string) string {
-	return fmt.Sprintf(JSONErrorMessage, message)
+	newConnection := requestInfo{
+		httpRequest: req.Attributes.Request.Http,
+	}
+
+	var err error
+	newConnection.URL, err = url.ParseRequestURI(newConnection.httpRequest.Path)
+	if err != nil {
+		return requestInfo{}, errors.New("could not parse url")
+	}
+	newConnection.queryParameters, _ = url.ParseQuery(newConnection.URL.RawQuery)
+	if err != nil {
+		return requestInfo{}, errors.New("could not parse query parameters")
+	}
+
+	newConnection.apikey = newConnection.queryParameters["apikey"][0]
+
+	return newConnection, nil
+}
+
+func logConnectionDebug(request *requestInfo) {
+	log.Debugf("Check() rx path: %s", request.httpRequest.Path)
+	log.Debugf("Check() rx uri: %s", request.URL.Path)
+	log.Debugf("Check() rx qp: %s", request.queryParameters)
+	log.Debugf("Check() rx apikey: %s", request.apikey)
+
+	for key, value := range request.httpRequest.Headers {
+		log.Debugf("Check() rx header [%s] = %s", key, value)
+	}
+
+	// log.Printf("Query String: %v", authRequest.GetAttributes().GetRequest().GetHttp().GetQuery())
 }
 
 // CheckProductEntitlement
-func (a *authorizationServer) CheckProductEntitlement(organization, requestPath,
-	apiKey string) (sessionState, error) {
+func (a *authorizationServer) CheckProductEntitlement(organization string, request *requestInfo) error {
 
-	session, err := a.getEntitlementDetails(organization, requestPath, apiKey)
+	err := a.getEntitlementDetails(organization, request)
 	if err != nil {
-		return session, err
+		return err
 	}
-	if err = checkAppCredentialValidity(session.appCredential); err != nil {
-		return session, err
+	if err = checkAppCredentialValidity(request.appCredential); err != nil {
+		return err
 	}
-	session.APIProduct, err = a.IsRequestPathAllowed(organization, requestPath, session.appCredential)
+	request.APIProduct, err = a.IsRequestPathAllowed(organization, request.URL.Path, request.appCredential)
 	if err != nil {
-		return session, errors.New("No product match")
+		return errors.New("No product match")
 	}
-	return session, nil
+	return nil
 }
 
-// getEntitlementDetails returns full apikey and dev app details
-func (a *authorizationServer) getEntitlementDetails(organization, requestPath, apiKey string) (sessionState, error) {
-	session := sessionState{}
-
-	session.apikey = apiKey
-
+// getEntitlementDetails populates apikey, developer and developerapp details
+func (a *authorizationServer) getEntitlementDetails(organization string, request *requestInfo) error {
 	var err error
-	session.appCredential, err = a.db.GetAppCredentialByKey(organization, apiKey)
+
+	request.appCredential, err = a.db.GetAppCredentialByKey(organization, request.apikey)
 	if err != nil {
 		// FIX ME increase unknown apikey counter (not an error state)
-		return session, errors.New("Could not find apikey")
+		return errors.New("Could not find apikey")
 	}
-	session.developerApp, err = a.db.GetDeveloperAppByID(organization, session.appCredential.OrganizationAppID)
+
+	request.developerApp, err = a.db.GetDeveloperAppByID(organization, request.appCredential.OrganizationAppID)
 	if err != nil {
 		// FIX ME increase counter as every apikey should link to dev app (error state)
-		return session, errors.New("Could not find developer app of this apikey")
+		return errors.New("Could not find developer app of this apikey")
 	}
-	session.developer, err = a.db.GetDeveloperByID(session.developerApp.ParentID)
+
+	request.developer, err = a.db.GetDeveloperByID(request.developerApp.ParentID)
 	if err != nil {
 		// FIX ME increase counter as every devapp should link to developer (error state)
-		return session, errors.New("Could not find developer of this apikey")
+		return errors.New("Could not find developer of this apikey")
 	}
-	return session, nil
+
+	return nil
 }
 
 // checkAppCredentialValidity checks devapp approval and expiry status
@@ -244,4 +265,15 @@ func (a *authorizationServer) IsRequestPathAllowed(organization, requestPath str
 		}
 	}
 	return shared.APIProduct{}, errors.New("No access")
+}
+
+// JSONErrorMessage is the format for our error messages
+const JSONErrorMessage = `{
+ "message": "%s"
+}
+`
+
+// returns a well structured JSON-formatted message
+func buildJSONErrorMessage(message string) string {
+	return fmt.Sprintf(JSONErrorMessage, message)
 }
