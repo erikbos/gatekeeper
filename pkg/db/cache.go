@@ -74,7 +74,7 @@ func CacheInit(myName string, size, cachettl, negativettl int) *Cache {
 
 	prometheus.MustRegister(prometheus.NewCounterFunc(
 		prometheus.CounterOpts{
-			Name: "apiauth_database_cache_misses",
+			Name: myName + "_database_cache_misses",
 			Help: "Number of database cache misses.",
 		},
 		func() float64 { return (float64(c.cache.MissCount())) },
@@ -82,7 +82,7 @@ func CacheInit(myName string, size, cachettl, negativettl int) *Cache {
 
 	prometheus.MustRegister(prometheus.NewGaugeFunc(
 		prometheus.GaugeOpts{
-			Name: "apiauth_database_cache_evictions",
+			Name: myName + "_database_cache_evictions",
 			Help: "Number of database cache entries that where evicted.",
 		},
 		func() float64 { return (float64(c.cache.EvacuateCount())) },
@@ -90,7 +90,7 @@ func CacheInit(myName string, size, cachettl, negativettl int) *Cache {
 
 	prometheus.MustRegister(prometheus.NewGaugeFunc(
 		prometheus.GaugeOpts{
-			Name: "apiauth_database_cache_expired",
+			Name: myName + "_database_cache_expired",
 			Help: "Number of database cache entries that expired.",
 		},
 		func() float64 { return (float64(c.cache.ExpiredCount())) },
@@ -98,7 +98,7 @@ func CacheInit(myName string, size, cachettl, negativettl int) *Cache {
 
 	c.dbCacheLookupHistogram = prometheus.NewSummary(
 		prometheus.SummaryOpts{
-			Name: "apiauth_database_cache_latency",
+			Name: myName + "_database_cache_latency",
 			Help: "Database retrieval latency (cached & non-cached) in seconds.",
 			Objectives: map[float64]float64{
 				0.5: 0.05, 0.9: 0.01, 0.99: 0.001, 0.999: 0.0001,
