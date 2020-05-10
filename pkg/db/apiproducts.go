@@ -82,9 +82,9 @@ func (d *Database) runGetAPIProductQuery(query string, queryParameters ...interf
 // UpdateAPIProductByName UPSERTs an apiproduct in database
 func (d *Database) UpdateAPIProductByName(updatedAPIProduct *shared.APIProduct) error {
 	query := "INSERT INTO api_products (key,name,display_name, attributes," +
-		"created_at,created_by, route_set, api_resources," +
+		"created_at,created_by, route_set, api_resources, scopes, " +
 		"lastmodified_at,lastmodified_by,organization_name) " +
-		"VALUES(?,?,?,?,?,?,?,?,?,?,?)"
+		"VALUES(?,?,?,?,?,?,?,?,?,?,?,?)"
 
 	updatedAPIProduct.Attributes = shared.TidyAttributes(updatedAPIProduct.Attributes)
 	attributes := d.marshallArrayOfAttributesToJSON(updatedAPIProduct.Attributes)
@@ -94,7 +94,7 @@ func (d *Database) UpdateAPIProductByName(updatedAPIProduct *shared.APIProduct) 
 	err := d.cassandraSession.Query(query,
 		updatedAPIProduct.Key, updatedAPIProduct.Name, updatedAPIProduct.DisplayName, attributes,
 		updatedAPIProduct.CreatedAt, updatedAPIProduct.CreatedBy, updatedAPIProduct.RouteSet,
-		apiResource,
+		apiResource, updatedAPIProduct.Scopes,
 		updatedAPIProduct.LastmodifiedAt, updatedAPIProduct.LastmodifiedBy,
 		updatedAPIProduct.OrganizationName).Exec()
 	if err == nil {
