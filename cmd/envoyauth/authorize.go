@@ -23,6 +23,7 @@ import (
 
 // requestInfo holds all information of a request
 type requestInfo struct {
+	IP              net.IP
 	httpRequest     *auth.AttributeContext_HttpRequest
 	URL             *url.URL
 	queryParameters url.Values
@@ -57,13 +58,14 @@ func (a *authorizationServer) Check(ctx context.Context, authRequest *auth.Check
 
 	request, err := getRequestInfo(authRequest)
 	if err != nil {
-		rejectRequest(http.StatusBadRequest, nil, fmt.Sprintf("%s", err))
+		return rejectRequest(http.StatusBadRequest, nil, fmt.Sprintf("%s", err))
 	}
 	logConnectionDebug(&request)
 
 	upstreamHeaders := make(map[string]string)
-	if value, ok := request.httpRequest.Headers["x-forwarded-for"]; ok {
-		country, state := a.g.GetCountryAndState(value)
+
+	if request.IP != nil {
+		country, state := a.g.GetCountryAndState(request.IP)
 		upstreamHeaders["geoip-country"] = country
 		upstreamHeaders["geoip-state"] = state
 		log.Debugf("Check() rx ip country: %s, state: %s", country, state)
@@ -74,8 +76,14 @@ func (a *authorizationServer) Check(ctx context.Context, authRequest *auth.Check
 		log.Debugf("Check() not allowed '%s' (%s)", request.URL.Path, err.Error())
 		return rejectRequest(envoy_type.StatusCode_Forbidden, nil, err.Error())
 	}
+
+	// Invoke any policy that we have to apply
 	if request.APIProduct.Scopes != "" {
-		handlePolicies(&request, upstreamHeaders)
+		_, err := handlePolicies(&request, upstreamHeaders)
+		// In case a policy wants us to stop we reject call
+		if err != nil {
+			return rejectRequest(envoy_type.StatusCode_Forbidden, nil, err.Error())
+		}
 	}
 	// FIXME add increase counter for succesful product authorization
 	return allowRequest(upstreamHeaders)
@@ -149,7 +157,9 @@ func getRequestInfo(req *auth.CheckRequest) (requestInfo, error) {
 	newConnection := requestInfo{
 		httpRequest: req.Attributes.Request.Http,
 	}
-
+	if ipaddress, ok := newConnection.httpRequest.Headers["x-forwarded-for"]; ok {
+		newConnection.IP = net.ParseIP(ipaddress)
+	}
 	var err error
 	newConnection.URL, err = url.ParseRequestURI(newConnection.httpRequest.Path)
 	if err != nil {

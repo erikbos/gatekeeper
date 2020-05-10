@@ -14,9 +14,7 @@ const (
 	routeDataRefreshInterval       = 2 * time.Second
 )
 
-var virtualhostsMap map[string]string
-
-var dataLastUpdate int64
+// var virtualhostsMap map[string]string
 
 // GetVirtualHostConfigFromDatabase continously gets the current configuration
 func (a *authorizationServer) GetVirtualHostConfigFromDatabase() {
@@ -38,7 +36,7 @@ func (a *authorizationServer) GetVirtualHostConfigFromDatabase() {
 				if virtualhost.LastmodifiedAt > virtualHostsLastUpdate {
 					virtualHostsMutex.Lock()
 					a.virtualhosts = newVirtualHosts
-					virtualhostsMap = a.buildVhostMap()
+					// virtualhostsMap = a.buildVhostMap()
 					virtualHostsMutex.Unlock()
 
 					virtualHostsLastUpdate = shared.GetCurrentTimeMilliseconds()
@@ -47,8 +45,6 @@ func (a *authorizationServer) GetVirtualHostConfigFromDatabase() {
 			}
 		}
 		if xdsPushNeeded {
-			// FIXME this should be notification via channel
-			dataLastUpdate = shared.GetCurrentTimeMilliseconds()
 			// Increase xds deployment metric
 			a.metrics.xdsDeployments.WithLabelValues("virtualhosts").Inc()
 		}
@@ -96,8 +92,6 @@ func (a *authorizationServer) GetRouteConfigFromDatabase() {
 			}
 		}
 		if xdsPushNeeded {
-			// FIXME this should be notification via channel
-			dataLastUpdate = shared.GetCurrentTimeMilliseconds()
 			// Increase xds deployment metric
 			a.metrics.xdsDeployments.WithLabelValues("routes").Inc()
 		}

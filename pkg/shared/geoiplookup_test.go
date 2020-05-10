@@ -3,6 +3,7 @@ package shared
 import (
 	"fmt"
 	"log"
+	"net"
 	"testing"
 )
 
@@ -23,7 +24,8 @@ func TestGeoLookupIPs(t *testing.T) {
 	}
 	for index, testSubnet := range testData {
 		t.Run(fmt.Sprintf("%d", index), func(t *testing.T) {
-			country, _ := g.GetCountryAndState(testSubnet.ipsubnet)
+			ipaddress := net.ParseIP(testSubnet.ipsubnet)
+			country, _ := g.GetCountryAndState(ipaddress)
 			if country != testSubnet.country {
 				t.Errorf("Lookup of (%s) was incorrect, got: %s, want: %s.", testSubnet.ipsubnet, country, testSubnet.country)
 			}
