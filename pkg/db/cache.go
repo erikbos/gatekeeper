@@ -27,7 +27,7 @@ type Cache struct {
 }
 
 // CacheInit initializes in memory cache and registers metrics
-func CacheInit(size, cachettl, negativettl int) *Cache {
+func CacheInit(myName string, size, cachettl, negativettl int) *Cache {
 	c := Cache{}
 
 	c.cache = freecache.NewCache(size)
@@ -36,21 +36,21 @@ func CacheInit(size, cachettl, negativettl int) *Cache {
 
 	c.dbCacheHitsCounter = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: "apiauth_database_cache_hits_total",
+			Name: myName + "_database_cache_hits_total",
 			Help: "Number of database cache hits.",
 		}, []string{"table"})
 	prometheus.MustRegister(c.dbCacheHitsCounter)
 
 	c.dbCacheMissesCounter = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: "apiauth_database_cache_misses_total",
+			Name: myName + "_database_cache_misses_total",
 			Help: "Number of database cache misses.",
 		}, []string{"table"})
 	prometheus.MustRegister(c.dbCacheMissesCounter)
 
 	prometheus.MustRegister(prometheus.NewGaugeFunc(
 		prometheus.GaugeOpts{
-			Name: "apiauth_database_cache_entries",
+			Name: myName + "_database_cache_entries",
 			Help: "Number of entries in database cache.",
 		},
 		func() float64 { return (float64(c.cache.EntryCount())) },
@@ -58,7 +58,7 @@ func CacheInit(size, cachettl, negativettl int) *Cache {
 
 	prometheus.MustRegister(prometheus.NewGaugeFunc(
 		prometheus.GaugeOpts{
-			Name: "apiauth_database_cache_hitratio",
+			Name: myName + "_database_cache_hitratio",
 			Help: "Hitratio of database cache.",
 		},
 		func() float64 { return (c.cache.HitRate()) },
@@ -66,7 +66,7 @@ func CacheInit(size, cachettl, negativettl int) *Cache {
 
 	prometheus.MustRegister(prometheus.NewCounterFunc(
 		prometheus.CounterOpts{
-			Name: "apiauth_database_cache_hits",
+			Name: myName + "_database_cache_hits",
 			Help: "Number of database cache hits.",
 		},
 		func() float64 { return (float64(c.cache.HitCount())) },

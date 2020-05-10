@@ -49,7 +49,7 @@ func main() {
 		log.Fatalf("Database connect failed: %v", err)
 	}
 
-	a.c = db.CacheInit(a.config.Cache.Size, a.config.Cache.TTL, a.config.Cache.NegativeTTL)
+	a.c = db.CacheInit(myName, a.config.Cache.Size, a.config.Cache.TTL, a.config.Cache.NegativeTTL)
 
 	a.g, err = shared.OpenGeoipDatabase(a.config.Geoip.Filename)
 	if err != nil {

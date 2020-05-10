@@ -25,9 +25,8 @@ func StartWebAdminServer(a *authorizationServer) {
 		gin.DefaultWriter = io.MultiWriter(logFile)
 	}
 
-	if a.config.LogLevel != "debug" {
-		gin.SetMode(gin.ReleaseMode)
-	}
+	gin.SetMode(gin.ReleaseMode)
+
 	a.ginEngine = gin.New()
 	a.ginEngine.Use(gin.LoggerWithFormatter(shared.LogHTTPRequest))
 

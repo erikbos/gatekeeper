@@ -11,12 +11,13 @@ import (
 	core "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	auth "github.com/envoyproxy/go-control-plane/envoy/service/auth/v2"
 	envoy_type "github.com/envoyproxy/go-control-plane/envoy/type"
-	"github.com/erikbos/apiauth/pkg/shared"
 	"github.com/gogo/googleapis/google/rpc"
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/genproto/googleapis/rpc/status"
 	"google.golang.org/grpc"
+
+	"github.com/erikbos/apiauth/pkg/shared"
 )
 
 type sessionState struct {
@@ -233,9 +234,9 @@ func (a *authorizationServer) IsRequestPathAllowed(organization, requestPath str
 			} else {
 				// Iterate over apiresource(paths) of apiproduct
 				for _, productPath := range apiproduct.APIResources {
-					log.Debugf("CheckPath() Matching path %s in %s", requestPath, productPath)
+					// log.Debugf("IsRequestPathAllowed() Matching path %s in %s", requestPath, productPath)
 					if ok, _ := doublestar.Match(productPath, requestPath); ok {
-						log.Debugf("CheckAllowedPath: match!")
+						// log.Debugf("IsRequestPathAllowed: match!")
 						return apiproduct, nil
 					}
 				}
