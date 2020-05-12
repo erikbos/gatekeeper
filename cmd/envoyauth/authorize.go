@@ -56,24 +56,20 @@ func (a *authorizationServer) Check(ctx context.Context, authRequest *auth.Check
 	timer := prometheus.NewTimer(a.metrics.authLatencyHistogram)
 	defer timer.ObserveDuration()
 
-	request, err := getRequestInfo(authRequest)
-	if err != nil {
-		return rejectRequest(http.StatusBadRequest, nil, fmt.Sprintf("%s", err))
-	}
-	logConnectionDebug(&request)
-
 	upstreamHeaders := make(map[string]string)
 
-	if request.IP != nil {
-		country, state := a.g.GetCountryAndState(request.IP)
-		upstreamHeaders["geoip-country"] = country
-		upstreamHeaders["geoip-state"] = state
-		log.Debugf("Check() rx ip country: %s, state: %s", country, state)
+	request, err := getRequestInfo(authRequest)
+	if err != nil {
+		a.metrics.connectInfoFailures.Inc()
+		return rejectRequest(http.StatusBadRequest, nil, fmt.Sprintf("%s", err))
 	}
+	a.getCountryAndStateOfRequestorIP(&request, upstreamHeaders)
+	a.logConnectionDebug(&request)
 
 	err = a.CheckProductEntitlement("petstore", &request)
 	if err != nil {
 		log.Debugf("Check() not allowed '%s' (%s)", request.URL.Path, err.Error())
+		a.increaseCounterApikeyNotfound(&request)
 		return rejectRequest(envoy_type.StatusCode_Forbidden, nil, err.Error())
 	}
 
@@ -82,11 +78,48 @@ func (a *authorizationServer) Check(ctx context.Context, authRequest *auth.Check
 		_, err := handlePolicies(&request, upstreamHeaders)
 		// In case a policy wants us to stop we reject call
 		if err != nil {
+			a.increaseRequestRejectCounter(&request)
 			return rejectRequest(envoy_type.StatusCode_Forbidden, nil, err.Error())
 		}
 	}
-	// FIXME add increase counter for succesful product authorization
+
+	a.IncreaseRequestAcceptCounter(&request)
 	return allowRequest(upstreamHeaders)
+}
+
+// increaseCounterPerCountry counts hits per country
+func (a *authorizationServer) increaseCounterPerCountry(country string) {
+
+	a.metrics.requestsPerCountry.WithLabelValues(country).Inc()
+}
+
+// increaseCounterApikeyNotfound requests with unknown apikey
+func (a *authorizationServer) increaseCounterApikeyNotfound(r *requestInfo) {
+
+	a.metrics.requestsApikeyNotFound.WithLabelValues(
+		r.httpRequest.Host,
+		r.httpRequest.Protocol,
+		r.httpRequest.Method).Inc()
+}
+
+// increaseRequestRejectCounter counts requests that are rejected
+func (a *authorizationServer) increaseRequestRejectCounter(r *requestInfo) {
+
+	a.metrics.requestsRejected.WithLabelValues(
+		r.httpRequest.Host,
+		r.httpRequest.Protocol,
+		r.httpRequest.Method,
+		r.APIProduct.Name).Inc()
+}
+
+// IncreaseRequestAcceptCounter counts requests that are accpeted
+func (a *authorizationServer) IncreaseRequestAcceptCounter(r *requestInfo) {
+
+	a.metrics.requestsAccepted.WithLabelValues(
+		r.httpRequest.Host,
+		r.httpRequest.Protocol,
+		r.httpRequest.Method,
+		r.APIProduct.Name).Inc()
 }
 
 // allowRequest authorizates customer request to go upstreadm
@@ -175,7 +208,7 @@ func getRequestInfo(req *auth.CheckRequest) (requestInfo, error) {
 	return newConnection, nil
 }
 
-func logConnectionDebug(request *requestInfo) {
+func (a *authorizationServer) logConnectionDebug(request *requestInfo) {
 	log.Debugf("Check() rx path: %s", request.httpRequest.Path)
 	log.Debugf("Check() rx uri: %s", request.URL.Path)
 	log.Debugf("Check() rx qp: %s", request.queryParameters)
@@ -188,7 +221,7 @@ func logConnectionDebug(request *requestInfo) {
 	// log.Printf("Query String: %v", authRequest.GetAttributes().GetRequest().GetHttp().GetQuery())
 }
 
-// CheckProductEntitlement
+// CheckProductEntitlement verifies whether the requested path is allowed to be called
 func (a *authorizationServer) CheckProductEntitlement(organization string, request *requestInfo) error {
 
 	err := a.getEntitlementDetails(organization, request)

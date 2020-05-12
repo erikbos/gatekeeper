@@ -13,7 +13,7 @@ import (
 )
 
 // handlePolicies invokes all policy functions to set additional upstream headers
-func handlePolicies(request *requestInfo, headersToReturn map[string]string) (int, error) {
+func handlePolicies(request *requestInfo, newUpstreamHeaders map[string]string) (int, error) {
 
 	for _, policy := range strings.Split(request.APIProduct.Scopes, ",") {
 		headersToAdd, err := handlePolicy(policy, request)
@@ -26,12 +26,13 @@ func handlePolicies(request *requestInfo, headersToReturn map[string]string) (in
 		// Add policy generated headers for upstream
 		for key, value := range headersToAdd {
 			// log.Infof("q2 %s", key)
-			headersToReturn[key] = value
+			newUpstreamHeaders[key] = value
 		}
 	}
 	return http.StatusOK, nil
 }
 
+// handlePolicy execute a single policy to optionally add upstream headers
 func handlePolicy(policy string, request *requestInfo) (map[string]string, error) {
 
 	// FIXME insert policy counter
@@ -58,6 +59,18 @@ func handlePolicy(policy string, request *requestInfo) (map[string]string, error
 	return nil, nil
 }
 
+// getCountryAndStateOfRequestorIP lookup requestor's ip address in geoip database
+func (a *authorizationServer) getCountryAndStateOfRequestorIP(
+	request *requestInfo, newUpstreamHeaders map[string]string) {
+
+	country, state := a.g.GetCountryAndState(request.IP)
+	newUpstreamHeaders["geoip-country"] = country
+	newUpstreamHeaders["geoip-state"] = state
+
+	log.Debugf("Check() rx ip country: %s, state: %s", country, state)
+	a.increaseCounterPerCountry(country)
+}
+
 // policyQPS1 returns QPS quotakey to be used by Lyft ratelimiter
 // QPS set as developer app attribute has priority over quota set as product attribute
 //
@@ -65,24 +78,26 @@ func policyQPS1(request *requestInfo) (map[string]string, error) {
 	headerToAdd := make(map[string]string)
 
 	quotaAttributeName := request.APIProduct.Name + "_quotaPerSecond"
-	quotaKeyHeader := request.apikey + "_a_" + quotaAttributeName
+	quotaKey := request.apikey + "_a_" + quotaAttributeName
 
 	value, err := shared.GetAttribute(request.developerApp.Attributes, quotaAttributeName)
 	if err == nil && value != "" {
-		headerToAdd[quotaKeyHeader] = value
-		headerToAdd["quotaSource"] = "app"
+		headerToAdd["qpsQuotaKey"] = quotaKey
+		headerToAdd["qpsRate"] = value
+		headerToAdd["qpsSource"] = "app"
 
 		return headerToAdd, nil
 	}
 	value, err = shared.GetAttribute(request.APIProduct.Attributes, quotaAttributeName)
 	if err == nil && value != "" {
-		headerToAdd[quotaKeyHeader] = value
-		headerToAdd["quotaSource"] = "apiproduct"
+		headerToAdd["qpsQuotaKey"] = quotaKey
+		headerToAdd["qpsRate"] = value
+		headerToAdd["qpsSource"] = "apiproduct"
 	}
 	return headerToAdd, nil
 }
 
-//
+// policySendAPIKey adds apikey as an upstream header
 func policySendAPIKey(request *requestInfo) (map[string]string, error) {
 	headerToAdd := make(map[string]string, 1)
 
@@ -91,7 +106,7 @@ func policySendAPIKey(request *requestInfo) (map[string]string, error) {
 	return headerToAdd, nil
 }
 
-//
+// policySendAPIKey adds developer's email address as an upstream header
 func policySendDeveloperEmail(request *requestInfo) (map[string]string, error) {
 	headerToAdd := make(map[string]string, 1)
 
@@ -100,7 +115,7 @@ func policySendDeveloperEmail(request *requestInfo) (map[string]string, error) {
 	return headerToAdd, nil
 }
 
-//
+// policySendAPIKey adds developerid as an upstream header
 func policySendDeveloperID(request *requestInfo) (map[string]string, error) {
 	headerToAdd := make(map[string]string, 1)
 
@@ -109,7 +124,7 @@ func policySendDeveloperID(request *requestInfo) (map[string]string, error) {
 	return headerToAdd, nil
 }
 
-//
+// policySendDeveloperAppName adds developer app name as an upstream header
 func policySendDeveloperAppName(request *requestInfo) (map[string]string, error) {
 	headerToAdd := make(map[string]string, 1)
 
@@ -118,7 +133,7 @@ func policySendDeveloperAppName(request *requestInfo) (map[string]string, error)
 	return headerToAdd, nil
 }
 
-//
+// policySendDeveloperAppID adds developer app id as an upstream header
 func policySendDeveloperAppID(request *requestInfo) (map[string]string, error) {
 	headerToAdd := make(map[string]string, 1)
 
@@ -127,6 +142,7 @@ func policySendDeveloperAppID(request *requestInfo) (map[string]string, error) {
 	return headerToAdd, nil
 }
 
+// policyCheckIPAccessList checks requestor ip against IP ACL defined in developer app
 func policyCheckIPAccessList(request *requestInfo) (map[string]string, error) {
 	ipAccessList, err := shared.GetAttribute(request.developerApp.Attributes, "IPAccessList")
 
@@ -140,6 +156,7 @@ func policyCheckIPAccessList(request *requestInfo) (map[string]string, error) {
 	return nil, nil
 }
 
+// checkIPinAccessList checks ip against all subnets in IP ACL
 func checkIPinAccessList(ip net.IP, ipAccessList string) bool {
 	if ipAccessList == "" {
 		return false
@@ -157,6 +174,7 @@ func checkIPinAccessList(ip net.IP, ipAccessList string) bool {
 	return false
 }
 
+// policyCheckHostHeader checks request's Host header against host ACL defined in developer app
 func policyCheckHostHeader(request *requestInfo) (map[string]string, error) {
 	hostAccessList, err := shared.GetAttribute(request.developerApp.Attributes, "HostWhiteList")
 
@@ -171,6 +189,7 @@ func policyCheckHostHeader(request *requestInfo) (map[string]string, error) {
 	return nil, nil
 }
 
+// policyCheckHostHeader checks host string against a comma separated host regexp list
 func checkHostinAccessList(hostHeader string, hostAccessList string) bool {
 	if hostAccessList == "" {
 		return false

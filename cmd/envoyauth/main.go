@@ -28,8 +28,13 @@ type authorizationServer struct {
 	c            *db.Cache
 	g            *shared.Geoip
 	metrics      struct {
-		xdsDeployments       *prometheus.CounterVec
-		authLatencyHistogram prometheus.Summary
+		xdsDeployments         *prometheus.CounterVec
+		authLatencyHistogram   prometheus.Summary
+		connectInfoFailures    prometheus.Counter
+		requestsPerCountry     *prometheus.CounterVec
+		requestsApikeyNotFound *prometheus.CounterVec
+		requestsAccepted       *prometheus.CounterVec
+		requestsRejected       *prometheus.CounterVec
 	}
 }
 
@@ -66,26 +71,41 @@ func main() {
 
 // registerMetrics registers our operational metrics
 func (a *authorizationServer) registerMetrics() {
-	// metricVirtualHostsCount := prometheus.NewGaugeFunc(
-	// prometheus.GaugeOpts{
-	// Namespace: myName,
-	// 	Name: "xds_virtualhosts_total",
-	// 	Help: "Total number of clusters.",
-	// }, s.GetVirtualHostCount)
+	a.metrics.connectInfoFailures = prometheus.NewCounter(
+		prometheus.CounterOpts{
+			Namespace: myName,
+			Name:      "connection_info_failures_total",
+			Help:      "Total number of connection info failures.",
+		})
 
-	// metricRoutesCount := prometheus.NewGaugeFunc(
-	// 	prometheus.GaugeOpts{
-	//	Namespace: myName,
-	// 		Name: "xds_routes_total",
-	// 		Help: "Total number of routes.",
-	// 	}, s.GetRouteCount)
+	a.metrics.requestsPerCountry = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: myName,
+			Name:      "requests_percountry_total",
+			Help:      "Total number of requests per country.",
+		}, []string{"country"})
 
-	// metricClustersCount := prometheus.NewGaugeFunc(
-	// 	prometheus.GaugeOpts{
-	//	Namespace: myName,
-	// 		Name: "xds_clusters_total",
-	// 		Help: "Total number of clusters.",
-	// 	}, s.GetClusterCount)
+	a.metrics.requestsApikeyNotFound = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: myName,
+			Name:      "requests_apikey_notfound_total",
+			Help:      "Total number of requests with an unknown apikey.",
+		}, []string{"hostname", "protocol", "method"})
+
+	a.metrics.requestsAccepted = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: myName,
+			Name:      "requests_accepted_total",
+			Help:      "Total number of requests accepted.",
+		}, []string{"hostname", "protocol", "method", "apiproduct"})
+
+	a.metrics.requestsRejected = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: myName,
+			Name:      "requests_rejected_total",
+			Help:      "Total number of requests rejected.",
+		}, []string{"hostname", "apiproduct"})
+
 	a.metrics.authLatencyHistogram = prometheus.NewSummary(
 		prometheus.SummaryOpts{
 			Namespace: myName,
@@ -103,9 +123,11 @@ func (a *authorizationServer) registerMetrics() {
 			Help:      "Total number of vhost/route table loads.",
 		}, []string{"resource"})
 
-	// prometheus.MustRegister(metricVirtualHostsCount)
-	// prometheus.MustRegister(metricRoutesCount)
-	// prometheus.MustRegister(metricClustersCount)
+	prometheus.MustRegister(a.metrics.connectInfoFailures)
+	prometheus.MustRegister(a.metrics.requestsPerCountry)
+	prometheus.MustRegister(a.metrics.requestsApikeyNotFound)
+	prometheus.MustRegister(a.metrics.requestsAccepted)
+	prometheus.MustRegister(a.metrics.requestsRejected)
 	prometheus.MustRegister(a.metrics.authLatencyHistogram)
 	prometheus.MustRegister(a.metrics.xdsDeployments)
 }
