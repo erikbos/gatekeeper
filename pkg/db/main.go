@@ -1,6 +1,7 @@
 package db
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"time"
@@ -45,9 +46,9 @@ func Connect(config DatabaseConfig, r *shared.Readiness, serviceName string) (*D
 	cluster := gocql.NewCluster(d.Config.Hostname)
 	cluster.Port = d.Config.Port
 	cluster.SslOpts = &gocql.SslOptions{
-		CertPath:               "selfsigned.crt",
-		KeyPath:                "selfsigned.key",
-		EnableHostVerification: false,
+		Config: &tls.Config{
+			InsecureSkipVerify: true,
+		},
 	}
 	cluster.Authenticator = gocql.PasswordAuthenticator{
 		Username: d.Config.Username,
@@ -84,7 +85,6 @@ func (d *Database) registerMetrics() {
 			Name:      "database_lookup_hits_total",
 			Help:      "Number of successful database lookups.",
 		}, []string{"hostname", "table"})
-	prometheus.MustRegister(d.dbLookupHitsCounter)
 
 	d.dbLookupMissesCounter = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
@@ -92,7 +92,6 @@ func (d *Database) registerMetrics() {
 			Name:      "database_lookup_misses_total",
 			Help:      "Number of unsuccesful database lookups.",
 		}, []string{"hostname", "table"})
-	prometheus.MustRegister(d.dbLookupMissesCounter)
 
 	d.dbLookupHistogram = prometheus.NewSummary(
 		prometheus.SummaryOpts{
@@ -102,6 +101,9 @@ func (d *Database) registerMetrics() {
 				0.5: 0.05, 0.9: 0.01, 0.99: 0.001, 0.999: 0.0001,
 			},
 		})
+
+	prometheus.MustRegister(d.dbLookupHitsCounter)
+	prometheus.MustRegister(d.dbLookupMissesCounter)
 	prometheus.MustRegister(d.dbLookupHistogram)
 }
 
