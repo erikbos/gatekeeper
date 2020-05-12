@@ -49,6 +49,8 @@ func handlePolicy(policy string, request *requestInfo) (map[string]string, error
 		return policyCheckIPAccessList(request)
 		// case "checkHostHeader":
 		// 	return policyCheckIPAccessList(request)
+		// case "sendbasicauth":
+		// 	return policyCheckIPAccessList(request)
 	}
 	// FIXME insert counter for unknown policy name in an active product
 	// label: product, policyname
@@ -141,9 +143,8 @@ func checkIPinAccessList(ip net.IP, ipAccessList string) bool {
 			if network.Contains(ip) {
 				return true
 			}
-		} else {
-			// FIXME increase unparsable ACL counter
 		}
+		// else FIXME increase unparsable ACL counter
 	}
 	// ip did not match any of the subnets found, request rejected
 	return false

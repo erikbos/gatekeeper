@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/erikbos/apiauth/pkg/shared"
-
 	"github.com/gin-gonic/gin"
+
+	"github.com/erikbos/apiauth/pkg/shared"
 )
 
 // registerOrganizationRoutes registers all routes we handle

@@ -4,8 +4,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/erikbos/apiauth/pkg/shared"
-
 	api "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	auth "github.com/envoyproxy/go-control-plane/envoy/api/v2/auth"
 	core "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
@@ -15,6 +13,8 @@ import (
 	"github.com/golang/protobuf/ptypes/duration"
 	"github.com/golang/protobuf/ptypes/wrappers"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/erikbos/apiauth/pkg/shared"
 )
 
 const (

@@ -5,15 +5,15 @@ import (
 	"sync"
 	"time"
 
-	"github.com/erikbos/apiauth/pkg/shared"
-	"github.com/golang/protobuf/ptypes/wrappers"
-
 	api "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	core "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	route "github.com/envoyproxy/go-control-plane/envoy/api/v2/route"
 	envoymatcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher"
 	cache "github.com/envoyproxy/go-control-plane/pkg/cache"
+	"github.com/golang/protobuf/ptypes/wrappers"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/erikbos/apiauth/pkg/shared"
 )
 
 const (

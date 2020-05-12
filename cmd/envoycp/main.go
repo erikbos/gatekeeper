@@ -1,14 +1,14 @@
 package main
 
 import (
-	"github.com/erikbos/apiauth/pkg/db"
-	"github.com/erikbos/apiauth/pkg/shared"
-	"github.com/prometheus/client_golang/prometheus"
-
 	"github.com/envoyproxy/go-control-plane/pkg/cache"
 	xds "github.com/envoyproxy/go-control-plane/pkg/server"
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/erikbos/apiauth/pkg/db"
+	"github.com/erikbos/apiauth/pkg/shared"
 )
 
 var (

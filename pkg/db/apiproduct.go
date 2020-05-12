@@ -3,10 +3,10 @@ package db
 import (
 	"fmt"
 
-	"github.com/erikbos/apiauth/pkg/shared"
-
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/erikbos/apiauth/pkg/shared"
 )
 
 // Prometheus label for metrics of db interactions

@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"encoding/gob"
 
-	"github.com/erikbos/apiauth/pkg/shared"
-
 	"github.com/coocood/freecache"
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/erikbos/apiauth/pkg/shared"
 )
 
 // FIXME:

@@ -4,10 +4,10 @@ import (
 	"flag"
 	"os"
 
-	"github.com/erikbos/apiauth/pkg/db"
-
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
+
+	"github.com/erikbos/apiauth/pkg/db"
 )
 
 const (

@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/erikbos/apiauth/pkg/shared"
-
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+
+	"github.com/erikbos/apiauth/pkg/shared"
 )
 
 func (e *env) registerDeveloperAppRoutes(r *gin.Engine) {

@@ -5,11 +5,11 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/erikbos/apiauth/pkg/db"
-	"github.com/erikbos/apiauth/pkg/shared"
-
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/erikbos/apiauth/pkg/db"
+	"github.com/erikbos/apiauth/pkg/shared"
 )
 
 var (

@@ -7,15 +7,15 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/erikbos/apiauth/pkg/shared"
-	"github.com/prometheus/client_golang/prometheus"
-
 	v2 "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	discovery "github.com/envoyproxy/go-control-plane/envoy/service/discovery/v2"
 	cache "github.com/envoyproxy/go-control-plane/pkg/cache"
 	xds "github.com/envoyproxy/go-control-plane/pkg/server"
+	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
+
+	"github.com/erikbos/apiauth/pkg/shared"
 )
 
 const (

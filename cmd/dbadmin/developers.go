@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/erikbos/apiauth/pkg/shared"
-
 	"github.com/dchest/uniuri"
 	"github.com/gin-gonic/gin"
+
+	"github.com/erikbos/apiauth/pkg/shared"
 )
 
 // registerDeveloperRoutes registers all routes we handle

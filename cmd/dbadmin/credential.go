@@ -3,10 +3,10 @@ package main
 import (
 	"net/http"
 
-	"github.com/erikbos/apiauth/pkg/shared"
-
 	"github.com/dchest/uniuri"
 	"github.com/gin-gonic/gin"
+
+	"github.com/erikbos/apiauth/pkg/shared"
 )
 
 func (e *env) registerCredentialRoutes(r *gin.Engine) {

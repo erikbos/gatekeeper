@@ -5,11 +5,11 @@ import (
 	"errors"
 	"time"
 
-	"github.com/erikbos/apiauth/pkg/shared"
-
 	"github.com/gocql/gocql"
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/erikbos/apiauth/pkg/shared"
 )
 
 // Database holds all our database connection information and performance counters
