@@ -36,70 +36,79 @@ func CacheInit(myName string, size, cachettl, negativettl int) *Cache {
 
 	c.dbCacheHitsCounter = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: myName + "_database_cache_hits_total",
-			Help: "Number of database cache hits.",
+			Namespace: myName,
+			Name:      "database_cache_hits_total",
+			Help:      "Number of database cache hits.",
 		}, []string{"table"})
 	prometheus.MustRegister(c.dbCacheHitsCounter)
 
 	c.dbCacheMissesCounter = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: myName + "_database_cache_misses_total",
-			Help: "Number of database cache misses.",
+			Namespace: myName,
+			Name:      "database_cache_misses_total",
+			Help:      "Number of database cache misses.",
 		}, []string{"table"})
 	prometheus.MustRegister(c.dbCacheMissesCounter)
 
 	prometheus.MustRegister(prometheus.NewGaugeFunc(
 		prometheus.GaugeOpts{
-			Name: myName + "_database_cache_entries",
-			Help: "Number of entries in database cache.",
+			Namespace: myName,
+			Name:      "database_cache_entries",
+			Help:      "Number of entries in database cache.",
 		},
 		func() float64 { return (float64(c.cache.EntryCount())) },
 	))
 
 	prometheus.MustRegister(prometheus.NewGaugeFunc(
 		prometheus.GaugeOpts{
-			Name: myName + "_database_cache_hitratio",
-			Help: "Hitratio of database cache.",
+			Namespace: myName,
+			Name:      "database_cache_hitratio",
+			Help:      "Hitratio of database cache.",
 		},
 		func() float64 { return (c.cache.HitRate()) },
 	))
 
 	prometheus.MustRegister(prometheus.NewCounterFunc(
 		prometheus.CounterOpts{
-			Name: myName + "_database_cache_hits",
-			Help: "Number of database cache hits.",
+			Namespace: myName,
+			Name:      "database_cache_hits",
+			Help:      "Number of database cache hits.",
 		},
 		func() float64 { return (float64(c.cache.HitCount())) },
 	))
 
 	prometheus.MustRegister(prometheus.NewCounterFunc(
 		prometheus.CounterOpts{
-			Name: myName + "_database_cache_misses",
-			Help: "Number of database cache misses.",
+			Namespace: myName,
+			Name:      "database_cache_misses",
+			Help:      "Number of database cache misses.",
 		},
 		func() float64 { return (float64(c.cache.MissCount())) },
 	))
 
 	prometheus.MustRegister(prometheus.NewGaugeFunc(
 		prometheus.GaugeOpts{
-			Name: myName + "_database_cache_evictions",
-			Help: "Number of database cache entries that where evicted.",
+			Namespace: myName,
+			Name:      "database_cache_evictions",
+			Help:      "Number of database cache entries that where evicted.",
 		},
 		func() float64 { return (float64(c.cache.EvacuateCount())) },
 	))
 
 	prometheus.MustRegister(prometheus.NewGaugeFunc(
 		prometheus.GaugeOpts{
-			Name: myName + "_database_cache_expired",
-			Help: "Number of database cache entries that expired.",
+			Namespace: myName,
+			Name:      "database_cache_expired",
+			Help:      "Number of database cache entries that expired.",
 		},
 		func() float64 { return (float64(c.cache.ExpiredCount())) },
 	))
 
 	c.dbCacheLookupHistogram = prometheus.NewSummary(
 		prometheus.SummaryOpts{
-			Name: myName + "_database_cache_latency",
-			Help: "Database retrieval latency (cached & non-cached) in seconds.",
+			Namespace: myName,
+			Name:      "database_cache_latency",
+			Help:      "Database retrieval latency (cached & non-cached) in seconds.",
 			Objectives: map[float64]float64{
 				0.5: 0.05, 0.9: 0.01, 0.99: 0.001, 0.999: 0.0001,
 			},

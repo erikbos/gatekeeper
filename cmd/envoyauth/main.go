@@ -67,26 +67,30 @@ func main() {
 // registerMetrics registers our operational metrics
 func (a *authorizationServer) registerMetrics() {
 	// metricVirtualHostsCount := prometheus.NewGaugeFunc(
-	// 	prometheus.GaugeOpts{
-	// 		Name: myName + "_xds_virtualhosts_total",
-	// 		Help: "Total number of clusters.",
-	// 	}, s.GetVirtualHostCount)
+	// prometheus.GaugeOpts{
+	// Namespace: myName,
+	// 	Name: "xds_virtualhosts_total",
+	// 	Help: "Total number of clusters.",
+	// }, s.GetVirtualHostCount)
 
 	// metricRoutesCount := prometheus.NewGaugeFunc(
 	// 	prometheus.GaugeOpts{
-	// 		Name: myName + "_xds_routes_total",
+	//	Namespace: myName,
+	// 		Name: "xds_routes_total",
 	// 		Help: "Total number of routes.",
 	// 	}, s.GetRouteCount)
 
 	// metricClustersCount := prometheus.NewGaugeFunc(
 	// 	prometheus.GaugeOpts{
-	// 		Name: myName + "_xds_clusters_total",
+	//	Namespace: myName,
+	// 		Name: "xds_clusters_total",
 	// 		Help: "Total number of clusters.",
 	// 	}, s.GetClusterCount)
 	a.metrics.authLatencyHistogram = prometheus.NewSummary(
 		prometheus.SummaryOpts{
-			Name: myName + "_request_latency",
-			Help: "Authentication latency in seconds.",
+			Namespace: myName,
+			Name:      "request_latency",
+			Help:      "Authentication latency in seconds.",
 			Objectives: map[float64]float64{
 				0.5: 0.05, 0.9: 0.01, 0.99: 0.001, 0.999: 0.0001,
 			},
@@ -94,8 +98,9 @@ func (a *authorizationServer) registerMetrics() {
 
 	a.metrics.xdsDeployments = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: myName + "_config_table_loads_total",
-			Help: "Total number of vhost/route table loads.",
+			Namespace: myName,
+			Name:      "config_table_loads_total",
+			Help:      "Total number of vhost/route table loads.",
 		}, []string{"resource"})
 
 	// prometheus.MustRegister(metricVirtualHostsCount)

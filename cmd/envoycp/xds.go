@@ -112,26 +112,30 @@ func getXDSInterval(config xdsConfig) time.Duration {
 func (s *server) registerMetrics() {
 	metricVirtualHostsCount := prometheus.NewGaugeFunc(
 		prometheus.GaugeOpts{
-			Name: myName + "_xds_virtualhosts_total",
-			Help: "Total number of clusters.",
+			Namespace: myName,
+			Name:      "xds_virtualhosts_total",
+			Help:      "Total number of clusters.",
 		}, s.GetVirtualHostCount)
 
 	metricRoutesCount := prometheus.NewGaugeFunc(
 		prometheus.GaugeOpts{
-			Name: myName + "_xds_routes_total",
-			Help: "Total number of routes.",
+			Namespace: myName,
+			Name:      "xds_routes_total",
+			Help:      "Total number of routes.",
 		}, s.GetRouteCount)
 
 	metricClustersCount := prometheus.NewGaugeFunc(
 		prometheus.GaugeOpts{
-			Name: myName + "_xds_clusters_total",
-			Help: "Total number of clusters.",
+			Namespace: myName,
+			Name:      "xds_clusters_total",
+			Help:      "Total number of clusters.",
 		}, s.GetClusterCount)
 
 	s.metrics.xdsDeployments = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: myName + "_xds_deployments_total",
-			Help: "Total number of xds configuration deployments.",
+			Namespace: myName,
+			Name:      "xds_deployments_total",
+			Help:      "Total number of xds configuration deployments.",
 		}, []string{"resource"})
 
 	prometheus.MustRegister(metricVirtualHostsCount)
