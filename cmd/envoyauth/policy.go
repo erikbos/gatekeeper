@@ -53,7 +53,7 @@ func handlePolicy(policy string, request *requestInfo) (map[string]string, error
 	case "checkHostHeader":
 		return policyCheckHostHeader(request)
 	}
-	// FIXME insert counter for unknown policy name in an active product
+	// FIXME insert counter for unknown policy name in an apiproduct
 	// label: product, policyname
 	return nil, nil
 }
@@ -62,64 +62,69 @@ func handlePolicy(policy string, request *requestInfo) (map[string]string, error
 // QPS set as developer app attribute has priority over quota set as product attribute
 //
 func policyQPS1(request *requestInfo) (map[string]string, error) {
-	quotaAttributeName := request.APIProduct.Name + "_quotaPerSecond"
+	headerToAdd := make(map[string]string)
 
-	returnValue := make(map[string]string)
+	quotaAttributeName := request.APIProduct.Name + "_quotaPerSecond"
+	quotaKeyHeader := request.apikey + "_a_" + quotaAttributeName
 
 	value, err := shared.GetAttribute(request.developerApp.Attributes, quotaAttributeName)
 	if err == nil && value != "" {
-		returnValue[request.apikey+"_a_"+quotaAttributeName] = value
+		headerToAdd[quotaKeyHeader] = value
+		headerToAdd["quotaSource"] = "app"
+
+		return headerToAdd, nil
 	}
 	value, err = shared.GetAttribute(request.APIProduct.Attributes, quotaAttributeName)
 	if err == nil && value != "" {
-		returnValue[request.apikey+"_p_"+quotaAttributeName] = value
+		headerToAdd[quotaKeyHeader] = value
+		headerToAdd["quotaSource"] = "apiproduct"
 	}
-	return returnValue, nil
+	return headerToAdd, nil
 }
 
 //
 func policySendAPIKey(request *requestInfo) (map[string]string, error) {
-	returnValue := make(map[string]string, 1)
+	headerToAdd := make(map[string]string, 1)
 
-	returnValue["x-apikey"] = request.apikey
+	headerToAdd["x-apikey"] = request.apikey
 
-	return returnValue, nil
+	return headerToAdd, nil
 }
 
 //
 func policySendDeveloperEmail(request *requestInfo) (map[string]string, error) {
-	returnValue := make(map[string]string, 1)
+	headerToAdd := make(map[string]string, 1)
 
-	returnValue["x-developer-email"] = request.developer.Email
+	headerToAdd["x-developer-email"] = request.developer.Email
 
-	return returnValue, nil
+	return headerToAdd, nil
 }
 
 //
 func policySendDeveloperID(request *requestInfo) (map[string]string, error) {
-	returnValue := make(map[string]string, 1)
+	headerToAdd := make(map[string]string, 1)
 
-	returnValue["x-developer-id"] = request.developer.DeveloperID
+	headerToAdd["x-developer-id"] = request.developer.DeveloperID
 
-	return returnValue, nil
+	return headerToAdd, nil
 }
 
 //
 func policySendDeveloperAppName(request *requestInfo) (map[string]string, error) {
-	returnValue := make(map[string]string, 1)
+	headerToAdd := make(map[string]string, 1)
 
-	returnValue["x-developer-app-name"] = request.developerApp.Name
+	headerToAdd["x-developer-app-name"] = request.developerApp.Name
 
-	return returnValue, nil
+	return headerToAdd, nil
 }
 
 //
 func policySendDeveloperAppID(request *requestInfo) (map[string]string, error) {
-	returnValue := make(map[string]string, 1)
+	headerToAdd := make(map[string]string, 1)
 
-	returnValue["x-developer-app-id"] = request.developerApp.AppID
+	headerToAdd["x-developer-app-id"] = request.developerApp.AppID
 
-	return returnValue, nil
+	return headerToAdd, nil
 }
 
 func policyCheckIPAccessList(request *requestInfo) (map[string]string, error) {
