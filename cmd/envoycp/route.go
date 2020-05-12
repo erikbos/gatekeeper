@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/base64"
 	"strconv"
 	"sync"
 	"time"
@@ -22,11 +23,13 @@ const (
 	attributeDirectResponseStatusCode = "DirectResponseStatusCode"
 	attributeDirectResponseBody       = "DirectResponseBody"
 	attributePrefixRewrite            = "PrefixRewrite"
+	attributeCORSAllowCredentials     = "CORSAllowCredentials"
 	attributeCORSAllowMethods         = "CORSAllowMethods"
 	attributeCORSAllowHeaders         = "CORSAllowHeaders"
 	attributeCORSExposeHeaders        = "CORSExposeHeaders"
 	attributeCORSMaxAge               = "CORSMaxAge"
-	attributeCORSAllowCredentials     = "CORSAllowCredentials"
+	attributeHostHeader               = "HostHeader"
+	attributeSendBasicAuth            = "SendBasicAuth"
 )
 
 // FIXME this does not detect removed records
@@ -139,6 +142,11 @@ func (s *server) buildEnvoyRoute(routeEntry shared.Route) *route.Route {
 		envoyRoute.Action = buildRouteActionCluster(routeEntry)
 	}
 
+	// In case route-level attributes exist we might additional upstream headers
+	upstreamHeaders := make(map[string]string)
+	handleSendBasicAuthAttribute(routeEntry, upstreamHeaders)
+	envoyRoute.RequestHeadersToAdd = buildHeadersList(upstreamHeaders)
+
 	// In case attribute exist we build direct response config
 	_, err := shared.GetAttribute(routeEntry.Attributes, attributeDirectResponseStatusCode)
 	if err == nil {
@@ -194,7 +202,8 @@ func buildRouteActionCluster(routeEntry shared.Route) *route.Route_Route {
 			ClusterSpecifier: &route.RouteAction_Cluster{
 				Cluster: routeEntry.Cluster,
 			},
-			Cors: buildCorsPolicy(routeEntry),
+			Cors:                 buildCorsPolicy(routeEntry),
+			HostRewriteSpecifier: buildHostRewrite(routeEntry),
 		},
 	}
 	prefixRewrite, err := shared.GetAttribute(routeEntry.Attributes, attributePrefixRewrite)
@@ -268,6 +277,17 @@ func buildRegexpMatcher(regexp string) *envoymatcher.RegexMatcher {
 	}
 }
 
+// buildHostRewrite return CorsPolicy based upon a route's attribute(s)
+func buildHostRewrite(routeEntry shared.Route) *route.RouteAction_HostRewrite {
+	upstreamHostHeader, err := shared.GetAttribute(routeEntry.Attributes, attributeHostHeader)
+	if err == nil && upstreamHostHeader != "" {
+		return &route.RouteAction_HostRewrite{
+			HostRewrite: upstreamHostHeader,
+		}
+	}
+	return nil
+}
+
 func buildRouteActionDirectResponse(routeEntry shared.Route) *route.Route_DirectResponse {
 	directResponseStatusCode, err := shared.GetAttribute(routeEntry.Attributes, attributeDirectResponseStatusCode)
 	if err == nil && directResponseStatusCode != "" {
@@ -291,4 +311,30 @@ func buildRouteActionDirectResponse(routeEntry shared.Route) *route.Route_Direct
 		}
 	}
 	return nil
+}
+
+func handleSendBasicAuthAttribute(routeEntry shared.Route, headersToAdd map[string]string) {
+	usernamePassword, err := shared.GetAttribute(routeEntry.Attributes, attributeSendBasicAuth)
+	if err == nil && usernamePassword != "" {
+		authenticationDigest := base64.StdEncoding.EncodeToString([]byte(usernamePassword))
+		headersToAdd["Authorization"] = authenticationDigest
+	}
+}
+
+// buildHeadersList creates map to hold additional upstream headers
+func buildHeadersList(headers map[string]string) []*core.HeaderValueOption {
+	if len(headers) == 0 {
+		return nil
+	}
+
+	headerList := make([]*core.HeaderValueOption, 0, len(headers))
+	for key, value := range headers {
+		headerList = append(headerList, &core.HeaderValueOption{
+			Header: &core.HeaderValue{
+				Key:   key,
+				Value: value,
+			},
+		})
+	}
+	return headerList
 }

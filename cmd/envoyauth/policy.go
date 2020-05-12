@@ -6,6 +6,9 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/bmatcuk/doublestar"
+	log "github.com/sirupsen/logrus"
+
 	"github.com/erikbos/apiauth/pkg/shared"
 )
 
@@ -47,10 +50,8 @@ func handlePolicy(policy string, request *requestInfo) (map[string]string, error
 		return policySendDeveloperAppID(request)
 	case "checkIPAccessList":
 		return policyCheckIPAccessList(request)
-		// case "checkHostHeader":
-		// 	return policyCheckIPAccessList(request)
-		// case "sendbasicauth":
-		// 	return policyCheckIPAccessList(request)
+	case "checkHostHeader":
+		return policyCheckHostHeader(request)
 	}
 	// FIXME insert counter for unknown policy name in an active product
 	// label: product, policyname
@@ -130,7 +131,7 @@ func policyCheckIPAccessList(request *requestInfo) (map[string]string, error) {
 		}
 		return nil, errors.New("Blocked by IP ACL")
 	}
-	// No IPACL attribute or it's empty: we allow request
+	// No IPACL attribute or it's value was empty: we allow request
 	return nil, nil
 }
 
@@ -143,8 +144,38 @@ func checkIPinAccessList(ip net.IP, ipAccessList string) bool {
 			if network.Contains(ip) {
 				return true
 			}
+		} else {
+			log.Debugf("FIXME increase unparsable ip ACL counter")
 		}
-		// else FIXME increase unparsable ACL counter
+	}
+	// source ip did not match any of the ACL subnets, request rejected
+	return false
+}
+
+func policyCheckHostHeader(request *requestInfo) (map[string]string, error) {
+	hostAccessList, err := shared.GetAttribute(request.developerApp.Attributes, "HostWhiteList")
+
+	log.Infof("Host header: %s", request.httpRequest.Headers[":authority"])
+	if err == nil && hostAccessList != "" {
+		if checkHostinAccessList(request.httpRequest.Headers[":authority"], hostAccessList) {
+			return nil, nil
+		}
+		return nil, errors.New("Blocked by host ACL")
+	}
+	// No Host ACL attribute or it's value was empty: we allow request
+	return nil, nil
+}
+
+func checkHostinAccessList(hostHeader string, hostAccessList string) bool {
+	if hostAccessList == "" {
+		return false
+	}
+	for _, hostPattern := range strings.Split(hostAccessList, ",") {
+		// Testing for this error value does not make sense: we cannot see difference betwen bad regexp
+		// or not-matching
+		if ok, _ := doublestar.Match(hostPattern, hostHeader); ok {
+			return true
+		}
 	}
 	// ip did not match any of the subnets found, request rejected
 	return false
