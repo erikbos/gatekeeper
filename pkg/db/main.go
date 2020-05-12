@@ -80,15 +80,17 @@ func Connect(config DatabaseConfig, r *shared.Readiness, serviceName string) (*D
 func (d *Database) registerMetrics() {
 	d.dbLookupHitsCounter = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: d.ServiceName + "_database_lookup_hits_total",
-			Help: "Number of successful database lookups.",
+			Namespace: d.ServiceName,
+			Name:      "database_lookup_hits_total",
+			Help:      "Number of successful database lookups.",
 		}, []string{"hostname", "table"})
 	prometheus.MustRegister(d.dbLookupHitsCounter)
 
 	d.dbLookupMissesCounter = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: d.ServiceName + "database_lookup_misses_total",
-			Help: "Number of unsuccesful database lookups.",
+			Namespace: d.ServiceName,
+			Name:      "database_lookup_misses_total",
+			Help:      "Number of unsuccesful database lookups.",
 		}, []string{"hostname", "table"})
 	prometheus.MustRegister(d.dbLookupMissesCounter)
 
@@ -103,12 +105,12 @@ func (d *Database) registerMetrics() {
 	prometheus.MustRegister(d.dbLookupHistogram)
 }
 
-func (d *Database) metricsQueryHit(metricLabel string) {
-	d.dbLookupHitsCounter.WithLabelValues(d.Config.Hostname, metricLabel).Inc()
+func (d *Database) metricsQueryHit(tableName string) {
+	d.dbLookupHitsCounter.WithLabelValues(d.Config.Hostname, tableName).Inc()
 }
 
-func (d *Database) metricsQueryMiss(metricLabel string) {
-	d.dbLookupMissesCounter.WithLabelValues(d.Config.Hostname, metricLabel).Inc()
+func (d *Database) metricsQueryMiss(tableName string) {
+	d.dbLookupMissesCounter.WithLabelValues(d.Config.Hostname, tableName).Inc()
 }
 
 // unmarshallJSONArrayOfStrings unpacks JSON array of strings
