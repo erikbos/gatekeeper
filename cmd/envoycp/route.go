@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/base64"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
@@ -11,6 +12,7 @@ import (
 	route "github.com/envoyproxy/go-control-plane/envoy/api/v2/route"
 	envoymatcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher"
 	cache "github.com/envoyproxy/go-control-plane/pkg/cache"
+	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/wrappers"
 	log "github.com/sirupsen/logrus"
 
@@ -204,6 +206,7 @@ func buildRouteActionCluster(routeEntry shared.Route) *route.Route_Route {
 			},
 			Cors:                 buildCorsPolicy(routeEntry),
 			HostRewriteSpecifier: buildHostRewrite(routeEntry),
+			RetryPolicy:          buildRetryPolicy(routeEntry),
 		},
 	}
 	prefixRewrite, err := shared.GetAttribute(routeEntry.Attributes, attributePrefixRewrite)
@@ -337,4 +340,42 @@ func buildHeadersList(headers map[string]string) []*core.HeaderValueOption {
 		})
 	}
 	return headerList
+}
+
+func buildRetryPolicy(routeEntry shared.Route) *route.RetryPolicy {
+
+	RetryOn := shared.GetAttributeAsString(routeEntry.Attributes, "RetryOn", "")
+	if RetryOn == "" {
+		return nil
+	}
+	perTryTimeout := shared.GetAttributeAsDuration(routeEntry.Attributes, "PerTryTimeout", "500ms")
+	numRetries := uint32(shared.GetAttributeAsInt(routeEntry.Attributes, "numRetries", "2"))
+	RetriableStatusCodes := buildStatusCodesSlice(
+		shared.GetAttributeAsString(
+			routeEntry.Attributes, "RetryOnStatusCodes", "503"))
+
+	return &route.RetryPolicy{
+		RetryOn:              RetryOn,
+		NumRetries:           &wrappers.UInt32Value{Value: numRetries},
+		PerTryTimeout:        ptypes.DurationProto(perTryTimeout),
+		RetriableStatusCodes: RetriableStatusCodes,
+		RetryHostPredicate: []*route.RetryPolicy_RetryHostPredicate{
+			{Name: "envoy.retry_host_predicates.previous_hosts"},
+		},
+		// HostSelectionRetryMaxAttempts: 5,
+
+	}
+}
+
+func buildStatusCodesSlice(statusCodes string) []uint32 {
+
+	var statusCodeSlice []uint32
+
+	for _, statusCode := range strings.Split(statusCodes, ",") {
+		// we only add succesfully parse integers
+		if value, err := strconv.Atoi(statusCode); err == nil {
+			statusCodeSlice = append(statusCodeSlice, uint32(value))
+		}
+	}
+	return statusCodeSlice
 }

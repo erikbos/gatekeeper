@@ -224,10 +224,10 @@ func clusterCommonHTTPProtocolOptions(cluster shared.Cluster) *core.HttpProtocol
 // according to spec we need to return at least empty struct to enable HTTP/2
 func clusterHTTP2ProtocolOptions(cluster shared.Cluster) *core.Http2ProtocolOptions {
 	value, err := shared.GetAttribute(cluster.Attributes, attributeHTTP2Enabled)
-	if err == nil && value == attributeValueTrue {
-		return &core.Http2ProtocolOptions{}
+	if err != nil || value != attributeValueTrue {
+		return nil
 	}
-	return nil
+	return &core.Http2ProtocolOptions{}
 }
 
 // clusterTransportSocket configures TLS settings

@@ -2,7 +2,9 @@ package shared
 
 import (
 	"errors"
+	"strconv"
 	"strings"
+	"time"
 )
 
 // Organization contains everything about a Organization
@@ -148,16 +150,60 @@ type Cluster struct {
 }
 
 // GetAttribute find one named attribute in array of attributes (developer or developerapp)
-func GetAttribute(attributes []AttributeKeyValues, requestedAttributeName string) (string, error) {
-	for attributeIndex := range attributes {
-		if attributes[attributeIndex].Name == requestedAttributeName {
-			return attributes[attributeIndex].Value, nil
-		}
+func GetAttribute(attributes []AttributeKeyValues, name string) (string, error) {
+	index := FindIndexOfAttribute(attributes, name)
+	if index == -1 {
+		return "", errors.New("Attribute not found")
 	}
-	return "", errors.New("Attribute not found")
+	return attributes[index].Value, nil
 }
 
-// FindIndexOfAttribute find index of attribute in slice
+// GetAttributeAsString returns attribute value (or provided default) as string
+func GetAttributeAsString(attributes []AttributeKeyValues, name, defaultValue string) string {
+	value, err := GetAttribute(attributes, name)
+	if err != nil {
+		return defaultValue
+	}
+	return value
+}
+
+// GetAttributeAsInt returns attribute value (or provided default) as integer
+func GetAttributeAsInt(attributes []AttributeKeyValues,
+	attributeName, defaultValue string) int {
+
+	value, err := GetAttribute(attributes, attributeName)
+	if err != nil {
+		if defaultValue == "" {
+			return 0
+		}
+		value = defaultValue
+	}
+	integer, err := strconv.Atoi(value)
+	if err != nil {
+		return -1
+	}
+	return integer
+}
+
+// GetAttributeAsDuration returns attribute value (or provided default) as type time.Duration
+func GetAttributeAsDuration(attributes []AttributeKeyValues,
+	attributeName, defaultValue string) time.Duration {
+
+	value, err := GetAttribute(attributes, attributeName)
+	if err != nil {
+		if defaultValue == "" {
+			return 0
+		}
+		value = defaultValue
+	}
+	duration, err := time.ParseDuration(value)
+	if err != nil {
+		return 0
+	}
+	return duration
+}
+
+// FindIndexOfAttribute find index of named attribute in slice
 func FindIndexOfAttribute(attributes []AttributeKeyValues, name string) int {
 	for index, element := range attributes {
 		if element.Name == name {

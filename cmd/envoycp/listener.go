@@ -79,7 +79,7 @@ func (s *server) getEnvoyListenerConfig() ([]cache.Resource, error) {
 
 	uniquePorts := s.getVirtualHostPorts()
 	for port := range uniquePorts {
-		log.Infof("adding listener for port %d", port)
+		log.Infof("Adding listener & vhosts on port %d", port)
 		envoyListeners = append(envoyListeners, s.buildEnvoyListenerConfig(port))
 	}
 	return envoyListeners, nil
@@ -202,17 +202,8 @@ func (s *server) buildFilterChainEntry(l *api.Listener, v shared.VirtualHost) *l
 					},
 				},
 			},
+			AlpnProtocols: s.ALPNOptions(v),
 		},
-	}
-
-	// Enable HTTP/2
-	if value, err := shared.GetAttribute(v.Attributes, "HTTP2Enabled"); err == nil {
-		if value == "true" {
-			downStreamTLSConfig.CommonTlsContext.AlpnProtocols = []string{"h2", "http/1.1"}
-		}
-	} else {
-		// by default we will do http/1.1
-		downStreamTLSConfig.CommonTlsContext.AlpnProtocols = []string{"http/1.1"}
 	}
 
 	tlsContext, err := ptypes.MarshalAny(downStreamTLSConfig)
@@ -227,6 +218,15 @@ func (s *server) buildFilterChainEntry(l *api.Listener, v shared.VirtualHost) *l
 			},
 		}
 	return FilterChainEntry
+}
+
+// ALPNOptions sets TLS's ALPN supported protocols
+func (s *server) ALPNOptions(v shared.VirtualHost) []string {
+	value, err := shared.GetAttribute(v.Attributes, attributeHTTP2Enabled)
+	if err == nil && value == attributeValueTrue {
+		return []string{"h2", "http/1.1"}
+	}
+	return []string{"http/1.1"}
 }
 
 func (s *server) buildConnectionManager(httpFilters []*hcm.HttpFilter, v shared.VirtualHost) *hcm.HttpConnectionManager {
