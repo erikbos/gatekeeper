@@ -47,8 +47,7 @@ func (a *authorizationServer) ShowWebAdminHomePage(c *gin.Context) {
 	shared.ShowIndexPage(c, a.ginEngine, myName)
 }
 
-//configDump pretty prints the active configuration
-//
+// ConfigDump pretty prints the active configuration
 func (a *authorizationServer) ConfigDump(c *gin.Context) {
 	// We must remove db password from configuration struct before showing
 	configToPrint := a.config

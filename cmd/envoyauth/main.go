@@ -28,13 +28,16 @@ type authorizationServer struct {
 	c            *db.Cache
 	g            *shared.Geoip
 	metrics      struct {
-		xdsDeployments         *prometheus.CounterVec
-		authLatencyHistogram   prometheus.Summary
-		connectInfoFailures    prometheus.Counter
-		requestsPerCountry     *prometheus.CounterVec
-		requestsApikeyNotFound *prometheus.CounterVec
-		requestsAccepted       *prometheus.CounterVec
-		requestsRejected       *prometheus.CounterVec
+		configLoads             *prometheus.CounterVec
+		authLatencyHistogram    prometheus.Summary
+		connectInfoFailures     prometheus.Counter
+		requestsPerCountry      *prometheus.CounterVec
+		requestsApikeyNotFound  *prometheus.CounterVec
+		requestsAccepted        *prometheus.CounterVec
+		requestsRejected        *prometheus.CounterVec
+		devApp                  *prometheus.CounterVec
+		apiProductPolicy        *prometheus.CounterVec
+		apiProductPolicyUnknown *prometheus.CounterVec
 	}
 }
 
@@ -71,6 +74,13 @@ func main() {
 
 // registerMetrics registers our operational metrics
 func (a *authorizationServer) registerMetrics() {
+	a.metrics.configLoads = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: myName,
+			Name:      "config_table_loads_total",
+			Help:      "Total number of vhost/route table loads.",
+		}, []string{"resource"})
+
 	a.metrics.connectInfoFailures = prometheus.NewCounter(
 		prometheus.CounterOpts{
 			Namespace: myName,
@@ -116,18 +126,27 @@ func (a *authorizationServer) registerMetrics() {
 			},
 		})
 
-	a.metrics.xdsDeployments = prometheus.NewCounterVec(
+	a.metrics.apiProductPolicy = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: myName,
-			Name:      "config_table_loads_total",
-			Help:      "Total number of vhost/route table loads.",
-		}, []string{"resource"})
+			Name:      "apiproduct_policy_hits_total",
+			Help:      "Total number of policy hits.",
+		}, []string{"apiproduct", "policy"})
 
+	a.metrics.apiProductPolicyUnknown = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: myName,
+			Name:      "apiproduct_policy_unknown_total",
+			Help:      "Total number of unknown policy hits.",
+		}, []string{"apiproduct", "policy"})
+
+	prometheus.MustRegister(a.metrics.configLoads)
 	prometheus.MustRegister(a.metrics.connectInfoFailures)
 	prometheus.MustRegister(a.metrics.requestsPerCountry)
 	prometheus.MustRegister(a.metrics.requestsApikeyNotFound)
 	prometheus.MustRegister(a.metrics.requestsAccepted)
 	prometheus.MustRegister(a.metrics.requestsRejected)
 	prometheus.MustRegister(a.metrics.authLatencyHistogram)
-	prometheus.MustRegister(a.metrics.xdsDeployments)
+	prometheus.MustRegister(a.metrics.apiProductPolicy)
+	prometheus.MustRegister(a.metrics.apiProductPolicyUnknown)
 }

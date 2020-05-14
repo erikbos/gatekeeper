@@ -75,7 +75,7 @@ func (a *authorizationServer) Check(ctx context.Context, authRequest *auth.Check
 
 	// Invoke any policy that we have to apply
 	if request.APIProduct.Scopes != "" {
-		_, err := handlePolicies(&request, upstreamHeaders)
+		_, err := a.handlePolicies(&request, upstreamHeaders)
 		// In case a policy wants us to stop we reject call
 		if err != nil {
 			a.increaseRequestRejectCounter(&request)
@@ -85,12 +85,6 @@ func (a *authorizationServer) Check(ctx context.Context, authRequest *auth.Check
 
 	a.IncreaseRequestAcceptCounter(&request)
 	return allowRequest(upstreamHeaders)
-}
-
-// increaseCounterPerCountry counts hits per country
-func (a *authorizationServer) increaseCounterPerCountry(country string) {
-
-	a.metrics.requestsPerCountry.WithLabelValues(country).Inc()
 }
 
 // increaseCounterApikeyNotfound requests with unknown apikey
@@ -266,12 +260,12 @@ func (a *authorizationServer) getEntitlementDetails(organization string, request
 // checkAppCredentialValidity checks devapp approval and expiry status
 func checkAppCredentialValidity(appcredential shared.AppCredential) error {
 	if appcredential.Status != "approved" {
-		// FIXME increase unapproved counter (not an error state)
+		// FIXME increase unapproved dev app counter (not an error state)
 		return errors.New("Unapproved apikey")
 	}
 	if appcredential.ExpiresAt != -1 {
 		if shared.GetCurrentTimeMilliseconds() > appcredential.ExpiresAt {
-			// FIXME increase expired credentials counter (not an error state))
+			// FIXME increase expired dev app credentials counter (not an error state))
 			return errors.New("Expired apikey")
 		}
 	}

@@ -13,10 +13,10 @@ import (
 )
 
 // handlePolicies invokes all policy functions to set additional upstream headers
-func handlePolicies(request *requestInfo, newUpstreamHeaders map[string]string) (int, error) {
+func (a *authorizationServer) handlePolicies(request *requestInfo, newUpstreamHeaders map[string]string) (int, error) {
 
 	for _, policy := range strings.Split(request.APIProduct.Scopes, ",") {
-		headersToAdd, err := handlePolicy(policy, request)
+		headersToAdd, err := a.handlePolicy(policy, request)
 
 		// Stop and return error in case policy indicates we should stop
 		if err != nil {
@@ -33,9 +33,10 @@ func handlePolicies(request *requestInfo, newUpstreamHeaders map[string]string) 
 }
 
 // handlePolicy execute a single policy to optionally add upstream headers
-func handlePolicy(policy string, request *requestInfo) (map[string]string, error) {
+func (a *authorizationServer) handlePolicy(policy string, request *requestInfo) (map[string]string, error) {
 
-	// FIXME insert policy counter
+	a.metrics.apiProductPolicy.WithLabelValues(request.APIProduct.Name, policy).Inc()
+
 	switch policy {
 	case "qps":
 		return policyQPS1(request)
@@ -54,8 +55,8 @@ func handlePolicy(policy string, request *requestInfo) (map[string]string, error
 	case "checkHostHeader":
 		return policyCheckHostHeader(request)
 	}
-	// FIXME insert counter for unknown policy name in an apiproduct
-	// label: product, policyname
+
+	a.metrics.apiProductPolicyUnknown.WithLabelValues(request.APIProduct.Name, policy).Inc()
 	return nil, nil
 }
 
@@ -67,8 +68,9 @@ func (a *authorizationServer) getCountryAndStateOfRequestorIP(
 	newUpstreamHeaders["geoip-country"] = country
 	newUpstreamHeaders["geoip-state"] = state
 
-	log.Debugf("Check() rx ip country: %s, state: %s", country, state)
-	a.increaseCounterPerCountry(country)
+	// log.Debugf("Check() rx ip country: %s, state: %s", country, state)
+
+	a.metrics.requestsPerCountry.WithLabelValues(country).Inc()
 }
 
 // policyQPS1 returns QPS quotakey to be used by Lyft ratelimiter
@@ -195,7 +197,7 @@ func checkHostinAccessList(hostHeader string, hostAccessList string) bool {
 		return false
 	}
 	for _, hostPattern := range strings.Split(hostAccessList, ",") {
-		// Testing for this error value does not make sense: we cannot see difference betwen bad regexp
+		// Testing for matching error  does not make sense: we cannot differentiate betwen bad regexp
 		// or not-matching
 		if ok, _ := doublestar.Match(hostPattern, hostHeader); ok {
 			return true
