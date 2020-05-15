@@ -8,6 +8,7 @@ import (
 	auth "github.com/envoyproxy/go-control-plane/envoy/api/v2/auth"
 	core "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	endpoint "github.com/envoyproxy/go-control-plane/envoy/api/v2/endpoint"
+	envoy_type "github.com/envoyproxy/go-control-plane/envoy/type"
 	cache "github.com/envoyproxy/go-control-plane/pkg/cache"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/duration"
@@ -26,7 +27,10 @@ const (
 	attributeTLSEnabled          = "TLSEnabled"
 	attributeTLSMinimumVersion   = "TLSMinimumVersion"
 	attributeTLSMaximumVersion   = "TLSMaximumVersion"
-	attributeHTTP2Enabled        = "HTTP2Enabled"
+	attributeHTTPProtocol        = "HTTPProtocol"
+	attributeHTTPProtocolHTTP1   = "HTTP/1.1"
+	attributeHTTPProtocolHTTP2   = "HTTP/2"
+	attributeHTTPProtocolHTTP3   = "HTTP/3"
 	attributeSNIHostName         = "SNIHostName"
 	attributeHealthCheck         = "HealthCheck"
 	attributeHealthCheckPath     = "HealthCheckPath"
@@ -194,7 +198,8 @@ func clusterHealthCheckConfig(cluster shared.Cluster) []*core.HealthCheck {
 		healthCheck := &core.HealthCheck{
 			HealthChecker: &core.HealthCheck_HttpHealthCheck_{
 				HttpHealthCheck: &core.HealthCheck_HttpHealthCheck{
-					Path: healthCheckPath,
+					Path:            healthCheckPath,
+					CodecClientType: clusterHealthCodec(cluster),
 				},
 			},
 			Interval:           ptypes.DurationProto(healthcheckIntervalAsDuration),
@@ -208,8 +213,25 @@ func clusterHealthCheckConfig(cluster shared.Cluster) []*core.HealthCheck {
 	return nil
 }
 
+func clusterHealthCodec(cluster shared.Cluster) envoy_type.CodecClientType {
+	value, _ := shared.GetAttribute(cluster.Attributes, attributeHTTPProtocol)
+
+	switch value {
+	case attributeHTTPProtocolHTTP2:
+		return envoy_type.CodecClientType_HTTP2
+	case attributeHTTPProtocolHTTP3:
+		return envoy_type.CodecClientType_HTTP3
+	}
+
+	log.Warnf("Cluster %s has attribute %s with unknown value %s",
+		cluster.Name, attributeHTTPProtocol, value)
+
+	return envoy_type.CodecClientType_HTTP1
+}
+
 // clusterCommonHTTPProtocolOptions sets HTTP options applicable to both HTTP/1 and /2
 func clusterCommonHTTPProtocolOptions(cluster shared.Cluster) *core.HttpProtocolOptions {
+
 	idleTimeout, _ := shared.GetAttribute(cluster.Attributes, attributeIdleTimeout)
 	idleTimeoutAsDuration, err := time.ParseDuration(idleTimeout)
 	if err != nil {
@@ -221,13 +243,22 @@ func clusterCommonHTTPProtocolOptions(cluster shared.Cluster) *core.HttpProtocol
 }
 
 // clusterHTTP2ProtocolOptions returns HTTP/2 parameters
-// according to spec we need to return at least empty struct to enable HTTP/2
 func clusterHTTP2ProtocolOptions(cluster shared.Cluster) *core.Http2ProtocolOptions {
-	value, err := shared.GetAttribute(cluster.Attributes, attributeHTTP2Enabled)
-	if err != nil || value != attributeValueTrue {
-		return nil
+
+	value, err := shared.GetAttribute(cluster.Attributes, attributeHTTPProtocol)
+	if err == nil {
+		switch value {
+		case attributeHTTPProtocolHTTP1:
+			return nil
+		case attributeHTTPProtocolHTTP2:
+			// according to spec we need to return at least empty struct to enable HTTP/2
+			return &core.Http2ProtocolOptions{}
+		}
 	}
-	return &core.Http2ProtocolOptions{}
+
+	log.Warnf("ClusterProtocol: %s has attribute %s with unknown value %s",
+		cluster.Name, attributeHTTPProtocol, value)
+	return nil
 }
 
 // clusterTransportSocket configures TLS settings
@@ -262,10 +293,20 @@ func clusterSNIHostname(cluster shared.Cluster) string {
 
 // clusterALPNOptions sets TLS's ALPN supported protocols
 func clusterALPNOptions(cluster shared.Cluster) []string {
-	value, err := shared.GetAttribute(cluster.Attributes, attributeHTTP2Enabled)
-	if err == nil && value == attributeValueTrue {
-		return []string{"h2", "http/1.1"}
+
+	value, err := shared.GetAttribute(cluster.Attributes, attributeHTTPProtocol)
+	if err == nil {
+		switch value {
+		case attributeHTTPProtocolHTTP1:
+			return []string{"http/1.1"}
+		case attributeHTTPProtocolHTTP2:
+			return []string{"h2", "http/1.1"}
+		}
 	}
+
+	log.Warnf("clusterALPNOptions: cluster %s has attribute %s with unknown value %s",
+		cluster.Name, attributeHTTPProtocol, value)
+
 	return []string{"http/1.1"}
 }
 

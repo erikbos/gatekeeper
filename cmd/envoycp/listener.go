@@ -202,7 +202,7 @@ func (s *server) buildFilterChainEntry(l *api.Listener, v shared.VirtualHost) *l
 					},
 				},
 			},
-			AlpnProtocols: s.ALPNOptions(v),
+			AlpnProtocols: s.listenerALPNOptions(v),
 		},
 	}
 
@@ -220,12 +220,22 @@ func (s *server) buildFilterChainEntry(l *api.Listener, v shared.VirtualHost) *l
 	return FilterChainEntry
 }
 
-// ALPNOptions sets TLS's ALPN supported protocols
-func (s *server) ALPNOptions(v shared.VirtualHost) []string {
-	value, err := shared.GetAttribute(v.Attributes, attributeHTTP2Enabled)
-	if err == nil && value == attributeValueTrue {
-		return []string{"h2", "http/1.1"}
+// ALPNlistenerALPNOptionsOptions sets TLS's ALPN supported protocols
+func (s *server) listenerALPNOptions(v shared.VirtualHost) []string {
+
+	value, err := shared.GetAttribute(v.Attributes, attributeHTTPProtocol)
+	if err == nil {
+		switch value {
+		case attributeHTTPProtocolHTTP1:
+			return []string{"http/1.1"}
+		case attributeHTTPProtocolHTTP2:
+			return []string{"h2", "http/1.1"}
+		}
 	}
+
+	log.Warnf("listenerALPNOptions: vhost %s has attribute %s with unknown value %s",
+		v.Name, attributeHTTPProtocol, value)
+
 	return []string{"http/1.1"}
 }
 
