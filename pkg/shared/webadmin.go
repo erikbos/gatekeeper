@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 // LogHTTPRequest logs details of an HTTP request
@@ -21,6 +22,14 @@ func LogHTTPRequest(param gin.LogFormatterParams) string {
 		param.Request.UserAgent(),
 		param.ErrorMessage,
 	)
+}
+
+// AddRequestID Gin middleware to add RequestId
+func AddRequestID() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Writer.Header().Set("Request-Id", uuid.New().String())
+		c.Next()
+	}
 }
 
 //ShowIndexPage produces the index page based upon all registered routes

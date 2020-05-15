@@ -28,6 +28,7 @@ func StartWebAdminServer(e *env) {
 	gin.SetMode(gin.ReleaseMode)
 
 	e.ginEngine = gin.New()
+	e.ginEngine.Use(shared.AddRequestID())
 	e.ginEngine.Use(gin.LoggerWithFormatter(shared.LogHTTPRequest))
 
 	e.registerOrganizationRoutes(e.ginEngine)

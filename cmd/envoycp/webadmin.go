@@ -28,6 +28,7 @@ func (s *server) StartWebAdminServer() {
 	gin.SetMode(gin.ReleaseMode)
 
 	s.ginEngine = gin.New()
+	s.ginEngine.Use(shared.AddRequestID())
 	s.ginEngine.Use(gin.LoggerWithFormatter(shared.LogHTTPRequest))
 
 	s.ginEngine.GET("/", s.ShowWebAdminHomePage)
