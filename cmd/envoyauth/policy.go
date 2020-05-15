@@ -32,7 +32,7 @@ func (a *authorizationServer) handlePolicies(request *requestInfo, newUpstreamHe
 	return http.StatusOK, nil
 }
 
-// handlePolicy execute a single policy to optionally add upstream headers
+// handlePolicy executes a single policy to optionally add upstream headers
 func (a *authorizationServer) handlePolicy(policy string, request *requestInfo) (map[string]string, error) {
 
 	a.metrics.apiProductPolicy.WithLabelValues(request.APIProduct.Name, policy).Inc()
@@ -77,79 +77,84 @@ func (a *authorizationServer) getCountryAndStateOfRequestorIP(
 // QPS set as developer app attribute has priority over quota set as product attribute
 //
 func policyQPS1(request *requestInfo) (map[string]string, error) {
-	headerToAdd := make(map[string]string)
 
 	quotaAttributeName := request.APIProduct.Name + "_quotaPerSecond"
 	quotaKey := request.apikey + "_a_" + quotaAttributeName
 
 	value, err := shared.GetAttribute(request.developerApp.Attributes, quotaAttributeName)
 	if err == nil && value != "" {
-		headerToAdd["qpsQuotaKey"] = quotaKey
-		headerToAdd["qpsRate"] = value
-		headerToAdd["qpsSource"] = "app"
-
-		return headerToAdd, nil
+		return map[string]string{
+				"QPS-Quota-Key": quotaKey,
+				"QPS-Rate":      value,
+				"QPS-Source":    "app",
+			},
+			nil
 	}
 	value, err = shared.GetAttribute(request.APIProduct.Attributes, quotaAttributeName)
 	if err == nil && value != "" {
-		headerToAdd["qpsQuotaKey"] = quotaKey
-		headerToAdd["qpsRate"] = value
-		headerToAdd["qpsSource"] = "apiproduct"
+		return map[string]string{
+				"QPS-Quota-Key": quotaKey,
+				"QPS-Rate":      value,
+				"QPS-Source":    "apiproduct",
+			},
+			nil
 	}
-	return headerToAdd, nil
+	// Nothing to add, no error
+	return nil, nil
 }
 
 // policySendAPIKey adds apikey as an upstream header
 func policySendAPIKey(request *requestInfo) (map[string]string, error) {
-	headerToAdd := make(map[string]string, 1)
 
-	headerToAdd["x-apikey"] = request.apikey
-
-	return headerToAdd, nil
+	return map[string]string{
+			"x-apikey": request.apikey,
+		},
+		nil
 }
 
 // policySendAPIKey adds developer's email address as an upstream header
 func policySendDeveloperEmail(request *requestInfo) (map[string]string, error) {
-	headerToAdd := make(map[string]string, 1)
 
-	headerToAdd["x-developer-email"] = request.developer.Email
-
-	return headerToAdd, nil
+	return map[string]string{
+			"x-developer-email": request.developer.Email,
+		},
+		nil
 }
 
 // policySendAPIKey adds developerid as an upstream header
 func policySendDeveloperID(request *requestInfo) (map[string]string, error) {
-	headerToAdd := make(map[string]string, 1)
 
-	headerToAdd["x-developer-id"] = request.developer.DeveloperID
-
-	return headerToAdd, nil
+	return map[string]string{
+			"x-developer-id": request.developer.DeveloperID,
+		},
+		nil
 }
 
 // policySendDeveloperAppName adds developer app name as an upstream header
 func policySendDeveloperAppName(request *requestInfo) (map[string]string, error) {
-	headerToAdd := make(map[string]string, 1)
 
-	headerToAdd["x-developer-app-name"] = request.developerApp.Name
-
-	return headerToAdd, nil
+	return map[string]string{
+			"x-developer-app-name": request.developerApp.Name,
+		},
+		nil
 }
 
 // policySendDeveloperAppID adds developer app id as an upstream header
 func policySendDeveloperAppID(request *requestInfo) (map[string]string, error) {
-	headerToAdd := make(map[string]string, 1)
 
-	headerToAdd["x-developer-app-id"] = request.developerApp.AppID
-
-	return headerToAdd, nil
+	return map[string]string{
+			"x-developer-app-id": request.developerApp.AppID,
+		},
+		nil
 }
 
 // policyCheckIPAccessList checks requestor ip against IP ACL defined in developer app
 func policyCheckIPAccessList(request *requestInfo) (map[string]string, error) {
-	ipAccessList, err := shared.GetAttribute(request.developerApp.Attributes, "IPAccessList")
 
+	ipAccessList, err := shared.GetAttribute(request.developerApp.Attributes, "IPAccessList")
 	if err == nil && ipAccessList != "" {
 		if checkIPinAccessList(request.IP, ipAccessList) {
+			// OK, we have a match
 			return nil, nil
 		}
 		return nil, errors.New("Blocked by IP ACL")
@@ -160,12 +165,14 @@ func policyCheckIPAccessList(request *requestInfo) (map[string]string, error) {
 
 // checkIPinAccessList checks ip against all subnets in IP ACL
 func checkIPinAccessList(ip net.IP, ipAccessList string) bool {
+
 	if ipAccessList == "" {
 		return false
 	}
 	for _, subnet := range strings.Split(ipAccessList, ",") {
 		if _, network, err := net.ParseCIDR(subnet); err == nil {
 			if network.Contains(ip) {
+				// OK, we have a match
 				return true
 			}
 		} else {
@@ -178,9 +185,8 @@ func checkIPinAccessList(ip net.IP, ipAccessList string) bool {
 
 // policyCheckHostHeader checks request's Host header against host ACL defined in developer app
 func policyCheckHostHeader(request *requestInfo) (map[string]string, error) {
-	hostAccessList, err := shared.GetAttribute(request.developerApp.Attributes, "HostWhiteList")
 
-	log.Infof("Host header: %s", request.httpRequest.Headers[":authority"])
+	hostAccessList, err := shared.GetAttribute(request.developerApp.Attributes, "HostWhiteList")
 	if err == nil && hostAccessList != "" {
 		if checkHostinAccessList(request.httpRequest.Headers[":authority"], hostAccessList) {
 			return nil, nil
@@ -193,6 +199,7 @@ func policyCheckHostHeader(request *requestInfo) (map[string]string, error) {
 
 // policyCheckHostHeader checks host string against a comma separated host regexp list
 func checkHostinAccessList(hostHeader string, hostAccessList string) bool {
+
 	if hostAccessList == "" {
 		return false
 	}
