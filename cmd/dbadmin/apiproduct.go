@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -20,7 +21,6 @@ func (s *server) registerAPIProductRoutes(r *gin.Engine) {
 
 	r.GET("/v1/organizations/:organization/apiproducts/:apiproduct/attributes", s.GetAPIProductAttributes)
 	r.POST("/v1/organizations/:organization/apiproducts/:apiproduct/attributes", shared.AbortIfContentTypeNotJSON, s.PostAPIProductAttributes)
-	r.DELETE("/v1/organizations/:organization/apiproducts/:apiproduct/attributes", s.DeleteAPIProductAttributes)
 
 	r.GET("/v1/organizations/:organization/apiproducts/:apiproduct/attributes/:attribute", s.GetAPIProductAttributeByName)
 	r.POST("/v1/organizations/:organization/apiproducts/:apiproduct/attributes/:attribute", shared.AbortIfContentTypeNotJSON, s.PostAPIProductAttributeByName)
@@ -29,6 +29,7 @@ func (s *server) registerAPIProductRoutes(r *gin.Engine) {
 
 // GetAllAPIProducts returns all apiproduct names in an organization
 func (s *server) GetAllAPIProducts(c *gin.Context) {
+
 	apiproducts, err := s.db.GetAPIProductsByOrganization(c.Param("organization"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
@@ -45,54 +46,58 @@ func (s *server) GetAllAPIProducts(c *gin.Context) {
 
 // GetAPIProductByName returns full details of one APIProduct
 func (s *server) GetAPIProductByName(c *gin.Context) {
+
 	apiproduct, err := s.db.GetAPIProductByName(c.Param("organization"), c.Param("apiproduct"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
+
 	setLastModifiedHeader(c, apiproduct.LastmodifiedAt)
 	c.IndentedJSON(http.StatusOK, apiproduct)
 }
 
 // GetAPIProductAttributes returns attributes of a APIProduct
 func (s *server) GetAPIProductAttributes(c *gin.Context) {
+
 	apiproduct, err := s.db.GetAPIProductByName(c.Param("organization"), c.Param("apiproduct"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
+
 	setLastModifiedHeader(c, apiproduct.LastmodifiedAt)
 	c.IndentedJSON(http.StatusOK, gin.H{"attribute": apiproduct.Attributes})
 }
 
 // GetAPIProductAttributeByName returns one particular attribute of a APIProduct
 func (s *server) GetAPIProductAttributeByName(c *gin.Context) {
+
 	apiproduct, err := s.db.GetAPIProductByName(c.Param("organization"), c.Param("apiproduct"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
 
-	// lets find the attribute requested
-	for i := 0; i < len(apiproduct.Attributes); i++ {
-		if apiproduct.Attributes[i].Name == c.Param("attribute") {
-			setLastModifiedHeader(c, apiproduct.LastmodifiedAt)
-			c.IndentedJSON(http.StatusOK, apiproduct.Attributes[i])
-			return
-		}
+	value, err := shared.GetAttribute(apiproduct.Attributes, c.Param("attribute"))
+	if err != nil {
+		returnCanNotFindAttribute(c, c.Param("attribute"))
+		return
 	}
 
-	returnJSONMessage(c, http.StatusNotFound,
-		fmt.Errorf("Could not retrieve attribute '%s'", c.Param("attribute")))
+	setLastModifiedHeader(c, apiproduct.LastmodifiedAt)
+	c.IndentedJSON(http.StatusOK, value)
 }
 
 // PostCreateAPIProduct creates a new APIProduct
 func (s *server) PostCreateAPIProduct(c *gin.Context) {
+
 	var newAPIProduct shared.APIProduct
 	if err := c.ShouldBindJSON(&newAPIProduct); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
+
 	// we don't allow recreation of existing APIProduct
 	existingAPIProduct, err := s.db.GetAPIProductByName(c.Param("organization"), newAPIProduct.Name)
 	if err == nil {
@@ -114,134 +119,120 @@ func (s *server) PostCreateAPIProduct(c *gin.Context) {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
+
 	c.IndentedJSON(http.StatusCreated, newAPIProduct)
 }
 
 // PostAPIProduct updates an existing APIProduct
 func (s *server) PostAPIProduct(c *gin.Context) {
 	// APIProduct to update should exist
-	currentAPIProduct, err := s.db.GetAPIProductByName(c.Param("organization"), c.Param("apiproduct"))
+	apiproductToUpdate, err := s.db.GetAPIProductByName(c.Param("organization"), c.Param("apiproduct"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
 
-	var updatedAPIProduct shared.APIProduct
-	if err := c.ShouldBindJSON(&updatedAPIProduct); err != nil {
+	var updateRequest shared.APIProduct
+	if err := c.ShouldBindJSON(&updateRequest); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
 
-	// We don't allow POSTing to update APIProduct X while body says to update APIProduct Y ;-)
-	updatedAPIProduct.Name = currentAPIProduct.Name
-	updatedAPIProduct.Key = currentAPIProduct.Key
-	updatedAPIProduct.OrganizationName = currentAPIProduct.OrganizationName
-	updatedAPIProduct.CreatedBy = currentAPIProduct.CreatedBy
-	updatedAPIProduct.CreatedAt = currentAPIProduct.CreatedAt
-	updatedAPIProduct.LastmodifiedBy = s.whoAmI()
+	// Copy over the fields we allow to be updated
+	apiproductToUpdate.DisplayName = updateRequest.DisplayName
+	apiproductToUpdate.Description = updateRequest.Description
+	apiproductToUpdate.RouteSet = updateRequest.RouteSet
+	apiproductToUpdate.APIResources = updateRequest.APIResources
+	apiproductToUpdate.Attributes = updateRequest.Attributes
 
-	if err := s.db.UpdateAPIProductByName(&updatedAPIProduct); err != nil {
+	apiproductToUpdate.LastmodifiedBy = s.whoAmI()
+
+	if err := s.db.UpdateAPIProductByName(&apiproductToUpdate); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
-	c.IndentedJSON(http.StatusOK, updatedAPIProduct)
+	c.IndentedJSON(http.StatusOK, apiproductToUpdate)
 }
 
 // PostAPIProductAttributes updates attributes of APIProduct
 func (s *server) PostAPIProductAttributes(c *gin.Context) {
-	updatedAPIProduct, err := s.db.GetAPIProductByName(c.Param("organization"), c.Param("apiproduct"))
+
+	apiproductToUpdate, err := s.db.GetAPIProductByName(c.Param("organization"), c.Param("apiproduct"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
-	var receivedAttributes struct {
+
+	var body struct {
 		Attributes []shared.AttributeKeyValues `json:"attribute"`
 	}
-	if err := c.ShouldBindJSON(&receivedAttributes); err != nil {
+	if err := c.ShouldBindJSON(&body); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
+	if len(body.Attributes) == 0 {
+		returnJSONMessage(c, http.StatusBadRequest, errors.New("No attributes posted"))
+		return
+	}
 
-	updatedAPIProduct.Attributes = receivedAttributes.Attributes
-	updatedAPIProduct.LastmodifiedBy = s.whoAmI()
+	apiproductToUpdate.Attributes = body.Attributes
 
-	if err := s.db.UpdateAPIProductByName(&updatedAPIProduct); err != nil {
+	apiproductToUpdate.LastmodifiedBy = s.whoAmI()
+
+	if err := s.db.UpdateAPIProductByName(&apiproductToUpdate); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
 	c.IndentedJSON(http.StatusOK,
 		gin.H{
-			"attribute": updatedAPIProduct.Attributes,
+			"attribute": apiproductToUpdate.Attributes,
 		})
-}
-
-// DeleteAPIProductAttributes delete attributes of APIProduct
-func (s *server) DeleteAPIProductAttributes(c *gin.Context) {
-	updatedAPIProduct, err := s.db.GetAPIProductByName(c.Param("organization"), c.Param("apiproduct"))
-	if err != nil {
-		returnJSONMessage(c, http.StatusNotFound, err)
-		return
-	}
-
-	deletedAttributes := updatedAPIProduct.Attributes
-	updatedAPIProduct.Attributes = nil
-	updatedAPIProduct.LastmodifiedBy = s.whoAmI()
-
-	if err := s.db.UpdateAPIProductByName(&updatedAPIProduct); err != nil {
-		returnJSONMessage(c, http.StatusBadRequest, err)
-		return
-	}
-	c.IndentedJSON(http.StatusOK, deletedAttributes)
 }
 
 // PostAPIProductAttributeByName update an attribute of APIProduct
 func (s *server) PostAPIProductAttributeByName(c *gin.Context) {
-	updatedAPIProduct, err := s.db.GetAPIProductByName(c.Param("organization"), c.Param("apiproduct"))
+
+	apiproductToUpdate, err := s.db.GetAPIProductByName(c.Param("organization"), c.Param("apiproduct"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
-	attributeToUpdate := c.Param("attribute")
-	var receivedValue struct {
+
+	var body struct {
 		Value string `json:"value"`
 	}
-	if err := c.ShouldBindJSON(&receivedValue); err != nil {
+	if err := c.ShouldBindJSON(&body); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
 
-	// Find & update existing attribute in array
-	attributeToUpdateIndex := shared.FindIndexOfAttribute(
-		updatedAPIProduct.Attributes, attributeToUpdate)
-	if attributeToUpdateIndex == -1 {
-		// We did not find existing attribute, append new attribute
-		updatedAPIProduct.Attributes = append(updatedAPIProduct.Attributes,
-			shared.AttributeKeyValues{Name: attributeToUpdate, Value: receivedValue.Value})
-	} else {
-		updatedAPIProduct.Attributes[attributeToUpdateIndex].Value = receivedValue.Value
-	}
-	updatedAPIProduct.LastmodifiedBy = s.whoAmI()
+	attributeToUpdate := c.Param("attribute")
+	apiproductToUpdate.Attributes = shared.UpdateAttribute(apiproductToUpdate.Attributes,
+		attributeToUpdate, body.Value)
 
-	if err := s.db.UpdateAPIProductByName(&updatedAPIProduct); err != nil {
+	apiproductToUpdate.LastmodifiedBy = s.whoAmI()
+
+	if err := s.db.UpdateAPIProductByName(&apiproductToUpdate); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
 	c.IndentedJSON(http.StatusOK,
 		gin.H{
 			"name":  attributeToUpdate,
-			"value": receivedValue.Value,
+			"value": body.Value,
 		})
 }
 
 // DeleteAPIProductAttributeByName removes an attribute of APIProduct
 func (s *server) DeleteAPIProductAttributeByName(c *gin.Context) {
+
 	updatedAPIProduct, err := s.db.GetAPIProductByName(c.Param("organization"), c.Param("apiproduct"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
-	attributeToDelete := c.Param("attribute")
 
+	attributeToDelete := c.Param("attribute")
 	updatedAttributes, index, oldValue :=
 		shared.DeleteAttribute(updatedAPIProduct.Attributes, attributeToDelete)
 	if index == -1 {
@@ -249,8 +240,8 @@ func (s *server) DeleteAPIProductAttributeByName(c *gin.Context) {
 			fmt.Errorf("Could not find attribute '%s'", attributeToDelete))
 		return
 	}
-
 	updatedAPIProduct.Attributes = updatedAttributes
+
 	updatedAPIProduct.LastmodifiedBy = s.whoAmI()
 
 	if err := s.db.UpdateAPIProductByName(&updatedAPIProduct); err != nil {
@@ -266,11 +257,13 @@ func (s *server) DeleteAPIProductAttributeByName(c *gin.Context) {
 
 // DeleteAPIProductByName deletes of one APIProduct
 func (s *server) DeleteAPIProductByName(c *gin.Context) {
+
 	apiproduct, err := s.db.GetAPIProductByName(c.Param("organization"), c.Param("apiproduct"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
+
 	// FIX ME (we probably allow deletion only in case no dev app uses the product)
 	if err := s.db.DeleteAPIProductByName(apiproduct.OrganizationName, apiproduct.Name); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
