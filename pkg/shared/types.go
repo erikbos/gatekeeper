@@ -205,12 +205,29 @@ func GetAttributeAsDuration(attributes []AttributeKeyValues,
 
 // FindIndexOfAttribute find index of named attribute in slice
 func FindIndexOfAttribute(attributes []AttributeKeyValues, name string) int {
+
 	for index, element := range attributes {
 		if element.Name == name {
 			return index
 		}
 	}
 	return -1
+}
+
+// UpdateAttribute updates existing attribute in slice
+func UpdateAttribute(attributes []AttributeKeyValues, attributeToUpdate, value string) []AttributeKeyValues {
+
+	if index := FindIndexOfAttribute(attributes, attributeToUpdate); index == -1 {
+		// We did not find existing attribute, append new attribute
+		newAttribute := AttributeKeyValues{
+			Name:  attributeToUpdate,
+			Value: value,
+		}
+		attributes = append(attributes, newAttribute)
+	} else {
+		attributes[index].Value = value
+	}
+	return attributes
 }
 
 // TidyAttributes removes duplicate attributes and trims all names & values
@@ -237,12 +254,14 @@ func TidyAttributes(attributes []AttributeKeyValues) []AttributeKeyValues {
 
 // DeleteAttribute removes attribute from slice. returns slice, index of deleted value, deleted value
 func DeleteAttribute(attributes []AttributeKeyValues, attributeName string) ([]AttributeKeyValues, int, string) {
-	// Find attribute in array
+
 	index := FindIndexOfAttribute(attributes, attributeName)
 	if index == -1 {
 		return attributes, -1, ""
 	}
+
 	valueOfDeletedAttribute := attributes[index].Value
 	attributes = append(attributes[:index], attributes[index+1:]...)
+
 	return attributes, 0, valueOfDeletedAttribute
 }

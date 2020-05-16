@@ -14,16 +14,19 @@ const developerMetricLabel = "developers"
 
 // GetDevelopersByOrganization retrieves all developer belonging to an organization
 func (d *Database) GetDevelopersByOrganization(organizationName string) ([]shared.Developer, error) {
+
 	query := "SELECT * FROM developers WHERE organization_name = ? ALLOW FILTERING"
 	developers, err := d.runGetDeveloperQuery(query, organizationName)
 	if err != nil {
 		return []shared.Developer{}, err
 	}
+
 	if len(developers) == 0 {
 		d.metricsQueryMiss(developerMetricLabel)
 		return developers,
 			fmt.Errorf("Could not retrieve developers in organization %s", organizationName)
 	}
+
 	d.metricsQueryHit(developerMetricLabel)
 	return developers, nil
 }
@@ -31,41 +34,49 @@ func (d *Database) GetDevelopersByOrganization(organizationName string) ([]share
 // GetDeveloperCountByOrganization retrieves number of developer belonging to an organization
 func (d *Database) GetDeveloperCountByOrganization(organizationName string) int {
 	var developerCount int
+
 	query := "SELECT count(*) FROM developers WHERE organization_name = ? ALLOW FILTERING"
 	if err := d.cassandraSession.Query(query, organizationName).Scan(&developerCount); err != nil {
 		d.metricsQueryMiss(developerMetricLabel)
 		return -1
 	}
+
 	d.metricsQueryHit(developerMetricLabel)
 	return developerCount
 }
 
 // GetDeveloperByEmail retrieves a developer from database
 func (d *Database) GetDeveloperByEmail(developerOrganization, developerEmail string) (shared.Developer, error) {
+
 	query := "SELECT * FROM developers WHERE organization_name = ? AND email = ? LIMIT 1 ALLOW FILTERING"
 	developers, err := d.runGetDeveloperQuery(query, developerOrganization, developerEmail)
 	if err != nil {
 		return shared.Developer{}, err
 	}
+
 	if len(developers) == 0 {
 		d.metricsQueryMiss(developerMetricLabel)
 		return shared.Developer{}, fmt.Errorf("Can not find developer (%s)", developerEmail)
 	}
+
 	d.metricsQueryHit(developerMetricLabel)
 	return developers[0], nil
 }
 
 // GetDeveloperByID retrieves a developer from database
 func (d *Database) GetDeveloperByID(developerID string) (shared.Developer, error) {
+
 	query := "SELECT * FROM developers WHERE key = ? LIMIT 1"
 	developers, err := d.runGetDeveloperQuery(query, developerID)
 	if err != nil {
 		return shared.Developer{}, err
 	}
+
 	if len(developers) == 0 {
 		d.metricsQueryMiss(developerMetricLabel)
 		return shared.Developer{}, fmt.Errorf("Can not find developerId (%s)", developerID)
 	}
+
 	d.metricsQueryHit(developerMetricLabel)
 	return developers[0], nil
 }
@@ -109,10 +120,13 @@ func (d *Database) runGetDeveloperQuery(query string, queryParameters ...interfa
 
 // UpdateDeveloperByName UPSERTs a developer in database
 func (d *Database) UpdateDeveloperByName(updatedDeveloper *shared.Developer) error {
+
 	Apps := d.marshallArrayOfStringsToJSON(updatedDeveloper.Apps)
-	updatedDeveloper.Attributes = shared.TidyAttributes(updatedDeveloper.Attributes)
-	Attributes := d.marshallArrayOfAttributesToJSON(updatedDeveloper.Attributes)
+	Attributes := d.marshallArrayOfAttributesToJSON(
+		shared.TidyAttributes(updatedDeveloper.Attributes))
+
 	updatedDeveloper.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
+
 	if err := d.cassandraSession.Query(
 		"INSERT INTO developers (key, apps, attributes, "+
 			"created_at, created_by, email, "+
@@ -131,10 +145,12 @@ func (d *Database) UpdateDeveloperByName(updatedDeveloper *shared.Developer) err
 
 // DeleteDeveloperByEmail deletes a developer
 func (d *Database) DeleteDeveloperByEmail(organizationName, developerEmail string) error {
+
 	developer, err := d.GetDeveloperByEmail(organizationName, developerEmail)
 	if err != nil {
 		return err
 	}
+
 	query := "DELETE FROM developers WHERE key = ?"
 	return d.cassandraSession.Query(query, developer.DeveloperID).Exec()
 }

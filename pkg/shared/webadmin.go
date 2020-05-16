@@ -24,7 +24,7 @@ func LogHTTPRequest(param gin.LogFormatterParams) string {
 	)
 }
 
-// AddRequestID Gin middleware to add RequestId
+// AddRequestID adds a Request-Id HTTP header for tracking purposes
 func AddRequestID() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Writer.Header().Set("Request-Id", uuid.New().String())
