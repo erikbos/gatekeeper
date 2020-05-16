@@ -10,26 +10,26 @@ import (
 )
 
 // registerRouteRoutes registers all routes we handle
-func (e *env) registerRouteRoutes(r *gin.Engine) {
-	r.GET("/v1/routes", e.GetRoutes)
-	r.POST("/v1/routes", shared.AbortIfContentTypeNotJSON, e.PostCreateRoute)
+func (s *server) registerRouteRoutes(r *gin.Engine) {
+	r.GET("/v1/routes", s.GetRoutes)
+	r.POST("/v1/routes", shared.AbortIfContentTypeNotJSON, s.PostCreateRoute)
 
-	r.GET("/v1/routes/:route", e.GetRouteByName)
-	r.POST("/v1/routes/:route", shared.AbortIfContentTypeNotJSON, e.PostRoute)
-	r.DELETE("/v1/routes/:route", e.DeleteRouteByName)
+	r.GET("/v1/routes/:route", s.GetRouteByName)
+	r.POST("/v1/routes/:route", shared.AbortIfContentTypeNotJSON, s.PostRoute)
+	r.DELETE("/v1/routes/:route", s.DeleteRouteByName)
 
-	r.GET("/v1/routes/:route/attributes", e.GetRouteAttributes)
-	r.POST("/v1/routes/:route/attributes", shared.AbortIfContentTypeNotJSON, e.PostRouteAttributes)
-	r.DELETE("/v1/routes/:route/attributes", e.DeleteRouteAttributes)
+	r.GET("/v1/routes/:route/attributes", s.GetRouteAttributes)
+	r.POST("/v1/routes/:route/attributes", shared.AbortIfContentTypeNotJSON, s.PostRouteAttributes)
+	r.DELETE("/v1/routes/:route/attributes", s.DeleteRouteAttributes)
 
-	r.GET("/v1/routes/:route/attributes/:attribute", e.GetRouteAttributeByName)
-	r.POST("/v1/routes/:route/attributes/:attribute", shared.AbortIfContentTypeNotJSON, e.PostRouteAttributeByName)
-	r.DELETE("/v1/routes/:route/attributes/:attribute", e.DeleteRouteAttributeByName)
+	r.GET("/v1/routes/:route/attributes/:attribute", s.GetRouteAttributeByName)
+	r.POST("/v1/routes/:route/attributes/:attribute", shared.AbortIfContentTypeNotJSON, s.PostRouteAttributeByName)
+	r.DELETE("/v1/routes/:route/attributes/:attribute", s.DeleteRouteAttributeByName)
 }
 
 // GetRoutes returns all routes
-func (e *env) GetRoutes(c *gin.Context) {
-	routes, err := e.db.GetRoutes()
+func (s *server) GetRoutes(c *gin.Context) {
+	routes, err := s.db.GetRoutes()
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -38,8 +38,8 @@ func (e *env) GetRoutes(c *gin.Context) {
 }
 
 // GetRouteByName returns details of an route
-func (e *env) GetRouteByName(c *gin.Context) {
-	route, err := e.db.GetRouteByName(c.Param("route"))
+func (s *server) GetRouteByName(c *gin.Context) {
+	route, err := s.db.GetRouteByName(c.Param("route"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -49,8 +49,8 @@ func (e *env) GetRouteByName(c *gin.Context) {
 }
 
 // GetRouteAttributes returns attributes of a route
-func (e *env) GetRouteAttributes(c *gin.Context) {
-	route, err := e.db.GetRouteByName(c.Param("route"))
+func (s *server) GetRouteAttributes(c *gin.Context) {
+	route, err := s.db.GetRouteByName(c.Param("route"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -60,8 +60,8 @@ func (e *env) GetRouteAttributes(c *gin.Context) {
 }
 
 // GetRouteAttributeByName returns one particular attribute of a route
-func (e *env) GetRouteAttributeByName(c *gin.Context) {
-	route, err := e.db.GetRouteByName(c.Param("route"))
+func (s *server) GetRouteAttributeByName(c *gin.Context) {
+	route, err := s.db.GetRouteByName(c.Param("route"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -79,13 +79,13 @@ func (e *env) GetRouteAttributeByName(c *gin.Context) {
 }
 
 // PostCreateRoute creates a route
-func (e *env) PostCreateRoute(c *gin.Context) {
+func (s *server) PostCreateRoute(c *gin.Context) {
 	var newRoute shared.Route
 	if err := c.ShouldBindJSON(&newRoute); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
-	existingRoute, err := e.db.GetRouteByName(newRoute.Name)
+	existingRoute, err := s.db.GetRouteByName(newRoute.Name)
 	if err == nil {
 		returnJSONMessage(c, http.StatusBadRequest,
 			fmt.Errorf("Route '%s' already exists", existingRoute.Name))
@@ -93,9 +93,9 @@ func (e *env) PostCreateRoute(c *gin.Context) {
 	}
 	// Automatically set default fields
 	newRoute.CreatedAt = shared.GetCurrentTimeMilliseconds()
-	newRoute.CreatedBy = e.whoAmI()
-	newRoute.LastmodifiedBy = e.whoAmI()
-	if err := e.db.UpdateRouteByName(&newRoute); err != nil {
+	newRoute.CreatedBy = s.whoAmI()
+	newRoute.LastmodifiedBy = s.whoAmI()
+	if err := s.db.UpdateRouteByName(&newRoute); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -103,8 +103,8 @@ func (e *env) PostCreateRoute(c *gin.Context) {
 }
 
 // PostRoute updates an existing route
-func (e *env) PostRoute(c *gin.Context) {
-	currentRoute, err := e.db.GetRouteByName(c.Param("route"))
+func (s *server) PostRoute(c *gin.Context) {
+	currentRoute, err := s.db.GetRouteByName(c.Param("route"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
@@ -118,8 +118,8 @@ func (e *env) PostRoute(c *gin.Context) {
 	updatedRoute.Name = currentRoute.Name
 	updatedRoute.CreatedBy = currentRoute.CreatedBy
 	updatedRoute.CreatedAt = currentRoute.CreatedAt
-	updatedRoute.LastmodifiedBy = e.whoAmI()
-	if err := e.db.UpdateRouteByName(&updatedRoute); err != nil {
+	updatedRoute.LastmodifiedBy = s.whoAmI()
+	if err := s.db.UpdateRouteByName(&updatedRoute); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -127,8 +127,8 @@ func (e *env) PostRoute(c *gin.Context) {
 }
 
 // PostRouteAttributes updates attributes of a route
-func (e *env) PostRouteAttributes(c *gin.Context) {
-	updatedRoute, err := e.db.GetRouteByName(c.Param("route"))
+func (s *server) PostRouteAttributes(c *gin.Context) {
+	updatedRoute, err := s.db.GetRouteByName(c.Param("route"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -141,8 +141,8 @@ func (e *env) PostRouteAttributes(c *gin.Context) {
 		return
 	}
 	updatedRoute.Attributes = receivedAttributes.Attributes
-	updatedRoute.LastmodifiedBy = e.whoAmI()
-	if err := e.db.UpdateRouteByName(&updatedRoute); err != nil {
+	updatedRoute.LastmodifiedBy = s.whoAmI()
+	if err := s.db.UpdateRouteByName(&updatedRoute); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -150,16 +150,16 @@ func (e *env) PostRouteAttributes(c *gin.Context) {
 }
 
 // DeleteRouteAttributes delete attributes of APIProduct
-func (e *env) DeleteRouteAttributes(c *gin.Context) {
-	updatedRoute, err := e.db.GetRouteByName(c.Param("route"))
+func (s *server) DeleteRouteAttributes(c *gin.Context) {
+	updatedRoute, err := s.db.GetRouteByName(c.Param("route"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
 	deletedAttributes := updatedRoute.Attributes
 	updatedRoute.Attributes = nil
-	updatedRoute.LastmodifiedBy = e.whoAmI()
-	if err := e.db.UpdateRouteByName(&updatedRoute); err != nil {
+	updatedRoute.LastmodifiedBy = s.whoAmI()
+	if err := s.db.UpdateRouteByName(&updatedRoute); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -167,8 +167,8 @@ func (e *env) DeleteRouteAttributes(c *gin.Context) {
 }
 
 // PostRouteAttributeByName update an attribute of APIProduct
-func (e *env) PostRouteAttributeByName(c *gin.Context) {
-	updatedRoute, err := e.db.GetRouteByName(c.Param("route"))
+func (s *server) PostRouteAttributeByName(c *gin.Context) {
+	updatedRoute, err := s.db.GetRouteByName(c.Param("route"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -191,8 +191,8 @@ func (e *env) PostRouteAttributeByName(c *gin.Context) {
 	} else {
 		updatedRoute.Attributes[attributeToUpdateIndex].Value = receivedValue.Value
 	}
-	updatedRoute.LastmodifiedBy = e.whoAmI()
-	if err := e.db.UpdateRouteByName(&updatedRoute); err != nil {
+	updatedRoute.LastmodifiedBy = s.whoAmI()
+	if err := s.db.UpdateRouteByName(&updatedRoute); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -201,8 +201,8 @@ func (e *env) PostRouteAttributeByName(c *gin.Context) {
 }
 
 // DeleteRouteAttributeByName removes an attribute of route
-func (e *env) DeleteRouteAttributeByName(c *gin.Context) {
-	updatedRoute, err := e.db.GetRouteByName(c.Param("route"))
+func (s *server) DeleteRouteAttributeByName(c *gin.Context) {
+	updatedRoute, err := s.db.GetRouteByName(c.Param("route"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -215,8 +215,8 @@ func (e *env) DeleteRouteAttributeByName(c *gin.Context) {
 		return
 	}
 	updatedRoute.Attributes = updatedAttributes
-	updatedRoute.LastmodifiedBy = e.whoAmI()
-	if err := e.db.UpdateRouteByName(&updatedRoute); err != nil {
+	updatedRoute.LastmodifiedBy = s.whoAmI()
+	if err := s.db.UpdateRouteByName(&updatedRoute); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -225,13 +225,13 @@ func (e *env) DeleteRouteAttributeByName(c *gin.Context) {
 }
 
 // DeleteRouteByName deletes a route
-func (e *env) DeleteRouteByName(c *gin.Context) {
-	route, err := e.db.GetRouteByName(c.Param("route"))
+func (s *server) DeleteRouteByName(c *gin.Context) {
+	route, err := s.db.GetRouteByName(c.Param("route"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
-	if err := e.db.DeleteRouteByName(route.Name); err != nil {
+	if err := s.db.DeleteRouteByName(route.Name); err != nil {
 		returnJSONMessage(c, http.StatusServiceUnavailable, err)
 	}
 	c.IndentedJSON(http.StatusOK, route)

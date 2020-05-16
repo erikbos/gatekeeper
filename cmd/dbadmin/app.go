@@ -10,30 +10,30 @@ import (
 	"github.com/erikbos/apiauth/pkg/shared"
 )
 
-func (e *env) registerDeveloperAppRoutes(r *gin.Engine) {
-	r.GET("/v1/organizations/:organization/apps", e.GetAllDevelopersApps)
-	r.GET("/v1/organizations/:organization/apps/:application", e.GetDeveloperAppByName)
+func (s *server) registerDeveloperAppRoutes(r *gin.Engine) {
+	r.GET("/v1/organizations/:organization/apps", s.GetAllDevelopersApps)
+	r.GET("/v1/organizations/:organization/apps/:application", s.GetDeveloperAppByName)
 
-	r.GET("/v1/organizations/:organization/developers/:developer/apps", e.GetDeveloperAppsByDeveloperEmail)
-	r.POST("/v1/organizations/:organization/developers/:developer/apps", shared.AbortIfContentTypeNotJSON, e.PostCreateDeveloperApp)
+	r.GET("/v1/organizations/:organization/developers/:developer/apps", s.GetDeveloperAppsByDeveloperEmail)
+	r.POST("/v1/organizations/:organization/developers/:developer/apps", shared.AbortIfContentTypeNotJSON, s.PostCreateDeveloperApp)
 
-	r.GET("/v1/organizations/:organization/developers/:developer/apps/:application", e.GetDeveloperAppByName)
-	r.POST("/v1/organizations/:organization/developers/:developer/apps/:application", shared.AbortIfContentTypeNotJSON, e.PostDeveloperApp)
-	r.DELETE("/v1/organizations/:organization/developers/:developer/apps/:application", e.DeleteDeveloperAppByName)
+	r.GET("/v1/organizations/:organization/developers/:developer/apps/:application", s.GetDeveloperAppByName)
+	r.POST("/v1/organizations/:organization/developers/:developer/apps/:application", shared.AbortIfContentTypeNotJSON, s.PostDeveloperApp)
+	r.DELETE("/v1/organizations/:organization/developers/:developer/apps/:application", s.DeleteDeveloperAppByName)
 
-	r.GET("/v1/organizations/:organization/developers/:developer/apps/:application/attributes", e.GetDeveloperAppAttributes)
-	r.POST("/v1/organizations/:organization/developers/:developer/apps/:application/attributes", shared.AbortIfContentTypeNotJSON, e.PostDeveloperAppAttributes)
-	r.DELETE("/v1/organizations/:organization/developers/:developer/apps/:application/attributes", e.DeleteDeveloperAppAttributes)
+	r.GET("/v1/organizations/:organization/developers/:developer/apps/:application/attributes", s.GetDeveloperAppAttributes)
+	r.POST("/v1/organizations/:organization/developers/:developer/apps/:application/attributes", shared.AbortIfContentTypeNotJSON, s.PostDeveloperAppAttributes)
+	r.DELETE("/v1/organizations/:organization/developers/:developer/apps/:application/attributes", s.DeleteDeveloperAppAttributes)
 
-	r.GET("/v1/organizations/:organization/developers/:developer/apps/:application/attributes/:attribute", e.GetDeveloperAppAttributeByName)
-	r.POST("/v1/organizations/:organization/developers/:developer/apps/:application/attributes/:attribute", shared.AbortIfContentTypeNotJSON, e.PostDeveloperAppAttributeByName)
-	r.DELETE("/v1/organizations/:organization/developers/:developer/apps/:application/attributes/:attribute", e.DeleteDeveloperAppAttributeByName)
+	r.GET("/v1/organizations/:organization/developers/:developer/apps/:application/attributes/:attribute", s.GetDeveloperAppAttributeByName)
+	r.POST("/v1/organizations/:organization/developers/:developer/apps/:application/attributes/:attribute", shared.AbortIfContentTypeNotJSON, s.PostDeveloperAppAttributeByName)
+	r.DELETE("/v1/organizations/:organization/developers/:developer/apps/:application/attributes/:attribute", s.DeleteDeveloperAppAttributeByName)
 }
 
 // GetAllDevelopersApps returns all developers in organization
 // FIXME: add pagination support
-func (e *env) GetAllDevelopersApps(c *gin.Context) {
-	developerapps, err := e.db.GetDeveloperAppsByOrganization(c.Param("organization"))
+func (s *server) GetAllDevelopersApps(c *gin.Context) {
+	developerapps, err := s.db.GetDeveloperAppsByOrganization(c.Param("organization"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -51,8 +51,8 @@ func (e *env) GetAllDevelopersApps(c *gin.Context) {
 }
 
 // GetDeveloperAppsByDeveloperEmail returns apps of a developer
-func (e *env) GetDeveloperAppsByDeveloperEmail(c *gin.Context) {
-	developer, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
+func (s *server) GetDeveloperAppsByDeveloperEmail(c *gin.Context) {
+	developer, err := s.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -62,14 +62,14 @@ func (e *env) GetDeveloperAppsByDeveloperEmail(c *gin.Context) {
 }
 
 // GetDeveloperAppByName returns one named app of a developer
-func (e *env) GetDeveloperAppByName(c *gin.Context) {
-	developerApp, err := e.db.GetDeveloperAppByName(c.Param("organization"), c.Param("application"))
+func (s *server) GetDeveloperAppByName(c *gin.Context) {
+	developerApp, err := s.db.GetDeveloperAppByName(c.Param("organization"), c.Param("application"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
 	// All apikeys belonging to this developer app
-	AppCredentials, err := e.db.GetAppCredentialByDeveloperAppID(developerApp.DeveloperAppID)
+	AppCredentials, err := s.db.GetAppCredentialByDeveloperAppID(developerApp.DeveloperAppID)
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -80,13 +80,13 @@ func (e *env) GetDeveloperAppByName(c *gin.Context) {
 }
 
 // GetDeveloperAppAttributes returns attributes of a developer
-func (e *env) GetDeveloperAppAttributes(c *gin.Context) {
-	// developer, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
+func (s *server) GetDeveloperAppAttributes(c *gin.Context) {
+	// developer, err := s.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
 	// if err != nil {
 	// 	returnJSONMessage(c, http.StatusNotFound, err)
 	// 	return
 	// }
-	developerApp, err := e.db.GetDeveloperAppByName(c.Param("organization"), c.Param("application"))
+	developerApp, err := s.db.GetDeveloperAppByName(c.Param("organization"), c.Param("application"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -96,13 +96,13 @@ func (e *env) GetDeveloperAppAttributes(c *gin.Context) {
 }
 
 // GetDeveloperAttributeByName returns one particular attribute of a developer
-func (e *env) GetDeveloperAppAttributeByName(c *gin.Context) {
-	// developer, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
+func (s *server) GetDeveloperAppAttributeByName(c *gin.Context) {
+	// developer, err := s.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
 	// if err != nil {
 	// 	returnJSONMessage(c, http.StatusNotFound, err)
 	// 	return
 	// }
-	developerApp, err := e.db.GetDeveloperAppByName(c.Param("organization"), c.Param("application"))
+	developerApp, err := s.db.GetDeveloperAppByName(c.Param("organization"), c.Param("application"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -120,18 +120,18 @@ func (e *env) GetDeveloperAppAttributeByName(c *gin.Context) {
 }
 
 // PostCreateDeveloperApp creates a developer application
-func (e *env) PostCreateDeveloperApp(c *gin.Context) {
+func (s *server) PostCreateDeveloperApp(c *gin.Context) {
 	var newDeveloperApp shared.DeveloperApp
 	if err := c.ShouldBindJSON(&newDeveloperApp); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
-	developer, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
+	developer, err := s.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
-	existingDeveloperApp, err := e.db.GetDeveloperAppByName(c.Param("organization"), newDeveloperApp.Name)
+	existingDeveloperApp, err := s.db.GetDeveloperAppByName(c.Param("organization"), newDeveloperApp.Name)
 	if err == nil {
 		returnJSONMessage(c, http.StatusBadRequest,
 			fmt.Errorf("Developer app '%s' already exists", existingDeveloperApp.Name))
@@ -144,19 +144,19 @@ func (e *env) PostCreateDeveloperApp(c *gin.Context) {
 	// New developers starts actived
 	newDeveloperApp.Status = "active"
 	newDeveloperApp.CreatedAt = shared.GetCurrentTimeMilliseconds()
-	newDeveloperApp.CreatedBy = e.whoAmI()
+	newDeveloperApp.CreatedBy = s.whoAmI()
 	newDeveloperApp.LastmodifiedAt = newDeveloperApp.CreatedAt
-	newDeveloperApp.LastmodifiedBy = e.whoAmI()
+	newDeveloperApp.LastmodifiedBy = s.whoAmI()
 	newDeveloperApp.ParentID = developer.DeveloperID
 	newDeveloperApp.ParentStatus = developer.Status
-	if err := e.db.UpdateDeveloperAppByName(&newDeveloperApp); err != nil {
+	if err := s.db.UpdateDeveloperAppByName(&newDeveloperApp); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
 	// Update developer.apps entry with new app
 	developer.Apps = append(developer.Apps, newDeveloperApp.Name)
-	developer.LastmodifiedBy = e.whoAmI()
-	if err := e.db.UpdateDeveloperByName(&developer); err != nil {
+	developer.LastmodifiedBy = s.whoAmI()
+	if err := s.db.UpdateDeveloperByName(&developer); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -164,12 +164,12 @@ func (e *env) PostCreateDeveloperApp(c *gin.Context) {
 }
 
 // PostDeveloperApp updates an existing developer
-func (e *env) PostDeveloperApp(c *gin.Context) {
-	if _, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer")); err != nil {
+func (s *server) PostDeveloperApp(c *gin.Context) {
+	if _, err := s.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer")); err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
-	currentDeveloperApp, err := e.db.GetDeveloperAppByName(c.Param("organization"), c.Param("application"))
+	currentDeveloperApp, err := s.db.GetDeveloperAppByName(c.Param("organization"), c.Param("application"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -186,8 +186,8 @@ func (e *env) PostDeveloperApp(c *gin.Context) {
 	updatedDeveloperApp.ParentStatus = currentDeveloperApp.ParentStatus
 
 	updatedDeveloperApp.Name = currentDeveloperApp.Name
-	updatedDeveloperApp.LastmodifiedBy = e.whoAmI()
-	if err := e.db.UpdateDeveloperAppByName(&updatedDeveloperApp); err != nil {
+	updatedDeveloperApp.LastmodifiedBy = s.whoAmI()
+	if err := s.db.UpdateDeveloperAppByName(&updatedDeveloperApp); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -195,12 +195,12 @@ func (e *env) PostDeveloperApp(c *gin.Context) {
 }
 
 // PostDeveloperAppAttributes updates attribute of one particular app
-func (e *env) PostDeveloperAppAttributes(c *gin.Context) {
-	if _, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer")); err != nil {
+func (s *server) PostDeveloperAppAttributes(c *gin.Context) {
+	if _, err := s.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer")); err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
-	developerApp, err := e.db.GetDeveloperAppByName(c.Param("organization"), c.Param("application"))
+	developerApp, err := s.db.GetDeveloperAppByName(c.Param("organization"), c.Param("application"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -213,8 +213,8 @@ func (e *env) PostDeveloperAppAttributes(c *gin.Context) {
 		return
 	}
 	developerApp.Attributes = receivedAttributes.Attributes
-	developerApp.LastmodifiedBy = e.whoAmI()
-	if err := e.db.UpdateDeveloperAppByName(&developerApp); err != nil {
+	developerApp.LastmodifiedBy = s.whoAmI()
+	if err := s.db.UpdateDeveloperAppByName(&developerApp); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -222,20 +222,20 @@ func (e *env) PostDeveloperAppAttributes(c *gin.Context) {
 }
 
 // DeleteDeveloperAppAttributes delete attributes of developer app
-func (e *env) DeleteDeveloperAppAttributes(c *gin.Context) {
-	if _, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer")); err != nil {
+func (s *server) DeleteDeveloperAppAttributes(c *gin.Context) {
+	if _, err := s.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer")); err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
-	developerApp, err := e.db.GetDeveloperAppByName(c.Param("organization"), c.Param("application"))
+	developerApp, err := s.db.GetDeveloperAppByName(c.Param("organization"), c.Param("application"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
 	deletedAttributes := developerApp.Attributes
 	developerApp.Attributes = nil
-	developerApp.LastmodifiedBy = e.whoAmI()
-	if err := e.db.UpdateDeveloperAppByName(&developerApp); err != nil {
+	developerApp.LastmodifiedBy = s.whoAmI()
+	if err := s.db.UpdateDeveloperAppByName(&developerApp); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -244,12 +244,12 @@ func (e *env) DeleteDeveloperAppAttributes(c *gin.Context) {
 }
 
 // PostDeveloperAppAttributeByName update an attribute of developer
-func (e *env) PostDeveloperAppAttributeByName(c *gin.Context) {
-	if _, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer")); err != nil {
+func (s *server) PostDeveloperAppAttributeByName(c *gin.Context) {
+	if _, err := s.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer")); err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
-	updatedDeveloperApp, err := e.db.GetDeveloperAppByName(c.Param("organization"), c.Param("application"))
+	updatedDeveloperApp, err := s.db.GetDeveloperAppByName(c.Param("organization"), c.Param("application"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -272,8 +272,8 @@ func (e *env) PostDeveloperAppAttributeByName(c *gin.Context) {
 	} else {
 		updatedDeveloperApp.Attributes[attributeToUpdateIndex].Value = receivedValue.Value
 	}
-	updatedDeveloperApp.LastmodifiedBy = e.whoAmI()
-	if err := e.db.UpdateDeveloperAppByName(&updatedDeveloperApp); err != nil {
+	updatedDeveloperApp.LastmodifiedBy = s.whoAmI()
+	if err := s.db.UpdateDeveloperAppByName(&updatedDeveloperApp); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -282,12 +282,12 @@ func (e *env) PostDeveloperAppAttributeByName(c *gin.Context) {
 }
 
 // DeleteDeveloperAppAttributeByName removes an attribute of developer
-func (e *env) DeleteDeveloperAppAttributeByName(c *gin.Context) {
-	if _, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer")); err != nil {
+func (s *server) DeleteDeveloperAppAttributeByName(c *gin.Context) {
+	if _, err := s.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer")); err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
-	updatedDeveloperApp, err := e.db.GetDeveloperAppByName(c.Param("organization"), c.Param("application"))
+	updatedDeveloperApp, err := s.db.GetDeveloperAppByName(c.Param("organization"), c.Param("application"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -300,8 +300,8 @@ func (e *env) DeleteDeveloperAppAttributeByName(c *gin.Context) {
 		return
 	}
 	updatedDeveloperApp.Attributes = updatedAttributes
-	updatedDeveloperApp.LastmodifiedBy = e.whoAmI()
-	if err := e.db.UpdateDeveloperAppByName(&updatedDeveloperApp); err != nil {
+	updatedDeveloperApp.LastmodifiedBy = s.whoAmI()
+	if err := s.db.UpdateDeveloperAppByName(&updatedDeveloperApp); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -310,18 +310,18 @@ func (e *env) DeleteDeveloperAppAttributeByName(c *gin.Context) {
 }
 
 // DeleteDeveloperAppByName deletes a developer app
-func (e *env) DeleteDeveloperAppByName(c *gin.Context) {
-	developer, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
+func (s *server) DeleteDeveloperAppByName(c *gin.Context) {
+	developer, err := s.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
-	developerApp, err := e.db.GetDeveloperAppByName(c.Param("organization"), c.Param("application"))
+	developerApp, err := s.db.GetDeveloperAppByName(c.Param("organization"), c.Param("application"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
-	AppCredentialCount := e.db.GetAppCredentialCountByDeveloperAppID(developerApp.DeveloperAppID)
+	AppCredentialCount := s.db.GetAppCredentialCountByDeveloperAppID(developerApp.DeveloperAppID)
 	if AppCredentialCount == -1 {
 		returnJSONMessage(c, http.StatusInternalServerError,
 			fmt.Errorf("Could not retrieve number of developerapps of developer (%s)",
@@ -334,7 +334,7 @@ func (e *env) DeleteDeveloperAppByName(c *gin.Context) {
 				developerApp.Name, AppCredentialCount))
 		return
 	}
-	err = e.db.DeleteDeveloperAppByID(developerApp.OrganizationName, developerApp.DeveloperAppID)
+	err = s.db.DeleteDeveloperAppByID(developerApp.OrganizationName, developerApp.DeveloperAppID)
 	if err != nil {
 		returnJSONMessage(c, http.StatusServiceUnavailable, err)
 		return
@@ -346,8 +346,8 @@ func (e *env) DeleteDeveloperAppByName(c *gin.Context) {
 			i-- // form the remove item index to start iterate next item
 		}
 	}
-	developerApp.LastmodifiedBy = e.whoAmI()
-	if err := e.db.UpdateDeveloperByName(&developer); err != nil {
+	developerApp.LastmodifiedBy = s.whoAmI()
+	if err := s.db.UpdateDeveloperByName(&developer); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}

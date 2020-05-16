@@ -10,26 +10,26 @@ import (
 )
 
 // registerClusterRoutes registers all routes we handle
-func (e *env) registerClusterRoutes(r *gin.Engine) {
-	r.GET("/v1/clusters", e.GetClusters)
-	r.POST("/v1/clusters", shared.AbortIfContentTypeNotJSON, e.PostCreateCluster)
+func (s *server) registerClusterRoutes(r *gin.Engine) {
+	r.GET("/v1/clusters", s.GetClusters)
+	r.POST("/v1/clusters", shared.AbortIfContentTypeNotJSON, s.PostCreateCluster)
 
-	r.GET("/v1/clusters/:cluster", e.GetClusterByName)
-	r.POST("/v1/clusters/:cluster", shared.AbortIfContentTypeNotJSON, e.PostCluster)
-	r.DELETE("/v1/clusters/:cluster", e.DeleteClusterByName)
+	r.GET("/v1/clusters/:cluster", s.GetClusterByName)
+	r.POST("/v1/clusters/:cluster", shared.AbortIfContentTypeNotJSON, s.PostCluster)
+	r.DELETE("/v1/clusters/:cluster", s.DeleteClusterByName)
 
-	r.GET("/v1/clusters/:cluster/attributes", e.GetClusterAttributes)
-	r.POST("/v1/clusters/:cluster/attributes", shared.AbortIfContentTypeNotJSON, e.PostClusterAttributes)
-	r.DELETE("/v1/clusters/:cluster/attributes", e.DeleteClusterAttributes)
+	r.GET("/v1/clusters/:cluster/attributes", s.GetClusterAttributes)
+	r.POST("/v1/clusters/:cluster/attributes", shared.AbortIfContentTypeNotJSON, s.PostClusterAttributes)
+	r.DELETE("/v1/clusters/:cluster/attributes", s.DeleteClusterAttributes)
 
-	r.GET("/v1/clusters/:cluster/attributes/:attribute", e.GetClusterAttributeByName)
-	r.POST("/v1/clusters/:cluster/attributes/:attribute", shared.AbortIfContentTypeNotJSON, e.PostClusterAttributeByName)
-	r.DELETE("/v1/clusters/:cluster/attributes/:attribute", e.DeleteClusterAttributeByName)
+	r.GET("/v1/clusters/:cluster/attributes/:attribute", s.GetClusterAttributeByName)
+	r.POST("/v1/clusters/:cluster/attributes/:attribute", shared.AbortIfContentTypeNotJSON, s.PostClusterAttributeByName)
+	r.DELETE("/v1/clusters/:cluster/attributes/:attribute", s.DeleteClusterAttributeByName)
 }
 
 // GetClusters returns all clusters
-func (e *env) GetClusters(c *gin.Context) {
-	clusters, err := e.db.GetClusters()
+func (s *server) GetClusters(c *gin.Context) {
+	clusters, err := s.db.GetClusters()
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -38,8 +38,8 @@ func (e *env) GetClusters(c *gin.Context) {
 }
 
 // GetClusterByName returns details of an cluster
-func (e *env) GetClusterByName(c *gin.Context) {
-	cluster, err := e.db.GetClusterByName(c.Param("cluster"))
+func (s *server) GetClusterByName(c *gin.Context) {
+	cluster, err := s.db.GetClusterByName(c.Param("cluster"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -49,8 +49,8 @@ func (e *env) GetClusterByName(c *gin.Context) {
 }
 
 // GetClusterAttributes returns attributes of a cluster
-func (e *env) GetClusterAttributes(c *gin.Context) {
-	cluster, err := e.db.GetClusterByName(c.Param("cluster"))
+func (s *server) GetClusterAttributes(c *gin.Context) {
+	cluster, err := s.db.GetClusterByName(c.Param("cluster"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -60,8 +60,8 @@ func (e *env) GetClusterAttributes(c *gin.Context) {
 }
 
 // GetClusterAttributeByName returns one particular attribute of a cluster
-func (e *env) GetClusterAttributeByName(c *gin.Context) {
-	cluster, err := e.db.GetClusterByName(c.Param("cluster"))
+func (s *server) GetClusterAttributeByName(c *gin.Context) {
+	cluster, err := s.db.GetClusterByName(c.Param("cluster"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -79,13 +79,13 @@ func (e *env) GetClusterAttributeByName(c *gin.Context) {
 }
 
 // PostCreateCluster creates a cluster
-func (e *env) PostCreateCluster(c *gin.Context) {
+func (s *server) PostCreateCluster(c *gin.Context) {
 	var newCluster shared.Cluster
 	if err := c.ShouldBindJSON(&newCluster); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
-	existingCluster, err := e.db.GetClusterByName(newCluster.Name)
+	existingCluster, err := s.db.GetClusterByName(newCluster.Name)
 	if err == nil {
 		returnJSONMessage(c, http.StatusBadRequest,
 			fmt.Errorf("Cluster '%s' already exists", existingCluster.Name))
@@ -93,9 +93,9 @@ func (e *env) PostCreateCluster(c *gin.Context) {
 	}
 	// Automatically set default fields
 	newCluster.CreatedAt = shared.GetCurrentTimeMilliseconds()
-	newCluster.CreatedBy = e.whoAmI()
-	newCluster.LastmodifiedBy = e.whoAmI()
-	if err := e.db.UpdateClusterByName(&newCluster); err != nil {
+	newCluster.CreatedBy = s.whoAmI()
+	newCluster.LastmodifiedBy = s.whoAmI()
+	if err := s.db.UpdateClusterByName(&newCluster); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -103,8 +103,8 @@ func (e *env) PostCreateCluster(c *gin.Context) {
 }
 
 // PostCluster updates an existing cluster
-func (e *env) PostCluster(c *gin.Context) {
-	currentCluster, err := e.db.GetClusterByName(c.Param("cluster"))
+func (s *server) PostCluster(c *gin.Context) {
+	currentCluster, err := s.db.GetClusterByName(c.Param("cluster"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
@@ -118,8 +118,8 @@ func (e *env) PostCluster(c *gin.Context) {
 	updatedCluster.Name = currentCluster.Name
 	updatedCluster.CreatedBy = currentCluster.CreatedBy
 	updatedCluster.CreatedAt = currentCluster.CreatedAt
-	updatedCluster.LastmodifiedBy = e.whoAmI()
-	if err := e.db.UpdateClusterByName(&updatedCluster); err != nil {
+	updatedCluster.LastmodifiedBy = s.whoAmI()
+	if err := s.db.UpdateClusterByName(&updatedCluster); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -127,8 +127,8 @@ func (e *env) PostCluster(c *gin.Context) {
 }
 
 // PostClusterAttributes updates attributes of a cluster
-func (e *env) PostClusterAttributes(c *gin.Context) {
-	updatedCluster, err := e.db.GetClusterByName(c.Param("cluster"))
+func (s *server) PostClusterAttributes(c *gin.Context) {
+	updatedCluster, err := s.db.GetClusterByName(c.Param("cluster"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -141,8 +141,8 @@ func (e *env) PostClusterAttributes(c *gin.Context) {
 		return
 	}
 	updatedCluster.Attributes = receivedAttributes.Attributes
-	updatedCluster.LastmodifiedBy = e.whoAmI()
-	if err := e.db.UpdateClusterByName(&updatedCluster); err != nil {
+	updatedCluster.LastmodifiedBy = s.whoAmI()
+	if err := s.db.UpdateClusterByName(&updatedCluster); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -150,16 +150,16 @@ func (e *env) PostClusterAttributes(c *gin.Context) {
 }
 
 // DeleteClusterAttributes delete attributes of APIProduct
-func (e *env) DeleteClusterAttributes(c *gin.Context) {
-	updatedCluster, err := e.db.GetClusterByName(c.Param("cluster"))
+func (s *server) DeleteClusterAttributes(c *gin.Context) {
+	updatedCluster, err := s.db.GetClusterByName(c.Param("cluster"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
 	deletedAttributes := updatedCluster.Attributes
 	updatedCluster.Attributes = nil
-	updatedCluster.LastmodifiedBy = e.whoAmI()
-	if err := e.db.UpdateClusterByName(&updatedCluster); err != nil {
+	updatedCluster.LastmodifiedBy = s.whoAmI()
+	if err := s.db.UpdateClusterByName(&updatedCluster); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -167,8 +167,8 @@ func (e *env) DeleteClusterAttributes(c *gin.Context) {
 }
 
 // PostClusterAttributeByName update an attribute of APIProduct
-func (e *env) PostClusterAttributeByName(c *gin.Context) {
-	updatedCluster, err := e.db.GetClusterByName(c.Param("cluster"))
+func (s *server) PostClusterAttributeByName(c *gin.Context) {
+	updatedCluster, err := s.db.GetClusterByName(c.Param("cluster"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -191,8 +191,8 @@ func (e *env) PostClusterAttributeByName(c *gin.Context) {
 	} else {
 		updatedCluster.Attributes[attributeToUpdateIndex].Value = receivedValue.Value
 	}
-	updatedCluster.LastmodifiedBy = e.whoAmI()
-	if err := e.db.UpdateClusterByName(&updatedCluster); err != nil {
+	updatedCluster.LastmodifiedBy = s.whoAmI()
+	if err := s.db.UpdateClusterByName(&updatedCluster); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -201,8 +201,8 @@ func (e *env) PostClusterAttributeByName(c *gin.Context) {
 }
 
 // DeleteClusterAttributeByName removes an attribute of cluster
-func (e *env) DeleteClusterAttributeByName(c *gin.Context) {
-	updatedCluster, err := e.db.GetClusterByName(c.Param("cluster"))
+func (s *server) DeleteClusterAttributeByName(c *gin.Context) {
+	updatedCluster, err := s.db.GetClusterByName(c.Param("cluster"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -215,8 +215,8 @@ func (e *env) DeleteClusterAttributeByName(c *gin.Context) {
 		return
 	}
 	updatedCluster.Attributes = updatedAttributes
-	updatedCluster.LastmodifiedBy = e.whoAmI()
-	if err := e.db.UpdateClusterByName(&updatedCluster); err != nil {
+	updatedCluster.LastmodifiedBy = s.whoAmI()
+	if err := s.db.UpdateClusterByName(&updatedCluster); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -225,13 +225,13 @@ func (e *env) DeleteClusterAttributeByName(c *gin.Context) {
 }
 
 // DeleteClusterByName deletes a cluster
-func (e *env) DeleteClusterByName(c *gin.Context) {
-	cluster, err := e.db.GetClusterByName(c.Param("cluster"))
+func (s *server) DeleteClusterByName(c *gin.Context) {
+	cluster, err := s.db.GetClusterByName(c.Param("cluster"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
-	if err := e.db.DeleteClusterByName(cluster.Name); err != nil {
+	if err := s.db.DeleteClusterByName(cluster.Name); err != nil {
 		returnJSONMessage(c, http.StatusServiceUnavailable, err)
 	}
 	c.IndentedJSON(http.StatusOK, cluster)

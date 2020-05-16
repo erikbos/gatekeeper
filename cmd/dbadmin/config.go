@@ -23,7 +23,6 @@ type DBAdminConfig struct {
 	LogLevel string         `yaml:"loglevel"`
 	WebAdmin webAdminConfig `yaml:"webadmin"`
 	Database db.DatabaseConfig
-	//	WebAdminListen string `yaml:"webadminlisten"`
 }
 
 func loadConfiguration() *DBAdminConfig {

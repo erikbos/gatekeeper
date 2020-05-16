@@ -3,9 +3,11 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -20,49 +22,50 @@ type webAdminConfig struct {
 }
 
 // StartWebAdminServer starts the admin web UI
-func StartWebAdminServer(e *env) {
-	if logFile, err := os.Create(e.config.WebAdmin.LogFile); err == nil {
+func StartWebAdminServer(s *server, c *webAdminConfig) {
+	if logFile, err := os.Create(c.LogFile); err == nil {
 		gin.DefaultWriter = io.MultiWriter(logFile)
 	}
 
 	gin.SetMode(gin.ReleaseMode)
 
-	e.ginEngine = gin.New()
-	e.ginEngine.Use(shared.AddRequestID())
-	e.ginEngine.Use(gin.LoggerWithFormatter(shared.LogHTTPRequest))
+	s.ginEngine = gin.New()
 
-	e.registerOrganizationRoutes(e.ginEngine)
-	e.registerDeveloperRoutes(e.ginEngine)
-	e.registerDeveloperAppRoutes(e.ginEngine)
-	e.registerCredentialRoutes(e.ginEngine)
-	e.registerAPIProductRoutes(e.ginEngine)
-	e.registerClusterRoutes(e.ginEngine)
-	e.registerRouteRoutes(e.ginEngine)
-	e.registerVirtualHostRoutes(e.ginEngine)
+	s.ginEngine.Use(shared.AddRequestID())
+	s.ginEngine.Use(gin.LoggerWithFormatter(shared.LogHTTPRequest))
 
-	e.ginEngine.GET("/", e.ShowWebAdminHomePage)
-	e.ginEngine.GET("/ready", e.readiness.DisplayStatus)
-	e.ginEngine.GET("/metrics", gin.WrapH(promhttp.Handler()))
-	e.ginEngine.GET("/config_dump", e.ConfigDump)
-	e.ginEngine.Static("/assets", "./assets")
+	s.registerOrganizationRoutes(s.ginEngine)
+	s.registerDeveloperRoutes(s.ginEngine)
+	s.registerDeveloperAppRoutes(s.ginEngine)
+	s.registerCredentialRoutes(s.ginEngine)
+	s.registerAPIProductRoutes(s.ginEngine)
+	s.registerClusterRoutes(s.ginEngine)
+	s.registerRouteRoutes(s.ginEngine)
+	s.registerVirtualHostRoutes(s.ginEngine)
 
-	log.Info("Webadmin listening on ", e.config.WebAdmin.Listen)
-	if err := e.ginEngine.Run(e.config.WebAdmin.Listen); err != nil {
+	s.ginEngine.GET("/", s.ShowWebAdminHomePage)
+	s.ginEngine.GET("/ready", s.readiness.DisplayStatus)
+	s.ginEngine.GET("/metrics", gin.WrapH(promhttp.Handler()))
+	s.ginEngine.GET("/config_dump", s.ConfigDump)
+	s.ginEngine.Static("/assets", "./assets")
+
+	log.Info("Webadmin listening on ", c.Listen)
+	if err := s.ginEngine.Run(c.Listen); err != nil {
 		log.Fatal(err)
 	}
 }
 
 // ShowWebAdminHomePage shows home page
-func (e *env) ShowWebAdminHomePage(c *gin.Context) {
+func (s *server) ShowWebAdminHomePage(c *gin.Context) {
 	// FIXME feels like hack, is there a better way to pass gin engine context?
-	shared.ShowIndexPage(c, e.ginEngine, myName)
+	shared.ShowIndexPage(c, s.ginEngine, myName)
 }
 
 // configDump pretty prints the active configuration
-func (e *env) ConfigDump(c *gin.Context) {
+func (s *server) ConfigDump(c *gin.Context) {
 	// We must remove db password from configuration struct before showing
-	configToPrint := e.config
-	configToPrint.Database.Password = ""
+	configToPrint := s.config
+	// configToPrint.config.Password = ""
 
 	buffer := new(bytes.Buffer)
 	encoder := json.NewEncoder(buffer)
@@ -74,4 +77,16 @@ func (e *env) ConfigDump(c *gin.Context) {
 
 	c.Header("Content-type", "text/json")
 	c.String(http.StatusOK, buffer.String())
+}
+
+func setLastModifiedHeader(c *gin.Context, timeStamp int64) {
+	c.Header("Last-Modified",
+		time.Unix(0, timeStamp*int64(time.Millisecond)).UTC().Format(http.TimeFormat))
+}
+
+// returnJSONMessage returns an error message
+func returnJSONMessage(c *gin.Context, statusCode int, errorMessage error) {
+	c.IndentedJSON(statusCode, gin.H{
+		"message": fmt.Sprintf("%s", errorMessage),
+	})
 }

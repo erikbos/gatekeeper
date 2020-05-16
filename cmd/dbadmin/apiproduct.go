@@ -10,26 +10,26 @@ import (
 )
 
 // registerAPIProductRoutes registers all routes we handle
-func (e *env) registerAPIProductRoutes(r *gin.Engine) {
-	r.GET("/v1/organizations/:organization/apiproducts", e.GetAllAPIProducts)
-	r.POST("/v1/organizations/:organization/apiproducts", shared.AbortIfContentTypeNotJSON, e.PostCreateAPIProduct)
+func (s *server) registerAPIProductRoutes(r *gin.Engine) {
+	r.GET("/v1/organizations/:organization/apiproducts", s.GetAllAPIProducts)
+	r.POST("/v1/organizations/:organization/apiproducts", shared.AbortIfContentTypeNotJSON, s.PostCreateAPIProduct)
 
-	r.GET("/v1/organizations/:organization/apiproducts/:apiproduct", e.GetAPIProductByName)
-	r.POST("/v1/organizations/:organization/apiproducts/:apiproduct", shared.AbortIfContentTypeNotJSON, e.PostAPIProduct)
-	r.DELETE("/v1/organizations/:organization/apiproducts/:apiproduct", e.DeleteAPIProductByName)
+	r.GET("/v1/organizations/:organization/apiproducts/:apiproduct", s.GetAPIProductByName)
+	r.POST("/v1/organizations/:organization/apiproducts/:apiproduct", shared.AbortIfContentTypeNotJSON, s.PostAPIProduct)
+	r.DELETE("/v1/organizations/:organization/apiproducts/:apiproduct", s.DeleteAPIProductByName)
 
-	r.GET("/v1/organizations/:organization/apiproducts/:apiproduct/attributes", e.GetAPIProductAttributes)
-	r.POST("/v1/organizations/:organization/apiproducts/:apiproduct/attributes", shared.AbortIfContentTypeNotJSON, e.PostAPIProductAttributes)
-	r.DELETE("/v1/organizations/:organization/apiproducts/:apiproduct/attributes", e.DeleteAPIProductAttributes)
+	r.GET("/v1/organizations/:organization/apiproducts/:apiproduct/attributes", s.GetAPIProductAttributes)
+	r.POST("/v1/organizations/:organization/apiproducts/:apiproduct/attributes", shared.AbortIfContentTypeNotJSON, s.PostAPIProductAttributes)
+	r.DELETE("/v1/organizations/:organization/apiproducts/:apiproduct/attributes", s.DeleteAPIProductAttributes)
 
-	r.GET("/v1/organizations/:organization/apiproducts/:apiproduct/attributes/:attribute", e.GetAPIProductAttributeByName)
-	r.POST("/v1/organizations/:organization/apiproducts/:apiproduct/attributes/:attribute", shared.AbortIfContentTypeNotJSON, e.PostAPIProductAttributeByName)
-	r.DELETE("/v1/organizations/:organization/apiproducts/:apiproduct/attributes/:attribute", e.DeleteAPIProductAttributeByName)
+	r.GET("/v1/organizations/:organization/apiproducts/:apiproduct/attributes/:attribute", s.GetAPIProductAttributeByName)
+	r.POST("/v1/organizations/:organization/apiproducts/:apiproduct/attributes/:attribute", shared.AbortIfContentTypeNotJSON, s.PostAPIProductAttributeByName)
+	r.DELETE("/v1/organizations/:organization/apiproducts/:apiproduct/attributes/:attribute", s.DeleteAPIProductAttributeByName)
 }
 
 // GetAllAPIProducts returns all apiproduct names in an organization
-func (e *env) GetAllAPIProducts(c *gin.Context) {
-	apiproducts, err := e.db.GetAPIProductsByOrganization(c.Param("organization"))
+func (s *server) GetAllAPIProducts(c *gin.Context) {
+	apiproducts, err := s.db.GetAPIProductsByOrganization(c.Param("organization"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -44,8 +44,8 @@ func (e *env) GetAllAPIProducts(c *gin.Context) {
 }
 
 // GetAPIProductByName returns full details of one APIProduct
-func (e *env) GetAPIProductByName(c *gin.Context) {
-	apiproduct, err := e.db.GetAPIProductByName(c.Param("organization"), c.Param("apiproduct"))
+func (s *server) GetAPIProductByName(c *gin.Context) {
+	apiproduct, err := s.db.GetAPIProductByName(c.Param("organization"), c.Param("apiproduct"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -55,8 +55,8 @@ func (e *env) GetAPIProductByName(c *gin.Context) {
 }
 
 // GetAPIProductAttributes returns attributes of a APIProduct
-func (e *env) GetAPIProductAttributes(c *gin.Context) {
-	apiproduct, err := e.db.GetAPIProductByName(c.Param("organization"), c.Param("apiproduct"))
+func (s *server) GetAPIProductAttributes(c *gin.Context) {
+	apiproduct, err := s.db.GetAPIProductByName(c.Param("organization"), c.Param("apiproduct"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -66,8 +66,8 @@ func (e *env) GetAPIProductAttributes(c *gin.Context) {
 }
 
 // GetAPIProductAttributeByName returns one particular attribute of a APIProduct
-func (e *env) GetAPIProductAttributeByName(c *gin.Context) {
-	apiproduct, err := e.db.GetAPIProductByName(c.Param("organization"), c.Param("apiproduct"))
+func (s *server) GetAPIProductAttributeByName(c *gin.Context) {
+	apiproduct, err := s.db.GetAPIProductByName(c.Param("organization"), c.Param("apiproduct"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -87,14 +87,14 @@ func (e *env) GetAPIProductAttributeByName(c *gin.Context) {
 }
 
 // PostCreateAPIProduct creates a new APIProduct
-func (e *env) PostCreateAPIProduct(c *gin.Context) {
+func (s *server) PostCreateAPIProduct(c *gin.Context) {
 	var newAPIProduct shared.APIProduct
 	if err := c.ShouldBindJSON(&newAPIProduct); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
 	// we don't allow recreation of existing APIProduct
-	existingAPIProduct, err := e.db.GetAPIProductByName(c.Param("organization"), newAPIProduct.Name)
+	existingAPIProduct, err := s.db.GetAPIProductByName(c.Param("organization"), newAPIProduct.Name)
 	if err == nil {
 		returnJSONMessage(c, http.StatusBadRequest,
 			fmt.Errorf("APIProduct '%s' already exists", existingAPIProduct.Name))
@@ -106,11 +106,11 @@ func (e *env) PostCreateAPIProduct(c *gin.Context) {
 	// Generate primary key for new row
 	newAPIProduct.Key = generatePrimaryKeyOfAPIProduct(newAPIProduct.OrganizationName,
 		newAPIProduct.Name)
-	newAPIProduct.CreatedBy = e.whoAmI()
+	newAPIProduct.CreatedBy = s.whoAmI()
 	newAPIProduct.CreatedAt = shared.GetCurrentTimeMilliseconds()
-	newAPIProduct.LastmodifiedBy = e.whoAmI()
+	newAPIProduct.LastmodifiedBy = s.whoAmI()
 
-	if err := e.db.UpdateAPIProductByName(&newAPIProduct); err != nil {
+	if err := s.db.UpdateAPIProductByName(&newAPIProduct); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -118,9 +118,9 @@ func (e *env) PostCreateAPIProduct(c *gin.Context) {
 }
 
 // PostAPIProduct updates an existing APIProduct
-func (e *env) PostAPIProduct(c *gin.Context) {
+func (s *server) PostAPIProduct(c *gin.Context) {
 	// APIProduct to update should exist
-	currentAPIProduct, err := e.db.GetAPIProductByName(c.Param("organization"), c.Param("apiproduct"))
+	currentAPIProduct, err := s.db.GetAPIProductByName(c.Param("organization"), c.Param("apiproduct"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
@@ -138,9 +138,9 @@ func (e *env) PostAPIProduct(c *gin.Context) {
 	updatedAPIProduct.OrganizationName = currentAPIProduct.OrganizationName
 	updatedAPIProduct.CreatedBy = currentAPIProduct.CreatedBy
 	updatedAPIProduct.CreatedAt = currentAPIProduct.CreatedAt
-	updatedAPIProduct.LastmodifiedBy = e.whoAmI()
+	updatedAPIProduct.LastmodifiedBy = s.whoAmI()
 
-	if err := e.db.UpdateAPIProductByName(&updatedAPIProduct); err != nil {
+	if err := s.db.UpdateAPIProductByName(&updatedAPIProduct); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -148,8 +148,8 @@ func (e *env) PostAPIProduct(c *gin.Context) {
 }
 
 // PostAPIProductAttributes updates attributes of APIProduct
-func (e *env) PostAPIProductAttributes(c *gin.Context) {
-	updatedAPIProduct, err := e.db.GetAPIProductByName(c.Param("organization"), c.Param("apiproduct"))
+func (s *server) PostAPIProductAttributes(c *gin.Context) {
+	updatedAPIProduct, err := s.db.GetAPIProductByName(c.Param("organization"), c.Param("apiproduct"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -163,9 +163,9 @@ func (e *env) PostAPIProductAttributes(c *gin.Context) {
 	}
 
 	updatedAPIProduct.Attributes = receivedAttributes.Attributes
-	updatedAPIProduct.LastmodifiedBy = e.whoAmI()
+	updatedAPIProduct.LastmodifiedBy = s.whoAmI()
 
-	if err := e.db.UpdateAPIProductByName(&updatedAPIProduct); err != nil {
+	if err := s.db.UpdateAPIProductByName(&updatedAPIProduct); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -176,8 +176,8 @@ func (e *env) PostAPIProductAttributes(c *gin.Context) {
 }
 
 // DeleteAPIProductAttributes delete attributes of APIProduct
-func (e *env) DeleteAPIProductAttributes(c *gin.Context) {
-	updatedAPIProduct, err := e.db.GetAPIProductByName(c.Param("organization"), c.Param("apiproduct"))
+func (s *server) DeleteAPIProductAttributes(c *gin.Context) {
+	updatedAPIProduct, err := s.db.GetAPIProductByName(c.Param("organization"), c.Param("apiproduct"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -185,9 +185,9 @@ func (e *env) DeleteAPIProductAttributes(c *gin.Context) {
 
 	deletedAttributes := updatedAPIProduct.Attributes
 	updatedAPIProduct.Attributes = nil
-	updatedAPIProduct.LastmodifiedBy = e.whoAmI()
+	updatedAPIProduct.LastmodifiedBy = s.whoAmI()
 
-	if err := e.db.UpdateAPIProductByName(&updatedAPIProduct); err != nil {
+	if err := s.db.UpdateAPIProductByName(&updatedAPIProduct); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -195,8 +195,8 @@ func (e *env) DeleteAPIProductAttributes(c *gin.Context) {
 }
 
 // PostAPIProductAttributeByName update an attribute of APIProduct
-func (e *env) PostAPIProductAttributeByName(c *gin.Context) {
-	updatedAPIProduct, err := e.db.GetAPIProductByName(c.Param("organization"), c.Param("apiproduct"))
+func (s *server) PostAPIProductAttributeByName(c *gin.Context) {
+	updatedAPIProduct, err := s.db.GetAPIProductByName(c.Param("organization"), c.Param("apiproduct"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -220,9 +220,9 @@ func (e *env) PostAPIProductAttributeByName(c *gin.Context) {
 	} else {
 		updatedAPIProduct.Attributes[attributeToUpdateIndex].Value = receivedValue.Value
 	}
-	updatedAPIProduct.LastmodifiedBy = e.whoAmI()
+	updatedAPIProduct.LastmodifiedBy = s.whoAmI()
 
-	if err := e.db.UpdateAPIProductByName(&updatedAPIProduct); err != nil {
+	if err := s.db.UpdateAPIProductByName(&updatedAPIProduct); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -234,8 +234,8 @@ func (e *env) PostAPIProductAttributeByName(c *gin.Context) {
 }
 
 // DeleteAPIProductAttributeByName removes an attribute of APIProduct
-func (e *env) DeleteAPIProductAttributeByName(c *gin.Context) {
-	updatedAPIProduct, err := e.db.GetAPIProductByName(c.Param("organization"), c.Param("apiproduct"))
+func (s *server) DeleteAPIProductAttributeByName(c *gin.Context) {
+	updatedAPIProduct, err := s.db.GetAPIProductByName(c.Param("organization"), c.Param("apiproduct"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -251,9 +251,9 @@ func (e *env) DeleteAPIProductAttributeByName(c *gin.Context) {
 	}
 
 	updatedAPIProduct.Attributes = updatedAttributes
-	updatedAPIProduct.LastmodifiedBy = e.whoAmI()
+	updatedAPIProduct.LastmodifiedBy = s.whoAmI()
 
-	if err := e.db.UpdateAPIProductByName(&updatedAPIProduct); err != nil {
+	if err := s.db.UpdateAPIProductByName(&updatedAPIProduct); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -265,14 +265,14 @@ func (e *env) DeleteAPIProductAttributeByName(c *gin.Context) {
 }
 
 // DeleteAPIProductByName deletes of one APIProduct
-func (e *env) DeleteAPIProductByName(c *gin.Context) {
-	apiproduct, err := e.db.GetAPIProductByName(c.Param("organization"), c.Param("apiproduct"))
+func (s *server) DeleteAPIProductByName(c *gin.Context) {
+	apiproduct, err := s.db.GetAPIProductByName(c.Param("organization"), c.Param("apiproduct"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
 	// FIX ME (we probably allow deletion only in case no dev app uses the product)
-	if err := e.db.DeleteAPIProductByName(apiproduct.OrganizationName, apiproduct.Name); err != nil {
+	if err := s.db.DeleteAPIProductByName(apiproduct.OrganizationName, apiproduct.Name); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}

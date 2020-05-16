@@ -9,28 +9,28 @@ import (
 	"github.com/erikbos/apiauth/pkg/shared"
 )
 
-func (e *env) registerCredentialRoutes(r *gin.Engine) {
-	r.GET("/v1/organizations/:organization/developers/:developer/apps/:application/keys", e.GetDeveloperAppKeys)
-	r.POST("/v1/organizations/:organization/developers/:developer/apps/:application/keys", shared.AbortIfContentTypeNotJSON, e.PostCreateDeveloperAppKey)
+func (s *server) registerCredentialRoutes(r *gin.Engine) {
+	r.GET("/v1/organizations/:organization/developers/:developer/apps/:application/keys", s.GetDeveloperAppKeys)
+	r.POST("/v1/organizations/:organization/developers/:developer/apps/:application/keys", shared.AbortIfContentTypeNotJSON, s.PostCreateDeveloperAppKey)
 
-	r.GET("/v1/organizations/:organization/developers/:developer/apps/:application/keys/:key", e.GetDeveloperAppKeyByKey)
-	r.POST("/v1/organizations/:organization/developers/:developer/apps/:application/keys/:key", shared.AbortIfContentTypeNotJSON, e.PostUpdateDeveloperAppKeyByKey)
-	r.DELETE("/v1/organizations/:organization/developers/:developer/apps/:application/keys/:key", e.DeleteDeveloperAppKeyByKey)
+	r.GET("/v1/organizations/:organization/developers/:developer/apps/:application/keys/:key", s.GetDeveloperAppKeyByKey)
+	r.POST("/v1/organizations/:organization/developers/:developer/apps/:application/keys/:key", shared.AbortIfContentTypeNotJSON, s.PostUpdateDeveloperAppKeyByKey)
+	r.DELETE("/v1/organizations/:organization/developers/:developer/apps/:application/keys/:key", s.DeleteDeveloperAppKeyByKey)
 }
 
 // GetDeveloperAppByKey returns all keys of one particular developer application
-func (e *env) GetDeveloperAppKeys(c *gin.Context) {
-	_, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
+func (s *server) GetDeveloperAppKeys(c *gin.Context) {
+	_, err := s.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
-	developerApp, err := e.db.GetDeveloperAppByName(c.Param("organization"), c.Param("application"))
+	developerApp, err := s.db.GetDeveloperAppByName(c.Param("organization"), c.Param("application"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
-	AppCredentials, err := e.db.GetAppCredentialByDeveloperAppID(developerApp.DeveloperAppID)
+	AppCredentials, err := s.db.GetAppCredentialByDeveloperAppID(developerApp.DeveloperAppID)
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -39,18 +39,18 @@ func (e *env) GetDeveloperAppKeys(c *gin.Context) {
 }
 
 // GetDeveloperAppByKey returns one key of one particular developer application
-func (e *env) GetDeveloperAppKeyByKey(c *gin.Context) {
-	_, err := e.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
+func (s *server) GetDeveloperAppKeyByKey(c *gin.Context) {
+	_, err := s.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
-	_, err = e.db.GetDeveloperAppByName(c.Param("organization"), c.Param("application"))
+	_, err = s.db.GetDeveloperAppByName(c.Param("organization"), c.Param("application"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
-	AppCredential, err := e.db.GetAppCredentialByKey(c.Param("organization"), c.Param("key"))
+	AppCredential, err := s.db.GetAppCredentialByKey(c.Param("organization"), c.Param("key"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -59,7 +59,7 @@ func (e *env) GetDeveloperAppKeyByKey(c *gin.Context) {
 }
 
 // PostCreateDeveloperAppKey creates key for developerapp
-func (e *env) PostCreateDeveloperAppKey(c *gin.Context) {
+func (s *server) PostCreateDeveloperAppKey(c *gin.Context) {
 	// var receivedKeypair struct {
 	// 	ConsumerKey    string `json:"consumerKey"`
 	// 	ConsumerSecret string `json:"ConsumerSecret"`
@@ -68,7 +68,7 @@ func (e *env) PostCreateDeveloperAppKey(c *gin.Context) {
 	// 	returnJSONMessage(c, http.StatusBadRequest, err)
 	// 	return
 	// }
-	developerApp, err := e.db.GetDeveloperAppByName(c.Param("organization"), c.Param("application"))
+	developerApp, err := s.db.GetDeveloperAppByName(c.Param("organization"), c.Param("application"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -83,7 +83,7 @@ func (e *env) PostCreateDeveloperAppKey(c *gin.Context) {
 	newAppCredential.OrganizationName = developerApp.OrganizationName
 	newAppCredential.Status = "approved"
 
-	if err := e.db.UpdateAppCredentialByKey(&newAppCredential); err != nil {
+	if err := s.db.UpdateAppCredentialByKey(&newAppCredential); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -91,13 +91,13 @@ func (e *env) PostCreateDeveloperAppKey(c *gin.Context) {
 }
 
 // PostUpdateDeveloperAppKeyByKey creates key for developerapp
-func (e *env) PostUpdateDeveloperAppKeyByKey(c *gin.Context) {
+func (s *server) PostUpdateDeveloperAppKeyByKey(c *gin.Context) {
 	var receivedAppCredential shared.AppCredential
 	if err := c.ShouldBindJSON(&receivedAppCredential); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
-	AppCredential, err := e.db.GetAppCredentialByKey(c.Param("organization"), c.Param("key"))
+	AppCredential, err := s.db.GetAppCredentialByKey(c.Param("organization"), c.Param("key"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -107,7 +107,7 @@ func (e *env) PostUpdateDeveloperAppKeyByKey(c *gin.Context) {
 	AppCredential.Attributes = receivedAppCredential.Attributes
 	AppCredential.ExpiresAt = receivedAppCredential.ExpiresAt
 	AppCredential.Status = receivedAppCredential.Status
-	if err := e.db.UpdateAppCredentialByKey(&AppCredential); err != nil {
+	if err := s.db.UpdateAppCredentialByKey(&AppCredential); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -115,13 +115,13 @@ func (e *env) PostUpdateDeveloperAppKeyByKey(c *gin.Context) {
 }
 
 // DeleteDeveloperAppKeyByKey deletes apikey of developer app
-func (e *env) DeleteDeveloperAppKeyByKey(c *gin.Context) {
-	AppCredential, err := e.db.GetAppCredentialByKey(c.Param("organization"), c.Param("key"))
+func (s *server) DeleteDeveloperAppKeyByKey(c *gin.Context) {
+	AppCredential, err := s.db.GetAppCredentialByKey(c.Param("organization"), c.Param("key"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
-	if err := e.db.DeleteAppCredentialByKey(c.Param("organization"), c.Param("key")); err != nil {
+	if err := s.db.DeleteAppCredentialByKey(c.Param("organization"), c.Param("key")); err != nil {
 		returnJSONMessage(c, http.StatusServiceUnavailable, err)
 		return
 	}
