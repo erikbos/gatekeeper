@@ -27,7 +27,11 @@ func StartWebAdminServer(s *server, c *webAdminConfig) {
 		gin.DefaultWriter = io.MultiWriter(logFile)
 	}
 
+	// disable debuglogging
 	gin.SetMode(gin.ReleaseMode)
+
+	// Enable strict checking of posted JSON fields
+	gin.EnableJsonDecoderDisallowUnknownFields()
 
 	s.ginEngine = gin.New()
 
