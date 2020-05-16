@@ -228,13 +228,15 @@ func (s *server) listenerALPNOptions(v shared.VirtualHost) []string {
 		switch value {
 		case attributeHTTPProtocolHTTP1:
 			return []string{"http/1.1"}
+
 		case attributeHTTPProtocolHTTP2:
 			return []string{"h2", "http/1.1"}
+
+		default:
+			log.Warnf("listenerALPNOptions: vhost %s has attribute %s with unknown value %s",
+				v.Name, attributeHTTPProtocol, value)
 		}
 	}
-
-	log.Warnf("listenerALPNOptions: vhost %s has attribute %s with unknown value %s",
-		v.Name, attributeHTTPProtocol, value)
 
 	return []string{"http/1.1"}
 }

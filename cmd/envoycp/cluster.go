@@ -32,7 +32,7 @@ const (
 	attributeHTTPProtocolHTTP2   = "HTTP/2"
 	attributeHTTPProtocolHTTP3   = "HTTP/3"
 	attributeSNIHostName         = "SNIHostName"
-	attributeHealthCheck         = "HealthCheck"
+	attributeHealthCheckProtocol = "HealthCheckProtocol"
 	attributeHealthCheckPath     = "HealthCheckPath"
 	attributeHealthCheckInterval = "HealthCheckInterval"
 	attributeHealthCheckTimeout  = "HealthCheckTimeout"
@@ -179,7 +179,7 @@ func buildEndpoint(hostname string, port int) []*endpoint.LocalityLbEndpoints {
 // clusterHealthCheckConfig builds health configuration for a cluster
 func clusterHealthCheckConfig(cluster shared.Cluster) []*core.HealthCheck {
 
-	value, err := shared.GetAttribute(cluster.Attributes, attributeHealthCheck)
+	value, err := shared.GetAttribute(cluster.Attributes, attributeHealthCheckProtocol)
 	if err == nil && value == attributeValueHTTP {
 		healthCheckPath, _ := shared.GetAttribute(cluster.Attributes, attributeHealthCheckPath)
 
@@ -214,18 +214,21 @@ func clusterHealthCheckConfig(cluster shared.Cluster) []*core.HealthCheck {
 }
 
 func clusterHealthCodec(cluster shared.Cluster) envoy_type.CodecClientType {
-	value, _ := shared.GetAttribute(cluster.Attributes, attributeHTTPProtocol)
 
-	switch value {
-	case attributeHTTPProtocolHTTP2:
-		return envoy_type.CodecClientType_HTTP2
-	case attributeHTTPProtocolHTTP3:
-		return envoy_type.CodecClientType_HTTP3
+	value, err := shared.GetAttribute(cluster.Attributes, attributeHTTPProtocol)
+	if err == nil {
+		switch value {
+		case attributeHTTPProtocolHTTP2:
+			return envoy_type.CodecClientType_HTTP2
+
+		case attributeHTTPProtocolHTTP3:
+			return envoy_type.CodecClientType_HTTP3
+
+		default:
+			log.Warnf("Cluster %s has attribute %s with unknown value %s",
+				cluster.Name, attributeHTTPProtocol, value)
+		}
 	}
-
-	log.Warnf("Cluster %s has attribute %s with unknown value %s",
-		cluster.Name, attributeHTTPProtocol, value)
-
 	return envoy_type.CodecClientType_HTTP1
 }
 
