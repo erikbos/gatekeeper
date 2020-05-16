@@ -30,10 +30,12 @@ func (s *server) registerOrganizationRoutes(r *gin.Engine) {
 // GetOrganizations returns all organizations
 func (s *server) GetOrganizations(c *gin.Context) {
 	organizations, err := s.db.GetOrganizations()
+
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
+
 	c.IndentedJSON(http.StatusOK, gin.H{"organizations": organizations})
 }
 
