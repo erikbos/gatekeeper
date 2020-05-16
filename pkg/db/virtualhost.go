@@ -122,6 +122,6 @@ func (d *Database) DeleteVirtualHostByName(virtualHostToDelete string) error {
 		return err
 	}
 
-	query := "DELETE FROM virtualhosts WHERE key = ?"
+	query := "DELETE FROM virtualhosts WHERE name = ?"
 	return d.cassandraSession.Query(query, virtualHostToDelete).Exec()
 }
