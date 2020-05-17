@@ -1,13 +1,32 @@
 package shared
 
 import (
+	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
+
+// WebAdminCheckIPACL checks if requestor's ip address matches ACL
+func WebAdminCheckIPACL(ipAccessList string) gin.HandlerFunc {
+
+	return func(c *gin.Context) {
+		if ipAccessList == "" {
+			returnJSONMessage(c, http.StatusForbidden,
+				errors.New("Permission denied, No IP ACL configured"))
+			return
+		}
+		if !CheckIPinAccessList(net.ParseIP(c.ClientIP()), ipAccessList) {
+			returnJSONMessage(c, http.StatusForbidden,
+				errors.New("Permission denied, IP ACL denied request"))
+			return
+		}
+	}
+}
 
 // LogHTTPRequest logs details of an HTTP request
 func LogHTTPRequest(param gin.LogFormatterParams) string {
