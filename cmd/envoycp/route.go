@@ -36,7 +36,7 @@ const (
 
 // FIXME this does not detect removed records
 // GetRouteConfigFromDatabase continously gets the current configuration
-func (s *server) GetRouteConfigFromDatabase() {
+func (s *server) GetRouteConfigFromDatabase(n chan xdsNotifyMesssage) {
 	var routesLastUpdate int64
 	var routeMutex sync.Mutex
 
@@ -63,9 +63,9 @@ func (s *server) GetRouteConfigFromDatabase() {
 			}
 		}
 		if xdsPushNeeded {
-			// FIXME this should be notification via channel
-			xdsLastUpdate = shared.GetCurrentTimeMilliseconds()
-			// Increase xds deployment metric
+			n <- xdsNotifyMesssage{
+				resource: "route",
+			}
 			s.metrics.xdsDeployments.WithLabelValues("routes").Inc()
 		}
 		time.Sleep(routeDataRefreshInterval)

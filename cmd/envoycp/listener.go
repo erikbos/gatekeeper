@@ -26,13 +26,12 @@ import (
 
 const (
 	virtualHostDataRefreshInterval = 2 * time.Second
-
-	extAuthzTimeout = 100 * time.Millisecond
+	extAuthzTimeout                = 100 * time.Millisecond
 )
 
 // FIXME this does not detect removed records
 // GetVirtualHostConfigFromDatabase continously gets the current configuration
-func (s *server) GetVirtualHostConfigFromDatabase() {
+func (s *server) GetVirtualHostConfigFromDatabase(n chan xdsNotifyMesssage) {
 	var virtualHostsLastUpdate int64
 	var virtualHostsMutex sync.Mutex
 
@@ -59,8 +58,9 @@ func (s *server) GetVirtualHostConfigFromDatabase() {
 			}
 		}
 		if xdsPushNeeded {
-			// FIXME this should be notification via channel
-			xdsLastUpdate = shared.GetCurrentTimeMilliseconds()
+			n <- xdsNotifyMesssage{
+				resource: "virtualhost",
+			}
 			// Increase xds deployment metric
 			s.metrics.xdsDeployments.WithLabelValues("virtualhosts").Inc()
 		}

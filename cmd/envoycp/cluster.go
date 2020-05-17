@@ -47,7 +47,7 @@ const (
 
 // FIXME this does not detect removed records
 // getClusterConfigFromDatabase continously gets the current configuration
-func (s *server) GetClusterConfigFromDatabase() {
+func (s *server) GetClusterConfigFromDatabase(n chan xdsNotifyMesssage) {
 	var clustersLastUpdate int64
 	var clusterMutex sync.Mutex
 
@@ -74,8 +74,9 @@ func (s *server) GetClusterConfigFromDatabase() {
 			}
 		}
 		if xdsPushNeeded {
-			// FIXME this should be notification via channel
-			xdsLastUpdate = shared.GetCurrentTimeMilliseconds()
+			n <- xdsNotifyMesssage{
+				resource: "cluster",
+			}
 			// Increase xds deployment metric
 			s.metrics.xdsDeployments.WithLabelValues("clusters").Inc()
 		}

@@ -23,7 +23,7 @@ const (
 )
 
 // StartXDS brings up XDS system
-func (s *server) StartXDS() {
+func (s *server) StartXDS(notifications chan xdsNotifyMesssage) {
 	s.xdsCache = cache.NewSnapshotCache(true, Hasher{}, logger{})
 	//config := cache.NewSnapshotCache(false, hash{}, logger{})
 	signal := make(chan struct{})
@@ -35,7 +35,18 @@ func (s *server) StartXDS() {
 
 	go s.GRPCManagementServer()
 	go s.HTTPManagementGateway()
-	s.XDSMainloop()
+
+	interval := getXDSInterval(s.config.XDS)
+	for {
+		select {
+		case n := <-notifications:
+			log.Infof("XDS change notify received for resource '%s'", n.resource)
+
+			s.XDSBuildSnapshot()
+
+		case <-time.After(interval):
+		}
+	}
 }
 
 // GRPCManagementServer starts grpc xds listener
@@ -66,34 +77,17 @@ func (s *server) HTTPManagementGateway() {
 	}
 }
 
-var xdsLastUpdate int64
+func (s *server) XDSBuildSnapshot() {
 
-func (s *server) XDSMainloop() {
+	version := fmt.Sprint(shared.GetCurrentTimeMilliseconds())
+	log.Infof("Creating configuration snapshot version %s", version)
 
-	interval := getXDSInterval(s.config.XDS)
+	EnvoyClusters, _ := s.getEnvoyClusterConfig()
+	EnvoyRoutes, _ := s.getEnvoyRouteConfig()
+	EnvoyListeners, _ := s.getEnvoyListenerConfig()
 
-	var lastConfigurationDeployment int64
-	for {
-		if lastConfigurationDeployment == 0 || xdsLastUpdate > lastConfigurationDeployment {
-			log.Info("lastConfigurationDeployment: ", shared.TimeMillisecondsToString(lastConfigurationDeployment))
-			log.Info("XdsLastUpdate: ", shared.TimeMillisecondsToString(xdsLastUpdate))
-			log.Info("Starting configuration compilation")
-
-			EnvoyClusters, _ := s.getEnvoyClusterConfig()
-			EnvoyRoutes, _ := s.getEnvoyRouteConfig()
-			EnvoyListeners, _ := s.getEnvoyListenerConfig()
-
-			now := shared.GetCurrentTimeMilliseconds()
-			version := fmt.Sprint(now)
-
-			log.Infof("Creating config version %s", version)
-			snap := cache.NewSnapshot(version, nil, EnvoyClusters, EnvoyRoutes, EnvoyListeners, nil)
-			_ = s.xdsCache.SetSnapshot("jenny", snap)
-
-			lastConfigurationDeployment = now
-		}
-		time.Sleep(interval)
-	}
+	snapshot := cache.NewSnapshot(version, nil, EnvoyClusters, EnvoyRoutes, EnvoyListeners, nil)
+	_ = s.xdsCache.SetSnapshot("jenny", snapshot)
 }
 
 // getXDSInterval gets xds interval from configuration
@@ -103,7 +97,7 @@ func getXDSInterval(config xdsConfig) time.Duration {
 		log.Fatalf("Cannot parse '%s' as XDSInterval (%s)", config.XDSInterval, err)
 	}
 	if interval < minimumXDSInterval {
-		log.Fatalf("xds refresh interval set to low, should be >= '%s'", minimumXDSInterval)
+		log.Fatalf("XDS refresh interval set to low, should be >= '%s'", minimumXDSInterval)
 	}
 	return interval
 }

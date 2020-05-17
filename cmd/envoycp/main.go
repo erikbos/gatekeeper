@@ -35,6 +35,10 @@ type server struct {
 	}
 }
 
+type xdsNotifyMesssage struct {
+	resource string
+}
+
 func main() {
 	shared.StartLogging(myName, version, buildTime)
 
@@ -53,8 +57,10 @@ func main() {
 
 	s.registerMetrics()
 	go s.StartWebAdminServer()
-	go s.GetVirtualHostConfigFromDatabase()
-	go s.GetRouteConfigFromDatabase()
-	go s.GetClusterConfigFromDatabase()
-	s.StartXDS()
+
+	xdsNotify := make(chan xdsNotifyMesssage)
+	go s.GetVirtualHostConfigFromDatabase(xdsNotify)
+	go s.GetRouteConfigFromDatabase(xdsNotify)
+	go s.GetClusterConfigFromDatabase(xdsNotify)
+	s.StartXDS(xdsNotify)
 }
