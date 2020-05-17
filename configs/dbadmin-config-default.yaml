@@ -3,6 +3,7 @@
 # The address to listen on for REST API
 webadmin:
   listen: 0.0.0.0:7777
+  ipacl: 127.0.0.0/24
   logfile: dbadmin-access.log
 
 # Cassandra settings

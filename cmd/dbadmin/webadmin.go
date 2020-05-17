@@ -16,6 +16,7 @@ import (
 
 type webAdminConfig struct {
 	Listen  string `yaml:"listen"`
+	IPACL   string `yaml:"ipacl"`
 	LogFile string `yaml:"logfile"`
 }
 
@@ -32,7 +33,7 @@ func StartWebAdminServer(s *server, c *webAdminConfig) {
 	gin.EnableJsonDecoderDisallowUnknownFields()
 
 	s.ginEngine = gin.New()
-
+	s.ginEngine.Use(shared.WebAdminCheckIPACL(s.config.WebAdmin.IPACL))
 	s.ginEngine.Use(shared.AddRequestID())
 	s.ginEngine.Use(gin.LoggerWithFormatter(shared.LogHTTPRequest))
 
@@ -67,7 +68,7 @@ func (s *server) ShowWebAdminHomePage(c *gin.Context) {
 func (s *server) ConfigDump(c *gin.Context) {
 	// We must remove db password from configuration struct before showing
 	configToPrint := s.config
-	// configToPrint.config.Password = ""
+	configToPrint.Database.Password = ""
 
 	buffer := new(bytes.Buffer)
 	encoder := json.NewEncoder(buffer)

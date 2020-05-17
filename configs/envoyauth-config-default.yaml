@@ -9,6 +9,7 @@ xdshttplisten: 0.0.0.0:4001
 # The address to listen on for Admin UI
 webadmin:
   listen: 0.0.0.0:2113
+  ipacl: 127.0.0.0/24
   logfile: envoyauth-admin.log
 
 # Cassandra settings

@@ -2,12 +2,10 @@ package main
 
 import (
 	"errors"
-	"net"
 	"net/http"
 	"strings"
 
 	"github.com/bmatcuk/doublestar"
-	log "github.com/sirupsen/logrus"
 
 	"github.com/erikbos/apiauth/pkg/shared"
 )
@@ -153,7 +151,7 @@ func policyCheckIPAccessList(request *requestInfo) (map[string]string, error) {
 
 	ipAccessList, err := shared.GetAttribute(request.developerApp.Attributes, "IPAccessList")
 	if err == nil && ipAccessList != "" {
-		if checkIPinAccessList(request.IP, ipAccessList) {
+		if shared.CheckIPinAccessList(request.IP, ipAccessList) {
 			// OK, we have a match
 			return nil, nil
 		}
@@ -161,26 +159,6 @@ func policyCheckIPAccessList(request *requestInfo) (map[string]string, error) {
 	}
 	// No IPACL attribute or it's value was empty: we allow request
 	return nil, nil
-}
-
-// checkIPinAccessList checks ip against all subnets in IP ACL
-func checkIPinAccessList(ip net.IP, ipAccessList string) bool {
-
-	if ipAccessList == "" {
-		return false
-	}
-	for _, subnet := range strings.Split(ipAccessList, ",") {
-		if _, network, err := net.ParseCIDR(subnet); err == nil {
-			if network.Contains(ip) {
-				// OK, we have a match
-				return true
-			}
-		} else {
-			log.Debugf("FIXME increase unparsable ip ACL counter")
-		}
-	}
-	// source ip did not match any of the ACL subnets, request rejected
-	return false
 }
 
 // policyCheckHostHeader checks request's Host header against host ACL defined in developer app

@@ -16,6 +16,7 @@ import (
 
 type webAdminConfig struct {
 	Listen  string `yaml:"listen"`
+	IPACL   string `yaml:"ipacl"`
 	LogFile string `yaml:"logfile"`
 }
 
@@ -28,6 +29,7 @@ func StartWebAdminServer(a *authorizationServer) {
 	gin.SetMode(gin.ReleaseMode)
 
 	a.ginEngine = gin.New()
+	a.ginEngine.Use(shared.WebAdminCheckIPACL(a.config.WebAdmin.IPACL))
 	a.ginEngine.Use(shared.AddRequestID())
 	a.ginEngine.Use(gin.LoggerWithFormatter(shared.LogHTTPRequest))
 
