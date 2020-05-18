@@ -134,6 +134,8 @@ func (s *server) PostVirtualHost(c *gin.Context) {
 	virtualHostToUpdate.DisplayName = updateRequest.DisplayName
 	virtualHostToUpdate.Attributes = updateRequest.Attributes
 	virtualHostToUpdate.RouteSet = updateRequest.RouteSet
+	virtualHostToUpdate.Policies = updateRequest.Policies
+	virtualHostToUpdate.OrganizationName = updateRequest.OrganizationName
 
 	if err := s.db.UpdateVirtualHostByName(&virtualHostToUpdate); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)

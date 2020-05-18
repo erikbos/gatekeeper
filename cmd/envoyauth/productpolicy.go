@@ -2,33 +2,12 @@ package main
 
 import (
 	"errors"
-	"net/http"
 	"strings"
 
 	"github.com/bmatcuk/doublestar"
 
 	"github.com/erikbos/apiauth/pkg/shared"
 )
-
-// handlePolicies invokes all policy functions to set additional upstream headers
-func (a *authorizationServer) handlePolicies(request *requestInfo, newUpstreamHeaders map[string]string) (int, error) {
-
-	for _, policy := range strings.Split(request.APIProduct.Scopes, ",") {
-		headersToAdd, err := a.handlePolicy(policy, request)
-
-		// Stop and return error in case policy indicates we should stop
-		if err != nil {
-			return http.StatusForbidden, err
-		}
-
-		// Add policy generated headers for upstream
-		for key, value := range headersToAdd {
-			// log.Infof("q2 %s", key)
-			newUpstreamHeaders[key] = value
-		}
-	}
-	return http.StatusOK, nil
-}
 
 // handlePolicy executes a single policy to optionally add upstream headers
 func (a *authorizationServer) handlePolicy(policy string, request *requestInfo) (map[string]string, error) {
@@ -56,19 +35,6 @@ func (a *authorizationServer) handlePolicy(policy string, request *requestInfo) 
 
 	a.metrics.apiProductPolicyUnknown.WithLabelValues(request.APIProduct.Name, policy).Inc()
 	return nil, nil
-}
-
-// getCountryAndStateOfRequestorIP lookup requestor's ip address in geoip database
-func (a *authorizationServer) getCountryAndStateOfRequestorIP(
-	request *requestInfo, newUpstreamHeaders map[string]string) {
-
-	country, state := a.g.GetCountryAndState(request.IP)
-	newUpstreamHeaders["geoip-country"] = country
-	newUpstreamHeaders["geoip-state"] = state
-
-	// log.Debugf("Check() rx ip country: %s, state: %s", country, state)
-
-	a.metrics.requestsPerCountry.WithLabelValues(country).Inc()
 }
 
 // policyQPS1 returns QPS quotakey to be used by Lyft ratelimiter

@@ -114,6 +114,7 @@ type VirtualHost struct {
 	VirtualHosts   []string             `json:"virtualHosts"`
 	Port           int                  `json:"port"`
 	RouteSet       string               `json:"routeSet"`
+	Policies       string               `json:"policies"`
 	Attributes     []AttributeKeyValues `json:"attributes"`
 	CreatedAt      int64                `json:"createdAt"`
 	CreatedBy      string               `json:"createdBy"`

@@ -48,7 +48,7 @@ func (s *server) GetRouteConfigFromDatabase(n chan xdsNotifyMesssage) {
 			log.Errorf("Could not retrieve routes from database (%s)", err)
 		} else {
 			if routesLastUpdate == 0 {
-				log.Info("Initial load of routes done")
+				log.Info("Initial load of routes")
 			}
 			for _, route := range newRouteList {
 				// Is a cluster updated since last time we stored it?

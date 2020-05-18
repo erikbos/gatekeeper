@@ -7,8 +7,8 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strings"
 
-	"github.com/bmatcuk/doublestar"
 	core "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	auth "github.com/envoyproxy/go-control-plane/envoy/service/auth/v2"
 	envoy_type "github.com/envoyproxy/go-control-plane/envoy/type"
@@ -35,7 +35,8 @@ type requestInfo struct {
 }
 
 // startGRPCAuthorizationServer starts extauthz grpc listener
-func startGRPCAuthorizationServer(a authorizationServer) {
+func (a *authorizationServer) startGRPCAuthorizationServer() {
+
 	lis, err := net.Listen("tcp", a.config.AuthGRPCListen)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
@@ -43,7 +44,7 @@ func startGRPCAuthorizationServer(a authorizationServer) {
 	log.Printf("GRPC listening on %s", a.config.AuthGRPCListen)
 
 	grpcServer := grpc.NewServer()
-	auth.RegisterAuthorizationServer(grpcServer, &a)
+	auth.RegisterAuthorizationServer(grpcServer, a)
 
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
@@ -56,26 +57,37 @@ func (a *authorizationServer) Check(ctx context.Context, authRequest *auth.Check
 	timer := prometheus.NewTimer(a.metrics.authLatencyHistogram)
 	defer timer.ObserveDuration()
 
-	upstreamHeaders := make(map[string]string)
-
 	request, err := getRequestInfo(authRequest)
 	if err != nil {
 		a.metrics.connectInfoFailures.Inc()
 		return rejectRequest(http.StatusBadRequest, nil, fmt.Sprintf("%s", err))
 	}
-	a.getCountryAndStateOfRequestorIP(&request, upstreamHeaders)
-	a.logConnectionDebug(&request)
 
-	err = a.CheckProductEntitlement("petstore", &request)
-	if err != nil {
-		log.Debugf("Check() not allowed '%s' (%s)", request.URL.Path, err.Error())
-		a.increaseCounterApikeyNotfound(&request)
-		return rejectRequest(envoy_type.StatusCode_Forbidden, nil, err.Error())
+	a.logConnectionDebug(&request)
+	log.Printf("Incoming host: %s", request.httpRequest.Host)
+
+	upstreamHeaders := make(map[string]string)
+
+	for _, vhostEntry := range a.virtualhosts {
+		for _, vhost := range vhostEntry.VirtualHosts {
+			if vhost == request.httpRequest.Host {
+				if vhostEntry.Policies != "" {
+					log.Infof("found host: %s, policies: %s", vhost, vhostEntry.Policies)
+					_, err := a.handlePolicies(&request, vhostEntry.Policies, a.handleVhostPolicy, upstreamHeaders)
+					// In case a policy wants us to stop we reject call
+					if err != nil {
+						a.increaseRequestRejectCounter(&request)
+						return rejectRequest(envoy_type.StatusCode_Forbidden, nil, err.Error())
+					}
+				}
+
+			}
+		}
 	}
 
-	// Invoke any policy that we have to apply
+	// Invoke any product policy that we need to invoke
 	if request.APIProduct.Scopes != "" {
-		_, err := a.handlePolicies(&request, upstreamHeaders)
+		_, err := a.handlePolicies(&request, request.APIProduct.Scopes, a.handlePolicy, upstreamHeaders)
 		// In case a policy wants us to stop we reject call
 		if err != nil {
 			a.increaseRequestRejectCounter(&request)
@@ -85,6 +97,28 @@ func (a *authorizationServer) Check(ctx context.Context, authRequest *auth.Check
 
 	a.IncreaseRequestAcceptCounter(&request)
 	return allowRequest(upstreamHeaders)
+}
+
+type function func(policy string, request *requestInfo) (map[string]string, error)
+
+// handlePolicies invokes all policy functions to set additional upstream headers
+func (a *authorizationServer) handlePolicies(request *requestInfo, policies string,
+	policyHandler function, newUpstreamHeaders map[string]string) (int, error) {
+
+	for _, policy := range strings.Split(policies, ",") {
+		headersToAdd, err := policyHandler(policy, request)
+
+		// Stop and return error in case policy indicates we should stop
+		if err != nil {
+			return http.StatusForbidden, err
+		}
+
+		// Add policy generated headers for upstream
+		for key, value := range headersToAdd {
+			newUpstreamHeaders[key] = value
+		}
+	}
+	return http.StatusOK, nil
 }
 
 // increaseCounterApikeyNotfound requests with unknown apikey
@@ -197,8 +231,6 @@ func getRequestInfo(req *auth.CheckRequest) (requestInfo, error) {
 		return requestInfo{}, errors.New("could not parse query parameters")
 	}
 
-	newConnection.apikey = newConnection.queryParameters["apikey"][0]
-
 	return newConnection, nil
 }
 
@@ -215,62 +247,75 @@ func (a *authorizationServer) logConnectionDebug(request *requestInfo) {
 	// log.Printf("Query String: %v", authRequest.GetAttributes().GetRequest().GetHttp().GetQuery())
 }
 
-// CheckProductEntitlement verifies whether the requested path is allowed to be called
-func (a *authorizationServer) CheckProductEntitlement(organization string, request *requestInfo) error {
+// func (a *authorizationServer) logConnectionDebug(request *requestInfo) {
+// 	log.Debugf("Check() rx path: %s", request.httpRequest.Path)
+// 	log.Debugf("Check() rx uri: %s", request.URL.Path)
+// 	log.Debugf("Check() rx qp: %s", request.queryParameters)
+// 	log.Debugf("Check() rx apikey: %s", request.apikey)
 
-	err := a.getEntitlementDetails(organization, request)
-	if err != nil {
-		return err
-	}
-	if err = checkAppCredentialValidity(request.appCredential); err != nil {
-		return err
-	}
-	request.APIProduct, err = a.IsRequestPathAllowed(organization, request.URL.Path, request.appCredential)
-	if err != nil {
-		return errors.New("No product match")
-	}
-	return nil
-}
+// 	for key, value := range request.httpRequest.Headers {
+// 		log.Debugf("Check() rx header [%s] = %s", key, value)
+// 	}
+
+// 	// log.Printf("Query String: %v", authRequest.GetAttributes().GetRequest().GetHttp().GetQuery())
+// }
+
+// CheckProductEntitlement verifies whether the requested path is allowed to be called
+// func (a *authorizationServer) CheckProductEntitlement(organization string, request *requestInfo) error {
+
+// 	err := a.getEntitlementDetails(organization, request)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	if err = checkAppCredentialValidity(request.appCredential); err != nil {
+// 		return err
+// 	}
+// 	request.APIProduct, err = a.IsRequestPathAllowed(organization, request.URL.Path, request.appCredential)
+// 	if err != nil {
+// 		return errors.New("No product match")
+// 	}
+// 	return nil
+// }
 
 // getEntitlementDetails populates apikey, developer and developerapp details
-func (a *authorizationServer) getEntitlementDetails(organization string, request *requestInfo) error {
-	var err error
+// func (a *authorizationServer) getEntitlementDetails(organization string, request *requestInfo) error {
+// 	var err error
 
-	request.appCredential, err = a.db.GetAppCredentialByKey(organization, request.apikey)
-	if err != nil {
-		// FIX ME increase unknown apikey counter (not an error state)
-		return errors.New("Could not find apikey")
-	}
+// 	request.appCredential, err = a.db.GetAppCredentialByKey(organization, request.apikey)
+// 	if err != nil {
+// 		// FIX ME increase unknown apikey counter (not an error state)
+// 		return errors.New("Could not find apikey")
+// 	}
 
-	request.developerApp, err = a.db.GetDeveloperAppByID(organization, request.appCredential.OrganizationAppID)
-	if err != nil {
-		// FIX ME increase counter as every apikey should link to dev app (error state)
-		return errors.New("Could not find developer app of this apikey")
-	}
+// 	request.developerApp, err = a.db.GetDeveloperAppByID(organization, request.appCredential.OrganizationAppID)
+// 	if err != nil {
+// 		// FIX ME increase counter as every apikey should link to dev app (error state)
+// 		return errors.New("Could not find developer app of this apikey")
+// 	}
 
-	request.developer, err = a.db.GetDeveloperByID(request.developerApp.ParentID)
-	if err != nil {
-		// FIX ME increase counter as every devapp should link to developer (error state)
-		return errors.New("Could not find developer of this apikey")
-	}
+// 	request.developer, err = a.db.GetDeveloperByID(request.developerApp.ParentID)
+// 	if err != nil {
+// 		// FIX ME increase counter as every devapp should link to developer (error state)
+// 		return errors.New("Could not find developer of this apikey")
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
-// checkAppCredentialValidity checks devapp approval and expiry status
-func checkAppCredentialValidity(appcredential shared.AppCredential) error {
-	if appcredential.Status != "approved" {
-		// FIXME increase unapproved dev app counter (not an error state)
-		return errors.New("Unapproved apikey")
-	}
-	if appcredential.ExpiresAt != -1 {
-		if shared.GetCurrentTimeMilliseconds() > appcredential.ExpiresAt {
-			// FIXME increase expired dev app credentials counter (not an error state))
-			return errors.New("Expired apikey")
-		}
-	}
-	return nil
-}
+// // checkAppCredentialValidity checks devapp approval and expiry status
+// func checkAppCredentialValidity(appcredential shared.AppCredential) error {
+// 	if appcredential.Status != "approved" {
+// 		// FIXME increase unapproved dev app counter (not an error state)
+// 		return errors.New("Unapproved apikey")
+// 	}
+// 	if appcredential.ExpiresAt != -1 {
+// 		if shared.GetCurrentTimeMilliseconds() > appcredential.ExpiresAt {
+// 			// FIXME increase expired dev app credentials counter (not an error state))
+// 			return errors.New("Expired apikey")
+// 		}
+// 	}
+// 	return nil
+// }
 
 // IsRequestPathAllowed
 // - iterate over products in apikey
@@ -279,30 +324,30 @@ func checkAppCredentialValidity(appcredential shared.AppCredential) error {
 // -			- return 200
 // - if not 403
 
-func (a *authorizationServer) IsRequestPathAllowed(organization, requestPath string,
-	appcredential shared.AppCredential) (shared.APIProduct, error) {
+// func (a *authorizationServer) IsRequestPathAllowed(organization, requestPath string,
+// 	appcredential shared.AppCredential) (shared.APIProduct, error) {
 
-	// Iterate over this key's apiproducts
-	for _, apiproduct := range appcredential.APIProducts {
-		if apiproduct.Status == "approved" {
-			// Retrieve details of each api product embedded in key
-			apiproduct, err := a.db.GetAPIProductByName(organization, apiproduct.Apiproduct)
-			if err != nil {
-				// FIXME increase unknown product in apikey counter (not an error state)
-			} else {
-				// Iterate over apiresource(paths) of apiproduct
-				for _, productPath := range apiproduct.APIResources {
-					// log.Debugf("IsRequestPathAllowed() Matching path %s in %s", requestPath, productPath)
-					if ok, _ := doublestar.Match(productPath, requestPath); ok {
-						// log.Debugf("IsRequestPathAllowed: match!")
-						return apiproduct, nil
-					}
-				}
-			}
-		}
-	}
-	return shared.APIProduct{}, errors.New("No access")
-}
+// 	// Iterate over this key's apiproducts
+// 	for _, apiproduct := range appcredential.APIProducts {
+// 		if apiproduct.Status == "approved" {
+// 			// Retrieve details of each api product embedded in key
+// 			apiproduct, err := a.db.GetAPIProductByName(organization, apiproduct.Apiproduct)
+// 			if err != nil {
+// 				// FIXME increase unknown product in apikey counter (not an error state)
+// 			} else {
+// 				// Iterate over apiresource(paths) of apiproduct
+// 				for _, productPath := range apiproduct.APIResources {
+// 					// log.Debugf("IsRequestPathAllowed() Matching path %s in %s", requestPath, productPath)
+// 					if ok, _ := doublestar.Match(productPath, requestPath); ok {
+// 						// log.Debugf("IsRequestPathAllowed: match!")
+// 						return apiproduct, nil
+// 					}
+// 				}
+// 			}
+// 		}
+// 	}
+// 	return shared.APIProduct{}, errors.New("No access")
+// }
 
 // JSONErrorMessage is the format for our error messages
 const JSONErrorMessage = `{

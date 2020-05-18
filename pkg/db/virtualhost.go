@@ -16,7 +16,7 @@ const virtualHostMetricLabel = "virtualhosts"
 // GetVirtualHosts retrieves all virtualhosts
 func (d *Database) GetVirtualHosts() ([]shared.VirtualHost, error) {
 
-	query := "SELECT * FROM virtualhosts"
+	query := "SELECT * FROM virtual_hosts"
 	virtualhosts, err := d.runGetVirtualHostQuery(query)
 	if err != nil {
 		return []shared.VirtualHost{}, err
@@ -34,7 +34,7 @@ func (d *Database) GetVirtualHosts() ([]shared.VirtualHost, error) {
 // GetVirtualHostByName retrieves a virtualhost from database
 func (d *Database) GetVirtualHostByName(virtualHost string) (shared.VirtualHost, error) {
 
-	query := "SELECT * FROM virtualhosts WHERE name = ? LIMIT 1"
+	query := "SELECT * FROM virtual_hosts WHERE name = ? LIMIT 1"
 	virtualhosts, err := d.runGetVirtualHostQuery(query, virtualHost)
 	if err != nil {
 		return shared.VirtualHost{}, err
@@ -67,6 +67,7 @@ func (d *Database) runGetVirtualHostQuery(query string,
 			DisplayName:    m["display_name"].(string),
 			Port:           m["port"].(int),
 			RouteSet:       m["route_set"].(string),
+			Policies:       m["policies"].(string),
 			CreatedAt:      m["created_at"].(int64),
 			CreatedBy:      m["created_by"].(string),
 			LastmodifiedAt: m["lastmodified_at"].(int64),
@@ -91,10 +92,10 @@ func (d *Database) runGetVirtualHostQuery(query string,
 
 // UpdateVirtualHostByName updates a virtualhost in database
 func (d *Database) UpdateVirtualHostByName(updatedVirtualHost *shared.VirtualHost) error {
-	query := "INSERT INTO virtualhosts " +
-		"(name, display_name, virtual_hosts, port, route_set, attributes, " +
+	query := "INSERT INTO virtual_hosts " +
+		"(name, display_name, virtual_hosts, port, route_set, policies, attributes, " +
 		"created_at, created_by, lastmodified_at, lastmodified_by) " +
-		"VALUES(?,?,?,?,?,?,?,?,?,?)"
+		"VALUES(?,?,?,?,?,?,?,?,?,?,?)"
 
 	virtualhosts := d.marshallArrayOfStringsToJSON(updatedVirtualHost.VirtualHosts)
 
@@ -104,7 +105,8 @@ func (d *Database) UpdateVirtualHostByName(updatedVirtualHost *shared.VirtualHos
 	updatedVirtualHost.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
 	err := d.cassandraSession.Query(query,
 		updatedVirtualHost.Name, updatedVirtualHost.DisplayName,
-		virtualhosts, updatedVirtualHost.Port, updatedVirtualHost.RouteSet, attributes,
+		virtualhosts, updatedVirtualHost.Port, updatedVirtualHost.RouteSet,
+		updatedVirtualHost.Policies, attributes,
 		updatedVirtualHost.CreatedAt, updatedVirtualHost.CreatedBy,
 		updatedVirtualHost.LastmodifiedAt,
 		updatedVirtualHost.LastmodifiedBy).Exec()
@@ -122,6 +124,6 @@ func (d *Database) DeleteVirtualHostByName(virtualHostToDelete string) error {
 		return err
 	}
 
-	query := "DELETE FROM virtualhosts WHERE name = ?"
+	query := "DELETE FROM virtual_hosts WHERE name = ?"
 	return d.cassandraSession.Query(query, virtualHostToDelete).Exec()
 }

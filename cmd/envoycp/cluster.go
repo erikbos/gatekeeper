@@ -60,7 +60,7 @@ func (s *server) GetClusterConfigFromDatabase(n chan xdsNotifyMesssage) {
 		} else {
 			// Is one of the cluster updated since last time pushed config to Envoy?
 			if clustersLastUpdate == 0 {
-				log.Info("Initial load of clusters done")
+				log.Info("Initial load of clusters")
 			}
 			for _, cluster := range newClusterList {
 				if cluster.LastmodifiedAt > clustersLastUpdate {

@@ -28,16 +28,18 @@ type authorizationServer struct {
 	c            *db.Cache
 	g            *shared.Geoip
 	metrics      struct {
-		configLoads             *prometheus.CounterVec
-		authLatencyHistogram    prometheus.Summary
-		connectInfoFailures     prometheus.Counter
-		requestsPerCountry      *prometheus.CounterVec
-		requestsApikeyNotFound  *prometheus.CounterVec
-		requestsAccepted        *prometheus.CounterVec
-		requestsRejected        *prometheus.CounterVec
-		devApp                  *prometheus.CounterVec
-		apiProductPolicy        *prometheus.CounterVec
-		apiProductPolicyUnknown *prometheus.CounterVec
+		configLoads              *prometheus.CounterVec
+		authLatencyHistogram     prometheus.Summary
+		connectInfoFailures      prometheus.Counter
+		requestsPerCountry       *prometheus.CounterVec
+		requestsApikeyNotFound   *prometheus.CounterVec
+		requestsAccepted         *prometheus.CounterVec
+		requestsRejected         *prometheus.CounterVec
+		devApp                   *prometheus.CounterVec
+		apiProductPolicy         *prometheus.CounterVec
+		apiProductPolicyUnknown  *prometheus.CounterVec
+		virtualHostPolicy        *prometheus.CounterVec
+		virtualHostPolicyUnknown *prometheus.CounterVec
 	}
 }
 
@@ -69,7 +71,7 @@ func main() {
 	go a.GetVirtualHostConfigFromDatabase()
 	go a.GetRouteConfigFromDatabase()
 
-	startGRPCAuthorizationServer(a)
+	a.startGRPCAuthorizationServer()
 }
 
 // registerMetrics registers our operational metrics
@@ -114,7 +116,7 @@ func (a *authorizationServer) registerMetrics() {
 			Namespace: myName,
 			Name:      "requests_rejected_total",
 			Help:      "Total number of requests rejected.",
-		}, []string{"hostname", "apiproduct"})
+		}, []string{"hostname", "protocol", "method", "apiproduct"})
 
 	a.metrics.authLatencyHistogram = prometheus.NewSummary(
 		prometheus.SummaryOpts{
@@ -130,15 +132,29 @@ func (a *authorizationServer) registerMetrics() {
 		prometheus.CounterOpts{
 			Namespace: myName,
 			Name:      "apiproduct_policy_hits_total",
-			Help:      "Total number of policy hits.",
+			Help:      "Total number of product policy hits.",
 		}, []string{"apiproduct", "policy"})
 
 	a.metrics.apiProductPolicyUnknown = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: myName,
 			Name:      "apiproduct_policy_unknown_total",
-			Help:      "Total number of unknown policy hits.",
+			Help:      "Total number of unknown product policy hits.",
 		}, []string{"apiproduct", "policy"})
+
+	a.metrics.virtualHostPolicy = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: myName,
+			Name:      "virtualhost_policy_hits_total",
+			Help:      "Total number of virtualhost policy hits.",
+		}, []string{"virtualhost", "policy"})
+
+	a.metrics.virtualHostPolicyUnknown = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: myName,
+			Name:      "virtualhost_policy_unknown_total",
+			Help:      "Total number of unknown virtualhost policy hits.",
+		}, []string{"virtualhost", "policy"})
 
 	prometheus.MustRegister(a.metrics.configLoads)
 	prometheus.MustRegister(a.metrics.connectInfoFailures)
@@ -149,4 +165,6 @@ func (a *authorizationServer) registerMetrics() {
 	prometheus.MustRegister(a.metrics.authLatencyHistogram)
 	prometheus.MustRegister(a.metrics.apiProductPolicy)
 	prometheus.MustRegister(a.metrics.apiProductPolicyUnknown)
+	prometheus.MustRegister(a.metrics.virtualHostPolicy)
+	prometheus.MustRegister(a.metrics.virtualHostPolicyUnknown)
 }

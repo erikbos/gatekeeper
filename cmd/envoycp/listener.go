@@ -43,7 +43,7 @@ func (s *server) GetVirtualHostConfigFromDatabase(n chan xdsNotifyMesssage) {
 			log.Errorf("Could not retrieve virtualhosts from database (%s)", err)
 		} else {
 			if virtualHostsLastUpdate == 0 {
-				log.Info("Initial load of virtualhosts done")
+				log.Info("Initial load of virtualhosts")
 			}
 			for _, virtualhost := range newVirtualHosts {
 				// Is a virtualhosts updated since last time we stored it?
