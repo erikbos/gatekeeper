@@ -33,9 +33,9 @@ func StartWebAdminServer(s *server, c *webAdminConfig) {
 	gin.EnableJsonDecoderDisallowUnknownFields()
 
 	s.ginEngine = gin.New()
-	s.ginEngine.Use(shared.WebAdminCheckIPACL(s.config.WebAdmin.IPACL))
-	s.ginEngine.Use(shared.AddRequestID())
 	s.ginEngine.Use(gin.LoggerWithFormatter(shared.LogHTTPRequest))
+	s.ginEngine.Use(shared.AddRequestID())
+	s.ginEngine.Use(shared.WebAdminCheckIPACL(s.config.WebAdmin.IPACL))
 
 	s.registerOrganizationRoutes(s.ginEngine)
 	s.registerDeveloperRoutes(s.ginEngine)

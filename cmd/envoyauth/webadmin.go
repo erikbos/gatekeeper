@@ -29,9 +29,9 @@ func StartWebAdminServer(a *authorizationServer) {
 	gin.SetMode(gin.ReleaseMode)
 
 	a.ginEngine = gin.New()
-	a.ginEngine.Use(shared.WebAdminCheckIPACL(a.config.WebAdmin.IPACL))
-	a.ginEngine.Use(shared.AddRequestID())
 	a.ginEngine.Use(gin.LoggerWithFormatter(shared.LogHTTPRequest))
+	a.ginEngine.Use(shared.AddRequestID())
+	a.ginEngine.Use(shared.WebAdminCheckIPACL(a.config.WebAdmin.IPACL))
 
 	a.ginEngine.GET("/", a.ShowWebAdminHomePage)
 	a.ginEngine.GET("/ready", a.readiness.DisplayStatus)
