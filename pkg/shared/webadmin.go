@@ -11,20 +11,43 @@ import (
 	"github.com/google/uuid"
 )
 
+// returnJSONMessage returns an error message
+func returnJSONMessage(c *gin.Context, statusCode int, msg error) {
+	c.IndentedJSON(statusCode,
+		gin.H{
+			"message": fmt.Sprint(msg),
+		})
+}
+
+// returnJSONMessage returns an error message, and aborts request
+func returnJSONMessageAndAbort(c *gin.Context, statusCode int, msg error) {
+	returnJSONMessage(c, statusCode, msg)
+	c.Abort()
+}
+
+// AbortIfContentTypeNotJSON checks for json content-type and abort request
+func AbortIfContentTypeNotJSON(c *gin.Context) {
+	if c.Request.Header.Get("content-type") != "application/json" {
+		returnJSONMessageAndAbort(c, http.StatusUnsupportedMediaType,
+			errors.New("Content-type application/json required when submitting data"))
+	}
+}
+
 // WebAdminCheckIPACL checks if requestor's ip address matches ACL
 func WebAdminCheckIPACL(ipAccessList string) gin.HandlerFunc {
 
 	return func(c *gin.Context) {
 		if ipAccessList == "" {
-			returnJSONMessage(c, http.StatusForbidden,
+			returnJSONMessageAndAbort(c, http.StatusForbidden,
 				errors.New("Permission denied, No IP ACL configured"))
 			return
 		}
 		if !CheckIPinAccessList(net.ParseIP(c.ClientIP()), ipAccessList) {
-			returnJSONMessage(c, http.StatusForbidden,
+			returnJSONMessageAndAbort(c, http.StatusForbidden,
 				errors.New("Permission denied, IP ACL denied request"))
 			return
 		}
+		// no hit, we allow request
 	}
 }
 
