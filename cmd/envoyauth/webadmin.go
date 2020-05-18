@@ -34,7 +34,8 @@ func StartWebAdminServer(a *authorizationServer) {
 	a.ginEngine.Use(shared.WebAdminCheckIPACL(a.config.WebAdmin.IPACL))
 
 	a.ginEngine.GET("/", a.ShowWebAdminHomePage)
-	a.ginEngine.GET("/ready", a.readiness.DisplayStatus)
+	a.ginEngine.GET("/liveness", shared.LivenessProbe)
+	a.ginEngine.GET("/readiness", a.readiness.ReadinessProbe)
 	a.ginEngine.GET("/metrics", gin.WrapH(promhttp.Handler()))
 	a.ginEngine.GET("/config_dump", a.ConfigDump)
 

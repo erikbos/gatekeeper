@@ -17,8 +17,8 @@ type Readiness struct {
 	transitionCounter *prometheus.CounterVec
 }
 
-// DisplayStatus shows our readiness status
-func (r *Readiness) DisplayStatus(c *gin.Context) {
+// ReadinessProbe shows our readiness status
+func (r *Readiness) ReadinessProbe(c *gin.Context) {
 	if r.Status {
 		c.IndentedJSON(http.StatusOK, gin.H{"readiness": r})
 	} else {

@@ -47,7 +47,8 @@ func StartWebAdminServer(s *server, c *webAdminConfig) {
 	s.registerVirtualHostRoutes(s.ginEngine)
 
 	s.ginEngine.GET("/", s.ShowWebAdminHomePage)
-	s.ginEngine.GET("/ready", s.readiness.DisplayStatus)
+	s.ginEngine.GET("/liveness", shared.LivenessProbe)
+	s.ginEngine.GET("/readiness", s.readiness.ReadinessProbe)
 	s.ginEngine.GET("/metrics", gin.WrapH(promhttp.Handler()))
 	s.ginEngine.GET("/config_dump", s.ConfigDump)
 	s.ginEngine.Static("/assets", "./assets")

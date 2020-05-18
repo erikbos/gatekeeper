@@ -51,6 +51,11 @@ func WebAdminCheckIPACL(ipAccessList string) gin.HandlerFunc {
 	}
 }
 
+// LivenessProbe answer with OK
+func LivenessProbe(c *gin.Context) {
+	returnJSONMessage(c, http.StatusOK, errors.New("Liveness OK"))
+}
+
 // LogHTTPRequest logs details of an HTTP request
 func LogHTTPRequest(param gin.LogFormatterParams) string {
 	return fmt.Sprintf("%s - - [%s] \"%s %s %s\" %d %d \"%s\" \"%s\"\n",
