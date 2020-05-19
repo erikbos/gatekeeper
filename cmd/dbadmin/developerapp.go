@@ -74,14 +74,14 @@ func (s *server) GetDeveloperAppByName(c *gin.Context) {
 		return
 	}
 
-	// All apikeys belonging to this developer app
-	AppCredentials, err := s.db.GetAppCredentialByDeveloperAppID(developerApp.DeveloperAppID)
-	if err != nil {
-		returnJSONMessage(c, http.StatusNotFound, err)
-		return
-	}
+	// // All apikeys belonging to this developer app
+	// AppCredentials, err := s.db.GetAppCredentialByDeveloperAppID(developerApp.DeveloperAppID)
+	// if err != nil {
+	// 	returnJSONMessage(c, http.StatusNotFound, err)
+	// 	return
+	// }
 
-	developerApp.Credentials = AppCredentials
+	// developerApp.Credentials = AppCredentials
 
 	setLastModifiedHeader(c, developerApp.LastmodifiedAt)
 	c.IndentedJSON(http.StatusOK, developerApp)
@@ -140,18 +140,16 @@ func (s *server) PostCreateDeveloperApp(c *gin.Context) {
 		return
 	}
 
-	newDeveloperApp.AppID = generateDeveloperAppPrimaryKey()
-	newDeveloperApp.DeveloperAppID = generateDeveloperAppID(c.Param("organization"), newDeveloperApp.AppID)
-	// Automatically assign new developer to organization
+	newDeveloperApp.DeveloperAppID = generateDeveloperAppID()
+	newDeveloperApp.DeveloperID = developer.DeveloperID
 	newDeveloperApp.OrganizationName = c.Param("organization")
+
 	// New developers starts actived
 	newDeveloperApp.Status = "active"
 	newDeveloperApp.CreatedAt = shared.GetCurrentTimeMilliseconds()
 	newDeveloperApp.CreatedBy = s.whoAmI()
 	newDeveloperApp.LastmodifiedAt = newDeveloperApp.CreatedAt
 	newDeveloperApp.LastmodifiedBy = s.whoAmI()
-	newDeveloperApp.ParentID = developer.DeveloperID
-	newDeveloperApp.ParentStatus = developer.Status
 
 	if err := s.db.UpdateDeveloperAppByName(&newDeveloperApp); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
@@ -324,8 +322,8 @@ func (s *server) DeleteDeveloperAppByName(c *gin.Context) {
 	AppCredentialCount := s.db.GetAppCredentialCountByDeveloperAppID(developerApp.DeveloperAppID)
 	if AppCredentialCount == -1 {
 		returnJSONMessage(c, http.StatusInternalServerError,
-			fmt.Errorf("Could not retrieve number of developerapps of developer (%s)",
-				developer.Email))
+			fmt.Errorf("Could not retrieve number of api keys of developer app '%s'",
+				developerApp.Name))
 		return
 	}
 	if AppCredentialCount > 0 {
@@ -356,12 +354,7 @@ func (s *server) DeleteDeveloperAppByName(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, developerApp)
 }
 
-// GenerateDeveloperAppPrimaryKey creates unique primary key for developer app row
-func generateDeveloperAppPrimaryKey() string {
+// generateDeveloperAppID creates unique primary key for developer app row
+func generateDeveloperAppID() string {
 	return (uuid.New().String())
-}
-
-// GeneratePrimaryKeyOfDeveloper creates unique primary key for developer db row
-func generateDeveloperAppID(organization, primaryKey string) string {
-	return (fmt.Sprintf("%s@@@%s", organization, primaryKey))
 }

@@ -81,13 +81,13 @@ func (a *authorizationServer) getEntitlementDetails(organization string, request
 		return errors.New("Could not find apikey")
 	}
 
-	request.developerApp, err = a.db.GetDeveloperAppByID(organization, request.appCredential.OrganizationAppID)
+	request.developerApp, err = a.db.GetDeveloperAppByID(organization, request.appCredential.DeveloperAppID)
 	if err != nil {
 		// FIX ME increase counter as every apikey should link to dev app (error state)
 		return errors.New("Could not find developer app of this apikey")
 	}
 
-	request.developer, err = a.db.GetDeveloperByID(request.developerApp.ParentID)
+	request.developer, err = a.db.GetDeveloperByID(request.developerApp.DeveloperID)
 	if err != nil {
 		// FIX ME increase counter as every devapp should link to developer (error state)
 		return errors.New("Could not find developer of this apikey")

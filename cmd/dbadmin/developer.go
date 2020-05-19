@@ -277,7 +277,8 @@ func (s *server) DeleteDeveloperByEmail(c *gin.Context) {
 	}
 }
 
+// FIXME this should live in /pkg/db
 // GeneratePrimaryKeyOfDeveloper creates primary key for developer db row
 func generatePrimaryKeyOfDeveloper(organization, developer string) string {
-	return (fmt.Sprintf("%s@@@%s", organization, uniuri.New()))
+	return (uniuri.New())
 }

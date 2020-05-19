@@ -10,27 +10,30 @@ import (
 )
 
 // Prometheus label for metrics of db interactions
-const appsMetricLabel = "apps"
+const appsMetricLabel = "developerapps"
 
 // GetDeveloperAppsByOrganization retrieves all developer apps belonging to an organization
 func (d *Database) GetDeveloperAppsByOrganization(organizationName string) ([]shared.DeveloperApp, error) {
-	query := "SELECT * FROM apps WHERE organization_name = ? ALLOW FILTERING"
+
+	query := "SELECT * FROM developer_apps WHERE organization_name = ? ALLOW FILTERING"
 	developerapps, err := d.runGetDeveloperAppQuery(query, organizationName)
 	if err != nil {
 		return []shared.DeveloperApp{}, err
 	}
+
 	if len(developerapps) == 0 {
 		d.metricsQueryMiss(appsMetricLabel)
 		return developerapps,
-			fmt.Errorf("Can not find developers in organization %s", organizationName)
+			fmt.Errorf("Can not find developer apps in organization '%s'", organizationName)
 	}
+
 	d.metricsQueryHit(appsMetricLabel)
 	return developerapps, nil
 }
 
 // GetDeveloperAppByName returns details of a developer app
 func (d *Database) GetDeveloperAppByName(organization, developerAppName string) (shared.DeveloperApp, error) {
-	query := "SELECT * FROM apps WHERE organization_name = ? AND name = ? LIMIT 1"
+	query := "SELECT * FROM developer_apps WHERE organization_name = ? AND name = ? LIMIT 1"
 	developerapps, err := d.runGetDeveloperAppQuery(query, organization, developerAppName)
 	if err != nil {
 		return shared.DeveloperApp{}, err
@@ -38,7 +41,7 @@ func (d *Database) GetDeveloperAppByName(organization, developerAppName string) 
 	if len(developerapps) == 0 {
 		d.metricsQueryMiss(appsMetricLabel)
 		return shared.DeveloperApp{},
-			fmt.Errorf("Can not find developer app (%s)", developerAppName)
+			fmt.Errorf("Can not find developer app '%s'", developerAppName)
 	}
 	d.metricsQueryHit(appsMetricLabel)
 	return developerapps[0], nil
@@ -46,28 +49,33 @@ func (d *Database) GetDeveloperAppByName(organization, developerAppName string) 
 
 // GetDeveloperAppByID returns details of a developer app
 func (d *Database) GetDeveloperAppByID(organization, developerAppID string) (shared.DeveloperApp, error) {
-	query := "SELECT * FROM apps WHERE key = ? LIMIT 1"
+
+	query := "SELECT * FROM developer_apps WHERE developer_app_id = ? LIMIT 1"
 	developerapps, err := d.runGetDeveloperAppQuery(query, developerAppID)
 	if err != nil {
 		return shared.DeveloperApp{}, err
 	}
+
 	if len(developerapps) == 0 {
 		d.metricsQueryMiss(appsMetricLabel)
 		return shared.DeveloperApp{},
-			fmt.Errorf("Can not find developer app id (%s)", developerAppID)
+			fmt.Errorf("Can not find developer app id '%s'", developerAppID)
 	}
+
 	d.metricsQueryHit(appsMetricLabel)
 	return developerapps[0], nil
 }
 
 // GetDeveloperAppCountByDeveloperID retrieves number of apps belonging to a developer
-func (d *Database) GetDeveloperAppCountByDeveloperID(organizationName string) int {
+func (d *Database) GetDeveloperAppCountByDeveloperID(developerID string) int {
+
 	var developerAppCount int
-	query := "SELECT count(*) FROM apps WHERE parent_id = ?"
-	if err := d.cassandraSession.Query(query, organizationName).Scan(&developerAppCount); err != nil {
+	query := "SELECT count(*) FROM developer_apps WHERE developer_id = ?"
+	if err := d.cassandraSession.Query(query, developerID).Scan(&developerAppCount); err != nil {
 		d.metricsQueryMiss(appsMetricLabel)
 		return -1
 	}
+
 	d.metricsQueryHit(appsMetricLabel)
 	return developerAppCount
 }
@@ -83,22 +91,16 @@ func (d *Database) runGetDeveloperAppQuery(query string, queryParameters ...inte
 	m := make(map[string]interface{})
 	for iterable.MapScan(m) {
 		developerapps = append(developerapps, shared.DeveloperApp{
-			AccessType:       m["access_type"].(string),
-			AppFamily:        m["app_family"].(string),
-			AppID:            m["app_id"].(string),
-			AppType:          m["app_type"].(string),
+			DeveloperAppID:   m["developer_app_id"].(string),
 			Attributes:       d.unmarshallJSONArrayOfAttributes(m["attributes"].(string)),
-			CallbackURL:      m["callback_url"].(string),
 			CreatedAt:        m["created_at"].(int64),
 			CreatedBy:        m["created_by"].(string),
-			DeveloperAppID:   m["key"].(string),
 			DisplayName:      m["display_name"].(string),
 			LastmodifiedAt:   m["lastmodified_at"].(int64),
 			LastmodifiedBy:   m["lastmodified_by"].(string),
 			Name:             m["name"].(string),
 			OrganizationName: m["organization_name"].(string),
-			ParentID:         m["parent_id"].(string),
-			ParentStatus:     m["parent_status"].(string),
+			DeveloperID:      m["developer_id"].(string),
 			Status:           m["status"].(string),
 		})
 		m = map[string]interface{}{}
@@ -113,31 +115,39 @@ func (d *Database) runGetDeveloperAppQuery(query string, queryParameters ...inte
 
 // UpdateDeveloperAppByName UPSERTs a developer app in database
 func (d *Database) UpdateDeveloperAppByName(updatedDeveloperApp *shared.DeveloperApp) error {
-	query := "INSERT INTO apps (key, app_id, attributes, " +
+
+	query := "INSERT INTO developer_apps (developer_app_id, attributes, " +
 		"created_at, created_by, display_name, " +
 		"lastmodified_at, lastmodified_by, name, " +
-		"organization_name, parent_id, parent_status, " +
-		"status) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)"
+		"organization_name, developer_id, " +
+		"status) VALUES(?,?,?,?,?,?,?,?,?,?,?)"
+
 	updatedDeveloperApp.Attributes = shared.TidyAttributes(updatedDeveloperApp.Attributes)
 	Attributes := d.marshallArrayOfAttributesToJSON(updatedDeveloperApp.Attributes)
+
 	updatedDeveloperApp.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
-	if err := d.cassandraSession.Query(query,
-		updatedDeveloperApp.DeveloperAppID, updatedDeveloperApp.AppID, Attributes,
+
+	err := d.cassandraSession.Query(query,
+		updatedDeveloperApp.DeveloperAppID, Attributes,
 		updatedDeveloperApp.CreatedAt, updatedDeveloperApp.CreatedBy, updatedDeveloperApp.DisplayName,
 		updatedDeveloperApp.LastmodifiedAt, updatedDeveloperApp.LastmodifiedBy, updatedDeveloperApp.Name,
-		updatedDeveloperApp.OrganizationName, updatedDeveloperApp.ParentID, updatedDeveloperApp.ParentStatus,
-		updatedDeveloperApp.Status).Exec(); err != nil {
-		return fmt.Errorf("Can not update developer app (%v)", err)
+		updatedDeveloperApp.OrganizationName, updatedDeveloperApp.DeveloperID,
+		updatedDeveloperApp.Status).Exec()
+	if err != nil {
+		return fmt.Errorf("Can not update developer app '%s' (%v)",
+			updatedDeveloperApp.DeveloperAppID, err)
 	}
 	return nil
 }
 
 // DeleteDeveloperAppByID deletes an developer app
 func (d *Database) DeleteDeveloperAppByID(organizationName, developerAppID string) error {
+
 	_, err := d.GetDeveloperAppByID(organizationName, developerAppID)
 	if err != nil {
 		return err
 	}
-	query := "DELETE FROM apps WHERE key = ?"
+
+	query := "DELETE FROM developer_apps WHERE developer_app_id = ?"
 	return d.cassandraSession.Query(query, developerAppID).Exec()
 }

@@ -95,7 +95,7 @@ func (d *Database) runGetDeveloperQuery(query string, queryParameters ...interfa
 		developers = append(developers, shared.Developer{
 			Apps:             d.unmarshallJSONArrayOfStrings(m["apps"].(string)),
 			Attributes:       d.unmarshallJSONArrayOfAttributes(m["attributes"].(string)),
-			DeveloperID:      m["key"].(string),
+			DeveloperID:      m["developer_id"].(string),
 			CreatedAt:        m["created_at"].(int64),
 			CreatedBy:        m["created_by"].(string),
 			Email:            m["email"].(string),
@@ -104,10 +104,8 @@ func (d *Database) runGetDeveloperQuery(query string, queryParameters ...interfa
 			LastmodifiedAt:   m["lastmodified_at"].(int64),
 			LastmodifiedBy:   m["lastmodified_by"].(string),
 			OrganizationName: m["organization_name"].(string),
-			// password:          m["password"].(string),
-			Salt:     m["salt"].(string),
-			Status:   m["status"].(string),
-			UserName: m["user_name"].(string),
+			Status:           m["status"].(string),
+			UserName:         m["user_name"].(string),
 		})
 		m = map[string]interface{}{}
 	}
@@ -128,7 +126,7 @@ func (d *Database) UpdateDeveloperByName(updatedDeveloper *shared.Developer) err
 	updatedDeveloper.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
 
 	if err := d.cassandraSession.Query(
-		"INSERT INTO developers (key, apps, attributes, "+
+		"INSERT INTO developers (developer_id, apps, attributes, "+
 			"created_at, created_by, email, "+
 			"first_name, last_name, lastmodified_at, "+
 			"lastmodified_by, organization_name, status, user_name) "+
@@ -151,6 +149,6 @@ func (d *Database) DeleteDeveloperByEmail(organizationName, developerEmail strin
 		return err
 	}
 
-	query := "DELETE FROM developers WHERE key = ?"
+	query := "DELETE FROM developers WHERE developer_app_id = ?"
 	return d.cassandraSession.Query(query, developer.DeveloperID).Exec()
 }

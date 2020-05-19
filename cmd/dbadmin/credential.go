@@ -76,17 +76,17 @@ func (s *server) PostCreateDeveloperAppKey(c *gin.Context) {
 	}
 
 	newAppCredential := shared.AppCredential{
-		ExpiresAt:         -1,
-		IssuedAt:          shared.GetCurrentTimeMilliseconds(),
-		OrganizationAppID: developerApp.DeveloperAppID,
-		OrganizationName:  developerApp.OrganizationName,
-		Status:            "approved",
+		ExpiresAt:        -1,
+		IssuedAt:         shared.GetCurrentTimeMilliseconds(),
+		DeveloperAppID:   developerApp.DeveloperAppID,
+		OrganizationName: developerApp.OrganizationName,
+		Status:           "approved",
 	}
 
 	var receivedCredential shared.AppCredential
 	err = c.ShouldBindJSON(&receivedCredential)
 
-	if err != nil && receivedCredential.ConsumerKey != "" {
+	if err == nil && receivedCredential.ConsumerKey != "" {
 		newAppCredential.ConsumerKey = receivedCredential.ConsumerKey
 		newAppCredential.ConsumerSecret = receivedCredential.ConsumerSecret
 	} else {

@@ -41,33 +41,41 @@ func (s *server) GetOrganizations(c *gin.Context) {
 
 // GetOrganizationByName returns details of an organization
 func (s *server) GetOrganizationByName(c *gin.Context) {
+
 	organization, err := s.db.GetOrganizationByName(c.Param("organization"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
+
 	setLastModifiedHeader(c, organization.LastmodifiedAt)
+
 	c.IndentedJSON(http.StatusOK, organization)
 }
 
 // GetOrganizationAttributes returns attributes of an organization
 func (s *server) GetOrganizationAttributes(c *gin.Context) {
+
 	organization, err := s.db.GetOrganizationByName(c.Param("organization"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
+
 	setLastModifiedHeader(c, organization.LastmodifiedAt)
+
 	c.IndentedJSON(http.StatusOK, gin.H{"attribute": organization.Attributes})
 }
 
 // GetDeveloperAttributeByName returns one particular attribute of an organization
 func (s *server) GetOrganizationAttributeByName(c *gin.Context) {
+
 	organization, err := s.db.GetOrganizationByName(c.Param("organization"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
+
 	// lets find the attribute requested
 	for i := 0; i < len(organization.Attributes); i++ {
 		if organization.Attributes[i].Name == c.Param("attribute") {
@@ -76,57 +84,66 @@ func (s *server) GetOrganizationAttributeByName(c *gin.Context) {
 			return
 		}
 	}
+
 	returnJSONMessage(c, http.StatusNotFound,
 		fmt.Errorf("Could not retrieve attribute '%s'", c.Param("attribute")))
 }
 
 // PostCreateOrganization creates an organization
 func (s *server) PostCreateOrganization(c *gin.Context) {
+
 	var newOrganization shared.Organization
 	if err := c.ShouldBindJSON(&newOrganization); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
+
 	existingOrganization, err := s.db.GetOrganizationByName(newOrganization.Name)
 	if err == nil {
 		returnJSONMessage(c, http.StatusBadRequest,
 			fmt.Errorf("Organization '%s' already exists", existingOrganization.Name))
 		return
 	}
+
 	// Automatically set default fields
-	newOrganization.Key = newOrganization.Name
 	newOrganization.CreatedBy = s.whoAmI()
 	newOrganization.CreatedAt = shared.GetCurrentTimeMilliseconds()
 	newOrganization.LastmodifiedBy = s.whoAmI()
+
 	if err := s.db.UpdateOrganizationByName(&newOrganization); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
+
 	c.IndentedJSON(http.StatusCreated, newOrganization)
 }
 
 // PostOrganization updates an existing organization
 func (s *server) PostOrganization(c *gin.Context) {
+
 	currentOrganization, err := s.db.GetOrganizationByName(c.Param("organization"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
+
 	var updatedOrganization shared.Organization
 	if err := c.ShouldBindJSON(&updatedOrganization); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
+
 	// We don't allow POSTing to update organization X while body says to update organization Y
 	updatedOrganization.Name = currentOrganization.Name
-	updatedOrganization.Key = currentOrganization.Key
 	updatedOrganization.CreatedBy = currentOrganization.CreatedBy
 	updatedOrganization.CreatedAt = currentOrganization.CreatedAt
 	updatedOrganization.LastmodifiedBy = s.whoAmI()
+
 	if err := s.db.UpdateOrganizationByName(&updatedOrganization); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
+
 	c.IndentedJSON(http.StatusOK, updatedOrganization)
 }
 

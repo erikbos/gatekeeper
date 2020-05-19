@@ -80,14 +80,17 @@ func (d *Database) runGetOrganizationQuery(query, queryParameter string) ([]shar
 
 // UpdateOrganizationByName UPSERTs an organization in database
 func (d *Database) UpdateOrganizationByName(updatedOrganization *shared.Organization) error {
+
 	updatedOrganization.Attributes = shared.TidyAttributes(updatedOrganization.Attributes)
 	Attributes := d.marshallArrayOfAttributesToJSON(updatedOrganization.Attributes)
+
 	updatedOrganization.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
+
 	if err := d.cassandraSession.Query(
-		"INSERT INTO organizations (key, name, display_name, attributes, "+
+		"INSERT INTO organizations (name, display_name, attributes, "+
 			"created_at, created_by, lastmodified_at, lastmodified_by) "+
-			"VALUES(?,?,?,?,?,?,?,?)",
-		updatedOrganization.Name, updatedOrganization.Name,
+			"VALUES(?,?,?,?,?,?,?)",
+		updatedOrganization.Name,
 		updatedOrganization.DisplayName, Attributes, updatedOrganization.CreatedAt,
 		updatedOrganization.CreatedBy, updatedOrganization.LastmodifiedAt,
 		updatedOrganization.LastmodifiedBy).Exec(); err != nil {
@@ -102,6 +105,6 @@ func (d *Database) DeleteOrganizationByName(organizationToDelete string) error {
 	if err != nil {
 		return err
 	}
-	query := "DELETE FROM organizations WHERE key = ?"
+	query := "DELETE FROM organizations WHERE name = ?"
 	return d.cassandraSession.Query(query, organizationToDelete).Exec()
 }

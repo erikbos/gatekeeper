@@ -13,7 +13,6 @@ type Organization struct {
 	CreatedAt      int64                `json:"createdAt"`
 	CreatedBy      string               `json:"createdBy"`
 	DisplayName    string               `json:"displayName"`
-	Key            string               `json:"key"`
 	LastmodifiedAt int64                `json:"lastmodifiedAt"`
 	LastmodifiedBy string               `json:"lastmodifiedBy"`
 	Name           string               `json:"name" binding:"required"`
@@ -22,60 +21,46 @@ type Organization struct {
 // Developer contains everything about a Developer
 type Developer struct {
 	DeveloperID      string               `json:"developerId"`
+	Status           string               `json:"status"`
+	OrganizationName string               `json:"organizationName"`
 	Apps             []string             `json:"apps"`
 	Attributes       []AttributeKeyValues `json:"attributes"`
-	CreatedAt        int64                `json:"createdAt"`
-	CreatedBy        string               `json:"createdBy"`
 	Email            string               `json:"email" binding:"required"`
+	UserName         string               `json:"userName" binding:"required"`
 	FirstName        string               `json:"firstName" binding:"required"`
 	LastName         string               `json:"lastName" binding:"required"`
+	CreatedAt        int64                `json:"createdAt"`
+	CreatedBy        string               `json:"createdBy"`
 	LastmodifiedAt   int64                `json:"lastmodifiedAt"`
 	LastmodifiedBy   string               `json:"lastmodifiedBy"`
-	OrganizationName string               `json:"organizationName"`
-	Salt             string               `json:"salt"`
-	Status           string               `json:"status"`
-	UserName         string               `json:"userName" binding:"required"`
 }
 
 // DeveloperApp contains everything about a Developer Application
 type DeveloperApp struct {
-	DeveloperAppID   string               `json:"key"`
-	AccessType       string               `json:"accessType"`
-	AppFamily        string               `json:"appFamily"`
-	AppID            string               `json:"appId"`
-	AppType          string               `json:"appType"`
+	DeveloperAppID   string               `json:"developerAppId"`
+	DeveloperID      string               `json:"developerId"`
+	OrganizationName string               `json:"organizationName"`
+	Status           string               `json:"status"`
 	Attributes       []AttributeKeyValues `json:"attributes"`
-	CallbackURL      string               `json:"callbackUrl"`
+	Name             string               `json:"name" binding:"required"`
+	DisplayName      string               `json:"displayName"`
 	CreatedAt        int64                `json:"createdAt"`
 	CreatedBy        string               `json:"createdBy"`
-	Credentials      []AppCredential      `json:"credentials"`
-	DisplayName      string               `json:"displayName"`
 	LastmodifiedAt   int64                `json:"lastmodifiedAt"`
 	LastmodifiedBy   string               `json:"lastmodifiedBy"`
-	Name             string               `json:"name" binding:"required"`
-	OrganizationName string               `json:"organizationName"`
-	ParentID         string               `json:"parentId"`
-	ParentStatus     string               `json:"parentStatus"`
-	Status           string               `json:"status"`
-	// Key              string               `json:"DeveloperAppID"`
 }
 
 // AppCredential contains an apikey entitlement
 type AppCredential struct {
-	ConsumerKey       string               `json:"key"`
-	APIProducts       []APIProductStatus   `json:"apiProducts"`
-	AppStatus         string               `json:"appStatus"`
-	Attributes        []AttributeKeyValues `json:"attributes"`
-	CompanyStatus     string               `json:"companyStatus"`
-	ConsumerSecret    string               `json:"consumerSecret"`
-	CredentialMethod  string               `json:"credentialMethod"`
-	DeveloperStatus   string               `json:"developerStatus"`
-	ExpiresAt         int64                `json:"expiresAt"`
-	IssuedAt          int64                `json:"issuesAt"`
-	OrganizationAppID string               `json:"organizationAppId"`
-	OrganizationName  string               `json:"organizationName"`
-	Scopes            string               `json:"scopes"`
-	Status            string               `json:"status"`
+	ConsumerKey      string               `json:"consumerKey"`
+	ConsumerSecret   string               `json:"consumerSecret"`
+	APIProducts      []APIProductStatus   `json:"apiProducts"`
+	Attributes       []AttributeKeyValues `json:"attributes"`
+	ExpiresAt        int64                `json:"expiresAt"`
+	IssuedAt         int64                `json:"issuesAt"`
+	DeveloperAppID   string               `json:"developerAppId"`
+	OrganizationName string               `json:"organizationName"`
+	Status           string               `json:"status"`
 }
 
 // APIProductStatus contains whether an apikey's assigned apiproduct has been approved
@@ -109,17 +94,18 @@ type AttributeKeyValues struct {
 
 // VirtualHost contains everything about downstream configuration of virtual hosts
 type VirtualHost struct {
-	Name           string               `json:"name"`
-	DisplayName    string               `json:"displayName"`
-	VirtualHosts   []string             `json:"virtualHosts"`
-	Port           int                  `json:"port"`
-	RouteSet       string               `json:"routeSet"`
-	Policies       string               `json:"policies"`
-	Attributes     []AttributeKeyValues `json:"attributes"`
-	CreatedAt      int64                `json:"createdAt"`
-	CreatedBy      string               `json:"createdBy"`
-	LastmodifiedAt int64                `json:"lastmodifiedAt"`
-	LastmodifiedBy string               `json:"lastmodifiedBy"`
+	Name             string               `json:"name"`
+	DisplayName      string               `json:"displayName"`
+	VirtualHosts     []string             `json:"virtualHosts"`
+	Port             int                  `json:"port"`
+	RouteSet         string               `json:"routeSet"`
+	Policies         string               `json:"policies"`
+	Attributes       []AttributeKeyValues `json:"attributes"`
+	OrganizationName string               `json:"organizationName"`
+	CreatedAt        int64                `json:"createdAt"`
+	CreatedBy        string               `json:"createdBy"`
+	LastmodifiedAt   int64                `json:"lastmodifiedAt"`
+	LastmodifiedBy   string               `json:"lastmodifiedBy"`
 }
 
 // Route holds configuration of one or more routes

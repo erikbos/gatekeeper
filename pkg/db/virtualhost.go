@@ -63,15 +63,16 @@ func (d *Database) runGetVirtualHostQuery(query string,
 	m := make(map[string]interface{})
 	for iter.MapScan(m) {
 		newVirtualHost := shared.VirtualHost{
-			Name:           m["name"].(string),
-			DisplayName:    m["display_name"].(string),
-			Port:           m["port"].(int),
-			RouteSet:       m["route_set"].(string),
-			Policies:       m["policies"].(string),
-			CreatedAt:      m["created_at"].(int64),
-			CreatedBy:      m["created_by"].(string),
-			LastmodifiedAt: m["lastmodified_at"].(int64),
-			LastmodifiedBy: m["lastmodified_by"].(string),
+			Name:             m["name"].(string),
+			DisplayName:      m["display_name"].(string),
+			Port:             m["port"].(int),
+			RouteSet:         m["route_set"].(string),
+			Policies:         m["policies"].(string),
+			OrganizationName: m["organization_name"].(string),
+			CreatedAt:        m["created_at"].(int64),
+			CreatedBy:        m["created_by"].(string),
+			LastmodifiedAt:   m["lastmodified_at"].(int64),
+			LastmodifiedBy:   m["lastmodified_by"].(string),
 		}
 		if m["virtual_hosts"] != nil {
 			newVirtualHost.VirtualHosts = d.unmarshallJSONArrayOfStrings(m["virtual_hosts"].(string))
@@ -94,8 +95,8 @@ func (d *Database) runGetVirtualHostQuery(query string,
 func (d *Database) UpdateVirtualHostByName(updatedVirtualHost *shared.VirtualHost) error {
 	query := "INSERT INTO virtual_hosts " +
 		"(name, display_name, virtual_hosts, port, route_set, policies, attributes, " +
-		"created_at, created_by, lastmodified_at, lastmodified_by) " +
-		"VALUES(?,?,?,?,?,?,?,?,?,?,?)"
+		"organization_name, created_at, created_by, lastmodified_at, lastmodified_by) " +
+		"VALUES(?,?,?,?,?,?,?,?,?,?,?,?)"
 
 	virtualhosts := d.marshallArrayOfStringsToJSON(updatedVirtualHost.VirtualHosts)
 
@@ -107,6 +108,7 @@ func (d *Database) UpdateVirtualHostByName(updatedVirtualHost *shared.VirtualHos
 		updatedVirtualHost.Name, updatedVirtualHost.DisplayName,
 		virtualhosts, updatedVirtualHost.Port, updatedVirtualHost.RouteSet,
 		updatedVirtualHost.Policies, attributes,
+		updatedVirtualHost.OrganizationName,
 		updatedVirtualHost.CreatedAt, updatedVirtualHost.CreatedBy,
 		updatedVirtualHost.LastmodifiedAt,
 		updatedVirtualHost.LastmodifiedBy).Exec()
