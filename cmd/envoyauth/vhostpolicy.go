@@ -6,7 +6,7 @@ import (
 	"github.com/bmatcuk/doublestar"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/erikbos/apiauth/pkg/shared"
+	"github.com/erikbos/gatekeeper/pkg/shared"
 )
 
 // handleVhostPolicy executes a single policy to optionally add upstream headers
@@ -15,7 +15,7 @@ func (a *authorizationServer) handleVhostPolicy(policy string, request *requestI
 	a.metrics.virtualHostPolicy.WithLabelValues(request.httpRequest.Host, policy).Inc()
 
 	switch policy {
-	case "checkapi":
+	case "checkapikey":
 		return a.checkAPIKey(request)
 	case "geoiplookup":
 		return a.geoIPLookup(request)

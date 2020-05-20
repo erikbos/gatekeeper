@@ -7,7 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/erikbos/apiauth/pkg/shared"
+	"github.com/erikbos/gatekeeper/pkg/shared"
 )
 
 // registerClusterRoutes registers all routes we handle

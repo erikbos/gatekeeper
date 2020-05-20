@@ -7,7 +7,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 
-	"github.com/erikbos/apiauth/pkg/db"
+	"github.com/erikbos/gatekeeper/pkg/db"
 )
 
 const (

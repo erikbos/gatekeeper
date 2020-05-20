@@ -21,7 +21,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/types/known/anypb"
 
-	"github.com/erikbos/apiauth/pkg/shared"
+	"github.com/erikbos/gatekeeper/pkg/shared"
 )
 
 const (

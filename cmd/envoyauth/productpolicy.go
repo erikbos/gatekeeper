@@ -6,7 +6,7 @@ import (
 
 	"github.com/bmatcuk/doublestar"
 
-	"github.com/erikbos/apiauth/pkg/shared"
+	"github.com/erikbos/gatekeeper/pkg/shared"
 )
 
 // handlePolicy executes a single policy to optionally add upstream headers

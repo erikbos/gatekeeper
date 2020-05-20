@@ -7,8 +7,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/erikbos/apiauth/pkg/db"
-	"github.com/erikbos/apiauth/pkg/shared"
+	"github.com/erikbos/gatekeeper/pkg/db"
+	"github.com/erikbos/gatekeeper/pkg/shared"
 )
 
 var (

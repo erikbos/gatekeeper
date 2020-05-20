@@ -6,7 +6,7 @@ import (
 	"github.com/dchest/uniuri"
 	"github.com/gin-gonic/gin"
 
-	"github.com/erikbos/apiauth/pkg/shared"
+	"github.com/erikbos/gatekeeper/pkg/shared"
 )
 
 func (s *server) registerCredentialRoutes(r *gin.Engine) {
