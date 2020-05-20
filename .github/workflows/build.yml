@@ -21,7 +21,7 @@ jobs:
     - name: Docker login
       uses: azure/docker-login@v1
       with:
-        login-server: testerbs.azurecr.io
+        login-server: ${{ secrets.acr_hostname }}
         username: ${{ secrets.acr_username }}
         password: ${{ secrets.acr_password }}
 
