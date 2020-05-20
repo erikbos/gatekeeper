@@ -15,32 +15,38 @@ const organizationMetricLabel = "organizations"
 
 // GetOrganizations retrieves all organizations
 func (d *Database) GetOrganizations() ([]shared.Organization, error) {
+
 	// FIXME this ugly workaround to have to pass an argument
 	query := "SELECT * FROM organizations ALLOW FILTERING"
 	organizations, err := d.runGetOrganizationQuery(query, "")
 	if err != nil {
 		return []shared.Organization{}, fmt.Errorf("Cannot retrieve list of organizations (%s)", err)
 	}
+
 	if len(organizations) == 0 {
 		d.metricsQueryMiss(organizationMetricLabel)
 	} else {
 		d.metricsQueryHit(organizationMetricLabel)
 	}
+
 	return organizations, nil
 }
 
 // GetOrganizationByName retrieves an organization from database
 func (d *Database) GetOrganizationByName(organizationName string) (shared.Organization, error) {
+
 	query := "SELECT * FROM organizations WHERE name = ? LIMIT 1"
 	organizations, err := d.runGetOrganizationQuery(query, organizationName)
 	if err != nil {
 		return shared.Organization{}, err
 	}
+
 	if len(organizations) == 0 {
 		d.metricsQueryMiss(organizationMetricLabel)
 		return shared.Organization{},
 			fmt.Errorf("Can not find organization (%s)", organizationName)
 	}
+
 	d.metricsQueryHit(organizationMetricLabel)
 	return organizations[0], nil
 }
@@ -101,10 +107,12 @@ func (d *Database) UpdateOrganizationByName(updatedOrganization *shared.Organiza
 
 // DeleteOrganizationByName deletes an organization from database
 func (d *Database) DeleteOrganizationByName(organizationToDelete string) error {
+
 	_, err := d.GetOrganizationByName(organizationToDelete)
 	if err != nil {
 		return err
 	}
+
 	query := "DELETE FROM organizations WHERE name = ?"
 	return d.cassandraSession.Query(query, organizationToDelete).Exec()
 }

@@ -10,7 +10,7 @@ import (
 )
 
 // Prometheus label for metrics of db interactions
-const appCredentialsMetricLabel = "appcredentials"
+const appCredentialsMetricLabel = "credentials"
 
 // GetAppCredentialByKey returns details of a single apikey
 func (d *Database) GetAppCredentialByKey(organizationName, key string) (shared.AppCredential, error) {
@@ -66,6 +66,7 @@ func (d *Database) GetAppCredentialCountByDeveloperAppID(developerAppID string) 
 
 // runAppCredentialQuery executes CQL query and returns resulset
 func (d *Database) runGetAppCredentialQuery(query string, queryParameters ...interface{}) ([]shared.AppCredential, error) {
+
 	var appcredentials []shared.AppCredential
 
 	timer := prometheus.NewTimer(d.dbLookupHistogram)

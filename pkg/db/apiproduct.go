@@ -55,19 +55,18 @@ func (d *Database) runGetAPIProductQuery(query string, queryParameters ...interf
 	m := make(map[string]interface{})
 	for iterable.MapScan(m) {
 		apiproduct := shared.APIProduct{
-			Key:              m["key"].(string),
 			Name:             m["name"].(string),
 			DisplayName:      m["display_name"].(string),
 			Description:      m["description"].(string),
 			RouteSet:         m["route_set"].(string),
 			OrganizationName: m["organization_name"].(string),
-			Scopes:           m["scopes"].(string),
+			Policies:         m["policies"].(string),
 			CreatedAt:        m["created_at"].(int64),
 			CreatedBy:        m["created_by"].(string),
 			LastmodifiedAt:   m["lastmodified_at"].(int64),
 			LastmodifiedBy:   m["lastmodified_by"].(string),
 		}
-		apiproduct.APIResources = d.unmarshallJSONArrayOfStrings(m["api_resources"].(string))
+		apiproduct.Paths = d.unmarshallJSONArrayOfStrings(m["paths"].(string))
 		apiproduct.Attributes = d.unmarshallJSONArrayOfAttributes(m["attributes"].(string))
 		apiproducts = append(apiproducts, apiproduct)
 		m = map[string]interface{}{}
@@ -81,20 +80,21 @@ func (d *Database) runGetAPIProductQuery(query string, queryParameters ...interf
 
 // UpdateAPIProductByName UPSERTs an apiproduct in database
 func (d *Database) UpdateAPIProductByName(updatedAPIProduct *shared.APIProduct) error {
-	query := "INSERT INTO api_products (key,name,display_name, attributes," +
-		"created_at,created_by, route_set, api_resources, scopes, " +
+	query := "INSERT INTO api_products (name,display_name, attributes," +
+		"created_at,created_by, route_set, paths, policies, " +
 		"lastmodified_at,lastmodified_by,organization_name) " +
-		"VALUES(?,?,?,?,?,?,?,?,?,?,?,?)"
+		"VALUES(?,?,?,?,?,?,?,?,?,?,?)"
 
 	updatedAPIProduct.Attributes = shared.TidyAttributes(updatedAPIProduct.Attributes)
 	attributes := d.marshallArrayOfAttributesToJSON(updatedAPIProduct.Attributes)
-	apiResource := d.marshallArrayOfStringsToJSON(updatedAPIProduct.APIResources)
+
+	paths := d.marshallArrayOfStringsToJSON(updatedAPIProduct.Paths)
 
 	updatedAPIProduct.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
 	err := d.cassandraSession.Query(query,
-		updatedAPIProduct.Key, updatedAPIProduct.Name, updatedAPIProduct.DisplayName, attributes,
+		updatedAPIProduct.Name, updatedAPIProduct.DisplayName, attributes,
 		updatedAPIProduct.CreatedAt, updatedAPIProduct.CreatedBy, updatedAPIProduct.RouteSet,
-		apiResource, updatedAPIProduct.Scopes,
+		paths, updatedAPIProduct.Policies,
 		updatedAPIProduct.LastmodifiedAt, updatedAPIProduct.LastmodifiedBy,
 		updatedAPIProduct.OrganizationName).Exec()
 	if err == nil {
@@ -109,6 +109,6 @@ func (d *Database) DeleteAPIProductByName(organizationName, apiProduct string) e
 	if err != nil {
 		return err
 	}
-	query := "DELETE FROM api_products WHERE key = ?"
-	return d.cassandraSession.Query(query, apiproduct.Key).Exec()
+	query := "DELETE FROM api_products WHERE name = ?"
+	return d.cassandraSession.Query(query, apiproduct.Name).Exec()
 }

@@ -15,31 +15,38 @@ const clusterMetricLabel = "clusters"
 
 // GetClusters retrieves all clusters
 func (d *Database) GetClusters() ([]shared.Cluster, error) {
+
 	query := "SELECT * FROM clusters"
 	clusters, err := d.runGetClusterQuery(query)
 	if err != nil {
 		return []shared.Cluster{}, err
 	}
+
 	if len(clusters) == 0 {
 		d.metricsQueryMiss(clusterMetricLabel)
 		return []shared.Cluster{}, errors.New("Can not retrieve list of clusters")
 	}
+
 	d.metricsQueryHit(clusterMetricLabel)
 	return clusters, nil
 }
 
 // GetClusterByName retrieves a cluster from database
 func (d *Database) GetClusterByName(clusterName string) (shared.Cluster, error) {
+
 	query := "SELECT * FROM clusters WHERE key = ? LIMIT 1"
 	clusters, err := d.runGetClusterQuery(query, clusterName)
+
 	if err != nil {
 		return shared.Cluster{}, err
 	}
+
 	if len(clusters) == 0 {
 		d.metricsQueryMiss(clusterMetricLabel)
 		return shared.Cluster{},
 			fmt.Errorf("Can not find cluster (%s)", clusterName)
 	}
+
 	d.metricsQueryHit(clusterMetricLabel)
 	return clusters[0], nil
 }
@@ -80,13 +87,16 @@ func (d *Database) runGetClusterQuery(query string, queryParameters ...interface
 
 // UpdateClusterByName UPSERTs an cluster in database
 func (d *Database) UpdateClusterByName(updatedCluster *shared.Cluster) error {
+
 	query := "INSERT INTO clusters (key, display_name, " +
 		"host_name, port, attributes, " +
 		"created_at, created_by, lastmodified_at, lastmodified_by) " +
 		"VALUES(?,?,?,?,?,?,?,?,?)"
+
 	updatedCluster.Attributes = shared.TidyAttributes(updatedCluster.Attributes)
 	attributes := d.marshallArrayOfAttributesToJSON(updatedCluster.Attributes)
 	updatedCluster.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
+
 	if err := d.cassandraSession.Query(query,
 		updatedCluster.Name, updatedCluster.DisplayName,
 		updatedCluster.HostName, updatedCluster.Port, attributes,
@@ -95,15 +105,18 @@ func (d *Database) UpdateClusterByName(updatedCluster *shared.Cluster) error {
 		updatedCluster.LastmodifiedBy).Exec(); err != nil {
 		return fmt.Errorf("Can not update cluster (%v)", err)
 	}
+
 	return nil
 }
 
 // DeleteClusterByName deletes a cluster
 func (d *Database) DeleteClusterByName(clusterToDelete string) error {
+
 	_, err := d.GetClusterByName(clusterToDelete)
 	if err != nil {
 		return err
 	}
+
 	query := "DELETE FROM clusters WHERE key = ?"
 	return d.cassandraSession.Query(query, clusterToDelete).Exec()
 }

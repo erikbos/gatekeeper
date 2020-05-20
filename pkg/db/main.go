@@ -37,6 +37,7 @@ type DatabaseConfig struct {
 
 // Connect setups up connectivity to Cassandra
 func Connect(config DatabaseConfig, r *shared.Readiness, serviceName string) (*Database, error) {
+
 	var err error
 	d := Database{
 		ServiceName: serviceName,

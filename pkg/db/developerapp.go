@@ -33,16 +33,19 @@ func (d *Database) GetDeveloperAppsByOrganization(organizationName string) ([]sh
 
 // GetDeveloperAppByName returns details of a developer app
 func (d *Database) GetDeveloperAppByName(organization, developerAppName string) (shared.DeveloperApp, error) {
+
 	query := "SELECT * FROM developer_apps WHERE organization_name = ? AND name = ? LIMIT 1"
 	developerapps, err := d.runGetDeveloperAppQuery(query, organization, developerAppName)
 	if err != nil {
 		return shared.DeveloperApp{}, err
 	}
+
 	if len(developerapps) == 0 {
 		d.metricsQueryMiss(appsMetricLabel)
 		return shared.DeveloperApp{},
 			fmt.Errorf("Can not find developer app '%s'", developerAppName)
 	}
+
 	d.metricsQueryHit(appsMetricLabel)
 	return developerapps[0], nil
 }

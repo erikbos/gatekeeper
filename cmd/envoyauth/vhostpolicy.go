@@ -68,6 +68,7 @@ func (a *authorizationServer) CheckProductEntitlement(organization string, reque
 	if err != nil {
 		return errors.New("No product match")
 	}
+
 	return nil
 }
 
@@ -98,10 +99,12 @@ func (a *authorizationServer) getEntitlementDetails(organization string, request
 
 // checkAppCredentialValidity checks devapp approval and expiry status
 func checkAppCredentialValidity(appcredential shared.AppCredential) error {
+
 	if appcredential.Status != "approved" {
 		// FIXME increase unapproved dev app counter (not an error state)
 		return errors.New("Unapproved apikey")
 	}
+
 	if appcredential.ExpiresAt != -1 {
 		if shared.GetCurrentTimeMilliseconds() > appcredential.ExpiresAt {
 			// FIXME increase expired dev app credentials counter (not an error state))
@@ -130,7 +133,7 @@ func (a *authorizationServer) IsRequestPathAllowed(organization, requestPath str
 				// FIXME increase unknown product in apikey counter (not an error state)
 			} else {
 				// Iterate over apiresource(paths) of apiproduct
-				for _, productPath := range apiproduct.APIResources {
+				for _, productPath := range apiproduct.Paths {
 					// log.Debugf("IsRequestPathAllowed() Matching path %s in %s", requestPath, productPath)
 					if ok, _ := doublestar.Match(productPath, requestPath); ok {
 						// log.Debugf("IsRequestPathAllowed: match!")

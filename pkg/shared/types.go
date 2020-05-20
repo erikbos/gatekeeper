@@ -71,15 +71,14 @@ type APIProductStatus struct {
 
 // APIProduct type contains everything about an API product
 type APIProduct struct {
-	Key              string               `json:"key"`
 	Name             string               `json:"name"`
+	RouteSet         string               `json:"routeSet"`
+	Paths            []string             `json:"paths"`
+	Attributes       []AttributeKeyValues `json:"attributes"`
+	Policies         string               `json:"policies"`
+	OrganizationName string               `json:"organizationName"`
 	DisplayName      string               `json:"displayName"`
 	Description      string               `json:"description"`
-	RouteSet         string               `json:"routeSet"`
-	APIResources     []string             `json:"apiResources"`
-	Attributes       []AttributeKeyValues `json:"attributes"`
-	OrganizationName string               `json:"organizationName"`
-	Scopes           string               `json:"scopes"`
 	CreatedAt        int64                `json:"createdAt"`
 	CreatedBy        string               `json:"createdBy"`
 	LastmodifiedAt   int64                `json:"lastmodifiedAt"`

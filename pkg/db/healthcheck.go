@@ -24,6 +24,7 @@ type HealthCheckStatus struct {
 
 // runHealthCheck runs continous query against databse to confirm connectivity
 func (d *Database) runHealthCheck(healthcheckInterval string) {
+
 	interval := d.getHealthCheckInterval(healthcheckInterval)
 
 	var connected bool
@@ -48,13 +49,16 @@ func (d *Database) runHealthCheck(healthcheckInterval string) {
 
 // getHealthCheckInterval parses config option to set db healthcheck interval
 func (d *Database) getHealthCheckInterval(healthcheckInterval string) time.Duration {
+
 	interval, err := time.ParseDuration(healthcheckInterval)
 	if err != nil {
 		log.Fatalf("Cannot parse '%s' as db healthCheckInterval (%s)", healthcheckInterval, err)
 	}
+
 	if interval < minimumHealthCheckInterval {
 		log.Fatalf("Db healthcheck interval set to low, should be >= '%s'", minimumHealthCheckInterval)
 	}
+
 	return interval
 }
 
@@ -75,10 +79,12 @@ func (d *Database) HealthCheckQuery() (HealthCheckStatus, error) {
 			rack:          m["rack"].(string),
 		}
 	}
+
 	if err := iter.Close(); err != nil {
 		d.metricsQueryMiss(healthCheckMetricLabel)
 		return HealthCheckStatus{}, err
 	}
+
 	d.metricsQueryHit(healthCheckMetricLabel)
 	return peers, nil
 }

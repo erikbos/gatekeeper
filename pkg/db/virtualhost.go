@@ -113,7 +113,7 @@ func (d *Database) UpdateVirtualHostByName(updatedVirtualHost *shared.VirtualHos
 		updatedVirtualHost.LastmodifiedAt,
 		updatedVirtualHost.LastmodifiedBy).Exec()
 	if err != nil {
-		return fmt.Errorf("Can not update virtualhost (%v)", err)
+		return fmt.Errorf("Can not update virtualhost '%v'", err)
 	}
 	return nil
 }

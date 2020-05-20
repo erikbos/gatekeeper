@@ -108,9 +108,6 @@ func (s *server) PostCreateAPIProduct(c *gin.Context) {
 
 	// Automatically assign new APIProduct to organization
 	newAPIProduct.OrganizationName = c.Param("organization")
-	// Generate primary key for new row
-	newAPIProduct.Key = generatePrimaryKeyOfAPIProduct(newAPIProduct.OrganizationName,
-		newAPIProduct.Name)
 	newAPIProduct.CreatedBy = s.whoAmI()
 	newAPIProduct.CreatedAt = shared.GetCurrentTimeMilliseconds()
 	newAPIProduct.LastmodifiedBy = s.whoAmI()
@@ -142,7 +139,8 @@ func (s *server) PostAPIProduct(c *gin.Context) {
 	apiproductToUpdate.DisplayName = updateRequest.DisplayName
 	apiproductToUpdate.Description = updateRequest.Description
 	apiproductToUpdate.RouteSet = updateRequest.RouteSet
-	apiproductToUpdate.APIResources = updateRequest.APIResources
+	apiproductToUpdate.Paths = updateRequest.Paths
+	apiproductToUpdate.Policies = updateRequest.Policies
 	apiproductToUpdate.Attributes = updateRequest.Attributes
 
 	apiproductToUpdate.LastmodifiedBy = s.whoAmI()

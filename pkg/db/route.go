@@ -39,6 +39,7 @@ func (d *Database) GetRouteByName(routeName string) (shared.Route, error) {
 	if err != nil {
 		return shared.Route{}, err
 	}
+
 	if len(routes) == 0 {
 		d.metricsQueryMiss(routeMetricLabel)
 		return shared.Route{},
@@ -109,10 +110,12 @@ func (d *Database) UpdateRouteByName(updatedRoute *shared.Route) error {
 
 // DeleteRouteByName deletes a route
 func (d *Database) DeleteRouteByName(routeToDelete string) error {
+
 	_, err := d.GetRouteByName(routeToDelete)
 	if err != nil {
 		return err
 	}
+
 	query := "DELETE FROM routes WHERE name = ?"
 	return d.cassandraSession.Query(query, routeToDelete).Exec()
 }

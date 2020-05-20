@@ -88,8 +88,8 @@ func (a *authorizationServer) Check(ctx context.Context, authRequest *auth.Check
 	}
 
 	// Invoke any product policy that we need to invoke
-	if request.APIProduct.Scopes != "" {
-		_, err := a.handlePolicies(&request, request.APIProduct.Scopes, a.handlePolicy, upstreamHeaders)
+	if request.APIProduct.Policies != "" {
+		_, err := a.handlePolicies(&request, request.APIProduct.Policies, a.handlePolicy, upstreamHeaders)
 		// In case a policy wants us to stop we reject call
 		if err != nil {
 			a.increaseRequestRejectCounter(&request)
@@ -240,7 +240,6 @@ func (a *authorizationServer) logConnectionDebug(request *requestInfo) {
 	log.Debugf("Check() rx path: %s", request.httpRequest.Path)
 	log.Debugf("Check() rx uri: %s", request.URL.Path)
 	log.Debugf("Check() rx qp: %s", request.queryParameters)
-	log.Debugf("Check() rx apikey: %s", request.apikey)
 
 	for key, value := range request.httpRequest.Headers {
 		log.Debugf("Check() rx header [%s] = %s", key, value)

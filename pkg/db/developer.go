@@ -24,7 +24,7 @@ func (d *Database) GetDevelopersByOrganization(organizationName string) ([]share
 	if len(developers) == 0 {
 		d.metricsQueryMiss(developerMetricLabel)
 		return developers,
-			fmt.Errorf("Could not retrieve developers in organization %s", organizationName)
+			fmt.Errorf("Could not retrieve developers in organization '%s'", organizationName)
 	}
 
 	d.metricsQueryHit(developerMetricLabel)
@@ -33,6 +33,7 @@ func (d *Database) GetDevelopersByOrganization(organizationName string) ([]share
 
 // GetDeveloperCountByOrganization retrieves number of developer belonging to an organization
 func (d *Database) GetDeveloperCountByOrganization(organizationName string) int {
+
 	var developerCount int
 
 	query := "SELECT count(*) FROM developers WHERE organization_name = ? ALLOW FILTERING"
@@ -56,7 +57,7 @@ func (d *Database) GetDeveloperByEmail(developerOrganization, developerEmail str
 
 	if len(developers) == 0 {
 		d.metricsQueryMiss(developerMetricLabel)
-		return shared.Developer{}, fmt.Errorf("Can not find developer (%s)", developerEmail)
+		return shared.Developer{}, fmt.Errorf("Can not find developer '%s'", developerEmail)
 	}
 
 	d.metricsQueryHit(developerMetricLabel)
@@ -66,7 +67,7 @@ func (d *Database) GetDeveloperByEmail(developerOrganization, developerEmail str
 // GetDeveloperByID retrieves a developer from database
 func (d *Database) GetDeveloperByID(developerID string) (shared.Developer, error) {
 
-	query := "SELECT * FROM developers WHERE key = ? LIMIT 1"
+	query := "SELECT * FROM developers WHERE developer_id = ? LIMIT 1"
 	developers, err := d.runGetDeveloperQuery(query, developerID)
 	if err != nil {
 		return shared.Developer{}, err
@@ -74,7 +75,7 @@ func (d *Database) GetDeveloperByID(developerID string) (shared.Developer, error
 
 	if len(developers) == 0 {
 		d.metricsQueryMiss(developerMetricLabel)
-		return shared.Developer{}, fmt.Errorf("Can not find developerId (%s)", developerID)
+		return shared.Developer{}, fmt.Errorf("Can not find developerId '%s'", developerID)
 	}
 
 	d.metricsQueryHit(developerMetricLabel)
@@ -83,6 +84,7 @@ func (d *Database) GetDeveloperByID(developerID string) (shared.Developer, error
 
 // runDeveloperQuery executes CQL query and returns resultset
 func (d *Database) runGetDeveloperQuery(query string, queryParameters ...interface{}) ([]shared.Developer, error) {
+
 	var developers []shared.Developer
 
 	timer := prometheus.NewTimer(d.dbLookupHistogram)
