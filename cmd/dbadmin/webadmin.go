@@ -51,7 +51,6 @@ func StartWebAdminServer(s *server, c *webAdminConfig) {
 	s.ginEngine.GET("/readiness", s.readiness.ReadinessProbe)
 	s.ginEngine.GET("/metrics", gin.WrapH(promhttp.Handler()))
 	s.ginEngine.GET("/config_dump", s.ConfigDump)
-	s.ginEngine.Static("/assets", "./assets")
 
 	log.Info("Webadmin listening on ", c.Listen)
 	if err := s.ginEngine.Run(c.Listen); err != nil {
