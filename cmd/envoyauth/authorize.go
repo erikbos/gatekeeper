@@ -65,17 +65,17 @@ func (a *authorizationServer) Check(ctx context.Context, authRequest *auth.Check
 	}
 	a.logRequestDebug(&request)
 
-	request.vhost, err = a.lookupVhost(request.httpRequest.Host, request.httpRequest.Scheme)
+	// FIXME not sure if x-forwarded-proto the way to determine original tcp port used
+	request.vhost, err = a.lookupVhost(request.httpRequest.Host, request.httpRequest.Headers["x-forwarded-proto"])
 	if err != nil {
 		a.increaseRequestRejectCounter(&request)
 		return rejectRequest(http.StatusNotFound, nil, "unknown vhost")
 	}
 
+	// upstreamHeaders will receive all to be added upstream headers
 	upstreamHeaders := make(map[string]string)
 
 	if request.vhost.Policies != "" {
-		log.Debugf("found2 http host: %s, vhost: %s, policies: %s",
-			request.httpRequest.Host, request.vhost.Name, request.vhost.Policies)
 		errorStatusCode, err := a.handlePolicies(&request, request.vhost.Policies, a.handleVhostPolicy, upstreamHeaders)
 		// In case a policy wants us to stop we reject call
 		if err != nil {
@@ -84,13 +84,21 @@ func (a *authorizationServer) Check(ctx context.Context, authRequest *auth.Check
 		}
 	}
 
-	if request.APIProduct.Policies != "" {
-		errorStatusCode, err := a.handlePolicies(&request, request.APIProduct.Policies, a.handlePolicy, upstreamHeaders)
-		// In case a policy wants us to stop we reject call
-		if err != nil {
-			a.increaseRequestRejectCounter(&request)
-			return rejectRequest(errorStatusCode, nil, err.Error())
+	// In case HTTP method is OPTIONS we skip parsing product/upstream policy
+	// as we're not sending anything upstream, Envoy should answer all OPTIONS requests
+	if request.httpRequest.Method != "OPTIONS" {
+		if request.APIProduct.Policies != "" {
+			errorStatusCode, err := a.handlePolicies(&request, request.APIProduct.Policies, a.handlePolicy, upstreamHeaders)
+			// In case a policy wants us to stop we reject call
+			if err != nil {
+				a.increaseRequestRejectCounter(&request)
+				return rejectRequest(errorStatusCode, nil, err.Error())
+			}
 		}
+	}
+
+	for k, v := range upstreamHeaders {
+		log.Debugf("upstream header: %s = %s", k, v)
 	}
 
 	a.IncreaseRequestAcceptCounter(&request)
@@ -104,7 +112,6 @@ func (a *authorizationServer) lookupVhost(hostname, protocol string) (*shared.Vi
 	for _, vhostEntry := range a.virtualhosts {
 		for _, vhost := range vhostEntry.VirtualHosts {
 			if vhost == hostname {
-				log.Printf("1: %s, %s", vhostEntry.Port, protocol)
 				if (vhostEntry.Port == 80 && protocol == "http") ||
 					(vhostEntry.Port == 443 && protocol == "https") {
 					return &vhostEntry, nil
@@ -178,7 +185,6 @@ func allowRequest(headers map[string]string) (*auth.CheckResponse, error) {
 			},
 		},
 	}
-	log.Printf("allowCall: %v", response)
 	return response, nil
 }
 
