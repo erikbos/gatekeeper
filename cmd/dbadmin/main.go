@@ -43,8 +43,3 @@ func main() {
 	StartWebAdminServer(srv, &srv.config.WebAdmin)
 
 }
-
-// boiler plate for later log actual API user
-func (s *server) whoAmI() string {
-	return "rest-api@test"
-}

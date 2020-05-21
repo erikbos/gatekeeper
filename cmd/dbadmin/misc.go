@@ -9,6 +9,7 @@ import (
 )
 
 func setLastModifiedHeader(c *gin.Context, timeStamp int64) {
+
 	c.Header("Last-Modified",
 		time.Unix(0, timeStamp*int64(time.Millisecond)).UTC().Format(http.TimeFormat))
 }
@@ -28,4 +29,10 @@ func returnCanNotFindAttribute(c *gin.Context, name string) {
 		http.StatusNotFound,
 		fmt.Errorf("Could not find attribute '%s'", name),
 	)
+}
+
+// boiler plate for later log actual API user
+func (s *server) whoAmI() string {
+
+	return "rest-api@test"
 }

@@ -3,7 +3,7 @@ package db
 import (
 	"crypto/tls"
 	"encoding/json"
-	"errors"
+	"fmt"
 	"time"
 
 	"github.com/gocql/gocql"
@@ -46,11 +46,13 @@ func Connect(config DatabaseConfig, r *shared.Readiness, serviceName string) (*D
 	}
 	cluster := gocql.NewCluster(d.Config.Hostname)
 	cluster.Port = d.Config.Port
+
 	cluster.SslOpts = &gocql.SslOptions{
 		Config: &tls.Config{
 			InsecureSkipVerify: true,
 		},
 	}
+
 	cluster.Authenticator = gocql.PasswordAuthenticator{
 		Username: d.Config.Username,
 		Password: d.Config.Password,
@@ -68,7 +70,7 @@ func Connect(config DatabaseConfig, r *shared.Readiness, serviceName string) (*D
 
 	d.cassandraSession, err = cluster.CreateSession()
 	if err != nil {
-		return nil, errors.New("Could not connect to database")
+		return nil, fmt.Errorf("Could not connect to database: %s", err)
 	}
 
 	d.registerMetrics()

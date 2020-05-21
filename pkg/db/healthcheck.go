@@ -3,7 +3,6 @@ package db
 import (
 	"time"
 
-	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -66,8 +65,8 @@ func (d *Database) getHealthCheckInterval(healthcheckInterval string) time.Durat
 func (d *Database) HealthCheckQuery() (HealthCheckStatus, error) {
 	var peers HealthCheckStatus
 
-	timer := prometheus.NewTimer(d.dbLookupHistogram)
-	defer timer.ObserveDuration()
+	// timer := prometheus.NewTimer(d.dbLookupHistogram)
+	// defer timer.ObserveDuration()
 
 	iter := d.cassandraSession.Query(healthCheckCQLquery).Iter()
 	m := make(map[string]interface{})

@@ -2,12 +2,16 @@ package main
 
 import (
 	"errors"
+	"net/url"
+	"strings"
 
 	"github.com/bmatcuk/doublestar"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/erikbos/gatekeeper/pkg/shared"
 )
+
+type function func(policy string, request *requestInfo) (map[string]string, error)
 
 // handleVhostPolicy executes a single policy to optionally add upstream headers
 func (a *authorizationServer) handleVhostPolicy(policy string, request *requestInfo) (map[string]string, error) {
@@ -25,17 +29,40 @@ func (a *authorizationServer) handleVhostPolicy(policy string, request *requestI
 	return nil, nil
 }
 
+// checkAPIKey tries to find key in querystring, loads dev app, dev details, and check whether path is allowed
 func (a *authorizationServer) checkAPIKey(request *requestInfo) (map[string]string, error) {
 
-	request.apikey = request.queryParameters["apikey"][0]
+	var err error
+	request.apikey, err = getAPIkeyFromQueryString(request.queryParameters)
+	if err != nil || request.apikey == "" {
+		return nil, err
+	}
 
-	err := a.CheckProductEntitlement("petstore", request)
+	err = a.CheckProductEntitlement("petstore", request)
 	if err != nil {
 		log.Debugf("CheckProductEntitlement() not allowed '%s' (%s)", request.URL.Path, err.Error())
 		a.increaseCounterApikeyNotfound(request)
 		return nil, err
 	}
 	return nil, nil
+}
+
+// getAPIkeyFromQueryString extracts apikey from query parameters
+func getAPIkeyFromQueryString(queryParameters url.Values) (string, error) {
+
+	// iterate over queryparameters be able to Find Them in alL CasEs
+	for param, value := range queryParameters {
+		param := strings.ToLower(param)
+
+		// we allow both spellings
+		if param == "apikey" || param == "key" {
+			if len(value) == 1 {
+				return value[0], nil
+			}
+			return "", errors.New("apikey has no value")
+		}
+	}
+	return "", errors.New("querystring does not contain apikey")
 }
 
 // geoIPLookup lookup requestor's ip address in geoip database
@@ -61,12 +88,14 @@ func (a *authorizationServer) CheckProductEntitlement(organization string, reque
 	if err != nil {
 		return err
 	}
+
 	if err = checkAppCredentialValidity(request.appCredential); err != nil {
 		return err
 	}
+
 	request.APIProduct, err = a.IsRequestPathAllowed(organization, request.URL.Path, request.appCredential)
 	if err != nil {
-		return errors.New("No product match")
+		return err
 	}
 
 	return nil
@@ -116,23 +145,31 @@ func checkAppCredentialValidity(appcredential shared.AppCredential) error {
 
 // IsRequestPathAllowed
 // - iterate over products in apikey
-// - 	iterate over resource path(s) of each product:
-// - 		if requestor path matches apiresource_path(s)
+// - 	iterate over path(s) of each product:
+// - 		if requestor path matches paths(s)
 // -			- return 200
 // - if not 403
 
 func (a *authorizationServer) IsRequestPathAllowed(organization, requestPath string,
 	appcredential shared.AppCredential) (shared.APIProduct, error) {
 
+	var consumerKeyHasActiveProduct bool
+
 	// Iterate over this key's apiproducts
 	for _, apiproduct := range appcredential.APIProducts {
 		if apiproduct.Status == "approved" {
+
+			// Remember that this key has at least one active product
+			// so we can differentiate between no products vs not allowed product error later
+			consumerKeyHasActiveProduct = true
+
 			// Retrieve details of each api product embedded in key
 			apiproduct, err := a.db.GetAPIProductByName(organization, apiproduct.Apiproduct)
 			if err != nil {
 				// FIXME increase unknown product in apikey counter (not an error state)
 			} else {
-				// Iterate over apiresource(paths) of apiproduct
+				// Iterate over apiresource(paths) of apiproduct and try to match
+				// request's path with each of them
 				for _, productPath := range apiproduct.Paths {
 					// log.Debugf("IsRequestPathAllowed() Matching path %s in %s", requestPath, productPath)
 					if ok, _ := doublestar.Match(productPath, requestPath); ok {
@@ -143,5 +180,8 @@ func (a *authorizationServer) IsRequestPathAllowed(organization, requestPath str
 			}
 		}
 	}
-	return shared.APIProduct{}, errors.New("No access")
+	if consumerKeyHasActiveProduct {
+		return shared.APIProduct{}, errors.New("No product active for requested path")
+	}
+	return shared.APIProduct{}, errors.New("No active products")
 }
