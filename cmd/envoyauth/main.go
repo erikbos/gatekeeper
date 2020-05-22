@@ -61,9 +61,11 @@ func main() {
 
 	a.c = db.CacheInit(myName, a.config.Cache.Size, a.config.Cache.TTL, a.config.Cache.NegativeTTL)
 
-	a.g, err = shared.OpenGeoipDatabase(a.config.Geoip.Filename)
-	if err != nil {
-		log.Fatalf("Geoip db load failed: %v", err)
+	if a.config.Geoip.Filename != "" {
+		a.g, err = shared.OpenGeoipDatabase(a.config.Geoip.Filename)
+		if err != nil {
+			log.Fatalf("Geoip db load failed: %v", err)
+		}
 	}
 
 	a.registerMetrics()
