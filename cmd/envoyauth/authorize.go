@@ -68,7 +68,7 @@ func (a *authorizationServer) Check(ctx context.Context, authRequest *auth.Check
 	// FIXME not sure if x-forwarded-proto the way to determine original tcp port used
 	request.vhost, err = a.lookupVhost(request.httpRequest.Host, request.httpRequest.Headers["x-forwarded-proto"])
 	if err != nil {
-		a.increaseRequestRejectCounter(&request)
+		a.increaseCounterRequestRejected(&request)
 		return rejectRequest(http.StatusNotFound, nil, "unknown vhost")
 	}
 
@@ -79,7 +79,7 @@ func (a *authorizationServer) Check(ctx context.Context, authRequest *auth.Check
 		errorStatusCode, err := a.handlePolicies(&request, request.vhost.Policies, a.handleVhostPolicy, upstreamHeaders)
 		// In case a policy wants us to stop we reject call
 		if err != nil {
-			a.increaseRequestRejectCounter(&request)
+			a.increaseCounterRequestRejected(&request)
 			return rejectRequest(errorStatusCode, nil, err.Error())
 		}
 	}
@@ -91,7 +91,7 @@ func (a *authorizationServer) Check(ctx context.Context, authRequest *auth.Check
 			errorStatusCode, err := a.handlePolicies(&request, request.APIProduct.Policies, a.handlePolicy, upstreamHeaders)
 			// In case a policy wants us to stop we reject call
 			if err != nil {
-				a.increaseRequestRejectCounter(&request)
+				a.increaseCounterRequestRejected(&request)
 				return rejectRequest(errorStatusCode, nil, err.Error())
 			}
 		}
@@ -101,7 +101,7 @@ func (a *authorizationServer) Check(ctx context.Context, authRequest *auth.Check
 		log.Debugf("upstream header: %s = %s", k, v)
 	}
 
-	a.IncreaseRequestAcceptCounter(&request)
+	a.IncreaseCounterRequestAccept(&request)
 	return allowRequest(upstreamHeaders)
 }
 
@@ -141,35 +141,6 @@ func (a *authorizationServer) handlePolicies(request *requestInfo, policies stri
 		}
 	}
 	return http.StatusOK, nil
-}
-
-// increaseCounterApikeyNotfound requests with unknown apikey
-func (a *authorizationServer) increaseCounterApikeyNotfound(r *requestInfo) {
-
-	a.metrics.requestsApikeyNotFound.WithLabelValues(
-		r.httpRequest.Host,
-		r.httpRequest.Protocol,
-		r.httpRequest.Method).Inc()
-}
-
-// increaseRequestRejectCounter counts requests that are rejected
-func (a *authorizationServer) increaseRequestRejectCounter(r *requestInfo) {
-
-	a.metrics.requestsRejected.WithLabelValues(
-		r.httpRequest.Host,
-		r.httpRequest.Protocol,
-		r.httpRequest.Method,
-		r.APIProduct.Name).Inc()
-}
-
-// IncreaseRequestAcceptCounter counts requests that are accpeted
-func (a *authorizationServer) IncreaseRequestAcceptCounter(r *requestInfo) {
-
-	a.metrics.requestsAccepted.WithLabelValues(
-		r.httpRequest.Host,
-		r.httpRequest.Protocol,
-		r.httpRequest.Method,
-		r.APIProduct.Name).Inc()
 }
 
 // allowRequest authorizates customer request to go upstream

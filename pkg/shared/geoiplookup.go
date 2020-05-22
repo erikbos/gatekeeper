@@ -16,7 +16,7 @@ type Geoip struct {
 // GetCountryAndState returns country and state of the location of an ip address
 func (g *Geoip) GetCountryAndState(ipaddress net.IP) (string, string) {
 
-	if g.mdb == nil || ipaddress == nil {
+	if g == nil || g.mdb == nil || ipaddress == nil {
 		return "", ""
 	}
 

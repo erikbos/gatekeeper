@@ -45,8 +45,7 @@ func (a *authorizationServer) GetVirtualHostConfigFromDatabase() {
 			}
 		}
 		if xdsPushNeeded {
-			// Increase xds deployment metric
-			a.metrics.configLoads.WithLabelValues("virtualhosts").Inc()
+			a.IncreaseCounterConfigLoad("virtualhosts")
 		}
 		time.Sleep(virtualHostDataRefreshInterval)
 	}
@@ -92,8 +91,7 @@ func (a *authorizationServer) GetRouteConfigFromDatabase() {
 			}
 		}
 		if xdsPushNeeded {
-			// Increase xds deployment metric
-			a.metrics.configLoads.WithLabelValues("routes").Inc()
+			a.IncreaseCounterConfigLoad("routes")
 		}
 		time.Sleep(routeDataRefreshInterval)
 	}
