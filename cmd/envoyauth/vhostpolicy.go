@@ -68,6 +68,9 @@ func getAPIkeyFromQueryString(queryParameters url.Values) (string, error) {
 // geoIPLookup lookup requestor's ip address in geoip database
 func (a *authorizationServer) geoIPLookup(request *requestInfo) (map[string]string, error) {
 
+	if a.g == nil {
+		return nil, nil
+	}
 	country, state := a.g.GetCountryAndState(request.IP)
 	if country == "" {
 		return nil, nil
