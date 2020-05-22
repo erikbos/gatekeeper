@@ -26,13 +26,12 @@ type Database struct {
 
 // DatabaseConfig holds configuration configuration
 type DatabaseConfig struct {
-	Hostname            string `yaml:"hostname"`
-	Port                int    `yaml:"port"`
-	Username            string `yaml:"username"`
-	Password            string `yaml:"password"`
-	Keyspace            string `yaml:"keyspace"`
-	Timeout             string `yaml:"timeout"`
-	HealthcheckInterval string `yaml:"healthcheckinterval"`
+	Hostname string        `yaml:"hostname"`
+	Port     int           `yaml:"port"`
+	Username string        `yaml:"username"`
+	Password string        `yaml:"password"`
+	Keyspace string        `yaml:"keyspace"`
+	Timeout  time.Duration `yaml:"timeout"`
 }
 
 // Connect setups up connectivity to Cassandra
@@ -59,14 +58,13 @@ func Connect(config DatabaseConfig, r *shared.Readiness, serviceName string) (*D
 	}
 	cluster.Keyspace = d.Config.Keyspace
 
-	if d.Config.Timeout != "" {
-		timeout, err := time.ParseDuration(d.Config.Timeout)
-		if err != nil {
-			log.Fatalf("Cannot parse database timeout %v", err)
-		}
-		cluster.Timeout = timeout
+	if d.Config.Timeout != 0 {
+		cluster.Timeout = d.Config.Timeout
 	}
 	// cluster.RetryPolicy = &gocql.SimpleRetryPolicy{NumRetries: 3}
+
+	log.Infof("Database connecting as user %s to host %s",
+		d.Config.Username, d.Config.Hostname)
 
 	d.cassandraSession, err = cluster.CreateSession()
 	if err != nil {
@@ -75,7 +73,7 @@ func Connect(config DatabaseConfig, r *shared.Readiness, serviceName string) (*D
 
 	d.registerMetrics()
 
-	go d.runHealthCheck(d.Config.HealthcheckInterval)
+	go d.runContinousHealthCheck()
 
 	return &d, nil
 }

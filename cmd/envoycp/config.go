@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"os"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
@@ -28,11 +29,11 @@ type EnvoyCPConfig struct {
 }
 
 type xdsConfig struct {
-	GRPCListen  string         `yaml:"xdsgrpclisten"`
-	HTTPListen  string         `yaml:"xdshttplisten"`
-	XDSInterval string         `yaml:"xdsinterval"`
-	Envoy       envoyConfig    `yaml:"envoy"`
-	ExtAuthz    extAuthzConfig `yaml:"extauthz"`
+	GRPCListen         string         `yaml:"grpclisten"`
+	HTTPListen         string         `yaml:"httplisten"`
+	ConfigPushInterval time.Duration  `yaml:"configpushinterval"`
+	Envoy              envoyConfig    `yaml:"envoy"`
+	ExtAuthz           extAuthzConfig `yaml:"extauthz"`
 }
 
 type envoyConfig struct {
@@ -41,12 +42,16 @@ type envoyConfig struct {
 }
 
 type extAuthzConfig struct {
-	Enabled          bool   `yaml:"enabled"`
-	Cluster          string `yaml:"cluster"`
-	Timeout          string `yaml:"timeout"`
-	FailureModeAllow bool   `yaml:"failuremodeallow"`
-	RequestBodySize  int16  `yaml:"requestbodysize"`
+	Enabled          bool          `yaml:"enabled"`
+	Cluster          string        `yaml:"cluster"`
+	Timeout          time.Duration `yaml:"timeout"`
+	FailureModeAllow bool          `yaml:"failuremodeallow"`
+	RequestBodySize  int16         `yaml:"requestbodysize"`
 }
+
+const (
+	defaultConfigPushInterval = 2 * time.Second
+)
 
 func loadConfiguration() *EnvoyCPConfig {
 	filename := flag.String("config", defaultConfigFilename, "Configuration filename")
@@ -60,8 +65,9 @@ func loadConfiguration() *EnvoyCPConfig {
 			LogFile: defaultWebAdminLogFile,
 		},
 		XDS: xdsConfig{
-			GRPCListen: defaultXDSGRPCListen,
-			HTTPListen: defaultXDSHTTPListen,
+			GRPCListen:         defaultXDSGRPCListen,
+			HTTPListen:         defaultXDSHTTPListen,
+			ConfigPushInterval: defaultConfigPushInterval,
 		},
 	}
 
@@ -71,8 +77,11 @@ func loadConfiguration() *EnvoyCPConfig {
 	}
 	defer file.Close()
 
-	if err := yaml.NewDecoder(file).Decode(&config); err != nil {
+	yamlDecoder := yaml.NewDecoder(file)
+	yamlDecoder.SetStrict(true)
+	if err := yamlDecoder.Decode(&config); err != nil {
 		log.Fatalf("Cannot decode configuration file: %v", err)
 	}
+
 	return &config
 }

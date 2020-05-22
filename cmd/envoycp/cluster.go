@@ -19,8 +19,7 @@ import (
 )
 
 const (
-	clusterDataRefreshInterval   = 2 * time.Second
-	defaultClusterConnectTimeout = 2 * time.Second
+	clusterDataRefreshInterval = 2 * time.Second
 
 	attributeConnectTimeout      = "ConnectTimeout"
 	attributeIdleTimeout         = "IdleTimeout"
@@ -43,6 +42,11 @@ const (
 	attributeValueTLS11 = "TLSv11"
 	attributeValueTLS12 = "TLSv12"
 	attributeValueTLS13 = "TLSv13"
+
+	defaultClusterConnectTimeout = 5 * time.Second
+	defaultClusterIdleTimeout    = 15 * time.Minute
+	defaultHealthCheckInterval   = 5 * time.Second
+	defaultHealthCheckTimeout    = 10 * time.Second
 )
 
 // FIXME this does not detect removed records
@@ -124,12 +128,11 @@ func buildEnvoyClusterConfig(cluster shared.Cluster) *api.Cluster {
 }
 
 func clusterConnectTimeout(cluster shared.Cluster) *duration.Duration {
-	connectTimeout, _ := shared.GetAttribute(cluster.Attributes, attributeConnectTimeout)
-	connectTimeoutAsDuration, err := time.ParseDuration(connectTimeout)
-	if err != nil {
-		connectTimeoutAsDuration = defaultClusterConnectTimeout
-	}
-	return ptypes.DurationProto(connectTimeoutAsDuration)
+
+	connectTimeout := shared.GetAttributeAsDuration(cluster.Attributes,
+		attributeConnectTimeout, defaultClusterConnectTimeout)
+
+	return ptypes.DurationProto(connectTimeout)
 }
 
 func clusterLoadAssignment(cluster shared.Cluster) *api.ClusterLoadAssignment {
@@ -181,20 +184,16 @@ func buildEndpoint(hostname string, port int) []*endpoint.LocalityLbEndpoints {
 func clusterHealthCheckConfig(cluster shared.Cluster) []*core.HealthCheck {
 
 	value, err := shared.GetAttribute(cluster.Attributes, attributeHealthCheckProtocol)
-	if err == nil && value == attributeValueHTTP {
-		healthCheckPath, _ := shared.GetAttribute(cluster.Attributes, attributeHealthCheckPath)
+	healthCheckPath, _ := shared.GetAttribute(cluster.Attributes, attributeHealthCheckPath)
 
-		healthCheckInterval, _ := shared.GetAttribute(cluster.Attributes, attributeHealthCheckInterval)
-		healthcheckIntervalAsDuration, err := time.ParseDuration(healthCheckInterval)
-		if err != nil {
-			healthcheckIntervalAsDuration = 10 * time.Second
-		}
+	// FIXME add GRPC support
+	if err == nil && value == attributeValueHTTP && healthCheckPath != "" {
 
-		healthCheckTimeout, _ := shared.GetAttribute(cluster.Attributes, attributeHealthCheckTimeout)
-		healthcheckTimeoutAsDuration, err := time.ParseDuration(healthCheckTimeout)
-		if err != nil {
-			healthcheckTimeoutAsDuration = 10 * time.Second
-		}
+		healthCheckInterval := shared.GetAttributeAsDuration(cluster.Attributes,
+			attributeHealthCheckInterval, defaultHealthCheckInterval)
+
+		healthCheckTimeout := shared.GetAttributeAsDuration(cluster.Attributes,
+			attributeHealthCheckTimeout, defaultHealthCheckTimeout)
 
 		healthCheck := &core.HealthCheck{
 			HealthChecker: &core.HealthCheck_HttpHealthCheck_{
@@ -203,8 +202,8 @@ func clusterHealthCheckConfig(cluster shared.Cluster) []*core.HealthCheck {
 					CodecClientType: clusterHealthCodec(cluster),
 				},
 			},
-			Interval:           ptypes.DurationProto(healthcheckIntervalAsDuration),
-			Timeout:            ptypes.DurationProto(healthcheckTimeoutAsDuration),
+			Interval:           ptypes.DurationProto(healthCheckInterval),
+			Timeout:            ptypes.DurationProto(healthCheckTimeout),
 			UnhealthyThreshold: &wrappers.UInt32Value{Value: 2},
 			HealthyThreshold:   &wrappers.UInt32Value{Value: 1},
 			EventLogPath:       "/tmp/healthcheck",
@@ -236,13 +235,11 @@ func clusterHealthCodec(cluster shared.Cluster) envoy_type.CodecClientType {
 // clusterCommonHTTPProtocolOptions sets HTTP options applicable to both HTTP/1 and /2
 func clusterCommonHTTPProtocolOptions(cluster shared.Cluster) *core.HttpProtocolOptions {
 
-	idleTimeout, _ := shared.GetAttribute(cluster.Attributes, attributeIdleTimeout)
-	idleTimeoutAsDuration, err := time.ParseDuration(idleTimeout)
-	if err != nil {
-		return nil
-	}
+	idleTimeout := shared.GetAttributeAsDuration(cluster.Attributes,
+		attributeIdleTimeout, defaultClusterIdleTimeout)
+
 	return &core.HttpProtocolOptions{
-		IdleTimeout: ptypes.DurationProto(idleTimeoutAsDuration),
+		IdleTimeout: ptypes.DurationProto(idleTimeout),
 	}
 }
 

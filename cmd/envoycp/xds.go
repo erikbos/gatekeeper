@@ -18,10 +18,6 @@ import (
 	"github.com/erikbos/gatekeeper/pkg/shared"
 )
 
-const (
-	minimumXDSInterval = 2 * time.Second
-)
-
 // StartXDS brings up XDS system
 func (s *server) StartXDS(notifications chan xdsNotifyMesssage) {
 	s.xdsCache = cache.NewSnapshotCache(true, Hasher{}, logger{})
@@ -36,7 +32,6 @@ func (s *server) StartXDS(notifications chan xdsNotifyMesssage) {
 	go s.GRPCManagementServer()
 	go s.HTTPManagementGateway()
 
-	interval := getXDSInterval(s.config.XDS)
 	for {
 		select {
 		case n := <-notifications:
@@ -44,7 +39,7 @@ func (s *server) StartXDS(notifications chan xdsNotifyMesssage) {
 
 			s.XDSBuildSnapshot()
 
-		case <-time.After(interval):
+		case <-time.After(s.config.XDS.ConfigPushInterval):
 		}
 	}
 }
@@ -88,18 +83,6 @@ func (s *server) XDSBuildSnapshot() {
 
 	snapshot := cache.NewSnapshot(version, nil, EnvoyClusters, EnvoyRoutes, EnvoyListeners, nil)
 	_ = s.xdsCache.SetSnapshot("jenny", snapshot)
-}
-
-// getXDSInterval gets xds interval from configuration
-func getXDSInterval(config xdsConfig) time.Duration {
-	interval, err := time.ParseDuration(config.XDSInterval)
-	if err != nil {
-		log.Fatalf("Cannot parse '%s' as XDSInterval (%s)", config.XDSInterval, err)
-	}
-	if interval < minimumXDSInterval {
-		log.Fatalf("XDS refresh interval set to low, should be >= '%s'", minimumXDSInterval)
-	}
-	return interval
 }
 
 // registerMetrics registers xds' operational metrics

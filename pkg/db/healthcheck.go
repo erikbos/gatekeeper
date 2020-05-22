@@ -9,8 +9,7 @@ import (
 const (
 	healthCheckMetricLabel = "system.local"
 	healthCheckCQLquery    = "select * from system.local"
-
-	minimumHealthCheckInterval = 2 * time.Second
+	healthCheckInterval    = 5 * time.Second
 )
 
 // HealthCheckStatus state of our healthiness
@@ -21,16 +20,14 @@ type HealthCheckStatus struct {
 	rack          string
 }
 
-// runHealthCheck runs continous query against databse to confirm connectivity
-func (d *Database) runHealthCheck(healthcheckInterval string) {
-
-	interval := d.getHealthCheckInterval(healthcheckInterval)
+// runContinousHealthCheck monitors database queryability
+func (d *Database) runContinousHealthCheck() {
 
 	var connected bool
 	for {
 		if peers, err := d.HealthCheckQuery(); err == nil {
 			if !connected {
-				log.Infof("Database connected (%s, %s, %s, %s)",
+				log.Infof("Database connected (address: %s, name: %s, dc: %s, rack: %s)",
 					peers.listenAddress, peers.clusterName, peers.dataCenter, peers.rack)
 				log.Infof("Database healthcheck ok")
 				connected = true
@@ -42,23 +39,8 @@ func (d *Database) runHealthCheck(healthcheckInterval string) {
 
 			d.readiness.Down()
 		}
-		time.Sleep(interval)
+		time.Sleep(healthCheckInterval)
 	}
-}
-
-// getHealthCheckInterval parses config option to set db healthcheck interval
-func (d *Database) getHealthCheckInterval(healthcheckInterval string) time.Duration {
-
-	interval, err := time.ParseDuration(healthcheckInterval)
-	if err != nil {
-		log.Fatalf("Cannot parse '%s' as db healthCheckInterval (%s)", healthcheckInterval, err)
-	}
-
-	if interval < minimumHealthCheckInterval {
-		log.Fatalf("Db healthcheck interval set to low, should be >= '%s'", minimumHealthCheckInterval)
-	}
-
-	return interval
 }
 
 // HealthCheckQuery checks Cassandra connectivity by reading table system.local

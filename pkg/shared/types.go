@@ -173,20 +173,16 @@ func GetAttributeAsInt(attributes []AttributeKeyValues,
 
 // GetAttributeAsDuration returns attribute value (or provided default) as type time.Duration
 func GetAttributeAsDuration(attributes []AttributeKeyValues,
-	attributeName, defaultValue string) time.Duration {
+	attributeName string, defaultDuration time.Duration) time.Duration {
 
 	value, err := GetAttribute(attributes, attributeName)
-	if err != nil {
-		if defaultValue == "" {
-			return 0
+	if err == nil {
+		duration, err := time.ParseDuration(value)
+		if err == nil {
+			return duration
 		}
-		value = defaultValue
 	}
-	duration, err := time.ParseDuration(value)
-	if err != nil {
-		return 0
-	}
-	return duration
+	return defaultDuration
 }
 
 // FindIndexOfAttribute find index of named attribute in slice

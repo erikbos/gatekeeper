@@ -32,6 +32,8 @@ const (
 	attributeCORSMaxAge               = "CORSMaxAge"
 	attributeHostHeader               = "HostHeader"
 	attributeSendBasicAuth            = "SendBasicAuth"
+
+	perRetryTimeout = 500 * time.Millisecond
 )
 
 // FIXME this does not detect removed records
@@ -348,7 +350,7 @@ func buildRetryPolicy(routeEntry shared.Route) *route.RetryPolicy {
 	if RetryOn == "" {
 		return nil
 	}
-	perTryTimeout := shared.GetAttributeAsDuration(routeEntry.Attributes, "PerTryTimeout", "500ms")
+	perTryTimeout := shared.GetAttributeAsDuration(routeEntry.Attributes, "PerTryTimeout", perRetryTimeout)
 	numRetries := uint32(shared.GetAttributeAsInt(routeEntry.Attributes, "numRetries", "2"))
 	RetriableStatusCodes := buildStatusCodesSlice(
 		shared.GetAttributeAsString(

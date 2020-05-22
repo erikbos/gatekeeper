@@ -302,23 +302,13 @@ func (s *server) extAuthzWithRequestBody() *extAuthz.BufferSettings {
 
 func (s *server) buildGRPCService(timeout time.Duration) *core.GrpcService {
 	return &core.GrpcService{
-		Timeout: ptypes.DurationProto(s.getAuthzTimeout()),
+		Timeout: ptypes.DurationProto(s.config.XDS.ExtAuthz.Timeout),
 		TargetSpecifier: &core.GrpcService_EnvoyGrpc_{
 			EnvoyGrpc: &core.GrpcService_EnvoyGrpc{
 				ClusterName: s.config.XDS.ExtAuthz.Cluster,
 			},
 		},
 	}
-}
-
-// getAuthTimeout gets extauthz timeout
-func (s *server) getAuthzTimeout() time.Duration {
-	interval, err := time.ParseDuration(s.config.XDS.ExtAuthz.Timeout)
-	if err != nil {
-		log.Warnf("Cannot parse '%s' as AuthzTimeout (%s)", s.config.XDS.ExtAuthz.Timeout, err)
-		return extAuthzTimeout
-	}
-	return interval
 }
 
 func (s *server) buildRouteSpecifier(routeSet string) *hcm.HttpConnectionManager_RouteConfig {

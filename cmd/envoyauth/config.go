@@ -54,8 +54,11 @@ func loadConfiguration() *APIAuthConfig {
 	}
 	defer file.Close()
 
-	if err := yaml.NewDecoder(file).Decode(&config); err != nil {
+	yamlDecoder := yaml.NewDecoder(file)
+	yamlDecoder.SetStrict(true)
+	if err := yamlDecoder.Decode(&config); err != nil {
 		log.Fatalf("Cannot decode configuration file: %v", err)
 	}
+
 	return &config
 }

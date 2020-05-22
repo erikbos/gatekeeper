@@ -17,12 +17,11 @@ const (
 	defaultWebAdminLogFile = "dbadmin-access.log"
 )
 
-//DBAdminConfig contains our startup configuration data
-//
+// DBAdminConfig contains our startup configuration data
 type DBAdminConfig struct {
-	LogLevel string         `yaml:"loglevel"`
-	WebAdmin webAdminConfig `yaml:"webadmin"`
-	Database db.DatabaseConfig
+	LogLevel string            `yaml:"loglevel"`
+	WebAdmin webAdminConfig    `yaml:"webadmin"`
+	Database db.DatabaseConfig `yaml:"database"`
 }
 
 func loadConfiguration() *DBAdminConfig {
@@ -44,8 +43,11 @@ func loadConfiguration() *DBAdminConfig {
 	}
 	defer file.Close()
 
-	if err := yaml.NewDecoder(file).Decode(&config); err != nil {
+	yamlDecoder := yaml.NewDecoder(file)
+	yamlDecoder.SetStrict(true)
+	if err := yamlDecoder.Decode(&config); err != nil {
 		log.Fatalf("Cannot decode configuration file: %v", err)
 	}
+
 	return &config
 }
