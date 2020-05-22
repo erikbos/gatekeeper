@@ -20,6 +20,7 @@ import (
 
 // StartXDS brings up XDS system
 func (s *server) StartXDS(notifications chan xdsNotifyMesssage) {
+
 	s.xdsCache = cache.NewSnapshotCache(true, Hasher{}, logger{})
 	//config := cache.NewSnapshotCache(false, hash{}, logger{})
 	signal := make(chan struct{})
@@ -46,11 +47,13 @@ func (s *server) StartXDS(notifications chan xdsNotifyMesssage) {
 
 // GRPCManagementServer starts grpc xds listener
 func (s *server) GRPCManagementServer() {
+
 	log.Info("GRPC XDS listening on ", s.config.XDS.GRPCListen)
 	lis, err := net.Listen("tcp", s.config.XDS.GRPCListen)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
+
 	grpcServer := grpc.NewServer()
 	discovery.RegisterAggregatedDiscoveryServiceServer(grpcServer, s.xds)
 	v2.RegisterEndpointDiscoveryServiceServer(grpcServer, s.xds)
@@ -65,6 +68,7 @@ func (s *server) GRPCManagementServer() {
 
 // HTTPManagementGateway starts http xds listener
 func (s *server) HTTPManagementGateway() {
+
 	log.Info("HTTP XDS listening on ", s.config.XDS.HTTPListen)
 	err := http.ListenAndServe(s.config.XDS.HTTPListen, &xds.HTTPGateway{Server: s.xds})
 	if err != nil {
@@ -87,6 +91,7 @@ func (s *server) XDSBuildSnapshot() {
 
 // registerMetrics registers xds' operational metrics
 func (s *server) registerMetrics() {
+
 	metricVirtualHostsCount := prometheus.NewGaugeFunc(
 		prometheus.GaugeOpts{
 			Namespace: myName,

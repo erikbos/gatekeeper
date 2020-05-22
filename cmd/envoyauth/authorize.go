@@ -222,11 +222,13 @@ func getRequestInfo(req *auth.CheckRequest) (requestInfo, error) {
 	if ipaddress, ok := newConnection.httpRequest.Headers["x-forwarded-for"]; ok {
 		newConnection.IP = net.ParseIP(ipaddress)
 	}
+
 	var err error
 	newConnection.URL, err = url.ParseRequestURI(newConnection.httpRequest.Path)
 	if err != nil {
 		return requestInfo{}, errors.New("could not parse url")
 	}
+
 	newConnection.queryParameters, _ = url.ParseQuery(newConnection.URL.RawQuery)
 	if err != nil {
 		return requestInfo{}, errors.New("could not parse query parameters")

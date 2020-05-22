@@ -20,10 +20,10 @@ const (
 
 // APIAuthConfig contains our startup configuration data
 type APIAuthConfig struct {
-	LogLevel       string         `yaml:"loglevel"`
-	WebAdmin       webAdminConfig `yaml:"webadmin"`
-	AuthGRPCListen string         `yaml:"authgrpclisten"`
-	Database       db.DatabaseConfig
+	LogLevel       string            `yaml:"loglevel"`
+	WebAdmin       webAdminConfig    `yaml:"webadmin"`
+	AuthGRPCListen string            `yaml:"authgrpclisten"`
+	Database       db.DatabaseConfig `yaml:"database"`
 	Cache          struct {
 		Size        int `yaml:"size"`
 		TTL         int `yaml:"ttl"`

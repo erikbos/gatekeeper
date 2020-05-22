@@ -52,6 +52,7 @@ func (a *authorizationServer) GetVirtualHostConfigFromDatabase() {
 }
 
 func (a *authorizationServer) buildVhostMap() map[string]string {
+
 	m := make(map[string]string)
 
 	for _, virtualhost := range a.virtualhosts {

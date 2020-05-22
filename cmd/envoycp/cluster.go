@@ -52,6 +52,7 @@ const (
 // FIXME this does not detect removed records
 // getClusterConfigFromDatabase continously gets the current configuration
 func (s *server) GetClusterConfigFromDatabase(n chan xdsNotifyMesssage) {
+
 	var clustersLastUpdate int64
 	var clusterMutex sync.Mutex
 
@@ -90,15 +91,19 @@ func (s *server) GetClusterConfigFromDatabase(n chan xdsNotifyMesssage) {
 
 // GetClusterCount returns number of clusters
 func (s *server) GetClusterCount() float64 {
+
 	return float64(len(s.clusters))
 }
 
 // getClusterConfig returns array of all envoy clusters
 func (s *server) getEnvoyClusterConfig() ([]cache.Resource, error) {
+
 	envoyClusters := []cache.Resource{}
+
 	for _, s := range s.clusters {
 		envoyClusters = append(envoyClusters, buildEnvoyClusterConfig(s))
 	}
+
 	return envoyClusters, nil
 }
 
@@ -136,6 +141,7 @@ func clusterConnectTimeout(cluster shared.Cluster) *duration.Duration {
 }
 
 func clusterLoadAssignment(cluster shared.Cluster) *api.ClusterLoadAssignment {
+
 	return &api.ClusterLoadAssignment{
 		ClusterName: cluster.Name,
 		Endpoints:   buildEndpoint(cluster.HostName, cluster.Port),
@@ -143,6 +149,7 @@ func clusterLoadAssignment(cluster shared.Cluster) *api.ClusterLoadAssignment {
 }
 
 func buildEndpoint(hostname string, port int) []*endpoint.LocalityLbEndpoints {
+
 	address := &core.Address{Address: &core.Address_SocketAddress{
 		SocketAddress: &core.SocketAddress{
 			Address:  hostname,
@@ -206,7 +213,8 @@ func clusterHealthCheckConfig(cluster shared.Cluster) []*core.HealthCheck {
 			Timeout:            ptypes.DurationProto(healthCheckTimeout),
 			UnhealthyThreshold: &wrappers.UInt32Value{Value: 2},
 			HealthyThreshold:   &wrappers.UInt32Value{Value: 1},
-			EventLogPath:       "/tmp/healthcheck",
+			// FIXME this should be configurable
+			EventLogPath: "/tmp/healthcheck",
 		}
 		return append([]*core.HealthCheck{}, healthCheck)
 	}
@@ -264,6 +272,7 @@ func clusterHTTP2ProtocolOptions(cluster shared.Cluster) *core.Http2ProtocolOpti
 
 // clusterTransportSocket configures TLS settings
 func clusterTransportSocket(cluster shared.Cluster) *core.TransportSocket {
+
 	TLSContext := &auth.UpstreamTlsContext{
 		Sni: clusterSNIHostname(cluster),
 		CommonTlsContext: &auth.CommonTlsContext{
@@ -275,6 +284,7 @@ func clusterTransportSocket(cluster shared.Cluster) *core.TransportSocket {
 	if err != nil {
 		return nil
 	}
+
 	return &core.TransportSocket{
 		Name: "tls",
 		ConfigType: &core.TransportSocket_TypedConfig{
@@ -285,6 +295,7 @@ func clusterTransportSocket(cluster shared.Cluster) *core.TransportSocket {
 
 // clusterSNIHostname sets SNI hostname used by TLS
 func clusterSNIHostname(cluster shared.Cluster) string {
+
 	value, err := shared.GetAttribute(cluster.Attributes, attributeSNIHostName)
 	if err == nil && value != "" {
 		return value
@@ -313,10 +324,12 @@ func clusterALPNOptions(cluster shared.Cluster) []string {
 
 // clusterALPNOptions sets TLS minimum and max cipher options
 func clusterTLSOptions(cluster shared.Cluster) *auth.TlsParameters {
+
 	tlsParameters := &auth.TlsParameters{}
 	if minVersion, err := shared.GetAttribute(cluster.Attributes, attributeTLSMinimumVersion); err == nil {
 		tlsParameters.TlsMinimumProtocolVersion = tlsVersion(minVersion)
 	}
+
 	if maxVersion, err := shared.GetAttribute(cluster.Attributes, attributeTLSMaximumVersion); err == nil {
 		tlsParameters.TlsMaximumProtocolVersion = tlsVersion(maxVersion)
 	}
@@ -324,6 +337,7 @@ func clusterTLSOptions(cluster shared.Cluster) *auth.TlsParameters {
 }
 
 func tlsVersion(version string) auth.TlsParameters_TlsProtocol {
+
 	switch version {
 	case attributeValueTLS10:
 		return auth.TlsParameters_TLSv1_0
@@ -336,12 +350,3 @@ func tlsVersion(version string) auth.TlsParameters_TlsProtocol {
 	}
 	return auth.TlsParameters_TLS_AUTO
 }
-
-// func u32nil(val uint32) *wrappers.UInt32Value {
-// 	switch val {
-// 	case 0:
-// 		return nil
-// 	default:
-// 		return &wrappers.UInt32Value{Value: val}
-// 	}
-// }

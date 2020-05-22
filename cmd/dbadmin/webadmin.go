@@ -22,6 +22,7 @@ type webAdminConfig struct {
 
 // StartWebAdminServer starts the admin web UI
 func StartWebAdminServer(s *server, c *webAdminConfig) {
+
 	if logFile, err := os.Create(c.LogFile); err == nil {
 		gin.DefaultWriter = io.MultiWriter(logFile)
 	}
