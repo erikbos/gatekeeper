@@ -64,9 +64,9 @@ func LogHTTPRequest(param gin.LogFormatterParams) string {
 		return ""
 	}
 
-	return fmt.Sprintf("%s - - [%s] \"%s %s %s\" %d %d \"%s\" \"%s\"\n",
-		param.ClientIP,
+	return fmt.Sprintf("%s - - %s \"%s %s %s\" %d %d \"%s\" \"%s\"\n",
 		param.TimeStamp.Format(time.RFC3339),
+		param.ClientIP,
 		param.Method,
 		param.Path,
 		param.Request.Proto,

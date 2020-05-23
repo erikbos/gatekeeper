@@ -19,9 +19,9 @@ const (
 
 // DBAdminConfig contains our startup configuration data
 type DBAdminConfig struct {
-	LogLevel string            `yaml:"loglevel"`
-	WebAdmin webAdminConfig    `yaml:"webadmin"`
-	Database db.DatabaseConfig `yaml:"database"`
+	LogLevel string            `yaml:"loglevel" json:"loglevel"`
+	WebAdmin webAdminConfig    `yaml:"webadmin" json:"webadmin"`
+	Database db.DatabaseConfig `yaml:"database" json:"database"`
 }
 
 func loadConfiguration() *DBAdminConfig {

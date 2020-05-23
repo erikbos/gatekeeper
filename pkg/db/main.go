@@ -26,12 +26,12 @@ type Database struct {
 
 // DatabaseConfig holds configuration configuration
 type DatabaseConfig struct {
-	Hostname string        `yaml:"hostname"`
-	Port     int           `yaml:"port"`
-	Username string        `yaml:"username"`
-	Password string        `yaml:"password"`
-	Keyspace string        `yaml:"keyspace"`
-	Timeout  time.Duration `yaml:"timeout"`
+	Hostname string        `yaml:"hostname" json:"hostname"`
+	Port     int           `yaml:"port"     json:"port"`
+	Username string        `yaml:"username" json:"username" `
+	Password string        `yaml:"password" json:"password"`
+	Keyspace string        `yaml:"keyspace" json:"keyspace"`
+	Timeout  time.Duration `yaml:"timeout"  json:"timeout"`
 }
 
 // Connect setups up connectivity to Cassandra

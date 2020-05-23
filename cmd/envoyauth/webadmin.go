@@ -15,9 +15,9 @@ import (
 )
 
 type webAdminConfig struct {
-	Listen  string `yaml:"listen"`
-	IPACL   string `yaml:"ipacl"`
-	LogFile string `yaml:"logfile"`
+	Listen  string `yaml:"listen"  json:"listen"`
+	IPACL   string `yaml:"ipacl"   json:"ipacl"`
+	LogFile string `yaml:"logfile" json:"logfile"`
 }
 
 // StartWebAdminServer starts the admin web UI
