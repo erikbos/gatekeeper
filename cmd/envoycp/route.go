@@ -21,19 +21,6 @@ import (
 
 const (
 	routeDataRefreshInterval = 2 * time.Second
-
-	attributeDirectResponseStatusCode = "DirectResponseStatusCode"
-	attributeDirectResponseBody       = "DirectResponseBody"
-	attributePrefixRewrite            = "PrefixRewrite"
-	attributeCORSAllowCredentials     = "CORSAllowCredentials"
-	attributeCORSAllowMethods         = "CORSAllowMethods"
-	attributeCORSAllowHeaders         = "CORSAllowHeaders"
-	attributeCORSExposeHeaders        = "CORSExposeHeaders"
-	attributeCORSMaxAge               = "CORSMaxAge"
-	attributeHostHeader               = "HostHeader"
-	attributeSendBasicAuth            = "SendBasicAuth"
-
-	perRetryTimeout = 500 * time.Millisecond
 )
 
 // FIXME this does not detect removed records
@@ -61,6 +48,8 @@ func (s *server) GetRouteConfigFromDatabase(n chan xdsNotifyMesssage) {
 
 					routesLastUpdate = shared.GetCurrentTimeMilliseconds()
 					xdsPushNeeded = true
+
+					warnForUnknownRouteAttributes(route)
 				}
 			}
 		}
@@ -146,21 +135,24 @@ func (s *server) buildEnvoyRoute(routeEntry shared.Route) *route.Route {
 		envoyRoute.Action = buildRouteActionCluster(routeEntry)
 	}
 
-	// In case route-level attributes exist we might additional upstream headers
-	upstreamHeaders := make(map[string]string)
-	handleSendBasicAuthAttribute(routeEntry, upstreamHeaders)
-	envoyRoute.RequestHeadersToAdd = buildHeadersList(upstreamHeaders)
-
-	// In case attribute exist we build direct response config
+	// Add direct response config if required
 	_, err := shared.GetAttribute(routeEntry.Attributes, attributeDirectResponseStatusCode)
 	if err == nil {
 		envoyRoute.Action = buildRouteActionDirectResponse(routeEntry)
+		return envoyRoute
 	}
+
+	// In case route-level attributes exist we might additional upstream headers
+	upstreamHeaders := make(map[string]string)
+	handleBasicAuthAttribute(routeEntry, upstreamHeaders)
+	envoyRoute.RequestHeadersToAdd = buildHeadersList(upstreamHeaders)
+
 	return envoyRoute
 }
 
 // buildRouteActionCluster returns route config we match on
 func buildRouteMatch(routeEntry shared.Route) *route.RouteMatch {
+
 	switch routeEntry.PathType {
 	case "path":
 		return buildRouteMatchPath(routeEntry)
@@ -174,6 +166,7 @@ func buildRouteMatch(routeEntry shared.Route) *route.RouteMatch {
 
 // buildRouteMatchPath returns prefix-based route-match config
 func buildRouteMatchPath(routeEntry shared.Route) *route.RouteMatch {
+
 	return &route.RouteMatch{
 		PathSpecifier: &route.RouteMatch_Path{
 			Path: routeEntry.Path,
@@ -183,6 +176,7 @@ func buildRouteMatchPath(routeEntry shared.Route) *route.RouteMatch {
 
 // buildRouteMatchPrefix returns path-based route-match config
 func buildRouteMatchPrefix(routeEntry shared.Route) *route.RouteMatch {
+
 	return &route.RouteMatch{
 		PathSpecifier: &route.RouteMatch_Prefix{
 			Prefix: routeEntry.Path,
@@ -192,6 +186,7 @@ func buildRouteMatchPrefix(routeEntry shared.Route) *route.RouteMatch {
 
 // buildRouteMatchPath returns prefix-based route-match config
 func buildRouteMatchRegexp(routeEntry shared.Route) *route.RouteMatch {
+
 	return &route.RouteMatch{
 		PathSpecifier: &route.RouteMatch_SafeRegex{
 			SafeRegex: buildRegexpMatcher(routeEntry.Path),
@@ -201,6 +196,7 @@ func buildRouteMatchRegexp(routeEntry shared.Route) *route.RouteMatch {
 
 // buildRouteActionCluster return route action in of forwarding to a cluster
 func buildRouteActionCluster(routeEntry shared.Route) *route.Route_Route {
+
 	action := &route.Route_Route{
 		Route: &route.RouteAction{
 			ClusterSpecifier: &route.RouteAction_Cluster{
@@ -211,15 +207,18 @@ func buildRouteActionCluster(routeEntry shared.Route) *route.Route_Route {
 			RetryPolicy:          buildRetryPolicy(routeEntry),
 		},
 	}
+
 	prefixRewrite, err := shared.GetAttribute(routeEntry.Attributes, attributePrefixRewrite)
 	if err == nil && prefixRewrite != "" {
 		action.Route.PrefixRewrite = prefixRewrite
 	}
+
 	return action
 }
 
 // buildCorsPolicy return CorsPolicy based upon a route's attribute(s)
 func buildCorsPolicy(routeEntry shared.Route) *route.CorsPolicy {
+
 	var corsConfigured bool
 	corsPolicy := route.CorsPolicy{}
 
@@ -262,6 +261,7 @@ func buildCorsPolicy(routeEntry shared.Route) *route.CorsPolicy {
 }
 
 func buildStringMatcher(regexp string) *envoymatcher.StringMatcher {
+
 	return &envoymatcher.StringMatcher{
 		MatchPattern: &envoymatcher.StringMatcher_SafeRegex{
 			SafeRegex: buildRegexpMatcher(regexp),
@@ -270,6 +270,7 @@ func buildStringMatcher(regexp string) *envoymatcher.StringMatcher {
 }
 
 func buildRegexpMatcher(regexp string) *envoymatcher.RegexMatcher {
+
 	return &envoymatcher.RegexMatcher{
 		EngineType: &envoymatcher.RegexMatcher_GoogleRe2{
 			GoogleRe2: &envoymatcher.RegexMatcher_GoogleRE2{
@@ -284,16 +285,19 @@ func buildRegexpMatcher(regexp string) *envoymatcher.RegexMatcher {
 
 // buildHostRewrite return CorsPolicy based upon a route's attribute(s)
 func buildHostRewrite(routeEntry shared.Route) *route.RouteAction_HostRewrite {
+
 	upstreamHostHeader, err := shared.GetAttribute(routeEntry.Attributes, attributeHostHeader)
 	if err == nil && upstreamHostHeader != "" {
 		return &route.RouteAction_HostRewrite{
 			HostRewrite: upstreamHostHeader,
 		}
 	}
+
 	return nil
 }
 
 func buildRouteActionDirectResponse(routeEntry shared.Route) *route.Route_DirectResponse {
+
 	directResponseStatusCode, err := shared.GetAttribute(routeEntry.Attributes, attributeDirectResponseStatusCode)
 	if err == nil && directResponseStatusCode != "" {
 		statusCode, err := strconv.Atoi(directResponseStatusCode)
@@ -318,10 +322,12 @@ func buildRouteActionDirectResponse(routeEntry shared.Route) *route.Route_Direct
 	return nil
 }
 
-func handleSendBasicAuthAttribute(routeEntry shared.Route, headersToAdd map[string]string) {
-	usernamePassword, err := shared.GetAttribute(routeEntry.Attributes, attributeSendBasicAuth)
+func handleBasicAuthAttribute(routeEntry shared.Route, headersToAdd map[string]string) {
+
+	usernamePassword, err := shared.GetAttribute(routeEntry.Attributes, attributeBasicAuth)
 	if err == nil && usernamePassword != "" {
 		authenticationDigest := base64.StdEncoding.EncodeToString([]byte(usernamePassword))
+
 		headersToAdd["Authorization"] = authenticationDigest
 	}
 }
@@ -346,14 +352,14 @@ func buildHeadersList(headers map[string]string) []*core.HeaderValueOption {
 
 func buildRetryPolicy(routeEntry shared.Route) *route.RetryPolicy {
 
-	RetryOn := shared.GetAttributeAsString(routeEntry.Attributes, "RetryOn", "")
+	RetryOn := shared.GetAttributeAsString(routeEntry.Attributes, attributeRetryOn, "")
 	if RetryOn == "" {
 		return nil
 	}
-	perTryTimeout := shared.GetAttributeAsDuration(routeEntry.Attributes, "PerTryTimeout", perRetryTimeout)
-	numRetries := uint32(shared.GetAttributeAsInt(routeEntry.Attributes, "numRetries", 2))
+	perTryTimeout := shared.GetAttributeAsDuration(routeEntry.Attributes, attributePerTryTimeout, perRetryTimeout)
+	numRetries := uint32(shared.GetAttributeAsInt(routeEntry.Attributes, attributeNumRetries, 2))
 	RetriableStatusCodes := buildStatusCodesSlice(
-		shared.GetAttributeAsString(routeEntry.Attributes, "RetryOnStatusCodes", "503"))
+		shared.GetAttributeAsString(routeEntry.Attributes, attributeRetryOnStatusCodes, "503"))
 
 	return &route.RetryPolicy{
 		RetryOn:              RetryOn,

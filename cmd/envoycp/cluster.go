@@ -22,43 +22,6 @@ import (
 
 const (
 	clusterDataRefreshInterval = 2 * time.Second
-
-	attributeConnectTimeout                = "ConnectTimeout"
-	attributeIdleTimeout                   = "IdleTimeout"
-	attributeTLSEnabled                    = "TLSEnabled"
-	attributeTLSMinimumVersion             = "TLSMinimumVersion"
-	attributeTLSMaximumVersion             = "TLSMaximumVersion"
-	attributeTLSCipherSuites               = "TLSCipherSuites"
-	attributeHTTPProtocol                  = "HTTPProtocol"
-	attributeHTTPProtocolHTTP11            = "HTTP/1.1"
-	attributeHTTPProtocolHTTP2             = "HTTP/2"
-	attributeHTTPProtocolHTTP3             = "HTTP/3"
-	attributeSNIHostName                   = "SNIHostName"
-	attributeHealthCheckProtocol           = "HealthCheckProtocol"
-	attributeHealthCheckPath               = "HealthCheckPath"
-	attributeHealthCheckInterval           = "HealthCheckInterval"
-	attributeHealthCheckTimeout            = "HealthCheckTimeout"
-	attributeHealthCheckUnhealthyThreshold = "HealthCheckUnhealthyThreshold"
-	attributeHealthCheckHealthyThreshold   = "HealthCheckHealthyThreshold"
-	attributeHealthCheckLogFile            = "HealthCheckLogFile"
-	attributeMaxConnections                = "MaxConnections"
-	attributeMaxPendingRequests            = "MaxPendingRequests"
-	attributeMaxRequests                   = "MaxRequests"
-	attributeMaxRetries                    = "MAxRetries"
-
-	attributeValueTrue  = "true"
-	attributeValueHTTP  = "HTTP"
-	attributeValueTLS10 = "TLSv10"
-	attributeValueTLS11 = "TLSv11"
-	attributeValueTLS12 = "TLSv12"
-	attributeValueTLS13 = "TLSv13"
-
-	defaultClusterConnectTimeout         = 5 * time.Second
-	defaultClusterIdleTimeout            = 15 * time.Minute
-	defaultHealthCheckInterval           = 5 * time.Second
-	defaultHealthCheckTimeout            = 10 * time.Second
-	defaultHealthCheckUnhealthyThreshold = 2
-	defaultHealthCheckHealthyThreshold   = 2
 )
 
 // FIXME this does not detect removed records
@@ -87,6 +50,8 @@ func (s *server) GetClusterConfigFromDatabase(n chan xdsNotifyMesssage) {
 
 					clustersLastUpdate = shared.GetCurrentTimeMilliseconds()
 					xdsPushNeeded = true
+
+					warnForUnknownClusterAttributes(cluster)
 				}
 			}
 		}

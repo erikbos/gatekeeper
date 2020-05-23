@@ -27,9 +27,6 @@ import (
 const (
 	virtualHostDataRefreshInterval = 2 * time.Second
 	extAuthzTimeout                = 100 * time.Millisecond
-
-	attributeTLSCertificate    = "TLSCertificate"
-	attributeTLSCertificateKey = "TLSCertificateKey"
 )
 
 // FIXME this does not detect removed records
@@ -57,6 +54,8 @@ func (s *server) GetVirtualHostConfigFromDatabase(n chan xdsNotifyMesssage) {
 
 					virtualHostsLastUpdate = shared.GetCurrentTimeMilliseconds()
 					xdsPushNeeded = true
+
+					warnForUnknownVirtualHostAttributes(virtualhost)
 				}
 			}
 		}
