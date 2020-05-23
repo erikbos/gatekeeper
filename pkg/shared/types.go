@@ -155,20 +155,17 @@ func GetAttributeAsString(attributes []AttributeKeyValues, name, defaultValue st
 
 // GetAttributeAsInt returns attribute value (or provided default) as integer
 func GetAttributeAsInt(attributes []AttributeKeyValues,
-	attributeName, defaultValue string) int {
+	attributeName string, defaultValue int) int {
 
 	value, err := GetAttribute(attributes, attributeName)
-	if err != nil {
-		if defaultValue == "" {
-			return 0
+	if err == nil {
+		integer, err := strconv.Atoi(value)
+		if err == nil {
+			return integer
 		}
-		value = defaultValue
-	}
-	integer, err := strconv.Atoi(value)
-	if err != nil {
 		return -1
 	}
-	return integer
+	return defaultValue
 }
 
 // GetAttributeAsDuration returns attribute value (or provided default) as type time.Duration

@@ -351,10 +351,9 @@ func buildRetryPolicy(routeEntry shared.Route) *route.RetryPolicy {
 		return nil
 	}
 	perTryTimeout := shared.GetAttributeAsDuration(routeEntry.Attributes, "PerTryTimeout", perRetryTimeout)
-	numRetries := uint32(shared.GetAttributeAsInt(routeEntry.Attributes, "numRetries", "2"))
+	numRetries := uint32(shared.GetAttributeAsInt(routeEntry.Attributes, "numRetries", 2))
 	RetriableStatusCodes := buildStatusCodesSlice(
-		shared.GetAttributeAsString(
-			routeEntry.Attributes, "RetryOnStatusCodes", "503"))
+		shared.GetAttributeAsString(routeEntry.Attributes, "RetryOnStatusCodes", "503"))
 
 	return &route.RetryPolicy{
 		RetryOn:              RetryOn,

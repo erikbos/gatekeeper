@@ -6,6 +6,7 @@ import (
 
 	api "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	auth "github.com/envoyproxy/go-control-plane/envoy/api/v2/auth"
+	envoy_cluster "github.com/envoyproxy/go-control-plane/envoy/api/v2/cluster"
 	core "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	endpoint "github.com/envoyproxy/go-control-plane/envoy/api/v2/endpoint"
 	envoy_type "github.com/envoyproxy/go-control-plane/envoy/type"
@@ -14,6 +15,7 @@ import (
 	"github.com/golang/protobuf/ptypes/duration"
 	"github.com/golang/protobuf/ptypes/wrappers"
 	log "github.com/sirupsen/logrus"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 
 	"github.com/erikbos/gatekeeper/pkg/shared"
 )
@@ -35,6 +37,10 @@ const (
 	attributeHealthCheckPath     = "HealthCheckPath"
 	attributeHealthCheckInterval = "HealthCheckInterval"
 	attributeHealthCheckTimeout  = "HealthCheckTimeout"
+	attributeMaxConnections      = "MaxConnections"
+	attributeMaxPendingRequests  = "MaxPendingRequests"
+	attributeMaxRequests         = "MaxRequets"
+	attributeMaxRetries          = "MAxRetries"
 
 	attributeValueTrue  = "true"
 	attributeValueHTTP  = "HTTP"
@@ -119,7 +125,7 @@ func buildEnvoyClusterConfig(cluster shared.Cluster) *api.Cluster {
 		LoadAssignment:            clusterLoadAssignment(cluster),
 		HealthChecks:              clusterHealthCheckConfig(cluster),
 		CommonHttpProtocolOptions: clusterCommonHTTPProtocolOptions(cluster),
-		// CircuitBreakers:      clusterCircuitBreaker(cluster),
+		CircuitBreakers:           clusterCircuitBreaker(cluster),
 	}
 
 	// Add TLS and HTTP/2 configuration options in case we want to
@@ -176,16 +182,36 @@ func buildEndpoint(hostname string, port int) []*endpoint.LocalityLbEndpoints {
 
 }
 
-// func clusterCircuitBreaker(cluster shared.Cluster) *envoy_cluster.CircuitBreakers {
-// 	return &envoy_cluster.CircuitBreakers{
-// 		Thresholds: []*envoy_cluster.CircuitBreakers_Thresholds{{
-// 			MaxConnections:     u32nil(service.MaxConnections),
-// 			MaxPendingRequests: u32nil(service.MaxPendingRequests),
-// 			MaxRequests:        u32nil(service.MaxRequests),
-// 			MaxRetries:         u32nil(service.MaxRetries),
-// 		}},
-// 	}
-// }
+func clusterCircuitBreaker(cluster shared.Cluster) *envoy_cluster.CircuitBreakers {
+
+	maxConnections := shared.GetAttributeAsInt(cluster.Attributes, attributeMaxConnections, 0)
+	maxPendingRequests := shared.GetAttributeAsInt(cluster.Attributes, attributeMaxPendingRequests, 0)
+	maxRequests := shared.GetAttributeAsInt(cluster.Attributes, attributeMaxRequests, 0)
+	maxRetries := shared.GetAttributeAsInt(cluster.Attributes, attributeMaxRetries, 0)
+
+	log.Printf("QQ: %d", maxConnections)
+	return &envoy_cluster.CircuitBreakers{
+		Thresholds: []*envoy_cluster.CircuitBreakers_Thresholds{{
+			MaxConnections:     u32nil(maxConnections),
+			MaxPendingRequests: u32nil(maxPendingRequests),
+			MaxRequests:        u32nil(maxRequests),
+			MaxRetries:         u32nil(maxRetries),
+		}},
+	}
+}
+
+// u32nil returns value in *wrapperspb.UInt32Value
+func u32nil(val int) *wrapperspb.UInt32Value {
+
+	switch val {
+	case 0:
+		return nil
+	default:
+		return &wrapperspb.UInt32Value{
+			Value: uint32(val),
+		}
+	}
+}
 
 // clusterHealthCheckConfig builds health configuration for a cluster
 func clusterHealthCheckConfig(cluster shared.Cluster) []*core.HealthCheck {
