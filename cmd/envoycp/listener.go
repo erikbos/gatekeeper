@@ -27,6 +27,9 @@ import (
 const (
 	virtualHostDataRefreshInterval = 2 * time.Second
 	extAuthzTimeout                = 100 * time.Millisecond
+
+	attributeTLSCertificate    = "TLSCertificate"
+	attributeTLSCertificateKey = "TLSCertificateKey"
 )
 
 // FIXME this does not detect removed records
@@ -164,8 +167,8 @@ func (s *server) buildFilterChainEntry(l *api.Listener, v shared.VirtualHost) *l
 	}
 
 	// Configure TLS in case when we have a certificate + key
-	certificate, error1 := shared.GetAttribute(v.Attributes, "TLSCertificate")
-	certificateKey, error2 := shared.GetAttribute(v.Attributes, "TLSCertificateKey")
+	certificate, error1 := shared.GetAttribute(v.Attributes, attributeTLSCertificate)
+	certificateKey, error2 := shared.GetAttribute(v.Attributes, attributeTLSCertificateKey)
 
 	// No certificate details, return and do not enable TLS
 	if error1 != nil && error2 != nil {
@@ -226,7 +229,7 @@ func (s *server) listenerALPNOptions(v shared.VirtualHost) []string {
 	value, err := shared.GetAttribute(v.Attributes, attributeHTTPProtocol)
 	if err == nil {
 		switch value {
-		case attributeHTTPProtocolHTTP1:
+		case attributeHTTPProtocolHTTP11:
 			return []string{"http/1.1"}
 
 		case attributeHTTPProtocolHTTP2:

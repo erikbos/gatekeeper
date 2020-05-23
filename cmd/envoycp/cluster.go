@@ -1,6 +1,7 @@
 package main
 
 import (
+	"strings"
 	"sync"
 	"time"
 
@@ -15,7 +16,6 @@ import (
 	"github.com/golang/protobuf/ptypes/duration"
 	"github.com/golang/protobuf/ptypes/wrappers"
 	log "github.com/sirupsen/logrus"
-	"google.golang.org/protobuf/types/known/wrapperspb"
 
 	"github.com/erikbos/gatekeeper/pkg/shared"
 )
@@ -23,24 +23,28 @@ import (
 const (
 	clusterDataRefreshInterval = 2 * time.Second
 
-	attributeConnectTimeout      = "ConnectTimeout"
-	attributeIdleTimeout         = "IdleTimeout"
-	attributeTLSEnabled          = "TLSEnabled"
-	attributeTLSMinimumVersion   = "TLSMinimumVersion"
-	attributeTLSMaximumVersion   = "TLSMaximumVersion"
-	attributeHTTPProtocol        = "HTTPProtocol"
-	attributeHTTPProtocolHTTP1   = "HTTP/1.1"
-	attributeHTTPProtocolHTTP2   = "HTTP/2"
-	attributeHTTPProtocolHTTP3   = "HTTP/3"
-	attributeSNIHostName         = "SNIHostName"
-	attributeHealthCheckProtocol = "HealthCheckProtocol"
-	attributeHealthCheckPath     = "HealthCheckPath"
-	attributeHealthCheckInterval = "HealthCheckInterval"
-	attributeHealthCheckTimeout  = "HealthCheckTimeout"
-	attributeMaxConnections      = "MaxConnections"
-	attributeMaxPendingRequests  = "MaxPendingRequests"
-	attributeMaxRequests         = "MaxRequets"
-	attributeMaxRetries          = "MAxRetries"
+	attributeConnectTimeout                = "ConnectTimeout"
+	attributeIdleTimeout                   = "IdleTimeout"
+	attributeTLSEnabled                    = "TLSEnabled"
+	attributeTLSMinimumVersion             = "TLSMinimumVersion"
+	attributeTLSMaximumVersion             = "TLSMaximumVersion"
+	attributeTLSCipherSuites               = "TLSCipherSuites"
+	attributeHTTPProtocol                  = "HTTPProtocol"
+	attributeHTTPProtocolHTTP11            = "HTTP/1.1"
+	attributeHTTPProtocolHTTP2             = "HTTP/2"
+	attributeHTTPProtocolHTTP3             = "HTTP/3"
+	attributeSNIHostName                   = "SNIHostName"
+	attributeHealthCheckProtocol           = "HealthCheckProtocol"
+	attributeHealthCheckPath               = "HealthCheckPath"
+	attributeHealthCheckInterval           = "HealthCheckInterval"
+	attributeHealthCheckTimeout            = "HealthCheckTimeout"
+	attributeHealthCheckUnhealthyThreshold = "HealthCheckUnhealthyThreshold"
+	attributeHealthCheckHealthyThreshold   = "HealthCheckHealthyThreshold"
+	attributeHealthCheckLogFile            = "HealthCheckLogFile"
+	attributeMaxConnections                = "MaxConnections"
+	attributeMaxPendingRequests            = "MaxPendingRequests"
+	attributeMaxRequests                   = "MaxRequests"
+	attributeMaxRetries                    = "MAxRetries"
 
 	attributeValueTrue  = "true"
 	attributeValueHTTP  = "HTTP"
@@ -49,10 +53,12 @@ const (
 	attributeValueTLS12 = "TLSv12"
 	attributeValueTLS13 = "TLSv13"
 
-	defaultClusterConnectTimeout = 5 * time.Second
-	defaultClusterIdleTimeout    = 15 * time.Minute
-	defaultHealthCheckInterval   = 5 * time.Second
-	defaultHealthCheckTimeout    = 10 * time.Second
+	defaultClusterConnectTimeout         = 5 * time.Second
+	defaultClusterIdleTimeout            = 15 * time.Minute
+	defaultHealthCheckInterval           = 5 * time.Second
+	defaultHealthCheckTimeout            = 10 * time.Second
+	defaultHealthCheckUnhealthyThreshold = 2
+	defaultHealthCheckHealthyThreshold   = 2
 )
 
 // FIXME this does not detect removed records
@@ -189,25 +195,24 @@ func clusterCircuitBreaker(cluster shared.Cluster) *envoy_cluster.CircuitBreaker
 	maxRequests := shared.GetAttributeAsInt(cluster.Attributes, attributeMaxRequests, 0)
 	maxRetries := shared.GetAttributeAsInt(cluster.Attributes, attributeMaxRetries, 0)
 
-	log.Printf("QQ: %d", maxConnections)
 	return &envoy_cluster.CircuitBreakers{
 		Thresholds: []*envoy_cluster.CircuitBreakers_Thresholds{{
-			MaxConnections:     u32nil(maxConnections),
-			MaxPendingRequests: u32nil(maxPendingRequests),
-			MaxRequests:        u32nil(maxRequests),
-			MaxRetries:         u32nil(maxRetries),
+			MaxConnections:     Uint32orNil(maxConnections),
+			MaxPendingRequests: Uint32orNil(maxPendingRequests),
+			MaxRequests:        Uint32orNil(maxRequests),
+			MaxRetries:         Uint32orNil(maxRetries),
 		}},
 	}
 }
 
-// u32nil returns value in *wrapperspb.UInt32Value
-func u32nil(val int) *wrapperspb.UInt32Value {
+// Uint32orNil returns value in *wrapperspb.UInt32Value
+func Uint32orNil(val int) *wrappers.UInt32Value {
 
 	switch val {
 	case 0:
 		return nil
 	default:
-		return &wrapperspb.UInt32Value{
+		return &wrappers.UInt32Value{
 			Value: uint32(val),
 		}
 	}
@@ -216,11 +221,10 @@ func u32nil(val int) *wrapperspb.UInt32Value {
 // clusterHealthCheckConfig builds health configuration for a cluster
 func clusterHealthCheckConfig(cluster shared.Cluster) []*core.HealthCheck {
 
-	value, err := shared.GetAttribute(cluster.Attributes, attributeHealthCheckProtocol)
-	healthCheckPath, _ := shared.GetAttribute(cluster.Attributes, attributeHealthCheckPath)
+	protocol, err := shared.GetAttribute(cluster.Attributes, attributeHealthCheckProtocol)
+	path, _ := shared.GetAttribute(cluster.Attributes, attributeHealthCheckPath)
 
-	// FIXME add GRPC support
-	if err == nil && value == attributeValueHTTP && healthCheckPath != "" {
+	if err == nil && protocol == attributeValueHTTP && path != "" {
 
 		healthCheckInterval := shared.GetAttributeAsDuration(cluster.Attributes,
 			attributeHealthCheckInterval, defaultHealthCheckInterval)
@@ -228,20 +232,31 @@ func clusterHealthCheckConfig(cluster shared.Cluster) []*core.HealthCheck {
 		healthCheckTimeout := shared.GetAttributeAsDuration(cluster.Attributes,
 			attributeHealthCheckTimeout, defaultHealthCheckTimeout)
 
+		healthCheckUnhealthyThreshold := shared.GetAttributeAsInt(cluster.Attributes,
+			attributeHealthCheckUnhealthyThreshold, defaultHealthCheckUnhealthyThreshold)
+
+		healthCheckHealthyThreshold := shared.GetAttributeAsInt(cluster.Attributes,
+			attributeHealthCheckHealthyThreshold, defaultHealthCheckHealthyThreshold)
+
+		healthCheckLogFile := shared.GetAttributeAsString(cluster.Attributes,
+			attributeHealthCheckLogFile, "")
+
 		healthCheck := &core.HealthCheck{
 			HealthChecker: &core.HealthCheck_HttpHealthCheck_{
 				HttpHealthCheck: &core.HealthCheck_HttpHealthCheck{
-					Path:            healthCheckPath,
+					Path:            path,
 					CodecClientType: clusterHealthCodec(cluster),
 				},
 			},
 			Interval:           ptypes.DurationProto(healthCheckInterval),
 			Timeout:            ptypes.DurationProto(healthCheckTimeout),
-			UnhealthyThreshold: &wrappers.UInt32Value{Value: 2},
-			HealthyThreshold:   &wrappers.UInt32Value{Value: 1},
-			// FIXME this should be configurable
-			EventLogPath: "/tmp/healthcheck",
+			UnhealthyThreshold: Uint32orNil(healthCheckUnhealthyThreshold),
+			HealthyThreshold:   Uint32orNil(healthCheckHealthyThreshold),
 		}
+		if healthCheckLogFile != "" {
+			healthCheck.EventLogPath = healthCheckLogFile
+		}
+
 		return append([]*core.HealthCheck{}, healthCheck)
 	}
 	return nil
@@ -283,7 +298,7 @@ func clusterHTTP2ProtocolOptions(cluster shared.Cluster) *core.Http2ProtocolOpti
 	value, err := shared.GetAttribute(cluster.Attributes, attributeHTTPProtocol)
 	if err == nil {
 		switch value {
-		case attributeHTTPProtocolHTTP1:
+		case attributeHTTPProtocolHTTP11:
 			return nil
 		case attributeHTTPProtocolHTTP2:
 			// according to spec we need to return at least empty struct to enable HTTP/2
@@ -335,7 +350,7 @@ func clusterALPNOptions(cluster shared.Cluster) []string {
 	value, err := shared.GetAttribute(cluster.Attributes, attributeHTTPProtocol)
 	if err == nil {
 		switch value {
-		case attributeHTTPProtocolHTTP1:
+		case attributeHTTPProtocolHTTP11:
 			return []string{"http/1.1"}
 		case attributeHTTPProtocolHTTP2:
 			return []string{"h2", "http/1.1"}
@@ -359,6 +374,7 @@ func clusterTLSOptions(cluster shared.Cluster) *auth.TlsParameters {
 	if maxVersion, err := shared.GetAttribute(cluster.Attributes, attributeTLSMaximumVersion); err == nil {
 		tlsParameters.TlsMaximumProtocolVersion = tlsVersion(maxVersion)
 	}
+	tlsParameters.CipherSuites = tlsCipherSuites(cluster)
 	return tlsParameters
 }
 
@@ -375,4 +391,18 @@ func tlsVersion(version string) auth.TlsParameters_TlsProtocol {
 		return auth.TlsParameters_TLSv1_3
 	}
 	return auth.TlsParameters_TLS_AUTO
+}
+
+func tlsCipherSuites(cluster shared.Cluster) []string {
+
+	value, err := shared.GetAttribute(cluster.Attributes, attributeTLSCipherSuites)
+	if err == nil {
+		var ciphers []string
+
+		for _, cipher := range strings.Split(value, ",") {
+			ciphers = append(ciphers, cipher)
+		}
+		return ciphers
+	}
+	return nil
 }
