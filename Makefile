@@ -21,7 +21,7 @@ envoycp:
 
 testbackend:
 	mkdir -p $(BIN)
-	go build -o $(BIN)/envoycp $(LDFLAGS) cmd/testbackend/*.go
+	go build -o $(BIN)/testbackend $(LDFLAGS) cmd/testbackend/*.go
 
 
 docker-images: docker-dbadmin docker-envoyauth docker-envoycp docker-testbackend
