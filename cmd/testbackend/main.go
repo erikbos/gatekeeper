@@ -26,8 +26,8 @@ var people []Person
 func main() {
 
 	listen := flag.String("listen", "0.0.0.0:8000", "listen port")
-	certificate := flag.String("certificate", "certificate.crt", "certificate filename")
-	certificateKey := flag.String("certificatekey", "certificate.key", "certificate key filename")
+	certificate := flag.String("certificate", "/config/tls.crt", "certificate filename")
+	certificateKey := flag.String("certificatekey", "/config/tls.key", "certificate key filename")
 	logFile := flag.String("accesslogfile", "/dev/null", "logfile")
 
 	flag.Parse()
