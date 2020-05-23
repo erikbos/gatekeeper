@@ -58,6 +58,12 @@ func LivenessProbe(c *gin.Context) {
 
 // LogHTTPRequest logs details of an HTTP request
 func LogHTTPRequest(param gin.LogFormatterParams) string {
+
+	// Do not log k8s health probes
+	if param.Path == "/liveness" || param.Path == "/readiness" {
+		return ""
+	}
+
 	return fmt.Sprintf("%s - - [%s] \"%s %s %s\" %d %d \"%s\" \"%s\"\n",
 		param.ClientIP,
 		param.TimeStamp.Format(time.RFC3339),
