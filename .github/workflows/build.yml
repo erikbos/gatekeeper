@@ -36,7 +36,7 @@ jobs:
        docker tag apiedge/dbadmin:$VERSION ${{ secrets.acr_hostname }}/dbadmin
        docker tag apiedge/envoyauth:$VERSION ${{ secrets.acr_hostname }}/envoyauth
        docker tag apiedge/envoycp:$VERSION ${{ secrets.acr_hostname }}/envoycp
-       docker tag apiedge/envoycp:$VERSION ${{ secrets.acr_hostname }}/testbackend
+       docker tag apiedge/testbackend:$VERSION ${{ secrets.acr_hostname }}/testbackend
 
        docker push ${{ secrets.acr_hostname }}/dbadmin
        docker push ${{ secrets.acr_hostname }}/envoyauth
