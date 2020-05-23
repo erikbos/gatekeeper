@@ -85,22 +85,29 @@ func (d *Database) runGetOrganizationQuery(query, queryParameter string) ([]shar
 }
 
 // UpdateOrganizationByName UPSERTs an organization in database
-func (d *Database) UpdateOrganizationByName(updatedOrganization *shared.Organization) error {
+func (d *Database) UpdateOrganizationByName(o *shared.Organization) error {
 
-	updatedOrganization.Attributes = shared.TidyAttributes(updatedOrganization.Attributes)
-	Attributes := d.marshallArrayOfAttributesToJSON(updatedOrganization.Attributes)
+	o.Attributes = shared.TidyAttributes(o.Attributes)
+	o.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
 
-	updatedOrganization.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
+	if err := d.cassandraSession.Query(`INSERT INTO organizations (
+name,
+display_name,
+attributes,
+created_at,
+created_by,
+lastmodified_at,
+lastmodified_by) VALUES(?,?,?,?,?,?,?)`,
 
-	if err := d.cassandraSession.Query(
-		"INSERT INTO organizations (name, display_name, attributes, "+
-			"created_at, created_by, lastmodified_at, lastmodified_by) "+
-			"VALUES(?,?,?,?,?,?,?)",
-		updatedOrganization.Name,
-		updatedOrganization.DisplayName, Attributes, updatedOrganization.CreatedAt,
-		updatedOrganization.CreatedBy, updatedOrganization.LastmodifiedAt,
-		updatedOrganization.LastmodifiedBy).Exec(); err != nil {
-		return fmt.Errorf("Can not update organization (%v)", err)
+		o.Name,
+		o.DisplayName,
+		d.marshallArrayOfAttributesToJSON(o.Attributes),
+		o.CreatedAt,
+		o.CreatedBy,
+		o.LastmodifiedAt,
+		o.LastmodifiedBy).Exec(); err != nil {
+
+		return fmt.Errorf("Cannot update organization '%s' (%v)", o.Name, err)
 	}
 	return nil
 }

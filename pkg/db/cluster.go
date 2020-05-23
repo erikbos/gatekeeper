@@ -86,24 +86,33 @@ func (d *Database) runGetClusterQuery(query string, queryParameters ...interface
 }
 
 // UpdateClusterByName UPSERTs an cluster in database
-func (d *Database) UpdateClusterByName(updatedCluster *shared.Cluster) error {
+func (d *Database) UpdateClusterByName(c *shared.Cluster) error {
 
-	query := "INSERT INTO clusters (key, display_name, " +
-		"host_name, port, attributes, " +
-		"created_at, created_by, lastmodified_at, lastmodified_by) " +
-		"VALUES(?,?,?,?,?,?,?,?,?)"
+	c.Attributes = shared.TidyAttributes(c.Attributes)
+	c.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
 
-	updatedCluster.Attributes = shared.TidyAttributes(updatedCluster.Attributes)
-	attributes := d.marshallArrayOfAttributesToJSON(updatedCluster.Attributes)
-	updatedCluster.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
+	if err := d.cassandraSession.Query(`INSERT INTO clusters (
+key,
+display_name,
+host_name,
+port,
+attributes,
+created_at,
+created_by,
+lastmodified_at,
+lastmodified_by) VALUES(?,?,?,?,?,?,?,?,?)`,
 
-	if err := d.cassandraSession.Query(query,
-		updatedCluster.Name, updatedCluster.DisplayName,
-		updatedCluster.HostName, updatedCluster.Port, attributes,
-		updatedCluster.CreatedAt, updatedCluster.CreatedBy,
-		updatedCluster.LastmodifiedAt,
-		updatedCluster.LastmodifiedBy).Exec(); err != nil {
-		return fmt.Errorf("Can not update cluster (%v)", err)
+		c.Name,
+		c.DisplayName,
+		c.HostName,
+		c.Port,
+		d.marshallArrayOfAttributesToJSON(c.Attributes),
+		c.CreatedAt,
+		c.CreatedBy,
+		c.LastmodifiedAt,
+		c.LastmodifiedBy).Exec(); err != nil {
+
+		return fmt.Errorf("Can not update cluster '%s' (%v)", c.Name, err)
 	}
 
 	return nil

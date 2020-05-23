@@ -103,23 +103,32 @@ func (d *Database) runGetAppCredentialQuery(query string, queryParameters ...int
 }
 
 // UpdateAppCredentialByKey UPSERTs appcredentials in database
-func (d *Database) UpdateAppCredentialByKey(updatedAppCredential *shared.AppCredential) error {
+func (d *Database) UpdateAppCredentialByKey(c *shared.AppCredential) error {
 
-	APIProducts := d.marshallArrayOfProductStatusesToJSON(updatedAppCredential.APIProducts)
+	c.Attributes = shared.TidyAttributes(c.Attributes)
 
-	updatedAppCredential.Attributes = shared.TidyAttributes(updatedAppCredential.Attributes)
-	Attributes := d.marshallArrayOfAttributesToJSON(updatedAppCredential.Attributes)
+	if err := d.cassandraSession.Query(`INSERT INTO credentials (
+consumer_key,
+consumer_secret,
+api_products,
+attributes,
+developer_app_id,
+organization_name,
+status,
+issued_at,
+expires_at) VALUES(?,?,?,?,?,?,?,?,?)`,
 
-	if err := d.cassandraSession.Query(
-		"INSERT INTO credentials (consumer_key, api_products, attributes, "+
-			"consumer_secret, expires_at, issued_at,"+
-			"developer_app_id, organization_name, status)"+
-			"VALUES(?,?,?,?,?,?,?,?,?)",
-		updatedAppCredential.ConsumerKey, APIProducts, Attributes,
-		updatedAppCredential.ConsumerSecret, -1, updatedAppCredential.IssuedAt,
-		updatedAppCredential.DeveloperAppID, updatedAppCredential.OrganizationName,
-		updatedAppCredential.Status).Exec(); err != nil {
-		return fmt.Errorf("Can not update credential (%v)", err)
+		c.ConsumerKey,
+		c.ConsumerSecret,
+		d.marshallArrayOfProductStatusesToJSON(c.APIProducts),
+		d.marshallArrayOfAttributesToJSON(c.Attributes),
+		c.DeveloperAppID,
+		c.OrganizationName,
+		c.Status,
+		c.IssuedAt,
+		c.ExpiresAt).Exec(); err != nil {
+
+		return fmt.Errorf("Can not update credential '%s', (%v)", c.ConsumerKey, err)
 	}
 	return nil
 }

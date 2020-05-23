@@ -87,23 +87,37 @@ func (d *Database) runGetRouteQuery(query string, queryParameters ...interface{}
 }
 
 // UpdateRouteByName UPSERTs an route in database
-func (d *Database) UpdateRouteByName(updatedRoute *shared.Route) error {
-	query := "INSERT INTO routes " +
-		"(name, display_name, route_set, path, path_type, cluster, attributes, " +
-		"created_at, created_by, lastmodified_at, lastmodified_by) " +
-		"VALUES(?,?,?,?,?,?,?,?,?,?,?)"
+func (d *Database) UpdateRouteByName(route *shared.Route) error {
 
-	updatedRoute.Attributes = shared.TidyAttributes(updatedRoute.Attributes)
-	attributes := d.marshallArrayOfAttributesToJSON(updatedRoute.Attributes)
+	route.Attributes = shared.TidyAttributes(route.Attributes)
+	route.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
 
-	updatedRoute.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
-	err := d.cassandraSession.Query(query,
-		updatedRoute.Name, updatedRoute.DisplayName, updatedRoute.RouteSet,
-		updatedRoute.Path, updatedRoute.PathType, updatedRoute.Cluster, attributes,
-		updatedRoute.CreatedAt, updatedRoute.CreatedBy,
-		updatedRoute.LastmodifiedAt, updatedRoute.LastmodifiedBy).Exec()
-	if err != nil {
-		return fmt.Errorf("Can not update route (%v)", err)
+	if err := d.cassandraSession.Query(`INSERT INTO routes (
+name,
+display_name,
+route_set,
+path,
+path_type,
+cluster,
+attributes,
+created_at,
+created_by,
+lastmodified_at,
+lastmodified_by) VALUES(?,?,?,?,?,?,?,?,?,?,?)`,
+
+		route.Name,
+		route.DisplayName,
+		route.RouteSet,
+		route.Path,
+		route.PathType,
+		route.Cluster,
+		d.marshallArrayOfAttributesToJSON(route.Attributes),
+		route.CreatedAt,
+		route.CreatedBy,
+		route.LastmodifiedAt,
+		route.LastmodifiedBy).Exec(); err != nil {
+
+		return fmt.Errorf("Cannot update route '%s' (%v)", route.Name, err)
 	}
 	return nil
 }

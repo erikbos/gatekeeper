@@ -92,28 +92,39 @@ func (d *Database) runGetVirtualHostQuery(query string,
 }
 
 // UpdateVirtualHostByName updates a virtualhost in database
-func (d *Database) UpdateVirtualHostByName(updatedVirtualHost *shared.VirtualHost) error {
-	query := "INSERT INTO virtual_hosts " +
-		"(name, display_name, virtual_hosts, port, route_set, policies, attributes, " +
-		"organization_name, created_at, created_by, lastmodified_at, lastmodified_by) " +
-		"VALUES(?,?,?,?,?,?,?,?,?,?,?,?)"
+func (d *Database) UpdateVirtualHostByName(vhost *shared.VirtualHost) error {
 
-	virtualhosts := d.marshallArrayOfStringsToJSON(updatedVirtualHost.VirtualHosts)
+	vhost.Attributes = shared.TidyAttributes(vhost.Attributes)
+	vhost.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
 
-	updatedVirtualHost.Attributes = shared.TidyAttributes(updatedVirtualHost.Attributes)
-	attributes := d.marshallArrayOfAttributesToJSON(updatedVirtualHost.Attributes)
+	if err := d.cassandraSession.Query(`INSERT INTO virtual_hosts (
+name,
+display_name,
+virtual_hosts,
+port,
+route_set,
+policies,
+attributes
+organization_name,
+created_at,
+created_by,
+lastmodified_at,
+lastmodified_by) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)`,
 
-	updatedVirtualHost.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
-	err := d.cassandraSession.Query(query,
-		updatedVirtualHost.Name, updatedVirtualHost.DisplayName,
-		virtualhosts, updatedVirtualHost.Port, updatedVirtualHost.RouteSet,
-		updatedVirtualHost.Policies, attributes,
-		updatedVirtualHost.OrganizationName,
-		updatedVirtualHost.CreatedAt, updatedVirtualHost.CreatedBy,
-		updatedVirtualHost.LastmodifiedAt,
-		updatedVirtualHost.LastmodifiedBy).Exec()
-	if err != nil {
-		return fmt.Errorf("Can not update virtualhost '%v'", err)
+		vhost.Name,
+		vhost.DisplayName,
+		d.marshallArrayOfStringsToJSON(vhost.VirtualHosts),
+		vhost.Port,
+		vhost.RouteSet,
+		vhost.Policies,
+		d.marshallArrayOfAttributesToJSON(vhost.Attributes),
+		vhost.OrganizationName,
+		vhost.CreatedAt,
+		vhost.CreatedBy,
+		vhost.LastmodifiedAt,
+		vhost.LastmodifiedBy).Exec(); err != nil {
+
+		return fmt.Errorf("Cannot update virtualhost '%s', '%v'", vhost.Name, err)
 	}
 	return nil
 }

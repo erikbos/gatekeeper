@@ -36,7 +36,7 @@ func (s *server) StartXDS(notifications chan xdsNotifyMesssage) {
 	for {
 		select {
 		case n := <-notifications:
-			log.Infof("XDS change notify received for resource '%s'", n.resource)
+			log.Infof("XDS change notify received for resource group '%s'", n.resource)
 
 			s.XDSBuildSnapshot()
 

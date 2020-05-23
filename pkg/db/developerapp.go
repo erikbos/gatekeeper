@@ -117,28 +117,38 @@ func (d *Database) runGetDeveloperAppQuery(query string, queryParameters ...inte
 }
 
 // UpdateDeveloperAppByName UPSERTs a developer app in database
-func (d *Database) UpdateDeveloperAppByName(updatedDeveloperApp *shared.DeveloperApp) error {
+func (d *Database) UpdateDeveloperAppByName(devapp *shared.DeveloperApp) error {
 
-	query := "INSERT INTO developer_apps (developer_app_id, attributes, " +
-		"created_at, created_by, display_name, " +
-		"lastmodified_at, lastmodified_by, name, " +
-		"organization_name, developer_id, " +
-		"status) VALUES(?,?,?,?,?,?,?,?,?,?,?)"
+	devapp.Attributes = shared.TidyAttributes(devapp.Attributes)
+	devapp.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
 
-	updatedDeveloperApp.Attributes = shared.TidyAttributes(updatedDeveloperApp.Attributes)
-	Attributes := d.marshallArrayOfAttributesToJSON(updatedDeveloperApp.Attributes)
+	if err := d.cassandraSession.Query(`INSERT INTO developer_apps (
+developer_app_id,
+developer_id,
+name,
+display_name,
+attributes,
+organization_name,
+status,
+created_at,
+created_by,
+lastmodified_at,
+lastmodified_by) VALUES(?,?,?,?,?,?,?,?,?,?,?)`,
 
-	updatedDeveloperApp.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
+		devapp.DeveloperAppID,
+		devapp.DeveloperID,
+		devapp.Name,
+		devapp.DisplayName,
+		d.marshallArrayOfAttributesToJSON(devapp.Attributes),
+		devapp.OrganizationName,
+		devapp.Status,
+		devapp.CreatedAt,
+		devapp.CreatedBy,
+		devapp.LastmodifiedAt,
+		devapp.LastmodifiedBy).Exec(); err != nil {
 
-	err := d.cassandraSession.Query(query,
-		updatedDeveloperApp.DeveloperAppID, Attributes,
-		updatedDeveloperApp.CreatedAt, updatedDeveloperApp.CreatedBy, updatedDeveloperApp.DisplayName,
-		updatedDeveloperApp.LastmodifiedAt, updatedDeveloperApp.LastmodifiedBy, updatedDeveloperApp.Name,
-		updatedDeveloperApp.OrganizationName, updatedDeveloperApp.DeveloperID,
-		updatedDeveloperApp.Status).Exec()
-	if err != nil {
-		return fmt.Errorf("Can not update developer app '%s' (%v)",
-			updatedDeveloperApp.DeveloperAppID, err)
+		return fmt.Errorf("Cannot update developer app '%s' (%v)",
+			devapp.DeveloperAppID, err)
 	}
 	return nil
 }

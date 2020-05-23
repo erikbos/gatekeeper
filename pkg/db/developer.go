@@ -119,26 +119,41 @@ func (d *Database) runGetDeveloperQuery(query string, queryParameters ...interfa
 }
 
 // UpdateDeveloperByName UPSERTs a developer in database
-func (d *Database) UpdateDeveloperByName(updatedDeveloper *shared.Developer) error {
+func (d *Database) UpdateDeveloperByName(dev *shared.Developer) error {
 
-	Apps := d.marshallArrayOfStringsToJSON(updatedDeveloper.Apps)
-	Attributes := d.marshallArrayOfAttributesToJSON(
-		shared.TidyAttributes(updatedDeveloper.Attributes))
+	dev.Attributes = shared.TidyAttributes(dev.Attributes)
+	dev.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
 
-	updatedDeveloper.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
+	if err := d.cassandraSession.Query(`INSERT INTO developers (
+developer_id,
+apps,
+attributes,
+organization_name,
+status,
+user_name,
+email,
+first_name,
+last_name,
+created_at,
+created_by,
+lastmodified_at,
+lastmodified_by) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)`,
 
-	if err := d.cassandraSession.Query(
-		"INSERT INTO developers (developer_id, apps, attributes, "+
-			"created_at, created_by, email, "+
-			"first_name, last_name, lastmodified_at, "+
-			"lastmodified_by, organization_name, status, user_name) "+
-			"VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)",
-		updatedDeveloper.DeveloperID, Apps, Attributes,
-		updatedDeveloper.CreatedAt, updatedDeveloper.CreatedBy, updatedDeveloper.Email,
-		updatedDeveloper.FirstName, updatedDeveloper.LastName, updatedDeveloper.LastmodifiedAt,
-		updatedDeveloper.LastmodifiedBy, updatedDeveloper.OrganizationName, updatedDeveloper.Status,
-		updatedDeveloper.UserName).Exec(); err != nil {
-		return fmt.Errorf("Can not update developer (%v)", err)
+		dev.DeveloperID,
+		d.marshallArrayOfStringsToJSON(dev.Apps),
+		d.marshallArrayOfAttributesToJSON(shared.TidyAttributes(dev.Attributes)),
+		dev.OrganizationName,
+		dev.Status,
+		dev.UserName,
+		dev.Email,
+		dev.FirstName,
+		dev.LastName,
+		dev.CreatedAt,
+		dev.CreatedBy,
+		dev.LastmodifiedAt,
+		dev.LastmodifiedBy).Exec(); err != nil {
+
+		return fmt.Errorf("Cannot update developer (%v)", err)
 	}
 	return nil
 }

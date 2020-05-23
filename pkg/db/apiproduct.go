@@ -88,29 +88,39 @@ func (d *Database) runGetAPIProductQuery(query string, queryParameters ...interf
 }
 
 // UpdateAPIProductByName UPSERTs an apiproduct in database
-func (d *Database) UpdateAPIProductByName(updatedAPIProduct *shared.APIProduct) error {
+func (d *Database) UpdateAPIProductByName(p *shared.APIProduct) error {
 
-	query := "INSERT INTO api_products (name,display_name, attributes," +
-		"created_at,created_by, route_set, paths, policies, " +
-		"lastmodified_at,lastmodified_by,organization_name) " +
-		"VALUES(?,?,?,?,?,?,?,?,?,?,?)"
+	p.Attributes = shared.TidyAttributes(p.Attributes)
+	p.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
 
-	updatedAPIProduct.Attributes = shared.TidyAttributes(updatedAPIProduct.Attributes)
-	attributes := d.marshallArrayOfAttributesToJSON(updatedAPIProduct.Attributes)
+	if err := d.cassandraSession.Query(`INSERT INTO api_products (
+name,
+display_name,
+attributes,
+route_set,
+paths,
+policies,
+created_at,
+created_by,
+lastmodified_at,
+lastmodified_by,
+organization_name) VALUES(?,?,?,?,?,?,?,?,?,?,?)`,
 
-	paths := d.marshallArrayOfStringsToJSON(updatedAPIProduct.Paths)
+		p.Name,
+		p.DisplayName,
+		d.marshallArrayOfAttributesToJSON(p.Attributes),
+		p.RouteSet,
+		d.marshallArrayOfStringsToJSON(p.Paths),
+		p.Policies,
+		p.CreatedAt,
+		p.CreatedBy,
+		p.LastmodifiedAt,
+		p.LastmodifiedBy,
+		p.OrganizationName).Exec(); err == nil {
 
-	updatedAPIProduct.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
-	err := d.cassandraSession.Query(query,
-		updatedAPIProduct.Name, updatedAPIProduct.DisplayName, attributes,
-		updatedAPIProduct.CreatedAt, updatedAPIProduct.CreatedBy, updatedAPIProduct.RouteSet,
-		paths, updatedAPIProduct.Policies,
-		updatedAPIProduct.LastmodifiedAt, updatedAPIProduct.LastmodifiedBy,
-		updatedAPIProduct.OrganizationName).Exec()
-	if err == nil {
-		return nil
+		return fmt.Errorf("Can not update apiproduct '%s' (%v)", p.Name, err)
 	}
-	return fmt.Errorf("Can not update apiproduct (%v)", err)
+	return nil
 }
 
 // DeleteAPIProductByName deletes an apiproduct
