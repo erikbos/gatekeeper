@@ -10,12 +10,18 @@ import (
 
 // GetCurrentTimeMilliseconds returns current epoch time in milliseconds
 func GetCurrentTimeMilliseconds() int64 {
+	// FIXME / is this the same as / int64(time.Millisecond)?
 	return time.Now().UTC().UnixNano() / 1000000
 }
 
-// TimeMillisecondsToString return time as string
+// TimeMillisecondsToString return timestamp as string
 func TimeMillisecondsToString(timestamp int64) string {
 	return time.Unix(0, timestamp*int64(time.Millisecond)).String()
+}
+
+// TimeMillisecondsToInt64 returns time.Time as int64
+func TimeMillisecondsToInt64(timestamp time.Time) int64 {
+	return timestamp.UTC().UnixNano() / int64(time.Millisecond)
 }
 
 // CheckIPinAccessList checks if ip addresses is in one of the subnets of IP ACL
