@@ -126,19 +126,6 @@ func (s *server) buildEnvoyListenerConfig(port int) *api.Listener {
 	return newListener
 }
 
-// buildAddress builds an Envoy address to connect to
-func buildAddress(hostname string, port int) *core.Address {
-	return &core.Address{Address: &core.Address_SocketAddress{
-		SocketAddress: &core.SocketAddress{
-			Address:  hostname,
-			Protocol: core.SocketAddress_TCP,
-			PortSpecifier: &core.SocketAddress_PortValue{
-				PortValue: uint32(port),
-			},
-		},
-	}}
-}
-
 func buildListenerFilterHTTP() []*listener.ListenerFilter {
 	return []*listener.ListenerFilter{
 		{

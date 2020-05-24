@@ -14,7 +14,6 @@ import (
 	cache "github.com/envoyproxy/go-control-plane/pkg/cache"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/duration"
-	"github.com/golang/protobuf/ptypes/wrappers"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/erikbos/gatekeeper/pkg/shared"
@@ -92,6 +91,8 @@ func buildEnvoyClusterConfig(cluster shared.Cluster) *api.Cluster {
 		ConnectTimeout:            clusterConnectTimeout(cluster),
 		ClusterDiscoveryType:      &api.Cluster_Type{Type: api.Cluster_LOGICAL_DNS},
 		DnsLookupFamily:           api.Cluster_V4_ONLY,
+		DnsResolvers:              clusterDNSResolvers(cluster),
+		DnsRefreshRate:            clusterDNSRefreshRate(cluster),
 		LbPolicy:                  api.Cluster_ROUND_ROBIN,
 		LoadAssignment:            clusterLoadAssignment(cluster),
 		HealthChecks:              clusterHealthCheckConfig(cluster),
@@ -127,30 +128,19 @@ func clusterLoadAssignment(cluster shared.Cluster) *api.ClusterLoadAssignment {
 
 func buildEndpoint(hostname string, port int) []*endpoint.LocalityLbEndpoints {
 
-	address := &core.Address{Address: &core.Address_SocketAddress{
-		SocketAddress: &core.SocketAddress{
-			Address:  hostname,
-			Protocol: core.SocketAddress_TCP,
-			PortSpecifier: &core.SocketAddress_PortValue{
-				PortValue: uint32(port),
-			},
-		},
-	}}
-
 	return []*endpoint.LocalityLbEndpoints{
 		{
 			LbEndpoints: []*endpoint.LbEndpoint{
 				{
 					HostIdentifier: &endpoint.LbEndpoint_Endpoint{
 						Endpoint: &endpoint.Endpoint{
-							Address: address,
+							Address: buildAddress(hostname, port),
 						},
 					},
 				},
 			},
 		},
 	}
-
 }
 
 func clusterCircuitBreaker(cluster shared.Cluster) *envoy_cluster.CircuitBreakers {
@@ -167,19 +157,6 @@ func clusterCircuitBreaker(cluster shared.Cluster) *envoy_cluster.CircuitBreaker
 			MaxRequests:        Uint32orNil(maxRequests),
 			MaxRetries:         Uint32orNil(maxRetries),
 		}},
-	}
-}
-
-// Uint32orNil returns value in *wrapperspb.UInt32Value
-func Uint32orNil(val int) *wrappers.UInt32Value {
-
-	switch val {
-	case 0:
-		return nil
-	default:
-		return &wrappers.UInt32Value{
-			Value: uint32(val),
-		}
 	}
 }
 
@@ -365,9 +342,31 @@ func tlsCipherSuites(cluster shared.Cluster) []string {
 		var ciphers []string
 
 		for _, cipher := range strings.Split(value, ",") {
-			ciphers = append(ciphers, cipher)
+			ciphers = append(ciphers, strings.TrimSpace(cipher))
 		}
 		return ciphers
+	}
+	return nil
+}
+
+func clusterDNSRefreshRate(cluster shared.Cluster) *duration.Duration {
+
+	refreshInterval := shared.GetAttributeAsDuration(cluster.Attributes,
+		attributeDNSRefreshRate, defaultDNSRefreshRate)
+
+	return ptypes.DurationProto(refreshInterval)
+}
+
+func clusterDNSResolvers(cluster shared.Cluster) []*core.Address {
+
+	value, err := shared.GetAttribute(cluster.Attributes, attributeDNSResolvers)
+	if err == nil {
+		var resolvers []*core.Address
+
+		for _, resolver := range strings.Split(value, ",") {
+			resolvers = append(resolvers, buildAddress(resolver, 53))
+		}
+		return resolvers
 	}
 	return nil
 }
