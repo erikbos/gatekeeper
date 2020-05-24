@@ -24,8 +24,8 @@ func CheckIPinAccessList(ip net.IP, ipAccessList string) bool {
 	if ipAccessList == "" {
 		return false
 	}
-	for _, subnet := range strings.Split(strings.TrimSpace(ipAccessList), ",") {
-		if _, network, err := net.ParseCIDR(subnet); err == nil {
+	for _, subnet := range strings.Split(ipAccessList, ",") {
+		if _, network, err := net.ParseCIDR(strings.TrimSpace(subnet)); err == nil {
 			if network.Contains(ip) {
 				// OK, we have a match
 				return true
