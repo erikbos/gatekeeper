@@ -21,9 +21,9 @@ type webAdminConfig struct {
 }
 
 // StartWebAdminServer starts the admin web UI
-func StartWebAdminServer(s *server, c *webAdminConfig) {
+func StartWebAdminServer(s *server) {
 
-	if logFile, err := os.Create(c.LogFile); err == nil {
+	if logFile, err := os.Create(s.config.WebAdmin.LogFile); err == nil {
 		gin.DefaultWriter = io.MultiWriter(logFile)
 	}
 
@@ -53,8 +53,8 @@ func StartWebAdminServer(s *server, c *webAdminConfig) {
 	s.ginEngine.GET("/metrics", gin.WrapH(promhttp.Handler()))
 	s.ginEngine.GET("/config_dump", s.ConfigDump)
 
-	log.Info("Webadmin listening on ", c.Listen)
-	if err := s.ginEngine.Run(c.Listen); err != nil {
+	log.Info("Webadmin listening on ", s.config.WebAdmin.Listen)
+	if err := s.ginEngine.Run(s.config.WebAdmin.Listen); err != nil {
 		log.Fatal(err)
 	}
 }

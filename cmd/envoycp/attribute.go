@@ -35,7 +35,10 @@ const (
 	attributeMaxConnections                = "MaxConnections"
 	attributeMaxPendingRequests            = "MaxPendingRequests"
 	attributeMaxRequests                   = "MaxRequests"
-	attributeMaxRetries                    = "MAxRetries"
+	attributeMaxRetries                    = "MaxRetries"
+	attributeDNSLookupFamiliy              = "DNSLookupFamily"
+	attributeDNSRefreshRate                = "DNSRefreshRate"
+	attributeDNSResolvers                  = "DNSResolvers"
 
 	attributeValueTrue  = "true"
 	attributeValueHTTP  = "HTTP"
@@ -50,6 +53,7 @@ const (
 	defaultHealthCheckTimeout            = 10 * time.Second
 	defaultHealthCheckUnhealthyThreshold = 2
 	defaultHealthCheckHealthyThreshold   = 2
+	defaultDNSRefreshRate                = 5 * time.Second
 
 	// route
 	attributeDirectResponseStatusCode = "DirectResponseStatusCode"

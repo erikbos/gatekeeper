@@ -42,9 +42,9 @@ type xdsNotifyMesssage struct {
 func main() {
 	shared.StartLogging(myName, version, buildTime)
 
-	s := server{}
-	s.config = loadConfiguration()
-	// FIXME we should check if we have all required parameters (use viper package?)
+	s := server{
+		config: loadConfiguration(),
+	}
 
 	shared.SetLoggingConfiguration(s.config.LogLevel)
 	s.readiness.RegisterMetrics(myName)

@@ -22,5 +22,6 @@ require (
 	google.golang.org/genproto v0.0.0-20200521103424-e9a78aa275b7
 	google.golang.org/grpc v1.29.1
 	google.golang.org/protobuf v1.23.0
+	gopkg.in/oauth2.v3 v3.12.0
 	gopkg.in/yaml.v2 v2.3.0
 )

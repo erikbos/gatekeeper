@@ -33,12 +33,14 @@ jobs:
        echo ${{ github.sha }}
        echo $VERSION
 
-       docker tag apiedge/dbadmin:$VERSION ${{ secrets.acr_hostname }}/dbadmin
-       docker tag apiedge/envoyauth:$VERSION ${{ secrets.acr_hostname }}/envoyauth
-       docker tag apiedge/envoycp:$VERSION ${{ secrets.acr_hostname }}/envoycp
-       docker tag apiedge/testbackend:$VERSION ${{ secrets.acr_hostname }}/testbackend
+       docker tag gatekeeper/dbadmin:$VERSION ${{ secrets.acr_hostname }}/dbadmin
+       docker tag gatekeeper/envoyauth:$VERSION ${{ secrets.acr_hostname }}/envoyauth
+       docker tag gatekeeper/envoycp:$VERSION ${{ secrets.acr_hostname }}/envoycp
+       docker tag gatekeeper/testbackend:$VERSION ${{ secrets.acr_hostname }}/testbackend
+       docker tag gatekeeper/oauthserver:$VERSION ${{ secrets.acr_hostname }}/oauthserver
 
        docker push ${{ secrets.acr_hostname }}/dbadmin
        docker push ${{ secrets.acr_hostname }}/envoyauth
        docker push ${{ secrets.acr_hostname }}/envoycp
        docker push ${{ secrets.acr_hostname }}/testbackend
+       docker push ${{ secrets.acr_hostname }}/oauthserver

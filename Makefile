@@ -5,7 +5,7 @@ BUILDER := $(shell echo "`git config user.name` <`git config user.email`>")
 LDFLAGS := -ldflags "-X main.version=$(VERSION) -X main.buildTime=$(BUILDTIME)"
 BIN = bin
 
-all: dbadmin envoyauth envoycp testbackend
+all: dbadmin envoyauth envoycp testbackend oauthserver
 
 dbadmin:
 	mkdir -p $(BIN)
@@ -23,20 +23,27 @@ testbackend:
 	mkdir -p $(BIN)
 	go build -o $(BIN)/testbackend $(LDFLAGS) cmd/testbackend/*.go
 
+oauthserver:
+	mkdir -p $(BIN)
+	go build -o $(BIN)/oauthserver $(LDFLAGS) cmd/oauthserver/*.go
+
 
 docker-images: docker-dbadmin docker-envoyauth docker-envoycp docker-testbackend
 
 docker-dbadmin:
-	 docker build -t apiedge/dbadmin:$(VERSION) . -f Dockerfile.dbadmin
+	 docker build -t gatekeeper/dbadmin:$(VERSION) . -f Dockerfile.dbadmin
 
 docker-envoyauth:
-	 docker build -t apiedge/envoyauth:$(VERSION) . -f Dockerfile.envoyauth
+	 docker build -t gatekeeper/envoyauth:$(VERSION) . -f Dockerfile.envoyauth
 
 docker-envoycp:
-	 docker build -t apiedge/envoycp:$(VERSION) . -f Dockerfile.envoycp
+	 docker build -t gatekeeper/envoycp:$(VERSION) . -f Dockerfile.envoycp
 
 docker-testbackend:
-	 docker build -t apiedge/testbackend:$(VERSION) . -f Dockerfile.testbackend
+	 docker build -t gatekeeper/testbackend:$(VERSION) . -f Dockerfile.testbackend
+
+docker-oauthserver:
+	 docker build -t gatekeeper/oauthserver:$(VERSION) . -f Dockerfile.oauthserver
 
 clean:
-	rm -f $(BIN)/dbadmin $(BIN)/envoyauth $(BIN)/envoycp $(BIN)/testbackend
+	rm -f $(BIN)/dbadmin $(BIN)/envoyauth $(BIN)/envoycp $(BIN)/testbackend $(BIN)/oauthserver

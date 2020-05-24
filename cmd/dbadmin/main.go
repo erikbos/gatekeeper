@@ -27,19 +27,19 @@ type server struct {
 func main() {
 	shared.StartLogging(myName, version, buildTime)
 
-	srv := &server{}
-	srv.config = loadConfiguration()
-	// FIXME we should check if we have all required parameters (use viper package?)
+	s := server{
+		config: loadConfiguration(),
+	}
 
-	shared.SetLoggingConfiguration(srv.config.LogLevel)
-	srv.readiness.RegisterMetrics(myName)
+	shared.SetLoggingConfiguration(s.config.LogLevel)
+	s.readiness.RegisterMetrics(myName)
 
 	var err error
-	srv.db, err = db.Connect(srv.config.Database, &srv.readiness, myName)
+	s.db, err = db.Connect(s.config.Database, &s.readiness, myName)
 	if err != nil {
 		log.Fatalf("Database connect failed: %v", err)
 	}
 
-	StartWebAdminServer(srv, &srv.config.WebAdmin)
+	StartWebAdminServer(&s)
 
 }
