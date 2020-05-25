@@ -5,10 +5,9 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"gopkg.in/oauth2.v3"
 	"gopkg.in/oauth2.v3/manage"
-	"gopkg.in/oauth2.v3/models"
 	"gopkg.in/oauth2.v3/server"
-	"gopkg.in/oauth2.v3/store"
 
 	"github.com/erikbos/gatekeeper/pkg/db"
 	oauthtoken "github.com/erikbos/gatekeeper/pkg/oauthtoken"
@@ -64,27 +63,36 @@ func main() {
 func (os *oauthServer) prepOAuth() {
 
 	manager := manage.NewDefaultManager()
-	// manager.MustTokenStorage(store.NewFileTokenStore("/tmp/data.db"))
+
+	// Set our token storage engine for access tokens
 	manager.MapTokenStorage(oauthtoken.NewTokenStore(os.db))
 
-	// client store
-	clientStore := store.NewClientStore()
-	clientStore.Set("000000", &models.Client{
-		ID:     "000000",
-		Secret: "999999",
-		Domain: "http://localhost",
-	})
-	manager.MapClientStorage(clientStore)
+	// Set client id engine for client ids
+	manager.MapClientStorage(oauthtoken.NewClientTokenStore(os.db))
 
-	// Initialize the oauth2 service
-	os.server = server.NewDefaultServer(manager)
+	// Set token ttl
+	// manager.SetClientTokenCfg(&manage.Config{AccessTokenExp: 1 * time.Hour})
+
+	config := &server.Config{
+		TokenType:             "Bearer",
+		AllowGetAccessRequest: false,
+		AllowedResponseTypes: []oauth2.ResponseType{
+			// oauth2.Code,
+			oauth2.Token,
+		},
+		AllowedGrantTypes: []oauth2.GrantType{
+			oauth2.ClientCredentials,
+		},
+	}
+	os.server = server.NewServer(config, manager)
+
+	// Setup extracting POSTed clientId/Secret
 	os.server.SetClientInfoHandler(server.ClientFormHandler)
 }
 
 func (os *oauthServer) handleToken(c *gin.Context) {
 
-	err := os.server.HandleTokenRequest(c.Writer, c.Request)
-	if err != nil {
+	if err := os.server.HandleTokenRequest(c.Writer, c.Request); err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
@@ -92,9 +100,12 @@ func (os *oauthServer) handleToken(c *gin.Context) {
 
 func (os *oauthServer) handeTestPath(c *gin.Context) {
 
-	ti, err := os.server.ValidationBearerToken(c.Request)
+	tokenInfo, err := os.server.ValidationBearerToken(c.Request)
+	if err != nil {
+		c.AbortWithError(http.StatusUnauthorized, err)
+		return
+	}
 
-	log.Printf("ti: %+v, err: %+v", ti, err)
-
-	c.JSON(http.StatusOK, ti)
+	// FIX ME we probably do not want to show all fields
+	c.JSON(http.StatusOK, tokenInfo)
 }

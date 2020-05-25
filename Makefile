@@ -28,7 +28,7 @@ oauthserver:
 	go build -o $(BIN)/oauthserver $(LDFLAGS) cmd/oauthserver/*.go
 
 
-docker-images: docker-dbadmin docker-envoyauth docker-envoycp docker-testbackend
+docker-images: docker-dbadmin docker-envoyauth docker-envoycp docker-testbackend docker-oauthserver
 
 docker-dbadmin:
 	 docker build -t gatekeeper/dbadmin:$(VERSION) . -f Dockerfile.dbadmin
