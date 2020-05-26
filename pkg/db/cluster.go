@@ -34,7 +34,7 @@ func (d *Database) GetClusters() ([]shared.Cluster, error) {
 // GetClusterByName retrieves a cluster from database
 func (d *Database) GetClusterByName(clusterName string) (shared.Cluster, error) {
 
-	query := "SELECT * FROM clusters WHERE key = ? LIMIT 1"
+	query := "SELECT * FROM clusters WHERE name = ? LIMIT 1"
 	clusters, err := d.runGetClusterQuery(query, clusterName)
 
 	if err != nil {
@@ -62,7 +62,7 @@ func (d *Database) runGetClusterQuery(query string, queryParameters ...interface
 	m := make(map[string]interface{})
 	for iter.MapScan(m) {
 		newCluster := shared.Cluster{
-			Name:           m["key"].(string),
+			Name:           m["name"].(string),
 			HostName:       m["host_name"].(string),
 			Port:           m["port"].(int),
 			CreatedAt:      m["created_at"].(int64),
@@ -92,7 +92,7 @@ func (d *Database) UpdateClusterByName(c *shared.Cluster) error {
 	c.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
 
 	if err := d.cassandraSession.Query(`INSERT INTO clusters (
-key,
+name,
 display_name,
 host_name,
 port,
@@ -126,6 +126,6 @@ func (d *Database) DeleteClusterByName(clusterToDelete string) error {
 		return err
 	}
 
-	query := "DELETE FROM clusters WHERE key = ?"
+	query := "DELETE FROM clusters WHERE name = ?"
 	return d.cassandraSession.Query(query, clusterToDelete).Exec()
 }
