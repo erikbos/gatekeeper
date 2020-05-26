@@ -91,9 +91,10 @@ func deletePerson(c *gin.Context) {
 		if item.ID == c.Param("id") {
 			deletePerson = people[index]
 			people = append(people[:index], people[index+1:]...)
+
+			c.IndentedJSON(http.StatusOK, deletePerson)
 			break
 		}
-		c.IndentedJSON(http.StatusOK, deletePerson)
 	}
 }
 

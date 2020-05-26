@@ -269,8 +269,3 @@ func (s *server) DeleteAPIProductByName(c *gin.Context) {
 	}
 	c.IndentedJSON(http.StatusOK, apiproduct)
 }
-
-// GeneratePrimaryKeyOfAPIProduct creates unique primary key for apiproduct row
-func generatePrimaryKeyOfAPIProduct(organization, name string) string {
-	return (fmt.Sprintf("%s@@@%s", organization, name))
-}

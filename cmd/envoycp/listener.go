@@ -272,6 +272,7 @@ func (s *server) buildExtAuthzFilterConfig() *anypb.Any {
 	if s.config.XDS.ExtAuthz.RequestBodySize > 0 {
 		extAuthz.WithRequestBody = s.extAuthzWithRequestBody()
 	}
+
 	extAuthzTypedConf, err := ptypes.MarshalAny(extAuthz)
 	if err != nil {
 		log.Panic(err)
