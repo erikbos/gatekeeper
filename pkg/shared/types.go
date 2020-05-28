@@ -72,7 +72,7 @@ type APIProductStatus struct {
 // APIProduct type contains everything about an API product
 type APIProduct struct {
 	Name             string               `json:"name"`
-	RouteSet         string               `json:"routeSet"`
+	RouteGroup       string               `json:"RouteGroup"`
 	Paths            []string             `json:"paths"`
 	Attributes       []AttributeKeyValues `json:"attributes"`
 	Policies         string               `json:"policies"`
@@ -97,7 +97,7 @@ type VirtualHost struct {
 	DisplayName      string               `json:"displayName"`
 	VirtualHosts     []string             `json:"virtualHosts"`
 	Port             int                  `json:"port"`
-	RouteSet         string               `json:"routeSet"`
+	RouteGroup       string               `json:"RouteGroup"`
 	Policies         string               `json:"policies"`
 	Attributes       []AttributeKeyValues `json:"attributes"`
 	OrganizationName string               `json:"organizationName"`
@@ -111,7 +111,7 @@ type VirtualHost struct {
 type Route struct {
 	Name           string               `json:"name"`
 	DisplayName    string               `json:"displayName"`
-	RouteSet       string               `json:"routeSet"`
+	RouteGroup     string               `json:"RouteGroup"`
 	Path           string               `json:"path"`
 	PathType       string               `json:"pathType"`
 	Cluster        string               `json:"cluster"`

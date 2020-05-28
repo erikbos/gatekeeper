@@ -63,7 +63,7 @@ func (d *Database) runGetRouteQuery(query string, queryParameters ...interface{}
 		newRoute := shared.Route{
 			Name:           m["name"].(string),
 			DisplayName:    m["display_name"].(string),
-			RouteSet:       m["route_set"].(string),
+			RouteGroup:     m["route_group"].(string),
 			Path:           m["path"].(string),
 			PathType:       m["path_type"].(string),
 			Cluster:        m["cluster"].(string),
@@ -95,7 +95,7 @@ func (d *Database) UpdateRouteByName(route *shared.Route) error {
 	if err := d.cassandraSession.Query(`INSERT INTO routes (
 name,
 display_name,
-route_set,
+route_group,
 path,
 path_type,
 cluster,
@@ -107,7 +107,7 @@ lastmodified_by) VALUES(?,?,?,?,?,?,?,?,?,?,?)`,
 
 		route.Name,
 		route.DisplayName,
-		route.RouteSet,
+		route.RouteGroup,
 		route.Path,
 		route.PathType,
 		route.Cluster,

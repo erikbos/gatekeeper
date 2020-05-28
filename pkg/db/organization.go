@@ -58,14 +58,20 @@ func (d *Database) runGetOrganizationQuery(query, queryParameter string) ([]shar
 	timer := prometheus.NewTimer(d.dbLookupHistogram)
 	defer timer.ObserveDuration()
 
-	var iterable *gocql.Iter
+	var iter *gocql.Iter
 	if queryParameter == "" {
-		iterable = d.cassandraSession.Query(query).Iter()
+		iter = d.cassandraSession.Query(query).Iter()
 	} else {
-		iterable = d.cassandraSession.Query(query, queryParameter).Iter()
+		iter = d.cassandraSession.Query(query, queryParameter).Iter()
 	}
+
+	if iter.NumRows() == 0 {
+		_ = iter.Close()
+		return []shared.Organization{}, nil
+	}
+
 	m := make(map[string]interface{})
-	for iterable.MapScan(m) {
+	for iter.MapScan(m) {
 		organizations = append(organizations, shared.Organization{
 			Attributes:     d.unmarshallJSONArrayOfAttributes(m["attributes"].(string)),
 			CreatedAt:      m["created_at"].(int64),
@@ -77,7 +83,7 @@ func (d *Database) runGetOrganizationQuery(query, queryParameter string) ([]shar
 		})
 		m = map[string]interface{}{}
 	}
-	if err := iterable.Close(); err != nil {
+	if err := iter.Close(); err != nil {
 		log.Error(err)
 		return []shared.Organization{}, err
 	}

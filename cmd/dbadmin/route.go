@@ -130,7 +130,7 @@ func (s *server) PostRoute(c *gin.Context) {
 
 	// Copy over the fields we allow to be updated
 	routeToUpdate.DisplayName = updateRequest.DisplayName
-	routeToUpdate.RouteSet = updateRequest.RouteSet
+	routeToUpdate.RouteGroup = updateRequest.RouteGroup
 	routeToUpdate.Path = updateRequest.Path
 	routeToUpdate.PathType = updateRequest.PathType
 	routeToUpdate.Cluster = updateRequest.Cluster

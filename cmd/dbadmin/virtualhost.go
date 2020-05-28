@@ -133,7 +133,7 @@ func (s *server) PostVirtualHost(c *gin.Context) {
 	virtualHostToUpdate.Port = updateRequest.Port
 	virtualHostToUpdate.DisplayName = updateRequest.DisplayName
 	virtualHostToUpdate.Attributes = updateRequest.Attributes
-	virtualHostToUpdate.RouteSet = updateRequest.RouteSet
+	virtualHostToUpdate.RouteGroup = updateRequest.RouteGroup
 	virtualHostToUpdate.Policies = updateRequest.Policies
 	virtualHostToUpdate.OrganizationName = updateRequest.OrganizationName
 

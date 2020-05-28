@@ -97,15 +97,15 @@ func (s *server) getVirtualHostPorts() map[int]bool {
 }
 
 // getVirtualHostPorts return unique set of ports from vhost configuration
-func (s *server) getVirtualHostsOfRouteSet(routeSetName string) []string {
-	var virtualHostsInRouteSet []string
+func (s *server) getVirtualHostsOfRouteGroup(RouteGroupName string) []string {
+	var virtualHostsInRouteGroup []string
 
 	for _, virtualhost := range s.virtualhosts {
-		if virtualhost.RouteSet == routeSetName {
-			virtualHostsInRouteSet = append(virtualHostsInRouteSet, virtualhost.VirtualHosts...)
+		if virtualhost.RouteGroup == RouteGroupName {
+			virtualHostsInRouteGroup = append(virtualHostsInRouteGroup, virtualhost.VirtualHosts...)
 		}
 	}
-	return virtualHostsInRouteSet
+	return virtualHostsInRouteGroup
 }
 
 func (s *server) buildEnvoyListenerConfig(port int) *api.Listener {
@@ -236,7 +236,7 @@ func (s *server) buildConnectionManager(httpFilters []*hcm.HttpFilter, v shared.
 		CodecType:        hcm.HttpConnectionManager_AUTO,
 		StatPrefix:       "ingress_http",
 		UseRemoteAddress: &wrappers.BoolValue{Value: true},
-		RouteSpecifier:   s.buildRouteSpecifier(v.RouteSet),
+		RouteSpecifier:   s.buildRouteSpecifier(v.RouteGroup),
 		HttpFilters:      httpFilters,
 		AccessLog:        buildAccessLog(s.config.XDS.Envoy.LogFilename, s.config.XDS.Envoy.LogFields),
 	}
@@ -301,19 +301,19 @@ func (s *server) buildGRPCService(timeout time.Duration) *core.GrpcService {
 	}
 }
 
-func (s *server) buildRouteSpecifier(routeSet string) *hcm.HttpConnectionManager_RouteConfig {
+func (s *server) buildRouteSpecifier(RouteGroup string) *hcm.HttpConnectionManager_RouteConfig {
 	return &hcm.HttpConnectionManager_RouteConfig{
-		RouteConfig: s.buildEnvoyVirtualHostRouteConfig(routeSet, s.routes),
+		RouteConfig: s.buildEnvoyVirtualHostRouteConfig(RouteGroup, s.routes),
 	}
 }
 
-// func buildRouteSpecifierRDS(routeSet string) *hcm.HttpConnectionManager_Rds {
+// func buildRouteSpecifierRDS(RouteGroup string) *hcm.HttpConnectionManager_Rds {
 // 	// FIXME
 // 	XdsCluster := "xds_cluster"
 
 // 	return &hcm.HttpConnectionManager_Rds{
 // 		Rds: &hcm.Rds{
-// 			RouteConfigName: routeSet,
+// 			RouteConfigName: RouteGroup,
 // 			ConfigSource: &core.ConfigSource{
 // 				ConfigSourceSpecifier: &core.ConfigSource_ApiConfigSource{
 // 					ApiConfigSource: &core.ApiConfigSource{

@@ -72,46 +72,46 @@ func (s *server) GetRouteCount() float64 {
 func (s *server) getEnvoyRouteConfig() ([]cache.Resource, error) {
 	var envoyRoutes []cache.Resource
 
-	RouteSetNames := s.getRouteSetNames(s.routes)
-	for routeSetName := range RouteSetNames {
-		log.Infof("Adding routeset %s", routeSetName)
-		envoyRoutes = append(envoyRoutes, s.buildEnvoyVirtualHostRouteConfig(routeSetName, s.routes))
+	RouteGroupNames := s.getRouteGroupNames(s.routes)
+	for RouteGroupName := range RouteGroupNames {
+		log.Infof("Adding RouteGroup %s", RouteGroupName)
+		envoyRoutes = append(envoyRoutes, s.buildEnvoyVirtualHostRouteConfig(RouteGroupName, s.routes))
 	}
 
 	return envoyRoutes, nil
 }
 
-// getVirtualHostPorts returns set of unique routeset names
-func (s *server) getRouteSetNames(vhosts []shared.Route) map[string]bool {
-	routeSetNames := map[string]bool{}
+// getVirtualHostPorts returns set of unique RouteGroup names
+func (s *server) getRouteGroupNames(vhosts []shared.Route) map[string]bool {
+	RouteGroupNames := map[string]bool{}
 	for _, routeEntry := range s.routes {
-		routeSetNames[routeEntry.RouteSet] = true
+		RouteGroupNames[routeEntry.RouteGroup] = true
 	}
-	return routeSetNames
+	return RouteGroupNames
 }
 
-// buildEnvoyVirtualHostRouteConfig builds vhost and route configuration of one routeset
-func (s *server) buildEnvoyVirtualHostRouteConfig(routeSet string,
+// buildEnvoyVirtualHostRouteConfig builds vhost and route configuration of one RouteGroup
+func (s *server) buildEnvoyVirtualHostRouteConfig(RouteGroup string,
 	routes []shared.Route) *api.RouteConfiguration {
 
 	return &api.RouteConfiguration{
-		Name: routeSet,
+		Name: RouteGroup,
 		VirtualHosts: []*route.VirtualHost{
 			{
-				Name:    routeSet,
-				Domains: s.getVirtualHostsOfRouteSet(routeSet),
-				Routes:  s.buildEnvoyRoutes(routeSet, routes),
+				Name:    RouteGroup,
+				Domains: s.getVirtualHostsOfRouteGroup(RouteGroup),
+				Routes:  s.buildEnvoyRoutes(RouteGroup, routes),
 			},
 		},
 	}
 }
 
-// buildEnvoyRoute returns all Envoy routes belong to one routeset
-func (s *server) buildEnvoyRoutes(routeSet string, routes []shared.Route) []*route.Route {
+// buildEnvoyRoute returns all Envoy routes belong to one RouteGroup
+func (s *server) buildEnvoyRoutes(RouteGroup string, routes []shared.Route) []*route.Route {
 	var envoyRoutes []*route.Route
 
 	for _, route := range routes {
-		if route.RouteSet == routeSet {
+		if route.RouteGroup == RouteGroup {
 			envoyRoutes = append(envoyRoutes, s.buildEnvoyRoute(route))
 		}
 	}

@@ -138,7 +138,7 @@ func (s *server) PostAPIProduct(c *gin.Context) {
 	// Copy over the fields we allow to be updated
 	apiproductToUpdate.DisplayName = updateRequest.DisplayName
 	apiproductToUpdate.Description = updateRequest.Description
-	apiproductToUpdate.RouteSet = updateRequest.RouteSet
+	apiproductToUpdate.RouteGroup = updateRequest.RouteGroup
 	apiproductToUpdate.Paths = updateRequest.Paths
 	apiproductToUpdate.Policies = updateRequest.Policies
 	apiproductToUpdate.Attributes = updateRequest.Attributes

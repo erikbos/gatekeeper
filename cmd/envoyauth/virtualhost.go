@@ -57,7 +57,7 @@ func (a *authorizationServer) buildVhostMap() map[string]string {
 
 	for _, virtualhost := range a.virtualhosts {
 		for _, host := range virtualhost.VirtualHosts {
-			m[host] = virtualhost.RouteSet
+			m[host] = virtualhost.RouteGroup
 		}
 	}
 
