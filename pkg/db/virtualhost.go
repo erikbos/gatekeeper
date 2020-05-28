@@ -104,7 +104,7 @@ virtual_hosts,
 port,
 route_set,
 policies,
-attributes
+attributes,
 organization_name,
 created_at,
 created_by,
