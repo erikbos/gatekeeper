@@ -166,6 +166,6 @@ func (d *Database) DeleteDeveloperByEmail(organizationName, developerEmail strin
 		return err
 	}
 
-	query := "DELETE FROM developers WHERE developer_app_id = ?"
+	query := "DELETE FROM developers WHERE app_id = ?"
 	return d.cassandraSession.Query(query, developer.DeveloperID).Exec()
 }

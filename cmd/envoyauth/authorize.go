@@ -31,7 +31,7 @@ type requestInfo struct {
 	vhost           *shared.VirtualHost
 	developer       shared.Developer
 	developerApp    shared.DeveloperApp
-	appCredential   shared.AppCredential
+	appCredential   shared.DeveloperAppKey
 	APIProduct      shared.APIProduct
 }
 

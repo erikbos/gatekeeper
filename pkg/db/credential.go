@@ -13,17 +13,17 @@ import (
 const appCredentialsMetricLabel = "credentials"
 
 // GetAppCredentialByKey returns details of a single apikey
-func (d *Database) GetAppCredentialByKey(organizationName, key string) (shared.AppCredential, error) {
+func (d *Database) GetAppCredentialByKey(organizationName, key string) (shared.DeveloperAppKey, error) {
 
 	query := "SELECT * FROM credentials WHERE consumer_key = ? AND organization_name = ? LIMIT 1"
 	appcredentials, err := d.runGetAppCredentialQuery(query, key, organizationName)
 	if err != nil {
-		return shared.AppCredential{}, err
+		return shared.DeveloperAppKey{}, err
 	}
 
 	if len(appcredentials) == 0 {
 		d.metricsQueryMiss(appCredentialsMetricLabel)
-		return shared.AppCredential{}, fmt.Errorf("Can not find apikey '%s'", key)
+		return shared.DeveloperAppKey{}, fmt.Errorf("Can not find apikey '%s'", key)
 	}
 
 	d.metricsQueryHit(appCredentialsMetricLabel)
@@ -31,12 +31,12 @@ func (d *Database) GetAppCredentialByKey(organizationName, key string) (shared.A
 }
 
 // GetAppCredentialByDeveloperAppID returns an array with apikey details of a developer app
-func (d *Database) GetAppCredentialByDeveloperAppID(developerAppID string) ([]shared.AppCredential, error) {
+func (d *Database) GetAppCredentialByDeveloperAppID(developerAppID string) ([]shared.DeveloperAppKey, error) {
 
-	query := "SELECT * FROM credentials WHERE developer_app_id = ?"
+	query := "SELECT * FROM credentials WHERE app_id = ?"
 	appcredentials, err := d.runGetAppCredentialQuery(query, developerAppID)
 	if err != nil {
-		return []shared.AppCredential{}, err
+		return []shared.DeveloperAppKey{}, err
 	}
 
 	if len(appcredentials) == 0 {
@@ -54,7 +54,7 @@ func (d *Database) GetAppCredentialCountByDeveloperAppID(developerAppID string) 
 
 	var AppCredentialCount int
 
-	query := "SELECT count(*) FROM credentials WHERE developer_app_id = ?"
+	query := "SELECT count(*) FROM credentials WHERE app_id = ?"
 	if err := d.cassandraSession.Query(query, developerAppID).Scan(&AppCredentialCount); err != nil {
 		d.metricsQueryMiss(appCredentialsMetricLabel)
 		return -1
@@ -65,9 +65,9 @@ func (d *Database) GetAppCredentialCountByDeveloperAppID(developerAppID string) 
 }
 
 // runAppCredentialQuery executes CQL query and returns resulset
-func (d *Database) runGetAppCredentialQuery(query string, queryParameters ...interface{}) ([]shared.AppCredential, error) {
+func (d *Database) runGetAppCredentialQuery(query string, queryParameters ...interface{}) ([]shared.DeveloperAppKey, error) {
 
-	var appcredentials []shared.AppCredential
+	var appcredentials []shared.DeveloperAppKey
 
 	timer := prometheus.NewTimer(d.dbLookupHistogram)
 	defer timer.ObserveDuration()
@@ -75,12 +75,12 @@ func (d *Database) runGetAppCredentialQuery(query string, queryParameters ...int
 	iterable := d.cassandraSession.Query(query, queryParameters...).Iter()
 	m := make(map[string]interface{})
 	for iterable.MapScan(m) {
-		appcredential := shared.AppCredential{
+		appcredential := shared.DeveloperAppKey{
 			ConsumerKey:      m["consumer_key"].(string),
 			ConsumerSecret:   m["consumer_secret"].(string),
 			ExpiresAt:        m["expires_at"].(int64),
 			IssuedAt:         m["issued_at"].(int64),
-			DeveloperAppID:   m["developer_app_id"].(string),
+			AppID:            m["app_id"].(string),
 			OrganizationName: m["organization_name"].(string),
 			Status:           m["status"].(string),
 		}
@@ -97,13 +97,13 @@ func (d *Database) runGetAppCredentialQuery(query string, queryParameters ...int
 	// In case query failed we return query error
 	if err := iterable.Close(); err != nil {
 		log.Error(err)
-		return []shared.AppCredential{}, err
+		return []shared.DeveloperAppKey{}, err
 	}
 	return appcredentials, nil
 }
 
 // UpdateAppCredentialByKey UPSERTs appcredentials in database
-func (d *Database) UpdateAppCredentialByKey(c *shared.AppCredential) error {
+func (d *Database) UpdateAppCredentialByKey(c *shared.DeveloperAppKey) error {
 
 	c.Attributes = shared.TidyAttributes(c.Attributes)
 
@@ -112,7 +112,7 @@ consumer_key,
 consumer_secret,
 api_products,
 attributes,
-developer_app_id,
+app_id,
 organization_name,
 status,
 issued_at,
@@ -122,7 +122,7 @@ expires_at) VALUES(?,?,?,?,?,?,?,?,?)`,
 		c.ConsumerSecret,
 		d.marshallArrayOfProductStatusesToJSON(c.APIProducts),
 		d.marshallArrayOfAttributesToJSON(c.Attributes),
-		c.DeveloperAppID,
+		c.AppID,
 		c.OrganizationName,
 		c.Status,
 		c.IssuedAt,

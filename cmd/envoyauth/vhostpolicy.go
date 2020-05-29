@@ -114,7 +114,7 @@ func (a *authorizationServer) getEntitlementDetails(organization string, request
 		return errors.New("Could not find apikey")
 	}
 
-	request.developerApp, err = a.db.GetDeveloperAppByID(organization, request.appCredential.DeveloperAppID)
+	request.developerApp, err = a.db.GetDeveloperAppByID(organization, request.appCredential.AppID)
 	if err != nil {
 		// FIX ME increase counter as every apikey should link to dev app (error state)
 		return errors.New("Could not find developer app of this apikey")
@@ -130,7 +130,7 @@ func (a *authorizationServer) getEntitlementDetails(organization string, request
 }
 
 // checkAppCredentialValidity checks devapp approval and expiry status
-func checkAppCredentialValidity(appcredential shared.AppCredential) error {
+func checkAppCredentialValidity(appcredential shared.DeveloperAppKey) error {
 
 	if appcredential.Status != "approved" {
 		// FIXME increase unapproved dev app counter (not an error state)
@@ -154,7 +154,7 @@ func checkAppCredentialValidity(appcredential shared.AppCredential) error {
 // - if not 403
 
 func (a *authorizationServer) IsRequestPathAllowed(organization, requestPath string,
-	appcredential shared.AppCredential) (shared.APIProduct, error) {
+	appcredential shared.DeveloperAppKey) (shared.APIProduct, error) {
 
 	var consumerKeyHasActiveProduct bool
 

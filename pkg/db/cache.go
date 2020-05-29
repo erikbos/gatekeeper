@@ -119,8 +119,8 @@ func CacheInit(myName string, size, cachettl, negativettl int) *Cache {
 }
 
 // GetAppCredentialCached retrieves entry from database (or cache if entry present)
-func (c *Cache) GetAppCredentialCached(d *Database, organization, key string) (shared.AppCredential, error) {
-	var appcredential shared.AppCredential
+func (c *Cache) GetAppCredentialCached(d *Database, organization, key string) (shared.DeveloperAppKey, error) {
+	var appcredential shared.DeveloperAppKey
 	var err error
 
 	timer := prometheus.NewTimer(c.dbCacheLookupHistogram)

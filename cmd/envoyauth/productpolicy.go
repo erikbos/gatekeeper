@@ -107,7 +107,7 @@ func policySendDeveloperAppName(request *requestInfo) (map[string]string, error)
 func policySendDeveloperAppID(request *requestInfo) (map[string]string, error) {
 
 	return map[string]string{
-			"x-developer-app-id": request.developerApp.DeveloperAppID,
+			"x-developer-app-id": request.developerApp.AppID,
 		},
 		nil
 }

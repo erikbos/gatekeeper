@@ -37,7 +37,7 @@ type Developer struct {
 
 // DeveloperApp contains everything about a Developer Application
 type DeveloperApp struct {
-	DeveloperAppID   string               `json:"developerAppId"`
+	AppID            string               `json:"appId"`
 	DeveloperID      string               `json:"developerId"`
 	OrganizationName string               `json:"organizationName"`
 	Status           string               `json:"status"`
@@ -50,15 +50,15 @@ type DeveloperApp struct {
 	LastmodifiedBy   string               `json:"lastmodifiedBy"`
 }
 
-// AppCredential contains an apikey entitlement
-type AppCredential struct {
+// DeveloperAppKey contains an apikey entitlement
+type DeveloperAppKey struct {
 	ConsumerKey      string               `json:"consumerKey"`
 	ConsumerSecret   string               `json:"consumerSecret"`
 	APIProducts      []APIProductStatus   `json:"apiProducts"`
 	Attributes       []AttributeKeyValues `json:"attributes"`
 	ExpiresAt        int64                `json:"expiresAt"`
 	IssuedAt         int64                `json:"issuesAt"`
-	DeveloperAppID   string               `json:"developerAppId"`
+	AppID            string               `json:"AppId"`
 	OrganizationName string               `json:"organizationName"`
 	Status           string               `json:"status"`
 }

@@ -140,7 +140,7 @@ func (s *server) PostCreateDeveloperApp(c *gin.Context) {
 		return
 	}
 
-	newDeveloperApp.DeveloperAppID = generateDeveloperAppID()
+	newDeveloperApp.AppID = generateAppID()
 	newDeveloperApp.DeveloperID = developer.DeveloperID
 	newDeveloperApp.OrganizationName = c.Param("organization")
 
@@ -319,7 +319,7 @@ func (s *server) DeleteDeveloperAppByName(c *gin.Context) {
 		return
 	}
 
-	AppCredentialCount := s.db.GetAppCredentialCountByDeveloperAppID(developerApp.DeveloperAppID)
+	AppCredentialCount := s.db.GetAppCredentialCountByDeveloperAppID(developerApp.AppID)
 	if AppCredentialCount == -1 {
 		returnJSONMessage(c, http.StatusInternalServerError,
 			fmt.Errorf("Could not retrieve number of api keys of developer app '%s'",
@@ -332,7 +332,7 @@ func (s *server) DeleteDeveloperAppByName(c *gin.Context) {
 				developerApp.Name, AppCredentialCount))
 		return
 	}
-	err = s.db.DeleteDeveloperAppByID(developerApp.OrganizationName, developerApp.DeveloperAppID)
+	err = s.db.DeleteDeveloperAppByID(developerApp.OrganizationName, developerApp.AppID)
 	if err != nil {
 		returnJSONMessage(c, http.StatusServiceUnavailable, err)
 		return
@@ -354,7 +354,7 @@ func (s *server) DeleteDeveloperAppByName(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, developerApp)
 }
 
-// generateDeveloperAppID creates unique primary key for developer app row
-func generateDeveloperAppID() string {
+// generateAppID creates unique primary key for developer app row
+func generateAppID() string {
 	return (uuid.New().String())
 }

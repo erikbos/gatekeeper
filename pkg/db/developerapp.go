@@ -53,7 +53,7 @@ func (d *Database) GetDeveloperAppByName(organization, developerAppName string) 
 // GetDeveloperAppByID returns details of a developer app
 func (d *Database) GetDeveloperAppByID(organization, developerAppID string) (shared.DeveloperApp, error) {
 
-	query := "SELECT * FROM developer_apps WHERE developer_app_id = ? LIMIT 1"
+	query := "SELECT * FROM developer_apps WHERE app_id = ? LIMIT 1"
 	developerapps, err := d.runGetDeveloperAppQuery(query, developerAppID)
 	if err != nil {
 		return shared.DeveloperApp{}, err
@@ -94,7 +94,7 @@ func (d *Database) runGetDeveloperAppQuery(query string, queryParameters ...inte
 	m := make(map[string]interface{})
 	for iterable.MapScan(m) {
 		developerapps = append(developerapps, shared.DeveloperApp{
-			DeveloperAppID:   m["developer_app_id"].(string),
+			AppID:            m["app_id"].(string),
 			Attributes:       d.unmarshallJSONArrayOfAttributes(m["attributes"].(string)),
 			CreatedAt:        m["created_at"].(int64),
 			CreatedBy:        m["created_by"].(string),
@@ -117,13 +117,13 @@ func (d *Database) runGetDeveloperAppQuery(query string, queryParameters ...inte
 }
 
 // UpdateDeveloperAppByName UPSERTs a developer app in database
-func (d *Database) UpdateDeveloperAppByName(devapp *shared.DeveloperApp) error {
+func (d *Database) UpdateDeveloperAppByName(app *shared.DeveloperApp) error {
 
-	devapp.Attributes = shared.TidyAttributes(devapp.Attributes)
-	devapp.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
+	app.Attributes = shared.TidyAttributes(app.Attributes)
+	app.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
 
 	if err := d.cassandraSession.Query(`INSERT INTO developer_apps (
-developer_app_id,
+app_id,
 developer_id,
 name,
 display_name,
@@ -135,20 +135,20 @@ created_by,
 lastmodified_at,
 lastmodified_by) VALUES(?,?,?,?,?,?,?,?,?,?,?)`,
 
-		devapp.DeveloperAppID,
-		devapp.DeveloperID,
-		devapp.Name,
-		devapp.DisplayName,
-		d.marshallArrayOfAttributesToJSON(devapp.Attributes),
-		devapp.OrganizationName,
-		devapp.Status,
-		devapp.CreatedAt,
-		devapp.CreatedBy,
-		devapp.LastmodifiedAt,
-		devapp.LastmodifiedBy).Exec(); err != nil {
+		app.AppID,
+		app.DeveloperID,
+		app.Name,
+		app.DisplayName,
+		d.marshallArrayOfAttributesToJSON(app.Attributes),
+		app.OrganizationName,
+		app.Status,
+		app.CreatedAt,
+		app.CreatedBy,
+		app.LastmodifiedAt,
+		app.LastmodifiedBy).Exec(); err != nil {
 
 		return fmt.Errorf("Cannot update developer app '%s' (%v)",
-			devapp.DeveloperAppID, err)
+			app.AppID, err)
 	}
 	return nil
 }
@@ -161,6 +161,6 @@ func (d *Database) DeleteDeveloperAppByID(organizationName, developerAppID strin
 		return err
 	}
 
-	query := "DELETE FROM developer_apps WHERE developer_app_id = ?"
+	query := "DELETE FROM developer_apps WHERE app_id = ?"
 	return d.cassandraSession.Query(query, developerAppID).Exec()
 }

@@ -33,7 +33,7 @@ func (s *server) GetDeveloperAppKeys(c *gin.Context) {
 		return
 	}
 
-	AppCredentials, err := s.db.GetAppCredentialByDeveloperAppID(developerApp.DeveloperAppID)
+	AppCredentials, err := s.db.GetAppCredentialByDeveloperAppID(developerApp.AppID)
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -75,15 +75,15 @@ func (s *server) PostCreateDeveloperAppKey(c *gin.Context) {
 		return
 	}
 
-	newAppCredential := shared.AppCredential{
+	newAppCredential := shared.DeveloperAppKey{
 		ExpiresAt:        -1,
 		IssuedAt:         shared.GetCurrentTimeMilliseconds(),
-		DeveloperAppID:   developerApp.DeveloperAppID,
+		AppID:            developerApp.AppID,
 		OrganizationName: developerApp.OrganizationName,
 		Status:           "approved",
 	}
 
-	var receivedCredential shared.AppCredential
+	var receivedCredential shared.DeveloperAppKey
 	err = c.ShouldBindJSON(&receivedCredential)
 
 	if err == nil && receivedCredential.ConsumerKey != "" {
@@ -104,7 +104,7 @@ func (s *server) PostCreateDeveloperAppKey(c *gin.Context) {
 // PostUpdateDeveloperAppKeyByKey creates key for developerapp
 func (s *server) PostUpdateDeveloperAppKeyByKey(c *gin.Context) {
 
-	var receivedAppCredential shared.AppCredential
+	var receivedAppCredential shared.DeveloperAppKey
 	if err := c.ShouldBindJSON(&receivedAppCredential); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
