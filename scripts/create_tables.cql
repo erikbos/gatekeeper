@@ -66,6 +66,17 @@ CREATE TABLE IF NOT EXISTS oauth_access_token (
 CREATE INDEX ON oauth_access_token (refresh);
 CREATE INDEX ON oauth_access_token (code);
 
+CREATE TABLE IF NOT EXISTS organizations (
+    attributes text,
+    created_at bigint,
+    created_by text,
+    display_name text,
+    lastmodified_at bigint,
+    lastmodified_by text,
+    name text,
+    PRIMARY KEY (name)
+);
+
 CREATE TABLE IF NOT EXISTS developers (
     apps text,
     attributes text,
@@ -101,6 +112,7 @@ CREATE TABLE IF NOT EXISTS developer_apps (
     lastmodified_at bigint,
     lastmodified_by text,
     name text,
+    organization_name text,
     status text,
     PRIMARY KEY (app_id)
 );
@@ -108,6 +120,7 @@ CREATE TABLE IF NOT EXISTS developer_apps (
 CREATE INDEX ON developer_apps (app_id);
 CREATE INDEX ON developer_apps (name);
 CREATE INDEX ON developer_apps (developer_id);
+CREATE INDEX ON developer_apps (organization_name);
 CREATE INDEX ON developer_apps (status);
 
 CREATE TABLE IF NOT EXISTS credentials (

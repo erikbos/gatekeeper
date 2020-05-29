@@ -15,7 +15,7 @@ const appCredentialsMetricLabel = "credentials"
 // GetAppCredentialByKey returns details of a single apikey
 func (d *Database) GetAppCredentialByKey(organizationName, key string) (shared.DeveloperAppKey, error) {
 
-	query := "SELECT * FROM credentials WHERE consumer_key = ? AND organization_name = ? LIMIT 1"
+	query := "SELECT * FROM credentials WHERE consumer_key = ? AND organization_name = ? LIMIT 1 ALLOW FILTERING"
 	appcredentials, err := d.runGetAppCredentialQuery(query, key, organizationName)
 	if err != nil {
 		return shared.DeveloperAppKey{}, err
