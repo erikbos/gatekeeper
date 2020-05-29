@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	defaultConfigFilename  = "/config/oauthserver-config.yaml"
+	defaultConfigFilename  = "oauthserver-config.yaml"
 	defaultLogLevel        = "info"
 	defaultWebAdminListen  = "0.0.0.0:1000"
 	defaultWebAdminLogFile = "oauthserver-access.log"
