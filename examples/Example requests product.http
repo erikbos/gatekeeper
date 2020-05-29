@@ -1,0 +1,53 @@
+# Example REST calls for apiproduct
+
+
+### Get all apiproducts
+GET http://{{hostname}}/v1/organizations/petstore/apiproducts
+
+
+### Get one apiproduct
+GET http://{{hostname}}/v1/organizations/petstore/apiproducts/people
+
+
+### Create a new api product
+POST http://{{hostname}}/v1/organizations/petstore/apiproducts
+content-type: application/json
+
+{
+    "name": "people",
+    "displayName": "People Inc",
+    "routeSet": "routes_443",
+    "paths": [
+        "/people/*"
+    ]
+}
+
+
+### Update an apiproduct
+POST http://{{hostname}}/v1/organizations/petstore/apiproducts/people
+content-type: application/json
+
+{
+    "name": "people",
+    "displayName": "People Inc",
+    "routeSet": "routes_443",
+    "paths": [
+        "/people",
+        "/people/1",
+        "/people/*"],
+    "attributes": [
+    {
+        "name": "people_quotaPerSecond",
+        "value": "42"
+    },
+    {
+        "name": "OpeningHours",
+        "value": "9-5"
+    }
+    ],
+    "policies": "burp,checkIPAccessList,checkHostHeader,qps,sendAPIKey,sendDeveloperEmail,sendDeveloperID,sendDeveloperAppID"
+}
+
+
+###
+DELETE http://{{hostname}}/v1/organizations/petstore/apiproducts/people

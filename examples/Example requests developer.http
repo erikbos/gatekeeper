@@ -1,0 +1,79 @@
+# Example REST calls for developer
+
+
+### Get all developers
+GET http://{{hostname}}/v1/organizations/petstore/developers
+
+
+### Get developer
+GET http://{{hostname}}/v1/organizations/petstore/developers/john@example.com
+
+
+### Create a new developer
+POST http://{{hostname}}/v1/organizations/petstore/developers
+content-type: application/json
+
+{
+    "email": "john@example.com",
+    "firstName": "John",
+    "lastName": "Smith",
+    "userName": "john"
+}
+
+### Update an existing developer
+POST http://{{hostname}}/v1/organizations/petstore/developers/john@example.com
+content-type: application/json
+
+{
+    "email": "john@example.com",
+    "firstName": "John",
+    "lastName": "Smith",
+    "userName": "john",
+        "attributes": [
+    {
+        "name": "Shoesize",
+        "value": "42"
+    },
+    {
+        "name": "CustomerGroup",
+        "value": "VIP"
+    }
+    ]
+}
+
+### Update attributes of developer
+POST http://{{hostname}}/v1/organizations/petstore/developers/john@example.com/attributes
+content-type: application/json
+
+{
+    "attribute": [
+    {
+        "name": "Shoesize",
+        "value": "42"
+    },
+    {
+        "name": "CustomerGroup",
+        "value": "VIP"
+    }
+    ]
+}
+
+
+### Retrieve attributes of developer
+GET http://{{hostname}}/v1/organizations/petstore/developers/john@example.com/attributes
+
+
+
+### Retrieve one named attribute of developer
+GET http://{{hostname}}/v1/organizations/petstore/developers/john@example.com/attributes/Shoesize
+
+
+### Update one attribute of developer
+POST http://{{hostname}}/v1/organizations/petstore/developers/john@example.com/attributes/Shoesize
+content-type: application/json
+
+{"value":"43"}
+
+
+### Delete developer
+DELETE http://{{hostname}}/v1/organizations/petstore/developers/john@example.com

@@ -1,0 +1,176 @@
+# Example REST calls for route
+
+
+GET http://{{hostname}}/v1/routes
+
+###
+POST http://{{hostname}}/v1/routes HTTP/1.1
+content-type: application/json
+
+{
+    "name": "default80",
+    "displayName": "Default route",
+    "routeGroup": "routes_80",
+    "path": "/",
+    "pathType": "path",
+    "cluster": "doesnotexist"
+}
+
+###
+POST http://{{hostname}}/v1/routes/default80 HTTP/1.1
+content-type: application/json
+
+{
+    "name": "default80",
+    "displayName": "Default HTTP route",
+    "routeGroup": "routes_80",
+    "path": "/",
+    "pathType": "path",
+    "cluster": "none",
+    "attributes": [
+    {
+        "name": "DirectResponseStatusCode",
+        "value": "200"
+    },
+    {
+        "name": "DirectResponseBody",
+        "value": "We do not support plain HTTP anymore, please use HTTPS"
+    }
+    ]
+}
+
+###
+POST http://{{hostname}}/v1/routes HTTP/1.1
+content-type: application/json
+
+{
+    "name": "people",
+    "displayName": "Default people",
+    "routeGroup": "routes_443",
+    "path": "/people",
+    "pathType": "prefix",
+    "cluster": "people"
+}
+
+
+###
+POST http://{{hostname}}/v1/routes/people HTTP/1.1
+content-type: application/json
+
+{
+    "name": "people",
+    "displayName": "Default people",
+    "routeGroup": "routes_443",
+    "path": "/people",
+    "pathType": "prefix",
+    "cluster": "people",
+    "attributes": [
+    {
+        "name": "CORSAllowMethods",
+        "value": "GET,POST,DELETE,OPTIONS"
+    },
+    {
+        "name": "CORSAllowHeaders",
+        "value": "User-Agent-X"
+    },
+    {
+        "name": "CORSExposeHeaders",
+        "value": "Shoesize"
+    },
+    {
+        "name": "CORSMaxAge",
+        "value": "3600"
+    },
+    {
+        "name": "CORSAllowCredentials",
+        "value": "true"
+    },
+    {
+        "name": "BasicAuth",
+        "value": "erik:s3cr3t"
+    },
+    {
+        "name": "HostHeader",
+        "value": "www.example.com"
+    },
+    {
+        "name": "NumRetries",
+        "value": "3"
+    },
+    {
+        "name": "RetryOn",
+        "value": "connect-failure,refused-stream,unavailable,cancelled,retriable-status-codes"
+    },
+    {
+        "name": "PerTryTimeout",
+        "value": "112ms"
+    },
+    {
+        "name": "RetryOnStatusCodes",
+        "value": "503,599"
+    }
+    ]
+}
+
+###
+
+POST http://{{hostname}}/v1/routes/route_403_test HTTP/1.1
+content-type: application/json
+
+{
+    "name": "route_403_test",
+    "displayName": "Default route",
+    "routeGroup": "routes_443",
+    "path": "/403",
+    "pathType": "prefix",
+    "cluster": "",
+    "attributes": [
+    {
+        "name": "DirectResponseStatusCode",
+        "value": "403"
+    },
+    {
+        "name": "DirectResponseBody",
+        "value": "Forbidden"
+    }
+    ],
+    "createdAt": 1588538062087,
+    "createdBy": "rest-api@test",
+    "lastmodifiedAt": 1588538062087,
+    "lastmodifiedBy": "rest-api@test"
+}
+
+###
+
+POST http://{{hostname}}/v1/routes/route_404_test HTTP/1.1
+content-type: application/json
+
+{
+    "name": "route_404_test",
+    "displayName": "Default route",
+    "routeGroup": "routes_443",
+    "path": "/4.4",
+    "pathType": "regexp",
+    "attributes": [
+    {
+        "name": "DirectResponseStatusCode",
+        "value": "404"
+    },
+    {
+        "name": "DirectResponseBody",
+        "value": "Niet gevonden!"
+    }
+    ],
+}
+
+###
+DELETE http://{{hostname}}/v1/routes/default80 HTTP/1.1
+
+###
+DELETE http://{{hostname}}/v1/routes/people HTTP/1.1
+
+###
+DELETE http://{{hostname}}/v1/routes/route_403_test HTTP/1.1
+
+###
+DELETE http://{{hostname}}/v1/routes/route_404_test HTTP/1.1

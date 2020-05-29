@@ -1,0 +1,41 @@
+# Example REST calls for organization
+
+
+### Get all organizations
+GET http://{{hostname}}/v1/organizations
+
+
+### Create a new organization
+POST http://{{hostname}}/v1/organizations
+content-type: application/json
+
+{
+    "name": "petstore",
+    "displayName": "Pet Store Inc"
+}
+
+### Update an existing organization
+POST http://{{hostname}}/v1/organizations/petstore
+content-type: application/json
+
+{
+    "name": "petstore",
+    "displayName": "Pet Store Inc",
+    "attributes": [
+        {
+            "name": "CustomerGroup",
+            "value": "42"
+        },
+        {
+            "name":"Location",
+            "value":"New York"
+        },
+        {
+            "name":"Openinghours",
+            "value":"9-5"
+        }
+    ]
+}
+
+### Deletes an organization
+DELETE http://{{hostname}}/v1/organizations/petstore

@@ -1,0 +1,53 @@
+# Example REST calls for developer apps
+
+
+### Retrieve all developer apps of a developer
+GET http://{{hostname}}/v1/organizations/petstore/developers/john@example.com/apps
+
+
+### Retrieve one developer app
+GET http://{{hostname}}/v1/organizations/petstore/developers/john@example.com/apps/teleporter
+
+
+### Create developer app
+POST http://{{hostname}}/v1/organizations/petstore/developers/john@example.com/apps
+content-type: application/json
+
+{
+  "name": "teleporter",
+  "displayName": "Teleportrrrrr"
+}
+
+
+### Update developer app with full details
+POST http://{{hostname}}/v1/organizations/petstore/developers/john@example.com/apps/teleporter
+content-type: application/json
+
+{
+  "displayName": "Teleportrrrrr",
+  "name": "teleporter",
+  "organizationName": "petstore",
+  "status": "active",
+  "attributes": [
+    {
+        "name": "people_quotaPerSecond",
+        "value": "20"
+    },
+    {
+      "name": "IPAccessList",
+      "value": "10.0.0.0/8,192.168.178.0/24"
+    },
+    {
+      "name": "HostWhiteList",
+      "value": "example.org,*example.com"
+    }
+  ]
+}
+
+
+### Retrieve attributes of developer apps
+GET http://{{hostname}}/v1/organizations/petstore/developers/john@example.com/apps/teleporter/attributes
+
+
+### Delete a developer application
+DELETE http://{{hostname}}/v1/organizations/petstore/developers/john@example.com/apps/teleporter

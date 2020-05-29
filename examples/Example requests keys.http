@@ -1,0 +1,48 @@
+# Example REST calls for api keys
+
+
+### Get all keys of developer app
+GET http://{{hostname}}/v1/organizations/petstore/developers/john@example.com/apps/teleporter/keys
+
+
+### Create new apikey for developer app
+POST http://{{hostname}}/v1/organizations/petstore/developers/john@example.com/apps/teleporter/keys
+content-type: application/json
+
+
+### Create a new apikey for developer app with specific consumer key
+POST http://{{hostname}}/v1/organizations/petstore/developers/john@example.com/apps/teleporter/keys
+content-type: application/json
+
+{
+    "consumerKey": "s3cr3t"
+}
+
+
+### Retrieve details of an apikey
+GET http://{{hostname}}/v1/organizations/petstore/developers/john@example.com/apps/teleporter/keys/4DrmtHuaA9ywu4rGTr2C0CFcgr1iLPbu
+
+
+### Update an apikey
+POST http://{{hostname}}/v1/organizations/petstore/developers/john@example.com/apps/teleporter/keys/4DrmtHuaA9ywu4rGTr2C0CFcgr1iLPbu
+content-type: application/json
+
+{
+    "consumerKey": "4DrmtHuaA9ywu4rGTr2C0CFcgr1iLPbu",
+    "apiProducts" : [
+        {
+            "apiproduct" : "people",
+            "status" : "approved"
+        }, {
+            "apiproduct" : "prem1iumfish",
+            "status" : "approved"
+        }
+    ],
+    "attributes": [],
+    "consumerSecret": "4SOMItkaLErzH4n2",
+    "status": "approved"
+}
+
+
+### Delete an apikey
+DELETE http://{{hostname}}/v1/organizations/petstore/developers/john@example.com/apps/teleporter/keys/4DrmtHuaA9ywu4rGTr2C0CFcgr1iLPbu

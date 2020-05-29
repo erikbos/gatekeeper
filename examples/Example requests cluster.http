@@ -1,0 +1,190 @@
+# Example REST calls for cluster
+
+
+### Get all clusters
+GET http://{{hostname}}/v1/clusters
+
+
+### Create a new cluster
+POST http://{{hostname}}/v1/clusters HTTP/1.1
+content-type: application/json
+
+{
+    "name": "people",
+    "displayName": "People API",
+    "hostName": "127.0.0.1",
+    "port": 8000,
+    "attributes": [
+        {
+        "name": "ConnectTimeout",
+        "value": "7s"
+    },
+    {
+        "name": "IdleTimeout",
+        "value": "4s"
+    }
+    ]
+}
+
+
+### Update an existing cluster 
+POST http://{{hostname}}/v1/clusters/people HTTP/1.1
+content-type: application/json
+
+{
+    "name": "people",
+    "displayName": "People API",
+    "hostName": "127.0.0.1",
+    "port": 8000,
+    "attributes": [
+    {
+        "name": "TLSEnabled",
+        "value": "true"
+    },
+    {
+        "name": "TLSMinimumVersion",
+        "value": "TLSv12"
+    },
+    {
+        "name": "TLSCipherSuites",
+        "value": "[ECDHE-ECDSA-AES128-GCM-SHA256|ECDHE-ECDSA-CHACHA20-POLY1305],ECDHE-ECDSA-AES256-GCM-SHA384"
+    },
+    {
+        "name": "HTTPProtocol",
+        "value": "HTTP/2"
+    },
+    {
+        "name": "SNIHostName",
+        "value": "www.example.com"
+    },
+    {
+        "name": "HealthCheckProtocol",
+        "value": "HTTP"
+    },
+    {
+        "name": "MaxConnections",
+        "value": "700"
+    },
+    {
+        "name": "HealthCheckPath",
+        "value": "/people/1"
+    },
+    {
+        "name": "HealthCheckInterval",
+        "value": "2s"
+    },
+    {
+        "name": "HealthCheckTimeout",
+        "value": "1s"
+    },
+    {
+        "name": "HealthCheckLogFile",
+        "value": "/tmp/healthcheck.log"
+    },
+    {
+        "name": "DNSRefreshRate",
+        "value": "5s"
+    },
+    {
+        "name": "DNSResolvers",
+        "value": "8.8.8.8,1.1.1.1"
+    }
+    ]
+}
+
+
+### Get attribute of cluster
+GET http://{{hostname}}/v1/clusters/people/attributes/HealthCheckPath HTTP/1.1
+
+
+### Delete attribute of cluster
+DELETE http://{{hostname}}/v1/clusters/people/attributes/DNSRefreshRate
+
+
+### Delete a cluster
+DELETE http://{{hostname}}/v1/clusters/people
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+###
+POST http://51.105.96.150/v1/clusters/people HTTP/1.1
+content-type: application/json
+
+{
+    "name": "people",
+    "displayName": "People API - TLS",
+    "hostName": "testbackend.gatekeeper",
+    "port": 8000,
+    "attributes": [
+    {
+        "name": "TLSEnabled",
+        "value": "true"
+    },
+    {
+        "name": "TLSMinimumVersion",
+        "value": "TLSv12"
+    },
+    {
+        "name": "TLSCipherSuites2",
+        "value": "[ECDHE-ECDSA-AES128-GCM-SHA256|ECDHE-ECDSA-CHACHA20-POLY1305],ECDHE-ECDSA-AES256-GCM-SHA384"
+    },
+    {
+        "name": "HTTPProtocol",
+        "value": "HTTP/2"
+    },
+    {
+        "name": "SNIHostName",
+        "value": "www.people.nl"
+    },
+    {
+        "name": "HealthCheckProtocol",
+        "value": "HTTP"
+    },
+    {
+        "name": "MaxConnections",
+        "value": "700"
+    },
+    {
+        "name": "HealthCheckPath",
+        "value": "/people/1"
+    },
+    {
+        "name": "HealthCheckInterval",
+        "value": "2s"
+    },
+    {
+        "name": "HealthCheckTimeout",
+        "value": "1s"
+    },
+    {
+        "name": "HealthCheckLogFile",
+        "value": "/tmp/healthcheck.log"
+    },
+    {
+        "name": "DNSRefreshRate",
+        "value": "7s"
+    },
+    {
+        "name": "DNSResolvers",
+        "value": "194.109.6.66,194.109.9.99"
+    }
+    ]
+}
