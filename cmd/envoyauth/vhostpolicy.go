@@ -38,7 +38,7 @@ func (a *authorizationServer) checkAPIKey(request *requestInfo) (map[string]stri
 		return nil, err
 	}
 
-	err = a.CheckProductEntitlement("petstore", request)
+	err = a.CheckProductEntitlement(request.vhost.OrganizationName, request)
 	if err != nil {
 		log.Debugf("CheckProductEntitlement() not allowed '%s' (%s)", request.URL.Path, err.Error())
 		a.increaseCounterApikeyNotfound(request)
@@ -87,7 +87,7 @@ func (a *authorizationServer) geoIPLookup(request *requestInfo) (map[string]stri
 
 func (a *authorizationServer) CheckProductEntitlement(organization string, request *requestInfo) error {
 
-	err := a.getEntitlementDetails(organization, request)
+	err := a.getEntitlementDetails(request)
 	if err != nil {
 		return err
 	}
@@ -105,16 +105,16 @@ func (a *authorizationServer) CheckProductEntitlement(organization string, reque
 }
 
 // getEntitlementDetails populates apikey, developer and developerapp details
-func (a *authorizationServer) getEntitlementDetails(organization string, request *requestInfo) error {
+func (a *authorizationServer) getEntitlementDetails(request *requestInfo) error {
 	var err error
 
-	request.appCredential, err = a.db.GetAppCredentialByKey(organization, request.apikey)
+	request.appCredential, err = a.db.GetAppCredentialByKey(request.vhost.OrganizationName, request.apikey)
 	if err != nil {
 		// FIX ME increase unknown apikey counter (not an error state)
 		return errors.New("Could not find apikey")
 	}
 
-	request.developerApp, err = a.db.GetDeveloperAppByID(organization, request.appCredential.AppID)
+	request.developerApp, err = a.db.GetDeveloperAppByID(request.vhost.OrganizationName, request.appCredential.AppID)
 	if err != nil {
 		// FIX ME increase counter as every apikey should link to dev app (error state)
 		return errors.New("Could not find developer app of this apikey")
@@ -164,35 +164,29 @@ func checkDevAndKeyValidity(request *requestInfo) error {
 func (a *authorizationServer) IsRequestPathAllowed(organization, requestPath string,
 	appcredential shared.DeveloperAppKey) (shared.APIProduct, error) {
 
-	var consumerKeyHasActiveProduct bool
+	// Does this apikey have any products assigned?
+	if len(appcredential.APIProducts) == 0 {
+		return shared.APIProduct{}, errors.New("No active products")
+	}
 
 	// Iterate over this key's apiproducts
 	for _, apiproduct := range appcredential.APIProducts {
 		if apiproduct.Status == "approved" {
-
-			// Remember that this key has at least one active product
-			// so we can differentiate between no products vs not allowed product error later
-			consumerKeyHasActiveProduct = true
-
-			// Retrieve details of each api product embedded in key
-			apiproduct, err := a.db.GetAPIProductByName(organization, apiproduct.Apiproduct)
+			apiproductDetails, err := a.db.GetAPIProductByName(organization, apiproduct.Apiproduct)
 			if err != nil {
-				// FIXME increase unknown product in apikey counter (not an error state)
+				// apikey has non existing product in it:
+				// FIXME increase "unknown product in apikey" counter (not an error state)
 			} else {
-				// Iterate over apiresource(paths) of apiproduct and try to match
-				// request's path with each of them
-				for _, productPath := range apiproduct.Paths {
+				// Iterate over all paths of apiproduct and try to match with path of request
+				for _, productPath := range apiproductDetails.Paths {
 					// log.Debugf("IsRequestPathAllowed() Matching path %s in %s", requestPath, productPath)
 					if ok, _ := doublestar.Match(productPath, requestPath); ok {
 						// log.Debugf("IsRequestPathAllowed: match!")
-						return apiproduct, nil
+						return apiproductDetails, nil
 					}
 				}
 			}
 		}
 	}
-	if consumerKeyHasActiveProduct {
-		return shared.APIProduct{}, errors.New("No product active for requested path")
-	}
-	return shared.APIProduct{}, errors.New("No active products")
+	return shared.APIProduct{}, errors.New("No product active for requested path")
 }
