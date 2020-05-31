@@ -111,6 +111,7 @@ func (s *server) PostCreateDeveloper(c *gin.Context) {
 	newDeveloper.Apps = nil
 	// starts active
 	newDeveloper.Status = "active"
+	newDeveloper.SuspendedTill = -1
 	newDeveloper.CreatedBy = s.whoAmI()
 	newDeveloper.CreatedAt = shared.GetCurrentTimeMilliseconds()
 	newDeveloper.LastmodifiedBy = s.whoAmI()

@@ -31,6 +31,7 @@ type Developer struct {
 	LastName         string               `json:"lastName" binding:"required"`
 	CreatedAt        int64                `json:"createdAt"`
 	CreatedBy        string               `json:"createdBy"`
+	SuspendedTill    int64                `json:"suspendedTill"`
 	LastmodifiedAt   int64                `json:"lastmodifiedAt"`
 	LastmodifiedBy   string               `json:"lastmodifiedBy"`
 }

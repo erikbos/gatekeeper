@@ -92,7 +92,7 @@ func (a *authorizationServer) CheckProductEntitlement(organization string, reque
 		return err
 	}
 
-	if err = checkAppCredentialValidity(request.appCredential); err != nil {
+	if err = checkDevAndKeyValidity(request); err != nil {
 		return err
 	}
 
@@ -129,16 +129,24 @@ func (a *authorizationServer) getEntitlementDetails(organization string, request
 	return nil
 }
 
-// checkAppCredentialValidity checks devapp approval and expiry status
-func checkAppCredentialValidity(appcredential shared.DeveloperAppKey) error {
+// checkDevAndKeyValidity checks devapp approval and expiry status
+func checkDevAndKeyValidity(request *requestInfo) error {
 
-	if appcredential.Status != "approved" {
+	now := shared.GetCurrentTimeMilliseconds()
+
+	if request.developer.SuspendedTill != -1 &&
+		now < request.developer.SuspendedTill {
+
+		return errors.New("Developer suspended")
+	}
+
+	if request.appCredential.Status != "approved" {
 		// FIXME increase unapproved dev app counter (not an error state)
 		return errors.New("Unapproved apikey")
 	}
 
-	if appcredential.ExpiresAt != -1 {
-		if shared.GetCurrentTimeMilliseconds() > appcredential.ExpiresAt {
+	if request.appCredential.ExpiresAt != -1 {
+		if now > request.appCredential.ExpiresAt {
 			// FIXME increase expired dev app credentials counter (not an error state))
 			return errors.New("Expired apikey")
 		}
