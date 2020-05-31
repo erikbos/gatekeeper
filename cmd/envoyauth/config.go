@@ -24,12 +24,8 @@ type APIAuthConfig struct {
 	WebAdmin       webAdminConfig    `yaml:"webadmin"`
 	AuthGRPCListen string            `yaml:"authgrpclisten"`
 	Database       db.DatabaseConfig `yaml:"database"`
-	Cache          struct {
-		Size        int `yaml:"size"`
-		TTL         int `yaml:"ttl"`
-		NegativeTTL int `yaml:"negativettl"`
-	} `yaml:"cache"`
-	Geoip struct {
+	Cache          CacheConfig       `yaml:"cache"`
+	Geoip          struct {
 		Filename string `yaml:"filename"`
 	} `yaml:"geoip"`
 }

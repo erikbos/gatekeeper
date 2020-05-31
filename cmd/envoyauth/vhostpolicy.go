@@ -113,18 +113,21 @@ func (a *authorizationServer) getEntitlementDetails(request *requestInfo) error 
 		// FIX ME increase unknown apikey counter (not an error state)
 		return errors.New("Could not find apikey")
 	}
+	a.cache.StoreDeveloperAppKey(&request.appCredential)
 
 	request.developerApp, err = a.db.GetDeveloperAppByID(request.vhost.OrganizationName, request.appCredential.AppID)
 	if err != nil {
 		// FIX ME increase counter as every apikey should link to dev app (error state)
 		return errors.New("Could not find developer app of this apikey")
 	}
+	a.cache.StoreDeveloperApp(&request.developerApp)
 
 	request.developer, err = a.db.GetDeveloperByID(request.developerApp.DeveloperID)
 	if err != nil {
 		// FIX ME increase counter as every devapp should link to developer (error state)
 		return errors.New("Could not find developer of this apikey")
 	}
+	a.cache.StoreDeveloper(&request.developer)
 
 	return nil
 }

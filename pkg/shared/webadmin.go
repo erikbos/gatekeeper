@@ -13,6 +13,7 @@ import (
 
 // returnJSONMessage returns an error message
 func returnJSONMessage(c *gin.Context, statusCode int, msg error) {
+
 	c.IndentedJSON(statusCode,
 		gin.H{
 			"message": fmt.Sprint(msg),
@@ -21,12 +22,14 @@ func returnJSONMessage(c *gin.Context, statusCode int, msg error) {
 
 // returnJSONMessage returns an error message, and aborts request
 func returnJSONMessageAndAbort(c *gin.Context, statusCode int, msg error) {
+
 	returnJSONMessage(c, statusCode, msg)
 	c.Abort()
 }
 
 // AbortIfContentTypeNotJSON checks for json content-type and abort request
 func AbortIfContentTypeNotJSON(c *gin.Context) {
+
 	if c.Request.Header.Get("content-type") != "application/json" {
 		returnJSONMessageAndAbort(c, http.StatusUnsupportedMediaType,
 			errors.New("Content-type application/json required when submitting data"))
@@ -53,6 +56,7 @@ func WebAdminCheckIPACL(ipAccessList string) gin.HandlerFunc {
 
 // LivenessProbe answer with OK
 func LivenessProbe(c *gin.Context) {
+
 	returnJSONMessage(c, http.StatusOK, errors.New("Liveness OK"))
 }
 
@@ -79,6 +83,7 @@ func LogHTTPRequest(param gin.LogFormatterParams) string {
 
 // AddRequestID adds a Request-Id HTTP header for tracking purposes
 func AddRequestID() gin.HandlerFunc {
+
 	return func(c *gin.Context) {
 		c.Writer.Header().Set("Request-Id", uuid.New().String())
 		c.Next()
@@ -87,7 +92,9 @@ func AddRequestID() gin.HandlerFunc {
 
 //ShowIndexPage produces the index page based upon all registered routes
 func ShowIndexPage(c *gin.Context, e *gin.Engine, name string) {
+
 	body := fmt.Sprintf(adminIndexHTMLheader, name, name)
+
 	for _, v := range e.Routes() {
 		body += fmt.Sprintf(`<tr class='home-row'>
 		<td class='home-data'>%s</td>
@@ -95,6 +102,7 @@ func ShowIndexPage(c *gin.Context, e *gin.Engine, name string) {
 		<td class='home-data'>%s</td>
 	</tr>`, v.Method, v.Path, v.Path, "")
 	}
+
 	body += adminIndexHTMLend
 
 	c.Header("Content-type", "text/html")

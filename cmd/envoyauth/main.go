@@ -24,7 +24,7 @@ type authorizationServer struct {
 	virtualhosts []shared.VirtualHost
 	routes       []shared.Route
 	db           *db.Database
-	c            *db.Cache
+	cache        *Cache
 	g            *shared.Geoip
 	metrics      metricsCollection
 }
@@ -45,7 +45,7 @@ func main() {
 		log.Fatalf("Database connect failed: %v", err)
 	}
 
-	a.c = db.CacheInit(myName, a.config.Cache.Size, a.config.Cache.TTL, a.config.Cache.NegativeTTL)
+	a.cache = newCache(&a.config.Cache)
 
 	if a.config.Geoip.Filename != "" {
 		a.g, err = shared.OpenGeoipDatabase(a.config.Geoip.Filename)
