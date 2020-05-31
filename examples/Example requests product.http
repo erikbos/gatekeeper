@@ -16,7 +16,7 @@ content-type: application/json
 {
     "name": "people",
     "displayName": "People Inc",
-    "routeSet": "routes_443",
+    "routeGroup": "routes_443",
     "paths": [
         "/people/*"
     ]
@@ -30,7 +30,7 @@ content-type: application/json
 {
     "name": "people",
     "displayName": "People Inc",
-    "routeSet": "routes_443",
+    "routeGroup": "routes_443",
     "paths": [
         "/people",
         "/people/1",

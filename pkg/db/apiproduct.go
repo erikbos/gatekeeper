@@ -116,7 +116,7 @@ organization_name) VALUES(?,?,?,?,?,?,?,?,?,?,?)`,
 		p.CreatedBy,
 		p.LastmodifiedAt,
 		p.LastmodifiedBy,
-		p.OrganizationName).Exec(); err == nil {
+		p.OrganizationName).Exec(); err != nil {
 
 		return fmt.Errorf("Can not update apiproduct '%s' (%v)", p.Name, err)
 	}
