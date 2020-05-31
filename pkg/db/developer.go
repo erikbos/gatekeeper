@@ -47,39 +47,39 @@ func (d *Database) GetDeveloperCountByOrganization(organizationName string) int 
 }
 
 // GetDeveloperByEmail retrieves a developer from database
-func (d *Database) GetDeveloperByEmail(developerOrganization, developerEmail string) (shared.Developer, error) {
+func (d *Database) GetDeveloperByEmail(developerOrganization, developerEmail string) (*shared.Developer, error) {
 
 	query := "SELECT * FROM developers WHERE organization_name = ? AND email = ? LIMIT 1 ALLOW FILTERING"
 	developers, err := d.runGetDeveloperQuery(query, developerOrganization, developerEmail)
 	if err != nil {
-		return shared.Developer{}, err
+		return &shared.Developer{}, err
 	}
 
 	if len(developers) == 0 {
 		d.metricsQueryMiss(developerMetricLabel)
-		return shared.Developer{}, fmt.Errorf("Can not find developer '%s'", developerEmail)
+		return nil, fmt.Errorf("Can not find developer '%s'", developerEmail)
 	}
 
 	d.metricsQueryHit(developerMetricLabel)
-	return developers[0], nil
+	return &developers[0], nil
 }
 
 // GetDeveloperByID retrieves a developer from database
-func (d *Database) GetDeveloperByID(developerID string) (shared.Developer, error) {
+func (d *Database) GetDeveloperByID(developerID string) (*shared.Developer, error) {
 
 	query := "SELECT * FROM developers WHERE developer_id = ? LIMIT 1"
 	developers, err := d.runGetDeveloperQuery(query, developerID)
 	if err != nil {
-		return shared.Developer{}, err
+		return nil, err
 	}
 
 	if len(developers) == 0 {
 		d.metricsQueryMiss(developerMetricLabel)
-		return shared.Developer{}, fmt.Errorf("Can not find developerId '%s'", developerID)
+		return nil, fmt.Errorf("Can not find developerId '%s'", developerID)
 	}
 
 	d.metricsQueryHit(developerMetricLabel)
-	return developers[0], nil
+	return &developers[0], nil
 }
 
 // runDeveloperQuery executes CQL query and returns resultset

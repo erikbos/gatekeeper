@@ -136,7 +136,7 @@ func (s *server) PostRoute(c *gin.Context) {
 	routeToUpdate.Cluster = updateRequest.Cluster
 	routeToUpdate.Attributes = updateRequest.Attributes
 
-	if err := s.db.UpdateRouteByName(&routeToUpdate); err != nil {
+	if err := s.db.UpdateRouteByName(routeToUpdate); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -169,7 +169,7 @@ func (s *server) PostRouteAttributes(c *gin.Context) {
 
 	routeToUpdate.LastmodifiedBy = s.whoAmI()
 
-	if err := s.db.UpdateRouteByName(&routeToUpdate); err != nil {
+	if err := s.db.UpdateRouteByName(routeToUpdate); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -200,7 +200,7 @@ func (s *server) PostRouteAttributeByName(c *gin.Context) {
 
 	routeToUpdate.LastmodifiedBy = s.whoAmI()
 
-	if err := s.db.UpdateRouteByName(&routeToUpdate); err != nil {
+	if err := s.db.UpdateRouteByName(routeToUpdate); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -230,7 +230,7 @@ func (s *server) DeleteRouteAttributeByName(c *gin.Context) {
 
 	routeToUpdate.LastmodifiedBy = s.whoAmI()
 
-	if err := s.db.UpdateRouteByName(&routeToUpdate); err != nil {
+	if err := s.db.UpdateRouteByName(routeToUpdate); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}

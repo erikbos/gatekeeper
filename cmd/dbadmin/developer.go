@@ -148,7 +148,7 @@ func (s *server) PostDeveloper(c *gin.Context) {
 
 	developerToUpdate.LastmodifiedBy = s.whoAmI()
 
-	if err := s.db.UpdateDeveloperByName(&developerToUpdate); err != nil {
+	if err := s.db.UpdateDeveloperByName(developerToUpdate); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -181,7 +181,7 @@ func (s *server) PostDeveloperAttributes(c *gin.Context) {
 
 	developerToUpdate.LastmodifiedBy = s.whoAmI()
 
-	if err := s.db.UpdateDeveloperByName(&developerToUpdate); err != nil {
+	if err := s.db.UpdateDeveloperByName(developerToUpdate); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -212,7 +212,7 @@ func (s *server) PostDeveloperAttributeByName(c *gin.Context) {
 
 	developerToUpdate.LastmodifiedBy = s.whoAmI()
 
-	if err := s.db.UpdateDeveloperByName(&developerToUpdate); err != nil {
+	if err := s.db.UpdateDeveloperByName(developerToUpdate); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -241,7 +241,7 @@ func (s *server) DeleteDeveloperAttributeByName(c *gin.Context) {
 
 	developerToUpdate.LastmodifiedBy = s.whoAmI()
 
-	if err := s.db.UpdateDeveloperByName(&developerToUpdate); err != nil {
+	if err := s.db.UpdateDeveloperByName(developerToUpdate); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}

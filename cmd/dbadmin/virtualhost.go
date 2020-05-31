@@ -137,7 +137,7 @@ func (s *server) PostVirtualHost(c *gin.Context) {
 	virtualHostToUpdate.Policies = updateRequest.Policies
 	virtualHostToUpdate.OrganizationName = updateRequest.OrganizationName
 
-	if err := s.db.UpdateVirtualHostByName(&virtualHostToUpdate); err != nil {
+	if err := s.db.UpdateVirtualHostByName(virtualHostToUpdate); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -170,7 +170,7 @@ func (s *server) PostVirtualHostAttributes(c *gin.Context) {
 
 	virtualHostToUpdate.LastmodifiedBy = s.whoAmI()
 
-	if err := s.db.UpdateVirtualHostByName(&virtualHostToUpdate); err != nil {
+	if err := s.db.UpdateVirtualHostByName(virtualHostToUpdate); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -201,7 +201,7 @@ func (s *server) PostVirtualHostAttributeByName(c *gin.Context) {
 
 	virtualHostToUpdate.LastmodifiedBy = s.whoAmI()
 
-	if err := s.db.UpdateVirtualHostByName(&virtualHostToUpdate); err != nil {
+	if err := s.db.UpdateVirtualHostByName(virtualHostToUpdate); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -231,7 +231,7 @@ func (s *server) DeleteVirtualHostAttributeByName(c *gin.Context) {
 
 	updatedVirtualHost.LastmodifiedBy = s.whoAmI()
 
-	if err := s.db.UpdateVirtualHostByName(&updatedVirtualHost); err != nil {
+	if err := s.db.UpdateVirtualHostByName(updatedVirtualHost); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}

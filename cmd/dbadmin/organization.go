@@ -163,7 +163,7 @@ func (s *server) PostOrganizationAttributes(c *gin.Context) {
 	}
 	updatedOrganization.Attributes = receivedAttributes.Attributes
 	updatedOrganization.LastmodifiedBy = s.whoAmI()
-	if err := s.db.UpdateOrganizationByName(&updatedOrganization); err != nil {
+	if err := s.db.UpdateOrganizationByName(updatedOrganization); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -196,7 +196,7 @@ func (s *server) PostOrganizationAttributeByName(c *gin.Context) {
 		updatedOrganization.Attributes[attributeToUpdateIndex].Value = receivedValue.Value
 	}
 	updatedOrganization.LastmodifiedBy = s.whoAmI()
-	if err := s.db.UpdateOrganizationByName(&updatedOrganization); err != nil {
+	if err := s.db.UpdateOrganizationByName(updatedOrganization); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -220,7 +220,7 @@ func (s *server) DeleteOrganizationAttributeByName(c *gin.Context) {
 	}
 	updatedOrganization.Attributes = updatedAttributes
 	updatedOrganization.LastmodifiedBy = s.whoAmI()
-	if err := s.db.UpdateOrganizationByName(&updatedOrganization); err != nil {
+	if err := s.db.UpdateOrganizationByName(updatedOrganization); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -238,7 +238,7 @@ func (s *server) DeleteOrganizationAttributes(c *gin.Context) {
 	DeleteDeveloperAttributes := updatedOrganization.Attributes
 	updatedOrganization.Attributes = nil
 	updatedOrganization.LastmodifiedBy = s.whoAmI()
-	if err := s.db.UpdateOrganizationByName(&updatedOrganization); err != nil {
+	if err := s.db.UpdateOrganizationByName(updatedOrganization); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}

@@ -33,22 +33,21 @@ func (d *Database) GetOrganizations() ([]shared.Organization, error) {
 }
 
 // GetOrganizationByName retrieves an organization from database
-func (d *Database) GetOrganizationByName(organizationName string) (shared.Organization, error) {
+func (d *Database) GetOrganizationByName(organizationName string) (*shared.Organization, error) {
 
 	query := "SELECT * FROM organizations WHERE name = ? LIMIT 1"
 	organizations, err := d.runGetOrganizationQuery(query, organizationName)
 	if err != nil {
-		return shared.Organization{}, err
+		return nil, err
 	}
 
 	if len(organizations) == 0 {
 		d.metricsQueryMiss(organizationMetricLabel)
-		return shared.Organization{},
-			fmt.Errorf("Can not find organization (%s)", organizationName)
+		return nil, fmt.Errorf("Can not find organization (%s)", organizationName)
 	}
 
 	d.metricsQueryHit(organizationMetricLabel)
-	return organizations[0], nil
+	return &organizations[0], nil
 }
 
 // runGetOrganizationQuery executes CQL query and returns resultset

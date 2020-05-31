@@ -160,7 +160,7 @@ func (s *server) PostCreateDeveloperApp(c *gin.Context) {
 	developer.Apps = append(developer.Apps, newDeveloperApp.Name)
 	developer.LastmodifiedBy = s.whoAmI()
 
-	if err := s.db.UpdateDeveloperByName(&developer); err != nil {
+	if err := s.db.UpdateDeveloperByName(developer); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -194,7 +194,7 @@ func (s *server) PostDeveloperApp(c *gin.Context) {
 	developerAppToUpdate.Attributes = updateRequest.Attributes
 	developerAppToUpdate.Status = updateRequest.Status
 
-	if err := s.db.UpdateDeveloperAppByName(&developerAppToUpdate); err != nil {
+	if err := s.db.UpdateDeveloperAppByName(developerAppToUpdate); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -230,7 +230,7 @@ func (s *server) PostDeveloperAppAttributes(c *gin.Context) {
 	developerAppToUpdate.Attributes = body.Attributes
 	developerAppToUpdate.LastmodifiedBy = s.whoAmI()
 
-	if err := s.db.UpdateDeveloperAppByName(&developerAppToUpdate); err != nil {
+	if err := s.db.UpdateDeveloperAppByName(developerAppToUpdate); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -264,7 +264,7 @@ func (s *server) PostDeveloperAppAttributeByName(c *gin.Context) {
 		c.Param("attribute"), body.Value)
 
 	updatedDeveloperApp.LastmodifiedBy = s.whoAmI()
-	if err := s.db.UpdateDeveloperAppByName(&updatedDeveloperApp); err != nil {
+	if err := s.db.UpdateDeveloperAppByName(updatedDeveloperApp); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -296,7 +296,7 @@ func (s *server) DeleteDeveloperAppAttributeByName(c *gin.Context) {
 	updatedDeveloperApp.Attributes = updatedAttributes
 	updatedDeveloperApp.LastmodifiedBy = s.whoAmI()
 
-	if err := s.db.UpdateDeveloperAppByName(&updatedDeveloperApp); err != nil {
+	if err := s.db.UpdateDeveloperAppByName(updatedDeveloperApp); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -347,7 +347,7 @@ func (s *server) DeleteDeveloperAppByName(c *gin.Context) {
 	}
 
 	developerApp.LastmodifiedBy = s.whoAmI()
-	if err := s.db.UpdateDeveloperByName(&developer); err != nil {
+	if err := s.db.UpdateDeveloperByName(developer); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}

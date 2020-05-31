@@ -32,22 +32,21 @@ func (d *Database) GetRoutes() ([]shared.Route, error) {
 }
 
 // GetRouteByName retrieves a route from database
-func (d *Database) GetRouteByName(routeName string) (shared.Route, error) {
+func (d *Database) GetRouteByName(routeName string) (*shared.Route, error) {
 
 	query := "SELECT * FROM routes WHERE name = ? LIMIT 1"
 	routes, err := d.runGetRouteQuery(query, routeName)
 	if err != nil {
-		return shared.Route{}, err
+		return nil, err
 	}
 
 	if len(routes) == 0 {
 		d.metricsQueryMiss(routeMetricLabel)
-		return shared.Route{},
-			fmt.Errorf("Can not find route (%s)", routeName)
+		return nil, fmt.Errorf("Can not find route (%s)", routeName)
 	}
 
 	d.metricsQueryHit(routeMetricLabel)
-	return routes[0], nil
+	return &routes[0], nil
 }
 
 // runGetRouteQuery executes CQL query and returns resultset

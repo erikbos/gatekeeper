@@ -32,23 +32,22 @@ func (d *Database) GetAPIProductsByOrganization(organizationName string) ([]shar
 }
 
 // GetAPIProductByName returns an apiproduct
-func (d *Database) GetAPIProductByName(organizationName, apiproductName string) (shared.APIProduct, error) {
+func (d *Database) GetAPIProductByName(organizationName, apiproductName string) (*shared.APIProduct, error) {
 
 	query := "SELECT * FROM api_products WHERE organization_name = ? AND name = ? LIMIT 1"
 
 	apiproducts, err := d.runGetAPIProductQuery(query, organizationName, apiproductName)
 	if err != nil {
-		return shared.APIProduct{}, err
+		return nil, err
 	}
 
 	if len(apiproducts) == 0 {
 		d.metricsQueryMiss(apiProductsMetricLabel)
-		return shared.APIProduct{},
-			fmt.Errorf("Could not find apiproduct (%s)", apiproductName)
+		return nil, fmt.Errorf("Could not find apiproduct (%s)", apiproductName)
 	}
 
 	d.metricsQueryHit(apiProductsMetricLabel)
-	return apiproducts[0], nil
+	return &apiproducts[0], nil
 }
 
 // runAPIProductQuery executes CQL query and returns resultset

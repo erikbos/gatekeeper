@@ -29,10 +29,10 @@ type requestInfo struct {
 	queryParameters url.Values
 	apikey          string
 	vhost           *shared.VirtualHost
-	developer       shared.Developer
-	developerApp    shared.DeveloperApp
-	appCredential   shared.DeveloperAppKey
-	APIProduct      shared.APIProduct
+	developer       *shared.Developer
+	developerApp    *shared.DeveloperApp
+	appCredential   *shared.DeveloperAppKey
+	APIProduct      *shared.APIProduct
 }
 
 // startGRPCAuthorizationServer starts extauthz grpc listener

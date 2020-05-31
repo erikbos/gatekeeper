@@ -32,22 +32,21 @@ func (d *Database) GetVirtualHosts() ([]shared.VirtualHost, error) {
 }
 
 // GetVirtualHostByName retrieves a virtualhost from database
-func (d *Database) GetVirtualHostByName(virtualHost string) (shared.VirtualHost, error) {
+func (d *Database) GetVirtualHostByName(virtualHost string) (*shared.VirtualHost, error) {
 
 	query := "SELECT * FROM virtual_hosts WHERE name = ? LIMIT 1"
 	virtualhosts, err := d.runGetVirtualHostQuery(query, virtualHost)
 	if err != nil {
-		return shared.VirtualHost{}, err
+		return nil, err
 	}
 
 	if len(virtualhosts) == 0 {
 		d.metricsQueryMiss(virtualHostMetricLabel)
-		return shared.VirtualHost{},
-			fmt.Errorf("Can not find route (%s)", virtualHost)
+		return nil, fmt.Errorf("Can not find route (%s)", virtualHost)
 	}
 
 	d.metricsQueryHit(virtualHostMetricLabel)
-	return virtualhosts[0], nil
+	return &virtualhosts[0], nil
 }
 
 // runGetVirtualHostQuery executes CQL query and returns resultset

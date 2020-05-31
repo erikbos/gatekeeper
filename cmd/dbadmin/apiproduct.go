@@ -145,7 +145,7 @@ func (s *server) PostAPIProduct(c *gin.Context) {
 
 	apiproductToUpdate.LastmodifiedBy = s.whoAmI()
 
-	if err := s.db.UpdateAPIProductByName(&apiproductToUpdate); err != nil {
+	if err := s.db.UpdateAPIProductByName(apiproductToUpdate); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -177,7 +177,7 @@ func (s *server) PostAPIProductAttributes(c *gin.Context) {
 
 	apiproductToUpdate.LastmodifiedBy = s.whoAmI()
 
-	if err := s.db.UpdateAPIProductByName(&apiproductToUpdate); err != nil {
+	if err := s.db.UpdateAPIProductByName(apiproductToUpdate); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -210,7 +210,7 @@ func (s *server) PostAPIProductAttributeByName(c *gin.Context) {
 
 	apiproductToUpdate.LastmodifiedBy = s.whoAmI()
 
-	if err := s.db.UpdateAPIProductByName(&apiproductToUpdate); err != nil {
+	if err := s.db.UpdateAPIProductByName(apiproductToUpdate); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -242,7 +242,7 @@ func (s *server) DeleteAPIProductAttributeByName(c *gin.Context) {
 
 	updatedAPIProduct.LastmodifiedBy = s.whoAmI()
 
-	if err := s.db.UpdateAPIProductByName(&updatedAPIProduct); err != nil {
+	if err := s.db.UpdateAPIProductByName(updatedAPIProduct); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}

@@ -32,23 +32,22 @@ func (d *Database) GetClusters() ([]shared.Cluster, error) {
 }
 
 // GetClusterByName retrieves a cluster from database
-func (d *Database) GetClusterByName(clusterName string) (shared.Cluster, error) {
+func (d *Database) GetClusterByName(clusterName string) (*shared.Cluster, error) {
 
 	query := "SELECT * FROM clusters WHERE name = ? LIMIT 1"
 	clusters, err := d.runGetClusterQuery(query, clusterName)
 
 	if err != nil {
-		return shared.Cluster{}, err
+		return nil, err
 	}
 
 	if len(clusters) == 0 {
 		d.metricsQueryMiss(clusterMetricLabel)
-		return shared.Cluster{},
-			fmt.Errorf("Can not find cluster (%s)", clusterName)
+		return nil, fmt.Errorf("Can not find cluster (%s)", clusterName)
 	}
 
 	d.metricsQueryHit(clusterMetricLabel)
-	return clusters[0], nil
+	return &clusters[0], nil
 }
 
 // runGetClusterQuery executes CQL query and returns resultset

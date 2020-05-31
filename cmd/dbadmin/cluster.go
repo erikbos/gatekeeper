@@ -135,7 +135,7 @@ func (s *server) PostCluster(c *gin.Context) {
 
 	clusterToUpdate.LastmodifiedBy = s.whoAmI()
 
-	if err := s.db.UpdateClusterByName(&clusterToUpdate); err != nil {
+	if err := s.db.UpdateClusterByName(clusterToUpdate); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -166,7 +166,7 @@ func (s *server) PostClusterAttributes(c *gin.Context) {
 	clusterToUpdate.Attributes = body.Attributes
 	clusterToUpdate.LastmodifiedBy = s.whoAmI()
 
-	if err := s.db.UpdateClusterByName(&clusterToUpdate); err != nil {
+	if err := s.db.UpdateClusterByName(clusterToUpdate); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -196,7 +196,7 @@ func (s *server) PostClusterAttributeByName(c *gin.Context) {
 
 	clusterToUpdate.LastmodifiedBy = s.whoAmI()
 
-	if err := s.db.UpdateClusterByName(&clusterToUpdate); err != nil {
+	if err := s.db.UpdateClusterByName(clusterToUpdate); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -224,7 +224,7 @@ func (s *server) DeleteClusterAttributeByName(c *gin.Context) {
 
 	updatedCluster.LastmodifiedBy = s.whoAmI()
 
-	if err := s.db.UpdateClusterByName(&updatedCluster); err != nil {
+	if err := s.db.UpdateClusterByName(updatedCluster); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}

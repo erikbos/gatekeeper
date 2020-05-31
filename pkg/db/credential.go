@@ -13,21 +13,21 @@ import (
 const appCredentialsMetricLabel = "credentials"
 
 // GetAppCredentialByKey returns details of a single apikey
-func (d *Database) GetAppCredentialByKey(organizationName, key string) (shared.DeveloperAppKey, error) {
+func (d *Database) GetAppCredentialByKey(organizationName, key string) (*shared.DeveloperAppKey, error) {
 
 	query := "SELECT * FROM credentials WHERE consumer_key = ? AND organization_name = ? LIMIT 1 ALLOW FILTERING"
 	appcredentials, err := d.runGetAppCredentialQuery(query, key, organizationName)
 	if err != nil {
-		return shared.DeveloperAppKey{}, err
+		return &shared.DeveloperAppKey{}, err
 	}
 
 	if len(appcredentials) == 0 {
 		d.metricsQueryMiss(appCredentialsMetricLabel)
-		return shared.DeveloperAppKey{}, fmt.Errorf("Can not find apikey '%s'", key)
+		return nil, fmt.Errorf("Can not find apikey '%s'", key)
 	}
 
 	d.metricsQueryHit(appCredentialsMetricLabel)
-	return appcredentials[0], nil
+	return &appcredentials[0], nil
 }
 
 // GetAppCredentialByDeveloperAppID returns an array with apikey details of a developer app

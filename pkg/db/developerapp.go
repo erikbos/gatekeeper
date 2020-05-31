@@ -32,41 +32,39 @@ func (d *Database) GetDeveloperAppsByOrganization(organizationName string) ([]sh
 }
 
 // GetDeveloperAppByName returns details of a developer app
-func (d *Database) GetDeveloperAppByName(organization, developerAppName string) (shared.DeveloperApp, error) {
+func (d *Database) GetDeveloperAppByName(organization, developerAppName string) (*shared.DeveloperApp, error) {
 
 	query := "SELECT * FROM developer_apps WHERE organization_name = ? AND name = ? LIMIT 1"
 	developerapps, err := d.runGetDeveloperAppQuery(query, organization, developerAppName)
 	if err != nil {
-		return shared.DeveloperApp{}, err
+		return nil, err
 	}
 
 	if len(developerapps) == 0 {
 		d.metricsQueryMiss(appsMetricLabel)
-		return shared.DeveloperApp{},
-			fmt.Errorf("Can not find developer app '%s'", developerAppName)
+		return nil, fmt.Errorf("Can not find developer app '%s'", developerAppName)
 	}
 
 	d.metricsQueryHit(appsMetricLabel)
-	return developerapps[0], nil
+	return &developerapps[0], nil
 }
 
 // GetDeveloperAppByID returns details of a developer app
-func (d *Database) GetDeveloperAppByID(organization, developerAppID string) (shared.DeveloperApp, error) {
+func (d *Database) GetDeveloperAppByID(organization, developerAppID string) (*shared.DeveloperApp, error) {
 
 	query := "SELECT * FROM developer_apps WHERE app_id = ? LIMIT 1"
 	developerapps, err := d.runGetDeveloperAppQuery(query, developerAppID)
 	if err != nil {
-		return shared.DeveloperApp{}, err
+		return nil, err
 	}
 
 	if len(developerapps) == 0 {
 		d.metricsQueryMiss(appsMetricLabel)
-		return shared.DeveloperApp{},
-			fmt.Errorf("Can not find developer app id '%s'", developerAppID)
+		return nil, fmt.Errorf("Can not find developer app id '%s'", developerAppID)
 	}
 
 	d.metricsQueryHit(appsMetricLabel)
-	return developerapps[0], nil
+	return &developerapps[0], nil
 }
 
 // GetDeveloperAppCountByDeveloperID retrieves number of apps belonging to a developer

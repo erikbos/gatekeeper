@@ -122,7 +122,7 @@ func (s *server) PostUpdateDeveloperAppKeyByKey(c *gin.Context) {
 	AppCredential.ExpiresAt = receivedAppCredential.ExpiresAt
 	AppCredential.Status = receivedAppCredential.Status
 
-	if err := s.db.UpdateAppCredentialByKey(&AppCredential); err != nil {
+	if err := s.db.UpdateAppCredentialByKey(AppCredential); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
