@@ -59,5 +59,7 @@ func main() {
 	go a.GetVirtualHostConfigFromDatabase()
 	go a.GetRouteConfigFromDatabase()
 
+	go StartOAuthServer(&a)
+
 	a.startGRPCAuthorizationServer()
 }

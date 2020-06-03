@@ -13,12 +13,20 @@ import (
 const appCredentialsMetricLabel = "credentials"
 
 // GetAppCredentialByKey returns details of a single apikey
-func (d *Database) GetAppCredentialByKey(organizationName string, key *string) (*shared.DeveloperAppKey, error) {
+func (d *Database) GetAppCredentialByKey(organizationName, key *string) (*shared.DeveloperAppKey, error) {
 
-	query := "SELECT * FROM credentials WHERE consumer_key = ? AND organization_name = ? LIMIT 1 ALLOW FILTERING"
-	appcredentials, err := d.runGetAppCredentialQuery(query, key, organizationName)
+	var appcredentials []shared.DeveloperAppKey
+	var err error
+
+	if organizationName == nil {
+		query := "SELECT * FROM credentials WHERE consumer_key = ? LIMIT 1"
+		appcredentials, err = d.runGetAppCredentialQuery(query, key)
+	} else {
+		query := "SELECT * FROM credentials WHERE consumer_key = ? AND organization_name = ? LIMIT 1 ALLOW FILTERING"
+		appcredentials, err = d.runGetAppCredentialQuery(query, key, organizationName)
+	}
 	if err != nil {
-		return &shared.DeveloperAppKey{}, err
+		return nil, err
 	}
 
 	if len(appcredentials) == 0 {
@@ -36,7 +44,7 @@ func (d *Database) GetAppCredentialByDeveloperAppID(developerAppID string) ([]sh
 	query := "SELECT * FROM credentials WHERE app_id = ?"
 	appcredentials, err := d.runGetAppCredentialQuery(query, developerAppID)
 	if err != nil {
-		return []shared.DeveloperAppKey{}, err
+		return nil, err
 	}
 
 	if len(appcredentials) == 0 {
@@ -97,7 +105,7 @@ func (d *Database) runGetAppCredentialQuery(query string, queryParameters ...int
 	// In case query failed we return query error
 	if err := iterable.Close(); err != nil {
 		log.Error(err)
-		return []shared.DeveloperAppKey{}, err
+		return nil, err
 	}
 	return appcredentials, nil
 }
@@ -136,7 +144,7 @@ expires_at) VALUES(?,?,?,?,?,?,?,?,?)`,
 // DeleteAppCredentialByKey deletes a developer
 func (d *Database) DeleteAppCredentialByKey(organizationName, consumerKey string) error {
 
-	_, err := d.GetAppCredentialByKey(organizationName, &consumerKey)
+	_, err := d.GetAppCredentialByKey(&organizationName, &consumerKey)
 	if err != nil {
 		return err
 	}

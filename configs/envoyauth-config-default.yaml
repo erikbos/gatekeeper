@@ -2,9 +2,11 @@
 #
 loglevel: info
 # The address to listen on for GRPC requests coming from Envoy
-xdsgrpclisten: 0.0.0.0:4000
-# The address to listen on for HTTP requests coming from Envoy
-xdshttplisten: 0.0.0.0:4001
+authgrpclisten: 0.0.0.0:4000
+
+# public endpoint for oauth requests
+oauth:
+  listen: 0.0.0.0:4001
 
 # The address to listen on for Admin UI
 webadmin:

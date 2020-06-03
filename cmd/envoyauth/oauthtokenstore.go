@@ -1,4 +1,4 @@
-package oauthtoken
+package main
 
 import (
 	"time"
@@ -16,8 +16,8 @@ type TokenStore struct {
 	db *db.Database
 }
 
-// NewTokenStore creates token store instance
-func NewTokenStore(database *db.Database) oauth2.TokenStore {
+// NewOAuthTokenStore creates token store instance
+func NewOAuthTokenStore(database *db.Database) oauth2.TokenStore {
 
 	return &TokenStore{
 		db: database,

@@ -111,7 +111,7 @@ func (a *authorizationServer) getEntitlementDetails(request *requestInfo) error 
 	request.appCredential, err = a.cache.GetDeveloperAppKey(request.apikey)
 	// in case we do not have this apikey in cache let's try to retrieve it from database
 	if err != nil {
-		request.appCredential, err = a.db.GetAppCredentialByKey(request.vhost.OrganizationName, request.apikey)
+		request.appCredential, err = a.db.GetAppCredentialByKey(&request.vhost.OrganizationName, request.apikey)
 		if err != nil {
 			// FIX ME increase unknown apikey counter (not an error state)
 			return errors.New("Could not find apikey")

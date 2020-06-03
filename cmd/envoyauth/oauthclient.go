@@ -1,4 +1,4 @@
-package oauthtoken
+package main
 
 import (
 	log "github.com/sirupsen/logrus"
@@ -13,8 +13,8 @@ type ClientTokenStore struct {
 	db *db.Database
 }
 
-// NewClientTokenStore creates client token store instance
-func NewClientTokenStore(database *db.Database) oauth2.ClientStore {
+// NewOAuthClientTokenStore creates client token store instance
+func NewOAuthClientTokenStore(database *db.Database) oauth2.ClientStore {
 
 	return &ClientTokenStore{
 		db: database,
@@ -29,7 +29,8 @@ func (clientstore *ClientTokenStore) GetByID(id string) (oauth2.ClientInfo, erro
 	}
 	log.Infof("OAuthClientTokenStore: GetByID: %s", id)
 
-	credential, err := clientstore.db.GetAppCredentialByKey("petstore", &id)
+	// FIXME
+	credential, err := clientstore.db.GetAppCredentialByKey(nil, &id)
 	if err != nil {
 		// FIXME increase fetch client id metric, label what=reject (not an error state)
 		return nil, nil

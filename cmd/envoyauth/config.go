@@ -15,7 +15,8 @@ const (
 	defaultLogLevel        = "info"
 	defaultWebAdminListen  = "0.0.0.0:7777"
 	defaultWebAdminLogFile = "envoyauth-admin.log"
-	defaultAuthGRPCListen  = "0.0.0.0:7778"
+	defaultAuthGRPCListen  = "0.0.0.0:4000"
+	defaultOAuthListen     = "0.0.0.0:4001"
 )
 
 // APIAuthConfig contains our startup configuration data
@@ -23,6 +24,7 @@ type APIAuthConfig struct {
 	LogLevel       string            `yaml:"loglevel"`
 	WebAdmin       webAdminConfig    `yaml:"webadmin"`
 	AuthGRPCListen string            `yaml:"authgrpclisten"`
+	Oauth          oauthServerConfig `yaml:"oauth"`
 	Database       db.DatabaseConfig `yaml:"database"`
 	Cache          CacheConfig       `yaml:"cache"`
 	Geoip          struct {
@@ -42,6 +44,9 @@ func loadConfiguration() *APIAuthConfig {
 			LogFile: defaultWebAdminLogFile,
 		},
 		AuthGRPCListen: defaultAuthGRPCListen,
+		Oauth: oauthServerConfig{
+			Listen: defaultOAuthListen,
+		},
 	}
 
 	file, err := os.Open(*filename)
