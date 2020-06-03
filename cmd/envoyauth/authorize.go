@@ -27,7 +27,7 @@ type requestInfo struct {
 	httpRequest     *auth.AttributeContext_HttpRequest
 	URL             *url.URL
 	queryParameters url.Values
-	apikey          string
+	apikey          *string
 	vhost           *shared.VirtualHost
 	developer       *shared.Developer
 	developerApp    *shared.DeveloperApp
@@ -63,12 +63,12 @@ func (a *authorizationServer) Check(ctx context.Context, authRequest *auth.Check
 		a.metrics.connectInfoFailures.Inc()
 		return rejectRequest(http.StatusBadRequest, nil, fmt.Sprintf("%s", err))
 	}
-	a.logRequestDebug(&request)
+	a.logRequestDebug(request)
 
 	// FIXME not sure if x-forwarded-proto the way to determine original tcp port used
 	request.vhost, err = a.lookupVhost(request.httpRequest.Host, request.httpRequest.Headers["x-forwarded-proto"])
 	if err != nil {
-		a.increaseCounterRequestRejected(&request)
+		a.increaseCounterRequestRejected(request)
 		return rejectRequest(http.StatusNotFound, nil, "unknown vhost")
 	}
 
@@ -76,10 +76,10 @@ func (a *authorizationServer) Check(ctx context.Context, authRequest *auth.Check
 	upstreamHeaders := make(map[string]string)
 
 	if request.vhost.Policies != "" {
-		errorStatusCode, err := a.handlePolicies(&request, request.vhost.Policies, a.handleVhostPolicy, upstreamHeaders)
+		errorStatusCode, err := a.handlePolicies(request, &request.vhost.Policies, a.handleVhostPolicy, upstreamHeaders)
 		// In case a policy wants us to stop we reject call
 		if err != nil {
-			a.increaseCounterRequestRejected(&request)
+			a.increaseCounterRequestRejected(request)
 			return rejectRequest(errorStatusCode, nil, err.Error())
 		}
 	}
@@ -88,10 +88,10 @@ func (a *authorizationServer) Check(ctx context.Context, authRequest *auth.Check
 	// as we're not sending anything upstream, Envoy should answer all OPTIONS requests
 	if request.httpRequest.Method != "OPTIONS" {
 		if request.APIProduct.Policies != "" {
-			errorStatusCode, err := a.handlePolicies(&request, request.APIProduct.Policies, a.handlePolicy, upstreamHeaders)
+			errorStatusCode, err := a.handlePolicies(request, &request.APIProduct.Policies, a.handlePolicy, upstreamHeaders)
 			// In case a policy wants us to stop we reject call
 			if err != nil {
-				a.increaseCounterRequestRejected(&request)
+				a.increaseCounterRequestRejected(request)
 				return rejectRequest(errorStatusCode, nil, err.Error())
 			}
 		}
@@ -101,7 +101,7 @@ func (a *authorizationServer) Check(ctx context.Context, authRequest *auth.Check
 		log.Debugf("upstream header: %s = %s", k, v)
 	}
 
-	a.IncreaseCounterRequestAccept(&request)
+	a.IncreaseCounterRequestAccept(request)
 	return allowRequest(upstreamHeaders)
 }
 
@@ -120,15 +120,15 @@ func (a *authorizationServer) lookupVhost(hostname, protocol string) (*shared.Vi
 		}
 	}
 
-	return &shared.VirtualHost{}, errors.New("vhost not found")
+	return nil, errors.New("vhost not found")
 }
 
 // handlePolicies invokes all policy functions to set additional upstream headers
-func (a *authorizationServer) handlePolicies(request *requestInfo, policies string,
+func (a *authorizationServer) handlePolicies(request *requestInfo, policies *string,
 	policyHandler function, newUpstreamHeaders map[string]string) (int, error) {
 
-	for _, policy := range strings.Split(policies, ",") {
-		headersToAdd, err := policyHandler(policy, request)
+	for _, policy := range strings.Split(*policies, ",") {
+		headersToAdd, err := policyHandler(&policy, request)
 
 		// Stop and return error in case policy indicates we must stop
 		if err != nil {
@@ -186,7 +186,7 @@ func rejectRequest(statusCode int, headers map[string]string,
 					Code: envoyStatusCode,
 				},
 				Headers: buildHeadersList(headers),
-				Body:    buildJSONErrorMessage(message),
+				Body:    buildJSONErrorMessage(&message),
 			},
 		},
 	}
@@ -214,27 +214,28 @@ func buildHeadersList(headers map[string]string) []*core.HeaderValueOption {
 }
 
 // getRequestInfo returns HTTP data of a request
-func getRequestInfo(req *auth.CheckRequest) (requestInfo, error) {
+func getRequestInfo(req *auth.CheckRequest) (*requestInfo, error) {
 
 	newConnection := requestInfo{
 		httpRequest: req.Attributes.Request.Http,
 	}
-	if ipaddress, ok := newConnection.httpRequest.Headers["x-forwarded-for"]; ok {
+	ipaddress, ok := newConnection.httpRequest.Headers["x-forwarded-for"]
+	if ok {
 		newConnection.IP = net.ParseIP(ipaddress)
 	}
 
 	var err error
 	newConnection.URL, err = url.ParseRequestURI(newConnection.httpRequest.Path)
 	if err != nil {
-		return requestInfo{}, errors.New("could not parse url")
+		return nil, errors.New("could not parse url")
 	}
 
 	newConnection.queryParameters, _ = url.ParseQuery(newConnection.URL.RawQuery)
 	if err != nil {
-		return requestInfo{}, errors.New("could not parse query parameters")
+		return nil, errors.New("could not parse query parameters")
 	}
 
-	return newConnection, nil
+	return &newConnection, nil
 }
 
 func (a *authorizationServer) logRequestDebug(request *requestInfo) {
@@ -252,6 +253,7 @@ const JSONErrorMessage = `{
 `
 
 // returns a well structured JSON-formatted message
-func buildJSONErrorMessage(message string) string {
-	return fmt.Sprintf(JSONErrorMessage, message)
+func buildJSONErrorMessage(message *string) string {
+
+	return fmt.Sprintf(JSONErrorMessage, *message)
 }

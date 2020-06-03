@@ -3,7 +3,7 @@ module github.com/erikbos/gatekeeper
 go 1.13
 
 require (
-	github.com/bmatcuk/doublestar v1.3.0
+	github.com/bmatcuk/doublestar v1.3.1
 	github.com/cespare/xxhash v1.1.0 // indirect
 	github.com/cncf/udpa/go v0.0.0-20200508205342-3b31d022a144 // indirect
 	github.com/coocood/freecache v1.1.0
@@ -19,6 +19,7 @@ require (
 	github.com/prometheus/client_golang v1.6.0
 	github.com/sirupsen/logrus v1.6.0
 	golang.org/x/net v0.0.0-20200519113804-d87ec0cfa476 // indirect
+	golang.org/x/sys v0.0.0-20200523222454-059865788121 // indirect
 	google.golang.org/genproto v0.0.0-20200521103424-e9a78aa275b7
 	google.golang.org/grpc v1.29.1
 	google.golang.org/protobuf v1.23.0

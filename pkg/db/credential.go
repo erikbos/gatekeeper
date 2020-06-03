@@ -13,7 +13,7 @@ import (
 const appCredentialsMetricLabel = "credentials"
 
 // GetAppCredentialByKey returns details of a single apikey
-func (d *Database) GetAppCredentialByKey(organizationName, key string) (*shared.DeveloperAppKey, error) {
+func (d *Database) GetAppCredentialByKey(organizationName string, key *string) (*shared.DeveloperAppKey, error) {
 
 	query := "SELECT * FROM credentials WHERE consumer_key = ? AND organization_name = ? LIMIT 1 ALLOW FILTERING"
 	appcredentials, err := d.runGetAppCredentialQuery(query, key, organizationName)
@@ -23,7 +23,7 @@ func (d *Database) GetAppCredentialByKey(organizationName, key string) (*shared.
 
 	if len(appcredentials) == 0 {
 		d.metricsQueryMiss(appCredentialsMetricLabel)
-		return nil, fmt.Errorf("Can not find apikey '%s'", key)
+		return nil, fmt.Errorf("Can not find apikey '%s'", *key)
 	}
 
 	d.metricsQueryHit(appCredentialsMetricLabel)
@@ -136,7 +136,7 @@ expires_at) VALUES(?,?,?,?,?,?,?,?,?)`,
 // DeleteAppCredentialByKey deletes a developer
 func (d *Database) DeleteAppCredentialByKey(organizationName, consumerKey string) error {
 
-	_, err := d.GetAppCredentialByKey(organizationName, consumerKey)
+	_, err := d.GetAppCredentialByKey(organizationName, &consumerKey)
 	if err != nil {
 		return err
 	}

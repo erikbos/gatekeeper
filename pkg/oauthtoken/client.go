@@ -29,7 +29,7 @@ func (clientstore *ClientTokenStore) GetByID(id string) (oauth2.ClientInfo, erro
 	}
 	log.Infof("OAuthClientTokenStore: GetByID: %s", id)
 
-	credential, err := clientstore.db.GetAppCredentialByKey("petstore", id)
+	credential, err := clientstore.db.GetAppCredentialByKey("petstore", &id)
 	if err != nil {
 		// FIXME increase fetch client id metric, label what=reject (not an error state)
 		return nil, nil

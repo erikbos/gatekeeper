@@ -11,21 +11,21 @@ import (
 	"github.com/erikbos/gatekeeper/pkg/shared"
 )
 
-type function func(policy string, request *requestInfo) (map[string]string, error)
+type function func(policy *string, request *requestInfo) (map[string]string, error)
 
 // handleVhostPolicy executes a single policy to optionally add upstream headers
-func (a *authorizationServer) handleVhostPolicy(policy string, request *requestInfo) (map[string]string, error) {
+func (a *authorizationServer) handleVhostPolicy(policy *string, request *requestInfo) (map[string]string, error) {
 
-	a.metrics.virtualHostPolicy.WithLabelValues(request.httpRequest.Host, policy).Inc()
+	a.metrics.virtualHostPolicy.WithLabelValues(request.httpRequest.Host, *policy).Inc()
 
-	switch policy {
+	switch *policy {
 	case "checkapikey":
 		return a.checkAPIKey(request)
 	case "geoiplookup":
 		return a.geoIPLookup(request)
 	}
 
-	a.metrics.virtualHostPolicyUnknown.WithLabelValues(request.httpRequest.Host, policy).Inc()
+	a.metrics.virtualHostPolicyUnknown.WithLabelValues(request.httpRequest.Host, *policy).Inc()
 	return nil, nil
 }
 
@@ -34,7 +34,7 @@ func (a *authorizationServer) checkAPIKey(request *requestInfo) (map[string]stri
 
 	var err error
 	request.apikey, err = getAPIkeyFromQueryString(request.queryParameters)
-	if err != nil || request.apikey == "" {
+	if err != nil || request.apikey == nil {
 		return nil, err
 	}
 
@@ -48,21 +48,21 @@ func (a *authorizationServer) checkAPIKey(request *requestInfo) (map[string]stri
 }
 
 // getAPIkeyFromQueryString extracts apikey from query parameters
-func getAPIkeyFromQueryString(queryParameters url.Values) (string, error) {
+func getAPIkeyFromQueryString(queryParameters url.Values) (*string, error) {
 
 	// iterate over queryparameters be able to Find Them in alL CasEs
 	for param, value := range queryParameters {
-		param := strings.ToLower(param)
 
 		// we allow both spellings
+		param := strings.ToLower(param)
 		if param == "apikey" || param == "key" {
 			if len(value) == 1 {
-				return value[0], nil
+				return &value[0], nil
 			}
-			return "", errors.New("apikey has no value")
+			return nil, errors.New("apikey has no value")
 		}
 	}
-	return "", errors.New("querystring does not contain apikey")
+	return nil, errors.New("querystring does not contain apikey")
 }
 
 // geoIPLookup lookup requestor's ip address in geoip database
@@ -108,26 +108,38 @@ func (a *authorizationServer) CheckProductEntitlement(organization string, reque
 func (a *authorizationServer) getEntitlementDetails(request *requestInfo) error {
 	var err error
 
-	request.appCredential, err = a.db.GetAppCredentialByKey(request.vhost.OrganizationName, request.apikey)
+	request.appCredential, err = a.cache.GetDeveloperAppKey(request.apikey)
+	// in case we do not have this apikey in cache let's try to retrieve it from database
 	if err != nil {
-		// FIX ME increase unknown apikey counter (not an error state)
-		return errors.New("Could not find apikey")
+		request.appCredential, err = a.db.GetAppCredentialByKey(request.vhost.OrganizationName, request.apikey)
+		if err != nil {
+			// FIX ME increase unknown apikey counter (not an error state)
+			return errors.New("Could not find apikey")
+		}
+		a.cache.StoreDeveloperAppKey(request.apikey, request.appCredential)
 	}
-	a.cache.StoreDeveloperAppKey(request.appCredential)
 
-	request.developerApp, err = a.db.GetDeveloperAppByID(request.vhost.OrganizationName, request.appCredential.AppID)
+	request.developerApp, err = a.cache.GetDeveloperApp(&request.appCredential.AppID)
+	// in case we do not have developer app in cache let's try to retrieve it from database
 	if err != nil {
-		// FIX ME increase counter as every apikey should link to dev app (error state)
-		return errors.New("Could not find developer app of this apikey")
+		request.developerApp, err = a.db.GetDeveloperAppByID(request.vhost.OrganizationName, request.appCredential.AppID)
+		if err != nil {
+			// FIX ME increase counter as every apikey should link to dev app (error state)
+			return errors.New("Could not find developer app of this apikey")
+		}
+		a.cache.StoreDeveloperApp(&request.developerApp.AppID, request.developerApp)
 	}
-	a.cache.StoreDeveloperApp(request.developerApp)
 
-	request.developer, err = a.db.GetDeveloperByID(request.developerApp.DeveloperID)
+	request.developer, err = a.cache.GetDeveloper(&request.developerApp.DeveloperID)
+	// in case we do not have develop in cache let's try to retrieve it from database
 	if err != nil {
-		// FIX ME increase counter as every devapp should link to developer (error state)
-		return errors.New("Could not find developer of this apikey")
+		request.developer, err = a.db.GetDeveloperByID(request.developerApp.DeveloperID)
+		if err != nil {
+			// FIX ME increase counter as every devapp should link to developer (error state)
+			return errors.New("Could not find developer of developer app")
+		}
+		a.cache.StoreDeveloper(&request.developer.DeveloperID, request.developer)
 	}
-	a.cache.StoreDeveloper(request.developer)
 
 	return nil
 }

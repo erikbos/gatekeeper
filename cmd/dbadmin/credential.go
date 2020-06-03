@@ -57,7 +57,8 @@ func (s *server) GetDeveloperAppKeyByKey(c *gin.Context) {
 		return
 	}
 
-	AppCredential, err := s.db.GetAppCredentialByKey(c.Param("organization"), c.Param("key"))
+	key := c.Param("key")
+	AppCredential, err := s.db.GetAppCredentialByKey(c.Param("organization"), &key)
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -110,7 +111,8 @@ func (s *server) PostUpdateDeveloperAppKeyByKey(c *gin.Context) {
 		return
 	}
 
-	AppCredential, err := s.db.GetAppCredentialByKey(c.Param("organization"), c.Param("key"))
+	key := c.Param("key")
+	AppCredential, err := s.db.GetAppCredentialByKey(c.Param("organization"), &key)
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -133,13 +135,14 @@ func (s *server) PostUpdateDeveloperAppKeyByKey(c *gin.Context) {
 // DeleteDeveloperAppKeyByKey deletes apikey of developer app
 func (s *server) DeleteDeveloperAppKeyByKey(c *gin.Context) {
 
-	AppCredential, err := s.db.GetAppCredentialByKey(c.Param("organization"), c.Param("key"))
+	key := c.Param("key")
+	AppCredential, err := s.db.GetAppCredentialByKey(c.Param("organization"), &key)
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
 
-	if err := s.db.DeleteAppCredentialByKey(c.Param("organization"), c.Param("key")); err != nil {
+	if err := s.db.DeleteAppCredentialByKey(c.Param("organization"), key); err != nil {
 		returnJSONMessage(c, http.StatusServiceUnavailable, err)
 		return
 	}

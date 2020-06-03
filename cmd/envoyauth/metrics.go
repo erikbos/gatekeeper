@@ -12,7 +12,6 @@ type metricsCollection struct {
 	requestsApikeyNotFound   *prometheus.CounterVec
 	requestsAccepted         *prometheus.CounterVec
 	requestsRejected         *prometheus.CounterVec
-	devApp                   *prometheus.CounterVec
 	apiProductPolicy         *prometheus.CounterVec
 	apiProductPolicyUnknown  *prometheus.CounterVec
 	virtualHostPolicy        *prometheus.CounterVec
@@ -126,11 +125,17 @@ func (a *authorizationServer) increaseCounterApikeyNotfound(r *requestInfo) {
 // increaseCounterRequestRejected counts requests that are rejected
 func (a *authorizationServer) increaseCounterRequestRejected(r *requestInfo) {
 
+	var product string
+
+	if r.APIProduct != nil {
+		product = r.APIProduct.Name
+	}
+
 	a.metrics.requestsRejected.WithLabelValues(
 		r.httpRequest.Host,
 		r.httpRequest.Protocol,
 		r.httpRequest.Method,
-		r.APIProduct.Name).Inc()
+		product).Inc()
 }
 
 // IncreaseCounterRequestAccept counts requests that are accpeted

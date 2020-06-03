@@ -8,7 +8,6 @@ import (
 	"github.com/coocood/freecache"
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/erikbos/gatekeeper/pkg/db"
 	"github.com/erikbos/gatekeeper/pkg/shared"
 )
 
@@ -21,7 +20,6 @@ type CacheConfig struct {
 
 // Cache holds our runtime parameters
 type Cache struct {
-	db                    *db.Database
 	freecache             *freecache.Cache
 	cacheTTL              int
 	negativeTTL           int
@@ -41,6 +39,130 @@ func newCache(config *CacheConfig) *Cache {
 	registerCacheMetrics(c)
 
 	return c
+}
+
+func getDeveloperCacheKey(id *string) []byte {
+
+	return []byte("dev_" + *id)
+}
+
+// StoreDeveloper stores a Developer in cache
+func (c *Cache) StoreDeveloper(developerID *string, developer *shared.Developer) error {
+
+	if c.freecache == nil {
+		return nil
+	}
+
+	var buf bytes.Buffer
+	if err := gob.NewEncoder(&buf).Encode(developer); err != nil {
+		return err
+	}
+	return c.freecache.Set(getDeveloperCacheKey(developerID), buf.Bytes(), c.cacheTTL)
+}
+
+// GetDeveloper gets a Developer from cache
+func (c *Cache) GetDeveloper(developerID *string) (*shared.Developer, error) {
+
+	if c.freecache == nil {
+		return nil, nil
+	}
+
+	cached, err := c.freecache.Get(getDeveloperCacheKey(developerID))
+	if err == nil && cached != nil {
+		var developer shared.Developer
+
+		err = gob.NewDecoder(bytes.NewBuffer(cached)).Decode(&developer)
+		if err == nil {
+			c.cacheHits.WithLabelValues("developer").Inc()
+			return &developer, nil
+		}
+	}
+	c.cacheMisses.WithLabelValues("developer").Inc()
+	return nil, errors.New("Not found")
+}
+
+///
+
+func getDeveloperAppCacheKey(id *string) []byte {
+
+	return []byte("app_" + *id)
+}
+
+// StoreDeveloperApp stores a Developer in cache
+func (c *Cache) StoreDeveloperApp(AppID *string, app *shared.DeveloperApp) error {
+
+	if c.freecache == nil {
+		return nil
+	}
+
+	var buf bytes.Buffer
+	if err := gob.NewEncoder(&buf).Encode(app); err != nil {
+		return err
+	}
+	return c.freecache.Set(getDeveloperAppCacheKey(AppID), buf.Bytes(), c.cacheTTL)
+}
+
+// GetDeveloperApp gets an App from cache
+func (c *Cache) GetDeveloperApp(AppID *string) (*shared.DeveloperApp, error) {
+
+	if c.freecache == nil {
+		return nil, nil
+	}
+
+	cached, err := c.freecache.Get(getDeveloperAppCacheKey(AppID))
+	if err == nil && cached != nil {
+		var app shared.DeveloperApp
+
+		err = gob.NewDecoder(bytes.NewBuffer(cached)).Decode(&app)
+		if err == nil {
+			c.cacheHits.WithLabelValues("app").Inc()
+			return &app, nil
+		}
+	}
+	c.cacheMisses.WithLabelValues("app").Inc()
+	return nil, errors.New("Not found")
+}
+
+///
+
+func getDeveloperAppKeyCacheKey(id *string) []byte {
+
+	return []byte("key_" + *id)
+}
+
+// StoreDeveloperAppKey stores a DeveloperAppKey in cache
+func (c *Cache) StoreDeveloperAppKey(apikey *string, appkey *shared.DeveloperAppKey) error {
+
+	if c.freecache == nil {
+		return nil
+	}
+
+	var buf bytes.Buffer
+	if err := gob.NewEncoder(&buf).Encode(appkey); err != nil {
+		return err
+	}
+	return c.freecache.Set(getDeveloperAppKeyCacheKey(apikey), buf.Bytes(), c.cacheTTL)
+}
+
+// GetDeveloperAppKey gets an apikey from cache
+func (c *Cache) GetDeveloperAppKey(apikey *string) (*shared.DeveloperAppKey, error) {
+
+	if c.freecache == nil {
+		return nil, nil
+	}
+
+	cached, err := c.freecache.Get(getDeveloperAppKeyCacheKey(apikey))
+	if err == nil && cached != nil {
+		var apikey shared.DeveloperAppKey
+
+		err = gob.NewDecoder(bytes.NewBuffer(cached)).Decode(&apikey)
+		if err == nil {
+			c.cacheHits.WithLabelValues("key").Inc()
+			return &apikey, nil
+		}
+	}
+	c.cacheMisses.WithLabelValues("key").Inc()
+	return nil, err
 }
 
 func registerCacheMetrics(c *Cache) {
@@ -114,139 +236,4 @@ func registerCacheMetrics(c *Cache) {
 		},
 		func() float64 { return (float64(c.freecache.ExpiredCount())) },
 	))
-
-	c.cacheLatencyHistogram = prometheus.NewSummary(
-		prometheus.SummaryOpts{
-			Namespace: myName,
-			Name:      "cache_latency",
-			Help:      "Latency of cache (cached & non-cached) in seconds.",
-			Objectives: map[float64]float64{
-				0.5: 0.05, 0.9: 0.01, 0.99: 0.001, 0.999: 0.0001,
-			},
-		})
-	prometheus.MustRegister(c.cacheLatencyHistogram)
-}
-
-func getDeveloperCacheKey(id *string) []byte {
-
-	return []byte("dev_" + *id)
-}
-
-// StoreDeveloper stores a Developer in cache
-func (c *Cache) StoreDeveloper(developer *shared.Developer) error {
-
-	if c.freecache == nil {
-		return nil
-	}
-
-	var buf bytes.Buffer
-	if err := gob.NewEncoder(&buf).Encode(developer); err != nil {
-		return err
-	}
-	return c.freecache.Set(getDeveloperCacheKey(&developer.DeveloperID), buf.Bytes(), c.cacheTTL)
-}
-
-// GetDeveloper gets a Developer from cache
-func (c *Cache) GetDeveloper(developerID *string) (*shared.Developer, error) {
-
-	if c.freecache == nil {
-		return nil, nil
-	}
-
-	cached, err := c.freecache.Get(getDeveloperCacheKey(developerID))
-	if err == nil && cached != nil {
-		var developer shared.Developer
-
-		err = gob.NewDecoder(bytes.NewBuffer(cached)).Decode(&developer)
-		if err == nil {
-			c.cacheHits.WithLabelValues("developer").Inc()
-			return &developer, nil
-		}
-	}
-	c.cacheMisses.WithLabelValues("developer").Inc()
-	return nil, errors.New("Not found")
-}
-
-///
-
-func getDeveloperAppCacheKey(id *string) []byte {
-
-	return []byte("app_" + *id)
-}
-
-// StoreDeveloperApp stores a Developer in cache
-func (c *Cache) StoreDeveloperApp(app *shared.DeveloperApp) error {
-
-	if c.freecache == nil {
-		return nil
-	}
-
-	var buf bytes.Buffer
-	if err := gob.NewEncoder(&buf).Encode(app); err != nil {
-		return err
-	}
-	return c.freecache.Set(getDeveloperAppCacheKey(&app.AppID), buf.Bytes(), c.cacheTTL)
-}
-
-// GetDeveloperApp gets an App from cache
-func (c *Cache) GetDeveloperApp(AppID *string) (*shared.DeveloperApp, error) {
-
-	if c.freecache == nil {
-		return nil, nil
-	}
-
-	cached, err := c.freecache.Get(getDeveloperCacheKey(AppID))
-	if err == nil && cached != nil {
-		var app shared.DeveloperApp
-
-		err = gob.NewDecoder(bytes.NewBuffer(cached)).Decode(&app)
-		if err == nil {
-			c.cacheHits.WithLabelValues("app").Inc()
-			return &app, nil
-		}
-	}
-	c.cacheMisses.WithLabelValues("app").Inc()
-	return nil, errors.New("Not found")
-}
-
-///
-
-func getDeveloperAppKeyCacheKey(id *string) []byte {
-
-	return []byte("key_" + *id)
-}
-
-// StoreDeveloperAppKey stores a DeveloperAppKey in cache
-func (c *Cache) StoreDeveloperAppKey(appkey *shared.DeveloperAppKey) error {
-
-	if c.freecache == nil {
-		return nil
-	}
-
-	var buf bytes.Buffer
-	if err := gob.NewEncoder(&buf).Encode(appkey); err != nil {
-		return err
-	}
-	return c.freecache.Set(getDeveloperAppKeyCacheKey(&appkey.ConsumerKey), buf.Bytes(), c.cacheTTL)
-}
-
-// GetDeveloperAppKey gets an Apikey from cache
-func (c *Cache) GetDeveloperAppKey(key *string) (*shared.DeveloperAppKey, error) {
-
-	if c.freecache == nil {
-		return nil, nil
-	}
-
-	cached, err := c.freecache.Get(getDeveloperAppKeyCacheKey(key))
-	if err == nil && cached != nil {
-		var apikey shared.DeveloperAppKey
-
-		err = gob.NewDecoder(bytes.NewBuffer(cached)).Decode(&apikey)
-		if err == nil {
-			c.cacheHits.WithLabelValues("key").Inc()
-			return &apikey, nil
-		}
-	}
-	c.cacheMisses.WithLabelValues("key").Inc()
-	return nil, err
 }

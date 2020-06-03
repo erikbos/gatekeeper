@@ -10,11 +10,11 @@ import (
 )
 
 // handlePolicy executes a single policy to optionally add upstream headers
-func (a *authorizationServer) handlePolicy(policy string, request *requestInfo) (map[string]string, error) {
+func (a *authorizationServer) handlePolicy(policy *string, request *requestInfo) (map[string]string, error) {
 
-	a.metrics.apiProductPolicy.WithLabelValues(request.APIProduct.Name, policy).Inc()
+	a.metrics.apiProductPolicy.WithLabelValues(request.APIProduct.Name, *policy).Inc()
 
-	switch policy {
+	switch *policy {
 	case "qps":
 		return policyQPS1(request)
 	case "sendAPIKey":
@@ -33,7 +33,7 @@ func (a *authorizationServer) handlePolicy(policy string, request *requestInfo) 
 		return policyCheckHostHeader(request)
 	}
 
-	a.metrics.apiProductPolicyUnknown.WithLabelValues(request.APIProduct.Name, policy).Inc()
+	a.metrics.apiProductPolicyUnknown.WithLabelValues(request.APIProduct.Name, *policy).Inc()
 	return nil, nil
 }
 
@@ -43,7 +43,7 @@ func (a *authorizationServer) handlePolicy(policy string, request *requestInfo) 
 func policyQPS1(request *requestInfo) (map[string]string, error) {
 
 	quotaAttributeName := request.APIProduct.Name + "_quotaPerSecond"
-	quotaKey := request.apikey + "_a_" + quotaAttributeName
+	quotaKey := *request.apikey + "_a_" + quotaAttributeName
 
 	value, err := shared.GetAttribute(request.developerApp.Attributes, quotaAttributeName)
 	if err == nil && value != "" {
@@ -71,7 +71,7 @@ func policyQPS1(request *requestInfo) (map[string]string, error) {
 func policySendAPIKey(request *requestInfo) (map[string]string, error) {
 
 	return map[string]string{
-			"x-apikey": request.apikey,
+			"x-apikey": *request.apikey,
 		},
 		nil
 }
