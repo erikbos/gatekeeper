@@ -135,6 +135,9 @@ func warnForUnknownClusterAttributes(cluster shared.Cluster) {
 		attributeMaxPendingRequests:            true,
 		attributeMaxRequests:                   true,
 		attributeMaxRetries:                    true,
+		attributeDNSLookupFamiliy:              true,
+		attributeDNSRefreshRate:                true,
+		attributeDNSResolvers:                  true,
 	}
 
 	warnForUnknownAttribute("Cluster "+cluster.Name,
