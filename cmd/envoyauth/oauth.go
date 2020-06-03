@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -30,8 +31,8 @@ type oauthServer struct {
 	ginEngine          *gin.Engine
 	db                 *db.Database
 	server             *server.Server
-	tokenIssueRequests prometheus.Counter
-	tokenInfoRequests  prometheus.Counter
+	tokenIssueRequests *prometheus.CounterVec
+	tokenInfoRequests  *prometheus.CounterVec
 }
 
 // StartOAuthServer runs our public endpoint
@@ -39,7 +40,7 @@ func StartOAuthServer(a *authorizationServer) {
 	// shared.StartLogging(myName, version, buildTime)
 
 	server := oauthServer{
-		config: &a.config.Oauth,
+		config: &a.config.OAuth,
 		db:     a.db,
 	}
 
@@ -58,7 +59,7 @@ func StartOAuthServer(a *authorizationServer) {
 	g.POST("/oauth2/token", server.handleTokenIssueRequest)
 	g.GET("/oauth2/info", server.handleTokenInfo)
 
-	g.Run(a.config.Oauth.Listen)
+	g.Run(a.config.OAuth.Listen)
 }
 
 // prepareOAuthInstance build OAuth server instance with client and token storage backends
@@ -96,39 +97,59 @@ func (o *oauthServer) prepareOAuthInstance() {
 func (o *oauthServer) handleTokenIssueRequest(c *gin.Context) {
 
 	if err := o.server.HandleTokenRequest(c.Writer, c.Request); err != nil {
+		o.tokenIssueRequests.WithLabelValues("400").Inc()
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
+	statusCode := fmt.Sprintf("%d", c.Writer.Status())
+	o.tokenIssueRequests.WithLabelValues(statusCode).Inc()
 }
 
-// handleTokenInfo shows information about token
+type tokenInfoAnswer struct {
+	Valid     bool
+	CreatedAt time.Time
+	ExpiresAt time.Time
+	Scope     string
+}
+
+// handleTokenInfo shows information about temporary token
 func (o *oauthServer) handleTokenInfo(c *gin.Context) {
 
 	tokenInfo, err := o.server.ValidationBearerToken(c.Request)
 	if err != nil {
+		o.tokenInfoRequests.WithLabelValues("401").Inc()
 		c.AbortWithError(http.StatusUnauthorized, err)
 		return
 	}
 
-	// FIX ME we probably do not want to show all fields
-	c.JSON(http.StatusOK, tokenInfo)
+	// Copy over the information we want to show back:
+	// We want to prevent showing client_id / client_secret for example.
+	status := tokenInfoAnswer{
+		Valid:     true,
+		CreatedAt: tokenInfo.GetAccessCreateAt(),
+		ExpiresAt: tokenInfo.GetAccessCreateAt().Add(tokenInfo.GetAccessExpiresIn()),
+		Scope:     tokenInfo.GetScope(),
+	}
+
+	o.tokenInfoRequests.WithLabelValues("200").Inc()
+	c.JSON(http.StatusOK, status)
 }
 
 func registerOAuthMetrics(o *oauthServer) {
 
-	o.tokenIssueRequests = prometheus.NewCounter(
+	o.tokenIssueRequests = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: myName,
 			Name:      "token_issue_total",
 			Help:      "Number of OAuth token issue requests.",
-		})
+		}, []string{"status"})
 	prometheus.MustRegister(o.tokenIssueRequests)
 
-	o.tokenInfoRequests = prometheus.NewCounter(
+	o.tokenInfoRequests = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: myName,
 			Name:      "token_info_total",
 			Help:      "Number of OAuth token info requests.",
-		})
+		}, []string{"status"})
 	prometheus.MustRegister(o.tokenInfoRequests)
 }

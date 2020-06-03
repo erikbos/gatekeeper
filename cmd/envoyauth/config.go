@@ -24,7 +24,7 @@ type APIAuthConfig struct {
 	LogLevel       string            `yaml:"loglevel"`
 	WebAdmin       webAdminConfig    `yaml:"webadmin"`
 	AuthGRPCListen string            `yaml:"authgrpclisten"`
-	Oauth          oauthServerConfig `yaml:"oauth"`
+	OAuth          oauthServerConfig `yaml:"oauth"`
 	Database       db.DatabaseConfig `yaml:"database"`
 	Cache          CacheConfig       `yaml:"cache"`
 	Geoip          struct {
@@ -44,7 +44,7 @@ func loadConfiguration() *APIAuthConfig {
 			LogFile: defaultWebAdminLogFile,
 		},
 		AuthGRPCListen: defaultAuthGRPCListen,
-		Oauth: oauthServerConfig{
+		OAuth: oauthServerConfig{
 			Listen: defaultOAuthListen,
 		},
 	}
