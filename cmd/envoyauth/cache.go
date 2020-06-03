@@ -165,6 +165,48 @@ func (c *Cache) GetDeveloperAppKey(apikey *string) (*shared.DeveloperAppKey, err
 	return nil, err
 }
 
+///
+
+func getAPIProductCacheKey(org, id *string) []byte {
+
+	return []byte("product_" + *org + "_" + *id)
+}
+
+// StoreAPIProduct stores an APIProduct in cache
+func (c *Cache) StoreAPIProduct(org, productname *string, apiproduct *shared.APIProduct) error {
+
+	if c.freecache == nil {
+		return nil
+	}
+
+	var buf bytes.Buffer
+	if err := gob.NewEncoder(&buf).Encode(apiproduct); err != nil {
+		return err
+	}
+	return c.freecache.Set(getAPIProductCacheKey(org, productname), buf.Bytes(), c.cacheTTL)
+}
+
+// GetAPIProduct gets an APIProduct from cache
+func (c *Cache) GetAPIProduct(org, productname *string) (*shared.APIProduct, error) {
+
+	if c.freecache == nil {
+		return nil, nil
+	}
+
+	cached, err := c.freecache.Get(getAPIProductCacheKey(org, productname))
+	if err == nil && cached != nil {
+		var apiproduct shared.APIProduct
+
+		err = gob.NewDecoder(bytes.NewBuffer(cached)).Decode(&apiproduct)
+		if err == nil {
+			c.cacheHits.WithLabelValues("apiproduct").Inc()
+			return &apiproduct, nil
+		}
+	}
+	c.cacheMisses.WithLabelValues("apiproduct").Inc()
+	return nil, err
+}
+
 func registerCacheMetrics(c *Cache) {
 
 	c.cacheHits = prometheus.NewCounterVec(

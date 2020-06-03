@@ -187,9 +187,11 @@ func (a *authorizationServer) IsRequestPathAllowed(organization, requestPath str
 	// Iterate over this key's apiproducts
 	for _, apiproduct := range appcredential.APIProducts {
 		if apiproduct.Status == "approved" {
-			apiproductDetails, err := a.db.GetAPIProductByName(organization, apiproduct.Apiproduct)
+
+			// apiproductDetails, err := a.db.GetAPIProductByName(organization, apiproduct.Apiproduct)
+			apiproductDetails, err := a.getAPIProduct(&organization, &apiproduct.Apiproduct)
 			if err != nil {
-				// apikey has non existing product in it:
+				// apikey has product in it which we cannot find:
 				// FIXME increase "unknown product in apikey" counter (not an error state)
 			} else {
 				// Iterate over all paths of apiproduct and try to match with path of request
@@ -204,4 +206,21 @@ func (a *authorizationServer) IsRequestPathAllowed(organization, requestPath str
 		}
 	}
 	return nil, errors.New("No product active for requested path")
+}
+
+// getAPIPRoduct retrieves an API Product through mem cache
+func (a *authorizationServer) getAPIProduct(organization, apiproductname *string) (*shared.APIProduct, error) {
+
+	var product *shared.APIProduct
+
+	product, err := a.cache.GetAPIProduct(organization, apiproductname)
+	// in case we do not have product in cache let's try to retrieve it from database
+	if err != nil {
+		product, err = a.db.GetAPIProductByName(*organization, *apiproductname)
+		if err == nil {
+			// In case we successfully retrieve from db we store in cache
+			a.cache.StoreAPIProduct(organization, apiproductname, product)
+		}
+	}
+	return product, err
 }
