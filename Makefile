@@ -28,16 +28,16 @@ testbackend:
 docker-images: docker-dbadmin docker-envoyauth docker-envoycp docker-testbackend
 
 docker-dbadmin:
-	 docker build -t gatekeeper/dbadmin:$(VERSION) . -f Dockerfile.dbadmin
+	 docker build -t gatekeeper/dbadmin:$(VERSION) . -f build/Dockerfile.dbadmin
 
 docker-envoyauth:
-	 docker build -t gatekeeper/envoyauth:$(VERSION) . -f Dockerfile.envoyauth
+	 docker build -t gatekeeper/envoyauth:$(VERSION) . -f build/Dockerfile.envoyauth
 
 docker-envoycp:
-	 docker build -t gatekeeper/envoycp:$(VERSION) . -f Dockerfile.envoycp
+	 docker build -t gatekeeper/envoycp:$(VERSION) . -f build/Dockerfile.envoycp
 
 docker-testbackend:
-	 docker build -t gatekeeper/testbackend:$(VERSION) . -f Dockerfile.testbackend
+	 docker build -t gatekeeper/testbackend:$(VERSION) . -f  build/Dockerfile.testbackend
 
 
 clean:
