@@ -8,6 +8,7 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/erikbos/gatekeeper/pkg/db"
+	"github.com/erikbos/gatekeeper/pkg/shared"
 )
 
 const (
@@ -21,15 +22,13 @@ const (
 
 // APIAuthConfig contains our startup configuration data
 type APIAuthConfig struct {
-	LogLevel       string            `yaml:"loglevel"`
-	WebAdmin       webAdminConfig    `yaml:"webadmin"`
-	AuthGRPCListen string            `yaml:"authgrpclisten"`
-	OAuth          oauthServerConfig `yaml:"oauth"`
-	Database       db.DatabaseConfig `yaml:"database"`
-	Cache          CacheConfig       `yaml:"cache"`
-	Geoip          struct {
-		Filename string `yaml:"filename"`
-	} `yaml:"geoip"`
+	LogLevel  string            `yaml:"loglevel"`
+	WebAdmin  webAdminConfig    `yaml:"webadmin"`
+	EnvoyAuth envoyAuthConfig   `yaml:"envoyauth"`
+	OAuth     oauthServerConfig `yaml:"oauth"`
+	Database  db.DatabaseConfig `yaml:"database"`
+	Cache     cacheConfig       `yaml:"cache"`
+	Geoip     shared.Geoip      `yaml:"geoip"`
 }
 
 func loadConfiguration() *APIAuthConfig {
@@ -43,7 +42,9 @@ func loadConfiguration() *APIAuthConfig {
 			Listen:  defaultWebAdminListen,
 			LogFile: defaultWebAdminLogFile,
 		},
-		AuthGRPCListen: defaultAuthGRPCListen,
+		EnvoyAuth: envoyAuthConfig{
+			Listen: defaultAuthGRPCListen,
+		},
 		OAuth: oauthServerConfig{
 			Listen: defaultOAuthListen,
 		},

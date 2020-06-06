@@ -8,9 +8,10 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-//Geoip bla
+// Geoip hold our configuration
 type Geoip struct {
-	mdb *maxminddb.Reader
+	Filename string `yaml:"filename"`
+	mdb      *maxminddb.Reader
 }
 
 // GetCountryAndState returns country and state of the location of an ip address
@@ -44,7 +45,9 @@ func (g *Geoip) GetCountryAndState(ipaddress net.IP) (string, string) {
 func OpenGeoipDatabase(filename string) (*Geoip, error) {
 
 	var err error
-	g := Geoip{}
+	g := Geoip{
+		Filename: filename,
+	}
 
 	g.mdb, err = maxminddb.Open(filename)
 	if err != nil {

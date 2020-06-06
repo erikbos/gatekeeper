@@ -21,6 +21,10 @@ import (
 	"github.com/erikbos/gatekeeper/pkg/shared"
 )
 
+type envoyAuthConfig struct {
+	Listen string `yaml:"listen"`
+}
+
 // requestInfo holds all information of a request
 type requestInfo struct {
 	IP              net.IP
@@ -38,11 +42,11 @@ type requestInfo struct {
 // startGRPCAuthorizationServer starts extauthz grpc listener
 func (a *authorizationServer) startGRPCAuthorizationServer() {
 
-	lis, err := net.Listen("tcp", a.config.AuthGRPCListen)
+	lis, err := net.Listen("tcp", a.config.EnvoyAuth.Listen)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
-	log.Printf("GRPC listening on %s", a.config.AuthGRPCListen)
+	log.Printf("GRPC listening on %s", a.config.EnvoyAuth.Listen)
 
 	grpcServer := grpc.NewServer()
 	auth.RegisterAuthorizationServer(grpcServer, a)

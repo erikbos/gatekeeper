@@ -11,8 +11,8 @@ import (
 	"github.com/erikbos/gatekeeper/pkg/shared"
 )
 
-// CacheConfig contains our start configuration
-type CacheConfig struct {
+// cacheConfig contains our start configuration
+type cacheConfig struct {
 	Size        int `yaml:"size"`
 	TTL         int `yaml:"ttl"`
 	NegativeTTL int `yaml:"negativettl"`
@@ -28,7 +28,7 @@ type Cache struct {
 }
 
 // newCache initializes in memory cache and registers metrics
-func newCache(config *CacheConfig) *Cache {
+func newCache(config *cacheConfig) *Cache {
 
 	c := &Cache{
 		freecache:   freecache.NewCache(config.Size),

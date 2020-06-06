@@ -1,8 +1,10 @@
 # Envoyauth authentication daemon settings
 #
 loglevel: info
+
 # The address to listen on for GRPC requests coming from Envoy
-authgrpclisten: 0.0.0.0:4000
+envoyauth:
+  listen: 0.0.0.0:4000
 
 # public endpoint for oauth requests
 oauth:
