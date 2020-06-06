@@ -21,6 +21,8 @@ func (a *authorizationServer) handleVhostPolicy(policy *string, request *request
 	switch *policy {
 	case "checkapikey":
 		return a.checkAPIKey(request)
+	case "checkoauth":
+		return a.checkOAuth(request)
 	case "geoiplookup":
 		return a.geoIPLookup(request)
 	}
@@ -63,6 +65,42 @@ func getAPIkeyFromQueryString(queryParameters url.Values) (*string, error) {
 		}
 	}
 	return nil, errors.New("querystring does not contain apikey")
+}
+
+// checkOAuth tries OAuth authentication, loads dev app, dev details, and check whether path is allowed
+func (a *authorizationServer) checkOAuth(request *requestInfo) (map[string]string, error) {
+
+	authorizationHeader := request.httpRequest.Headers["authorization"]
+	prefix := "Bearer "
+	token := ""
+
+	if authorizationHeader == "" {
+		return nil, nil
+	}
+
+	if authorizationHeader != "" && strings.HasPrefix(authorizationHeader, prefix) {
+		token = authorizationHeader[len(prefix):]
+	} else {
+		return nil, errors.New("Could not parse authentication header")
+	}
+
+	// Load OAuth token details
+	tokenInfo, err := a.oauth.server.Manager.LoadAccessToken(token)
+	if err != nil {
+		return nil, err
+	}
+
+	// The temporary token contains the apikey (Also Known As clientId)
+	clientID := tokenInfo.GetClientID()
+	request.apikey = &clientID
+
+	err = a.CheckProductEntitlement(request.vhost.OrganizationName, request)
+	if err != nil {
+		log.Debugf("CheckProductEntitlement() not allowed '%s' (%s)", request.URL.Path, err.Error())
+		a.increaseCounterApikeyNotfound(request)
+		return nil, err
+	}
+	return nil, nil
 }
 
 // geoIPLookup lookup requestor's ip address in geoip database

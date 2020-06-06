@@ -13,7 +13,7 @@ import (
 const oauthMetricLabel = "oauth"
 
 // OAuthAccessTokenGetByAccess retrieves an access token
-func (d *Database) OAuthAccessTokenGetByAccess(accessToken string) (shared.OAuthAccessToken, error) {
+func (d *Database) OAuthAccessTokenGetByAccess(accessToken string) (*shared.OAuthAccessToken, error) {
 
 	query := "SELECT * FROM oauth_access_token WHERE access = ? LIMIT 1"
 
@@ -21,7 +21,7 @@ func (d *Database) OAuthAccessTokenGetByAccess(accessToken string) (shared.OAuth
 }
 
 // OAuthAccessTokenGetByCode retrieves token by code
-func (d *Database) OAuthAccessTokenGetByCode(code string) (shared.OAuthAccessToken, error) {
+func (d *Database) OAuthAccessTokenGetByCode(code string) (*shared.OAuthAccessToken, error) {
 
 	query := "SELECT * FROM oauth_access_token WHERE code = ? LIMIT 1"
 
@@ -29,7 +29,7 @@ func (d *Database) OAuthAccessTokenGetByCode(code string) (shared.OAuthAccessTok
 }
 
 // OAuthAccessTokenGetByRefresh retrieves token by refreshcode
-func (d *Database) OAuthAccessTokenGetByRefresh(refresh string) (shared.OAuthAccessToken, error) {
+func (d *Database) OAuthAccessTokenGetByRefresh(refresh string) (*shared.OAuthAccessToken, error) {
 
 	query := "SELECT * FROM oauth_access_token WHERE refresh = ? LIMIT 1"
 
@@ -37,7 +37,7 @@ func (d *Database) OAuthAccessTokenGetByRefresh(refresh string) (shared.OAuthAcc
 }
 
 // runGetOAuthAccessTokenQuery executes CQL query and returns resultset
-func (d *Database) runGetOAuthAccessTokenQuery(query, queryParameter string) (shared.OAuthAccessToken, error) {
+func (d *Database) runGetOAuthAccessTokenQuery(query, queryParameter string) (*shared.OAuthAccessToken, error) {
 
 	var accessToken shared.OAuthAccessToken
 
@@ -66,16 +66,16 @@ func (d *Database) runGetOAuthAccessTokenQuery(query, queryParameter string) (sh
 	if err := iterable.Close(); err != nil {
 		log.Error(err)
 		d.metricsQueryMiss(organizationMetricLabel)
-		return shared.OAuthAccessToken{}, err
+		return nil, err
 	}
 	d.metricsQueryHit(oauthMetricLabel)
 
 	log.Printf("runGetOAuthAccessTokenQuery: %+v", accessToken)
-	return accessToken, nil
+	return &accessToken, nil
 }
 
 // OAuthAccessTokenCreate UPSERTs an organization in database
-func (d *Database) OAuthAccessTokenCreate(t shared.OAuthAccessToken) error {
+func (d *Database) OAuthAccessTokenCreate(t *shared.OAuthAccessToken) error {
 
 	// log.Printf("OAuthAccessTokenCreate: %+v", t)
 	if err := d.cassandraSession.Query(`INSERT INTO oauth_access_token (
@@ -113,7 +113,7 @@ refresh_expires_in) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)`,
 }
 
 // OAuthAccessTokenRemoveByAccess deletes an access token
-func (d *Database) OAuthAccessTokenRemoveByAccess(accessTokenToDelete string) error {
+func (d *Database) OAuthAccessTokenRemoveByAccess(accessTokenToDelete *string) error {
 
 	query := "DELETE FROM oauth_access_token WHERE access = ?"
 
@@ -121,7 +121,7 @@ func (d *Database) OAuthAccessTokenRemoveByAccess(accessTokenToDelete string) er
 }
 
 // OAuthAccessTokenRemoveByCode deletes an access token
-func (d *Database) OAuthAccessTokenRemoveByCode(codeToDelete string) error {
+func (d *Database) OAuthAccessTokenRemoveByCode(codeToDelete *string) error {
 
 	query := "DELETE FROM oauth_access_token WHERE code = ?"
 
@@ -129,7 +129,7 @@ func (d *Database) OAuthAccessTokenRemoveByCode(codeToDelete string) error {
 }
 
 // OAuthAccessTokenRemoveByRefresh deletes an access token
-func (d *Database) OAuthAccessTokenRemoveByRefresh(refreshToDelete string) error {
+func (d *Database) OAuthAccessTokenRemoveByRefresh(refreshToDelete *string) error {
 
 	query := "DELETE FROM oauth_access_token WHERE refresh = ?"
 

@@ -25,6 +25,7 @@ type authorizationServer struct {
 	routes       []shared.Route
 	db           *db.Database
 	cache        *Cache
+	oauth        *oauthServer
 	g            *shared.Geoip
 	metrics      metricsCollection
 }
