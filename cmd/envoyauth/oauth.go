@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -30,6 +31,7 @@ type oauthServer struct {
 	config             *oauthServerConfig
 	ginEngine          *gin.Engine
 	db                 *db.Database
+	cache              *Cache
 	server             *server.Server
 	tokenIssueRequests *prometheus.CounterVec
 	tokenInfoRequests  *prometheus.CounterVec
@@ -42,7 +44,9 @@ func StartOAuthServer(a *authorizationServer) {
 	server := oauthServer{
 		config: &a.config.OAuth,
 		db:     a.db,
+		cache:  a.cache,
 	}
+	a.oauth = &server
 
 	// shared.SetLoggingConfiguration(server.config.LogLevel)
 	// server.readiness.RegisterMetrics(myName)
@@ -52,14 +56,15 @@ func StartOAuthServer(a *authorizationServer) {
 	server.prepareOAuthInstance()
 
 	gin.SetMode(gin.ReleaseMode)
-	g := gin.New()
-	g.Use(gin.LoggerWithFormatter(shared.LogHTTPRequest))
-	g.Use(shared.AddRequestID())
 
-	g.POST("/oauth2/token", server.handleTokenIssueRequest)
-	g.GET("/oauth2/info", server.handleTokenInfo)
+	server.ginEngine = gin.New()
+	server.ginEngine.Use(gin.LoggerWithFormatter(shared.LogHTTPRequest))
+	server.ginEngine.Use(shared.AddRequestID())
 
-	g.Run(a.config.OAuth.Listen)
+	server.ginEngine.POST("/oauth2/token", server.handleTokenIssueRequest)
+	server.ginEngine.GET("/oauth2/info", server.handleTokenInfo)
+
+	log.Panic(server.ginEngine.Run(a.config.OAuth.Listen))
 }
 
 // prepareOAuthInstance build OAuth server instance with client and token storage backends
@@ -68,10 +73,10 @@ func (o *oauthServer) prepareOAuthInstance() {
 	manager := manage.NewDefaultManager()
 
 	// Set our token storage engine for access tokens
-	manager.MapTokenStorage(NewOAuthTokenStore(o.db))
+	manager.MapTokenStorage(NewOAuthTokenStore(o.db, o.cache))
 
 	// Set client id engine for client ids
-	manager.MapClientStorage(NewOAuthClientTokenStore(o.db))
+	manager.MapClientStorage(NewOAuthClientTokenStore(o.db, o.cache))
 
 	// Set default token ttl
 	manager.SetClientTokenCfg(&manage.Config{AccessTokenExp: 1 * time.Hour})
@@ -98,7 +103,7 @@ func (o *oauthServer) handleTokenIssueRequest(c *gin.Context) {
 
 	if err := o.server.HandleTokenRequest(c.Writer, c.Request); err != nil {
 		o.tokenIssueRequests.WithLabelValues("400").Inc()
-		c.AbortWithError(http.StatusBadRequest, err)
+		_ = c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
 	statusCode := fmt.Sprintf("%d", c.Writer.Status())
@@ -118,7 +123,7 @@ func (o *oauthServer) handleTokenInfo(c *gin.Context) {
 	tokenInfo, err := o.server.ValidationBearerToken(c.Request)
 	if err != nil {
 		o.tokenInfoRequests.WithLabelValues("401").Inc()
-		c.AbortWithError(http.StatusUnauthorized, err)
+		_ = c.AbortWithError(http.StatusUnauthorized, err)
 		return
 	}
 

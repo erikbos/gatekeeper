@@ -10,18 +10,20 @@ import (
 
 // ClientTokenStore holds our database config
 type ClientTokenStore struct {
-	db *db.Database
+	db    *db.Database
+	cache *Cache
 }
 
 // NewOAuthClientTokenStore creates client token store instance
-func NewOAuthClientTokenStore(database *db.Database) oauth2.ClientStore {
+func NewOAuthClientTokenStore(database *db.Database, cache *Cache) oauth2.ClientStore {
 
 	return &ClientTokenStore{
-		db: database,
+		db:    database,
+		cache: cache,
 	}
 }
 
-// GetByID gets client id token
+// GetByID retrieves token based upon tokenid
 func (clientstore *ClientTokenStore) GetByID(id string) (oauth2.ClientInfo, error) {
 
 	if id == "" {
@@ -29,14 +31,18 @@ func (clientstore *ClientTokenStore) GetByID(id string) (oauth2.ClientInfo, erro
 	}
 	log.Infof("OAuthClientTokenStore: GetByID: %s", id)
 
-	// FIXME
-	credential, err := clientstore.db.GetAppCredentialByKey(nil, &id)
+	credential, err := clientstore.cache.GetDeveloperAppKey(&id)
+	// in case we do not have this apikey in cache let's try to retrieve it from database
 	if err != nil {
-		// FIXME increase fetch client id metric, label what=reject (not an error state)
-		return nil, nil
+		credential, err = clientstore.db.GetAppCredentialByKey(nil, &id)
+		if err != nil {
+			// FIX ME increase unknown apikey counter (not an error state)
+			return nil, err
+		}
+		clientstore.cache.StoreDeveloperAppKey(&id, credential)
 	}
 
-	// FIXME increase fetch client id metric, label what=reject (good!)
+	// TODO increase fetch client id metric, label what=reject (good!)
 	return &models.Client{
 		ID:     credential.ConsumerKey,
 		Secret: credential.ConsumerSecret,

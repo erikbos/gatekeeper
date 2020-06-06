@@ -13,14 +13,16 @@ import (
 
 // TokenStore holds our database config
 type TokenStore struct {
-	db *db.Database
+	db    *db.Database
+	cache *Cache
 }
 
 // NewOAuthTokenStore creates token store instance
-func NewOAuthTokenStore(database *db.Database) oauth2.TokenStore {
+func NewOAuthTokenStore(database *db.Database, cache *Cache) oauth2.TokenStore {
 
 	return &TokenStore{
-		db: database,
+		db:    database,
+		cache: cache,
 	}
 }
 
@@ -45,19 +47,26 @@ func (tokenstore *TokenStore) Create(info oauth2.TokenInfo) (err error) {
 		RefreshCreatedAt: shared.TimeMillisecondsToInt64(info.GetRefreshCreateAt()),
 		RefreshExpiresIn: int64(info.GetRefreshExpiresIn().Milliseconds()),
 	}
-	return tokenstore.db.OAuthAccessTokenCreate(token)
+	return tokenstore.db.OAuthAccessTokenCreate(&token)
 }
 
 // GetByAccess gets token by access name
 func (tokenstore *TokenStore) GetByAccess(access string) (oauth2.TokenInfo, error) {
 
-	log.Debugf("OAuthTokenStore: GetByAccess: %s", access)
+	// log.Debugf("OAuthTokenStore: GetByAccess: %s", access)
 	if access == "" {
 		return nil, nil
 	}
-	token, err := tokenstore.db.OAuthAccessTokenGetByAccess(access)
+
+	token, err := tokenstore.cache.GetAccessToken(&access)
+	// in case we do not have this token in cache let's try to retrieve it from database
 	if err != nil {
-		return nil, err
+		token, err = tokenstore.db.OAuthAccessTokenGetByAccess(access)
+		if err != nil {
+			// TODO increase unknown oauth access counter (not an error state)
+			return nil, err
+		}
+		tokenstore.cache.StoreAccessToken(&access, token)
 	}
 	return toOAuthTokenStore(token)
 }
@@ -90,7 +99,7 @@ func (tokenstore *TokenStore) GetByRefresh(refresh string) (oauth2.TokenInfo, er
 	return toOAuthTokenStore(token)
 }
 
-func toOAuthTokenStore(token shared.OAuthAccessToken) (oauth2.TokenInfo, error) {
+func toOAuthTokenStore(token *shared.OAuthAccessToken) (oauth2.TokenInfo, error) {
 
 	return &models.Token{
 		// FIXME do we need all fields
@@ -114,19 +123,19 @@ func toOAuthTokenStore(token shared.OAuthAccessToken) (oauth2.TokenInfo, error) 
 func (tokenstore *TokenStore) RemoveByAccess(access string) error {
 
 	log.Debugf("OAuthTokenStore: RemoveByAccess: %s", access)
-	return tokenstore.db.OAuthAccessTokenRemoveByAccess(access)
+	return tokenstore.db.OAuthAccessTokenRemoveByAccess(&access)
 }
 
 // RemoveByCode removes token from database
 func (tokenstore *TokenStore) RemoveByCode(code string) (err error) {
 
 	log.Debugf("OAuthTokenStore: RemoveByCode: %s", code)
-	return tokenstore.db.OAuthAccessTokenRemoveByCode(code)
+	return tokenstore.db.OAuthAccessTokenRemoveByCode(&code)
 }
 
 // RemoveByRefresh removes token from database
 func (tokenstore *TokenStore) RemoveByRefresh(refresh string) error {
 
 	log.Debugf("OAuthTokenStore: RemoveByRefresh: %s", refresh)
-	return tokenstore.db.OAuthAccessTokenRemoveByRefresh(refresh)
+	return tokenstore.db.OAuthAccessTokenRemoveByRefresh(&refresh)
 }

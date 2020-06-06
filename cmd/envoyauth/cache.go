@@ -20,12 +20,11 @@ type CacheConfig struct {
 
 // Cache holds our runtime parameters
 type Cache struct {
-	freecache             *freecache.Cache
-	cacheTTL              int
-	negativeTTL           int
-	cacheHits             *prometheus.CounterVec
-	cacheMisses           *prometheus.CounterVec
-	cacheLatencyHistogram prometheus.Summary
+	freecache   *freecache.Cache
+	cacheTTL    int
+	negativeTTL int
+	cacheHits   *prometheus.CounterVec
+	cacheMisses *prometheus.CounterVec
 }
 
 // newCache initializes in memory cache and registers metrics
@@ -204,6 +203,46 @@ func (c *Cache) GetAPIProduct(org, productname *string) (*shared.APIProduct, err
 		}
 	}
 	c.cacheMisses.WithLabelValues("apiproduct").Inc()
+	return nil, err
+}
+
+func getAccessTokenCacheKey(name *string) []byte {
+
+	return []byte("at_" + *name)
+}
+
+// StoreAccessToken stores an OAuthAccessToken in cache
+func (c *Cache) StoreAccessToken(name *string, accessToken *shared.OAuthAccessToken) error {
+
+	if c.freecache == nil {
+		return nil
+	}
+
+	var buf bytes.Buffer
+	if err := gob.NewEncoder(&buf).Encode(accessToken); err != nil {
+		return err
+	}
+	return c.freecache.Set(getAccessTokenCacheKey(name), buf.Bytes(), c.cacheTTL)
+}
+
+// GetAccessToken gets an OAuthAccessToken from cache
+func (c *Cache) GetAccessToken(name *string) (*shared.OAuthAccessToken, error) {
+
+	if c.freecache == nil {
+		return nil, nil
+	}
+
+	cached, err := c.freecache.Get(getAccessTokenCacheKey(name))
+	if err == nil && cached != nil {
+		var accessToken shared.OAuthAccessToken
+
+		err = gob.NewDecoder(bytes.NewBuffer(cached)).Decode(&accessToken)
+		if err == nil {
+			c.cacheHits.WithLabelValues("accesstoken").Inc()
+			return &accessToken, nil
+		}
+	}
+	c.cacheMisses.WithLabelValues("accesstoken").Inc()
 	return nil, err
 }
 
