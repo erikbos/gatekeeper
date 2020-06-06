@@ -1,8 +1,6 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
 	"io"
 	"net/http"
 	"os"
@@ -10,14 +8,15 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
+	"gopkg.in/yaml.v2"
 
 	"github.com/erikbos/gatekeeper/pkg/shared"
 )
 
 type webAdminConfig struct {
-	Listen  string `yaml:"listen"  json:"listen"`
-	IPACL   string `yaml:"ipacl"   json:"ipacl"`
-	LogFile string `yaml:"logfile" json:"logfile"`
+	Listen  string `yaml:"listen"`
+	IPACL   string `yaml:"ipacl"`
+	LogFile string `yaml:"logfile"`
 }
 
 // StartWebAdminServer starts the admin web UI
@@ -71,14 +70,12 @@ func (s *server) ConfigDump(c *gin.Context) {
 	configToPrint := s.config
 	configToPrint.Database.Password = "[redacted]"
 
-	buffer := new(bytes.Buffer)
-	encoder := json.NewEncoder(buffer)
-	encoder.SetIndent("", "\t")
-	err := encoder.Encode(configToPrint)
+	configDump, err := yaml.Marshal(configToPrint)
 	if err != nil {
+		c.Status(http.StatusInternalServerError)
 		return
 	}
 
-	c.Header("Content-type", "text/json")
-	c.String(http.StatusOK, buffer.String())
+	c.Header("Content-type", "text/yaml")
+	c.String(http.StatusOK, string(configDump))
 }
