@@ -130,12 +130,12 @@ func policyCheckIPAccessList(request *requestInfo) (map[string]string, error) {
 // policyCheckHostHeader checks request's Host header against host ACL defined in developer app
 func policyCheckHostHeader(request *requestInfo) (map[string]string, error) {
 
-	hostAccessList, err := shared.GetAttribute(request.developerApp.Attributes, "HostWhiteList")
+	hostAccessList, err := shared.GetAttribute(request.developerApp.Attributes, "Referer")
 	if err == nil && hostAccessList != "" {
 		if checkHostinAccessList(request.httpRequest.Headers[":authority"], hostAccessList) {
 			return nil, nil
 		}
-		return nil, errors.New("Blocked by host ACL")
+		return nil, errors.New("Blocked by referer ACL")
 	}
 	// No Host ACL attribute or it's value was empty: we allow request
 	return nil, nil
