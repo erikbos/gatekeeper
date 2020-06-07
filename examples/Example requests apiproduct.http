@@ -34,7 +34,8 @@ content-type: application/json
     "paths": [
         "/people",
         "/people/1",
-        "/people/*"],
+        "/people/*"
+    ],
     "attributes": [
     {
         "name": "people_quotaPerSecond",
@@ -45,7 +46,7 @@ content-type: application/json
         "value": "9-5"
     }
     ],
-    "policies": "burp,checkIPAccessList,checkHostHeader,qps,sendAPIKey,sendDeveloperEmail,sendDeveloperID,sendDeveloperAppID"
+    "policies": "burp,checkIPAccessList,checkReferer,qps,sendAPIKey,sendDeveloperEmail,sendDeveloperID,sendDeveloperAppID"
 }
 
 

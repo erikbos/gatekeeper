@@ -1,12 +1,13 @@
 # Introduction
 
-This directory contains example API calls to run.
+This directory contains some example API calls.
 
-Easiest way to use these is to:
-1. Install Visual Code plugin [REST Client](https://github.com/Huachao/vscode-restclient) this will allow you to edit and execute API calls directly from Visual Code.
-2. Update Visual Code's settings **settings.json** to configure a hostname & port for the REST Client:
+A convenient way to execute these is using Visual Code's [REST Client](https://github.com/Huachao/vscode-restclient).
+This will allow you to edit and execute API calls directly from within Visual Code.
 
-```
+You might want to put the hostname and port of *dbadmin* in Visual Code's settings **settings.json**:
+
+```json
 "rest-client.environmentVariables": {
 
         "localhost": {

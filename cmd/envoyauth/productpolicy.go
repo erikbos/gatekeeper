@@ -29,8 +29,8 @@ func (a *authorizationServer) handlePolicy(policy *string, request *requestInfo)
 		return policySendDeveloperAppID(request)
 	case "checkIPAccessList":
 		return policyCheckIPAccessList(request)
-	case "checkHostHeader":
-		return policyCheckHostHeader(request)
+	case "checkReferer":
+		return policycheckReferer(request)
 	}
 
 	a.metrics.apiProductPolicyUnknown.WithLabelValues(request.APIProduct.Name, *policy).Inc()
@@ -127,8 +127,8 @@ func policyCheckIPAccessList(request *requestInfo) (map[string]string, error) {
 	return nil, nil
 }
 
-// policyCheckHostHeader checks request's Host header against host ACL defined in developer app
-func policyCheckHostHeader(request *requestInfo) (map[string]string, error) {
+// policycheckReferer checks request's Host header against host ACL defined in developer app
+func policycheckReferer(request *requestInfo) (map[string]string, error) {
 
 	hostAccessList, err := shared.GetAttribute(request.developerApp.Attributes, "Referer")
 	if err == nil && hostAccessList != "" {
@@ -141,7 +141,7 @@ func policyCheckHostHeader(request *requestInfo) (map[string]string, error) {
 	return nil, nil
 }
 
-// policyCheckHostHeader checks host string against a comma separated host regexp list
+// policycheckReferer checks host string against a comma separated host regexp list
 func checkHostinAccessList(hostHeader string, hostAccessList string) bool {
 
 	if hostAccessList == "" {
