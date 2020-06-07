@@ -1,6 +1,6 @@
 # developer
 
-A developer represents a .
+A developer is an API user and has defined.
 
 ## Supported methods and paths
 
@@ -49,4 +49,3 @@ A developer represents a .
 | lastName   | mandatory | last name           |
 | userName   | mandatory | user name           |
 | attributes | optional  | specific attributes |
-

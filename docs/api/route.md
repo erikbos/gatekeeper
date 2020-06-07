@@ -1,8 +1,6 @@
 # Route
 
-A route defines how a specific path needs to handled and forwarded on.
-
-All operations which are applied at HTTP-level to every request are configured here.
+A route defines how a specific path needs to handled and forwarded on. All operations which are applied at HTTP-level to every request are configured here.
 
 ## Supported methods and paths
 
@@ -136,7 +134,7 @@ Enable handling of Cross-Origin Resource Sharing (CORS):
 }
 ```
 
-Set route specific request retry behaviour in case upstream backend has issues:
+Set route specific request retry behaviour to reduce error rates:
 
 ```json
 
@@ -162,7 +160,7 @@ Set route specific request retry behaviour in case upstream backend has issues:
     },
     {
         "name": "RetryOnStatusCodes",
-        "value": "502,599"
+        "value": "503,504"
     }
     ]
 }

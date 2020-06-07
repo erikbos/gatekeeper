@@ -60,7 +60,3 @@ A developer application holds the attribut.
 | -------------- | ------------------------------ | --------------- |
 | IPAccessList   | source ip request access list  |                 |
 | Referer        | HTTP Referer check access list |                 |
-
-## Inspiration
-
-Definition of developer app is based on work [created and shared by Google](https://docs.apigee.com/reference/apis/apigee/rest/v1/organizations.developers.apps) and used according to terms described in the [Creative Commons 4.0 Attribution License](https://creativecommons.org/licenses/by/4.0/)

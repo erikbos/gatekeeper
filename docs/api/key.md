@@ -1,6 +1,6 @@
 # Keys
 
-Keys are attached to a [developer application](developerapp.MD) and determine which [APIProducts](aipproduct.MD) are allowed to be accessed.
+Keys are attached to a [developer application](developerapp.md) and are used to grant access to a set of [APIProducts](apiproduct.md). Multiple can be added to a developer application.
 
 ## Supported methods and paths
 
@@ -42,9 +42,5 @@ For POST:
 | -------------- | --------- | --------------------------------------------- |
 | consumerKey    | mandatory | api key, used in apikey-based authentication  |
 | consumerSecret | mandatory | api key secret, used in OAuth2 authentication |
-| apiProducts    | mandatory | allowed [APIProducts](apiproducts.MD)         |
-| status         | mandatory |                                         |
-
-## Inspiration
-
-Definition of key is based on work [created and shared by Google](https://docs.apigee.com/reference/apis/apigee/rest/v1/organizations.developers.apps.keys) and used according to terms described in the [Creative Commons 4.0 Attribution License](https://creativecommons.org/licenses/by/4.0/)
+| apiProducts    | mandatory | allowed [APIProducts](apiproducts.md)         |
+| status         | mandatory |                                               |

@@ -16,11 +16,11 @@ Gatekeeper is an Gatekeeper proxy with API entitlement functionality. It uses [E
 
 Gatekeeper provides API entitlement management:
 
-* Administration of API [developers](docs/api/developer.MD) and their [applications](docs/api/developerapp.MD).
+* Administration of API [developers](docs/api/developer.md) and their [applications](docs/api/developerapp.md).
 
-* Fine grained access control to backends by defining [API products](docs/api/apiproduct.MD).
+* Fine grained access control to backends by defining [API products](docs/api/apiproduct.md).
 
-* Authenticate and authorize developer applications using [API Keys and/or OAuth2](docs/api/key.MD).
+* Authenticate and authorize developer applications using [API Keys and/or OAuth2](docs/api/key.md).
 
 For backend teams:
 
@@ -28,16 +28,15 @@ For backend teams:
 
 * Envoyproxy offer detailed request metrics on error rates, response latencies, request size.
 
-* Security: Gatekeeper supports TLS for [downstream](docs/api/virtualhost.MD) and [upstream](docs/api/cluster.MD) traffic.
+* Security: Gatekeeper supports TLS for [downstream](docs/api/virtualhost.md) and [upstream](docs/api/cluster.md) traffic.
 
-* Dynamic Routing: Gatekeeper can [route](docs/api/route.MD) traffic across multiple backends.
+* Dynamic Routing: Gatekeeper can [route](docs/api/route.md) traffic across multiple backends.
 
-* High Availbility: by allowing [retry behaviour](docs/api/route.MD) to be configured per path to reduce error rates.
+* High Availbility: by allowing [retry behaviour](docs/api/route.md) to be configured per path to reduce error rates.
 
-* Health Checks: Gatekeeper can actively [monitor](docs/api/cluster.MD) backends.
+* Health Checks: Gatekeeper can actively [monitor](docs/api/cluster.md) backends.
 
-* Ease of deployment: it consists out 3 containers and any Cassandra database as backend.
-
+* Ease of deployment: it consists out 3 containers and a Cassandra database as backend.
 
 ## Understanding Gatekeeper
 
@@ -49,7 +48,7 @@ For backend teams:
 
 * [build](build): Scripts for packaging Gatekeeper components in a Docker images
 
-* [config](config): Example configuration files for Gatekeeper components
+* [configs](configs): Example configuration files for Gatekeeper components
 
 * [docs](docs): Extended documentation (use cases, architecture, api specs, etc.)
 
@@ -57,7 +56,9 @@ For backend teams:
 
 * [scripts](scripts): Scripts to deploy Gatekeeper
 
-* [src](src): Source code for all Gatekeeper components
+* [cmd](cmd): Source code of individual Gatekeeper components
+
+* [pkg](pkg): Source code of shared Gatekeeper components
 
 ## Contributing and support
 
@@ -65,9 +66,7 @@ Please note Gatekeeper is still under heavy development, but feel free to open a
 
 ## License
 
-[Apache v2](LICENSE)
-
-Definition of Gatekeeper's API is inspired by work [created and shared by Google](https://docs.apigee.com/reference/apis/apigee/rest/v1/) and used according to terms described in the [Creative Commons 4.0 Attribution License](https://creativecommons.org/licenses/by/4.0/)
+[Apache v2](LICENSE), some of Gatekeeper's API is inspired by work [created and shared by Google](https://docs.apigee.com/reference/apis/apigee/rest/) and used according to terms described in the [Creative Commons 4.0 Attribution License](https://creativecommons.org/licenses/by/4.0/)
 
 ## Disclaimer
 
