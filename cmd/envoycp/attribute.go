@@ -56,6 +56,7 @@ const (
 	defaultDNSRefreshRate                = 5 * time.Second
 
 	// route
+	attributeDisableAuthentication    = "DisableAuthentication"
 	attributeDirectResponseStatusCode = "DirectResponseStatusCode"
 	attributeDirectResponseBody       = "DirectResponseBody"
 	attributePrefixRewrite            = "PrefixRewrite"
@@ -93,6 +94,7 @@ func warnForUnknownVirtualHostAttributes(virtualhost shared.VirtualHost) {
 func warnForUnknownRouteAttributes(route shared.Route) {
 
 	var validRouteAttributes = map[string]bool{
+		attributeDisableAuthentication:    true,
 		attributeDirectResponseStatusCode: true,
 		attributeDirectResponseBody:       true,
 		attributePrefixRewrite:            true,
@@ -148,7 +150,7 @@ func warnForUnknownAttribute(resource string, attributes []shared.AttributeKeyVa
 
 	for _, attribute := range attributes {
 		if !validAttributes[attribute.Name] {
-			log.Warningf("%s has unknown attribute '%s' value '%s'",
+			log.Warningf("'%s' has unknown attribute '%s' value '%s'",
 				resource, attribute.Name, attribute.Value)
 		}
 	}

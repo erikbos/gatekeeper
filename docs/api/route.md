@@ -50,14 +50,15 @@ Every route can have optional attributes which control what Envoy will do to mat
 
 | attribute name           | purpose                                                               | possible values |
 | ------------------------ | --------------------------------------------------------------------- | --------------- |
+| DisableAuthentication    | Disable authentication on route                                       | true            |
 | DirectResponseStatusCode | Return an arbitrary HTTP response directly, without proxying.         | 200             |
 | DirectResponseBody       | Body to return when DirectResponseStatusCode is set                   | Hello World     |
 | PrefixRewrite            | Rewrites path when contacting upstream                                |                 |
 | CORSAllowCredentials     | Specifies whether the resource allows credentials                     | false           |
-| CORSAllowMethods         | Specifies the content for the access-control-allow-methods header     |                 |
-| CORSAllowHeaders         | Specifies the content for the access-control-allow-headers header     |                 |
-| CORSExposeHeaders        | Specifies the content for the access-control-expose-headers header    |                 |
-| CORSMaxAge               | Specifies the content for the access-control-max-age header           |                 |
+| CORSAllowMethods         | Specifies the content for the [Access-Control-Allow-Methods](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Methods) header    |                 |
+| CORSAllowHeaders         | Specifies the content for the [Access-Control-Allow-Headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Headers) header     |                 |
+| CORSExposeHeaders        | Specifies the content for the [Access-Control-Expose-Headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Expose-Headers) header    |                 |
+| CORSMaxAge               | Specifies the content for the [Access-Control-Max-Age](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Max-Age) header           |                 |
 | HostHeader               | HTTP host header to set when contact upstream cluster                 |                 |
 | BasicAuth                | HTTP Basic authentication header to set when contact upstream cluster | user:secret     |
 | RetryOn                  | Specifies the conditions under which retry takes place.               | [See envoy documentation](https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/router_filter#config-http-filters-router-x-envoy-retry-on)|

@@ -10,11 +10,14 @@ import (
 	api "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	core "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	route "github.com/envoyproxy/go-control-plane/envoy/api/v2/route"
+	envoyauth "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/ext_authz/v2"
 	envoymatcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher"
 	cache "github.com/envoyproxy/go-control-plane/pkg/cache"
+	"github.com/envoyproxy/go-control-plane/pkg/conversion"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/wrappers"
 	log "github.com/sirupsen/logrus"
+	"google.golang.org/protobuf/types/known/structpb"
 
 	"github.com/erikbos/gatekeeper/pkg/shared"
 )
@@ -136,7 +139,14 @@ func (s *server) buildEnvoyRoute(routeEntry shared.Route) *route.Route {
 	}
 
 	// Add direct response config if required
-	_, err := shared.GetAttribute(routeEntry.Attributes, attributeDirectResponseStatusCode)
+	_, err := shared.GetAttribute(routeEntry.Attributes, attributeDisableAuthentication)
+	if err == nil {
+		envoyRoute.PerFilterConfig = buildRoutePerFilterConfig(routeEntry)
+		return envoyRoute
+	}
+
+	// Add direct response config if required
+	_, err = shared.GetAttribute(routeEntry.Attributes, attributeDirectResponseStatusCode)
 	if err == nil {
 		envoyRoute.Action = buildRouteActionDirectResponse(routeEntry)
 		return envoyRoute
@@ -385,4 +395,25 @@ func buildStatusCodesSlice(statusCodes string) []uint32 {
 		}
 	}
 	return statusCodeSlice
+}
+
+func buildRoutePerFilterConfig(routeEntry shared.Route) map[string]*structpb.Struct {
+
+	perFilterConfig := make(map[string]*structpb.Struct)
+
+	value, err := shared.GetAttribute(routeEntry.Attributes, attributeDisableAuthentication)
+	if err == nil && value == attributeValueTrue {
+
+		extAuthzPerRoute, err := conversion.MessageToStruct(
+			&envoyauth.ExtAuthzPerRoute{
+				Override: &envoyauth.ExtAuthzPerRoute_Disabled{
+					Disabled: true,
+				},
+			})
+		if err == nil {
+			perFilterConfig["envoy.filters.http.ext_authz"] = extAuthzPerRoute
+		}
+	}
+
+	return perFilterConfig
 }
