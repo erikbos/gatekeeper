@@ -52,36 +52,35 @@ A cluster defines an upstream backend. Each provides one or more APIs to be cons
 
 ## Attribute specification
 
-| attribute name                | purpose | possible values              |
-| ----------------------------- | ------- | ---------------------------- |
-| ConnectTimeout                |         |                              |
-| IdleTimeout                   |         |                              |
-| DNSLookupFamily               |         |                              |
-| DNSRefreshRate                |         |                              |
-| DNSResolvers                  |         |                              |
-| HealthCheckProtocol           |         | HTTP                         |
-| HealthCheckPath               |         |                              |
-| HealthCheckInterval           |         |                              |
-| HealthCheckTimeout            |         |                              |
-| HealthCheckUnhealthyThreshold |         |                              |
-| HealthCheckHealthyThreshold   |         |                              |
-| HealthCheckLogFile            |         |                              |
-| HTTPProtocol                  |         | HTTP/1.1, HTTP/2, HTTP/3     |
-| MaxConnections                |         |                              |
-| MaxConnections                |         |                              |
-| MaxPendingRequests            |         |                              |
-| MaxRequests                   |         |                              |
-| MaxRetries                    |         |                              |
-| TLSEnabled                    |         | true, false                  |
-| SNIHostName                   |         |                              |
-| TLSMinimumVersion             |         | TLSv10,TLSv11, TLSv12 TLSv13 |
-| TLSMaximumVersion             |         | TLSv10,TLSv11, TLSv12 TLSv13 |
-| TLSCipherSuites               |         |                              |
+| attribute name                | purpose                                                                                 | example values               |
+| ----------------------------- | --------------------------------------------------------------------------------------- | ---------------------------- |
+| ConnectTimeout                | The timeout for new network connections to cluster                                      | 1s                           |
+| IdleTimeout                   | The idle timeout for connections, for the period in which there are no active requests. | 60s                          |
+| DNSLookupFamily               | IP network address family for contact cluster                                           | IPv6                         |
+| DNSRefreshRate                | Refreshrate for resolving cluster hostname                                              | 5s                           |
+| DNSResolvers                  | Resolver ip address to resolve cluster hostname (multiple can be comma separated)       | 1.1.1.1,8.8.8.8              |
+| HealthCheckProtocol           | Network protocol to use for health check                                                | HTTP                         |
+| HealthCheckPath               | HTTP Path of health check probe                                                         | /liveness                    |
+| HealthCheckInterval           | Health check interval                                                                   | 5s                           |
+| HealthCheckTimeout            | Health check timeout                                                                    | 5s                           |
+| HealthCheckUnhealthyThreshold | Threshold of events before declaring cluster unhealth                                   | 3                            |
+| HealthCheckHealthyThreshold   | Threshold of events before declaring clustern health                                    | 1                            |
+| HealthCheckLogFile            | Logfile name for healthcheck probes                                                     | /tmp/healthcheck             |
+| HTTPProtocol                  | Protocol to use when contacting upstream                                                | HTTP/1.1, HTTP/2, HTTP/3     |
+| MaxConnections                | The maximum number of connections that Envoy will make to the upstream cluster          | 1000                         |
+| MaxPendingRequests            | The maximum number of pending requests that Envoy will allow to the upstream cluster    | 1024                         |
+| MaxRequests                   | The maximum number of parallel requests that Envoy will make to the upstream cluster    | 1024                         |
+| MaxRetries                    | The maximum number of parallel retries that Envoy will allow to the upstream cluster    | 3                            |
+| TLSEnabled                    | Whether to enable TLS or not, HTTP/2 always uses TLS                                    | true, false                  |
+| SNIHostName                   | Hostname to request during TLS handshake                                                |                              |
+| TLSMinimumVersion             | Minimum version of TLS to use                                                           | TLSv10,TLSv11, TLSv12 TLSv13 |
+| TLSMaximumVersion             | Maximum version of TLS to use                                                           | TLSv10,TLSv11, TLSv12 TLSv13 |
+| TLSCipherSuites               | Allowed TLS cipher suite                                                                |                              |
 
 All attributes listed above are mapped on configuration properties of [Envoy Cluster API specifications](https://www.envoyproxy.io/docs/envoy/latest/api-v2/api/v2/cluster.proto#cluster) for detailed explanation of purpose and allowed value of each attribute.
 
-(The route options exposed this way are a subnet of Envoy's capabilities, in general any cluster configuration option Envoy supports can be easily exposed)
+The cluster options exposed this way are a subset of Envoy's capabilities, in general any cluster configuration option Envoy supports can be exposed  this way. Feel free to open an issue if you need more of Envoy's functionality exposed.
 
 ## Background
 
-Envoycp check the database for new or changed clusters every second. In case of any changes envoy will compile a new proxy configuration and send it to all envoyproxy instances.
+Envoycp check the database for new or changed clusters every second. In case of any changes envoycp will compile a new proxy configuration and push it to all envoyproxy instances.

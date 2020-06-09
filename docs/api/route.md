@@ -48,30 +48,30 @@ A route defines how a specific path needs to handled and forwarded on. All opera
 
 Every route can have optional attributes which control what Envoy will do to match the incoming request, respond directly without contacting a backend, or to add additional headers before the request is forwarded upstream.
 
-| attribute name           | purpose | possible values |
-| ------------------------ | ------- | --------------- |
-| DirectResponseStatusCode |         |                 |
-| DirectResponseBody       |         |                 |
-| PrefixRewrite            |         |                 |
-| CORSAllowCredentials     |         |                 |
-| CORSAllowMethods         |         |                 |
-| CORSAllowHeaders         |         |                 |
-| CORSExposeHeaders        |         |                 |
-| CORSMaxAge               |         |                 |
-| HostHeader               |         |                 |
-| BasicAuth                |         |                 |
-| RetryOn                  |         |                 |
-| PerTryTimeout            |         |                 |
-| NumRetries               |         |                 |
-| RetryOnStatusCodes       |         |                 |
+| attribute name           | purpose                                                               | possible values |
+| ------------------------ | --------------------------------------------------------------------- | --------------- |
+| DirectResponseStatusCode | Return an arbitrary HTTP response directly, without proxying.         | 200             |
+| DirectResponseBody       | Body to return when DirectResponseStatusCode is set                   | Hello World     |
+| PrefixRewrite            | Rewrites path when contacting upstream                                |                 |
+| CORSAllowCredentials     | Specifies whether the resource allows credentials                     | false           |
+| CORSAllowMethods         | Specifies the content for the access-control-allow-methods header     |                 |
+| CORSAllowHeaders         | Specifies the content for the access-control-allow-headers header     |                 |
+| CORSExposeHeaders        | Specifies the content for the access-control-expose-headers header    |                 |
+| CORSMaxAge               | Specifies the content for the access-control-max-age header           |                 |
+| HostHeader               | HTTP host header to set when contact upstream cluster                 |                 |
+| BasicAuth                | HTTP Basic authentication header to set when contact upstream cluster | user:secret     |
+| RetryOn                  | Specifies the conditions under which retry takes place.               | [See envoy documentation](https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/router_filter#config-http-filters-router-x-envoy-retry-on)|
+| PerTryTimeout            | Specify upstream timeout per retry attempt                            | 150ms           |
+| NumRetries               | Specify the allowed number of retries                                 | 1               |
+| RetryOnStatusCodes       |                                                                       | 503,504         |
 
 All attributes listed above are mapped on configuration properties of [Envoy route API specifications](https://www.envoyproxy.io/docs/envoy/latest/api-v2/api/v2/route/route_components.proto#envoy-api-msg-route-route) for detailed explanation of purpose and allowed value of each attribute.
 
-(The route options exposed this way are a subnet of Envoy's capabilities, in general any route configuration Envoy supports can be easily added)
+The route options exposed this way are a subset of Envoy's capabilities, in general any route configuration option Envoy supports can be exposed  this way. Feel free to open an issue if you need more of Envoy's functionality exposed.
 
 ## Background
 
-Envoycp check the database for new or changed routes every second. In case of any changes envoy will compile a new proxy configuration and send it to all envoyproxy instances.
+Envoycp check the database for new or changed routes every second. In case of any changes envoycp will compile a new proxy configuration and push it to all envoyproxy instances.
 
 ## More examples
 

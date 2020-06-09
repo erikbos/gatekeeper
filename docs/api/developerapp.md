@@ -46,17 +46,18 @@ A developer application holds the attribut.
 
 ## Fields specification
 
-| fieldname        | optional  | purpose                             |
-| ---------------- | --------- | ----------------------------------- |
-| name             | mandatory | name (cannot be updated afterwards) |
-| displayName      | optional  | friendly name                       |
-| organizationName | mandatory | last name                           |
-| status           | mandatory | wheter                              |
-| attributes       | optional  | specific attributes                 |
+| fieldname        | optional  | purpose                                                   |
+| ---------------- | --------- | --------------------------------------------------------- |
+| name             | mandatory | name (cannot be updated afterwards)                       |
+| displayName      | optional  | friendly name                                             |
+| organizationName | mandatory | last name                                                 |
+| status           | mandatory | status, call will be rejected in case not set to "active" |
+| attributes       | optional  | specific attributes                                       |
 
 ## Attribute specification
 
-| attribute name | purpose                        | possible values |
-| -------------- | ------------------------------ | --------------- |
-| IPAccessList   | source ip request access list  |                 |
-| Referer        | HTTP Referer check access list |                 |
+| attribute name                | purpose                                                       | possible values                |
+| ----------------------------- | ------------------------------------------------------------- | ------------------------------ |
+| IPAccessList                  | source ip request access list                                 | 10.0.0.0/8, 192.168.42.0/24    |
+| Referer                       | HTTP Referer hostname access list                             | *.example.com, www.example.net |
+| _productname_ _quotaPerSecond | Set a specific quota per second rate for a particular product | 50                             |

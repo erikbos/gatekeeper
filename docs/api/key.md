@@ -38,9 +38,9 @@ For POST:
 
 ## Fields specification
 
-| fieldname      | optional  | purpose                                       |
-| -------------- | --------- | --------------------------------------------- |
-| consumerKey    | mandatory | api key, used in apikey-based authentication  |
-| consumerSecret | mandatory | api key secret, used in OAuth2 authentication |
-| apiProducts    | mandatory | allowed [APIProducts](apiproducts.md)         |
-| status         | mandatory |                                               |
+| fieldname      | optional  | purpose                                                       |
+| -------------- | --------- | ------------------------------------------------------------- |
+| consumerKey    | mandatory | api key, used in apikey-based authentication                  |
+| consumerSecret | mandatory | api key secret, used in OAuth2 authentication                 |
+| apiProducts    | mandatory | allowed [APIProducts](apiproducts.md)                         |
+| status         | mandatory | status, requests will not be allowed if not set to "approved" |

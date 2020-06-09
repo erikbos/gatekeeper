@@ -54,20 +54,20 @@ An apiproduct defines a set paths which are allowed to be accessed. Policies can
 
 ## Attribute specification
 
-| attribute name                | purpose                              | possible values |
+| attribute name                | purpose                              | example values |
 | ----------------------------- | ------------------------------------ | --------------- |
-| _productname_ _quotaPerSecond | Set a specific quota per second rate |                 |
+| _productname_ _quotaPerSecond | Set a specific quota per second rate |        50       |
 
 ## Policy specification
 
 The policies field can contain a comma separate list of policies which will be applied before sending the request upstream to a backend.
 
-| attribute name       | purpose                                                                  | possible values |
-| -------------------- | ------------------------------------------------------------------------ | --------------- |
-| checkIPAccessList    | Validate source ip address against developerapp attribute _IPAccessList_ |                 |
-| checkReferer         | Validate Host header against developerapp attribute _Referer_            |                 |
-| sendAPIKey           | send apikey used to upstream                                             |                 |
-| sendDeveloperEmail   | send developer email to upstream                                         |                 |
-| sendDeveloperID      | send developer id to upstream                                            |                 |
-| sendDeveloperAppID   | send developer app id to upstream                                        |                 |
-| sendDeveloperAppName | send developer app name to upstream                                      |                 |
+| attribute name       | purpose                                                                  |
+| -------------------- | ------------------------------------------------------------------------ |
+| checkIPAccessList    | Validate source ip address against developerapp attribute _IPAccessList_ |
+| checkReferer         | Validate Host header against developerapp attribute _Referer_            |
+| sendAPIKey           | send apikey used to upstream                                             |
+| sendDeveloperEmail   | send developer email to upstream                                         |
+| sendDeveloperID      | send developer id to upstream                                            |
+| sendDeveloperAppID   | send developer app id to upstream                                        |
+| sendDeveloperAppName | send developer app name to upstream                                      |
