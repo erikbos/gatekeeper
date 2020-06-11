@@ -138,7 +138,7 @@ func (a *authorizationServer) increaseCounterRequestRejected(r *requestInfo) {
 		product).Inc()
 }
 
-// IncreaseCounterRequestAccept counts requests that are accpeted
+// IncreaseCounterRequestAccept counts requests that are accepted
 func (a *authorizationServer) IncreaseCounterRequestAccept(r *requestInfo) {
 
 	a.metrics.requestsAccepted.WithLabelValues(
@@ -148,7 +148,7 @@ func (a *authorizationServer) IncreaseCounterRequestAccept(r *requestInfo) {
 		r.APIProduct.Name).Inc()
 }
 
-// IncreaseCounterRequestAccept counts requests that are accpeted
+// IncreaseCounterRequestAccept counts requests that are accepted
 func (a *authorizationServer) IncreaseCounterConfigLoad(what string) {
 
 	a.metrics.configLoads.WithLabelValues(what).Inc()

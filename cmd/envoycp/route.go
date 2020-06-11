@@ -27,7 +27,7 @@ const (
 )
 
 // FIXME this does not detect removed records
-// GetRouteConfigFromDatabase continously gets the current configuration
+// GetRouteConfigFromDatabase continuously gets the current configuration
 func (s *server) GetRouteConfigFromDatabase(n chan xdsNotifyMesssage) {
 	var routesLastUpdate int64
 	var routeMutex sync.Mutex
@@ -389,7 +389,7 @@ func buildStatusCodesSlice(statusCodes string) []uint32 {
 	var statusCodeSlice []uint32
 
 	for _, statusCode := range strings.Split(statusCodes, ",") {
-		// we only add succesfully parse integers
+		// we only add successfully parse integers
 		if value, err := strconv.Atoi(statusCode); err == nil {
 			statusCodeSlice = append(statusCodeSlice, uint32(value))
 		}

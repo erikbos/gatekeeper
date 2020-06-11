@@ -59,12 +59,12 @@ Every route can have optional attributes which control what Envoy will do to mat
 | CORSAllowHeaders         | Specifies the content for the [Access-Control-Allow-Headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Headers) header     |                 |
 | CORSExposeHeaders        | Specifies the content for the [Access-Control-Expose-Headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Expose-Headers) header    |                 |
 | CORSMaxAge               | Specifies the content for the [Access-Control-Max-Age](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Max-Age) header           |                 |
-| HostHeader               | HTTP host header to set when contact upstream cluster                 |                 |
+| HostHeader               | HTTP host header to set when forwarding to upstream cluster                 |                 |
 | BasicAuth                | HTTP Basic authentication header to set when contact upstream cluster | user:secret     |
 | RetryOn                  | Specifies the conditions under which retry takes place.               | [See envoy documentation](https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/router_filter#config-http-filters-router-x-envoy-retry-on)|
 | PerTryTimeout            | Specify upstream timeout per retry attempt                            | 150ms           |
 | NumRetries               | Specify the allowed number of retries                                 | 1               |
-| RetryOnStatusCodes       |                                                                       | 503,504         |
+| RetryOnStatusCodes       | Upstream status codes which are allowed to be retried                 | 503,504         |
 
 All attributes listed above are mapped on configuration properties of [Envoy route API specifications](https://www.envoyproxy.io/docs/envoy/latest/api-v2/api/v2/route/route_components.proto#envoy-api-msg-route-route) for detailed explanation of purpose and allowed value of each attribute.
 
@@ -76,7 +76,7 @@ Envoycp check the database for new or changed routes every second. In case of an
 
 ## More examples
 
-Direct response without contact backend:
+Direct response by envoy without forwarding to upstream cluster:
 
 ```json
 {

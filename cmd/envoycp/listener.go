@@ -30,7 +30,7 @@ const (
 )
 
 // FIXME this does not detect removed records
-// GetVirtualHostConfigFromDatabase continously gets the current configuration
+// GetVirtualHostConfigFromDatabase continuously gets the current configuration
 func (s *server) GetVirtualHostConfigFromDatabase(n chan xdsNotifyMesssage) {
 	var virtualHostsLastUpdate int64
 	var virtualHostsMutex sync.Mutex

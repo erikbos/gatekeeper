@@ -16,7 +16,7 @@ const (
 
 // var virtualhostsMap map[string]string
 
-// GetVirtualHostConfigFromDatabase continously gets the current configuration
+// GetVirtualHostConfigFromDatabase continuously gets the current configuration
 func (a *authorizationServer) GetVirtualHostConfigFromDatabase() {
 	var virtualHostsLastUpdate int64
 	var virtualHostsMutex sync.Mutex
@@ -64,7 +64,7 @@ func (a *authorizationServer) buildVhostMap() map[string]string {
 	return m
 }
 
-// GetRouteConfigFromDatabase continously gets the current configuration
+// GetRouteConfigFromDatabase continuously gets the current configuration
 func (a *authorizationServer) GetRouteConfigFromDatabase() {
 	var routesLastUpdate int64
 	var routeMutex sync.Mutex

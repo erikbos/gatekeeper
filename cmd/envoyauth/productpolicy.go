@@ -148,7 +148,7 @@ func checkHostinAccessList(hostHeader string, hostAccessList string) bool {
 		return false
 	}
 	for _, hostPattern := range strings.Split(hostAccessList, ",") {
-		// Testing for matching error does not make sense: we cannot differentiate betwen bad regexp
+		// Testing for matching error does not make sense: we cannot differentiate between bad regexp
 		// or not-matching
 		if ok, _ := doublestar.Match(hostPattern, hostHeader); ok {
 			return true

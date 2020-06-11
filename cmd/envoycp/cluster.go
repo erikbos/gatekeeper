@@ -24,7 +24,7 @@ const (
 )
 
 // FIXME this does not detect removed records
-// getClusterConfigFromDatabase continously gets the current configuration
+// getClusterConfigFromDatabase continuously gets the current configuration
 func (s *server) GetClusterConfigFromDatabase(n chan xdsNotifyMesssage) {
 
 	var clustersLastUpdate int64
