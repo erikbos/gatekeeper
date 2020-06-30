@@ -53,6 +53,8 @@ jobs:
     steps:
     - name: Set up kubectl
       uses: azure/setup-kubectl@v1
+      with:
+        version: 'v1.16.6'
 
     - name: Set context
       uses: azure/k8s-set-context@v1
@@ -61,6 +63,9 @@ jobs:
 
     - name: Kubectl rollout restart
       run: |
+
+        kubectl version
+
         kubectl rollout restart deployment/dbadmin
         kubectl rollout restart deployment/envoyauth
         kubectl rollout restart deployment/envoycp
