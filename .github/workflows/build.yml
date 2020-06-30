@@ -63,7 +63,6 @@ jobs:
 
     - name: Kubectl rollout restart
       run: |
-
         kubectl version
 
         kubectl rollout restart deployment/dbadmin
