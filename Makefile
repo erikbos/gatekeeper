@@ -25,20 +25,22 @@ testbackend:
 	go build -o $(BIN)/testbackend $(LDFLAGS) cmd/testbackend/*.go
 
 
-docker-images: docker-dbadmin docker-envoyauth docker-envoycp docker-testbackend
+docker-images: docker-baseimage docker-dbadmin docker-envoyauth docker-envoycp docker-testbackend
+
+docker-baseimage:
+	 docker build -f build/Dockerfile.baseimage . -t gatekeeper/baseimage
 
 docker-dbadmin:
-	 docker build -t gatekeeper/dbadmin:$(VERSION) . -f build/Dockerfile.dbadmin
+	 docker build -f build/Dockerfile.dbadmin . -t gatekeeper/dbadmin:$(VERSION)
 
 docker-envoyauth:
-	 docker build -t gatekeeper/envoyauth:$(VERSION) . -f build/Dockerfile.envoyauth
+	 docker build -f build/Dockerfile.envoyauth . -t gatekeeper/envoyauth:$(VERSION)
 
 docker-envoycp:
-	 docker build -t gatekeeper/envoycp:$(VERSION) . -f build/Dockerfile.envoycp
+	 docker build -f build/Dockerfile.envoycp . -t gatekeeper/envoycp:$(VERSION)
 
 docker-testbackend:
-	 docker build -t gatekeeper/testbackend:$(VERSION) . -f  build/Dockerfile.testbackend
-
+	 docker build -f  build/Dockerfile.testbackend . -t gatekeeper/testbackend:$(VERSION)
 
 clean:
 	rm -f $(BIN)/dbadmin $(BIN)/envoyauth $(BIN)/envoycp $(BIN)/testbackend

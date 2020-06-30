@@ -91,7 +91,7 @@ func (d *Database) registerMetrics() {
 		prometheus.CounterOpts{
 			Namespace: d.ServiceName,
 			Name:      "database_lookup_misses_total",
-			Help:      "Number of unsuccesful database lookups.",
+			Help:      "Number of unsuccessful database lookups.",
 		}, []string{"hostname", "table"})
 
 	d.dbLookupHistogram = prometheus.NewSummary(
