@@ -5,9 +5,10 @@ on:
     branches: [ master ]
 
 jobs:
-  build_containers:
-    runs-on: ubuntu-latest
+  build:
+    name: Build containers
 
+    runs-on: ubuntu-latest
     steps:
     - name: Check out code into the Go module directory
       uses: actions/checkout@v2
@@ -42,3 +43,25 @@ jobs:
        docker push ${{ secrets.acr_hostname }}/envoyauth
        docker push ${{ secrets.acr_hostname }}/envoycp
        docker push ${{ secrets.acr_hostname }}/testbackend
+
+  deploy:
+    name: Deploy containers
+
+    needs: build
+
+    runs-on: ubuntu-latest
+    steps:
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v1
+
+    - name: Set context
+      uses: azure/k8s-set-context@v1
+      with:
+        kubeconfig: ${{secrets.KUBE_CONFIG}}
+
+    - name: Kubectl rollout restart
+      run: |
+        kubectl rollout restart deployment/dbadmin
+        kubectl rollout restart deployment/envoyauth
+        kubectl rollout restart deployment/envoycp
+        kubectl rollout restart deployment/testbackend
