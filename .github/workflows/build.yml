@@ -57,7 +57,7 @@ jobs:
     - name: Set context
       uses: azure/k8s-set-context@v1
       with:
-        kubeconfig: ${{secrets.KUBE_CONFIG}}
+        kubeconfig: ${{ secrets.KUBE_CONFIG }}
 
     - name: Kubectl rollout restart
       run: |
@@ -65,3 +65,5 @@ jobs:
         kubectl rollout restart deployment/envoyauth
         kubectl rollout restart deployment/envoycp
         kubectl rollout restart deployment/testbackend
+
+        kubectl get pods
