@@ -40,7 +40,7 @@ func (r *Readiness) Up() {
 
 // updateReadinessState set current readiness state if it has changed
 func (r *Readiness) updateReadinessState(newState bool) {
-	// In case timestamp is zero (= @ startup) we always set status
+	// In case timestamp is zero, when we first started, we always set status
 	if r.LastStateChange.IsZero() || r.Status != newState {
 		r.Status = newState
 		r.LastStateChange = time.Now().UTC()

@@ -34,7 +34,7 @@ func (d *Database) runContinousHealthCheck() {
 			}
 			d.readiness.Up()
 		} else {
-			log.Warnf("Database healthcheck failed (%s)", err)
+			log.Warnf("Database healthcheck failed: %s", err)
 			connected = false
 
 			d.readiness.Down()

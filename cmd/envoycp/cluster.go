@@ -216,7 +216,7 @@ func clusterHealthCodec(cluster shared.Cluster) envoy_type.CodecClientType {
 			return envoy_type.CodecClientType_HTTP3
 
 		default:
-			log.Warnf("Cluster %s has attribute %s with unknown value %s",
+			log.Warnf("Cluster '%s' has attribute '%s' with unknown value '%s'",
 				cluster.Name, attributeHTTPProtocol, value)
 		}
 	}
@@ -248,7 +248,7 @@ func clusterHTTP2ProtocolOptions(cluster shared.Cluster) *core.Http2ProtocolOpti
 		}
 	}
 
-	log.Warnf("ClusterProtocol: %s has attribute %s with unknown value %s",
+	log.Warnf("ClusterProtocol: '%s' has attribute '%s' with unknown value '%s'",
 		cluster.Name, attributeHTTPProtocol, value)
 	return nil
 }
@@ -299,7 +299,7 @@ func clusterALPNOptions(cluster shared.Cluster) []string {
 		}
 	}
 
-	log.Warnf("clusterALPNOptions: cluster %s has attribute %s with unknown value %s",
+	log.Warnf("Cluster '%s' has attribute '%s' with unsupported value '%s'",
 		cluster.Name, attributeHTTPProtocol, value)
 
 	return []string{"http/1.1"}

@@ -18,7 +18,7 @@ func StartLogging(myName, version, buildTime string) {
 func SetLoggingConfiguration(loglevel string) {
 	level, err := log.ParseLevel(loglevel)
 	if err != nil {
-		log.Fatalf("Cannot set unknown loglevel %s", loglevel)
+		log.Fatalf("Cannot set unknown loglevel '%s'", loglevel)
 	}
 	log.SetLevel(level)
 	log.Info("Log level set to ", loglevel)

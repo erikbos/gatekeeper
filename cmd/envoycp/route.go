@@ -77,7 +77,7 @@ func (s *server) getEnvoyRouteConfig() ([]cache.Resource, error) {
 
 	RouteGroupNames := s.getRouteGroupNames(s.routes)
 	for RouteGroupName := range RouteGroupNames {
-		log.Infof("Adding RouteGroup %s", RouteGroupName)
+		log.Infof("Adding routegroup '%s'", RouteGroupName)
 		envoyRoutes = append(envoyRoutes, s.buildEnvoyVirtualHostRouteConfig(RouteGroupName, s.routes))
 	}
 
@@ -125,7 +125,7 @@ func (s *server) buildEnvoyRoutes(RouteGroup string, routes []shared.Route) []*r
 func (s *server) buildEnvoyRoute(routeEntry shared.Route) *route.Route {
 	routeMatch := buildRouteMatch(routeEntry)
 	if routeMatch == nil {
-		log.Warnf("Cannot build route config for route %s", routeEntry.Name)
+		log.Warnf("Cannot build route config for route '%s'", routeEntry.Name)
 		return nil
 	}
 

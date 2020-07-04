@@ -222,7 +222,7 @@ func (s *server) listenerALPNOptions(v shared.VirtualHost) []string {
 			return []string{"h2", "http/1.1"}
 
 		default:
-			log.Warnf("listenerALPNOptions: vhost %s has attribute %s with unknown value %s",
+			log.Warnf("Virtual host '%s' has attribute '%s' with unsupported value '%s'",
 				v.Name, attributeHTTPProtocol, value)
 		}
 	}
@@ -308,7 +308,7 @@ func (s *server) buildRouteSpecifier(RouteGroup string) *hcm.HttpConnectionManag
 }
 
 // func buildRouteSpecifierRDS(RouteGroup string) *hcm.HttpConnectionManager_Rds {
-// 	// FIXME
+// 	// TODO
 // 	XdsCluster := "xds_cluster"
 
 // 	return &hcm.HttpConnectionManager_Rds{
@@ -350,6 +350,7 @@ func buildAccessLog(logFilename string, fieldFormats map[string]string) []*filte
 		log.Panic(err)
 	}
 	return []*filterAccessLog.AccessLog{{
+		// TODO: this should be configurable
 		Name: "envoy.file_access_log",
 		ConfigType: &filterAccessLog.AccessLog_TypedConfig{
 			TypedConfig: accessLogTypedConf,
