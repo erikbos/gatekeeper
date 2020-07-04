@@ -125,9 +125,10 @@ func (s *server) buildEnvoyListenerConfig(port int) *listener.Listener {
 }
 
 func buildListenerFilterHTTP() []*listener.ListenerFilter {
+
 	return []*listener.ListenerFilter{
 		{
-			Name: "envoy.filters.listener.http_inspector",
+			Name: wellknown.HttpInspector,
 		},
 	}
 }
@@ -162,7 +163,7 @@ func (s *server) buildFilterChainEntry(l *listener.Listener, v shared.VirtualHos
 	// Enable TLS protocol on listener
 	l.ListenerFilters = []*listener.ListenerFilter{
 		{
-			Name: "envoy.filters.listener.tls_inspector",
+			Name: wellknown.TlsInspector,
 		},
 	}
 
@@ -241,18 +242,19 @@ func (s *server) buildConnectionManager(httpFilters []*hcm.HttpFilter, v shared.
 }
 
 func (s *server) buildFilter() []*hcm.HttpFilter {
+
 	return []*hcm.HttpFilter{
 		{
-			Name: "envoy.ext_authz",
+			Name: wellknown.HTTPExternalAuthorization,
 			ConfigType: &hcm.HttpFilter_TypedConfig{
 				TypedConfig: s.buildExtAuthzFilterConfig(),
 			},
 		},
 		{
-			Name: "envoy.filters.http.cors",
+			Name: wellknown.CORS,
 		},
 		{
-			Name: "envoy.filters.http.router",
+			Name: wellknown.Router,
 		},
 	}
 }
@@ -264,7 +266,8 @@ func (s *server) buildExtAuthzFilterConfig() *anypb.Any {
 	extAuthz := &extAuthz.ExtAuthz{
 		FailureModeAllow: s.config.XDS.ExtAuthz.FailureModeAllow,
 		Services: &extAuthz.ExtAuthz_GrpcService{
-			GrpcService: s.buildGRPCService(1),
+			GrpcService: s.buildGRPCService(s.config.XDS.ExtAuthz.Cluster,
+				s.config.XDS.ExtAuthz.Timeout),
 		},
 	}
 	if s.config.XDS.ExtAuthz.RequestBodySize > 0 {
@@ -288,12 +291,12 @@ func (s *server) extAuthzWithRequestBody() *extAuthz.BufferSettings {
 	return nil
 }
 
-func (s *server) buildGRPCService(timeout time.Duration) *core.GrpcService {
+func (s *server) buildGRPCService(clusterName string, d time.Duration) *core.GrpcService {
 	return &core.GrpcService{
-		Timeout: ptypes.DurationProto(s.config.XDS.ExtAuthz.Timeout),
+		Timeout: ptypes.DurationProto(d),
 		TargetSpecifier: &core.GrpcService_EnvoyGrpc_{
 			EnvoyGrpc: &core.GrpcService_EnvoyGrpc{
-				ClusterName: s.config.XDS.ExtAuthz.Cluster,
+				ClusterName: clusterName,
 			},
 		},
 	}
