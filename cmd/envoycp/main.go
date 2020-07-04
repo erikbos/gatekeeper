@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/envoyproxy/go-control-plane/pkg/cache"
-	xds "github.com/envoyproxy/go-control-plane/pkg/server"
+	"github.com/envoyproxy/go-control-plane/pkg/cache/v3"
+	xds "github.com/envoyproxy/go-control-plane/pkg/server/v3"
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"

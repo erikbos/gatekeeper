@@ -5,19 +5,17 @@ import (
 	"sync"
 	"time"
 
-	api "github.com/envoyproxy/go-control-plane/envoy/api/v2"
-	auth "github.com/envoyproxy/go-control-plane/envoy/api/v2/auth"
-	core "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
-	listener "github.com/envoyproxy/go-control-plane/envoy/api/v2/listener"
-	accessLog "github.com/envoyproxy/go-control-plane/envoy/config/accesslog/v2"
-	filterAccessLog "github.com/envoyproxy/go-control-plane/envoy/config/filter/accesslog/v2"
-	extAuthz "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/ext_authz/v2"
-	hcm "github.com/envoyproxy/go-control-plane/envoy/config/filter/network/http_connection_manager/v2"
-	"github.com/envoyproxy/go-control-plane/pkg/cache"
+	accessLog "github.com/envoyproxy/go-control-plane/envoy/config/accesslog/v3"
+	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
+	listener "github.com/envoyproxy/go-control-plane/envoy/config/listener/v3"
+	fileAccessLog "github.com/envoyproxy/go-control-plane/envoy/extensions/access_loggers/file/v3"
+	extAuthz "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/ext_authz/v3"
+	hcm "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
+	tls "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/tls/v3"
+	cache "github.com/envoyproxy/go-control-plane/pkg/cache/types"
 	"github.com/envoyproxy/go-control-plane/pkg/wellknown"
 	"github.com/golang/protobuf/ptypes"
 	spb "github.com/golang/protobuf/ptypes/struct"
-	"github.com/golang/protobuf/ptypes/wrappers"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/types/known/anypb"
 
@@ -108,9 +106,9 @@ func (s *server) getVirtualHostsOfRouteGroup(RouteGroupName string) []string {
 	return virtualHostsInRouteGroup
 }
 
-func (s *server) buildEnvoyListenerConfig(port int) *api.Listener {
+func (s *server) buildEnvoyListenerConfig(port int) *listener.Listener {
 
-	newListener := &api.Listener{
+	newListener := &listener.Listener{
 		Name:            fmt.Sprintf("port_%d", port),
 		Address:         buildAddress("0.0.0.0", port),
 		ListenerFilters: buildListenerFilterHTTP(),
@@ -134,7 +132,7 @@ func buildListenerFilterHTTP() []*listener.ListenerFilter {
 	}
 }
 
-func (s *server) buildFilterChainEntry(l *api.Listener, v shared.VirtualHost) *listener.FilterChain {
+func (s *server) buildFilterChainEntry(l *listener.Listener, v shared.VirtualHost) *listener.FilterChain {
 	httpFilter := s.buildFilter()
 
 	manager := s.buildConnectionManager(httpFilter, v)
@@ -175,9 +173,9 @@ func (s *server) buildFilterChainEntry(l *api.Listener, v shared.VirtualHost) *l
 		}
 
 	// Add TLS certifcate configuration
-	downStreamTLSConfig := &auth.DownstreamTlsContext{
-		CommonTlsContext: &auth.CommonTlsContext{
-			TlsCertificates: []*auth.TlsCertificate{
+	downStreamTLSConfig := &tls.DownstreamTlsContext{
+		CommonTlsContext: &tls.CommonTlsContext{
+			TlsCertificates: []*tls.TlsCertificate{
 				{
 					CertificateChain: &core.DataSource{
 						Specifier: &core.DataSource_InlineString{
@@ -235,7 +233,7 @@ func (s *server) buildConnectionManager(httpFilters []*hcm.HttpFilter, v shared.
 	return &hcm.HttpConnectionManager{
 		CodecType:        hcm.HttpConnectionManager_AUTO,
 		StatPrefix:       "ingress_http",
-		UseRemoteAddress: &wrappers.BoolValue{Value: true},
+		UseRemoteAddress: protoBool(true),
 		RouteSpecifier:   s.buildRouteSpecifier(v.RouteGroup),
 		HttpFilters:      httpFilters,
 		AccessLog:        buildAccessLog(s.config.XDS.Envoy.LogFilename, s.config.XDS.Envoy.LogFields),
@@ -330,7 +328,7 @@ func (s *server) buildRouteSpecifier(RouteGroup string) *hcm.HttpConnectionManag
 // 	}
 // }
 
-func buildAccessLog(logFilename string, fieldFormats map[string]string) []*filterAccessLog.AccessLog {
+func buildAccessLog(logFilename string, fieldFormats map[string]string) []*accessLog.AccessLog {
 	jsonFormat := &spb.Struct{
 		Fields: map[string]*spb.Value{},
 	}
@@ -341,18 +339,20 @@ func buildAccessLog(logFilename string, fieldFormats map[string]string) []*filte
 			}
 		}
 	}
-	accessLogConf := &accessLog.FileAccessLog{
-		Path:            logFilename,
-		AccessLogFormat: &accessLog.FileAccessLog_JsonFormat{JsonFormat: jsonFormat},
+	accessLogConf := &fileAccessLog.FileAccessLog{
+		Path: logFilename,
+		AccessLogFormat: &fileAccessLog.FileAccessLog_JsonFormat{
+			JsonFormat: jsonFormat,
+		},
 	}
 	accessLogTypedConf, err := ptypes.MarshalAny(accessLogConf)
 	if err != nil {
 		log.Panic(err)
 	}
-	return []*filterAccessLog.AccessLog{{
+	return []*accessLog.AccessLog{{
 		// TODO: this should be configurable
 		Name: "envoy.file_access_log",
-		ConfigType: &filterAccessLog.AccessLog_TypedConfig{
+		ConfigType: &accessLog.AccessLog_TypedConfig{
 			TypedConfig: accessLogTypedConf,
 		},
 	}}

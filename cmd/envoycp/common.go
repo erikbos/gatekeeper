@@ -1,7 +1,7 @@
 package main
 
 import (
-	core "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
+	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	"github.com/golang/protobuf/ptypes/wrappers"
 )
 
@@ -19,15 +19,27 @@ func buildAddress(hostname string, port int) *core.Address {
 	}}
 }
 
-// Uint32orNil returns value in *wrapperspb.UInt32Value
-func Uint32orNil(val int) *wrappers.UInt32Value {
+func protoBool(b bool) *wrappers.BoolValue {
+
+	if b {
+		return &wrappers.BoolValue{Value: true}
+	}
+	return &wrappers.BoolValue{Value: false}
+}
+
+func protoUint32(i uint32) *wrappers.UInt32Value {
+
+	return &wrappers.UInt32Value{
+		Value: i,
+	}
+}
+
+func protoUint32orNil(val int) *wrappers.UInt32Value {
 
 	if val == 0 {
 		return nil
 	}
-	return &wrappers.UInt32Value{
-		Value: uint32(val),
-	}
+	return protoUint32(uint32(val))
 }
 
 // FIXME probably more of the transportsocket related stuff can move here as
