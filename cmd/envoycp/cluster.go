@@ -5,13 +5,12 @@ import (
 	"sync"
 	"time"
 
-	api "github.com/envoyproxy/go-control-plane/envoy/api/v2"
-	auth "github.com/envoyproxy/go-control-plane/envoy/api/v2/auth"
-	envoy_cluster "github.com/envoyproxy/go-control-plane/envoy/api/v2/cluster"
-	core "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
-	endpoint "github.com/envoyproxy/go-control-plane/envoy/api/v2/endpoint"
-	envoy_type "github.com/envoyproxy/go-control-plane/envoy/type"
-	cache "github.com/envoyproxy/go-control-plane/pkg/cache"
+	envoyCluster "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
+	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
+	endpoint "github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3"
+	tls "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/tls/v3"
+	envoyType "github.com/envoyproxy/go-control-plane/envoy/type/v3"
+	cache "github.com/envoyproxy/go-control-plane/pkg/cache/types"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/duration"
 	log "github.com/sirupsen/logrus"
@@ -84,16 +83,16 @@ func (s *server) getEnvoyClusterConfig() ([]cache.Resource, error) {
 }
 
 // buildEnvoyClusterConfig builds one envoy cluster configuration
-func buildEnvoyClusterConfig(cluster shared.Cluster) *api.Cluster {
+func buildEnvoyClusterConfig(cluster shared.Cluster) *envoyCluster.Cluster {
 
-	envoyCluster := &api.Cluster{
+	envoyCluster := &envoyCluster.Cluster{
 		Name:                      cluster.Name,
 		ConnectTimeout:            clusterConnectTimeout(cluster),
-		ClusterDiscoveryType:      &api.Cluster_Type{Type: api.Cluster_LOGICAL_DNS},
-		DnsLookupFamily:           api.Cluster_V4_ONLY,
+		ClusterDiscoveryType:      &envoyCluster.Cluster_Type{Type: envoyCluster.Cluster_LOGICAL_DNS},
+		DnsLookupFamily:           envoyCluster.Cluster_V4_ONLY,
 		DnsResolvers:              clusterDNSResolvers(cluster),
 		DnsRefreshRate:            clusterDNSRefreshRate(cluster),
-		LbPolicy:                  api.Cluster_ROUND_ROBIN,
+		LbPolicy:                  envoyCluster.Cluster_ROUND_ROBIN,
 		LoadAssignment:            clusterLoadAssignment(cluster),
 		HealthChecks:              clusterHealthCheckConfig(cluster),
 		CommonHttpProtocolOptions: clusterCommonHTTPProtocolOptions(cluster),
@@ -118,9 +117,9 @@ func clusterConnectTimeout(cluster shared.Cluster) *duration.Duration {
 	return ptypes.DurationProto(connectTimeout)
 }
 
-func clusterLoadAssignment(cluster shared.Cluster) *api.ClusterLoadAssignment {
+func clusterLoadAssignment(cluster shared.Cluster) *endpoint.ClusterLoadAssignment {
 
-	return &api.ClusterLoadAssignment{
+	return &endpoint.ClusterLoadAssignment{
 		ClusterName: cluster.Name,
 		Endpoints:   buildEndpoint(cluster.HostName, cluster.Port),
 	}
@@ -143,19 +142,19 @@ func buildEndpoint(hostname string, port int) []*endpoint.LocalityLbEndpoints {
 	}
 }
 
-func clusterCircuitBreaker(cluster shared.Cluster) *envoy_cluster.CircuitBreakers {
+func clusterCircuitBreaker(cluster shared.Cluster) *envoyCluster.CircuitBreakers {
 
 	maxConnections := shared.GetAttributeAsInt(cluster.Attributes, attributeMaxConnections, 0)
 	maxPendingRequests := shared.GetAttributeAsInt(cluster.Attributes, attributeMaxPendingRequests, 0)
 	maxRequests := shared.GetAttributeAsInt(cluster.Attributes, attributeMaxRequests, 0)
 	maxRetries := shared.GetAttributeAsInt(cluster.Attributes, attributeMaxRetries, 0)
 
-	return &envoy_cluster.CircuitBreakers{
-		Thresholds: []*envoy_cluster.CircuitBreakers_Thresholds{{
-			MaxConnections:     Uint32orNil(maxConnections),
-			MaxPendingRequests: Uint32orNil(maxPendingRequests),
-			MaxRequests:        Uint32orNil(maxRequests),
-			MaxRetries:         Uint32orNil(maxRetries),
+	return &envoyCluster.CircuitBreakers{
+		Thresholds: []*envoyCluster.CircuitBreakers_Thresholds{{
+			MaxConnections:     protoUint32orNil(maxConnections),
+			MaxPendingRequests: protoUint32orNil(maxPendingRequests),
+			MaxRequests:        protoUint32orNil(maxRequests),
+			MaxRetries:         protoUint32orNil(maxRetries),
 		}},
 	}
 }
@@ -192,8 +191,8 @@ func clusterHealthCheckConfig(cluster shared.Cluster) []*core.HealthCheck {
 			},
 			Interval:           ptypes.DurationProto(healthCheckInterval),
 			Timeout:            ptypes.DurationProto(healthCheckTimeout),
-			UnhealthyThreshold: Uint32orNil(healthCheckUnhealthyThreshold),
-			HealthyThreshold:   Uint32orNil(healthCheckHealthyThreshold),
+			UnhealthyThreshold: protoUint32orNil(healthCheckUnhealthyThreshold),
+			HealthyThreshold:   protoUint32orNil(healthCheckHealthyThreshold),
 		}
 		if healthCheckLogFile != "" {
 			healthCheck.EventLogPath = healthCheckLogFile
@@ -204,23 +203,23 @@ func clusterHealthCheckConfig(cluster shared.Cluster) []*core.HealthCheck {
 	return nil
 }
 
-func clusterHealthCodec(cluster shared.Cluster) envoy_type.CodecClientType {
+func clusterHealthCodec(cluster shared.Cluster) envoyType.CodecClientType {
 
 	value, err := shared.GetAttribute(cluster.Attributes, attributeHTTPProtocol)
 	if err == nil {
 		switch value {
 		case attributeHTTPProtocolHTTP2:
-			return envoy_type.CodecClientType_HTTP2
+			return envoyType.CodecClientType_HTTP2
 
 		case attributeHTTPProtocolHTTP3:
-			return envoy_type.CodecClientType_HTTP3
+			return envoyType.CodecClientType_HTTP3
 
 		default:
 			log.Warnf("Cluster '%s' has attribute '%s' with unknown value '%s'",
 				cluster.Name, attributeHTTPProtocol, value)
 		}
 	}
-	return envoy_type.CodecClientType_HTTP1
+	return envoyType.CodecClientType_HTTP1
 }
 
 // clusterCommonHTTPProtocolOptions sets HTTP options applicable to both HTTP/1 and /2
@@ -256,9 +255,9 @@ func clusterHTTP2ProtocolOptions(cluster shared.Cluster) *core.Http2ProtocolOpti
 // clusterTransportSocket configures TLS settings
 func clusterTransportSocket(cluster shared.Cluster) *core.TransportSocket {
 
-	TLSContext := &auth.UpstreamTlsContext{
+	TLSContext := &tls.UpstreamTlsContext{
 		Sni: clusterSNIHostname(cluster),
-		CommonTlsContext: &auth.CommonTlsContext{
+		CommonTlsContext: &tls.CommonTlsContext{
 			AlpnProtocols: clusterALPNOptions(cluster),
 			TlsParams:     clusterTLSOptions(cluster),
 		},
@@ -306,9 +305,9 @@ func clusterALPNOptions(cluster shared.Cluster) []string {
 }
 
 // clusterALPNOptions sets TLS minimum and max cipher options
-func clusterTLSOptions(cluster shared.Cluster) *auth.TlsParameters {
+func clusterTLSOptions(cluster shared.Cluster) *tls.TlsParameters {
 
-	tlsParameters := &auth.TlsParameters{}
+	tlsParameters := &tls.TlsParameters{}
 	if minVersion, err := shared.GetAttribute(cluster.Attributes, attributeTLSMinimumVersion); err == nil {
 		tlsParameters.TlsMinimumProtocolVersion = tlsVersion(minVersion)
 	}
@@ -320,19 +319,19 @@ func clusterTLSOptions(cluster shared.Cluster) *auth.TlsParameters {
 	return tlsParameters
 }
 
-func tlsVersion(version string) auth.TlsParameters_TlsProtocol {
+func tlsVersion(version string) tls.TlsParameters_TlsProtocol {
 
 	switch version {
 	case attributeValueTLS10:
-		return auth.TlsParameters_TLSv1_0
+		return tls.TlsParameters_TLSv1_0
 	case attributeValueTLS11:
-		return auth.TlsParameters_TLSv1_1
+		return tls.TlsParameters_TLSv1_1
 	case attributeValueTLS12:
-		return auth.TlsParameters_TLSv1_2
+		return tls.TlsParameters_TLSv1_2
 	case attributeValueTLS13:
-		return auth.TlsParameters_TLSv1_3
+		return tls.TlsParameters_TLSv1_3
 	}
-	return auth.TlsParameters_TLS_AUTO
+	return tls.TlsParameters_TLS_AUTO
 }
 
 func tlsCipherSuites(cluster shared.Cluster) []string {

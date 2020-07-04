@@ -7,17 +7,16 @@ import (
 	"sync"
 	"time"
 
-	api "github.com/envoyproxy/go-control-plane/envoy/api/v2"
-	core "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
-	route "github.com/envoyproxy/go-control-plane/envoy/api/v2/route"
-	envoyauth "github.com/envoyproxy/go-control-plane/envoy/config/filter/http/ext_authz/v2"
-	envoymatcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher"
-	cache "github.com/envoyproxy/go-control-plane/pkg/cache"
-	"github.com/envoyproxy/go-control-plane/pkg/conversion"
+	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
+	route "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
+	envoyauth "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/ext_authz/v3"
+	envoymatcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
+	cache "github.com/envoyproxy/go-control-plane/pkg/cache/types"
+	"github.com/envoyproxy/go-control-plane/pkg/wellknown"
+	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
-	"github.com/golang/protobuf/ptypes/wrappers"
+	"github.com/golang/protobuf/ptypes/any"
 	log "github.com/sirupsen/logrus"
-	"google.golang.org/protobuf/types/known/structpb"
 
 	"github.com/erikbos/gatekeeper/pkg/shared"
 )
@@ -95,9 +94,9 @@ func (s *server) getRouteGroupNames(vhosts []shared.Route) map[string]bool {
 
 // buildEnvoyVirtualHostRouteConfig builds vhost and route configuration of one RouteGroup
 func (s *server) buildEnvoyVirtualHostRouteConfig(RouteGroup string,
-	routes []shared.Route) *api.RouteConfiguration {
+	routes []shared.Route) *route.RouteConfiguration {
 
-	return &api.RouteConfiguration{
+	return &route.RouteConfiguration{
 		Name: RouteGroup,
 		VirtualHosts: []*route.VirtualHost{
 			{
@@ -138,10 +137,10 @@ func (s *server) buildEnvoyRoute(routeEntry shared.Route) *route.Route {
 		envoyRoute.Action = buildRouteActionCluster(routeEntry)
 	}
 
-	// Add direct response config if required
+	// disable extauth for this if required
 	_, err := shared.GetAttribute(routeEntry.Attributes, attributeDisableAuthentication)
 	if err == nil {
-		envoyRoute.PerFilterConfig = buildRoutePerFilterConfig(routeEntry)
+		envoyRoute.TypedPerFilterConfig = buildRoutePerFilterConfig(routeEntry)
 		return envoyRoute
 	}
 
@@ -258,7 +257,7 @@ func buildCorsPolicy(routeEntry shared.Route) *route.CorsPolicy {
 
 	corsAllowCredentials, err := shared.GetAttribute(routeEntry.Attributes, attributeCORSAllowCredentials)
 	if err == nil && corsAllowCredentials == attributeValueTrue {
-		corsPolicy.AllowCredentials = &wrappers.BoolValue{Value: true}
+		corsPolicy.AllowCredentials = protoBool(true)
 		corsConfigured = true
 	}
 
@@ -284,9 +283,8 @@ func buildRegexpMatcher(regexp string) *envoymatcher.RegexMatcher {
 	return &envoymatcher.RegexMatcher{
 		EngineType: &envoymatcher.RegexMatcher_GoogleRe2{
 			GoogleRe2: &envoymatcher.RegexMatcher_GoogleRE2{
-				MaxProgramSize: &wrappers.UInt32Value{
-					Value: 100,
-				},
+				// TODO magic number
+				MaxProgramSize: protoUint32(100),
 			},
 		},
 		Regex: regexp,
@@ -294,12 +292,12 @@ func buildRegexpMatcher(regexp string) *envoymatcher.RegexMatcher {
 }
 
 // buildHostRewrite return CorsPolicy based upon a route's attribute(s)
-func buildHostRewrite(routeEntry shared.Route) *route.RouteAction_HostRewrite {
+func buildHostRewrite(routeEntry shared.Route) *route.RouteAction_HostRewriteHeader {
 
 	upstreamHostHeader, err := shared.GetAttribute(routeEntry.Attributes, attributeHostHeader)
 	if err == nil && upstreamHostHeader != "" {
-		return &route.RouteAction_HostRewrite{
-			HostRewrite: upstreamHostHeader,
+		return &route.RouteAction_HostRewriteHeader{
+			HostRewriteHeader: upstreamHostHeader,
 		}
 	}
 
@@ -373,7 +371,7 @@ func buildRetryPolicy(routeEntry shared.Route) *route.RetryPolicy {
 
 	return &route.RetryPolicy{
 		RetryOn:              RetryOn,
-		NumRetries:           &wrappers.UInt32Value{Value: numRetries},
+		NumRetries:           protoUint32(numRetries),
 		PerTryTimeout:        ptypes.DurationProto(perTryTimeout),
 		RetriableStatusCodes: RetriableStatusCodes,
 		RetryHostPredicate: []*route.RetryPolicy_RetryHostPredicate{
@@ -397,23 +395,30 @@ func buildStatusCodesSlice(statusCodes string) []uint32 {
 	return statusCodeSlice
 }
 
-func buildRoutePerFilterConfig(routeEntry shared.Route) map[string]*structpb.Struct {
+func buildRoutePerFilterConfig(routeEntry shared.Route) map[string]*any.Any {
 
-	perFilterConfig := make(map[string]*structpb.Struct)
+	perFilterConfigMap := make(map[string]*any.Any)
 
 	value, err := shared.GetAttribute(routeEntry.Attributes, attributeDisableAuthentication)
 	if err == nil && value == attributeValueTrue {
 
-		extAuthzPerRoute, err := conversion.MessageToStruct(
-			&envoyauth.ExtAuthzPerRoute{
-				Override: &envoyauth.ExtAuthzPerRoute_Disabled{
-					Disabled: true,
-				},
-			})
-		if err == nil {
-			perFilterConfig["envoy.filters.http.ext_authz"] = extAuthzPerRoute
+		perFilterExtAuthzConfig := envoyauth.ExtAuthzPerRoute{
+			Override: &envoyauth.ExtAuthzPerRoute_Disabled{
+				Disabled: true,
+			},
 		}
+
+		b := proto.NewBuffer(nil)
+		b.SetDeterministic(true)
+		_ = b.Marshal(&perFilterExtAuthzConfig)
+
+		filter := &any.Any{
+			TypeUrl: "type.googleapis.com/" + proto.MessageName(&perFilterExtAuthzConfig),
+			Value:   b.Bytes(),
+		}
+
+		perFilterConfigMap[wellknown.HTTPExternalAuthorization] = filter
 	}
 
-	return perFilterConfig
+	return perFilterConfigMap
 }

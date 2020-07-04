@@ -7,10 +7,13 @@ import (
 	"net/http"
 	"time"
 
-	v2 "github.com/envoyproxy/go-control-plane/envoy/api/v2"
-	discovery "github.com/envoyproxy/go-control-plane/envoy/service/discovery/v2"
-	cache "github.com/envoyproxy/go-control-plane/pkg/cache"
-	xds "github.com/envoyproxy/go-control-plane/pkg/server"
+	clusterservice "github.com/envoyproxy/go-control-plane/envoy/service/cluster/v3"
+	discoveryservice "github.com/envoyproxy/go-control-plane/envoy/service/discovery/v3"
+	endpointservice "github.com/envoyproxy/go-control-plane/envoy/service/endpoint/v3"
+	listenerservice "github.com/envoyproxy/go-control-plane/envoy/service/listener/v3"
+	routeservice "github.com/envoyproxy/go-control-plane/envoy/service/route/v3"
+	cache "github.com/envoyproxy/go-control-plane/pkg/cache/v3"
+	xds "github.com/envoyproxy/go-control-plane/pkg/server/v3"
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
@@ -21,8 +24,7 @@ import (
 // StartXDS brings up XDS system
 func (s *server) StartXDS(notifications chan xdsNotifyMesssage) {
 
-	s.xdsCache = cache.NewSnapshotCache(true, Hasher{}, logger{})
-	//config := cache.NewSnapshotCache(false, hash{}, logger{})
+	s.xdsCache = cache.NewSnapshotCache(true, cache.IDHash{}, logger{})
 	signal := make(chan struct{})
 	s.xds = xds.NewServer(context.Background(), s.xdsCache, &callbacks{
 		signal:   signal,
@@ -41,6 +43,7 @@ func (s *server) StartXDS(notifications chan xdsNotifyMesssage) {
 			s.XDSBuildSnapshot()
 
 		case <-time.After(s.config.XDS.ConfigPushInterval):
+			// Nothing, just wait ConfigPushInterval seconds everytime
 		}
 	}
 }
@@ -55,22 +58,36 @@ func (s *server) GRPCManagementServer() {
 	}
 
 	grpcServer := grpc.NewServer()
-	discovery.RegisterAggregatedDiscoveryServiceServer(grpcServer, s.xds)
-	v2.RegisterEndpointDiscoveryServiceServer(grpcServer, s.xds)
-	v2.RegisterClusterDiscoveryServiceServer(grpcServer, s.xds)
-	v2.RegisterRouteDiscoveryServiceServer(grpcServer, s.xds)
-	v2.RegisterListenerDiscoveryServiceServer(grpcServer, s.xds)
+	discoveryservice.RegisterAggregatedDiscoveryServiceServer(grpcServer, s.xds)
+	endpointservice.RegisterEndpointDiscoveryServiceServer(grpcServer, s.xds)
+	clusterservice.RegisterClusterDiscoveryServiceServer(grpcServer, s.xds)
+	routeservice.RegisterRouteDiscoveryServiceServer(grpcServer, s.xds)
+	listenerservice.RegisterListenerDiscoveryServiceServer(grpcServer, s.xds)
 
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("failed to start GRPC server: %v", err)
 	}
 }
 
+// this wrapper is required:
+// - xds.HTTPGateway function proto mismatches http.Handler because it returns error
+// - we can pass xdsHTTPGatewayWrapper to http.ListenAndServe
+type xdsHTTPGatewayWrapper struct {
+	Server xds.HTTPGateway
+}
+
+func (h xdsHTTPGatewayWrapper) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	h.Server.ServeHTTP(w, r)
+}
+
 // HTTPManagementGateway starts http xds listener
 func (s *server) HTTPManagementGateway() {
 
 	log.Info("HTTP XDS listening on ", s.config.XDS.HTTPListen)
-	err := http.ListenAndServe(s.config.XDS.HTTPListen, &xds.HTTPGateway{Server: s.xds})
+	err := http.ListenAndServe(s.config.XDS.HTTPListen,
+		xdsHTTPGatewayWrapper{
+			Server: xds.HTTPGateway{},
+		})
 	if err != nil {
 		log.Fatalf("failed to HTTP serve: %v", err)
 	}

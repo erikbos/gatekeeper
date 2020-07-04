@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sync"
 
-	v2 "github.com/envoyproxy/go-control-plane/envoy/api/v2"
+	discovery "github.com/envoyproxy/go-control-plane/envoy/service/discovery/v3"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -48,7 +48,7 @@ func (cb *callbacks) OnStreamClosed(id int64) {
 
 // OnStreamRequest is called once a request is received on a stream.
 // Returning an error will end processing and close the stream. OnStreamClosed will still be called.
-func (cb *callbacks) OnStreamRequest(id int64, request *v2.DiscoveryRequest) error {
+func (cb *callbacks) OnStreamRequest(id int64, request *discovery.DiscoveryRequest) error {
 	fields := log.Fields{
 		"stream":    id,
 		"useragent": request.Node.UserAgentName,
@@ -71,7 +71,7 @@ func (cb *callbacks) OnStreamRequest(id int64, request *v2.DiscoveryRequest) err
 }
 
 // OnStreamResponse is called immediately prior to sending a response on a stream.
-func (cb *callbacks) OnStreamResponse(id int64, request *v2.DiscoveryRequest, response *v2.DiscoveryResponse) {
+func (cb *callbacks) OnStreamResponse(id int64, request *discovery.DiscoveryRequest, response *discovery.DiscoveryResponse) {
 	fields := log.Fields{
 		"stream": id,
 		"type":   response.TypeUrl,
@@ -82,7 +82,7 @@ func (cb *callbacks) OnStreamResponse(id int64, request *v2.DiscoveryRequest, re
 
 // OnFetchRequest is called for each Fetch request. Returning an error will end processing of the
 // request and respond with an error.
-func (cb *callbacks) OnFetchRequest(ctx context.Context, request *v2.DiscoveryRequest) error {
+func (cb *callbacks) OnFetchRequest(ctx context.Context, request *discovery.DiscoveryRequest) error {
 	log.WithFields(log.Fields{}).Info("OnFetchRequest")
 
 	cb.mu.Lock()
@@ -96,6 +96,6 @@ func (cb *callbacks) OnFetchRequest(ctx context.Context, request *v2.DiscoveryRe
 }
 
 // OnFetchResponse is called immediately prior to sending a response.
-func (cb *callbacks) OnFetchResponse(*v2.DiscoveryRequest, *v2.DiscoveryResponse) {
+func (cb *callbacks) OnFetchResponse(*discovery.DiscoveryRequest, *discovery.DiscoveryResponse) {
 	log.Infof("OnFetchResponse")
 }

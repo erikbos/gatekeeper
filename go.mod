@@ -8,7 +8,7 @@ require (
 	github.com/cncf/udpa/go v0.0.0-20200508205342-3b31d022a144 // indirect
 	github.com/coocood/freecache v1.1.0
 	github.com/dchest/uniuri v0.0.0-20200228104902-7aecb25e1fe5
-	github.com/envoyproxy/go-control-plane v0.9.4
+	github.com/envoyproxy/go-control-plane v0.9.5
 	github.com/gin-gonic/gin v1.6.3
 	github.com/gocql/gocql v0.0.0-20200526081602-cd04bd7f22a7
 	github.com/gogo/googleapis v1.4.0
