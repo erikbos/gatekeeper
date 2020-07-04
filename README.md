@@ -1,5 +1,6 @@
 # Gatekeeper
 ![Build pipeline](https://github.com/erikbos/gatekeeper/workflows/Build%20pipeline/badge.svg)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/3d582fc081494b368abd0120bc730800)](https://app.codacy.com/manual/erikbos/gatekeeper?utm_source=github.com&utm_medium=referral&utm_content=erikbos/gatekeeper&utm_campaign=Badge_Grade_Dashboard)
 [![Go Report Card](https://goreportcard.com/badge/github.com/erikbos/gatekeeper)](https://goreportcard.com/report/github.com/erikbos/gatekeeper)
 
 Gatekeeper is an Gatekeeper proxy with API entitlement functionality. It uses [Envoy](https://www.envoyproxy.io/) as a proxy.
