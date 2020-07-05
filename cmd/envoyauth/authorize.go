@@ -9,9 +9,9 @@ import (
 	"net/url"
 	"strings"
 
-	core "github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
-	auth "github.com/envoyproxy/go-control-plane/envoy/service/auth/v2"
-	envoy_type "github.com/envoyproxy/go-control-plane/envoy/type"
+	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
+	authservice "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
+	envoytype "github.com/envoyproxy/go-control-plane/envoy/type/v3"
 	"github.com/gogo/googleapis/google/rpc"
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
@@ -28,7 +28,7 @@ type envoyAuthConfig struct {
 // requestInfo holds all information of a request
 type requestInfo struct {
 	IP              net.IP
-	httpRequest     *auth.AttributeContext_HttpRequest
+	httpRequest     *authservice.AttributeContext_HttpRequest
 	URL             *url.URL
 	queryParameters url.Values
 	apikey          *string
@@ -49,7 +49,7 @@ func (a *authorizationServer) startGRPCAuthorizationServer() {
 	log.Printf("GRPC listening on %s", a.config.EnvoyAuth.Listen)
 
 	grpcServer := grpc.NewServer()
-	auth.RegisterAuthorizationServer(grpcServer, a)
+	authservice.RegisterAuthorizationServer(grpcServer, a)
 
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
@@ -57,7 +57,7 @@ func (a *authorizationServer) startGRPCAuthorizationServer() {
 }
 
 // Check (called by Envoy) to authenticate & authorize a HTTP request
-func (a *authorizationServer) Check(ctx context.Context, authRequest *auth.CheckRequest) (*auth.CheckResponse, error) {
+func (a *authorizationServer) Check(ctx context.Context, authRequest *authservice.CheckRequest) (*authservice.CheckResponse, error) {
 
 	timer := prometheus.NewTimer(a.metrics.authLatencyHistogram)
 	defer timer.ObserveDuration()
@@ -148,14 +148,14 @@ func (a *authorizationServer) handlePolicies(request *requestInfo, policies *str
 }
 
 // allowRequest authorizates customer request to go upstream
-func allowRequest(headers map[string]string) (*auth.CheckResponse, error) {
+func allowRequest(headers map[string]string) (*authservice.CheckResponse, error) {
 
-	response := &auth.CheckResponse{
+	response := &authservice.CheckResponse{
 		Status: &status.Status{
 			Code: int32(rpc.OK),
 		},
-		HttpResponse: &auth.CheckResponse_OkResponse{
-			OkResponse: &auth.OkHttpResponse{
+		HttpResponse: &authservice.CheckResponse_OkResponse{
+			OkResponse: &authservice.OkHttpResponse{
 				Headers: buildHeadersList(headers),
 			},
 		},
@@ -165,28 +165,28 @@ func allowRequest(headers map[string]string) (*auth.CheckResponse, error) {
 
 // rejectCall answers to Envoy to reject HTTP request
 func rejectRequest(statusCode int, headers map[string]string,
-	message string) (*auth.CheckResponse, error) {
+	message string) (*authservice.CheckResponse, error) {
 
-	var envoyStatusCode envoy_type.StatusCode
+	var envoyStatusCode envoytype.StatusCode
 
 	switch statusCode {
 	case http.StatusUnauthorized:
-		envoyStatusCode = envoy_type.StatusCode_Unauthorized
+		envoyStatusCode = envoytype.StatusCode_Unauthorized
 	case http.StatusForbidden:
-		envoyStatusCode = envoy_type.StatusCode_Forbidden
+		envoyStatusCode = envoytype.StatusCode_Forbidden
 	case http.StatusServiceUnavailable:
-		envoyStatusCode = envoy_type.StatusCode_ServiceUnavailable
+		envoyStatusCode = envoytype.StatusCode_ServiceUnavailable
 	default:
-		envoyStatusCode = envoy_type.StatusCode_Forbidden
+		envoyStatusCode = envoytype.StatusCode_Forbidden
 	}
 
-	response := &auth.CheckResponse{
+	response := &authservice.CheckResponse{
 		Status: &status.Status{
 			Code: int32(rpc.UNAUTHENTICATED),
 		},
-		HttpResponse: &auth.CheckResponse_DeniedResponse{
-			DeniedResponse: &auth.DeniedHttpResponse{
-				Status: &envoy_type.HttpStatus{
+		HttpResponse: &authservice.CheckResponse_DeniedResponse{
+			DeniedResponse: &authservice.DeniedHttpResponse{
+				Status: &envoytype.HttpStatus{
 					Code: envoyStatusCode,
 				},
 				Headers: buildHeadersList(headers),
@@ -218,7 +218,7 @@ func buildHeadersList(headers map[string]string) []*core.HeaderValueOption {
 }
 
 // getRequestInfo returns HTTP data of a request
-func getRequestInfo(req *auth.CheckRequest) (*requestInfo, error) {
+func getRequestInfo(req *authservice.CheckRequest) (*requestInfo, error) {
 
 	newConnection := requestInfo{
 		httpRequest: req.Attributes.Request.Http,
