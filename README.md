@@ -2,8 +2,8 @@
 
 [![Build pipeline](https://github.com/erikbos/gatekeeper/workflows/Build%20pipeline/badge.svg)](https://github.com/erikbos/gatekeeper/actions?query=workflow%3A%22Build+pipeline%22)
 [![Go Report Card](https://goreportcard.com/badge/github.com/erikbos/gatekeeper)](https://goreportcard.com/report/github.com/erikbos/gatekeeper)
-0-0
-Gatekeeper is an Gatekeeper proxy with API entitlement functionality. It uses [Envoy](https://www.envoyproxy.io/) as a proxy.
+
+Gatekeeper is an Gatekeeper proxy with rich API entitlement functionality. It uses [Envoy](https://www.envoyproxy.io/) as a proxy.
 
 ## Table of Contents
 

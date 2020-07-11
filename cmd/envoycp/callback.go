@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"sync"
 
 	discovery "github.com/envoyproxy/go-control-plane/envoy/service/discovery/v3"
@@ -54,9 +53,9 @@ func (cb *callbacks) OnStreamRequest(id int64, request *discovery.DiscoveryReque
 		"useragent": request.Node.UserAgentName,
 		"cluster":   request.Node.Cluster,
 		"id":        request.Node.Id,
-		"version": fmt.Sprintf("%d.%d.%d", request.Node.GetUserAgentBuildVersion().Version.MajorNumber,
-			request.Node.GetUserAgentBuildVersion().Version.MinorNumber,
-			request.Node.GetUserAgentBuildVersion().Version.Patch),
+		// "version": fmt.Sprintf("%d.%d.%d", request.Node.GetUserAgentBuildVersion().Version.MajorNumber,
+		// 	request.Node.GetUserAgentBuildVersion().Version.MinorNumber,
+		// 	request.Node.GetUserAgentBuildVersion().Version.Patch),
 	}
 	log.WithFields(fields).Info("OnStreamRequest")
 
