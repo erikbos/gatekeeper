@@ -77,7 +77,7 @@ type xdsHTTPGatewayWrapper struct {
 }
 
 func (h xdsHTTPGatewayWrapper) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	h.Server.ServeHTTP(w, r)
+	h.Server.ServeHTTP(r)
 }
 
 // HTTPManagementGateway starts http xds listener
