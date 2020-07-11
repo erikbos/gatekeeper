@@ -9,6 +9,7 @@ import (
 	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	listener "github.com/envoyproxy/go-control-plane/envoy/config/listener/v3"
 	fileAccessLog "github.com/envoyproxy/go-control-plane/envoy/extensions/access_loggers/file/v3"
+	grpcAccessLog "github.com/envoyproxy/go-control-plane/envoy/extensions/access_loggers/grpc/v3"
 	extAuthz "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/ext_authz/v3"
 	hcm "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 	tls "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/tls/v3"
@@ -152,11 +153,11 @@ func (s *server) buildFilterChainEntry(l *listener.Listener, v shared.VirtualHos
 	}
 
 	// Configure TLS in case when we have a certificate + key
-	certificate, error1 := shared.GetAttribute(v.Attributes, attributeTLSCertificate)
-	certificateKey, error2 := shared.GetAttribute(v.Attributes, attributeTLSCertificateKey)
+	certificate, certificateError := shared.GetAttribute(v.Attributes, attributeTLSCertificate)
+	certificateKey, certificateKeyError := shared.GetAttribute(v.Attributes, attributeTLSCertificateKey)
 
 	// No certificate details, return and do not enable TLS
-	if error1 != nil && error2 != nil {
+	if certificateError != nil && certificateKeyError != nil {
 		return FilterChainEntry
 	}
 
@@ -237,7 +238,7 @@ func (s *server) buildConnectionManager(httpFilters []*hcm.HttpFilter, v shared.
 		UseRemoteAddress: protoBool(true),
 		RouteSpecifier:   s.buildRouteSpecifier(v.RouteGroup),
 		HttpFilters:      httpFilters,
-		AccessLog:        buildAccessLog(s.config.XDS.Envoy.LogFilename, s.config.XDS.Envoy.LogFields),
+		AccessLog:        buildAccessLog(s.config.XDS.Envoy.Logging),
 	}
 }
 
@@ -266,7 +267,7 @@ func (s *server) buildExtAuthzFilterConfig() *anypb.Any {
 	extAuthz := &extAuthz.ExtAuthz{
 		FailureModeAllow: s.config.XDS.ExtAuthz.FailureModeAllow,
 		Services: &extAuthz.ExtAuthz_GrpcService{
-			GrpcService: s.buildGRPCService(s.config.XDS.ExtAuthz.Cluster,
+			GrpcService: buildGRPCService(s.config.XDS.ExtAuthz.Cluster,
 				s.config.XDS.ExtAuthz.Timeout),
 		},
 		TransportApiVersion: core.ApiVersion_V3,
@@ -290,17 +291,6 @@ func (s *server) extAuthzWithRequestBody() *extAuthz.BufferSettings {
 		}
 	}
 	return nil
-}
-
-func (s *server) buildGRPCService(clusterName string, d time.Duration) *core.GrpcService {
-	return &core.GrpcService{
-		Timeout: ptypes.DurationProto(d),
-		TargetSpecifier: &core.GrpcService_EnvoyGrpc_{
-			EnvoyGrpc: &core.GrpcService_EnvoyGrpc{
-				ClusterName: clusterName,
-			},
-		},
-	}
 }
 
 func (s *server) buildRouteSpecifier(RouteGroup string) *hcm.HttpConnectionManager_RouteConfig {
@@ -332,21 +322,42 @@ func (s *server) buildRouteSpecifier(RouteGroup string) *hcm.HttpConnectionManag
 // 	}
 // }
 
-func buildAccessLog(logFilename string, fieldFormats map[string]string) []*accessLog.AccessLog {
+func buildAccessLog(config envoyLogConfig) []*accessLog.AccessLog {
+
+	if config.File.Path != "" {
+		return buildFileAccessLog(config)
+	}
+	if config.GRPC.Cluster != "" {
+		return buildGRPCAccessLog(config)
+	}
+	return nil
+}
+
+func buildFileAccessLog(config envoyLogConfig) []*accessLog.AccessLog {
+
 	jsonFormat := &spb.Struct{
 		Fields: map[string]*spb.Value{},
 	}
-	for field, fieldFormat := range fieldFormats {
-		if fieldFormat != "" {
-			jsonFormat.Fields[field] = &spb.Value{
-				Kind: &spb.Value_StringValue{StringValue: fieldFormat},
+
+	if len(config.File.Fields) != 0 {
+		for field, fieldFormat := range config.File.Fields {
+			if fieldFormat != "" {
+				jsonFormat.Fields[field] = &spb.Value{
+					Kind: &spb.Value_StringValue{StringValue: fieldFormat},
+				}
 			}
 		}
+	} else {
+		log.Warnf("File logging should configure fields")
 	}
 	accessLogConf := &fileAccessLog.FileAccessLog{
-		Path: logFilename,
-		AccessLogFormat: &fileAccessLog.FileAccessLog_JsonFormat{
-			JsonFormat: jsonFormat,
+		Path: config.File.Path,
+		AccessLogFormat: &fileAccessLog.FileAccessLog_LogFormat{
+			LogFormat: &core.SubstitutionFormatString{
+				Format: &core.SubstitutionFormatString_JsonFormat{
+					JsonFormat: jsonFormat,
+				},
+			},
 		},
 	}
 	accessLogTypedConf, err := ptypes.MarshalAny(accessLogConf)
@@ -354,8 +365,30 @@ func buildAccessLog(logFilename string, fieldFormats map[string]string) []*acces
 		log.Panic(err)
 	}
 	return []*accessLog.AccessLog{{
-		// TODO: this should be configurable
-		Name: "envoy.file_access_log",
+		Name: wellknown.FileAccessLog,
+		ConfigType: &accessLog.AccessLog_TypedConfig{
+			TypedConfig: accessLogTypedConf,
+		},
+	}}
+}
+
+func buildGRPCAccessLog(config envoyLogConfig) []*accessLog.AccessLog {
+
+	accessLogConf := &grpcAccessLog.HttpGrpcAccessLogConfig{
+		CommonConfig: &grpcAccessLog.CommonGrpcAccessLogConfig{
+			LogName:             config.GRPC.LogName,
+			GrpcService:         buildGRPCService(config.GRPC.Cluster, config.GRPC.Timeout),
+			TransportApiVersion: core.ApiVersion_V3,
+			BufferSizeBytes:     protoUint32(config.GRPC.BufferSize),
+		},
+	}
+
+	accessLogTypedConf, err := ptypes.MarshalAny(accessLogConf)
+	if err != nil {
+		log.Panic(err)
+	}
+	return []*accessLog.AccessLog{{
+		Name: wellknown.HTTPGRPCAccessLog,
 		ConfigType: &accessLog.AccessLog_TypedConfig{
 			TypedConfig: accessLogTypedConf,
 		},

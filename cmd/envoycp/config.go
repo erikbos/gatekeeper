@@ -37,8 +37,20 @@ type xdsConfig struct {
 }
 
 type envoyConfig struct {
-	LogFilename string            `yaml:"logfilename"`
-	LogFields   map[string]string `yaml:"logfields"`
+	Logging envoyLogConfig `yaml:"logging"`
+}
+
+type envoyLogConfig struct {
+	File struct {
+		Path   string            `yaml:"path"`
+		Fields map[string]string `yaml:"fields"`
+	} `yaml:"file"`
+	GRPC struct {
+		BufferSize uint32        `yaml:"buffersize"`
+		Cluster    string        `yaml:"cluster"`
+		LogName    string        `yaml:"logname"`
+		Timeout    time.Duration `yaml:"timeout"`
+	} `yaml:"grpc"`
 }
 
 type extAuthzConfig struct {

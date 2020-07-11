@@ -282,16 +282,13 @@ func buildRegexpMatcher(regexp string) *envoymatcher.RegexMatcher {
 
 	return &envoymatcher.RegexMatcher{
 		EngineType: &envoymatcher.RegexMatcher_GoogleRe2{
-			GoogleRe2: &envoymatcher.RegexMatcher_GoogleRE2{
-				// TODO magic number
-				MaxProgramSize: protoUint32(100),
-			},
+			GoogleRe2: &envoymatcher.RegexMatcher_GoogleRE2{},
 		},
 		Regex: regexp,
 	}
 }
 
-// buildHostRewrite return CorsPolicy based upon a route's attribute(s)
+// buildHostRewrite returns HostRewrite config based upon route attribute(s)
 func buildHostRewrite(routeEntry shared.Route) *route.RouteAction_HostRewriteHeader {
 
 	upstreamHostHeader, err := shared.GetAttribute(routeEntry.Attributes, attributeHostHeader)

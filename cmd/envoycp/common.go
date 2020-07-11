@@ -1,7 +1,10 @@
 package main
 
 import (
+	"time"
+
 	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
+	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/wrappers"
 )
 
@@ -17,6 +20,18 @@ func buildAddress(hostname string, port int) *core.Address {
 			},
 		},
 	}}
+}
+
+func buildGRPCService(clusterName string, d time.Duration) *core.GrpcService {
+
+	return &core.GrpcService{
+		Timeout: ptypes.DurationProto(d),
+		TargetSpecifier: &core.GrpcService_EnvoyGrpc_{
+			EnvoyGrpc: &core.GrpcService_EnvoyGrpc{
+				ClusterName: clusterName,
+			},
+		},
+	}
 }
 
 func protoBool(b bool) *wrappers.BoolValue {
