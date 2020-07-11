@@ -269,6 +269,7 @@ func (s *server) buildExtAuthzFilterConfig() *anypb.Any {
 			GrpcService: s.buildGRPCService(s.config.XDS.ExtAuthz.Cluster,
 				s.config.XDS.ExtAuthz.Timeout),
 		},
+		TransportApiVersion: core.ApiVersion_V3,
 	}
 	if s.config.XDS.ExtAuthz.RequestBodySize > 0 {
 		extAuthz.WithRequestBody = s.extAuthzWithRequestBody()
