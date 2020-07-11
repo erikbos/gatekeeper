@@ -70,46 +70,47 @@ func policyQPS1(request *requestInfo) (map[string]string, error) {
 // policySendAPIKey adds apikey as an upstream header
 func policySendAPIKey(request *requestInfo) (map[string]string, error) {
 
-	return map[string]string{
-			"x-apikey": *request.apikey,
-		},
-		nil
+	if request.apikey != nil {
+		return map[string]string{"x-apikey": *request.apikey}, nil
+	}
+	return nil, nil
 }
 
 // policySendAPIKey adds developer's email address as an upstream header
 func policySendDeveloperEmail(request *requestInfo) (map[string]string, error) {
 
-	return map[string]string{
-			"x-developer-email": request.developer.Email,
-		},
-		nil
+	if request.developer != nil && request.developer.Email != "" {
+		return map[string]string{"x-developer-email": request.developer.Email}, nil
+	}
+	return nil, nil
 }
 
 // policySendAPIKey adds developerid as an upstream header
 func policySendDeveloperID(request *requestInfo) (map[string]string, error) {
 
-	return map[string]string{
-			"x-developer-id": request.developer.DeveloperID,
-		},
-		nil
+	if request.developer != nil && request.developer.DeveloperID != "" {
+		return map[string]string{"x-developer-id": request.developer.DeveloperID}, nil
+	}
+	return nil, nil
 }
 
 // policySendDeveloperAppName adds developer app name as an upstream header
 func policySendDeveloperAppName(request *requestInfo) (map[string]string, error) {
 
-	return map[string]string{
-			"x-developer-app-name": request.developerApp.Name,
-		},
-		nil
+	if request.developerApp != nil && request.developerApp.Name != "" {
+		return map[string]string{"x-developer-app-name": request.developerApp.Name}, nil
+	}
+	return nil, nil
+
 }
 
 // policySendDeveloperAppID adds developer app id as an upstream header
 func policySendDeveloperAppID(request *requestInfo) (map[string]string, error) {
 
-	return map[string]string{
-			"x-developer-app-id": request.developerApp.AppID,
-		},
-		nil
+	if request.developerApp != nil && request.developerApp.AppID != "" {
+		return map[string]string{"x-developer-app-id": request.developerApp.AppID}, nil
+	}
+	return nil, nil
 }
 
 // policyCheckIPAccessList checks requestor ip against IP ACL defined in developer app
