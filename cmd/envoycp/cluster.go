@@ -255,27 +255,15 @@ func clusterHTTP2ProtocolOptions(cluster shared.Cluster) *core.Http2ProtocolOpti
 // clusterTransportSocket configures TLS settings
 func clusterTransportSocket(cluster shared.Cluster) *core.TransportSocket {
 
+	// Set TLS configuration based upon cluster attributes
 	TLSContext := &tls.UpstreamTlsContext{
-		Sni: clusterSNIHostname(cluster),
-		CommonTlsContext: &tls.CommonTlsContext{
-			AlpnProtocols: clusterALPNOptions(cluster),
-			TlsParams:     clusterTLSOptions(cluster),
-		},
+		Sni:              clusterSNIHostname(cluster),
+		CommonTlsContext: buildCommonTLSContext(cluster.Name, cluster.Attributes),
 	}
-	tlsContextProtoBuf, err := ptypes.MarshalAny(TLSContext)
-	if err != nil {
-		return nil
-	}
-
-	return &core.TransportSocket{
-		Name: "tls",
-		ConfigType: &core.TransportSocket_TypedConfig{
-			TypedConfig: tlsContextProtoBuf,
-		},
-	}
+	return buildTransportSocket(cluster.Name, TLSContext)
 }
 
-// clusterSNIHostname sets SNI hostname used by TLS
+// clusterSNIHostname sets SNI hostname used for upstream connections
 func clusterSNIHostname(cluster shared.Cluster) string {
 
 	value, err := shared.GetAttribute(cluster.Attributes, attributeSNIHostName)
@@ -283,69 +271,6 @@ func clusterSNIHostname(cluster shared.Cluster) string {
 		return value
 	}
 	return cluster.HostName
-}
-
-// clusterALPNOptions sets TLS's ALPN supported protocols
-func clusterALPNOptions(cluster shared.Cluster) []string {
-
-	value, err := shared.GetAttribute(cluster.Attributes, attributeHTTPProtocol)
-	if err == nil {
-		switch value {
-		case attributeHTTPProtocolHTTP11:
-			return []string{"http/1.1"}
-		case attributeHTTPProtocolHTTP2:
-			return []string{"h2", "http/1.1"}
-		}
-	}
-
-	log.Warnf("Cluster '%s' has attribute '%s' with unsupported value '%s'",
-		cluster.Name, attributeHTTPProtocol, value)
-
-	return []string{"http/1.1"}
-}
-
-// clusterALPNOptions sets TLS minimum and max cipher options
-func clusterTLSOptions(cluster shared.Cluster) *tls.TlsParameters {
-
-	tlsParameters := &tls.TlsParameters{}
-	if minVersion, err := shared.GetAttribute(cluster.Attributes, attributeTLSMinimumVersion); err == nil {
-		tlsParameters.TlsMinimumProtocolVersion = tlsVersion(minVersion)
-	}
-
-	if maxVersion, err := shared.GetAttribute(cluster.Attributes, attributeTLSMaximumVersion); err == nil {
-		tlsParameters.TlsMaximumProtocolVersion = tlsVersion(maxVersion)
-	}
-	tlsParameters.CipherSuites = tlsCipherSuites(cluster)
-	return tlsParameters
-}
-
-func tlsVersion(version string) tls.TlsParameters_TlsProtocol {
-
-	switch version {
-	case attributeValueTLS10:
-		return tls.TlsParameters_TLSv1_0
-	case attributeValueTLS11:
-		return tls.TlsParameters_TLSv1_1
-	case attributeValueTLS12:
-		return tls.TlsParameters_TLSv1_2
-	case attributeValueTLS13:
-		return tls.TlsParameters_TLSv1_3
-	}
-	return tls.TlsParameters_TLS_AUTO
-}
-
-func tlsCipherSuites(cluster shared.Cluster) []string {
-
-	value, err := shared.GetAttribute(cluster.Attributes, attributeTLSCipherSuites)
-	if err == nil {
-		var ciphers []string
-
-		for _, cipher := range strings.Split(value, ",") {
-			ciphers = append(ciphers, strings.TrimSpace(cipher))
-		}
-		return ciphers
-	}
-	return nil
 }
 
 func clusterDNSRefreshRate(cluster shared.Cluster) *duration.Duration {

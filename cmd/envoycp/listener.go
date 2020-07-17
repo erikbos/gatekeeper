@@ -135,6 +135,7 @@ func buildListenerFilterHTTP() []*listener.ListenerFilter {
 }
 
 func (s *server) buildFilterChainEntry(l *listener.Listener, v shared.VirtualHost) *listener.FilterChain {
+
 	httpFilter := s.buildFilter()
 
 	manager := s.buildConnectionManager(httpFilter, v)
@@ -152,11 +153,11 @@ func (s *server) buildFilterChainEntry(l *listener.Listener, v shared.VirtualHos
 		}},
 	}
 
-	// Configure TLS in case when we have a certificate + key
-	certificate, certificateError := shared.GetAttribute(v.Attributes, attributeTLSCertificate)
-	certificateKey, certificateKeyError := shared.GetAttribute(v.Attributes, attributeTLSCertificateKey)
+	// Check if we have a certificate and certificate key
+	_, certificateError := shared.GetAttribute(v.Attributes, attributeTLSCertificate)
+	_, certificateKeyError := shared.GetAttribute(v.Attributes, attributeTLSCertificateKey)
 
-	// No certificate details, return and do not enable TLS
+	// No certificate details, return and do not try to enable TLS
 	if certificateError != nil && certificateKeyError != nil {
 		return FilterChainEntry
 	}
@@ -168,66 +169,19 @@ func (s *server) buildFilterChainEntry(l *listener.Listener, v shared.VirtualHos
 		},
 	}
 
-	// Configure listener to be able to match SNI
+	// Configure listener to use SNI to match against vhost names
 	FilterChainEntry.FilterChainMatch =
 		&listener.FilterChainMatch{
 			ServerNames: v.VirtualHosts,
 		}
 
-	// Add TLS certifcate configuration
+	// Set TLS configuration based upon virtualhosts attributes
 	downStreamTLSConfig := &tls.DownstreamTlsContext{
-		CommonTlsContext: &tls.CommonTlsContext{
-			TlsCertificates: []*tls.TlsCertificate{
-				{
-					CertificateChain: &core.DataSource{
-						Specifier: &core.DataSource_InlineString{
-							InlineString: certificate,
-						},
-					},
-					PrivateKey: &core.DataSource{
-						Specifier: &core.DataSource_InlineString{
-							InlineString: certificateKey,
-						},
-					},
-				},
-			},
-			AlpnProtocols: s.listenerALPNOptions(v),
-		},
+		CommonTlsContext: buildCommonTLSContext(v.Name, v.Attributes),
 	}
+	FilterChainEntry.TransportSocket = buildTransportSocket(v.Name, downStreamTLSConfig)
 
-	tlsContext, err := ptypes.MarshalAny(downStreamTLSConfig)
-	if err != nil {
-		log.Panic(err)
-	}
-	FilterChainEntry.TransportSocket =
-		&core.TransportSocket{
-			Name: "tls",
-			ConfigType: &core.TransportSocket_TypedConfig{
-				TypedConfig: tlsContext,
-			},
-		}
 	return FilterChainEntry
-}
-
-// ALPNlistenerALPNOptionsOptions sets TLS's ALPN supported protocols
-func (s *server) listenerALPNOptions(v shared.VirtualHost) []string {
-
-	value, err := shared.GetAttribute(v.Attributes, attributeHTTPProtocol)
-	if err == nil {
-		switch value {
-		case attributeHTTPProtocolHTTP11:
-			return []string{"http/1.1"}
-
-		case attributeHTTPProtocolHTTP2:
-			return []string{"h2", "http/1.1"}
-
-		default:
-			log.Warnf("Virtual host '%s' has attribute '%s' with unsupported value '%s'",
-				v.Name, attributeHTTPProtocol, value)
-		}
-	}
-
-	return []string{"http/1.1"}
 }
 
 func (s *server) buildConnectionManager(httpFilters []*hcm.HttpFilter, v shared.VirtualHost) *hcm.HttpConnectionManager {
