@@ -34,10 +34,10 @@ func StartWebAdminServer(a *authorizationServer) {
 	a.ginEngine.Use(shared.WebAdminCheckIPACL(a.config.WebAdmin.IPACL))
 
 	a.ginEngine.GET("/", a.ShowWebAdminHomePage)
-	a.ginEngine.GET("/liveness", shared.LivenessProbe)
-	a.ginEngine.GET("/readiness", a.readiness.ReadinessProbe)
-	a.ginEngine.GET("/metrics", gin.WrapH(promhttp.Handler()))
-	a.ginEngine.GET("/config_dump", a.ConfigDump)
+	a.ginEngine.GET(shared.LivenessCheckPath, shared.LivenessProbe)
+	a.ginEngine.GET(shared.ReadinessCheckPath, a.readiness.ReadinessProbe)
+	a.ginEngine.GET(shared.MetricsPath, gin.WrapH(promhttp.Handler()))
+	a.ginEngine.GET(shared.ConfigDumpPath, a.ConfigDump)
 
 	log.Info("Webadmin listening on ", a.config.WebAdmin.Listen)
 	if err := a.ginEngine.Run(a.config.WebAdmin.Listen); err != nil {

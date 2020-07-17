@@ -11,6 +11,20 @@ import (
 	"github.com/google/uuid"
 )
 
+const (
+	// LivenessCheckPath to be used by k8s checks
+	LivenessCheckPath = "/liveness"
+
+	// ReadinessCheckPath to be used by k8s checks
+	ReadinessCheckPath = "/readiness"
+
+	// MetricsPath is Prometheus metrics endpoint
+	MetricsPath = "/metrics"
+
+	// ConfigDumpPath endpoint for showing running configuration
+	ConfigDumpPath = "/config_dump"
+)
+
 // returnJSONMessage returns an error message
 func returnJSONMessage(c *gin.Context, statusCode int, msg error) {
 
@@ -64,7 +78,7 @@ func LivenessProbe(c *gin.Context) {
 func LogHTTPRequest(param gin.LogFormatterParams) string {
 
 	// Do not log k8s health probes
-	if param.Path == "/liveness" || param.Path == "/readiness" {
+	if param.Path == LivenessCheckPath || param.Path == ReadinessCheckPath {
 		return ""
 	}
 
