@@ -42,6 +42,10 @@ func (a *authorizationServer) handlePolicy(policy *string, request *requestInfo)
 //
 func policyQPS1(request *requestInfo) (map[string]string, error) {
 
+	if request == nil || request.APIProduct == nil || request.developerApp == nil {
+		return nil, nil
+	}
+
 	quotaAttributeName := request.APIProduct.Name + "_quotaPerSecond"
 	quotaKey := *request.apikey + "_a_" + quotaAttributeName
 
@@ -70,7 +74,7 @@ func policyQPS1(request *requestInfo) (map[string]string, error) {
 // policySendAPIKey adds apikey as an upstream header
 func policySendAPIKey(request *requestInfo) (map[string]string, error) {
 
-	if request.apikey != nil {
+	if request != nil && request.apikey != nil {
 		return map[string]string{"x-apikey": *request.apikey}, nil
 	}
 	return nil, nil
@@ -79,7 +83,7 @@ func policySendAPIKey(request *requestInfo) (map[string]string, error) {
 // policySendAPIKey adds developer's email address as an upstream header
 func policySendDeveloperEmail(request *requestInfo) (map[string]string, error) {
 
-	if request.developer != nil && request.developer.Email != "" {
+	if request != nil && request.developer != nil {
 		return map[string]string{"x-developer-email": request.developer.Email}, nil
 	}
 	return nil, nil
@@ -88,7 +92,7 @@ func policySendDeveloperEmail(request *requestInfo) (map[string]string, error) {
 // policySendAPIKey adds developerid as an upstream header
 func policySendDeveloperID(request *requestInfo) (map[string]string, error) {
 
-	if request.developer != nil && request.developer.DeveloperID != "" {
+	if request != nil && request.developer != nil {
 		return map[string]string{"x-developer-id": request.developer.DeveloperID}, nil
 	}
 	return nil, nil
@@ -97,7 +101,7 @@ func policySendDeveloperID(request *requestInfo) (map[string]string, error) {
 // policySendDeveloperAppName adds developer app name as an upstream header
 func policySendDeveloperAppName(request *requestInfo) (map[string]string, error) {
 
-	if request.developerApp != nil && request.developerApp.Name != "" {
+	if request != nil && request.developerApp != nil {
 		return map[string]string{"x-developer-app-name": request.developerApp.Name}, nil
 	}
 	return nil, nil
@@ -107,7 +111,7 @@ func policySendDeveloperAppName(request *requestInfo) (map[string]string, error)
 // policySendDeveloperAppID adds developer app id as an upstream header
 func policySendDeveloperAppID(request *requestInfo) (map[string]string, error) {
 
-	if request.developerApp != nil && request.developerApp.AppID != "" {
+	if request != nil && request.developerApp != nil {
 		return map[string]string{"x-developer-app-id": request.developerApp.AppID}, nil
 	}
 	return nil, nil
