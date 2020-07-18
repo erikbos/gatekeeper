@@ -206,6 +206,9 @@ Set route specific request retry behaviour to reduce error rates:
 
 Set multiple upstream clusters for a route:
 
+Upstream clusters need to be separated by comma. Each need to be assigned a load balancing weight using *:weight* suffix.
+
+
 ```json
 
 {
@@ -215,6 +218,30 @@ Set multiple upstream clusters for a route:
     "path": "/people",
     "pathType": "prefix",
     "cluster": "people:50,people2:75",
+}
+```
+
+Requst mirror to a separate cluster.
+
+```json
+
+{
+    "name": "people",
+    "displayName": "Default people",
+    "routeGroup": "routes_443",
+    "path": "/people",
+    "pathType": "prefix",
+    "cluster": "people",
+    "attributes": [
+    {
+        "name": "RequestMirrorClusterName",
+        "value": "people_v2"
+    },
+    {
+        "name": "RequestMirrorPercentage",
+        "value": "12"
+    }
+    ]
 }
 ```
 

@@ -35,6 +35,8 @@ const (
 	attributePerTryTimeout            = "PerTryTimeout"
 	attributeNumRetries               = "NumRetries"
 	attributeRetryOnStatusCodes       = "RetryOnStatusCodes"
+	attributeRequestMirrorClusterName = "RequestMirrorClusterName"
+	attributeRequestMirrorPercentage  = "RequestMirrorPercentage"
 
 	// Default route configuration values
 	perRetryTimeout = 500 * time.Millisecond

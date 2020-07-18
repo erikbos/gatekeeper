@@ -11,6 +11,7 @@ import (
 	route "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
 	envoyauth "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/ext_authz/v3"
 	envoymatcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
+	envoytype "github.com/envoyproxy/go-control-plane/envoy/type/v3"
 	cache "github.com/envoyproxy/go-control-plane/pkg/cache/types"
 	"github.com/envoyproxy/go-control-plane/pkg/wellknown"
 	"github.com/golang/protobuf/proto"
@@ -221,6 +222,8 @@ func buildRouteActionCluster(routeEntry shared.Route) *route.Route_Route {
 		}
 	}
 
+	action.Route.RequestMirrorPolicies = buildRequestMirrorPolicy(routeEntry)
+
 	return action
 }
 
@@ -256,6 +259,33 @@ func buildWeightedClusters(routeEntry shared.Route) *route.RouteAction_WeightedC
 			TotalWeight: protoUint32(uint32(totalWeight)),
 		},
 	}
+}
+
+func buildRequestMirrorPolicy(routeEntry shared.Route) []*route.RouteAction_RequestMirrorPolicy {
+
+	mirrorCluster := shared.GetAttributeAsString(routeEntry.Attributes, attributeRequestMirrorClusterName, "")
+	mirrorPercentage := shared.GetAttributeAsString(routeEntry.Attributes, attributeRequestMirrorPercentage, "")
+
+	if mirrorCluster == "" || mirrorPercentage == "" {
+		return nil
+	}
+
+	percentage, _ := strconv.Atoi(mirrorPercentage)
+	if percentage < 0 || percentage > 100 {
+		log.Warningf("Route '%s' cluster '%s' incorrect request mirror percentage '%s'",
+			routeEntry.Name, routeEntry.Cluster, mirrorPercentage)
+		return nil
+	}
+
+	return []*route.RouteAction_RequestMirrorPolicy{{
+		Cluster: mirrorCluster,
+		RuntimeFraction: &core.RuntimeFractionalPercent{
+			DefaultValue: &envoytype.FractionalPercent{
+				Numerator:   uint32(percentage),
+				Denominator: envoytype.FractionalPercent_HUNDRED,
+			},
+		},
+	}}
 }
 
 // buildCorsPolicy return CorsPolicy based upon a route's attribute(s)
