@@ -48,13 +48,19 @@ A route defines how a specific path needs to handled and forwarded on. All opera
 
 Every route can have optional attributes which control what Envoy will do to match the incoming request, respond directly without contacting a backend, or to add additional headers before the request is forwarded upstream.
 
-| attribute name           | purpose                                                               | possible values |
-| ------------------------ | --------------------------------------------------------------------- | --------------- |
-| DisableAuthentication    | Disable authentication via extauthz on route                          | true            |
-| DirectResponseStatusCode | Return an arbitrary HTTP response directly, without proxying.         | 200             |
-| DirectResponseBody       | Body to return when DirectResponseStatusCode is set                   | Hello World     |
-| PrefixRewrite            | Rewrites path when contacting upstream                                |                 |
-| CORSAllowCredentials     | Specifies whether the resource allows credentials                     | false           |
+| attribute name           | purpose                                                       | possible values        |
+| ------------------------ | ------------------------------------------------------------- | ---------------------- |
+| DisableAuthentication    | Disable authentication via extauthz on route                  | true                   |
+| DirectResponseStatusCode | Return an arbitrary HTTP response directly, without proxying. | 200                    |
+| DirectResponseBody       | Responsebody to return when direct response is done           | Hello World            |
+| RedirectStatusCode       | Return an HTTP redirect                                       | 301,302,303,307 or 308 |
+| RedirectScheme           | Set HTTP scheme when generating a redirect                    | http or https          |
+| RedirectHostName         | Set hostname when generating a redirect                       | www.example.com        |
+| RedirectPort             | Set port when generating a redirect                           | 443                    |
+| RedirectPath             | Set path when generating a redirect                           | /test/                 |
+| RedirectStripQuery       | Enable removal of query parameters when redirecting           | true                   |
+| PrefixRewrite            | Rewrites path when contacting upstream                        |                        |
+| CORSAllowCredentials     | Specifies whether the resource allows credentials             | false                  |
 | CORSAllowMethods         | Specifies the content for the [Access-Control-Allow-Methods](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Methods) header    |                 |
 | CORSAllowHeaders         | Specifies the content for the [Access-Control-Allow-Headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Headers) header     |                 |
 | CORSExposeHeaders        | Specifies the content for the [Access-Control-Expose-Headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Expose-Headers) header    |                 |

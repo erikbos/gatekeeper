@@ -144,10 +144,17 @@ func (s *server) buildEnvoyRoute(routeEntry shared.Route) *route.Route {
 		return envoyRoute
 	}
 
-	// Add direct response config if required
+	// Add direct response if configured, in this case Envoy itself will answer
 	_, err = shared.GetAttribute(routeEntry.Attributes, attributeDirectResponseStatusCode)
 	if err == nil {
 		envoyRoute.Action = buildRouteActionDirectResponse(routeEntry)
+		return envoyRoute
+	}
+
+	// Add redirect response if configured, in this case Envoy will generate HTTP redirect
+	_, err = shared.GetAttribute(routeEntry.Attributes, attributeRedirectStatusCode)
+	if err == nil {
+		envoyRoute.Action = buildRouteActionRedirectResponse(routeEntry)
 		return envoyRoute
 	}
 
@@ -301,6 +308,7 @@ func buildHostRewrite(routeEntry shared.Route) *route.RouteAction_HostRewriteHea
 	return nil
 }
 
+// buildRouteActionDirectResponse builds response to have Envoy itself answer with status code and body
 func buildRouteActionDirectResponse(routeEntry shared.Route) *route.Route_DirectResponse {
 
 	directResponseStatusCode, err := shared.GetAttribute(routeEntry.Attributes, attributeDirectResponseStatusCode)
@@ -325,6 +333,72 @@ func buildRouteActionDirectResponse(routeEntry shared.Route) *route.Route_Direct
 		}
 	}
 	return nil
+}
+
+// buildRouteActionRedirectResponse builds response to have Envoy redirect to different path
+func buildRouteActionRedirectResponse(routeEntry shared.Route) *route.Route_Redirect {
+
+	redirectStatusCode := shared.GetAttributeAsString(routeEntry.Attributes, attributeRedirectStatusCode, "")
+	redirectScheme := shared.GetAttributeAsString(routeEntry.Attributes, attributeRedirectScheme, "")
+	RedirectHostName := shared.GetAttributeAsString(routeEntry.Attributes, attributeRedirectHostName, "")
+	redirectPort := shared.GetAttributeAsString(routeEntry.Attributes, attributeRedirectPort, "")
+	redirectPath := shared.GetAttributeAsString(routeEntry.Attributes, attributeRedirectPath, "")
+	redirectStripQuery := shared.GetAttributeAsString(routeEntry.Attributes, attributeRedirectStripQuery, "")
+
+	// Status code must be set other wise we not build redirect configuration
+	if redirectStatusCode == "" {
+		return nil
+	}
+
+	response := route.Route_Redirect{
+		Redirect: &route.RedirectAction{},
+	}
+
+	// Do we have to set a particular statuscode?
+	statusCode, _ := strconv.Atoi(redirectStatusCode)
+	switch statusCode {
+	case 301:
+		response.Redirect.ResponseCode = route.RedirectAction_MOVED_PERMANENTLY
+	case 302:
+		response.Redirect.ResponseCode = route.RedirectAction_FOUND
+	case 303:
+		response.Redirect.ResponseCode = route.RedirectAction_SEE_OTHER
+	case 307:
+		response.Redirect.ResponseCode = route.RedirectAction_TEMPORARY_REDIRECT
+	case 308:
+		response.Redirect.ResponseCode = route.RedirectAction_PERMANENT_REDIRECT
+	default:
+		log.Warningf("Route '%s' attribute '%s' has unsupported status '%s'",
+			routeEntry.Name, attributeRedirectStatusCode, redirectStatusCode)
+		return nil
+	}
+	// Do we have to update scheme to http or https?
+	if redirectScheme != "" {
+		response.Redirect.SchemeRewriteSpecifier = &route.RedirectAction_SchemeRedirect{
+			SchemeRedirect: redirectScheme,
+		}
+	}
+	// Do we have to redirect to a specific hostname?
+	if RedirectHostName != "" {
+		response.Redirect.HostRedirect = RedirectHostName
+	}
+	// Do we have to redirect to a specific port?
+	if redirectPort != "" {
+		port, _ := strconv.Atoi(redirectPort)
+		response.Redirect.PortRedirect = uint32(port)
+	}
+	// Do we have to redirect to a specific path?
+	if redirectPath != "" {
+		response.Redirect.PathRewriteSpecifier = &route.RedirectAction_PathRedirect{
+			PathRedirect: redirectPath,
+		}
+	}
+	// Do we have to enable stripping of query string parameters?
+	if redirectStripQuery == attributeValueTrue {
+		response.Redirect.StripQuery = true
+	}
+
+	return &response
 }
 
 func handleBasicAuthAttribute(routeEntry shared.Route, headersToAdd map[string]string) {

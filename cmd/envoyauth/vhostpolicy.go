@@ -81,10 +81,10 @@ func (a *authorizationServer) checkOAuth(request *requestInfo) (map[string]strin
 	if authorizationHeader != "" && strings.HasPrefix(authorizationHeader, prefix) {
 		token = authorizationHeader[len(prefix):]
 	} else {
-		return nil, errors.New("Could not parse authentication header")
+		return nil, errors.New("Could not get bearer token from authorization header")
 	}
 
-	// Load OAuth token details
+	// Load OAuth token details from data store
 	tokenInfo, err := a.oauth.server.Manager.LoadAccessToken(token)
 	if err != nil {
 		return nil, err
