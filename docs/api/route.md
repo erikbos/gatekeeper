@@ -105,6 +105,37 @@ Direct response by envoy without forwarding to upstream cluster:
 }
 ```
 
+Redirect /login to another URL
+
+```json
+{
+    "name": "old_login_redirect",
+    "displayName": "Redirect old login",
+    "routeGroup": "routes_80",
+    "path": "/login",
+    "pathType": "prefix",
+    "cluster": "none",
+    "attributes": [
+        {
+            "name": "RedirectStatusCode",
+            "value": "301"
+        },
+        {
+            "name": "RedirectScheme",
+            "value": "https"
+        },
+        {
+            "name": "RedirectHostName",
+            "value": "www.example.com"
+        },
+        {
+            "name": "RedirectPath",
+            "value": "/new_login/"
+        }
+    ],
+}
+```
+
 Enable handling of Cross-Origin Resource Sharing (CORS):
 
 ```json
@@ -172,3 +203,20 @@ Set route specific request retry behaviour to reduce error rates:
     ]
 }
 ```
+
+Set multiple upstream clusters for a route:
+
+```json
+
+{
+    "name": "people",
+    "displayName": "Default people",
+    "routeGroup": "routes_443",
+    "path": "/people",
+    "pathType": "prefix",
+    "cluster": "people:50,people2:75",
+}
+```
+
+Upstream clusters need to be separated by comma.
+Each need to be assigned a load balancing weight using *:weight* suffix.

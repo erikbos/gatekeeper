@@ -124,7 +124,7 @@ func (s *server) buildEnvoyRoutes(RouteGroup string, routes []shared.Route) []*r
 func (s *server) buildEnvoyRoute(routeEntry shared.Route) *route.Route {
 	routeMatch := buildRouteMatch(routeEntry)
 	if routeMatch == nil {
-		log.Warnf("Cannot build route config for route '%s'", routeEntry.Name)
+		log.Warnf("Cannot build route match config for route '%s'", routeEntry.Name)
 		return nil
 	}
 
@@ -133,29 +133,30 @@ func (s *server) buildEnvoyRoute(routeEntry shared.Route) *route.Route {
 		Match: routeMatch,
 	}
 
-	if routeEntry.Cluster != "" {
-		envoyRoute.Action = buildRouteActionCluster(routeEntry)
-	}
-
-	// disable extauth for this if required
+	// disable extauth if requested.
+	// extauth is first configed filter, so this needs to be done before anything else
 	_, err := shared.GetAttribute(routeEntry.Attributes, attributeDisableAuthentication)
 	if err == nil {
 		envoyRoute.TypedPerFilterConfig = buildRoutePerFilterConfig(routeEntry)
-		return envoyRoute
 	}
 
-	// Add direct response if configured, in this case Envoy itself will answer
+	// Add direct response if configured: in this case Envoy itself will answer
 	_, err = shared.GetAttribute(routeEntry.Attributes, attributeDirectResponseStatusCode)
 	if err == nil {
 		envoyRoute.Action = buildRouteActionDirectResponse(routeEntry)
 		return envoyRoute
 	}
 
-	// Add redirect response if configured, in this case Envoy will generate HTTP redirect
+	// Add redirect response if configured: in this case Envoy will generate HTTP redirect
 	_, err = shared.GetAttribute(routeEntry.Attributes, attributeRedirectStatusCode)
 	if err == nil {
 		envoyRoute.Action = buildRouteActionRedirectResponse(routeEntry)
 		return envoyRoute
+	}
+
+	// Add cluster(s) to forward to
+	if routeEntry.Cluster != "" {
+		envoyRoute.Action = buildRouteActionCluster(routeEntry)
 	}
 
 	// In case route-level attributes exist we might additional upstream headers
@@ -171,43 +172,27 @@ func buildRouteMatch(routeEntry shared.Route) *route.RouteMatch {
 
 	switch routeEntry.PathType {
 	case "path":
-		return buildRouteMatchPath(routeEntry)
+		return &route.RouteMatch{
+			PathSpecifier: &route.RouteMatch_Path{
+				Path: routeEntry.Path,
+			},
+		}
+
 	case "prefix":
-		return buildRouteMatchPrefix(routeEntry)
+		return &route.RouteMatch{
+			PathSpecifier: &route.RouteMatch_Prefix{
+				Prefix: routeEntry.Path,
+			},
+		}
+
 	case "regexp":
-		return buildRouteMatchRegexp(routeEntry)
+		return &route.RouteMatch{
+			PathSpecifier: &route.RouteMatch_SafeRegex{
+				SafeRegex: buildRegexpMatcher(routeEntry.Path),
+			},
+		}
 	}
 	return nil
-}
-
-// buildRouteMatchPath returns prefix-based route-match config
-func buildRouteMatchPath(routeEntry shared.Route) *route.RouteMatch {
-
-	return &route.RouteMatch{
-		PathSpecifier: &route.RouteMatch_Path{
-			Path: routeEntry.Path,
-		},
-	}
-}
-
-// buildRouteMatchPrefix returns path-based route-match config
-func buildRouteMatchPrefix(routeEntry shared.Route) *route.RouteMatch {
-
-	return &route.RouteMatch{
-		PathSpecifier: &route.RouteMatch_Prefix{
-			Prefix: routeEntry.Path,
-		},
-	}
-}
-
-// buildRouteMatchPath returns prefix-based route-match config
-func buildRouteMatchRegexp(routeEntry shared.Route) *route.RouteMatch {
-
-	return &route.RouteMatch{
-		PathSpecifier: &route.RouteMatch_SafeRegex{
-			SafeRegex: buildRegexpMatcher(routeEntry.Path),
-		},
-	}
 }
 
 // buildRouteActionCluster return route action in of forwarding to a cluster
@@ -215,9 +200,6 @@ func buildRouteActionCluster(routeEntry shared.Route) *route.Route_Route {
 
 	action := &route.Route_Route{
 		Route: &route.RouteAction{
-			ClusterSpecifier: &route.RouteAction_Cluster{
-				Cluster: routeEntry.Cluster,
-			},
 			Cors:                 buildCorsPolicy(routeEntry),
 			HostRewriteSpecifier: buildHostRewrite(routeEntry),
 			RetryPolicy:          buildRetryPolicy(routeEntry),
@@ -229,7 +211,51 @@ func buildRouteActionCluster(routeEntry shared.Route) *route.Route_Route {
 		action.Route.PrefixRewrite = prefixRewrite
 	}
 
+	if routeEntry.Cluster != "" {
+		if strings.Contains(routeEntry.Cluster, ",") {
+			action.Route.ClusterSpecifier = buildWeightedClusters(routeEntry)
+		} else {
+			action.Route.ClusterSpecifier = &route.RouteAction_Cluster{
+				Cluster: routeEntry.Cluster,
+			}
+		}
+	}
+
 	return action
+}
+
+func buildWeightedClusters(routeEntry shared.Route) *route.RouteAction_WeightedClusters {
+
+	weightedClusters := make([]*route.WeightedCluster_ClusterWeight, 0)
+	var clusterWeight, totalWeight int
+
+	for _, cluster := range strings.Split(routeEntry.Cluster, ",") {
+
+		clusterConfig := strings.Split(cluster, ":")
+
+		if len(clusterConfig) == 2 {
+			clusterWeight, _ = strconv.Atoi(clusterConfig[1])
+		} else {
+			log.Warningf("Route '%s' cluster '%s' subcluster '%s' does not have weight value",
+				routeEntry.Name, routeEntry.Cluster, cluster)
+
+			clusterWeight = 1
+		}
+		totalWeight += clusterWeight
+
+		clusterToAdd := &route.WeightedCluster_ClusterWeight{
+			Name:   clusterConfig[0],
+			Weight: protoUint32(uint32(clusterWeight)),
+		}
+		weightedClusters = append(weightedClusters, clusterToAdd)
+	}
+
+	return &route.RouteAction_WeightedClusters{
+		WeightedClusters: &route.WeightedCluster{
+			Clusters:    weightedClusters,
+			TotalWeight: protoUint32(uint32(totalWeight)),
+		},
+	}
 }
 
 // buildCorsPolicy return CorsPolicy based upon a route's attribute(s)
@@ -296,12 +322,12 @@ func buildRegexpMatcher(regexp string) *envoymatcher.RegexMatcher {
 }
 
 // buildHostRewrite returns HostRewrite config based upon route attribute(s)
-func buildHostRewrite(routeEntry shared.Route) *route.RouteAction_HostRewriteHeader {
+func buildHostRewrite(routeEntry shared.Route) *route.RouteAction_HostRewriteLiteral {
 
 	upstreamHostHeader, err := shared.GetAttribute(routeEntry.Attributes, attributeHostHeader)
 	if err == nil && upstreamHostHeader != "" {
-		return &route.RouteAction_HostRewriteHeader{
-			HostRewriteHeader: upstreamHostHeader,
+		return &route.RouteAction_HostRewriteLiteral{
+			HostRewriteLiteral: upstreamHostHeader,
 		}
 	}
 
