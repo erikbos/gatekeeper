@@ -42,9 +42,9 @@ func buildGRPCService(clusterName string, d time.Duration) *core.GrpcService {
 	}
 }
 
-func buildTransportSocket(resourceName string, m protoiface.MessageV1) *core.TransportSocket {
+func buildTransportSocket(resourceName string, tlsContext protoiface.MessageV1) *core.TransportSocket {
 
-	tlsContextProtoBuf, err := ptypes.MarshalAny(m)
+	tlsContextProtoBuf, err := ptypes.MarshalAny(tlsContext)
 	if err != nil {
 		log.Warnf("Cannot encode resource '%s' as transportsocket", resourceName)
 		return nil
@@ -99,13 +99,13 @@ func buildTLSParameters(attributes []shared.AttributeKeyValues) *tls.TlsParamete
 func buildTLSVersion(version string) tls.TlsParameters_TlsProtocol {
 
 	switch version {
-	case attributeValueTLS10:
+	case attributeValueTLSVersion10:
 		return tls.TlsParameters_TLSv1_0
-	case attributeValueTLS11:
+	case attributeValueTLSVersion11:
 		return tls.TlsParameters_TLSv1_1
-	case attributeValueTLS12:
+	case attributeValueTLSVersion12:
 		return tls.TlsParameters_TLSv1_2
-	case attributeValueTLS13:
+	case attributeValueTLSVersion13:
 		return tls.TlsParameters_TLSv1_3
 	}
 	return tls.TlsParameters_TLS_AUTO
@@ -117,10 +117,10 @@ func buildALPNProtocols(resourceName string, attributes []shared.AttributeKeyVal
 	value, err := shared.GetAttribute(attributes, attributeHTTPProtocol)
 	if err == nil {
 		switch value {
-		case attributeHTTPProtocolHTTP11:
+		case attributeValueHTTPProtocol11:
 			return []string{"http/1.1"}
 
-		case attributeHTTPProtocolHTTP2:
+		case attributeValueHTTPProtocol2:
 			return []string{"h2", "http/1.1"}
 
 		default:

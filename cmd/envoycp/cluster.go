@@ -162,10 +162,10 @@ func clusterCircuitBreaker(cluster shared.Cluster) *envoyCluster.CircuitBreakers
 // clusterHealthCheckConfig builds health configuration for a cluster
 func clusterHealthCheckConfig(cluster shared.Cluster) []*core.HealthCheck {
 
-	protocol, err := shared.GetAttribute(cluster.Attributes, attributeHealthCheckProtocol)
-	path, _ := shared.GetAttribute(cluster.Attributes, attributeHealthCheckPath)
+	healthCheckProtocol, err := shared.GetAttribute(cluster.Attributes, attributeHealthCheckProtocol)
+	healthCheckPath, _ := shared.GetAttribute(cluster.Attributes, attributeHealthCheckPath)
 
-	if err == nil && protocol == attributeValueHTTP && path != "" {
+	if err == nil && healthCheckProtocol == attributeValueHealthCheckProtocolHTTP && healthCheckPath != "" {
 
 		healthCheckInterval := shared.GetAttributeAsDuration(cluster.Attributes,
 			attributeHealthCheckInterval, defaultHealthCheckInterval)
@@ -185,7 +185,7 @@ func clusterHealthCheckConfig(cluster shared.Cluster) []*core.HealthCheck {
 		healthCheck := &core.HealthCheck{
 			HealthChecker: &core.HealthCheck_HttpHealthCheck_{
 				HttpHealthCheck: &core.HealthCheck_HttpHealthCheck{
-					Path:            path,
+					Path:            healthCheckPath,
 					CodecClientType: clusterHealthCodec(cluster),
 				},
 			},
@@ -208,10 +208,10 @@ func clusterHealthCodec(cluster shared.Cluster) envoyType.CodecClientType {
 	value, err := shared.GetAttribute(cluster.Attributes, attributeHTTPProtocol)
 	if err == nil {
 		switch value {
-		case attributeHTTPProtocolHTTP2:
+		case attributeValueHTTPProtocol2:
 			return envoyType.CodecClientType_HTTP2
 
-		case attributeHTTPProtocolHTTP3:
+		case attributeValueHTTPProtocol3:
 			return envoyType.CodecClientType_HTTP3
 
 		default:
@@ -239,9 +239,9 @@ func clusterHTTP2ProtocolOptions(cluster shared.Cluster) *core.Http2ProtocolOpti
 	value, err := shared.GetAttribute(cluster.Attributes, attributeHTTPProtocol)
 	if err == nil {
 		switch value {
-		case attributeHTTPProtocolHTTP11:
+		case attributeValueHTTPProtocol11:
 			return nil
-		case attributeHTTPProtocolHTTP2:
+		case attributeValueHTTPProtocol2:
 			// according to spec we need to return at least empty struct to enable HTTP/2
 			return &core.Http2ProtocolOptions{}
 		}

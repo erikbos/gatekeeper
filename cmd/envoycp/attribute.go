@@ -9,53 +9,11 @@ import (
 )
 
 const (
-	// Shared amongst virtualhost & cluster
-	attributeTLSEnabled         = "TLSEnabled"
-	attributeTLSCertificate     = "TLSCertificate"
-	attributeTLSCertificateKey  = "TLSCertificateKey"
-	attributeTLSMinimumVersion  = "TLSMinimumVersion"
-	attributeTLSMaximumVersion  = "TLSMaximumVersion"
-	attributeTLSCipherSuites    = "TLSCipherSuites"
-	attributeHTTPProtocol       = "HTTPProtocol"
-	attributeHTTPProtocolHTTP11 = "HTTP/1.1"
-	attributeHTTPProtocolHTTP2  = "HTTP/2"
-	attributeHTTPProtocolHTTP3  = "HTTP/3"
+	// Virtual host attributes
+	attributeAccessLogFileName    = "AccessLogFileName"
+	attributeAccessLogClusterName = "AccessLogClusterName"
 
-	// Cluster only
-	attributeConnectTimeout                = "ConnectTimeout"
-	attributeIdleTimeout                   = "IdleTimeout"
-	attributeSNIHostName                   = "SNIHostName"
-	attributeHealthCheckProtocol           = "HealthCheckProtocol"
-	attributeHealthCheckPath               = "HealthCheckPath"
-	attributeHealthCheckInterval           = "HealthCheckInterval"
-	attributeHealthCheckTimeout            = "HealthCheckTimeout"
-	attributeHealthCheckUnhealthyThreshold = "HealthCheckUnhealthyThreshold"
-	attributeHealthCheckHealthyThreshold   = "HealthCheckHealthyThreshold"
-	attributeHealthCheckLogFile            = "HealthCheckLogFile"
-	attributeMaxConnections                = "MaxConnections"
-	attributeMaxPendingRequests            = "MaxPendingRequests"
-	attributeMaxRequests                   = "MaxRequests"
-	attributeMaxRetries                    = "MaxRetries"
-	attributeDNSLookupFamiliy              = "DNSLookupFamily"
-	attributeDNSRefreshRate                = "DNSRefreshRate"
-	attributeDNSResolvers                  = "DNSResolvers"
-
-	attributeValueTrue  = "true"
-	attributeValueHTTP  = "HTTP"
-	attributeValueTLS10 = "TLSv10"
-	attributeValueTLS11 = "TLSv11"
-	attributeValueTLS12 = "TLSv12"
-	attributeValueTLS13 = "TLSv13"
-
-	defaultClusterConnectTimeout         = 5 * time.Second
-	defaultClusterIdleTimeout            = 15 * time.Minute
-	defaultHealthCheckInterval           = 5 * time.Second
-	defaultHealthCheckTimeout            = 10 * time.Second
-	defaultHealthCheckUnhealthyThreshold = 2
-	defaultHealthCheckHealthyThreshold   = 2
-	defaultDNSRefreshRate                = 5 * time.Second
-
-	// route
+	// Route attributes
 	attributeDisableAuthentication    = "DisableAuthentication"
 	attributeDirectResponseStatusCode = "DirectResponseStatusCode"
 	attributeDirectResponseBody       = "DirectResponseBody"
@@ -72,19 +30,70 @@ const (
 	attributeNumRetries               = "NumRetries"
 	attributeRetryOnStatusCodes       = "RetryOnStatusCodes"
 
+	// Default route configuration values
 	perRetryTimeout = 500 * time.Millisecond
+
+	// Cluster attributes
+	attributeConnectTimeout                = "ConnectTimeout"
+	attributeIdleTimeout                   = "IdleTimeout"
+	attributeTLSEnabled                    = "TLSEnabled"
+	attributeSNIHostName                   = "SNIHostName"
+	attributeHealthCheckProtocol           = "HealthCheckProtocol"
+	attributeHealthCheckPath               = "HealthCheckPath"
+	attributeHealthCheckInterval           = "HealthCheckInterval"
+	attributeHealthCheckTimeout            = "HealthCheckTimeout"
+	attributeHealthCheckUnhealthyThreshold = "HealthCheckUnhealthyThreshold"
+	attributeHealthCheckHealthyThreshold   = "HealthCheckHealthyThreshold"
+	attributeHealthCheckLogFile            = "HealthCheckLogFile"
+	attributeMaxConnections                = "MaxConnections"
+	attributeMaxPendingRequests            = "MaxPendingRequests"
+	attributeMaxRequests                   = "MaxRequests"
+	attributeMaxRetries                    = "MaxRetries"
+	attributeDNSLookupFamiliy              = "DNSLookupFamily"
+	attributeDNSRefreshRate                = "DNSRefreshRate"
+	attributeDNSResolvers                  = "DNSResolvers"
+
+	// Default cluster configuration values
+	defaultClusterConnectTimeout         = 5 * time.Second
+	defaultClusterIdleTimeout            = 15 * time.Minute
+	defaultHealthCheckInterval           = 5 * time.Second
+	defaultHealthCheckTimeout            = 10 * time.Second
+	defaultHealthCheckUnhealthyThreshold = 2
+	defaultHealthCheckHealthyThreshold   = 2
+	defaultDNSRefreshRate                = 5 * time.Second
+
+	// Attributes shared amongst virtualhost & cluster
+	attributeTLSCertificate    = "TLSCertificate"
+	attributeTLSCertificateKey = "TLSCertificateKey"
+	attributeTLSMinimumVersion = "TLSMinimumVersion"
+	attributeTLSMaximumVersion = "TLSMaximumVersion"
+	attributeTLSCipherSuites   = "TLSCipherSuites"
+	attributeHTTPProtocol      = "HTTPProtocol"
+
+	// Attribute values
+	attributeValueTrue                    = "true"
+	attributeValueTLSVersion10            = "TLSv10"
+	attributeValueTLSVersion11            = "TLSv11"
+	attributeValueTLSVersion12            = "TLSv12"
+	attributeValueTLSVersion13            = "TLSv13"
+	attributeValueHTTPProtocol11          = "HTTP/1.1"
+	attributeValueHTTPProtocol2           = "HTTP/2"
+	attributeValueHTTPProtocol3           = "HTTP/3"
+	attributeValueHealthCheckProtocolHTTP = "HTTP"
 )
 
 func warnForUnknownVirtualHostAttributes(virtualhost shared.VirtualHost) {
 
 	var validVirtualHostAttributes = map[string]bool{
-		attributeHTTPProtocol:      true,
-		attributeTLSEnabled:        true,
-		attributeTLSMinimumVersion: true,
-		attributeTLSMaximumVersion: true,
-		attributeTLSCipherSuites:   true,
-		attributeTLSCertificate:    true,
-		attributeTLSCertificateKey: true,
+		attributeAccessLogFileName:    true,
+		attributeAccessLogClusterName: true,
+		attributeHTTPProtocol:         true,
+		attributeTLSEnabled:           true,
+		attributeTLSMinimumVersion:    true,
+		attributeTLSMaximumVersion:    true,
+		attributeTLSCertificate:       true,
+		attributeTLSCertificateKey:    true,
+		attributeTLSCipherSuites:      true,
 	}
 
 	warnForUnknownAttribute("Virtualhost "+virtualhost.Name,

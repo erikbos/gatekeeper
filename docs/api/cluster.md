@@ -77,10 +77,11 @@ A cluster defines an upstream backend. Each provides one or more APIs to be cons
 | TLSMaximumVersion             | Maximum version of TLS to use                                                           | TLSv10,TLSv11, TLSv12 TLSv13 |
 | TLSCipherSuites               | Allowed TLS cipher suite                                                                |                              |
 
-All attributes listed above are mapped on configuration properties of [Envoy Cluster API specifications](https://www.envoyproxy.io/docs/envoy/latest/api-v2/api/v2/cluster.proto#cluster) for detailed explanation of purpose and allowed value of each attribute.
+All attributes listed above are mapped on configuration properties of [Envoy Cluster API specifications](https://www.envoyproxy.io/docs/envoy/latest/api-v3/api/v3/cluster.proto#cluster) for detailed explanation of purpose and allowed value of each attribute.
 
 The cluster options exposed this way are a subset of Envoy's capabilities, in general any cluster configuration option Envoy supports can be exposed  this way. Feel free to open an issue if you need more of Envoy's functionality exposed.
 
 ## Background
 
-Envoycp check the database for new or changed clusters every second. In case of any changes envoycp will compile a new proxy configuration and push it to all envoyproxy instances.
+Envoycp checks the database for new or changed clusters every second. Unrecognized attributes will be ignored and a warning will be logged. In case of any changes envoycp will compile a new proxy configuration and push it to all envoyproxy instances.
+

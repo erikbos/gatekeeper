@@ -69,13 +69,13 @@ func (s *server) GRPCManagementServer() {
 	}
 }
 
-// this wrapper is required:
-// - xds.HTTPGateway function proto mismatches http.Handler because it returns error
-// - we can pass xdsHTTPGatewayWrapper to http.ListenAndServe
 type xdsHTTPGatewayWrapper struct {
 	Server xds.HTTPGateway
 }
 
+// this wrapper is required:
+// - xds.HTTPGateway function proto mismatches http.Handler because it returns error
+// - we can pass xdsHTTPGatewayWrapper to http.ListenAndServe
 func (h xdsHTTPGatewayWrapper) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.Server.ServeHTTP(r)
 }

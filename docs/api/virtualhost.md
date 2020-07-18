@@ -49,23 +49,25 @@ _For POST content-type: application/json is required._
 
 ## Attribute specification
 
-| attribute name    | purpose                                              | possible values              |
-| ----------------- | ---------------------------------------------------- | ---------------------------- |
-| HTTPProtocol      | Highest HTTP protocol to support                     | HTTP/1.1, HTTP/2, HTTP/3     |
-| TLSEnabled        | Whether to enable TLS or not, HTTP/2 always uses TLS | true, false                  |
-| TLSCertificate    | Certificate to use for TLS                           |                              |
-| TLSCertificateKey | Key of certificate                                   |                              |
-| TLSMinimumVersion | Minimum version of TLS to use                        | TLSv10,TLSv11, TLSv12 TLSv13 |
-| TLSMaximumVersion | Maximum version of TLS to use                        | TLSv10,TLSv11, TLSv12 TLSv13 |
-| TLSCipherSuites   | Allowed TLS cipher suite                             |                              |
+| attribute name       | purpose                                              | possible values              |
+| -------------------- | ---------------------------------------------------- | ---------------------------- |
+| HTTPProtocol         | Highest HTTP protocol to support                     | HTTP/1.1, HTTP/2, HTTP/3     |
+| TLSEnabled           | Whether to enable TLS or not, HTTP/2 always uses TLS | true, false                  |
+| TLSCertificate       | Certificate to use for TLS                           |                              |
+| TLSCertificateKey    | Key of certificate                                   |                              |
+| TLSMinimumVersion    | Minimum version of TLS to use                        | TLSv10,TLSv11, TLSv12 TLSv13 |
+| TLSMaximumVersion    | Maximum version of TLS to use                        | TLSv10,TLSv11, TLSv12 TLSv13 |
+| TLSCipherSuites      | Allowed TLS cipher suite                             |                              |
+| AccessLogFileName    | Filename for storing access logs                     |                              |
+| AccessLogClusterName | Name of cluster to send access logs to               |                              |
 
-All attributes listed above are mapped on configuration properties of [Envoy listener API specifications](https://www.envoyproxy.io/docs/envoy/latest/api-v2/api/v2/listener.proto#listener) for detailed explanation of purpose and allowed value of each attribute.
+All attributes listed above are mapped on configuration properties of [Envoy listener API specifications](https://www.envoyproxy.io/docs/envoy/latest/api-v3/api/v3/listener.proto#listener) for detailed explanation of purpose and allowed value of each attribute.
 
 The virtual host options exposed this way are a subset of Envoy's capabilities, in general any listener configuration option Envoy supports can be exposed  this way. Feel free to open an issue if you need more of Envoy's functionality exposed.
 
 ## Background
 
-Envoycp check the database for new or changed virtualhosts every second. In case of any changes envoy will compile a new proxy configuration and send it to all envoyproxy instances.
+Envoycp checks the database for new or changed virtualhosts every second. Unrecognized attributes will be ignored and a warning will be logged. In case of any changes envoy will compile a new proxy configuration and send it to all envoyproxy instances.
 
 ## More examples
 

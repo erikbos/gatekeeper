@@ -192,7 +192,7 @@ func (s *server) buildConnectionManager(httpFilters []*hcm.HttpFilter, v shared.
 		UseRemoteAddress: protoBool(true),
 		RouteSpecifier:   s.buildRouteSpecifier(v.RouteGroup),
 		HttpFilters:      httpFilters,
-		AccessLog:        buildAccessLog(s.config.XDS.Envoy.Logging),
+		AccessLog:        buildAccessLog(s.config.XDS.Envoy.Logging, v),
 	}
 }
 
@@ -276,36 +276,51 @@ func (s *server) buildRouteSpecifier(RouteGroup string) *hcm.HttpConnectionManag
 // 	}
 // }
 
-func buildAccessLog(config envoyLogConfig) []*accessLog.AccessLog {
+func buildAccessLog(config envoyLogConfig, v shared.VirtualHost) []*accessLog.AccessLog {
 
+	// Allow override of logging setting used a virtual host attributes
+	accessLogFileName, error := shared.GetAttribute(v.Attributes, attributeAccessLogFileName)
+	if error == nil && accessLogFileName != "" {
+		log.Printf("Q1")
+		return buildFileAccessLog(config.File.Fields, accessLogFileName)
+	}
+	accessLogClusterName, error := shared.GetAttribute(v.Attributes, attributeAccessLogClusterName)
+	if error == nil && accessLogClusterName != "" {
+		log.Printf("Q2")
+		return buildGRPCAccessLog(accessLogClusterName, v.Name, defaultClusterConnectTimeout, 0)
+	}
+
+	// Fallback is default logging based upon configfile
 	if config.File.Path != "" {
-		return buildFileAccessLog(config)
+		log.Printf("Q3: %v", config.File.Path)
+		return buildFileAccessLog(config.File.Fields, config.File.Path)
 	}
 	if config.GRPC.Cluster != "" {
-		return buildGRPCAccessLog(config)
+		log.Printf("Q4")
+		return buildGRPCAccessLog(config.GRPC.Cluster, v.Name, config.GRPC.Timeout, config.GRPC.BufferSize)
 	}
 	return nil
 }
 
-func buildFileAccessLog(config envoyLogConfig) []*accessLog.AccessLog {
+func buildFileAccessLog(fields map[string]string, path string) []*accessLog.AccessLog {
+
+	if len(fields) == 0 {
+		log.Warnf("To do file access logging a logfield definition in envoycp configuration is required")
+		return nil
+	}
 
 	jsonFormat := &spb.Struct{
 		Fields: map[string]*spb.Value{},
 	}
-
-	if len(config.File.Fields) != 0 {
-		for field, fieldFormat := range config.File.Fields {
-			if fieldFormat != "" {
-				jsonFormat.Fields[field] = &spb.Value{
-					Kind: &spb.Value_StringValue{StringValue: fieldFormat},
-				}
+	for field, fieldFormat := range fields {
+		if fieldFormat != "" {
+			jsonFormat.Fields[field] = &spb.Value{
+				Kind: &spb.Value_StringValue{StringValue: fieldFormat},
 			}
 		}
-	} else {
-		log.Warnf("File logging should configure fields")
 	}
 	accessLogConf := &fileAccessLog.FileAccessLog{
-		Path: config.File.Path,
+		Path: path,
 		AccessLogFormat: &fileAccessLog.FileAccessLog_LogFormat{
 			LogFormat: &core.SubstitutionFormatString{
 				Format: &core.SubstitutionFormatString_JsonFormat{
@@ -326,14 +341,14 @@ func buildFileAccessLog(config envoyLogConfig) []*accessLog.AccessLog {
 	}}
 }
 
-func buildGRPCAccessLog(config envoyLogConfig) []*accessLog.AccessLog {
+func buildGRPCAccessLog(clusterName, LogName string, timeout time.Duration, bufferSize uint32) []*accessLog.AccessLog {
 
 	accessLogConf := &grpcAccessLog.HttpGrpcAccessLogConfig{
 		CommonConfig: &grpcAccessLog.CommonGrpcAccessLogConfig{
-			LogName:             config.GRPC.LogName,
-			GrpcService:         buildGRPCService(config.GRPC.Cluster, config.GRPC.Timeout),
+			LogName:             LogName,
+			GrpcService:         buildGRPCService(clusterName, timeout),
 			TransportApiVersion: core.ApiVersion_V3,
-			BufferSizeBytes:     protoUint32(config.GRPC.BufferSize),
+			BufferSizeBytes:     protoUint32orNil(int(bufferSize)),
 		},
 	}
 
