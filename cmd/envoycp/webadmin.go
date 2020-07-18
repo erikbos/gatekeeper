@@ -48,7 +48,7 @@ func (s *server) StartWebAdminServer() {
 // ShowWebAdminHomePage shows home page
 func (s *server) ShowWebAdminHomePage(c *gin.Context) {
 	// FIXME feels like hack, is there a better way to pass gin engine context?
-	shared.ShowIndexPage(c, s.ginEngine, myName)
+	shared.ShowIndexPage(c, s.ginEngine, applicationName)
 }
 
 // configDump pretty prints the active configuration (without password)

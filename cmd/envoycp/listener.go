@@ -278,25 +278,21 @@ func (s *server) buildRouteSpecifier(RouteGroup string) *hcm.HttpConnectionManag
 
 func buildAccessLog(config envoyLogConfig, v shared.VirtualHost) []*accessLog.AccessLog {
 
-	// Allow override of logging setting used a virtual host attributes
+	// Set access log behaviour based upon virtual host attributes
 	accessLogFileName, error := shared.GetAttribute(v.Attributes, attributeAccessLogFileName)
 	if error == nil && accessLogFileName != "" {
-		log.Printf("Q1")
 		return buildFileAccessLog(config.File.Fields, accessLogFileName)
 	}
 	accessLogClusterName, error := shared.GetAttribute(v.Attributes, attributeAccessLogClusterName)
 	if error == nil && accessLogClusterName != "" {
-		log.Printf("Q2")
 		return buildGRPCAccessLog(accessLogClusterName, v.Name, defaultClusterConnectTimeout, 0)
 	}
 
 	// Fallback is default logging based upon configfile
 	if config.File.Path != "" {
-		log.Printf("Q3: %v", config.File.Path)
 		return buildFileAccessLog(config.File.Fields, config.File.Path)
 	}
 	if config.GRPC.Cluster != "" {
-		log.Printf("Q4")
 		return buildGRPCAccessLog(config.GRPC.Cluster, v.Name, config.GRPC.Timeout, config.GRPC.BufferSize)
 	}
 	return nil

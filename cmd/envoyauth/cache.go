@@ -250,7 +250,7 @@ func registerCacheMetrics(c *Cache) {
 
 	c.cacheHits = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Namespace: myName,
+			Namespace: applicatioName,
 			Name:      "cache_hits_total",
 			Help:      "Number of cache hits.",
 		}, []string{"table"})
@@ -258,7 +258,7 @@ func registerCacheMetrics(c *Cache) {
 
 	c.cacheMisses = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Namespace: myName,
+			Namespace: applicatioName,
 			Name:      "cache_misses_total",
 			Help:      "Number of cache misses.",
 		}, []string{"table"})
@@ -266,7 +266,7 @@ func registerCacheMetrics(c *Cache) {
 
 	prometheus.MustRegister(prometheus.NewGaugeFunc(
 		prometheus.GaugeOpts{
-			Namespace: myName,
+			Namespace: applicatioName,
 			Name:      "cache_entries",
 			Help:      "Number of entries in cache.",
 		},
@@ -275,7 +275,7 @@ func registerCacheMetrics(c *Cache) {
 
 	prometheus.MustRegister(prometheus.NewGaugeFunc(
 		prometheus.GaugeOpts{
-			Namespace: myName,
+			Namespace: applicatioName,
 			Name:      "cache_hitratio",
 			Help:      "Hitratio of cache.",
 		},
@@ -284,7 +284,7 @@ func registerCacheMetrics(c *Cache) {
 
 	prometheus.MustRegister(prometheus.NewCounterFunc(
 		prometheus.CounterOpts{
-			Namespace: myName,
+			Namespace: applicatioName,
 			Name:      "cache_hits",
 			Help:      "Number of cache hits.",
 		},
@@ -293,7 +293,7 @@ func registerCacheMetrics(c *Cache) {
 
 	prometheus.MustRegister(prometheus.NewCounterFunc(
 		prometheus.CounterOpts{
-			Namespace: myName,
+			Namespace: applicatioName,
 			Name:      "cache_misses",
 			Help:      "Number of cache misses.",
 		},
@@ -302,7 +302,7 @@ func registerCacheMetrics(c *Cache) {
 
 	prometheus.MustRegister(prometheus.NewGaugeFunc(
 		prometheus.GaugeOpts{
-			Namespace: myName,
+			Namespace: applicatioName,
 			Name:      "cache_evictions",
 			Help:      "Number of cache entries that where evicted.",
 		},
@@ -311,7 +311,7 @@ func registerCacheMetrics(c *Cache) {
 
 	prometheus.MustRegister(prometheus.NewGaugeFunc(
 		prometheus.GaugeOpts{
-			Namespace: myName,
+			Namespace: applicatioName,
 			Name:      "cache_expired",
 			Help:      "Number of cache entries that expired.",
 		},

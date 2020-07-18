@@ -14,23 +14,28 @@ import (
 	routeservice "github.com/envoyproxy/go-control-plane/envoy/service/route/v3"
 	cache "github.com/envoyproxy/go-control-plane/pkg/cache/v3"
 	xds "github.com/envoyproxy/go-control-plane/pkg/server/v3"
-	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 
 	"github.com/erikbos/gatekeeper/pkg/shared"
 )
 
+// xdsNotifyMesssage is used to notify
+type xdsNotifyMesssage struct {
+	resource string
+}
+
 // StartXDS brings up XDS system
 func (s *server) StartXDS(notifications chan xdsNotifyMesssage) {
 
 	s.xdsCache = cache.NewSnapshotCache(true, cache.IDHash{}, logger{})
-	signal := make(chan struct{})
-	s.xds = xds.NewServer(context.Background(), s.xdsCache, &callbacks{
-		signal:   signal,
+	streamCallbacks := &callbacks{
+		signal:   make(chan struct{}),
 		fetches:  0,
 		requests: 0,
-	})
+		srv:      s,
+	}
+	s.xds = xds.NewServer(context.Background(), s.xdsCache, streamCallbacks)
 
 	go s.GRPCManagementServer()
 	go s.HTTPManagementGateway()
@@ -104,41 +109,4 @@ func (s *server) XDSBuildSnapshot() {
 
 	snapshot := cache.NewSnapshot(version, nil, EnvoyClusters, EnvoyRoutes, EnvoyListeners, nil)
 	_ = s.xdsCache.SetSnapshot("jenny", snapshot)
-}
-
-// registerMetrics registers xds' operational metrics
-func (s *server) registerMetrics() {
-
-	metricVirtualHostsCount := prometheus.NewGaugeFunc(
-		prometheus.GaugeOpts{
-			Namespace: myName,
-			Name:      "xds_virtualhosts_total",
-			Help:      "Total number of clusters.",
-		}, s.GetVirtualHostCount)
-
-	metricRoutesCount := prometheus.NewGaugeFunc(
-		prometheus.GaugeOpts{
-			Namespace: myName,
-			Name:      "xds_routes_total",
-			Help:      "Total number of routes.",
-		}, s.GetRouteCount)
-
-	metricClustersCount := prometheus.NewGaugeFunc(
-		prometheus.GaugeOpts{
-			Namespace: myName,
-			Name:      "xds_clusters_total",
-			Help:      "Total number of clusters.",
-		}, s.GetClusterCount)
-
-	s.metrics.xdsDeployments = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Namespace: myName,
-			Name:      "xds_deployments_total",
-			Help:      "Total number of xds configuration deployments.",
-		}, []string{"resource"})
-
-	prometheus.MustRegister(metricVirtualHostsCount)
-	prometheus.MustRegister(metricRoutesCount)
-	prometheus.MustRegister(metricClustersCount)
-	prometheus.MustRegister(s.metrics.xdsDeployments)
 }

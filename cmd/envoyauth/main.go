@@ -14,7 +14,7 @@ var (
 )
 
 const (
-	myName = "envoyauth"
+	applicatioName = "envoyauth"
 )
 
 type authorizationServer struct {
@@ -31,17 +31,17 @@ type authorizationServer struct {
 }
 
 func main() {
-	shared.StartLogging(myName, version, buildTime)
+	shared.StartLogging(applicatioName, version, buildTime)
 
 	a := authorizationServer{}
 	a.config = loadConfiguration()
 	// FIXME we should check if we have all required parameters (use viper package?)
 
 	shared.SetLoggingConfiguration(a.config.LogLevel)
-	a.readiness.RegisterMetrics(myName)
+	a.readiness.RegisterMetrics(applicatioName)
 
 	var err error
-	a.db, err = db.Connect(a.config.Database, &a.readiness, myName)
+	a.db, err = db.Connect(a.config.Database, &a.readiness, applicatioName)
 	if err != nil {
 		log.Fatalf("Database connect failed: %v", err)
 	}

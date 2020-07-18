@@ -14,7 +14,7 @@ var (
 )
 
 const (
-	myName = "dbadmin"
+	applicationName = "dbadmin"
 )
 
 type server struct {
@@ -25,17 +25,17 @@ type server struct {
 }
 
 func main() {
-	shared.StartLogging(myName, version, buildTime)
+	shared.StartLogging(applicationName, version, buildTime)
 
 	s := server{
 		config: loadConfiguration(),
 	}
 
 	shared.SetLoggingConfiguration(s.config.LogLevel)
-	s.readiness.RegisterMetrics(myName)
+	s.readiness.RegisterMetrics(applicationName)
 
 	var err error
-	s.db, err = db.Connect(s.config.Database, &s.readiness, myName)
+	s.db, err = db.Connect(s.config.Database, &s.readiness, applicationName)
 	if err != nil {
 		log.Fatalf("Database connect failed: %v", err)
 	}

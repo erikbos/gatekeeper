@@ -4,7 +4,6 @@ import (
 	"github.com/envoyproxy/go-control-plane/pkg/cache/v3"
 	xds "github.com/envoyproxy/go-control-plane/pkg/server/v3"
 	"github.com/gin-gonic/gin"
-	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/erikbos/gatekeeper/pkg/db"
@@ -17,7 +16,7 @@ var (
 )
 
 const (
-	myName = "envoycp"
+	applicationName = "envoycp"
 )
 
 type server struct {
@@ -30,27 +29,21 @@ type server struct {
 	clusters     []shared.Cluster
 	xds          xds.Server
 	xdsCache     cache.SnapshotCache
-	metrics      struct {
-		xdsDeployments *prometheus.CounterVec
-	}
-}
-
-type xdsNotifyMesssage struct {
-	resource string
+	metrics      metricsCollection
 }
 
 func main() {
-	shared.StartLogging(myName, version, buildTime)
+	shared.StartLogging(applicationName, version, buildTime)
 
 	s := server{
 		config: loadConfiguration(),
 	}
 
 	shared.SetLoggingConfiguration(s.config.LogLevel)
-	s.readiness.RegisterMetrics(myName)
+	s.readiness.RegisterMetrics(applicationName)
 
 	var err error
-	s.db, err = db.Connect(s.config.Database, &s.readiness, myName)
+	s.db, err = db.Connect(s.config.Database, &s.readiness, applicationName)
 	if err != nil {
 		log.Fatalf("Database connect failed: %v", err)
 	}

@@ -13,6 +13,7 @@ type callbacks struct {
 	fetches  int
 	requests int
 	mu       sync.Mutex
+	srv      *server
 }
 
 func (cb *callbacks) Report() {
@@ -24,6 +25,8 @@ func (cb *callbacks) Report() {
 		"requests": cb.requests,
 	}
 	log.WithFields(fields).Info("OnstreamReport")
+
+	cb.srv.increaseCounterXDSMessage("Report")
 }
 
 // OnStreamOpen is called once an xDS stream is open with a stream ID and the type URL (or "" for ADS).
@@ -34,6 +37,9 @@ func (cb *callbacks) OnStreamOpen(ctx context.Context, id int64, typ string) err
 		"type":   typ,
 	}
 	log.WithFields(fields).Info("OnStreamOpen")
+
+	cb.srv.increaseCounterXDSMessage("OnStreamOpen")
+
 	return nil
 }
 
@@ -43,6 +49,8 @@ func (cb *callbacks) OnStreamClosed(id int64) {
 		"stream": id,
 	}
 	log.WithFields(fields).Info("OnStreamClosed")
+
+	cb.srv.increaseCounterXDSMessage("OnStreamClosed")
 }
 
 // OnStreamRequest is called once a request is received on a stream.
@@ -58,6 +66,8 @@ func (cb *callbacks) OnStreamRequest(id int64, request *discovery.DiscoveryReque
 		// 	request.Node.GetUserAgentBuildVersion().Version.Patch),
 	}
 	log.WithFields(fields).Info("OnStreamRequest")
+
+	cb.srv.increaseCounterXDSMessage("OnStreamRequest")
 
 	cb.mu.Lock()
 	defer cb.mu.Unlock()
@@ -76,6 +86,9 @@ func (cb *callbacks) OnStreamResponse(id int64, request *discovery.DiscoveryRequ
 		"type":   response.TypeUrl,
 	}
 	log.WithFields(fields).Info("OnStreamResponse")
+
+	cb.srv.increaseCounterXDSMessage("OnStreamResponse")
+
 	cb.Report()
 }
 
@@ -83,6 +96,8 @@ func (cb *callbacks) OnStreamResponse(id int64, request *discovery.DiscoveryRequ
 // request and respond with an error.
 func (cb *callbacks) OnFetchRequest(ctx context.Context, request *discovery.DiscoveryRequest) error {
 	log.WithFields(log.Fields{}).Info("OnFetchRequest")
+
+	cb.srv.increaseCounterXDSMessage("OnFetchRequest")
 
 	cb.mu.Lock()
 	defer cb.mu.Unlock()
@@ -97,4 +112,6 @@ func (cb *callbacks) OnFetchRequest(ctx context.Context, request *discovery.Disc
 // OnFetchResponse is called immediately prior to sending a response.
 func (cb *callbacks) OnFetchResponse(*discovery.DiscoveryRequest, *discovery.DiscoveryResponse) {
 	log.Infof("OnFetchResponse")
+
+	cb.srv.increaseCounterXDSMessage("OnFetchResponse")
 }
