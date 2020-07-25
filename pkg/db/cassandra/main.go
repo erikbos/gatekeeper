@@ -52,6 +52,7 @@ func New(config DatabaseConfig, serviceName string) (*db.Database, error) {
 		APIProduct:   NewAPIProductStore(&dbConfig),
 		Credential:   NewCredentialStore(&dbConfig),
 		OAuth:        NewOAuthStore(&dbConfig),
+		Readiness:    NewReadinessCheck(&dbConfig),
 	}
 	return &database, nil
 }
@@ -78,13 +79,13 @@ func connect(config DatabaseConfig, serviceName string) (*gocql.Session, error) 
 	}
 	// cluster.RetryPolicy = &gocql.SimpleRetryPolicy{NumRetries: 3}
 
-	log.Infof("Database connecting as user %s to host %s",
-		config.Username, config.Hostname)
-
 	cassandraSession, err := cluster.CreateSession()
 	if err != nil {
-		return nil, fmt.Errorf("Could not connect to database: %s", err)
+		return nil, fmt.Errorf("Could not connect to database (%s)", err)
 	}
+
+	log.Infof("Database connected as '%s' to '%s'",
+		config.Username, config.Hostname)
 
 	return cassandraSession, nil
 }

@@ -12,5 +12,6 @@ type (
 		APIProduct   APIProductStore
 		Credential   CredentialStore
 		OAuth        OAuthStore
+		Readiness
 	}
 )
