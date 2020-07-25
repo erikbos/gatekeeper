@@ -5,6 +5,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/erikbos/gatekeeper/pkg/db"
+	"github.com/erikbos/gatekeeper/pkg/db/cassandra"
 	"github.com/erikbos/gatekeeper/pkg/shared"
 )
 
@@ -41,7 +42,7 @@ func main() {
 	a.readiness.RegisterMetrics(applicatioName)
 
 	var err error
-	a.db, err = db.Connect(a.config.Database, &a.readiness, applicatioName)
+	a.db, err = cassandra.New(a.config.Database, applicatioName)
 	if err != nil {
 		log.Fatalf("Database connect failed: %v", err)
 	}

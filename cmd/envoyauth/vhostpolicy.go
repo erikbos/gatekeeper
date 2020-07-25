@@ -149,7 +149,7 @@ func (a *authorizationServer) getEntitlementDetails(request *requestInfo) error 
 	request.appCredential, err = a.cache.GetDeveloperAppKey(request.apikey)
 	// in case we do not have this apikey in cache let's try to retrieve it from database
 	if err != nil {
-		request.appCredential, err = a.db.GetAppCredentialByKey(&request.vhost.OrganizationName, request.apikey)
+		request.appCredential, err = a.db.Credential.GetByKey(&request.vhost.OrganizationName, request.apikey)
 		if err != nil {
 			// FIX ME increase unknown apikey counter (not an error state)
 			return errors.New("Could not find apikey")
@@ -160,7 +160,7 @@ func (a *authorizationServer) getEntitlementDetails(request *requestInfo) error 
 	request.developerApp, err = a.cache.GetDeveloperApp(&request.appCredential.AppID)
 	// in case we do not have developer app in cache let's try to retrieve it from database
 	if err != nil {
-		request.developerApp, err = a.db.GetDeveloperAppByID(request.vhost.OrganizationName, request.appCredential.AppID)
+		request.developerApp, err = a.db.DeveloperApp.GetByID(request.vhost.OrganizationName, request.appCredential.AppID)
 		if err != nil {
 			// FIX ME increase counter as every apikey should link to dev app (error state)
 			return errors.New("Could not find developer app of this apikey")
@@ -171,7 +171,7 @@ func (a *authorizationServer) getEntitlementDetails(request *requestInfo) error 
 	request.developer, err = a.cache.GetDeveloper(&request.developerApp.DeveloperID)
 	// in case we do not have develop in cache let's try to retrieve it from database
 	if err != nil {
-		request.developer, err = a.db.GetDeveloperByID(request.developerApp.DeveloperID)
+		request.developer, err = a.db.Developer.GetByID(request.developerApp.DeveloperID)
 		if err != nil {
 			// FIX ME increase counter as every devapp should link to developer (error state)
 			return errors.New("Could not find developer of developer app")
@@ -254,7 +254,7 @@ func (a *authorizationServer) getAPIProduct(organization, apiproductname *string
 	product, err := a.cache.GetAPIProduct(organization, apiproductname)
 	// in case we do not have product in cache let's try to retrieve it from database
 	if err != nil {
-		product, err = a.db.GetAPIProductByName(*organization, *apiproductname)
+		product, err = a.db.APIProduct.GetByName(*organization, *apiproductname)
 		if err == nil {
 			// In case we successfully retrieve from db we store in cache
 			a.cache.StoreAPIProduct(organization, apiproductname, product)

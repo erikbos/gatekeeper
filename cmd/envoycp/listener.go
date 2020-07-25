@@ -37,7 +37,7 @@ func (s *server) GetVirtualHostConfigFromDatabase(n chan xdsNotifyMesssage) {
 	for {
 		var xdsPushNeeded bool
 
-		newVirtualHosts, err := s.db.GetVirtualHosts()
+		newVirtualHosts, err := s.db.Virtualhost.GetAll()
 		if err != nil {
 			log.Errorf("Could not retrieve virtualhosts from database (%s)", err)
 		} else {

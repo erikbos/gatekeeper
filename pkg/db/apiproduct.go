@@ -1,135 +1,22 @@
 package db
 
 import (
-	"fmt"
-
-	"github.com/prometheus/client_golang/prometheus"
-	log "github.com/sirupsen/logrus"
-
 	"github.com/erikbos/gatekeeper/pkg/shared"
 )
 
-// Prometheus label for metrics of db interactions
-const apiProductsMetricLabel = "apiproducts"
+type (
+	// APIProductStore the apiproduct information storage interface
+	APIProductStore interface {
+		// GetByOrganization retrieves all api products belonging to an organization
+		GetByOrganization(organizationName string) ([]shared.APIProduct, error)
 
-// GetAPIProductsByOrganization retrieves all api products belonging to an organization
-func (d *Database) GetAPIProductsByOrganization(organizationName string) ([]shared.APIProduct, error) {
-	query := "SELECT * FROM api_products WHERE organization_name = ? ALLOW FILTERING"
+		// GetByName returns an apiproduct
+		GetByName(organizationName, apiproductName string) (*shared.APIProduct, error)
 
-	apiproducts, err := d.runGetAPIProductQuery(query, organizationName)
-	if err != nil {
-		return []shared.APIProduct{}, err
+		// UpdateByName UPSERTs an apiproduct in database
+		UpdateByName(p *shared.APIProduct) error
+
+		// DeleteByName deletes an apiproduct
+		DeleteByName(organizationName, apiProduct string) error
 	}
-
-	if len(apiproducts) == 0 {
-		d.metricsQueryMiss(appsMetricLabel)
-		return apiproducts,
-			fmt.Errorf("Can not find apiproducts in organization %s", organizationName)
-	}
-
-	d.metricsQueryHit(appsMetricLabel)
-	return apiproducts, nil
-}
-
-// GetAPIProductByName returns an apiproduct
-func (d *Database) GetAPIProductByName(organizationName, apiproductName string) (*shared.APIProduct, error) {
-
-	query := "SELECT * FROM api_products WHERE organization_name = ? AND name = ? LIMIT 1"
-
-	apiproducts, err := d.runGetAPIProductQuery(query, organizationName, apiproductName)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(apiproducts) == 0 {
-		d.metricsQueryMiss(apiProductsMetricLabel)
-		return nil, fmt.Errorf("Could not find apiproduct (%s)", apiproductName)
-	}
-
-	d.metricsQueryHit(apiProductsMetricLabel)
-	return &apiproducts[0], nil
-}
-
-// runAPIProductQuery executes CQL query and returns resultset
-func (d *Database) runGetAPIProductQuery(query string, queryParameters ...interface{}) ([]shared.APIProduct, error) {
-	var apiproducts []shared.APIProduct
-
-	timer := prometheus.NewTimer(d.dbLookupHistogram)
-	defer timer.ObserveDuration()
-
-	iterable := d.cassandraSession.Query(query, queryParameters...).Iter()
-	m := make(map[string]interface{})
-	for iterable.MapScan(m) {
-		apiproduct := shared.APIProduct{
-			Name:             m["name"].(string),
-			DisplayName:      m["display_name"].(string),
-			Description:      m["description"].(string),
-			RouteGroup:       m["route_group"].(string),
-			OrganizationName: m["organization_name"].(string),
-			Policies:         m["policies"].(string),
-			CreatedAt:        m["created_at"].(int64),
-			CreatedBy:        m["created_by"].(string),
-			LastmodifiedAt:   m["lastmodified_at"].(int64),
-			LastmodifiedBy:   m["lastmodified_by"].(string),
-		}
-		apiproduct.Paths = d.unmarshallJSONArrayOfStrings(m["paths"].(string))
-		apiproduct.Attributes = d.unmarshallJSONArrayOfAttributes(m["attributes"].(string))
-		apiproducts = append(apiproducts, apiproduct)
-		m = map[string]interface{}{}
-	}
-
-	if err := iterable.Close(); err != nil {
-		log.Error(err)
-		return []shared.APIProduct{}, err
-	}
-
-	return apiproducts, nil
-}
-
-// UpdateAPIProductByName UPSERTs an apiproduct in database
-func (d *Database) UpdateAPIProductByName(p *shared.APIProduct) error {
-
-	p.Attributes = shared.TidyAttributes(p.Attributes)
-	p.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
-
-	if err := d.cassandraSession.Query(`INSERT INTO api_products (
-name,
-display_name,
-attributes,
-route_group,
-paths,
-policies,
-created_at,
-created_by,
-lastmodified_at,
-lastmodified_by,
-organization_name) VALUES(?,?,?,?,?,?,?,?,?,?,?)`,
-
-		p.Name,
-		p.DisplayName,
-		d.marshallArrayOfAttributesToJSON(p.Attributes),
-		p.RouteGroup,
-		d.marshallArrayOfStringsToJSON(p.Paths),
-		p.Policies,
-		p.CreatedAt,
-		p.CreatedBy,
-		p.LastmodifiedAt,
-		p.LastmodifiedBy,
-		p.OrganizationName).Exec(); err != nil {
-
-		return fmt.Errorf("Can not update apiproduct '%s' (%v)", p.Name, err)
-	}
-	return nil
-}
-
-// DeleteAPIProductByName deletes an apiproduct
-func (d *Database) DeleteAPIProductByName(organizationName, apiProduct string) error {
-
-	apiproduct, err := d.GetAPIProductByName(organizationName, apiProduct)
-	if err != nil {
-		return err
-	}
-
-	query := "DELETE FROM api_products WHERE name = ?"
-	return d.cassandraSession.Query(query, apiproduct.Name).Exec()
-}
+)

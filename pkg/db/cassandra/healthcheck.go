@@ -1,4 +1,4 @@
-package db
+package cassandra
 
 import (
 	"time"
@@ -32,12 +32,12 @@ func (d *Database) runContinousHealthCheck() {
 				log.Infof("Database healthcheck ok")
 				connected = true
 			}
-			d.readiness.Up()
+			// d.readiness.Up()
 		} else {
 			log.Warnf("Database healthcheck failed: %s", err)
 			connected = false
 
-			d.readiness.Down()
+			// d.readiness.Down()
 		}
 		time.Sleep(healthCheckInterval)
 	}
@@ -50,7 +50,7 @@ func (d *Database) HealthCheckQuery() (HealthCheckStatus, error) {
 	// timer := prometheus.NewTimer(d.dbLookupHistogram)
 	// defer timer.ObserveDuration()
 
-	iter := d.cassandraSession.Query(healthCheckCQLquery).Iter()
+	iter := d.CassandraSession.Query(healthCheckCQLquery).Iter()
 	m := make(map[string]interface{})
 	for iter.MapScan(m) {
 		peers = HealthCheckStatus{
@@ -62,10 +62,10 @@ func (d *Database) HealthCheckQuery() (HealthCheckStatus, error) {
 	}
 
 	if err := iter.Close(); err != nil {
-		d.metricsQueryMiss(healthCheckMetricLabel)
+		d.metrics.QueryHit(healthCheckMetricLabel)
 		return HealthCheckStatus{}, err
 	}
 
-	d.metricsQueryHit(healthCheckMetricLabel)
+	d.metrics.QueryHit(healthCheckMetricLabel)
 	return peers, nil
 }
