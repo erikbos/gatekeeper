@@ -32,7 +32,7 @@ func (s *server) GetClusterConfigFromDatabase(n chan xdsNotifyMesssage) {
 	for {
 		var xdsPushNeeded bool
 
-		newClusterList, err := s.db.GetClusters()
+		newClusterList, err := s.db.Cluster.GetAll()
 		if err != nil {
 			log.Errorf("Could not retrieve clusters from database (%s)", err)
 		} else {

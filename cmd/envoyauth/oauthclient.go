@@ -34,7 +34,7 @@ func (clientstore *ClientTokenStore) GetByID(id string) (oauth2.ClientInfo, erro
 	credential, err := clientstore.cache.GetDeveloperAppKey(&id)
 	// in case we do not have this apikey in cache let's try to retrieve it from database
 	if err != nil {
-		credential, err = clientstore.db.GetAppCredentialByKey(nil, &id)
+		credential, err = clientstore.db.Credential.GetByKey(nil, &id)
 		if err != nil {
 			// FIX ME increase unknown apikey counter (not an error state)
 			return nil, err

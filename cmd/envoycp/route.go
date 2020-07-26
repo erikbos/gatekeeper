@@ -35,7 +35,7 @@ func (s *server) GetRouteConfigFromDatabase(n chan xdsNotifyMesssage) {
 	for {
 		var xdsPushNeeded bool
 
-		newRouteList, err := s.db.GetRoutes()
+		newRouteList, err := s.db.Route.GetAll()
 		if err != nil {
 			log.Errorf("Could not retrieve routes from database (%s)", err)
 		} else {

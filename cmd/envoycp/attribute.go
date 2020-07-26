@@ -104,7 +104,7 @@ func warnForUnknownVirtualHostAttributes(virtualhost shared.VirtualHost) {
 		attributeTLSCipherSuites:      true,
 	}
 
-	warnForUnknownAttribute("Virtualhost "+virtualhost.Name,
+	warnForUnknownAttribute("Virtualhost", virtualhost.Name,
 		virtualhost.Attributes, validVirtualHostAttributes)
 }
 
@@ -126,9 +126,11 @@ func warnForUnknownRouteAttributes(route shared.Route) {
 		attributePerTryTimeout:            true,
 		attributeNumRetries:               true,
 		attributeRetryOnStatusCodes:       true,
+		attributeRequestMirrorClusterName: true,
+		attributeRequestMirrorPercentage:  true,
 	}
 
-	warnForUnknownAttribute("Route "+route.Name,
+	warnForUnknownAttribute("Route", route.Name,
 		route.Attributes, validRouteAttributes)
 }
 
@@ -159,16 +161,17 @@ func warnForUnknownClusterAttributes(cluster shared.Cluster) {
 		attributeDNSResolvers:                  true,
 	}
 
-	warnForUnknownAttribute("Cluster "+cluster.Name,
+	warnForUnknownAttribute("Cluster", cluster.Name,
 		cluster.Attributes, validClusterAttributes)
 }
 
-func warnForUnknownAttribute(resource string, attributes []shared.AttributeKeyValues, validAttributes map[string]bool) {
+func warnForUnknownAttribute(resourceType, resourceName string,
+	attributes []shared.AttributeKeyValues, validAttributes map[string]bool) {
 
 	for _, attribute := range attributes {
 		if !validAttributes[attribute.Name] {
-			log.Warningf("'%s' has unknown attribute '%s' value '%s'",
-				resource, attribute.Name, attribute.Value)
+			log.Warningf("%s '%s' has unknown attribute '%s' value '%s'",
+				resourceType, resourceName, attribute.Name, attribute.Value)
 		}
 	}
 }

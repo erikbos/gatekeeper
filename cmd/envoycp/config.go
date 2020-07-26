@@ -8,7 +8,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 
-	"github.com/erikbos/gatekeeper/pkg/db"
+	"github.com/erikbos/gatekeeper/pkg/db/cassandra"
 )
 
 const (
@@ -22,10 +22,10 @@ const (
 
 // EnvoyCPConfig contains our startup configuration data
 type EnvoyCPConfig struct {
-	LogLevel string            `yaml:"loglevel"`
-	WebAdmin webAdminConfig    `yaml:"webadmin"`
-	Database db.DatabaseConfig `yaml:"database"`
-	XDS      xdsConfig         `yaml:"xds"`
+	LogLevel string                   `yaml:"loglevel"`
+	WebAdmin webAdminConfig           `yaml:"webadmin"`
+	Database cassandra.DatabaseConfig `yaml:"database"`
+	XDS      xdsConfig                `yaml:"xds"`
 }
 
 type xdsConfig struct {

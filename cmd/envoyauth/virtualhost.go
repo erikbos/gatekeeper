@@ -24,7 +24,7 @@ func (a *authorizationServer) GetVirtualHostConfigFromDatabase() {
 	for {
 		var xdsPushNeeded bool
 
-		newVirtualHosts, err := a.db.GetVirtualHosts()
+		newVirtualHosts, err := a.db.Virtualhost.GetAll()
 		if err != nil {
 			log.Errorf("Could not retrieve virtualhosts from database (%s)", err)
 		} else {
@@ -72,7 +72,7 @@ func (a *authorizationServer) GetRouteConfigFromDatabase() {
 	for {
 		var xdsPushNeeded bool
 
-		newRouteList, err := a.db.GetRoutes()
+		newRouteList, err := a.db.Route.GetAll()
 		if err != nil {
 			log.Errorf("Could not retrieve routes from database (%s)", err)
 		} else {

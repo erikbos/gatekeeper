@@ -11,12 +11,12 @@ import (
 
 // registerOrganizationRoutes registers all routes we handle
 func (s *server) registerOrganizationRoutes(r *gin.Engine) {
-	r.GET("/v1/organizations", s.GetOrganizations)
+	r.GET("/v1/organizations", s.GetAllOrganizations)
 	r.POST("/v1/organizations", shared.AbortIfContentTypeNotJSON, s.PostCreateOrganization)
 
 	r.GET("/v1/organizations/:organization", s.GetOrganizationByName)
 	r.POST("/v1/organizations/:organization", shared.AbortIfContentTypeNotJSON, s.PostOrganization)
-	r.DELETE("/v1/organizations/:organization", s.DeleteOrganizationByName)
+	r.DELETE("/v1/organizations/:organization", s.DeleteByName)
 
 	r.GET("/v1/organizations/:organization/attributes", s.GetOrganizationAttributes)
 	r.POST("/v1/organizations/:organization/attributes", shared.AbortIfContentTypeNotJSON, s.PostOrganizationAttributes)
@@ -27,9 +27,9 @@ func (s *server) registerOrganizationRoutes(r *gin.Engine) {
 	r.DELETE("/v1/organizations/:organization/attributes/:attribute", s.DeleteOrganizationAttributeByName)
 }
 
-// GetOrganizations returns all organizations
-func (s *server) GetOrganizations(c *gin.Context) {
-	organizations, err := s.db.GetOrganizations()
+// GetAllOrganizations returns all organizations
+func (s *server) GetAllOrganizations(c *gin.Context) {
+	organizations, err := s.db.Organization.GetAll()
 
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
@@ -39,10 +39,10 @@ func (s *server) GetOrganizations(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, gin.H{"organizations": organizations})
 }
 
-// GetOrganizationByName returns details of an organization
+// GetByName returns details of an organization
 func (s *server) GetOrganizationByName(c *gin.Context) {
 
-	organization, err := s.db.GetOrganizationByName(c.Param("organization"))
+	organization, err := s.db.Organization.GetByName(c.Param("organization"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -56,7 +56,7 @@ func (s *server) GetOrganizationByName(c *gin.Context) {
 // GetOrganizationAttributes returns attributes of an organization
 func (s *server) GetOrganizationAttributes(c *gin.Context) {
 
-	organization, err := s.db.GetOrganizationByName(c.Param("organization"))
+	organization, err := s.db.Organization.GetByName(c.Param("organization"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -70,7 +70,7 @@ func (s *server) GetOrganizationAttributes(c *gin.Context) {
 // GetDeveloperAttributeByName returns one particular attribute of an organization
 func (s *server) GetOrganizationAttributeByName(c *gin.Context) {
 
-	organization, err := s.db.GetOrganizationByName(c.Param("organization"))
+	organization, err := s.db.Organization.GetByName(c.Param("organization"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -98,7 +98,7 @@ func (s *server) PostCreateOrganization(c *gin.Context) {
 		return
 	}
 
-	existingOrganization, err := s.db.GetOrganizationByName(newOrganization.Name)
+	existingOrganization, err := s.db.Organization.GetByName(newOrganization.Name)
 	if err == nil {
 		returnJSONMessage(c, http.StatusBadRequest,
 			fmt.Errorf("Organization '%s' already exists", existingOrganization.Name))
@@ -110,7 +110,7 @@ func (s *server) PostCreateOrganization(c *gin.Context) {
 	newOrganization.CreatedAt = shared.GetCurrentTimeMilliseconds()
 	newOrganization.LastmodifiedBy = s.whoAmI()
 
-	if err := s.db.UpdateOrganizationByName(&newOrganization); err != nil {
+	if err := s.db.Organization.UpdateByName(&newOrganization); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -121,7 +121,7 @@ func (s *server) PostCreateOrganization(c *gin.Context) {
 // PostOrganization updates an existing organization
 func (s *server) PostOrganization(c *gin.Context) {
 
-	currentOrganization, err := s.db.GetOrganizationByName(c.Param("organization"))
+	currentOrganization, err := s.db.Organization.GetByName(c.Param("organization"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
@@ -139,7 +139,7 @@ func (s *server) PostOrganization(c *gin.Context) {
 	updatedOrganization.CreatedAt = currentOrganization.CreatedAt
 	updatedOrganization.LastmodifiedBy = s.whoAmI()
 
-	if err := s.db.UpdateOrganizationByName(&updatedOrganization); err != nil {
+	if err := s.db.Organization.UpdateByName(&updatedOrganization); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -149,7 +149,7 @@ func (s *server) PostOrganization(c *gin.Context) {
 
 // PostOrganizationAttributes updates attributes of an organization
 func (s *server) PostOrganizationAttributes(c *gin.Context) {
-	updatedOrganization, err := s.db.GetOrganizationByName(c.Param("organization"))
+	updatedOrganization, err := s.db.Organization.GetByName(c.Param("organization"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
@@ -163,7 +163,7 @@ func (s *server) PostOrganizationAttributes(c *gin.Context) {
 	}
 	updatedOrganization.Attributes = receivedAttributes.Attributes
 	updatedOrganization.LastmodifiedBy = s.whoAmI()
-	if err := s.db.UpdateOrganizationByName(updatedOrganization); err != nil {
+	if err := s.db.Organization.UpdateByName(updatedOrganization); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -172,7 +172,7 @@ func (s *server) PostOrganizationAttributes(c *gin.Context) {
 
 // PostOrganizationAttributeByName update an attribute of developer
 func (s *server) PostOrganizationAttributeByName(c *gin.Context) {
-	updatedOrganization, err := s.db.GetOrganizationByName(c.Param("organization"))
+	updatedOrganization, err := s.db.Organization.GetByName(c.Param("organization"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
@@ -196,7 +196,7 @@ func (s *server) PostOrganizationAttributeByName(c *gin.Context) {
 		updatedOrganization.Attributes[attributeToUpdateIndex].Value = receivedValue.Value
 	}
 	updatedOrganization.LastmodifiedBy = s.whoAmI()
-	if err := s.db.UpdateOrganizationByName(updatedOrganization); err != nil {
+	if err := s.db.Organization.UpdateByName(updatedOrganization); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -206,7 +206,7 @@ func (s *server) PostOrganizationAttributeByName(c *gin.Context) {
 
 // DeleteOrganizationAttributeByName removes an attribute of an organization
 func (s *server) DeleteOrganizationAttributeByName(c *gin.Context) {
-	updatedOrganization, err := s.db.GetOrganizationByName(c.Param("organization"))
+	updatedOrganization, err := s.db.Organization.GetByName(c.Param("organization"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
@@ -220,7 +220,7 @@ func (s *server) DeleteOrganizationAttributeByName(c *gin.Context) {
 	}
 	updatedOrganization.Attributes = updatedAttributes
 	updatedOrganization.LastmodifiedBy = s.whoAmI()
-	if err := s.db.UpdateOrganizationByName(updatedOrganization); err != nil {
+	if err := s.db.Organization.UpdateByName(updatedOrganization); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -230,7 +230,7 @@ func (s *server) DeleteOrganizationAttributeByName(c *gin.Context) {
 
 // DeleteOrganizationAttributes removes all attribute of an organization
 func (s *server) DeleteOrganizationAttributes(c *gin.Context) {
-	updatedOrganization, err := s.db.GetOrganizationByName(c.Param("organization"))
+	updatedOrganization, err := s.db.Organization.GetByName(c.Param("organization"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
@@ -238,27 +238,27 @@ func (s *server) DeleteOrganizationAttributes(c *gin.Context) {
 	DeleteDeveloperAttributes := updatedOrganization.Attributes
 	updatedOrganization.Attributes = nil
 	updatedOrganization.LastmodifiedBy = s.whoAmI()
-	if err := s.db.UpdateOrganizationByName(updatedOrganization); err != nil {
+	if err := s.db.Organization.UpdateByName(updatedOrganization); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
 	c.IndentedJSON(http.StatusOK, gin.H{"attribute": DeleteDeveloperAttributes})
 }
 
-// DeleteOrganizationByName deletes an organization
-func (s *server) DeleteOrganizationByName(c *gin.Context) {
-	organization, err := s.db.GetOrganizationByName(c.Param("organization"))
+// DeleteByName deletes an organization
+func (s *server) DeleteByName(c *gin.Context) {
+	organization, err := s.db.Organization.GetByName(c.Param("organization"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
-	developerCount := s.db.GetDeveloperCountByOrganization(organization.Name)
+	developerCount := s.db.Developer.GetCountByOrganization(organization.Name)
 	switch developerCount {
 	case -1:
 		returnJSONMessage(c, http.StatusInternalServerError,
 			fmt.Errorf("Could not retrieve number of developers in organization"))
 	case 0:
-		if err := s.db.DeleteOrganizationByName(organization.Name); err != nil {
+		if err := s.db.Organization.DeleteByName(organization.Name); err != nil {
 			returnJSONMessage(c, http.StatusServiceUnavailable, err)
 		}
 		c.IndentedJSON(http.StatusOK, organization)

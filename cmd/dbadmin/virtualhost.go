@@ -12,7 +12,7 @@ import (
 
 // registerVirtualHostRoutes registers all virtualhosts we handle
 func (s *server) registerVirtualHostRoutes(r *gin.Engine) {
-	r.GET("/v1/virtualhosts", s.GetVirtualHosts)
+	r.GET("/v1/virtualhosts", s.GetAllVirtualHosts)
 	r.POST("/v1/virtualhosts", shared.AbortIfContentTypeNotJSON, s.PostCreateVirtualHost)
 
 	r.GET("/v1/virtualhosts/:virtualhost", s.GetVirtualHostByName)
@@ -27,10 +27,10 @@ func (s *server) registerVirtualHostRoutes(r *gin.Engine) {
 	r.DELETE("/v1/virtualhosts/:virtualhost/attributes/:attribute", s.DeleteVirtualHostAttributeByName)
 }
 
-// GetVirtualHosts returns all virtualhosts
-func (s *server) GetVirtualHosts(c *gin.Context) {
+// GetAllVirtualHosts returns all virtualhosts
+func (s *server) GetAllVirtualHosts(c *gin.Context) {
 
-	virtualhosts, err := s.db.GetVirtualHosts()
+	virtualhosts, err := s.db.Virtualhost.GetAll()
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -42,7 +42,7 @@ func (s *server) GetVirtualHosts(c *gin.Context) {
 // GetVirtualHostByName returns details of an route
 func (s *server) GetVirtualHostByName(c *gin.Context) {
 
-	route, err := s.db.GetVirtualHostByName(c.Param("virtualhost"))
+	route, err := s.db.Virtualhost.GetByName(c.Param("virtualhost"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -55,7 +55,7 @@ func (s *server) GetVirtualHostByName(c *gin.Context) {
 // GetVirtualHostAttributes returns attributes of a virtual host
 func (s *server) GetVirtualHostAttributes(c *gin.Context) {
 
-	route, err := s.db.GetVirtualHostByName(c.Param("virtualhost"))
+	route, err := s.db.Virtualhost.GetByName(c.Param("virtualhost"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -68,7 +68,7 @@ func (s *server) GetVirtualHostAttributes(c *gin.Context) {
 // GetVirtualHostAttributeByName returns one particular attribute of a virtual host
 func (s *server) GetVirtualHostAttributeByName(c *gin.Context) {
 
-	virtualhost, err := s.db.GetVirtualHostByName(c.Param("virtualhost"))
+	virtualhost, err := s.db.Virtualhost.GetByName(c.Param("virtualhost"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -93,7 +93,7 @@ func (s *server) PostCreateVirtualHost(c *gin.Context) {
 		return
 	}
 
-	existingVirtualHost, err := s.db.GetVirtualHostByName(newVirtualHost.Name)
+	existingVirtualHost, err := s.db.Virtualhost.GetByName(newVirtualHost.Name)
 	if err == nil {
 		returnJSONMessage(c, http.StatusBadRequest,
 			fmt.Errorf("VirtualHost '%s' already exists", existingVirtualHost.Name))
@@ -105,7 +105,7 @@ func (s *server) PostCreateVirtualHost(c *gin.Context) {
 	newVirtualHost.CreatedBy = s.whoAmI()
 	newVirtualHost.LastmodifiedBy = s.whoAmI()
 
-	if err := s.db.UpdateVirtualHostByName(&newVirtualHost); err != nil {
+	if err := s.db.Virtualhost.UpdateByName(&newVirtualHost); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -116,7 +116,7 @@ func (s *server) PostCreateVirtualHost(c *gin.Context) {
 // PostVirtualHost updates an existing virtual host
 func (s *server) PostVirtualHost(c *gin.Context) {
 
-	virtualHostToUpdate, err := s.db.GetVirtualHostByName(c.Param("virtualhost"))
+	virtualHostToUpdate, err := s.db.Virtualhost.GetByName(c.Param("virtualhost"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
@@ -137,7 +137,7 @@ func (s *server) PostVirtualHost(c *gin.Context) {
 	virtualHostToUpdate.Policies = updateRequest.Policies
 	virtualHostToUpdate.OrganizationName = updateRequest.OrganizationName
 
-	if err := s.db.UpdateVirtualHostByName(virtualHostToUpdate); err != nil {
+	if err := s.db.Virtualhost.UpdateByName(virtualHostToUpdate); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -148,7 +148,7 @@ func (s *server) PostVirtualHost(c *gin.Context) {
 // PostVirtualHostAttributes updates attributes of a virtual host
 func (s *server) PostVirtualHostAttributes(c *gin.Context) {
 
-	virtualHostToUpdate, err := s.db.GetVirtualHostByName(c.Param("virtualhost"))
+	virtualHostToUpdate, err := s.db.Virtualhost.GetByName(c.Param("virtualhost"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -170,7 +170,7 @@ func (s *server) PostVirtualHostAttributes(c *gin.Context) {
 
 	virtualHostToUpdate.LastmodifiedBy = s.whoAmI()
 
-	if err := s.db.UpdateVirtualHostByName(virtualHostToUpdate); err != nil {
+	if err := s.db.Virtualhost.UpdateByName(virtualHostToUpdate); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -181,7 +181,7 @@ func (s *server) PostVirtualHostAttributes(c *gin.Context) {
 // PostVirtualHostAttributeByName update an attribute of virtual host
 func (s *server) PostVirtualHostAttributeByName(c *gin.Context) {
 
-	virtualHostToUpdate, err := s.db.GetVirtualHostByName(c.Param("virtualhost"))
+	virtualHostToUpdate, err := s.db.Virtualhost.GetByName(c.Param("virtualhost"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -201,7 +201,7 @@ func (s *server) PostVirtualHostAttributeByName(c *gin.Context) {
 
 	virtualHostToUpdate.LastmodifiedBy = s.whoAmI()
 
-	if err := s.db.UpdateVirtualHostByName(virtualHostToUpdate); err != nil {
+	if err := s.db.Virtualhost.UpdateByName(virtualHostToUpdate); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -213,7 +213,7 @@ func (s *server) PostVirtualHostAttributeByName(c *gin.Context) {
 // DeleteVirtualHostAttributeByName removes an attribute of virtual host
 func (s *server) DeleteVirtualHostAttributeByName(c *gin.Context) {
 
-	updatedVirtualHost, err := s.db.GetVirtualHostByName(c.Param("virtualhost"))
+	updatedVirtualHost, err := s.db.Virtualhost.GetByName(c.Param("virtualhost"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -231,7 +231,7 @@ func (s *server) DeleteVirtualHostAttributeByName(c *gin.Context) {
 
 	updatedVirtualHost.LastmodifiedBy = s.whoAmI()
 
-	if err := s.db.UpdateVirtualHostByName(updatedVirtualHost); err != nil {
+	if err := s.db.Virtualhost.UpdateByName(updatedVirtualHost); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -243,13 +243,13 @@ func (s *server) DeleteVirtualHostAttributeByName(c *gin.Context) {
 // DeleteVirtualHostByName deletes a virtual host
 func (s *server) DeleteVirtualHostByName(c *gin.Context) {
 
-	virtualhost, err := s.db.GetVirtualHostByName(c.Param("virtualhost"))
+	virtualhost, err := s.db.Virtualhost.GetByName(c.Param("virtualhost"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
 
-	if err := s.db.DeleteVirtualHostByName(virtualhost.Name); err != nil {
+	if err := s.db.Virtualhost.DeleteByName(virtualhost.Name); err != nil {
 		returnJSONMessage(c, http.StatusServiceUnavailable, err)
 	}
 	c.IndentedJSON(http.StatusOK, virtualhost)

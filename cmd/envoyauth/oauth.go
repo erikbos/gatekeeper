@@ -144,7 +144,7 @@ func registerOAuthMetrics(o *oauthServer) {
 
 	o.tokenIssueRequests = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Namespace: applicatioName,
+			Namespace: applicationName,
 			Name:      "token_issue_total",
 			Help:      "Number of OAuth token issue requests.",
 		}, []string{"status"})
@@ -152,7 +152,7 @@ func registerOAuthMetrics(o *oauthServer) {
 
 	o.tokenInfoRequests = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Namespace: applicatioName,
+			Namespace: applicationName,
 			Name:      "token_info_total",
 			Help:      "Number of OAuth token info requests.",
 		}, []string{"status"})

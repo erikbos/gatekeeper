@@ -22,49 +22,49 @@ type metricsCollection struct {
 func (a *authorizationServer) registerMetrics() {
 	a.metrics.configLoads = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Namespace: applicatioName,
+			Namespace: applicationName,
 			Name:      "config_table_loads_total",
 			Help:      "Total number of vhost/route table loads.",
 		}, []string{"resource"})
 
 	a.metrics.connectInfoFailures = prometheus.NewCounter(
 		prometheus.CounterOpts{
-			Namespace: applicatioName,
+			Namespace: applicationName,
 			Name:      "connection_info_failures_total",
 			Help:      "Total number of connection info failures.",
 		})
 
 	a.metrics.requestsPerCountry = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Namespace: applicatioName,
+			Namespace: applicationName,
 			Name:      "requests_percountry_total",
 			Help:      "Total number of requests per country.",
 		}, []string{"country"})
 
 	a.metrics.requestsApikeyNotFound = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Namespace: applicatioName,
+			Namespace: applicationName,
 			Name:      "requests_apikey_notfound_total",
 			Help:      "Total number of requests with an unknown apikey.",
 		}, []string{"hostname", "protocol", "method"})
 
 	a.metrics.requestsAccepted = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Namespace: applicatioName,
+			Namespace: applicationName,
 			Name:      "requests_accepted_total",
 			Help:      "Total number of requests accepted.",
 		}, []string{"hostname", "protocol", "method", "apiproduct"})
 
 	a.metrics.requestsRejected = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Namespace: applicatioName,
+			Namespace: applicationName,
 			Name:      "requests_rejected_total",
 			Help:      "Total number of requests rejected.",
 		}, []string{"hostname", "protocol", "method", "apiproduct"})
 
 	a.metrics.authLatencyHistogram = prometheus.NewSummary(
 		prometheus.SummaryOpts{
-			Namespace: applicatioName,
+			Namespace: applicationName,
 			Name:      "request_latency",
 			Help:      "Authentication latency in seconds.",
 			Objectives: map[float64]float64{
@@ -74,28 +74,28 @@ func (a *authorizationServer) registerMetrics() {
 
 	a.metrics.apiProductPolicy = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Namespace: applicatioName,
+			Namespace: applicationName,
 			Name:      "apiproduct_policy_hits_total",
 			Help:      "Total number of product policy hits.",
 		}, []string{"apiproduct", "policy"})
 
 	a.metrics.apiProductPolicyUnknown = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Namespace: applicatioName,
+			Namespace: applicationName,
 			Name:      "apiproduct_policy_unknown_total",
 			Help:      "Total number of unknown product policy hits.",
 		}, []string{"apiproduct", "policy"})
 
 	a.metrics.virtualHostPolicy = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Namespace: applicatioName,
+			Namespace: applicationName,
 			Name:      "virtualhost_policy_hits_total",
 			Help:      "Total number of virtualhost policy hits.",
 		}, []string{"virtualhost", "policy"})
 
 	a.metrics.virtualHostPolicyUnknown = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Namespace: applicatioName,
+			Namespace: applicationName,
 			Name:      "virtualhost_policy_unknown_total",
 			Help:      "Total number of unknown virtualhost policy hits.",
 		}, []string{"virtualhost", "policy"})

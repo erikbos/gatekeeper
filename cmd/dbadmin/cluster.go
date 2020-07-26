@@ -12,7 +12,7 @@ import (
 
 // registerClusterRoutes registers all routes we handle
 func (s *server) registerClusterRoutes(r *gin.Engine) {
-	r.GET("/v1/clusters", s.GetClusters)
+	r.GET("/v1/clusters", s.GetAllClusters)
 	r.POST("/v1/clusters", shared.AbortIfContentTypeNotJSON, s.PostCreateCluster)
 
 	r.GET("/v1/clusters/:cluster", s.GetClusterByName)
@@ -27,10 +27,10 @@ func (s *server) registerClusterRoutes(r *gin.Engine) {
 	r.DELETE("/v1/clusters/:cluster/attributes/:attribute", s.DeleteClusterAttributeByName)
 }
 
-// GetClusters returns all clusters
-func (s *server) GetClusters(c *gin.Context) {
+// GetAllClusters returns all clusters
+func (s *server) GetAllClusters(c *gin.Context) {
 
-	clusters, err := s.db.GetClusters()
+	clusters, err := s.db.Cluster.GetAll()
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -42,7 +42,7 @@ func (s *server) GetClusters(c *gin.Context) {
 // GetClusterByName returns details of an cluster
 func (s *server) GetClusterByName(c *gin.Context) {
 
-	cluster, err := s.db.GetClusterByName(c.Param("cluster"))
+	cluster, err := s.db.Cluster.GetByName(c.Param("cluster"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -55,7 +55,7 @@ func (s *server) GetClusterByName(c *gin.Context) {
 // GetClusterAttributes returns attributes of a cluster
 func (s *server) GetClusterAttributes(c *gin.Context) {
 
-	cluster, err := s.db.GetClusterByName(c.Param("cluster"))
+	cluster, err := s.db.Cluster.GetByName(c.Param("cluster"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -68,7 +68,7 @@ func (s *server) GetClusterAttributes(c *gin.Context) {
 // GetClusterAttributeByName returns one particular attribute of a cluster
 func (s *server) GetClusterAttributeByName(c *gin.Context) {
 
-	cluster, err := s.db.GetClusterByName(c.Param("cluster"))
+	cluster, err := s.db.Cluster.GetByName(c.Param("cluster"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -93,7 +93,7 @@ func (s *server) PostCreateCluster(c *gin.Context) {
 		return
 	}
 
-	existingCluster, err := s.db.GetClusterByName(newCluster.Name)
+	existingCluster, err := s.db.Cluster.GetByName(newCluster.Name)
 	if err == nil {
 		returnJSONMessage(c, http.StatusBadRequest,
 			fmt.Errorf("Cluster '%s' already exists", existingCluster.Name))
@@ -105,7 +105,7 @@ func (s *server) PostCreateCluster(c *gin.Context) {
 	newCluster.CreatedBy = s.whoAmI()
 	newCluster.LastmodifiedBy = s.whoAmI()
 
-	if err := s.db.UpdateClusterByName(&newCluster); err != nil {
+	if err := s.db.Cluster.UpdateByName(&newCluster); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -115,7 +115,7 @@ func (s *server) PostCreateCluster(c *gin.Context) {
 // PostCluster updates an existing cluster
 func (s *server) PostCluster(c *gin.Context) {
 
-	clusterToUpdate, err := s.db.GetClusterByName(c.Param("cluster"))
+	clusterToUpdate, err := s.db.Cluster.GetByName(c.Param("cluster"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
@@ -135,7 +135,7 @@ func (s *server) PostCluster(c *gin.Context) {
 
 	clusterToUpdate.LastmodifiedBy = s.whoAmI()
 
-	if err := s.db.UpdateClusterByName(clusterToUpdate); err != nil {
+	if err := s.db.Cluster.UpdateByName(clusterToUpdate); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -145,7 +145,7 @@ func (s *server) PostCluster(c *gin.Context) {
 // PostClusterAttributes updates attributes of a cluster
 func (s *server) PostClusterAttributes(c *gin.Context) {
 
-	clusterToUpdate, err := s.db.GetClusterByName(c.Param("cluster"))
+	clusterToUpdate, err := s.db.Cluster.GetByName(c.Param("cluster"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -166,7 +166,7 @@ func (s *server) PostClusterAttributes(c *gin.Context) {
 	clusterToUpdate.Attributes = body.Attributes
 	clusterToUpdate.LastmodifiedBy = s.whoAmI()
 
-	if err := s.db.UpdateClusterByName(clusterToUpdate); err != nil {
+	if err := s.db.Cluster.UpdateByName(clusterToUpdate); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -176,7 +176,7 @@ func (s *server) PostClusterAttributes(c *gin.Context) {
 // PostClusterAttributeByName update an attribute of APIProduct
 func (s *server) PostClusterAttributeByName(c *gin.Context) {
 
-	clusterToUpdate, err := s.db.GetClusterByName(c.Param("cluster"))
+	clusterToUpdate, err := s.db.Cluster.GetByName(c.Param("cluster"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -196,7 +196,7 @@ func (s *server) PostClusterAttributeByName(c *gin.Context) {
 
 	clusterToUpdate.LastmodifiedBy = s.whoAmI()
 
-	if err := s.db.UpdateClusterByName(clusterToUpdate); err != nil {
+	if err := s.db.Cluster.UpdateByName(clusterToUpdate); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -207,7 +207,7 @@ func (s *server) PostClusterAttributeByName(c *gin.Context) {
 // DeleteClusterAttributeByName removes an attribute of cluster
 func (s *server) DeleteClusterAttributeByName(c *gin.Context) {
 
-	updatedCluster, err := s.db.GetClusterByName(c.Param("cluster"))
+	updatedCluster, err := s.db.Cluster.GetByName(c.Param("cluster"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -224,7 +224,7 @@ func (s *server) DeleteClusterAttributeByName(c *gin.Context) {
 
 	updatedCluster.LastmodifiedBy = s.whoAmI()
 
-	if err := s.db.UpdateClusterByName(updatedCluster); err != nil {
+	if err := s.db.Cluster.UpdateByName(updatedCluster); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -235,13 +235,13 @@ func (s *server) DeleteClusterAttributeByName(c *gin.Context) {
 // DeleteClusterByName deletes a cluster
 func (s *server) DeleteClusterByName(c *gin.Context) {
 
-	cluster, err := s.db.GetClusterByName(c.Param("cluster"))
+	cluster, err := s.db.Cluster.GetByName(c.Param("cluster"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
 
-	if err := s.db.DeleteClusterByName(cluster.Name); err != nil {
+	if err := s.db.Cluster.DeleteByName(cluster.Name); err != nil {
 		returnJSONMessage(c, http.StatusServiceUnavailable, err)
 	}
 	c.IndentedJSON(http.StatusOK, cluster)

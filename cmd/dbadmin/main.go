@@ -5,6 +5,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/erikbos/gatekeeper/pkg/db"
+	"github.com/erikbos/gatekeeper/pkg/db/cassandra"
 	"github.com/erikbos/gatekeeper/pkg/shared"
 )
 
@@ -21,7 +22,7 @@ type server struct {
 	config    *DBAdminConfig
 	ginEngine *gin.Engine
 	db        *db.Database
-	readiness shared.Readiness
+	readiness *shared.Readiness
 }
 
 func main() {
@@ -32,13 +33,16 @@ func main() {
 	}
 
 	shared.SetLoggingConfiguration(s.config.LogLevel)
-	s.readiness.RegisterMetrics(applicationName)
+	// s.readiness.RegisterMetrics(applicationName)
 
 	var err error
-	s.db, err = db.Connect(s.config.Database, &s.readiness, applicationName)
+	s.db, err = cassandra.New(s.config.Database, applicationName)
 	if err != nil {
 		log.Fatalf("Database connect failed: %v", err)
 	}
+
+	s.readiness = shared.StartReadiness(applicationName)
+	go s.db.RunReadinessCheck(s.readiness.GetChannel())
 
 	StartWebAdminServer(&s)
 
