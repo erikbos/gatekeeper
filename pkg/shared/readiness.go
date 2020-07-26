@@ -10,48 +10,36 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// Readiness contains the rreadiness of the application
+// Readiness contains the readiness state of our application
 type Readiness struct {
-	Status            bool      `json:"status"`
-	LastStateChange   time.Time `json:"lastStateChange"`
+	// channel to receive notifications from application components
+	channel chan ReadinessMessage
+	// latest status of application readiness
+	status bool
+	// status message of latest readiness state change
+	message string
+	// timestamp of latest state change
+	lastStateChange time.Time
+	// counter for number of state changes
 	transitionCounter *prometheus.CounterVec
 }
 
-// ReadinessProbe shows our readiness status
-func (r *Readiness) ReadinessProbe(c *gin.Context) {
-	if r.Status {
-		c.IndentedJSON(http.StatusOK, gin.H{"readiness": r})
-	} else {
-		c.IndentedJSON(http.StatusServiceUnavailable, gin.H{"readiness": r})
-	}
+// ReadinessMessage gets send by components to indicate whether they are up or not
+type ReadinessMessage struct {
+	// Which application component reported its readiness
+	Component string
+	// Friendly message that provides background on our readiness
+	Message string
+	// Boolean readiness state of our component
+	Up bool
 }
 
-// Down changes status to down
-func (r *Readiness) Down() {
-	r.updateReadinessState(false)
-}
+// StartReadiness starts the readiness subsystem which waits for incoming ReadinessMessages
+func StartReadiness(serviceName string) *Readiness {
 
-// Up changes status to up
-func (r *Readiness) Up() {
-	r.updateReadinessState(true)
-}
+	r := &Readiness{}
 
-// TODO we should have a failureThreshold and successThreshold before determining whether we are up or down
-
-// updateReadinessState set current readiness state if it has changed
-func (r *Readiness) updateReadinessState(newState bool) {
-	// In case timestamp is zero, when we first started, we always set status
-	if r.LastStateChange.IsZero() || r.Status != newState {
-		r.Status = newState
-		r.LastStateChange = time.Now().UTC()
-		r.increaseTransitionMetric(r.Status)
-
-		log.Infof("Setting readiness state to %t", r.Status)
-	}
-}
-
-// RegisterMetrics registers our readiness metric
-func (r *Readiness) RegisterMetrics(serviceName string) {
+	r.channel = make(chan ReadinessMessage)
 	r.transitionCounter = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Name: serviceName + "_readiness_transitions_total",
@@ -59,11 +47,65 @@ func (r *Readiness) RegisterMetrics(serviceName string) {
 		}, []string{"state"})
 
 	prometheus.MustRegister(r.transitionCounter)
+
+	go r.readinessMainLoop()
+
+	return r
 }
 
-// increaseTransitionMetric increase counter
-func (r *Readiness) increaseTransitionMetric(state bool) {
-	stateString := fmt.Sprintf("%t", state)
+// GetChannel return readiness notification channel
+func (r *Readiness) GetChannel() chan ReadinessMessage {
+	return r.channel
+}
 
-	r.transitionCounter.WithLabelValues(stateString).Inc()
+// readinessMainLoop runs continously in background waiting for messages
+func (r *Readiness) readinessMainLoop() {
+	for {
+		select {
+		case msg := <-r.channel:
+			log.Debugf("readiness msg '%+v'", msg)
+
+			r.updateReadinessState(msg.Up, msg.Message)
+		}
+	}
+}
+
+// TODO we should have a failureThreshold and successThreshold before determining whether we are up or down
+
+// updateReadinessState set current readiness state if it has changed
+func (r *Readiness) updateReadinessState(newState bool, message string) {
+	// we always update state in case:
+	// - timestamp is zero (=at application startup)
+	// - current state different than newstate
+	if r.lastStateChange.IsZero() || r.status != newState {
+
+		r.status = newState
+		r.message = message
+		r.lastStateChange = time.Now().UTC()
+
+		stateString := fmt.Sprintf("%t", r.status)
+		r.transitionCounter.WithLabelValues(stateString).Inc()
+
+		log.Infof("Setting readiness state to %s", stateString)
+	}
+}
+
+// ReadinessProbe shows our readiness status
+func (r *Readiness) ReadinessProbe(c *gin.Context) {
+
+	response := struct {
+		Status          bool      `json:"status"`
+		Message         string    `json:"message"`
+		LastStateChange time.Time `json:"lastStateChange"`
+	}{
+		Status:          r.status,
+		Message:         r.message,
+		LastStateChange: r.lastStateChange,
+	}
+
+	if r.status {
+		c.IndentedJSON(http.StatusOK, response)
+	} else {
+		c.IndentedJSON(http.StatusServiceUnavailable, response)
+	}
 }

@@ -21,19 +21,19 @@ func (s *server) registerCredentialRoutes(r *gin.Engine) {
 // GetDeveloperAppByKey returns all keys of one particular developer application
 func (s *server) GetDeveloperAppKeys(c *gin.Context) {
 
-	_, err := s.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
+	_, err := s.db.Developer.GetByEmail(c.Param("organization"), c.Param("developer"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
 
-	developerApp, err := s.db.GetDeveloperAppByName(c.Param("organization"), c.Param("application"))
+	developerApp, err := s.db.DeveloperApp.GetByName(c.Param("organization"), c.Param("application"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
 
-	AppCredentials, err := s.db.GetAppCredentialByDeveloperAppID(developerApp.AppID)
+	AppCredentials, err := s.db.Credential.GetByDeveloperAppID(developerApp.AppID)
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -45,13 +45,13 @@ func (s *server) GetDeveloperAppKeys(c *gin.Context) {
 // GetDeveloperAppByKey returns one key of one particular developer application
 func (s *server) GetDeveloperAppKeyByKey(c *gin.Context) {
 
-	_, err := s.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
+	_, err := s.db.Developer.GetByEmail(c.Param("organization"), c.Param("developer"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
 
-	_, err = s.db.GetDeveloperAppByName(c.Param("organization"), c.Param("application"))
+	_, err = s.db.DeveloperApp.GetByName(c.Param("organization"), c.Param("application"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -59,7 +59,7 @@ func (s *server) GetDeveloperAppKeyByKey(c *gin.Context) {
 
 	key := c.Param("key")
 	organization := c.Param("organization")
-	AppCredential, err := s.db.GetAppCredentialByKey(&organization, &key)
+	AppCredential, err := s.db.Credential.GetByKey(&organization, &key)
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -71,7 +71,7 @@ func (s *server) GetDeveloperAppKeyByKey(c *gin.Context) {
 // PostCreateDeveloperAppKey creates key for developerapp
 func (s *server) PostCreateDeveloperAppKey(c *gin.Context) {
 
-	developerApp, err := s.db.GetDeveloperAppByName(c.Param("organization"), c.Param("application"))
+	developerApp, err := s.db.DeveloperApp.GetByName(c.Param("organization"), c.Param("application"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -96,7 +96,7 @@ func (s *server) PostCreateDeveloperAppKey(c *gin.Context) {
 		newAppCredential.ConsumerSecret = generateCredentialConsumerSecret()
 	}
 
-	if err := s.db.UpdateAppCredentialByKey(&newAppCredential); err != nil {
+	if err := s.db.Credential.UpdateByKey(&newAppCredential); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -114,7 +114,7 @@ func (s *server) PostUpdateDeveloperAppKeyByKey(c *gin.Context) {
 
 	key := c.Param("key")
 	organization := c.Param("organization")
-	AppCredential, err := s.db.GetAppCredentialByKey(&organization, &key)
+	AppCredential, err := s.db.Credential.GetByKey(&organization, &key)
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -126,7 +126,7 @@ func (s *server) PostUpdateDeveloperAppKeyByKey(c *gin.Context) {
 	AppCredential.ExpiresAt = receivedAppCredential.ExpiresAt
 	AppCredential.Status = receivedAppCredential.Status
 
-	if err := s.db.UpdateAppCredentialByKey(AppCredential); err != nil {
+	if err := s.db.Credential.UpdateByKey(AppCredential); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -139,13 +139,13 @@ func (s *server) DeleteDeveloperAppKeyByKey(c *gin.Context) {
 
 	key := c.Param("key")
 	organization := c.Param("organization")
-	AppCredential, err := s.db.GetAppCredentialByKey(&organization, &key)
+	AppCredential, err := s.db.Credential.GetByKey(&organization, &key)
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
 
-	if err := s.db.DeleteAppCredentialByKey(c.Param("organization"), key); err != nil {
+	if err := s.db.Credential.DeleteByKey(c.Param("organization"), key); err != nil {
 		returnJSONMessage(c, http.StatusServiceUnavailable, err)
 		return
 	}

@@ -32,7 +32,7 @@ func (s *server) registerDeveloperRoutes(r *gin.Engine) {
 // FIXME: add pagination support
 func (s *server) GetAllDevelopers(c *gin.Context) {
 
-	developers, err := s.db.GetDevelopersByOrganization(c.Param("organization"))
+	developers, err := s.db.Developer.GetByOrganization(c.Param("organization"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -44,7 +44,7 @@ func (s *server) GetAllDevelopers(c *gin.Context) {
 // GetDeveloperByEmail returns full details of one developer
 func (s *server) GetDeveloperByEmail(c *gin.Context) {
 
-	developer, err := s.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
+	developer, err := s.db.Developer.GetByEmail(c.Param("organization"), c.Param("developer"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -57,7 +57,7 @@ func (s *server) GetDeveloperByEmail(c *gin.Context) {
 // GetDeveloperAttributes returns attributes of a developer
 func (s *server) GetDeveloperAttributes(c *gin.Context) {
 
-	developer, err := s.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
+	developer, err := s.db.Developer.GetByEmail(c.Param("organization"), c.Param("developer"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -70,7 +70,7 @@ func (s *server) GetDeveloperAttributes(c *gin.Context) {
 // GetDeveloperAttributeByName returns one particular attribute of a developer
 func (s *server) GetDeveloperAttributeByName(c *gin.Context) {
 
-	developer, err := s.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
+	developer, err := s.db.Developer.GetByEmail(c.Param("organization"), c.Param("developer"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -96,7 +96,7 @@ func (s *server) PostCreateDeveloper(c *gin.Context) {
 	}
 
 	// we don't allow recreation of existing developer
-	existingDeveloper, err := s.db.GetDeveloperByEmail(c.Param("organization"), newDeveloper.Email)
+	existingDeveloper, err := s.db.Developer.GetByEmail(c.Param("organization"), newDeveloper.Email)
 	if err == nil {
 		returnJSONMessage(c, http.StatusBadRequest,
 			fmt.Errorf("Developer '%s' already exists", existingDeveloper.Email))
@@ -116,7 +116,7 @@ func (s *server) PostCreateDeveloper(c *gin.Context) {
 	newDeveloper.CreatedAt = shared.GetCurrentTimeMilliseconds()
 	newDeveloper.LastmodifiedBy = s.whoAmI()
 
-	if err := s.db.UpdateDeveloperByName(&newDeveloper); err != nil {
+	if err := s.db.Developer.UpdateByName(&newDeveloper); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -127,7 +127,7 @@ func (s *server) PostCreateDeveloper(c *gin.Context) {
 // PostDeveloper updates an existing developer
 func (s *server) PostDeveloper(c *gin.Context) {
 
-	developerToUpdate, err := s.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
+	developerToUpdate, err := s.db.Developer.GetByEmail(c.Param("organization"), c.Param("developer"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
@@ -148,7 +148,7 @@ func (s *server) PostDeveloper(c *gin.Context) {
 
 	developerToUpdate.LastmodifiedBy = s.whoAmI()
 
-	if err := s.db.UpdateDeveloperByName(developerToUpdate); err != nil {
+	if err := s.db.Developer.UpdateByName(developerToUpdate); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -159,7 +159,7 @@ func (s *server) PostDeveloper(c *gin.Context) {
 // PostDeveloperAttributes updates attributes of developer
 func (s *server) PostDeveloperAttributes(c *gin.Context) {
 
-	developerToUpdate, err := s.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
+	developerToUpdate, err := s.db.Developer.GetByEmail(c.Param("organization"), c.Param("developer"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -181,7 +181,7 @@ func (s *server) PostDeveloperAttributes(c *gin.Context) {
 
 	developerToUpdate.LastmodifiedBy = s.whoAmI()
 
-	if err := s.db.UpdateDeveloperByName(developerToUpdate); err != nil {
+	if err := s.db.Developer.UpdateByName(developerToUpdate); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -192,7 +192,7 @@ func (s *server) PostDeveloperAttributes(c *gin.Context) {
 // PostDeveloperAttributeByName update an attribute of developer
 func (s *server) PostDeveloperAttributeByName(c *gin.Context) {
 
-	developerToUpdate, err := s.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
+	developerToUpdate, err := s.db.Developer.GetByEmail(c.Param("organization"), c.Param("developer"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -212,7 +212,7 @@ func (s *server) PostDeveloperAttributeByName(c *gin.Context) {
 
 	developerToUpdate.LastmodifiedBy = s.whoAmI()
 
-	if err := s.db.UpdateDeveloperByName(developerToUpdate); err != nil {
+	if err := s.db.Developer.UpdateByName(developerToUpdate); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -223,7 +223,7 @@ func (s *server) PostDeveloperAttributeByName(c *gin.Context) {
 // DeleteDeveloperAttributeByName removes an attribute of developer
 func (s *server) DeleteDeveloperAttributeByName(c *gin.Context) {
 
-	developerToUpdate, err := s.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
+	developerToUpdate, err := s.db.Developer.GetByEmail(c.Param("organization"), c.Param("developer"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
@@ -241,7 +241,7 @@ func (s *server) DeleteDeveloperAttributeByName(c *gin.Context) {
 
 	developerToUpdate.LastmodifiedBy = s.whoAmI()
 
-	if err := s.db.UpdateDeveloperByName(developerToUpdate); err != nil {
+	if err := s.db.Developer.UpdateByName(developerToUpdate); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
@@ -253,20 +253,20 @@ func (s *server) DeleteDeveloperAttributeByName(c *gin.Context) {
 // DeleteDeveloperByEmail deletes of one developer
 func (s *server) DeleteDeveloperByEmail(c *gin.Context) {
 
-	developer, err := s.db.GetDeveloperByEmail(c.Param("organization"), c.Param("developer"))
+	developer, err := s.db.Developer.GetByEmail(c.Param("organization"), c.Param("developer"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusNotFound, err)
 		return
 	}
 
-	developerAppCount := s.db.GetDeveloperAppCountByDeveloperID(developer.DeveloperID)
+	developerAppCount := s.db.DeveloperApp.GetCountByDeveloperID(developer.DeveloperID)
 	switch developerAppCount {
 	case -1:
 		returnJSONMessage(c, http.StatusInternalServerError,
 			fmt.Errorf("Could not retrieve number of developerapps of developer (%s)",
 				developer.Email))
 	case 0:
-		if err := s.db.DeleteDeveloperByEmail(developer.OrganizationName, developer.Email); err != nil {
+		if err := s.db.Developer.DeleteByEmail(developer.OrganizationName, developer.Email); err != nil {
 			returnJSONMessage(c, http.StatusServiceUnavailable, err)
 			return
 		}

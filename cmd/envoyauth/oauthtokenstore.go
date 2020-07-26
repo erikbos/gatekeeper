@@ -47,7 +47,7 @@ func (tokenstore *TokenStore) Create(info oauth2.TokenInfo) (err error) {
 		RefreshCreatedAt: shared.TimeMillisecondsToInt64(info.GetRefreshCreateAt()),
 		RefreshExpiresIn: int64(info.GetRefreshExpiresIn().Milliseconds()),
 	}
-	return tokenstore.db.OAuthAccessTokenCreate(&token)
+	return tokenstore.db.OAuth.OAuthAccessTokenCreate(&token)
 }
 
 // GetByAccess gets token by access name
@@ -61,7 +61,7 @@ func (tokenstore *TokenStore) GetByAccess(access string) (oauth2.TokenInfo, erro
 	token, err := tokenstore.cache.GetAccessToken(&access)
 	// in case we do not have this token in cache let's try to retrieve it from database
 	if err != nil {
-		token, err = tokenstore.db.OAuthAccessTokenGetByAccess(access)
+		token, err = tokenstore.db.OAuth.OAuthAccessTokenGetByAccess(access)
 		if err != nil {
 			// TODO increase unknown oauth access counter (not an error state)
 			return nil, err
@@ -78,7 +78,7 @@ func (tokenstore *TokenStore) GetByCode(code string) (oauth2.TokenInfo, error) {
 	if code == "" {
 		return nil, nil
 	}
-	token, err := tokenstore.db.OAuthAccessTokenGetByCode(code)
+	token, err := tokenstore.db.OAuth.OAuthAccessTokenGetByCode(code)
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +92,7 @@ func (tokenstore *TokenStore) GetByRefresh(refresh string) (oauth2.TokenInfo, er
 	if refresh == "" {
 		return nil, nil
 	}
-	token, err := tokenstore.db.OAuthAccessTokenGetByRefresh(refresh)
+	token, err := tokenstore.db.OAuth.OAuthAccessTokenGetByRefresh(refresh)
 	if err != nil {
 		return nil, err
 	}
@@ -123,19 +123,19 @@ func toOAuthTokenStore(token *shared.OAuthAccessToken) (oauth2.TokenInfo, error)
 func (tokenstore *TokenStore) RemoveByAccess(access string) error {
 
 	log.Debugf("OAuthTokenStore: RemoveByAccess: %s", access)
-	return tokenstore.db.OAuthAccessTokenRemoveByAccess(&access)
+	return tokenstore.db.OAuth.OAuthAccessTokenRemoveByAccess(&access)
 }
 
 // RemoveByCode removes token from database
 func (tokenstore *TokenStore) RemoveByCode(code string) (err error) {
 
 	log.Debugf("OAuthTokenStore: RemoveByCode: %s", code)
-	return tokenstore.db.OAuthAccessTokenRemoveByCode(&code)
+	return tokenstore.db.OAuth.OAuthAccessTokenRemoveByCode(&code)
 }
 
 // RemoveByRefresh removes token from database
 func (tokenstore *TokenStore) RemoveByRefresh(refresh string) error {
 
 	log.Debugf("OAuthTokenStore: RemoveByRefresh: %s", refresh)
-	return tokenstore.db.OAuthAccessTokenRemoveByRefresh(&refresh)
+	return tokenstore.db.OAuth.OAuthAccessTokenRemoveByRefresh(&refresh)
 }

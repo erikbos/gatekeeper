@@ -7,7 +7,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 
-	"github.com/erikbos/gatekeeper/pkg/db"
+	"github.com/erikbos/gatekeeper/pkg/db/cassandra"
 	"github.com/erikbos/gatekeeper/pkg/shared"
 )
 
@@ -22,13 +22,13 @@ const (
 
 // APIAuthConfig contains our startup configuration data
 type APIAuthConfig struct {
-	LogLevel  string            `yaml:"loglevel"`
-	WebAdmin  webAdminConfig    `yaml:"webadmin"`
-	EnvoyAuth envoyAuthConfig   `yaml:"envoyauth"`
-	OAuth     oauthServerConfig `yaml:"oauth"`
-	Database  db.DatabaseConfig `yaml:"database"`
-	Cache     cacheConfig       `yaml:"cache"`
-	Geoip     shared.Geoip      `yaml:"geoip"`
+	LogLevel  string                   `yaml:"loglevel"`
+	WebAdmin  webAdminConfig           `yaml:"webadmin"`
+	EnvoyAuth envoyAuthConfig          `yaml:"envoyauth"`
+	OAuth     oauthServerConfig        `yaml:"oauth"`
+	Database  cassandra.DatabaseConfig `yaml:"database"`
+	Cache     cacheConfig              `yaml:"cache"`
+	Geoip     shared.Geoip             `yaml:"geoip"`
 }
 
 func loadConfiguration() *APIAuthConfig {

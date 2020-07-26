@@ -7,7 +7,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 
-	"github.com/erikbos/gatekeeper/pkg/db"
+	"github.com/erikbos/gatekeeper/pkg/db/cassandra"
 )
 
 const (
@@ -19,9 +19,9 @@ const (
 
 // DBAdminConfig contains our startup configuration data
 type DBAdminConfig struct {
-	LogLevel string            `yaml:"loglevel" json:"loglevel"`
-	WebAdmin webAdminConfig    `yaml:"webadmin" json:"webadmin"`
-	Database db.DatabaseConfig `yaml:"database" json:"database"`
+	LogLevel string                   `yaml:"loglevel" json:"loglevel"`
+	WebAdmin webAdminConfig           `yaml:"webadmin" json:"webadmin"`
+	Database cassandra.DatabaseConfig `yaml:"database" json:"database"`
 }
 
 func loadConfiguration() *DBAdminConfig {
