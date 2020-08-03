@@ -10,8 +10,8 @@ webadmin:
 database:
   hostname: xx.cassandra.cosmos.azure.com
   port: 10350
+  tls: true
   username: x
   password: x
   keyspace: x
   timeout: 2s
-  healthcheckinterval: 5s
