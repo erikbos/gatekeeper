@@ -18,12 +18,13 @@ webadmin:
 
 # Cassandra settings
 database:
-  hostname: x.cassandra.cosmos.azure.com
-  port: 10350
-  tlse: true
-  username: x
-  password: x
-  keyspace: x
+  hostname: cassandra
+  port: 9042
+  tls:
+    enable: disable
+  username: cassandra
+  password: cassandra
+  keyspace: gatekeeper
   timeout: 2s
   healthcheckinterval: 5s
 
