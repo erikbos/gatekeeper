@@ -1,7 +1,6 @@
 package cassandra
 
 import (
-	"crypto/tls"
 	"fmt"
 	"time"
 
@@ -13,13 +12,17 @@ import (
 
 // DatabaseConfig holds configuration configuration
 type DatabaseConfig struct {
-	Hostname string        `yaml:"hostname"`
-	Port     int           `yaml:"port"`
-	TLS      bool          `yaml:"tls"`
-	Username string        `yaml:"username"`
-	Password string        `yaml:"password"`
-	Keyspace string        `yaml:"keyspace"`
-	Timeout  time.Duration `yaml:"timeout"`
+	Hostname string `yaml:"hostname"`
+	Port     int    `yaml:"port"`
+	TLS      struct {
+		Enable bool   `yaml:"enable"`
+		Capath string `yaml:"capath"`
+	} `yaml:"tls"`
+	Username        string        `yaml:"username"`
+	Password        string        `yaml:"password"`
+	Keyspace        string        `yaml:"keyspace"`
+	Timeout         time.Duration `yaml:"timeout"`
+	ConnectAttempts int           `yaml:"connectattempts"`
 }
 
 // Database holds all our database connection information and performance counters
@@ -65,11 +68,13 @@ func connect(config DatabaseConfig, serviceName string) (*gocql.Session, error) 
 
 	cluster.Port = config.Port
 
-	if config.TLS == true {
-		cluster.SslOpts = &gocql.SslOptions{
-			Config: &tls.Config{
-				InsecureSkipVerify: true,
-			},
+	if config.TLS.Enable == true {
+		cluster.SslOpts = &gocql.SslOptions{}
+
+		if config.TLS.Capath != "" {
+			cluster.SslOpts.CaPath = config.TLS.Capath
+		} else {
+			cluster.SslOpts.InsecureSkipVerify = true
 		}
 	}
 	cluster.Authenticator = gocql.PasswordAuthenticator{
@@ -83,13 +88,26 @@ func connect(config DatabaseConfig, serviceName string) (*gocql.Session, error) 
 	}
 	// cluster.RetryPolicy = &gocql.SimpleRetryPolicy{NumRetries: 3}
 
-	cassandraSession, err := cluster.CreateSession()
-	if err != nil {
-		return nil, fmt.Errorf("Could not connect to database (%s)", err)
+	// In case no number of connect attempts is set we try at least once
+	if config.ConnectAttempts == 0 {
+		config.ConnectAttempts = 1
 	}
 
-	log.Infof("Database connected as '%s' to '%s'",
-		config.Username, config.Hostname)
+	var err error
+	var cassandraSession *gocql.Session
 
-	return cassandraSession, nil
+	attempt := 0
+	for attempt < config.ConnectAttempts {
+		attempt++
+		log.Debugf("Trying to connect to database, attempt %d of %d", attempt, config.ConnectAttempts)
+
+		cassandraSession, err = cluster.CreateSession()
+		if cassandraSession != nil {
+			log.Infof("Database connected as '%s' to '%s'", config.Username, config.Hostname)
+
+			return cassandraSession, nil
+		}
+		time.Sleep(3 * time.Second)
+	}
+	return nil, fmt.Errorf("Could not connect to database (%s)", err)
 }
