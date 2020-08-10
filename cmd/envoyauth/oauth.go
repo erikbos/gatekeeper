@@ -26,7 +26,7 @@ import (
 type oauthServerConfig struct {
 	Listen         string `yaml:"listen"`
 	TokenIssuePath string `yaml:"tokenissuepath"`
-	TokenInfoPath  string `yaml:"tokeninfoath"`
+	TokenInfoPath  string `yaml:"tokeninfopath"`
 }
 
 type oauthServer struct {
