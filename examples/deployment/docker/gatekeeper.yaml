@@ -1,0 +1,85 @@
+version: "3.8"
+
+services:
+  cassandra:
+    image: cassandra:3
+    container_name: cassandra
+    ports:
+      - 9042:9042
+    volumes:
+      - /tmp/cassandra_data:/var/lib/cassandra
+
+  cassandra-create-tables:
+    container_name: cassandra-create-tables
+    image: cassandra:3
+    depends_on:
+      - cassandra
+    volumes:
+      - ../../../scripts:/mnt
+    command: /bin/bash -c "sleep 40 && echo Creating tables && cqlsh cassandra -f /mnt/Cassandra_create_tables.cql"
+
+  cassandra-change-to-one-instance-setup:
+    container_name: cassandra-change-to-one-instance-setup
+    image: cassandra:3
+    depends_on:
+      - cassandra
+    volumes:
+      - ../../../scripts:/mnt
+    command: /bin/bash -c "sleep 45 && echo Changing replication to one-node && cqlsh cassandra -f /mnt/Cassandra_switch_to_one_node.cql"
+
+  dbadmin:
+    image: gatekeeper/dbadmin:latest
+    container_name: dbadmin
+    entrypoint: ["/app/dbadmin", "--config", "/config/dbadmin.yaml"]
+    secrets:
+      - source: dbadmin-config
+        target: /config/dbadmin.yaml
+    ports:
+      - 7777:7777
+    restart: unless-stopped
+
+  envoyauth:
+    image: gatekeeper/envoyauth:latest
+    container_name: envoyauth
+    entrypoint: ["/app/envoyauth", "--config", "/config/envoyauth.yaml"]
+    secrets:
+      - source: envoyauth-config
+        target: /config/envoyauth.yaml
+    ports:
+      - 2113:2113
+      - 4000-4001:4001-4001
+    restart: unless-stopped
+
+  envoycp:
+    image: gatekeeper/envoycp:latest
+    container_name: envoycp
+    entrypoint: ["/app/envoycp", "--config", "/config/envoycp.yaml"]
+    secrets:
+      - source: envoycp-config
+        target: /config/envoycp.yaml
+    ports:
+      - 9901-9903:9901-9903
+    restart: unless-stopped
+
+  envoyproxy:
+    image: envoyproxy/envoy-alpine:v1.15.0
+    container_name: envoyproxy
+    entrypoint: ["/usr/local/bin/envoy", "-c", "/config/envoyproxy.yaml"]
+    secrets:
+      - source: envoyproxy-config
+        target: /config/envoyproxy.yaml
+    ports:
+      - 80:80
+      - 443:443
+      - 9900:9900
+    restart: unless-stopped
+
+secrets:
+  dbadmin-config:
+    file: dbadmin.yaml
+  envoyauth-config:
+    file: envoyauth.yaml
+  envoycp-config:
+    file: envoycp.yaml
+  envoyproxy-config:
+    file: envoyproxy.yaml

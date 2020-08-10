@@ -1,4 +1,4 @@
-CREATE KEYSPACE gatekeeper WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 3};
+CREATE KEYSPACE IF NOT EXISTS gatekeeper WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 3};
 
 USE gatekeeper;
 
@@ -117,7 +117,6 @@ CREATE TABLE IF NOT EXISTS developer_apps (
     PRIMARY KEY (app_id)
 );
 
-CREATE INDEX ON developer_apps (app_id);
 CREATE INDEX ON developer_apps (name);
 CREATE INDEX ON developer_apps (developer_id);
 CREATE INDEX ON developer_apps (organization_name);
@@ -158,3 +157,5 @@ CREATE TABLE IF NOT EXISTS api_products (
 );
 
 CREATE INDEX ON api_products (organization_name);
+
+ALTER KEYSPACE gatekeeper WITH REPLICATION = {'class':'SimpleStrategy', 'replication_factor': 1};

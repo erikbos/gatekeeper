@@ -3,16 +3,16 @@
 # The address to listen on for REST API
 webadmin:
   listen: 0.0.0.0:7777
-  ipacl: 127.0.0.0/24
+  ipacl: 0.0.0.0/0
   logfile: dbadmin-access.log
 
-# Cassandra settings
 database:
   hostname: cassandra
   port: 9042
   tls:
-    enable: disable
+    enable: false
   username: cassandra
   password: cassandra
   keyspace: gatekeeper
   timeout: 2s
+  connectattempts: 20     # Will try up to 20 times to connect before giving up. This will allow Cassandra to start up.

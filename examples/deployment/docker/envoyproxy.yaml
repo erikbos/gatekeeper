@@ -1,0 +1,75 @@
+admin:
+  address:
+    socket_address:
+      address: 0.0.0.0
+      port_value: 9900
+  access_log_path: /tmp/admin_access.log
+
+node:
+  cluster: service_greeter
+  id: jenny
+
+dynamic_resources:
+  lds_config:
+    resource_api_version: V3
+    api_config_source:
+      api_type: GRPC
+      transport_api_version: V3
+      grpc_services:
+        envoy_grpc:
+          cluster_name: envoycp
+      set_node_on_first_message_only: true
+
+  cds_config:
+    resource_api_version: V3
+    api_config_source:
+      api_type: GRPC
+      transport_api_version: V3
+      grpc_services:
+        envoy_grpc:
+          cluster_name: envoycp
+      set_node_on_first_message_only: true
+
+static_resources:
+  clusters:
+  - name: envoycp
+    connect_timeout: 1s
+    type: STRICT_DNS
+    http2_protocol_options: {}
+    common_http_protocol_options:
+      idle_timeout: { seconds: 15 }
+    upstream_connection_options:
+      tcp_keepalive:
+        keepalive_probes: 3
+        keepalive_time: 10
+        keepalive_interval: 10
+    load_assignment:
+      cluster_name: envoycp
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: envoycp
+                port_value: 9901
+
+  - name: envoyauth
+    type: STRICT_DNS
+    connect_timeout: 1s
+    http2_protocol_options: {}
+    common_http_protocol_options:
+      idle_timeout: { seconds: 15 }
+    upstream_connection_options:
+      tcp_keepalive:
+        keepalive_probes: 3
+        keepalive_time: 10
+        keepalive_interval: 10
+    load_assignment:
+      cluster_name: envoyauth
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: envoyauth
+                port_value: 4000
