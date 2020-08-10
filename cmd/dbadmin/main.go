@@ -1,6 +1,8 @@
 package main
 
 import (
+	"flag"
+
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 
@@ -28,8 +30,11 @@ type server struct {
 func main() {
 	shared.StartLogging(applicationName, version, buildTime)
 
+	filename := flag.String("config", defaultConfigFilename, "Configuration filename")
+	flag.Parse()
+
 	s := server{
-		config: loadConfiguration(),
+		config: loadConfiguration(filename),
 	}
 
 	shared.SetLoggingConfiguration(s.config.LogLevel)

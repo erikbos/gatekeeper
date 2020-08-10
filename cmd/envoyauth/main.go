@@ -1,6 +1,8 @@
 package main
 
 import (
+	"flag"
+
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 
@@ -34,8 +36,11 @@ type authorizationServer struct {
 func main() {
 	shared.StartLogging(applicationName, version, buildTime)
 
+	filename := flag.String("config", defaultConfigFilename, "Configuration filename")
+	flag.Parse()
+
 	a := authorizationServer{}
-	a.config = loadConfiguration()
+	a.config = loadConfiguration(filename)
 	// FIXME we should check if we have all required parameters (use viper package?)
 
 	shared.SetLoggingConfiguration(a.config.LogLevel)

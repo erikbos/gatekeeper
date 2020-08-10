@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"os"
 
 	log "github.com/sirupsen/logrus"
@@ -24,10 +23,7 @@ type DBAdminConfig struct {
 	Database cassandra.DatabaseConfig `yaml:"database" json:"database"`
 }
 
-func loadConfiguration() *DBAdminConfig {
-	filename := flag.String("config", defaultConfigFilename, "Configuration filename")
-	flag.Parse()
-
+func loadConfiguration(filename *string) *DBAdminConfig {
 	// default configuration
 	config := DBAdminConfig{
 		LogLevel: defaultLogLevel,

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"os"
 	"time"
 
@@ -65,10 +64,7 @@ const (
 	defaultConfigPushInterval = 2 * time.Second
 )
 
-func loadConfiguration() *EnvoyCPConfig {
-	filename := flag.String("config", defaultConfigFilename, "Configuration filename")
-	flag.Parse()
-
+func loadConfiguration(filename *string) *EnvoyCPConfig {
 	// default configuration
 	config := EnvoyCPConfig{
 		LogLevel: defaultLogLevel,

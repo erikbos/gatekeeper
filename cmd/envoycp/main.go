@@ -1,6 +1,8 @@
 package main
 
 import (
+	"flag"
+
 	"github.com/envoyproxy/go-control-plane/pkg/cache/v3"
 	xds "github.com/envoyproxy/go-control-plane/pkg/server/v3"
 	"github.com/gin-gonic/gin"
@@ -36,8 +38,11 @@ type server struct {
 func main() {
 	shared.StartLogging(applicationName, version, buildTime)
 
+	filename := flag.String("config", defaultConfigFilename, "Configuration filename")
+	flag.Parse()
+
 	s := server{
-		config: loadConfiguration(),
+		config: loadConfiguration(filename),
 	}
 
 	shared.SetLoggingConfiguration(s.config.LogLevel)
