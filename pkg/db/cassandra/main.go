@@ -69,12 +69,11 @@ func connect(config DatabaseConfig, serviceName string) (*gocql.Session, error) 
 	cluster.Port = config.Port
 
 	if config.TLS.Enable == true {
+		// Empty struct to enable TLS
 		cluster.SslOpts = &gocql.SslOptions{}
 
 		if config.TLS.Capath != "" {
 			cluster.SslOpts.CaPath = config.TLS.Capath
-		} else {
-			cluster.SslOpts.InsecureSkipVerify = true
 		}
 	}
 	cluster.Authenticator = gocql.PasswordAuthenticator{
