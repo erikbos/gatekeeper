@@ -21,13 +21,13 @@ const (
 
 // APIAuthConfig contains our startup configuration data
 type APIAuthConfig struct {
-	LogLevel  string                   `yaml:"loglevel"`
-	WebAdmin  webAdminConfig           `yaml:"webadmin"`
-	EnvoyAuth envoyAuthConfig          `yaml:"envoyauth"`
-	OAuth     oauthServerConfig        `yaml:"oauth"`
-	Database  cassandra.DatabaseConfig `yaml:"database"`
-	Cache     cacheConfig              `yaml:"cache"`
-	Geoip     shared.Geoip             `yaml:"geoip"`
+	LogLevel  string                   `yaml:"loglevel"`  // Overall logging level of application
+	WebAdmin  webAdminConfig           `yaml:"webadmin"`  // Admin web interface configuration
+	EnvoyAuth envoyAuthConfig          `yaml:"envoyauth"` // Envoyauth configuration
+	OAuth     oauthServerConfig        `yaml:"oauth"`     // OAuth configuration
+	Database  cassandra.DatabaseConfig `yaml:"database"`  // Database configuration
+	Cache     cacheConfig              `yaml:"cache"`     // In-mem cache configuration
+	Geoip     shared.Geoip             `yaml:"geoip"`     // Geoip lookup configuration
 }
 
 func loadConfiguration(filename *string) *APIAuthConfig {

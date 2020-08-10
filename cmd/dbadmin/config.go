@@ -18,9 +18,9 @@ const (
 
 // DBAdminConfig contains our startup configuration data
 type DBAdminConfig struct {
-	LogLevel string                   `yaml:"loglevel" json:"loglevel"`
-	WebAdmin webAdminConfig           `yaml:"webadmin" json:"webadmin"`
-	Database cassandra.DatabaseConfig `yaml:"database" json:"database"`
+	LogLevel string                   `yaml:"loglevel" json:"loglevel"` // Overall logging level of application
+	WebAdmin webAdminConfig           `yaml:"webadmin" json:"webadmin"` // Admin web interface configuration
+	Database cassandra.DatabaseConfig `yaml:"database" json:"database"` // Database configuration
 }
 
 func loadConfiguration(filename *string) *DBAdminConfig {

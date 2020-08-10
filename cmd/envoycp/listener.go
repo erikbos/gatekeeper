@@ -192,7 +192,7 @@ func (s *server) buildConnectionManager(httpFilters []*hcm.HttpFilter, v shared.
 		UseRemoteAddress: protoBool(true),
 		RouteSpecifier:   s.buildRouteSpecifier(v.RouteGroup),
 		HttpFilters:      httpFilters,
-		AccessLog:        buildAccessLog(s.config.XDS.Envoy.Logging, v),
+		AccessLog:        buildAccessLog(s.config.Envoyproxy.Logging, v),
 	}
 }
 
@@ -215,19 +215,19 @@ func (s *server) buildFilter() []*hcm.HttpFilter {
 }
 
 func (s *server) buildExtAuthzFilterConfig() *anypb.Any {
-	if s.config.XDS.Envoy.ExtAuthz.Cluster == "" {
+	if s.config.Envoyproxy.ExtAuthz.Cluster == "" {
 		return nil
 	}
 
 	extAuthz := &extauthz.ExtAuthz{
-		FailureModeAllow: s.config.XDS.Envoy.ExtAuthz.FailureModeAllow,
+		FailureModeAllow: s.config.Envoyproxy.ExtAuthz.FailureModeAllow,
 		Services: &extauthz.ExtAuthz_GrpcService{
-			GrpcService: buildGRPCService(s.config.XDS.Envoy.ExtAuthz.Cluster,
-				s.config.XDS.Envoy.ExtAuthz.Timeout),
+			GrpcService: buildGRPCService(s.config.Envoyproxy.ExtAuthz.Cluster,
+				s.config.Envoyproxy.ExtAuthz.Timeout),
 		},
 		TransportApiVersion: core.ApiVersion_V3,
 	}
-	if s.config.XDS.Envoy.ExtAuthz.RequestBodySize > 0 {
+	if s.config.Envoyproxy.ExtAuthz.RequestBodySize > 0 {
 		extAuthz.WithRequestBody = s.extAuthzWithRequestBody()
 	}
 
@@ -239,9 +239,9 @@ func (s *server) buildExtAuthzFilterConfig() *anypb.Any {
 }
 
 func (s *server) extAuthzWithRequestBody() *extauthz.BufferSettings {
-	if s.config.XDS.Envoy.ExtAuthz.RequestBodySize > 0 {
+	if s.config.Envoyproxy.ExtAuthz.RequestBodySize > 0 {
 		return &extauthz.BufferSettings{
-			MaxRequestBytes:     uint32(s.config.XDS.Envoy.ExtAuthz.RequestBodySize),
+			MaxRequestBytes:     uint32(s.config.Envoyproxy.ExtAuthz.RequestBodySize),
 			AllowPartialMessage: false,
 		}
 	}
