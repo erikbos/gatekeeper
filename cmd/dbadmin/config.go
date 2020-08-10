@@ -10,10 +10,10 @@ import (
 )
 
 const (
-	defaultConfigFilename  = "dbadmin-config.yaml"
-	defaultLogLevel        = "info"
-	defaultWebAdminListen  = "0.0.0.0:7777"
-	defaultWebAdminLogFile = "dbadmin-access.log"
+	defaultConfigFileName      = "dbadmin-config.yaml"
+	defaultLogLevel            = "info"
+	defaultWebAdminListen      = "0.0.0.0:7777"
+	defaultWebAdminLogFileName = "dbadmin-access.log"
 )
 
 // DBAdminConfig contains our startup configuration data
@@ -28,8 +28,8 @@ func loadConfiguration(filename *string) *DBAdminConfig {
 	config := DBAdminConfig{
 		LogLevel: defaultLogLevel,
 		WebAdmin: webAdminConfig{
-			Listen:  defaultWebAdminListen,
-			LogFile: defaultWebAdminLogFile,
+			Listen:      defaultWebAdminListen,
+			LogFileName: defaultWebAdminLogFileName,
 		},
 	}
 

@@ -14,15 +14,15 @@ import (
 )
 
 type webAdminConfig struct {
-	Listen  string `yaml:"listen"`
-	IPACL   string `yaml:"ipacl"`
-	LogFile string `yaml:"logfile"`
+	Listen      string `yaml:"listen"`
+	IPACL       string `yaml:"ipacl"`
+	LogFileName string `yaml:"logfilename"`
 }
 
 // StartWebAdminServer starts the admin web UI
 func StartWebAdminServer(a *authorizationServer) {
 
-	if logFile, err := os.Create(a.config.WebAdmin.LogFile); err == nil {
+	if logFile, err := os.Create(a.config.WebAdmin.LogFileName); err == nil {
 		gin.DefaultWriter = io.MultiWriter(logFile)
 	}
 

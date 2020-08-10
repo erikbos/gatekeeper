@@ -33,26 +33,26 @@ Envoycp requires a starup configuration which needs to be provided as YAML file,
 
 The supported fields are:
 
-| yaml field                     | purpose                                                                             | example                       |
-| ------------------------------ | ----------------------------------------------------------------------------------- | ----------------------------- |
-| webadmin.listen                | Webadmin address and port                                                           | 0.0.0.0:2113                  |
-| webadmin.ipacl                 | Webadmin ip acl, without this no access                                             | 172.16.0.0/19                 |
-| webadmin.logfile               | Filename of webadmin access log                                                     | /var/log/envoyproxy.log       |
-| database.hostname              | Cassandra hostname to connect to                                                    | cassandra                     |
-| database.port                  | Cassandra port to connect on                                                        | 9042 / 10350                  |
-| database.tls                   | Enable TLS for database session                                                     | true / false                  |
-| database.username              | Database username                                                                   | cassandra                     |
-| database.password              | Database password                                                                   | cassandra                     |
-| database.keyspace              | Database keyspace for Gatekeeper tables                                             | gatekeeper                    |
-| database.timeout               | Timeout for session                                                                 | 0.5s                          |
-| xds.grpclisten                 | listen address and port for XDS requests from Envoyproxy                            | 0.0.0.0:9901                  |
-| xds.configpushinterval         | Frequency of checking changes to configuration                                      | 1s                            |
-| xds.extauthz.enabled           | Envoyproxy-wide switch to enable or disable request authentication                  | true / false                  |
-| xds.extauthz.cluster           | Name of cluster which runs envoyauth                                                |                               |
-| xds.extauthz.timeout           | Maximum allowed duration of authentication requests to envoyauth                    |                               |
-| xds.extauthz.failuremodeallow  | In case envoyauth does not answer in time/fails should requests be forwarded or not | true / false                  |
-| xds.extauthz.requestbodysize   | Number of bytes of request body envoyproxy should forward to envoyauth              | 300                           |
-| xds.envoy.logging.grpc.cluster | if set, configure envoyproxy to stream accesslog to this cluster                    | accesslogcluster              |
-| xds.envoy.logging.grpc.logname | envoyproxy's logname when streaming accesslogs                                      | proxy                         |
-| xds.envoy.logging.file.path    | if set, config envoyproxy to write accesslogs to this local file                    | /var/log/envoyproxyaccess.log |
-| xds.envoy.logging.file.fields | json array of [fields to log](https://www.envoyproxy.io/docs/envoy/latest/configuration/observability/access_log/usage) | [Example field logging config](/example/deployment/docker/envoycp.yaml) |
+| yaml field                          | purpose                                                                             | example                       |
+| ----------------------------------- | ----------------------------------------------------------------------------------- | ----------------------------- |
+| webadmin.listen                     | Webadmin address and port                                                           | 0.0.0.0:2113                  |
+| webadmin.ipacl                      | Webadmin ip acl, without this no access                                             | 172.16.0.0/19                 |
+| webadmin.logfilename                | Filename of webadmin access log                                                     | /var/log/envoyproxy.log       |
+| database.hostname                   | Cassandra hostname to connect to                                                    | cassandra                     |
+| database.port                       | Cassandra port to connect on                                                        | 9042 / 10350                  |
+| database.tls                        | Enable TLS for database session                                                     | true / false                  |
+| database.username                   | Database username                                                                   | cassandra                     |
+| database.password                   | Database password                                                                   | cassandra                     |
+| database.keyspace                   | Database keyspace for Gatekeeper tables                                             | gatekeeper                    |
+| database.timeout                    | Timeout for session                                                                 | 0.5s                          |
+| xds.grpclisten                      | listen address and port for XDS requests from Envoyproxy                            | 0.0.0.0:9901                  |
+| xds.configpushinterval              | Frequency of checking changes to configuration                                      | 1s                            |
+| xds.envoy.extauthz.enabled          | Enable or disable Envoyproxy-wide request authentication via envoyauth              | true / false                  |
+| xds.envoy.extauthz.cluster          | Name of cluster which runs envoyauth                                                |                               |
+| xds.envoy.extauthz.timeout          | Maximum allowed duration of authentication requests to envoyauth                    |                               |
+| xds.envoy.extauthz.failuremodeallow | In case envoyauth does not answer in time/fails should requests be forwarded or not | true / false                  |
+| xds.envoy.extauthz.requestbodysize  | Number of bytes of request body envoyproxy should forward to envoyauth              | 300                           |
+| xds.envoy.logging.grpc.cluster      | if set, configure envoyproxy to stream accesslog to this cluster                    | accesslogcluster              |
+| xds.envoy.logging.grpc.logname      | envoyproxy's logname when streaming accesslogs                                      | proxy                         |
+| xds.envoy.logging.file.logfilename  | if set, config envoyproxy to write accesslogs to this local file                    | /var/log/envoyproxyaccess.log |
+| xds.envoy.logging.file.fields       | json array of [fields to log](https://www.envoyproxy.io/docs/envoy/latest/configuration/observability/access_log/usage) | [Example field logging config](/example/deployment/docker/envoycp.yaml) |

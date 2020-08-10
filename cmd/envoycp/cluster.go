@@ -94,9 +94,9 @@ func buildEnvoyClusterConfig(cluster shared.Cluster) *envoyCluster.Cluster {
 		DnsRefreshRate:            clusterDNSRefreshRate(cluster),
 		LbPolicy:                  envoyCluster.Cluster_ROUND_ROBIN,
 		LoadAssignment:            clusterLoadAssignment(cluster),
-		HealthChecks:              clusterHealthCheckConfig(cluster),
+		HealthChecks:              clusterHealthChecks(cluster),
 		CommonHttpProtocolOptions: clusterCommonHTTPProtocolOptions(cluster),
-		CircuitBreakers:           clusterCircuitBreaker(cluster),
+		CircuitBreakers:           clusterCircuitBreakers(cluster),
 	}
 
 	// Add TLS and HTTP/2 configuration options in case we want to
@@ -142,7 +142,7 @@ func buildEndpoint(hostname string, port int) []*endpoint.LocalityLbEndpoints {
 	}
 }
 
-func clusterCircuitBreaker(cluster shared.Cluster) *envoyCluster.CircuitBreakers {
+func clusterCircuitBreakers(cluster shared.Cluster) *envoyCluster.CircuitBreakers {
 
 	maxConnections := shared.GetAttributeAsInt(cluster.Attributes, attributeMaxConnections, 0)
 	maxPendingRequests := shared.GetAttributeAsInt(cluster.Attributes, attributeMaxPendingRequests, 0)
@@ -160,7 +160,7 @@ func clusterCircuitBreaker(cluster shared.Cluster) *envoyCluster.CircuitBreakers
 }
 
 // clusterHealthCheckConfig builds health configuration for a cluster
-func clusterHealthCheckConfig(cluster shared.Cluster) []*core.HealthCheck {
+func clusterHealthChecks(cluster shared.Cluster) []*core.HealthCheck {
 
 	healthCheckProtocol, err := shared.GetAttribute(cluster.Attributes, attributeHealthCheckProtocol)
 	healthCheckPath, _ := shared.GetAttribute(cluster.Attributes, attributeHealthCheckPath)
@@ -179,7 +179,7 @@ func clusterHealthCheckConfig(cluster shared.Cluster) []*core.HealthCheck {
 		healthCheckHealthyThreshold := shared.GetAttributeAsInt(cluster.Attributes,
 			attributeHealthCheckHealthyThreshold, defaultHealthCheckHealthyThreshold)
 
-		healthCheckLogFile := shared.GetAttributeAsString(cluster.Attributes,
+		healthCheckLogFileName := shared.GetAttributeAsString(cluster.Attributes,
 			attributeHealthCheckLogFile, "")
 
 		healthCheck := &core.HealthCheck{
@@ -194,8 +194,8 @@ func clusterHealthCheckConfig(cluster shared.Cluster) []*core.HealthCheck {
 			UnhealthyThreshold: protoUint32orNil(healthCheckUnhealthyThreshold),
 			HealthyThreshold:   protoUint32orNil(healthCheckHealthyThreshold),
 		}
-		if healthCheckLogFile != "" {
-			healthCheck.EventLogPath = healthCheckLogFile
+		if healthCheckLogFileName != "" {
+			healthCheck.EventLogPath = healthCheckLogFileName
 		}
 
 		return append([]*core.HealthCheck{}, healthCheck)

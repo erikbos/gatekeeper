@@ -11,12 +11,12 @@ import (
 )
 
 const (
-	defaultConfigFilename  = "envoycp-config.yaml"
-	defaultLogLevel        = "info"
-	defaultWebAdminListen  = "0.0.0.0:9902"
-	defaultWebAdminLogFile = "envoycp-admin.log"
-	defaultXDSGRPCListen   = "0.0.0.0:9901"
-	defaultXDSHTTPListen   = "0.0.0.0:9903"
+	defaultConfigFileName      = "envoycp-config.yaml"
+	defaultLogLevel            = "info"
+	defaultWebAdminListen      = "0.0.0.0:9902"
+	defaultWebAdminLogFileName = "envoycp-admin.log"
+	defaultXDSGRPCListen       = "0.0.0.0:9901"
+	defaultXDSHTTPListen       = "0.0.0.0:9903"
 )
 
 // EnvoyCPConfig contains our startup configuration data
@@ -28,28 +28,15 @@ type EnvoyCPConfig struct {
 }
 
 type xdsConfig struct {
-	GRPCListen         string         `yaml:"grpclisten"`
-	HTTPListen         string         `yaml:"httplisten"`
-	ConfigPushInterval time.Duration  `yaml:"configpushinterval"`
-	Envoy              envoyConfig    `yaml:"envoy"`
-	ExtAuthz           extAuthzConfig `yaml:"extauthz"`
+	GRPCListen         string        `yaml:"grpclisten"`
+	HTTPListen         string        `yaml:"httplisten"`
+	ConfigPushInterval time.Duration `yaml:"configpushinterval"`
+	Envoy              envoyConfig   `yaml:"envoy"`
 }
 
 type envoyConfig struct {
-	Logging envoyLogConfig `yaml:"logging"`
-}
-
-type envoyLogConfig struct {
-	File struct {
-		Path   string            `yaml:"path"`
-		Fields map[string]string `yaml:"fields"`
-	} `yaml:"file"`
-	GRPC struct {
-		BufferSize uint32        `yaml:"buffersize"`
-		Cluster    string        `yaml:"cluster"`
-		LogName    string        `yaml:"logname"`
-		Timeout    time.Duration `yaml:"timeout"`
-	} `yaml:"grpc"`
+	ExtAuthz extAuthzConfig `yaml:"extauthz"`
+	Logging  envoyLogConfig `yaml:"logging"`
 }
 
 type extAuthzConfig struct {
@@ -58,6 +45,19 @@ type extAuthzConfig struct {
 	Timeout          time.Duration `yaml:"timeout"`
 	FailureModeAllow bool          `yaml:"failuremodeallow"`
 	RequestBodySize  int16         `yaml:"requestbodysize"`
+}
+
+type envoyLogConfig struct {
+	File struct {
+		LogFileName string            `yaml:"logfilename"`
+		Fields      map[string]string `yaml:"fields"`
+	} `yaml:"file"`
+	GRPC struct {
+		BufferSize uint32        `yaml:"buffersize"`
+		Cluster    string        `yaml:"cluster"`
+		LogName    string        `yaml:"logname"`
+		Timeout    time.Duration `yaml:"timeout"`
+	} `yaml:"grpc"`
 }
 
 const (
@@ -69,8 +69,8 @@ func loadConfiguration(filename *string) *EnvoyCPConfig {
 	config := EnvoyCPConfig{
 		LogLevel: defaultLogLevel,
 		WebAdmin: webAdminConfig{
-			Listen:  defaultWebAdminListen,
-			LogFile: defaultWebAdminLogFile,
+			Listen:      defaultWebAdminListen,
+			LogFileName: defaultWebAdminLogFileName,
 		},
 		XDS: xdsConfig{
 			GRPCListen:         defaultXDSGRPCListen,

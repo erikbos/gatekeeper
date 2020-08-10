@@ -25,13 +25,14 @@ xds:
 
   configpushinterval: 2s
 
-  extauthz:
-    enabled: true
-    cluster: envoyauth
-    failuremodeallow: true
-    requestbodysize: 0
-
   envoy:
+    extauthz:
+      enabled: true
+      cluster: envoyauth
+      timeout: 0.5s
+      failuremodeallow: true
+      requestbodysize: 512
+
     logging:
       # grpc:
       #   logname: httplog
@@ -39,7 +40,7 @@ xds:
       #   timeout: 5s
       #   buffersize: 10485760
       file:
-        path: /dev/stdout
+        logfilename: /dev/stdout
         fields:
           request_id: '%REQ(REQUEST-ID)%'
           start_time: '%START_TIME%'

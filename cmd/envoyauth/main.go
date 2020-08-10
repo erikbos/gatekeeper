@@ -36,7 +36,7 @@ type authorizationServer struct {
 func main() {
 	shared.StartLogging(applicationName, version, buildTime)
 
-	filename := flag.String("config", defaultConfigFilename, "Configuration filename")
+	filename := flag.String("config", defaultConfigFileName, "Configuration filename")
 	flag.Parse()
 
 	a := authorizationServer{}

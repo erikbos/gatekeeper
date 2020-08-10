@@ -52,7 +52,7 @@ const (
 	attributeHealthCheckTimeout            = "HealthCheckTimeout"
 	attributeHealthCheckUnhealthyThreshold = "HealthCheckUnhealthyThreshold"
 	attributeHealthCheckHealthyThreshold   = "HealthCheckHealthyThreshold"
-	attributeHealthCheckLogFile            = "HealthCheckLogFile"
+	attributeHealthCheckLogFile            = "HealthCheckLogFileName"
 	attributeMaxConnections                = "MaxConnections"
 	attributeMaxPendingRequests            = "MaxPendingRequests"
 	attributeMaxRequests                   = "MaxRequests"

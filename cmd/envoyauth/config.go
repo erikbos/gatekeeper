@@ -11,12 +11,12 @@ import (
 )
 
 const (
-	defaultConfigFilename  = "envoyauth-config.yaml"
-	defaultLogLevel        = "info"
-	defaultWebAdminListen  = "0.0.0.0:7777"
-	defaultWebAdminLogFile = "envoyauth-admin.log"
-	defaultAuthGRPCListen  = "0.0.0.0:4000"
-	defaultOAuthListen     = "0.0.0.0:4001"
+	defaultConfigFileName      = "envoyauth-config.yaml"
+	defaultLogLevel            = "info"
+	defaultWebAdminListen      = "0.0.0.0:7777"
+	defaultWebAdminLogFileName = "envoyauth-admin.log"
+	defaultAuthGRPCListen      = "0.0.0.0:4000"
+	defaultOAuthListen         = "0.0.0.0:4001"
 )
 
 // APIAuthConfig contains our startup configuration data
@@ -35,8 +35,8 @@ func loadConfiguration(filename *string) *APIAuthConfig {
 	config := APIAuthConfig{
 		LogLevel: defaultLogLevel,
 		WebAdmin: webAdminConfig{
-			Listen:  defaultWebAdminListen,
-			LogFile: defaultWebAdminLogFile,
+			Listen:      defaultWebAdminListen,
+			LogFileName: defaultWebAdminLogFileName,
 		},
 		EnvoyAuth: envoyAuthConfig{
 			Listen: defaultAuthGRPCListen,

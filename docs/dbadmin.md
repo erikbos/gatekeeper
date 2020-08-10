@@ -38,16 +38,16 @@ Dbadmin requires a starup configuration which needs to be provided as YAML file,
 
 The supported fields are:
 
-| yaml field        | purpose                                 | example              |
-| ----------------- | --------------------------------------- | -------------------- |
-| loglevel          | logging level of application            | info / debug         |
-| webadmin.listen   | Webadmin address and port               | 0.0.0.0:7777         |
-| webadmin.ipacl    | Webadmin ip acl, without this no access | 172.16.0.0/19        |
-| webadmin.logfile  | Filename of webadmin access log         | /var/log/dbadmin.log |
-| database.hostname | Cassandra hostname to connect to        | cassandra            |
-| database.port     | Cassandra port to connect on            | 9042 / 10350         |
-| database.tls      | Enable TLS for database session         | true / false         |
-| database.username | Database username                       | cassandra            |
-| database.password | Database password                       | cassandra            |
-| database.keyspace | Database keyspace for Gatekeeper tables | gatekeeper           |
-| database.timeout  | Timeout for session                     | 0.5s                 |
+| yaml field           | purpose                                 | example              |
+| -------------------- | --------------------------------------- | -------------------- |
+| loglevel             | logging level of application            | info / debug         |
+| webadmin.listen      | Webadmin address and port               | 0.0.0.0:7777         |
+| webadmin.ipacl       | Webadmin ip acl, without this no access | 172.16.0.0/19        |
+| webadmin.logfilename | Filename of webadmin access log         | /var/log/dbadmin.log |
+| database.hostname    | Cassandra hostname to connect to        | cassandra            |
+| database.port        | Cassandra port to connect on            | 9042 / 10350         |
+| database.tls         | Enable TLS for database session         | true / false         |
+| database.username    | Database username                       | cassandra            |
+| database.password    | Database password                       | cassandra            |
+| database.keyspace    | Database keyspace for Gatekeeper tables | gatekeeper           |
+| database.timeout     | Timeout for session                     | 0.5s                 |

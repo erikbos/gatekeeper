@@ -168,7 +168,7 @@ func (s *server) buildEnvoyRoute(routeEntry shared.Route) *route.Route {
 	return envoyRoute
 }
 
-// buildRouteActionCluster returns route config we match on
+// buildRouteMatch returns route config we match on
 func buildRouteMatch(routeEntry shared.Route) *route.RouteMatch {
 
 	switch routeEntry.PathType {
@@ -202,7 +202,7 @@ func buildRouteActionCluster(routeEntry shared.Route) *route.Route_Route {
 	action := &route.Route_Route{
 		Route: &route.RouteAction{
 			Cors:                 buildCorsPolicy(routeEntry),
-			HostRewriteSpecifier: buildHostRewrite(routeEntry),
+			HostRewriteSpecifier: buildHostRewriteSpecifier(routeEntry),
 			RetryPolicy:          buildRetryPolicy(routeEntry),
 		},
 	}
@@ -352,7 +352,7 @@ func buildRegexpMatcher(regexp string) *envoymatcher.RegexMatcher {
 }
 
 // buildHostRewrite returns HostRewrite config based upon route attribute(s)
-func buildHostRewrite(routeEntry shared.Route) *route.RouteAction_HostRewriteLiteral {
+func buildHostRewriteSpecifier(routeEntry shared.Route) *route.RouteAction_HostRewriteLiteral {
 
 	upstreamHostHeader, err := shared.GetAttribute(routeEntry.Attributes, attributeHostHeader)
 	if err == nil && upstreamHostHeader != "" {
@@ -364,7 +364,7 @@ func buildHostRewrite(routeEntry shared.Route) *route.RouteAction_HostRewriteLit
 	return nil
 }
 
-// buildRouteActionDirectResponse builds response to have Envoy itself answer with status code and body
+// buildRouteActionDirectResponse builds route config to have Envoy itself answer with status code and body
 func buildRouteActionDirectResponse(routeEntry shared.Route) *route.Route_DirectResponse {
 
 	directResponseStatusCode, err := shared.GetAttribute(routeEntry.Attributes, attributeDirectResponseStatusCode)
@@ -528,7 +528,6 @@ func buildRoutePerFilterConfig(routeEntry shared.Route) map[string]*any.Any {
 
 	value, err := shared.GetAttribute(routeEntry.Attributes, attributeDisableAuthentication)
 	if err == nil && value == attributeValueTrue {
-
 		perFilterExtAuthzConfig := envoyauth.ExtAuthzPerRoute{
 			Override: &envoyauth.ExtAuthzPerRoute_Disabled{
 				Disabled: true,
