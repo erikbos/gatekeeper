@@ -5,7 +5,7 @@ loglevel: info
 webadmin:
   listen: 0.0.0.0:9902
   ipacl: 0.0.0.0/0
-  logfile: envoycp-admin.log
+  logfilename: envoycp-admin.log
 
 # Cassandra settings
 database:

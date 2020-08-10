@@ -31,16 +31,16 @@ docker-baseimage:
 	 docker build -f build/Dockerfile.baseimage . -t gatekeeper/baseimage
 
 docker-dbadmin:
-	 docker build -f build/Dockerfile.dbadmin . -t gatekeeper/dbadmin:$(VERSION)
+	 docker build -f build/Dockerfile.dbadmin . -t gatekeeper/dbadmin:$(VERSION) -t gatekeeper/dbadmin:latest
 
 docker-envoyauth:
-	 docker build -f build/Dockerfile.envoyauth . -t gatekeeper/envoyauth:$(VERSION)
+	 docker build -f build/Dockerfile.envoyauth . -t gatekeeper/envoyauth:$(VERSION) -t gatekeeper/envoyauth:latest
 
 docker-envoycp:
-	 docker build -f build/Dockerfile.envoycp . -t gatekeeper/envoycp:$(VERSION)
+	 docker build -f build/Dockerfile.envoycp . -t gatekeeper/envoycp:$(VERSION) -t gatekeeper/envoycp:latest
 
 docker-testbackend:
-	 docker build -f  build/Dockerfile.testbackend . -t gatekeeper/testbackend:$(VERSION)
+	 docker build -f  build/Dockerfile.testbackend . -t gatekeeper/testbackend:$(VERSION) -t gatekeeper/testbackend:latest
 
 clean:
 	rm -f $(BIN)/dbadmin $(BIN)/envoyauth $(BIN)/envoycp $(BIN)/testbackend
