@@ -64,6 +64,8 @@ The supported fields are:
 | webadmin.logfilename | Filename of Filename of webadmin access log                         | /var/log/envoyauth.log |
 | envoyauth.listen     | listen address and port for authentication requests from Envoyproxy | 0.0.0.0:4000           |
 | oauth.listen         | listen address and port for OAuth token requests                    | 0.0.0.0:4001           |
+| oauth.tokenissuepath | Path for OAuth token issue requests                                 | /oauth2/token          |
+| oauth.tokeninfopath  | Path for OAuth token info requests                                  | /oauth2/info           |
 | database.hostname    | Cassandra hostname to connect to                                    | cassandra              |
 | database.port        | Cassandra port to connect on                                        | 9042 / 10350           |
 | database.tls         | Enable TLS for database session                                     | true / false           |

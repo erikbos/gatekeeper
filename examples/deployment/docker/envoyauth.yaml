@@ -9,6 +9,8 @@ envoyauth:
 # public endpoint for oauth requests
 oauth:
   listen: 0.0.0.0:4001
+  tokenissuepath: /oauth2/token
+  tokeinfopath: /oauth2/info
 
 # The address to listen on for Admin UI
 webadmin:

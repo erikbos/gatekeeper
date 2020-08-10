@@ -24,7 +24,9 @@ import (
 
 // oauthServerConfig contains our configuration
 type oauthServerConfig struct {
-	Listen string `yaml:"listen"`
+	Listen         string `yaml:"listen"`
+	TokenIssuePath string `yaml:"tokenissuepath"`
+	TokenInfoPath  string `yaml:"tokeninfoath"`
 }
 
 type oauthServer struct {
@@ -40,6 +42,11 @@ type oauthServer struct {
 // StartOAuthServer runs our public endpoint
 func StartOAuthServer(a *authorizationServer) {
 	// shared.StartLogging(myName, version, buildTime)
+
+	// Do not try to start oauth system if we do not have a configuration
+	if a.config.OAuth.Listen == "" {
+		return
+	}
 
 	server := oauthServer{
 		config: &a.config.OAuth,
@@ -61,8 +68,12 @@ func StartOAuthServer(a *authorizationServer) {
 	server.ginEngine.Use(gin.LoggerWithFormatter(shared.LogHTTPRequest))
 	server.ginEngine.Use(shared.AddRequestID())
 
-	server.ginEngine.POST("/oauth2/token", server.handleTokenIssueRequest)
-	server.ginEngine.GET("/oauth2/info", server.handleTokenInfo)
+	if server.config.TokenIssuePath != "" {
+		server.ginEngine.POST(server.config.TokenIssuePath, server.handleTokenIssueRequest)
+	}
+	if server.config.TokenInfoPath != "" {
+		server.ginEngine.GET(server.config.TokenInfoPath, server.handleTokenInfo)
+	}
 
 	log.Panic(server.ginEngine.Run(a.config.OAuth.Listen))
 }
