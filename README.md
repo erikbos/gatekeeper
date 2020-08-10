@@ -8,7 +8,6 @@ Gatekeeper is an Gatekeeper proxy with rich API entitlement functionality. It us
 ## Table of Contents
 
 * [Introduction](#introduction)
-* [Understanding](#understanding)
 * [Getting Started](#getting-started)
 * [Repository Structure](#repository-structure)
 * [Contributing and Support](#contributing-and-support)
@@ -41,11 +40,13 @@ For backend teams:
 
 * Ease of deployment: it consists out 3 containers and a Cassandra database as backend.
 
-## Understanding Gatekeeper
+## Getting Started
 
-* [Use Cases](doc/use-cases.md)
+* [Use Cases](docs/use-cases.md)
 
-* [Architecture](doc/architecture.md)
+* [Architecture](docs/architecture.md)
+
+* [Deployment](docs/deployment.md)
 
 ## Repository structure
 
