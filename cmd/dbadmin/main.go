@@ -17,7 +17,8 @@ var (
 )
 
 const (
-	applicationName = "dbadmin"
+	applicationName       = "dbadmin"
+	defaultConfigFileName = "dbadmin-config.yaml"
 )
 
 type server struct {
@@ -31,6 +32,8 @@ func main() {
 	shared.StartLogging(applicationName, version, buildTime)
 
 	filename := flag.String("config", defaultConfigFileName, "Configuration filename")
+	createSchema := flag.Bool("createschema", false, "Create database schema if it does not exist")
+	replicaCount := flag.Int("replicacount", 3, "Replica count to set for database schema")
 	flag.Parse()
 
 	s := server{
@@ -41,7 +44,7 @@ func main() {
 	// s.readiness.RegisterMetrics(applicationName)
 
 	var err error
-	s.db, err = cassandra.New(s.config.Database, applicationName)
+	s.db, err = cassandra.New(s.config.Database, applicationName, *createSchema, *replicaCount)
 	if err != nil {
 		log.Fatalf("Database connect failed: %v", err)
 	}

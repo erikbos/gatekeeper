@@ -17,7 +17,8 @@ var (
 )
 
 const (
-	applicationName = "envoyauth"
+	applicationName       = "envoyauth"
+	defaultConfigFileName = "envoyauth-config.yaml"
 )
 
 type authorizationServer struct {
@@ -46,7 +47,7 @@ func main() {
 	shared.SetLoggingConfiguration(a.config.LogLevel)
 
 	var err error
-	a.db, err = cassandra.New(a.config.Database, applicationName)
+	a.db, err = cassandra.New(a.config.Database, applicationName, false, 0)
 	if err != nil {
 		log.Fatalf("Database connect failed: %v", err)
 	}

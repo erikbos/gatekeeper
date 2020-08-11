@@ -9,7 +9,7 @@ import (
 
 const (
 	systemLocalTable    = "system.local"
-	healthCheckCQLquery = "select * from " + systemLocalTable
+	healthCheckCQLquery = "SELECT * FROM " + systemLocalTable
 	healthCheckInterval = 5 * time.Second
 )
 
@@ -18,8 +18,8 @@ type ReadinessCheck struct {
 	db *Database
 }
 
-// NewReadinessCheck creates readiness instance
-func NewReadinessCheck(database *Database) *ReadinessCheck {
+// NewReadiness creates readiness instance
+func NewReadiness(database *Database) *ReadinessCheck {
 	return &ReadinessCheck{
 		db: database,
 	}

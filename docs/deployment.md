@@ -26,11 +26,11 @@ docker-compose -f examples/deployment/docker/cassandra.yaml up
 
 Please note:
 
-* At startup all relevant database tables will be created (using  [Cassandra_create_tables.cql](scripts/Cassandra_create_tables.cql))
-* Cassandra will be configured a single node database cluster by changing its replication factor down to 1 (Using [Cassandra_create_tables.cql](scripts/Cassandra_switch_to_one_node.cql))
+no* At startup database schema will be created (Using dbadmin cmdline argument *--create-tables*)
+* Database will be configured as a single node by changing its replication count to 1 (Using dbadmin cmdline argument *--create-tables*
+* For production do not use replication count of 1(!)
 * To persist the database across restarts the directory /tmp/cassandra_data is used.
-* Cassandra runs as a single node database cluster in a container we need to change its replication factor down to 1
-* All containers start at the same time (compose does not support waits) as Cassandra takes 30 seconds te start all other containers will warn about database unavailablity initially.
+* All containers start at the same time (compose does not support waits) as Cassandra takes 30 seconds te start all other containers might warn about not yet being able to connect to database. 
 
 ### Kubernetes
 

@@ -1,5 +1,7 @@
 # DBAdmin daemon settings
 #
+loglevel: debug
+
 # The address to listen on for REST API
 webadmin:
   listen: 0.0.0.0:7777

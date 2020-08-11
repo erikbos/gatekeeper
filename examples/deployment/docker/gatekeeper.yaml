@@ -9,28 +9,10 @@ services:
     volumes:
       - /tmp/cassandra_data:/var/lib/cassandra
 
-  cassandra-create-tables:
-    container_name: cassandra-create-tables
-    image: cassandra:3
-    depends_on:
-      - cassandra
-    volumes:
-      - ../../../scripts:/mnt
-    command: /bin/bash -c "sleep 40 && echo Creating tables && cqlsh cassandra -f /mnt/Cassandra_create_tables.cql"
-
-  cassandra-change-to-one-instance-setup:
-    container_name: cassandra-change-to-one-instance-setup
-    image: cassandra:3
-    depends_on:
-      - cassandra
-    volumes:
-      - ../../../scripts:/mnt
-    command: /bin/bash -c "sleep 45 && echo Changing replication to one-node && cqlsh cassandra -f /mnt/Cassandra_switch_to_one_node.cql"
-
   dbadmin:
     image: gatekeeper/dbadmin:latest
     container_name: dbadmin
-    entrypoint: ["/app/dbadmin", "--config", "/config/dbadmin.yaml"]
+    entrypoint: ["/app/dbadmin", "--config", "/config/dbadmin.yaml", "--createschema", "--replicacount=1"]
     secrets:
       - source: dbadmin-config
         target: /config/dbadmin.yaml

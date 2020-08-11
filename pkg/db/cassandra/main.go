@@ -32,11 +32,37 @@ type Database struct {
 }
 
 // New builds new connected database instance
-func New(config DatabaseConfig, serviceName string) (*db.Database, error) {
+func New(config DatabaseConfig, serviceName string,
+	createSchema bool, replicationCount int) (*db.Database, error) {
 
-	cassandraSession, err := connect(config, serviceName)
+	cassandraClusterConfig := buildClusterConfig(config)
+
+	if createSchema == true {
+		// Connect to system keyspace as keyspace does exist yet
+		cassandraClusterConfig.Keyspace = "system"
+		db, err := connect(cassandraClusterConfig, config)
+		if err != nil {
+			return nil, err
+		}
+
+		// Create keyspace with specific replication count
+		createKeyspace(db, config.Keyspace, replicationCount)
+		// Close session: we cannot use it any further,
+		// as we are connected to the wrong keyspace: we need to reconnect.
+		db.Close()
+	}
+
+	// Connect to Cassandra on correct keyspace
+	cassandraClusterConfig.Keyspace = config.Keyspace
+	cassandraSession, err := connect(cassandraClusterConfig, config)
 	if err != nil {
 		return nil, err
+	}
+	// Create tables within keyspace if requested
+	if createSchema == true {
+		if err := createTables(cassandraSession); err != nil {
+			return nil, err
+		}
 	}
 
 	dbConfig := Database{
@@ -56,36 +82,39 @@ func New(config DatabaseConfig, serviceName string) (*db.Database, error) {
 		APIProduct:   NewAPIProductStore(&dbConfig),
 		Credential:   NewCredentialStore(&dbConfig),
 		OAuth:        NewOAuthStore(&dbConfig),
-		Readiness:    NewReadinessCheck(&dbConfig),
+		Readiness:    NewReadiness(&dbConfig),
 	}
 	return &database, nil
 }
 
-// connect setups up connectivity to Cassandra
-func connect(config DatabaseConfig, serviceName string) (*gocql.Session, error) {
+func buildClusterConfig(config DatabaseConfig) *gocql.ClusterConfig {
 
-	cluster := gocql.NewCluster(config.Hostname)
+	clusterConfig := gocql.NewCluster(config.Hostname)
 
-	cluster.Port = config.Port
+	clusterConfig.Port = config.Port
 
 	if config.TLS.Enable == true {
 		// Empty struct to enable TLS
-		cluster.SslOpts = &gocql.SslOptions{}
+		clusterConfig.SslOpts = &gocql.SslOptions{}
 
 		if config.TLS.Capath != "" {
-			cluster.SslOpts.CaPath = config.TLS.Capath
+			clusterConfig.SslOpts.CaPath = config.TLS.Capath
 		}
 	}
-	cluster.Authenticator = gocql.PasswordAuthenticator{
+	clusterConfig.Authenticator = gocql.PasswordAuthenticator{
 		Username: config.Username,
 		Password: config.Password,
 	}
-	cluster.Keyspace = config.Keyspace
-
 	if config.Timeout != 0 {
-		cluster.Timeout = config.Timeout
+		clusterConfig.Timeout = config.Timeout
 	}
 	// cluster.RetryPolicy = &gocql.SimpleRetryPolicy{NumRetries: 3}
+
+	return clusterConfig
+}
+
+// connect setups up connectivity to Cassandra
+func connect(cluster *gocql.ClusterConfig, config DatabaseConfig) (*gocql.Session, error) {
 
 	// In case no number of connect attempts is set we try at least once
 	if config.ConnectAttempts == 0 {

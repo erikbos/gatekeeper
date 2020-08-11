@@ -11,7 +11,6 @@ import (
 )
 
 const (
-	defaultConfigFileName      = "envoyauth-config.yaml"
 	defaultLogLevel            = "info"
 	defaultWebAdminListen      = "0.0.0.0:7777"
 	defaultWebAdminLogFileName = "envoyauth-admin.log"

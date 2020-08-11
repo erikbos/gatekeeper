@@ -19,7 +19,8 @@ var (
 )
 
 const (
-	applicationName = "envoycp"
+	applicationName       = "envoycp"
+	defaultConfigFileName = "envoycp-config.yaml"
 )
 
 type server struct {
@@ -48,7 +49,7 @@ func main() {
 	shared.SetLoggingConfiguration(s.config.LogLevel)
 
 	var err error
-	s.db, err = cassandra.New(s.config.Database, applicationName)
+	s.db, err = cassandra.New(s.config.Database, applicationName, false, 0)
 	if err != nil {
 		log.Fatalf("Database connect failed: %v", err)
 	}
