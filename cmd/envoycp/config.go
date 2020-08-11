@@ -92,3 +92,17 @@ func loadConfiguration(filename *string) *EnvoyCPConfig {
 
 	return &config
 }
+
+// String() return our startup configuration as YAML
+func (config *EnvoyCPConfig) String() string {
+
+	// We must remove db password from configuration before showing
+	redactedConfig := config
+	redactedConfig.Database.Password = "[redacted]"
+
+	configAsYAML, err := yaml.Marshal(redactedConfig)
+	if err != nil {
+		return ""
+	}
+	return string(configAsYAML)
+}

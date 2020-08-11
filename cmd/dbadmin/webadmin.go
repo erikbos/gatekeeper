@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -8,15 +9,14 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
-	"gopkg.in/yaml.v2"
 
 	"github.com/erikbos/gatekeeper/pkg/shared"
 )
 
 type webAdminConfig struct {
-	Listen      string `yaml:"listen"`
-	IPACL       string `yaml:"ipacl"`
-	LogFileName string `yaml:"logfilename"`
+	Listen      string `yaml:"listen"`      // Address and port to listen
+	IPACL       string `yaml:"ipacl"`       // ip accesslist (e.g. "10.0.0.0/8,192.168.0.0/16")
+	LogFileName string `yaml:"logfilename"` // Filename for writing admin access logs
 }
 
 // StartWebAdminServer starts the admin web UI
@@ -66,16 +66,7 @@ func (s *server) ShowWebAdminHomePage(c *gin.Context) {
 
 // configDump pretty prints the active configuration
 func (s *server) ConfigDump(c *gin.Context) {
-	// We must remove db password from configuration struct before showing
-	configToPrint := s.config
-	configToPrint.Database.Password = "[redacted]"
-
-	configDump, err := yaml.Marshal(configToPrint)
-	if err != nil {
-		c.Status(http.StatusInternalServerError)
-		return
-	}
 
 	c.Header("Content-type", "text/yaml")
-	c.String(http.StatusOK, string(configDump))
+	c.String(http.StatusOK, fmt.Sprint(s.config))
 }

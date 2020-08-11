@@ -247,7 +247,7 @@ func buildWeightedClusters(routeEntry shared.Route) *route.RouteAction_WeightedC
 		totalWeight += clusterWeight
 
 		clusterToAdd := &route.WeightedCluster_ClusterWeight{
-			Name:   clusterConfig[0],
+			Name:   strings.TrimSpace(clusterConfig[0]),
 			Weight: protoUint32(uint32(clusterWeight)),
 		}
 		weightedClusters = append(weightedClusters, clusterToAdd)

@@ -132,7 +132,8 @@ func (a *authorizationServer) handlePolicies(request *requestInfo, policies *str
 	policyHandler function, newUpstreamHeaders map[string]string) (int, error) {
 
 	for _, policy := range strings.Split(*policies, ",") {
-		headersToAdd, err := policyHandler(&policy, request)
+		trimmedPolicy := strings.TrimSpace(policy)
+		headersToAdd, err := policyHandler(&trimmedPolicy, request)
 
 		// Stop and return error in case policy indicates we must stop
 		if err != nil {
