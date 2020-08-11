@@ -45,6 +45,8 @@ The supported fields are:
 | database.password                    | Database password                                                                   | cassandra                     |
 | database.keyspace                    | Database keyspace for Gatekeeper tables                                             | gatekeeper                    |
 | database.timeout                     | Timeout for session                                                                 | 0.5s                          |
+| database.connectattempts             | Number of attempts to establish connection                                          | 5                             |
+| database.queryretries                | Number of times to retry query                                                      | 2                             |
 | xds.grpclisten                       | listen address and port for XDS requests from Envoyproxy                            | 0.0.0.0:9901                  |
 | xds.configpushinterval               | Frequency of checking changes to configuration                                      | 1s                            |
 | envoyproxy.extauthz.enable           | Enable or disable Envoyproxy-wide request authentication via envoyauth              | true / false                  |

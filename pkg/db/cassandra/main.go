@@ -23,6 +23,7 @@ type DatabaseConfig struct {
 	Keyspace        string        `yaml:"keyspace"`
 	Timeout         time.Duration `yaml:"timeout"`
 	ConnectAttempts int           `yaml:"connectattempts"`
+	QueryRetries    int           `yaml:"queryretries"`
 }
 
 // Database holds all our database connection information and performance counters
@@ -108,7 +109,11 @@ func buildClusterConfig(config DatabaseConfig) *gocql.ClusterConfig {
 	if config.Timeout != 0 {
 		clusterConfig.Timeout = config.Timeout
 	}
-	// cluster.RetryPolicy = &gocql.SimpleRetryPolicy{NumRetries: 3}
+	if config.QueryRetries != 0 {
+		clusterConfig.RetryPolicy = &gocql.SimpleRetryPolicy{
+			NumRetries: config.QueryRetries,
+		}
+	}
 
 	return clusterConfig
 }

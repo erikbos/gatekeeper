@@ -57,23 +57,25 @@ Envoyauth has a built in-memory cache for retrieved data from Cassandra. This wi
 
 The supported fields are:
 
-| yaml field           | purpose                                                             | example                |
-| -------------------- | ------------------------------------------------------------------- | ---------------------- |
-| webadmin.listen      | webadmin address and port                                           | 0.0.0.0:2113           |
-| webadmin.ipacl       | webadmin ip acl, without this no access                             | 172.16.0.0/19          |
-| webadmin.logfilename | Filename of Filename of webadmin access log                         | /var/log/envoyauth.log |
-| envoyauth.listen     | listen address and port for authentication requests from Envoyproxy | 0.0.0.0:4000           |
-| oauth.listen         | listen address and port for OAuth token requests                    | 0.0.0.0:4001           |
-| oauth.tokenissuepath | Path for OAuth token issue requests                                 | /oauth2/token          |
-| oauth.tokeninfopath  | Path for OAuth token info requests                                  | /oauth2/info           |
-| database.hostname    | Cassandra hostname to connect to                                    | cassandra              |
-| database.port        | Cassandra port to connect on                                        | 9042 / 10350           |
-| database.tls         | Enable TLS for database session                                     | true / false           |
-| database.username    | Database username                                                   | cassandra              |
-| database.password    | Database password                                                   | cassandra              |
-| database.keyspace    | Database keyspace for Gatekeeper tables                             | gatekeeper             |
-| database.timeout     | Timeout for session                                                 | 0.5s                   |
-| cache.size           | in-memory cache size in bytes                                       | 1048576                |
-| cache.ttl            | time-to-live for cached objects in seconds                          | 15                     |
-| cache.negativettl    | time-to-live for non-existing objects in seconds                    | 15                     |
-| maxmind.filename     | geoip database filename                                             |                        |
+| yaml field               | purpose                                                             | example                |
+| ------------------------ | ------------------------------------------------------------------- | ---------------------- |
+| webadmin.listen          | webadmin address and port                                           | 0.0.0.0:2113           |
+| webadmin.ipacl           | webadmin ip acl, without this no access                             | 172.16.0.0/19          |
+| webadmin.logfilename     | Filename of Filename of webadmin access log                         | /var/log/envoyauth.log |
+| envoyauth.listen         | listen address and port for authentication requests from Envoyproxy | 0.0.0.0:4000           |
+| oauth.listen             | listen address and port for OAuth token requests                    | 0.0.0.0:4001           |
+| oauth.tokenissuepath     | Path for OAuth token issue requests                                 | /oauth2/token          |
+| oauth.tokeninfopath      | Path for OAuth token info requests                                  | /oauth2/info           |
+| database.hostname        | Cassandra hostname to connect to                                    | cassandra              |
+| database.port            | Cassandra port to connect on                                        | 9042 / 10350           |
+| database.tls             | Enable TLS for database session                                     | true / false           |
+| database.username        | Database username                                                   | cassandra              |
+| database.password        | Database password                                                   | cassandra              |
+| database.keyspace        | Database keyspace for Gatekeeper tables                             | gatekeeper             |
+| database.timeout         | Timeout for session                                                 | 0.5s                   |
+| database.connectattempts | Number of attempts to establish connection                          | 5                      |
+| database.queryretries    | Number of times to retry query                                      | 2                      |
+| cache.size               | in-memory cache size in bytes                                       | 1048576                |
+| cache.ttl                | time-to-live for cached objects in seconds                          | 15                     |
+| cache.negativettl        | time-to-live for non-existing objects in seconds                    | 15                     |
+| maxmind.filename         | geoip database filename                                             |                        |
