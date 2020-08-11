@@ -55,8 +55,11 @@ For backend teams:
 * [configs](configs): Example configuration files for Gatekeeper components
 
 * [docs](docs): Extended documentation (use cases, architecture, api specs, etc.)
+  * [api](docs/api/README.md)
+  * [Deployment guide](docs/deployment.md)
 
 * [examples](examples): Example management API calls to configure Gatekeeper
+  * [deployment/docker](examples/deployment/docker): example Docker compose configuration
 
 * [scripts](scripts): Scripts to deploy Gatekeeper
 
