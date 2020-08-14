@@ -7,6 +7,9 @@ import (
 type (
 	// APIProductStore the apiproduct information storage interface
 	APIProductStore interface {
+		// GetAll retrieves all api products
+		GetAll() ([]shared.APIProduct, error)
+
 		// GetByOrganization retrieves all api products belonging to an organization
 		GetByOrganization(organizationName string) ([]shared.APIProduct, error)
 

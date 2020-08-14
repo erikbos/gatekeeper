@@ -3,6 +3,7 @@ package cassandra
 import (
 	"fmt"
 
+	"github.com/gocql/gocql"
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 
@@ -22,6 +23,25 @@ func NewAPIProductStore(database *Database) *APIProductStore {
 	return &APIProductStore{
 		db: database,
 	}
+}
+
+// GetAll retrieves all api products
+func (s *APIProductStore) GetAll() ([]shared.APIProduct, error) {
+	query := "SELECT * FROM api_products"
+
+	apiproducts, err := s.runGetAPIProductQuery(query)
+	if err != nil {
+		return []shared.APIProduct{}, err
+	}
+
+	if len(apiproducts) == 0 {
+		//db.metrics.QueryMiss
+		s.db.metrics.QueryMiss(apiProductsMetricLabel)
+		return apiproducts, fmt.Errorf("Can not find apiproducts")
+	}
+
+	s.db.metrics.QueryHit(apiProductsMetricLabel)
+	return apiproducts, nil
 }
 
 // GetByOrganization retrieves all api products belonging to an organization
@@ -70,9 +90,19 @@ func (s *APIProductStore) runGetAPIProductQuery(query string, queryParameters ..
 	timer := prometheus.NewTimer(s.db.metrics.LookupHistogram)
 	defer timer.ObserveDuration()
 
-	iterable := s.db.CassandraSession.Query(query, queryParameters...).Iter()
+	var iter *gocql.Iter
+	if queryParameters == nil {
+		iter = s.db.CassandraSession.Query(query).Iter()
+	} else {
+		iter = s.db.CassandraSession.Query(query, queryParameters...).Iter()
+	}
+	if iter.NumRows() == 0 {
+		_ = iter.Close()
+		return []shared.APIProduct{}, nil
+	}
+
 	m := make(map[string]interface{})
-	for iterable.MapScan(m) {
+	for iter.MapScan(m) {
 		apiproduct := shared.APIProduct{
 			Name:             m["name"].(string),
 			DisplayName:      m["display_name"].(string),
@@ -91,7 +121,7 @@ func (s *APIProductStore) runGetAPIProductQuery(query string, queryParameters ..
 		m = map[string]interface{}{}
 	}
 
-	if err := iterable.Close(); err != nil {
+	if err := iter.Close(); err != nil {
 		log.Error(err)
 		return []shared.APIProduct{}, err
 	}

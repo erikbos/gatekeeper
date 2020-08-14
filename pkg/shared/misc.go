@@ -10,13 +10,12 @@ import (
 
 // GetCurrentTimeMilliseconds returns current epoch time in milliseconds
 func GetCurrentTimeMilliseconds() int64 {
-	// FIXME / is this the same as / int64(time.Millisecond)?
-	return time.Now().UTC().UnixNano() / 1000000
+	return time.Now().UTC().UnixNano() / int64(time.Millisecond)
 }
 
-// TimeMillisecondsToString return timestamp as string
+// TimeMillisecondsToString return timestamp as string in UTC
 func TimeMillisecondsToString(timestamp int64) string {
-	return time.Unix(0, timestamp*int64(time.Millisecond)).String()
+	return time.Unix(0, timestamp*int64(time.Millisecond)).UTC().Format(time.RFC3339)
 }
 
 // TimeMillisecondsToInt64 returns time.Time as int64
