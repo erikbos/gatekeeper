@@ -107,6 +107,6 @@ func (s *server) XDSBuildSnapshot() {
 	EnvoyRoutes, _ := s.getEnvoyRouteConfig()
 	EnvoyListeners, _ := s.getEnvoyListenerConfig()
 
-	snapshot := cache.NewSnapshot(version, nil, EnvoyClusters, EnvoyRoutes, EnvoyListeners, nil)
+	snapshot := cache.NewSnapshot(version, nil, EnvoyClusters, EnvoyRoutes, EnvoyListeners, nil, nil)
 	_ = s.xdsCache.SetSnapshot("jenny", snapshot)
 }

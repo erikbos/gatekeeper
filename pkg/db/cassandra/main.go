@@ -10,7 +10,7 @@ import (
 	"github.com/erikbos/gatekeeper/pkg/db"
 )
 
-// DatabaseConfig holds configuration configuration
+// DatabaseConfig holds database connection configuration
 type DatabaseConfig struct {
 	Hostname string `yaml:"hostname"`
 	Port     int    `yaml:"port"`
@@ -39,7 +39,7 @@ func New(config DatabaseConfig, serviceName string,
 	cassandraClusterConfig := buildClusterConfig(config)
 
 	if createSchema == true {
-		// Connect to system keyspace as keyspace does exist yet
+		// Connect to system keyspace first as our keyspace does not exist yet
 		cassandraClusterConfig.Keyspace = "system"
 		db, err := connect(cassandraClusterConfig, config)
 		if err != nil {

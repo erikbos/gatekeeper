@@ -4,10 +4,9 @@ go 1.13
 
 require (
 	github.com/bmatcuk/doublestar v1.3.1
-	github.com/cncf/udpa/go v0.0.0-20200629203442-efcf912fb354 // indirect
 	github.com/coocood/freecache v1.1.1
 	github.com/dchest/uniuri v0.0.0-20200228104902-7aecb25e1fe5
-	github.com/envoyproxy/go-control-plane v0.9.6
+	github.com/envoyproxy/go-control-plane v0.9.7-0.20200811182123-112a4904c4b0
 	github.com/gin-gonic/gin v1.6.3
 	github.com/gocql/gocql v0.0.0-20200624222514-34081eda590e
 	github.com/gogo/googleapis v1.4.0

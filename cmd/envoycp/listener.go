@@ -9,16 +9,16 @@ import (
 	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	listener "github.com/envoyproxy/go-control-plane/envoy/config/listener/v3"
 	fileaccesslog "github.com/envoyproxy/go-control-plane/envoy/extensions/access_loggers/file/v3"
-	grpcaccessLog "github.com/envoyproxy/go-control-plane/envoy/extensions/access_loggers/grpc/v3"
+	grpcaccesslog "github.com/envoyproxy/go-control-plane/envoy/extensions/access_loggers/grpc/v3"
 	extauthz "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/ext_authz/v3"
 	hcm "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 	tls "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/tls/v3"
 	cache "github.com/envoyproxy/go-control-plane/pkg/cache/types"
 	"github.com/envoyproxy/go-control-plane/pkg/wellknown"
 	"github.com/golang/protobuf/ptypes"
-	spb "github.com/golang/protobuf/ptypes/struct"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/types/known/anypb"
+	"google.golang.org/protobuf/types/known/structpb"
 
 	"github.com/erikbos/gatekeeper/pkg/shared"
 )
@@ -306,13 +306,13 @@ func buildFileAccessLog(fields map[string]string, path string) []*accesslog.Acce
 		return nil
 	}
 
-	jsonFormat := &spb.Struct{
-		Fields: map[string]*spb.Value{},
+	jsonFormat := &structpb.Struct{
+		Fields: map[string]*structpb.Value{},
 	}
 	for field, fieldFormat := range fields {
 		if fieldFormat != "" {
-			jsonFormat.Fields[field] = &spb.Value{
-				Kind: &spb.Value_StringValue{StringValue: fieldFormat},
+			jsonFormat.Fields[field] = &structpb.Value{
+				Kind: &structpb.Value_StringValue{StringValue: fieldFormat},
 			}
 		}
 	}
@@ -340,8 +340,8 @@ func buildFileAccessLog(fields map[string]string, path string) []*accesslog.Acce
 
 func buildGRPCAccessLog(clusterName, LogName string, timeout time.Duration, bufferSize uint32) []*accesslog.AccessLog {
 
-	accessLogConf := &grpcaccessLog.HttpGrpcAccessLogConfig{
-		CommonConfig: &grpcaccessLog.CommonGrpcAccessLogConfig{
+	accessLogConf := &grpcaccesslog.HttpGrpcAccessLogConfig{
+		CommonConfig: &grpcaccesslog.CommonGrpcAccessLogConfig{
 			LogName:             LogName,
 			GrpcService:         buildGRPCService(clusterName, timeout),
 			TransportApiVersion: core.ApiVersion_V3,

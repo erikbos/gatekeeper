@@ -17,6 +17,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/genproto/googleapis/rpc/status"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/structpb"
 
 	"github.com/erikbos/gatekeeper/pkg/shared"
 )
@@ -65,7 +66,7 @@ func (a *authorizationServer) Check(ctx context.Context, authRequest *authservic
 	request, err := getRequestInfo(authRequest)
 	if err != nil {
 		a.metrics.connectInfoFailures.Inc()
-		return rejectRequest(http.StatusBadRequest, nil, fmt.Sprintf("%s", err))
+		return rejectRequest(http.StatusBadRequest, nil, nil, fmt.Sprintf("%s", err))
 	}
 	a.logRequestDebug(request)
 
@@ -73,18 +74,22 @@ func (a *authorizationServer) Check(ctx context.Context, authRequest *authservic
 	request.vhost, err = a.lookupVhost(request.httpRequest.Host, request.httpRequest.Headers["x-forwarded-proto"])
 	if err != nil {
 		a.increaseCounterRequestRejected(request)
-		return rejectRequest(http.StatusNotFound, nil, "unknown vhost")
+		return rejectRequest(http.StatusNotFound, nil, nil, "unknown vhost")
 	}
 
-	// upstreamHeaders will receive all to be added upstream headers
+	// upstreamHeaders will receive all new headers to add before request goes upstream
 	upstreamHeaders := make(map[string]string)
+
+	// dynamicMetadata will receive all metadata to be used by next envoy filters
+	// examples are: ratelimiter and extra fields to be logged
+	dynamicMetadata := make(map[string]string)
 
 	if request.vhost.Policies != "" {
 		errorStatusCode, err := a.handlePolicies(request, &request.vhost.Policies, a.handleVhostPolicy, upstreamHeaders)
 		// In case a policy wants us to stop we reject call
 		if err != nil {
 			a.increaseCounterRequestRejected(request)
-			return rejectRequest(errorStatusCode, nil, err.Error())
+			return rejectRequest(errorStatusCode, nil, dynamicMetadata, err.Error())
 		}
 	}
 
@@ -95,8 +100,10 @@ func (a *authorizationServer) Check(ctx context.Context, authRequest *authservic
 			errorStatusCode, err := a.handlePolicies(request, &request.APIProduct.Policies, a.handlePolicy, upstreamHeaders)
 			// In case a policy wants us to stop we reject call
 			if err != nil {
+				compileMetadata(request, dynamicMetadata)
+
 				a.increaseCounterRequestRejected(request)
-				return rejectRequest(errorStatusCode, nil, err.Error())
+				return rejectRequest(errorStatusCode, nil, dynamicMetadata, err.Error())
 			}
 		}
 	}
@@ -105,8 +112,10 @@ func (a *authorizationServer) Check(ctx context.Context, authRequest *authservic
 		log.Debugf("upstream header: %s = %s", k, v)
 	}
 
+	compileMetadata(request, dynamicMetadata)
+
 	a.IncreaseCounterRequestAccept(request)
-	return allowRequest(upstreamHeaders)
+	return allowRequest(upstreamHeaders, dynamicMetadata)
 }
 
 // FIXME this should be lookup in map instead of for loops
@@ -148,8 +157,34 @@ func (a *authorizationServer) handlePolicies(request *requestInfo, policies *str
 	return http.StatusOK, nil
 }
 
+func compileMetadata(request *requestInfo, metadata map[string]string) {
+
+	if request.developer != nil {
+		if request.developer.Email != "" {
+			metadata["developerEmail"] = request.developer.Email
+		}
+		if request.developer.DeveloperID != "" {
+			metadata["developerID"] = request.developer.DeveloperID
+		}
+	}
+	if request.developerApp != nil {
+		if request.developerApp.AppID != "" {
+			metadata["developerAppID"] = request.developerApp.AppID
+		}
+		if request.developerApp.Name != "" {
+			metadata["developerAppName"] = request.developerApp.Name
+		}
+	}
+	if request.APIProduct != nil && request.APIProduct.Name != "" {
+		metadata["APIProduct"] = request.APIProduct.Name
+	}
+	if request.apikey != nil {
+		metadata["apikey"] = *request.apikey
+	}
+}
+
 // allowRequest authorizates customer request to go upstream
-func allowRequest(headers map[string]string) (*authservice.CheckResponse, error) {
+func allowRequest(headers, metadata map[string]string) (*authservice.CheckResponse, error) {
 
 	response := &authservice.CheckResponse{
 		Status: &status.Status{
@@ -157,15 +192,18 @@ func allowRequest(headers map[string]string) (*authservice.CheckResponse, error)
 		},
 		HttpResponse: &authservice.CheckResponse_OkResponse{
 			OkResponse: &authservice.OkHttpResponse{
-				Headers: buildHeadersList(headers),
+				Headers:         buildHeadersList(headers),
+				DynamicMetadata: buildDynamicMetadataList(metadata),
 			},
 		},
 	}
+	log.Printf("allowRequest: %+v", response)
+
 	return response, nil
 }
 
 // rejectCall answers to Envoy to reject HTTP request
-func rejectRequest(statusCode int, headers map[string]string,
+func rejectRequest(statusCode int, headers, metadata map[string]string,
 	message string) (*authservice.CheckResponse, error) {
 
 	var envoyStatusCode envoytype.StatusCode
@@ -192,6 +230,8 @@ func rejectRequest(statusCode int, headers map[string]string,
 				},
 				Headers: buildHeadersList(headers),
 				Body:    buildJSONErrorMessage(&message),
+				// FIXME this is not yet supported by envoy
+				//				DynamicMetadata: buildDynamicMetadataList(metadata),
 			},
 		},
 	}
@@ -216,6 +256,29 @@ func buildHeadersList(headers map[string]string) []*core.HeaderValueOption {
 		})
 	}
 	return headerList
+}
+
+// buildDynamicMetadataList creates struct for all additional metadata to be returned when accepting a request
+// purpose is:
+// 1) have accesslog log additional fields which are not susposed to go upstream as HTTP headers
+// 2) to provide configuration to ratelimiter filter
+func buildDynamicMetadataList(metadata map[string]string) *structpb.Struct {
+
+	if len(metadata) == 0 {
+		return nil
+	}
+
+	metadataStruct := structpb.Struct{
+		Fields: map[string]*structpb.Value{},
+	}
+	for key, value := range metadata {
+		metadataStruct.Fields[key] = &structpb.Value{
+			Kind: &structpb.Value_StringValue{
+				StringValue: value,
+			},
+		}
+	}
+	return &metadataStruct
 }
 
 // getRequestInfo returns HTTP data of a request
