@@ -49,7 +49,7 @@ func policyQPS1(request *requestInfo) (map[string]string, error) {
 	quotaAttributeName := request.APIProduct.Name + "_quotaPerSecond"
 	quotaKey := *request.apikey + "_a_" + quotaAttributeName
 
-	value, err := shared.GetAttribute(request.developerApp.Attributes, quotaAttributeName)
+	value, err := request.developerApp.Attributes.Get(quotaAttributeName)
 	if err == nil && value != "" {
 		return map[string]string{
 				"QPS-Quota-Key": quotaKey,
@@ -58,7 +58,7 @@ func policyQPS1(request *requestInfo) (map[string]string, error) {
 			},
 			nil
 	}
-	value, err = shared.GetAttribute(request.APIProduct.Attributes, quotaAttributeName)
+	value, err = request.APIProduct.Attributes.Get(quotaAttributeName)
 	if err == nil && value != "" {
 		return map[string]string{
 				"QPS-Quota-Key": quotaKey,
@@ -120,7 +120,7 @@ func policySendDeveloperAppID(request *requestInfo) (map[string]string, error) {
 // policyCheckIPAccessList checks requestor ip against IP ACL defined in developer app
 func policyCheckIPAccessList(request *requestInfo) (map[string]string, error) {
 
-	ipAccessList, err := shared.GetAttribute(request.developerApp.Attributes, "IPAccessList")
+	ipAccessList, err := request.developerApp.Attributes.Get("IPAccessList")
 	if err == nil && ipAccessList != "" {
 		if shared.CheckIPinAccessList(request.IP, ipAccessList) {
 			// OK, we have a match
@@ -135,7 +135,7 @@ func policyCheckIPAccessList(request *requestInfo) (map[string]string, error) {
 // policycheckReferer checks request's Host header against host ACL defined in developer app
 func policycheckReferer(request *requestInfo) (map[string]string, error) {
 
-	hostAccessList, err := shared.GetAttribute(request.developerApp.Attributes, "Referer")
+	hostAccessList, err := request.developerApp.Attributes.Get("Referer")
 	if err == nil && hostAccessList != "" {
 		if checkHostinAccessList(request.httpRequest.Headers[":authority"], hostAccessList) {
 			return nil, nil

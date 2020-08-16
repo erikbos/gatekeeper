@@ -74,7 +74,7 @@ func (s *server) GetRouteAttributeByName(c *gin.Context) {
 		return
 	}
 
-	value, err := shared.GetAttribute(route.Attributes, c.Param("attribute"))
+	value, err := route.Attributes.Get(c.Param("attribute"))
 	if err != nil {
 		returnCanNotFindAttribute(c, c.Param("attribute"))
 		return
@@ -154,7 +154,7 @@ func (s *server) PostRouteAttributes(c *gin.Context) {
 	}
 
 	var body struct {
-		Attributes []shared.AttributeKeyValues `json:"attribute"`
+		Attributes shared.Attributes `json:"attribute"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
@@ -166,7 +166,6 @@ func (s *server) PostRouteAttributes(c *gin.Context) {
 	}
 
 	routeToUpdate.Attributes = body.Attributes
-
 	routeToUpdate.LastmodifiedBy = s.whoAmI()
 
 	if err := s.db.Route.UpdateRouteByName(routeToUpdate); err != nil {
@@ -195,9 +194,7 @@ func (s *server) PostRouteAttributeByName(c *gin.Context) {
 	}
 
 	attributeToUpdate := c.Param("attribute")
-	routeToUpdate.Attributes = shared.UpdateAttribute(routeToUpdate.Attributes,
-		attributeToUpdate, body.Value)
-
+	routeToUpdate.Attributes.Set(attributeToUpdate, body.Value)
 	routeToUpdate.LastmodifiedBy = s.whoAmI()
 
 	if err := s.db.Route.UpdateRouteByName(routeToUpdate); err != nil {
@@ -219,15 +216,12 @@ func (s *server) DeleteRouteAttributeByName(c *gin.Context) {
 	}
 
 	attributeToDelete := c.Param("attribute")
-	updatedAttributes, index, oldValue :=
-		shared.DeleteAttribute(routeToUpdate.Attributes, attributeToDelete)
-	if index == -1 {
+	deleted, oldValue := routeToUpdate.Attributes.Delete(attributeToDelete)
+	if !deleted {
 		returnJSONMessage(c, http.StatusNotFound,
 			fmt.Errorf("Could not find attribute '%s'", attributeToDelete))
 		return
 	}
-	routeToUpdate.Attributes = updatedAttributes
-
 	routeToUpdate.LastmodifiedBy = s.whoAmI()
 
 	if err := s.db.Route.UpdateRouteByName(routeToUpdate); err != nil {

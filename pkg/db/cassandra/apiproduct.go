@@ -103,10 +103,12 @@ func (s *APIProductStore) runGetAPIProductQuery(query string, queryParameters ..
 
 	m := make(map[string]interface{})
 	for iter.MapScan(m) {
-		apiproduct := shared.APIProduct{
+		apiproducts = append(apiproducts, shared.APIProduct{
 			Name:             m["name"].(string),
 			DisplayName:      m["display_name"].(string),
 			Description:      m["description"].(string),
+			Paths:            shared.APIProduct{}.Paths.Unmarshal(m["paths"].(string)),
+			Attributes:       shared.APIProduct{}.Attributes.Unmarshal(m["attributes"].(string)),
 			RouteGroup:       m["route_group"].(string),
 			OrganizationName: m["organization_name"].(string),
 			Policies:         m["policies"].(string),
@@ -114,10 +116,7 @@ func (s *APIProductStore) runGetAPIProductQuery(query string, queryParameters ..
 			CreatedBy:        m["created_by"].(string),
 			LastmodifiedAt:   m["lastmodified_at"].(int64),
 			LastmodifiedBy:   m["lastmodified_by"].(string),
-		}
-		apiproduct.Paths = s.db.UnmarshallJSONArrayOfStrings(m["paths"].(string))
-		apiproduct.Attributes = s.db.UnmarshallJSONArrayOfAttributes(m["attributes"].(string))
-		apiproducts = append(apiproducts, apiproduct)
+		})
 		m = map[string]interface{}{}
 	}
 
@@ -132,7 +131,7 @@ func (s *APIProductStore) runGetAPIProductQuery(query string, queryParameters ..
 // UpdateByName UPSERTs an apiproduct in database
 func (s *APIProductStore) UpdateByName(p *shared.APIProduct) error {
 
-	p.Attributes = shared.TidyAttributes(p.Attributes)
+	p.Attributes.Tidy()
 	p.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
 
 	if err := s.db.CassandraSession.Query(`INSERT INTO api_products (
@@ -150,9 +149,9 @@ organization_name) VALUES(?,?,?,?,?,?,?,?,?,?,?)`,
 
 		p.Name,
 		p.DisplayName,
-		s.db.MarshallArrayOfAttributesToJSON(p.Attributes),
+		p.Attributes.Marshal(),
 		p.RouteGroup,
-		s.db.MarshallArrayOfStringsToJSON(p.Paths),
+		p.Paths.Marshal(),
 		p.Policies,
 		p.CreatedAt,
 		p.CreatedBy,

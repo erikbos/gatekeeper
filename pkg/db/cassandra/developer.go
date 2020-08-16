@@ -107,8 +107,8 @@ func (s *DeveloperStore) runGetDeveloperQuery(query string, queryParameters ...i
 	m := make(map[string]interface{})
 	for iterable.MapScan(m) {
 		developers = append(developers, shared.Developer{
-			Apps:             s.db.UnmarshallJSONArrayOfStrings(m["apps"].(string)),
-			Attributes:       s.db.UnmarshallJSONArrayOfAttributes(m["attributes"].(string)),
+			Apps:             shared.Developer{}.Apps.Unmarshal(m["apps"].(string)),
+			Attributes:       shared.Developer{}.Attributes.Unmarshal(m["attributes"].(string)),
 			DeveloperID:      m["developer_id"].(string),
 			CreatedAt:        m["created_at"].(int64),
 			CreatedBy:        m["created_by"].(string),
@@ -134,7 +134,7 @@ func (s *DeveloperStore) runGetDeveloperQuery(query string, queryParameters ...i
 // UpdateByName UPSERTs a developer in database
 func (s *DeveloperStore) UpdateByName(dev *shared.Developer) error {
 
-	dev.Attributes = shared.TidyAttributes(dev.Attributes)
+	dev.Attributes.Tidy()
 	dev.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
 
 	if err := s.db.CassandraSession.Query(`INSERT INTO developers (
@@ -154,8 +154,8 @@ lastmodified_at,
 lastmodified_by) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
 
 		dev.DeveloperID,
-		s.db.MarshallArrayOfStringsToJSON(dev.Apps),
-		s.db.MarshallArrayOfAttributesToJSON(shared.TidyAttributes(dev.Attributes)),
+		dev.Apps.Marshal(),
+		dev.Attributes.Marshal(),
 		dev.OrganizationName,
 		dev.Status,
 		dev.UserName,

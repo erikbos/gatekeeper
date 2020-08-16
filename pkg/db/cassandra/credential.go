@@ -95,23 +95,17 @@ func (s *CredentialStore) runGetAppCredentialQuery(query string, queryParameters
 	iterable := s.db.CassandraSession.Query(query, queryParameters...).Iter()
 	m := make(map[string]interface{})
 	for iterable.MapScan(m) {
-		appcredential := shared.DeveloperAppKey{
+		appcredentials = append(appcredentials, shared.DeveloperAppKey{
 			ConsumerKey:      m["consumer_key"].(string),
 			ConsumerSecret:   m["consumer_secret"].(string),
+			APIProducts:      shared.DeveloperAppKey{}.APIProducts.Unmarshal(m["api_products"].(string)),
+			Attributes:       shared.DeveloperAppKey{}.Attributes.Unmarshal(m["attributes"].(string)),
 			ExpiresAt:        m["expires_at"].(int64),
 			IssuedAt:         m["issued_at"].(int64),
 			AppID:            m["app_id"].(string),
 			OrganizationName: m["organization_name"].(string),
 			Status:           m["status"].(string),
-		}
-		if m["attributes"] != nil {
-			appcredential.Attributes = s.db.UnmarshallJSONArrayOfAttributes(m["attributes"].(string))
-		}
-		if m["api_products"] != nil {
-			appcredential.APIProducts = s.db.UnmarshallJSONArrayOfProductStatuses(m["api_products"].(string))
-		}
-
-		appcredentials = append(appcredentials, appcredential)
+		})
 		m = map[string]interface{}{}
 	}
 	// In case query failed we return query error
@@ -125,7 +119,7 @@ func (s *CredentialStore) runGetAppCredentialQuery(query string, queryParameters
 // UpdateByKey UPSERTs credentials in database
 func (s *CredentialStore) UpdateByKey(c *shared.DeveloperAppKey) error {
 
-	c.Attributes = shared.TidyAttributes(c.Attributes)
+	c.Attributes.Tidy()
 
 	if err := s.db.CassandraSession.Query(`INSERT INTO credentials (
 consumer_key,
@@ -140,8 +134,8 @@ expires_at) VALUES(?,?,?,?,?,?,?,?,?)`,
 
 		c.ConsumerKey,
 		c.ConsumerSecret,
-		s.db.MarshallArrayOfProductStatusesToJSON(c.APIProducts),
-		s.db.MarshallArrayOfAttributesToJSON(c.Attributes),
+		c.APIProducts.Marshal(),
+		c.Attributes.Marshal(),
 		c.AppID,
 		c.OrganizationName,
 		c.Status,

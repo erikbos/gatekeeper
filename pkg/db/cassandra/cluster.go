@@ -72,20 +72,17 @@ func (s *ClusterStore) runGetClusterQuery(query string, queryParameters ...inter
 	iter := s.db.CassandraSession.Query(query, queryParameters...).Iter()
 	m := make(map[string]interface{})
 	for iter.MapScan(m) {
-		newCluster := shared.Cluster{
+		clusters = append(clusters, shared.Cluster{
 			Name:           m["name"].(string),
 			HostName:       m["host_name"].(string),
 			Port:           m["port"].(int),
+			Attributes:     shared.Cluster{}.Attributes.Unmarshal(m["attributes"].(string)),
 			CreatedAt:      m["created_at"].(int64),
 			CreatedBy:      m["created_by"].(string),
 			DisplayName:    m["display_name"].(string),
 			LastmodifiedAt: m["lastmodified_at"].(int64),
 			LastmodifiedBy: m["lastmodified_by"].(string),
-		}
-		if m["attributes"] != nil {
-			newCluster.Attributes = s.db.UnmarshallJSONArrayOfAttributes(m["attributes"].(string))
-		}
-		clusters = append(clusters, newCluster)
+		})
 		m = map[string]interface{}{}
 	}
 	// In case query failed we return query error
@@ -99,7 +96,7 @@ func (s *ClusterStore) runGetClusterQuery(query string, queryParameters ...inter
 // UpdateByName UPSERTs an cluster in database
 func (s *ClusterStore) UpdateByName(c *shared.Cluster) error {
 
-	c.Attributes = shared.TidyAttributes(c.Attributes)
+	c.Attributes.Tidy()
 	c.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
 
 	if err := s.db.CassandraSession.Query(`INSERT INTO clusters (
@@ -117,7 +114,7 @@ lastmodified_by) VALUES(?,?,?,?,?,?,?,?,?)`,
 		c.DisplayName,
 		c.HostName,
 		c.Port,
-		s.db.MarshallArrayOfAttributesToJSON(c.Attributes),
+		c.Attributes.Marshal(),
 		c.CreatedAt,
 		c.CreatedBy,
 		c.LastmodifiedAt,

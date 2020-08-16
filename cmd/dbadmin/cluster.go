@@ -74,7 +74,7 @@ func (s *server) GetClusterAttributeByName(c *gin.Context) {
 		return
 	}
 
-	value, err := shared.GetAttribute(cluster.Attributes, c.Param("attribute"))
+	value, err := cluster.Attributes.Get(c.Param("attribute"))
 	if err != nil {
 		returnCanNotFindAttribute(c, c.Param("attribute"))
 		return
@@ -152,7 +152,7 @@ func (s *server) PostClusterAttributes(c *gin.Context) {
 	}
 
 	var body struct {
-		Attributes []shared.AttributeKeyValues `json:"attribute"`
+		Attributes shared.Attributes `json:"attribute"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
@@ -191,9 +191,7 @@ func (s *server) PostClusterAttributeByName(c *gin.Context) {
 	}
 
 	attributeToUpdate := c.Param("attribute")
-	clusterToUpdate.Attributes = shared.UpdateAttribute(clusterToUpdate.Attributes,
-		attributeToUpdate, body.Value)
-
+	clusterToUpdate.Attributes.Set(attributeToUpdate, body.Value)
 	clusterToUpdate.LastmodifiedBy = s.whoAmI()
 
 	if err := s.db.Cluster.UpdateByName(clusterToUpdate); err != nil {
@@ -214,14 +212,12 @@ func (s *server) DeleteClusterAttributeByName(c *gin.Context) {
 	}
 
 	attributeToDelete := c.Param("attribute")
-	updatedAttributes, index, oldValue := shared.DeleteAttribute(updatedCluster.Attributes, attributeToDelete)
-	if index == -1 {
+	deleted, oldValue := updatedCluster.Attributes.Delete(attributeToDelete)
+	if !deleted {
 		returnJSONMessage(c, http.StatusNotFound,
 			fmt.Errorf("Could not find attribute '%s'", attributeToDelete))
 		return
 	}
-	updatedCluster.Attributes = updatedAttributes
-
 	updatedCluster.LastmodifiedBy = s.whoAmI()
 
 	if err := s.db.Cluster.UpdateByName(updatedCluster); err != nil {

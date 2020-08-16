@@ -76,17 +76,14 @@ func (s *server) GetOrganizationAttributeByName(c *gin.Context) {
 		return
 	}
 
-	// lets find the attribute requested
-	for i := 0; i < len(organization.Attributes); i++ {
-		if organization.Attributes[i].Name == c.Param("attribute") {
-			setLastModifiedHeader(c, organization.LastmodifiedAt)
-			c.IndentedJSON(http.StatusOK, organization.Attributes[i])
-			return
-		}
+	value, err := organization.Attributes.Get(c.Param("attribute"))
+	if err != nil {
+		returnCanNotFindAttribute(c, c.Param("attribute"))
+		return
 	}
 
-	returnJSONMessage(c, http.StatusNotFound,
-		fmt.Errorf("Could not retrieve attribute '%s'", c.Param("attribute")))
+	setLastModifiedHeader(c, organization.LastmodifiedAt)
+	c.IndentedJSON(http.StatusOK, value)
 }
 
 // PostCreateOrganization creates an organization
@@ -154,8 +151,9 @@ func (s *server) PostOrganizationAttributes(c *gin.Context) {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
+
 	var receivedAttributes struct {
-		Attributes []shared.AttributeKeyValues `json:"attribute"`
+		Attributes shared.Attributes `json:"attribute"`
 	}
 	if err := c.ShouldBindJSON(&receivedAttributes); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
@@ -163,6 +161,7 @@ func (s *server) PostOrganizationAttributes(c *gin.Context) {
 	}
 	updatedOrganization.Attributes = receivedAttributes.Attributes
 	updatedOrganization.LastmodifiedBy = s.whoAmI()
+
 	if err := s.db.Organization.UpdateByName(updatedOrganization); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
@@ -172,12 +171,13 @@ func (s *server) PostOrganizationAttributes(c *gin.Context) {
 
 // PostOrganizationAttributeByName update an attribute of developer
 func (s *server) PostOrganizationAttributeByName(c *gin.Context) {
+
 	updatedOrganization, err := s.db.Organization.GetByName(c.Param("organization"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
-	attributeToUpdate := c.Param("attribute")
+
 	var receivedValue struct {
 		Value string `json:"value"`
 	}
@@ -185,17 +185,11 @@ func (s *server) PostOrganizationAttributeByName(c *gin.Context) {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
-	// Find & update existing attribute in array
-	attributeToUpdateIndex := shared.FindIndexOfAttribute(
-		updatedOrganization.Attributes, attributeToUpdate)
-	if attributeToUpdateIndex == -1 {
-		// We did not find exist attribute, append new attribute
-		updatedOrganization.Attributes = append(updatedOrganization.Attributes,
-			shared.AttributeKeyValues{Name: attributeToUpdate, Value: receivedValue.Value})
-	} else {
-		updatedOrganization.Attributes[attributeToUpdateIndex].Value = receivedValue.Value
-	}
+
+	attributeToUpdate := c.Param("attribute")
+	updatedOrganization.Attributes.Set(attributeToUpdate, receivedValue.Value)
 	updatedOrganization.LastmodifiedBy = s.whoAmI()
+
 	if err := s.db.Organization.UpdateByName(updatedOrganization); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
@@ -206,20 +200,22 @@ func (s *server) PostOrganizationAttributeByName(c *gin.Context) {
 
 // DeleteOrganizationAttributeByName removes an attribute of an organization
 func (s *server) DeleteOrganizationAttributeByName(c *gin.Context) {
+
 	updatedOrganization, err := s.db.Organization.GetByName(c.Param("organization"))
 	if err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
+
 	attributeToDelete := c.Param("attribute")
-	updatedAttributes, index, oldValue := shared.DeleteAttribute(updatedOrganization.Attributes, attributeToDelete)
-	if index == -1 {
+	deleted, oldValue := updatedOrganization.Attributes.Delete(attributeToDelete)
+	if !deleted {
 		returnJSONMessage(c, http.StatusNotFound,
 			fmt.Errorf("Could not find attribute '%s'", attributeToDelete))
 		return
 	}
-	updatedOrganization.Attributes = updatedAttributes
 	updatedOrganization.LastmodifiedBy = s.whoAmI()
+
 	if err := s.db.Organization.UpdateByName(updatedOrganization); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return

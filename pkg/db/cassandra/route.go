@@ -71,7 +71,8 @@ func (s *RouteStore) runGetRouteQuery(query string, queryParameters ...interface
 	iter := s.db.CassandraSession.Query(query, queryParameters...).Iter()
 	m := make(map[string]interface{})
 	for iter.MapScan(m) {
-		newRoute := shared.Route{
+		routes = append(routes, shared.Route{
+			Attributes:     shared.Route{}.Attributes.Unmarshal(m["attributes"].(string)),
 			Name:           m["name"].(string),
 			DisplayName:    m["display_name"].(string),
 			RouteGroup:     m["route_group"].(string),
@@ -82,11 +83,7 @@ func (s *RouteStore) runGetRouteQuery(query string, queryParameters ...interface
 			CreatedBy:      m["created_by"].(string),
 			LastmodifiedAt: m["lastmodified_at"].(int64),
 			LastmodifiedBy: m["lastmodified_by"].(string),
-		}
-		if m["attributes"] != nil {
-			newRoute.Attributes = s.db.UnmarshallJSONArrayOfAttributes(m["attributes"].(string))
-		}
-		routes = append(routes, newRoute)
+		})
 		m = map[string]interface{}{}
 	}
 	// In case query failed we return query error
@@ -100,7 +97,7 @@ func (s *RouteStore) runGetRouteQuery(query string, queryParameters ...interface
 // UpdateRouteByName UPSERTs an route
 func (s *RouteStore) UpdateRouteByName(route *shared.Route) error {
 
-	route.Attributes = shared.TidyAttributes(route.Attributes)
+	route.Attributes.Tidy()
 	route.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
 
 	if err := s.db.CassandraSession.Query(`INSERT INTO routes (
@@ -122,7 +119,7 @@ lastmodified_by) VALUES(?,?,?,?,?,?,?,?,?,?,?)`,
 		route.Path,
 		route.PathType,
 		route.Cluster,
-		s.db.MarshallArrayOfAttributesToJSON(route.Attributes),
+		route.Attributes.Marshal(),
 		route.CreatedAt,
 		route.CreatedBy,
 		route.LastmodifiedAt,

@@ -166,7 +166,7 @@ func warnForUnknownClusterAttributes(cluster shared.Cluster) {
 }
 
 func warnForUnknownAttribute(resourceType, resourceName string,
-	attributes []shared.AttributeKeyValues, validAttributes map[string]bool) {
+	attributes shared.Attributes, validAttributes map[string]bool) {
 
 	for _, attribute := range attributes {
 		if !validAttributes[attribute.Name] {

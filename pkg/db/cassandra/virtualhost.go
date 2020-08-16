@@ -73,10 +73,12 @@ func (s *VirtualhostStore) runGetVirtualHostQuery(query string,
 	iter := s.db.CassandraSession.Query(query, queryParameters...).Iter()
 	m := make(map[string]interface{})
 	for iter.MapScan(m) {
-		newVirtualHost := shared.VirtualHost{
+		virtualhosts = append(virtualhosts, shared.VirtualHost{
 			Name:             m["name"].(string),
 			DisplayName:      m["display_name"].(string),
 			Port:             m["port"].(int),
+			VirtualHosts:     shared.VirtualHost{}.VirtualHosts.Unmarshal(m["virtual_hosts"].(string)),
+			Attributes:       shared.VirtualHost{}.Attributes.Unmarshal(m["attributes"].(string)),
 			RouteGroup:       m["route_group"].(string),
 			Policies:         m["policies"].(string),
 			OrganizationName: m["organization_name"].(string),
@@ -84,14 +86,7 @@ func (s *VirtualhostStore) runGetVirtualHostQuery(query string,
 			CreatedBy:        m["created_by"].(string),
 			LastmodifiedAt:   m["lastmodified_at"].(int64),
 			LastmodifiedBy:   m["lastmodified_by"].(string),
-		}
-		if m["virtual_hosts"] != nil {
-			newVirtualHost.VirtualHosts = s.db.UnmarshallJSONArrayOfStrings(m["virtual_hosts"].(string))
-		}
-		if m["attributes"] != nil {
-			newVirtualHost.Attributes = s.db.UnmarshallJSONArrayOfAttributes(m["attributes"].(string))
-		}
-		virtualhosts = append(virtualhosts, newVirtualHost)
+		})
 		m = map[string]interface{}{}
 	}
 	// In case query failed we return query error
@@ -105,7 +100,7 @@ func (s *VirtualhostStore) runGetVirtualHostQuery(query string,
 // UpdateByName updates a virtualhost
 func (s *VirtualhostStore) UpdateByName(vhost *shared.VirtualHost) error {
 
-	vhost.Attributes = shared.TidyAttributes(vhost.Attributes)
+	vhost.Attributes.Tidy()
 	vhost.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
 
 	if err := s.db.CassandraSession.Query(`INSERT INTO virtual_hosts (
@@ -124,11 +119,11 @@ lastmodified_by) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)`,
 
 		vhost.Name,
 		vhost.DisplayName,
-		s.db.MarshallArrayOfStringsToJSON(vhost.VirtualHosts),
+		vhost.VirtualHosts.Marshal(),
 		vhost.Port,
 		vhost.RouteGroup,
 		vhost.Policies,
-		s.db.MarshallArrayOfAttributesToJSON(vhost.Attributes),
+		vhost.Attributes.Marshal(),
 		vhost.OrganizationName,
 		vhost.CreatedAt,
 		vhost.CreatedBy,

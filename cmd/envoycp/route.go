@@ -136,26 +136,23 @@ func (s *server) buildEnvoyRoute(routeEntry shared.Route) *route.Route {
 
 	// disable extauth if requested.
 	// extauth is first configed filter, so this needs to be done before anything else
-	_, err := shared.GetAttribute(routeEntry.Attributes, attributeDisableAuthentication)
-	if err == nil {
+	if _, err := routeEntry.Attributes.Get(attributeDisableAuthentication); err == nil {
 		envoyRoute.TypedPerFilterConfig = buildRoutePerFilterConfig(routeEntry)
 	}
 
 	// Add direct response if configured: in this case Envoy itself will answer
-	_, err = shared.GetAttribute(routeEntry.Attributes, attributeDirectResponseStatusCode)
-	if err == nil {
+	if _, err := routeEntry.Attributes.Get(attributeDirectResponseStatusCode); err == nil {
 		envoyRoute.Action = buildRouteActionDirectResponse(routeEntry)
 		return envoyRoute
 	}
 
 	// Add redirect response if configured: in this case Envoy will generate HTTP redirect
-	_, err = shared.GetAttribute(routeEntry.Attributes, attributeRedirectStatusCode)
-	if err == nil {
+	if _, err := routeEntry.Attributes.Get(attributeRedirectStatusCode); err == nil {
 		envoyRoute.Action = buildRouteActionRedirectResponse(routeEntry)
 		return envoyRoute
 	}
 
-	// Add cluster(s) to forward to
+	// Add cluster(s) to forward this route to
 	if routeEntry.Cluster != "" {
 		envoyRoute.Action = buildRouteActionCluster(routeEntry)
 	}
@@ -207,7 +204,7 @@ func buildRouteActionCluster(routeEntry shared.Route) *route.Route_Route {
 		},
 	}
 
-	prefixRewrite, err := shared.GetAttribute(routeEntry.Attributes, attributePrefixRewrite)
+	prefixRewrite, err := routeEntry.Attributes.Get(attributePrefixRewrite)
 	if err == nil && prefixRewrite != "" {
 		action.Route.PrefixRewrite = prefixRewrite
 	}
@@ -263,8 +260,8 @@ func buildWeightedClusters(routeEntry shared.Route) *route.RouteAction_WeightedC
 
 func buildRequestMirrorPolicy(routeEntry shared.Route) []*route.RouteAction_RequestMirrorPolicy {
 
-	mirrorCluster := shared.GetAttributeAsString(routeEntry.Attributes, attributeRequestMirrorClusterName, "")
-	mirrorPercentage := shared.GetAttributeAsString(routeEntry.Attributes, attributeRequestMirrorPercentage, "")
+	mirrorCluster := routeEntry.Attributes.GetAsString(attributeRequestMirrorClusterName, "")
+	mirrorPercentage := routeEntry.Attributes.GetAsString(attributeRequestMirrorPercentage, "")
 
 	if mirrorCluster == "" || mirrorPercentage == "" {
 		return nil
@@ -294,31 +291,31 @@ func buildCorsPolicy(routeEntry shared.Route) *route.CorsPolicy {
 	var corsConfigured bool
 	corsPolicy := route.CorsPolicy{}
 
-	corsAllowMethods, err := shared.GetAttribute(routeEntry.Attributes, attributeCORSAllowMethods)
+	corsAllowMethods, err := routeEntry.Attributes.Get(attributeCORSAllowMethods)
 	if err == nil && corsAllowMethods != "" {
 		corsPolicy.AllowMethods = corsAllowMethods
 		corsConfigured = true
 	}
 
-	corsAllowHeaders, err := shared.GetAttribute(routeEntry.Attributes, attributeCORSAllowHeaders)
+	corsAllowHeaders, err := routeEntry.Attributes.Get(attributeCORSAllowHeaders)
 	if err == nil && corsAllowMethods != "" {
 		corsPolicy.AllowHeaders = corsAllowHeaders
 		corsConfigured = true
 	}
 
-	corsExposeHeaders, err := shared.GetAttribute(routeEntry.Attributes, attributeCORSExposeHeaders)
+	corsExposeHeaders, err := routeEntry.Attributes.Get(attributeCORSExposeHeaders)
 	if err == nil && corsAllowMethods != "" {
 		corsPolicy.ExposeHeaders = corsExposeHeaders
 		corsConfigured = true
 	}
 
-	corsMaxAge, err := shared.GetAttribute(routeEntry.Attributes, attributeCORSMaxAge)
+	corsMaxAge, err := routeEntry.Attributes.Get(attributeCORSMaxAge)
 	if err == nil && corsAllowMethods != "" {
 		corsPolicy.MaxAge = corsMaxAge
 		corsConfigured = true
 	}
 
-	corsAllowCredentials, err := shared.GetAttribute(routeEntry.Attributes, attributeCORSAllowCredentials)
+	corsAllowCredentials, err := routeEntry.Attributes.Get(attributeCORSAllowCredentials)
 	if err == nil && corsAllowCredentials == attributeValueTrue {
 		corsPolicy.AllowCredentials = protoBool(true)
 		corsConfigured = true
@@ -354,7 +351,7 @@ func buildRegexpMatcher(regexp string) *envoymatcher.RegexMatcher {
 // buildHostRewrite returns HostRewrite config based upon route attribute(s)
 func buildHostRewriteSpecifier(routeEntry shared.Route) *route.RouteAction_HostRewriteLiteral {
 
-	upstreamHostHeader, err := shared.GetAttribute(routeEntry.Attributes, attributeHostHeader)
+	upstreamHostHeader, err := routeEntry.Attributes.Get(attributeHostHeader)
 	if err == nil && upstreamHostHeader != "" {
 		return &route.RouteAction_HostRewriteLiteral{
 			HostRewriteLiteral: upstreamHostHeader,
@@ -367,7 +364,7 @@ func buildHostRewriteSpecifier(routeEntry shared.Route) *route.RouteAction_HostR
 // buildRouteActionDirectResponse builds route config to have Envoy itself answer with status code and body
 func buildRouteActionDirectResponse(routeEntry shared.Route) *route.Route_DirectResponse {
 
-	directResponseStatusCode, err := shared.GetAttribute(routeEntry.Attributes, attributeDirectResponseStatusCode)
+	directResponseStatusCode, err := routeEntry.Attributes.Get(attributeDirectResponseStatusCode)
 	if err == nil && directResponseStatusCode != "" {
 		statusCode, err := strconv.Atoi(directResponseStatusCode)
 
@@ -377,7 +374,7 @@ func buildRouteActionDirectResponse(routeEntry shared.Route) *route.Route_Direct
 					Status: uint32(statusCode),
 				},
 			}
-			directResponseStatusBody, err := shared.GetAttribute(routeEntry.Attributes, attributeDirectResponseBody)
+			directResponseStatusBody, err := routeEntry.Attributes.Get(attributeDirectResponseBody)
 			if err == nil && directResponseStatusCode != "" {
 				response.DirectResponse.Body = &core.DataSource{
 					Specifier: &core.DataSource_InlineString{
@@ -394,12 +391,12 @@ func buildRouteActionDirectResponse(routeEntry shared.Route) *route.Route_Direct
 // buildRouteActionRedirectResponse builds response to have Envoy redirect to different path
 func buildRouteActionRedirectResponse(routeEntry shared.Route) *route.Route_Redirect {
 
-	redirectStatusCode := shared.GetAttributeAsString(routeEntry.Attributes, attributeRedirectStatusCode, "")
-	redirectScheme := shared.GetAttributeAsString(routeEntry.Attributes, attributeRedirectScheme, "")
-	RedirectHostName := shared.GetAttributeAsString(routeEntry.Attributes, attributeRedirectHostName, "")
-	redirectPort := shared.GetAttributeAsString(routeEntry.Attributes, attributeRedirectPort, "")
-	redirectPath := shared.GetAttributeAsString(routeEntry.Attributes, attributeRedirectPath, "")
-	redirectStripQuery := shared.GetAttributeAsString(routeEntry.Attributes, attributeRedirectStripQuery, "")
+	redirectStatusCode := routeEntry.Attributes.GetAsString(attributeRedirectStatusCode, "")
+	redirectScheme := routeEntry.Attributes.GetAsString(attributeRedirectScheme, "")
+	RedirectHostName := routeEntry.Attributes.GetAsString(attributeRedirectHostName, "")
+	redirectPort := routeEntry.Attributes.GetAsString(attributeRedirectPort, "")
+	redirectPath := routeEntry.Attributes.GetAsString(attributeRedirectPath, "")
+	redirectStripQuery := routeEntry.Attributes.GetAsString(attributeRedirectStripQuery, "")
 
 	// Status code must be set other wise we not build redirect configuration
 	if redirectStatusCode == "" {
@@ -459,7 +456,7 @@ func buildRouteActionRedirectResponse(routeEntry shared.Route) *route.Route_Redi
 
 func handleBasicAuthAttribute(routeEntry shared.Route, headersToAdd map[string]string) {
 
-	usernamePassword, err := shared.GetAttribute(routeEntry.Attributes, attributeBasicAuth)
+	usernamePassword, err := routeEntry.Attributes.Get(attributeBasicAuth)
 	if err == nil && usernamePassword != "" {
 		authenticationDigest := base64.StdEncoding.EncodeToString([]byte(usernamePassword))
 
@@ -487,14 +484,14 @@ func buildHeadersList(headers map[string]string) []*core.HeaderValueOption {
 
 func buildRetryPolicy(routeEntry shared.Route) *route.RetryPolicy {
 
-	RetryOn := shared.GetAttributeAsString(routeEntry.Attributes, attributeRetryOn, "")
+	RetryOn := routeEntry.Attributes.GetAsString(attributeRetryOn, "")
 	if RetryOn == "" {
 		return nil
 	}
-	perTryTimeout := shared.GetAttributeAsDuration(routeEntry.Attributes, attributePerTryTimeout, perRetryTimeout)
-	numRetries := uint32(shared.GetAttributeAsInt(routeEntry.Attributes, attributeNumRetries, 2))
+	perTryTimeout := routeEntry.Attributes.GetAsDuration(attributePerTryTimeout, perRetryTimeout)
+	numRetries := uint32(routeEntry.Attributes.GetAsUInt32(attributeNumRetries, 2))
 	RetriableStatusCodes := buildStatusCodesSlice(
-		shared.GetAttributeAsString(routeEntry.Attributes, attributeRetryOnStatusCodes, "503"))
+		routeEntry.Attributes.GetAsString(attributeRetryOnStatusCodes, "503"))
 
 	return &route.RetryPolicy{
 		RetryOn:              RetryOn,
@@ -526,7 +523,7 @@ func buildRoutePerFilterConfig(routeEntry shared.Route) map[string]*any.Any {
 
 	perFilterConfigMap := make(map[string]*any.Any)
 
-	value, err := shared.GetAttribute(routeEntry.Attributes, attributeDisableAuthentication)
+	value, err := routeEntry.Attributes.Get(attributeDisableAuthentication)
 	if err == nil && value == attributeValueTrue {
 		perFilterExtAuthzConfig := envoyauth.ExtAuthzPerRoute{
 			Override: &envoyauth.ExtAuthzPerRoute_Disabled{

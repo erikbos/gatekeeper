@@ -74,7 +74,7 @@ func (s *server) GetVirtualHostAttributeByName(c *gin.Context) {
 		return
 	}
 
-	value, err := shared.GetAttribute(virtualhost.Attributes, c.Param("attribute"))
+	value, err := virtualhost.Attributes.Get(c.Param("attribute"))
 	if err != nil {
 		returnCanNotFindAttribute(c, c.Param("attribute"))
 		return
@@ -155,7 +155,7 @@ func (s *server) PostVirtualHostAttributes(c *gin.Context) {
 	}
 
 	var body struct {
-		Attributes []shared.AttributeKeyValues `json:"attribute"`
+		Attributes shared.Attributes `json:"attribute"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
@@ -165,9 +165,7 @@ func (s *server) PostVirtualHostAttributes(c *gin.Context) {
 		returnJSONMessage(c, http.StatusBadRequest, errors.New("No attributes posted"))
 		return
 	}
-
 	virtualHostToUpdate.Attributes = body.Attributes
-
 	virtualHostToUpdate.LastmodifiedBy = s.whoAmI()
 
 	if err := s.db.Virtualhost.UpdateByName(virtualHostToUpdate); err != nil {
@@ -196,9 +194,7 @@ func (s *server) PostVirtualHostAttributeByName(c *gin.Context) {
 	}
 
 	attributeToUpdate := c.Param("attribute")
-	virtualHostToUpdate.Attributes = shared.UpdateAttribute(virtualHostToUpdate.Attributes,
-		attributeToUpdate, body.Value)
-
+	virtualHostToUpdate.Attributes.Set(attributeToUpdate, body.Value)
 	virtualHostToUpdate.LastmodifiedBy = s.whoAmI()
 
 	if err := s.db.Virtualhost.UpdateByName(virtualHostToUpdate); err != nil {
@@ -220,15 +216,12 @@ func (s *server) DeleteVirtualHostAttributeByName(c *gin.Context) {
 	}
 
 	attributeToDelete := c.Param("attribute")
-	updatedAttributes, index, oldValue :=
-		shared.DeleteAttribute(updatedVirtualHost.Attributes, attributeToDelete)
-	if index == -1 {
+	deleted, oldValue := updatedVirtualHost.Attributes.Delete(attributeToDelete)
+	if !deleted {
 		returnJSONMessage(c, http.StatusNotFound,
 			fmt.Errorf("Could not find attribute '%s'", attributeToDelete))
 		return
 	}
-	updatedVirtualHost.Attributes = updatedAttributes
-
 	updatedVirtualHost.LastmodifiedBy = s.whoAmI()
 
 	if err := s.db.Virtualhost.UpdateByName(updatedVirtualHost); err != nil {

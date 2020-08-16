@@ -84,7 +84,7 @@ func (s *OrganizationStore) runGetOrganizationQuery(query, queryParameter string
 	m := make(map[string]interface{})
 	for iter.MapScan(m) {
 		organizations = append(organizations, shared.Organization{
-			Attributes:     s.db.UnmarshallJSONArrayOfAttributes(m["attributes"].(string)),
+			Attributes:     shared.Organization{}.Attributes.Unmarshal(m["attributes"].(string)),
 			CreatedAt:      m["created_at"].(int64),
 			CreatedBy:      m["created_by"].(string),
 			DisplayName:    m["display_name"].(string),
@@ -104,7 +104,7 @@ func (s *OrganizationStore) runGetOrganizationQuery(query, queryParameter string
 // UpdateByName UPSERTs an organization
 func (s *OrganizationStore) UpdateByName(o *shared.Organization) error {
 
-	o.Attributes = shared.TidyAttributes(o.Attributes)
+	o.Attributes.Tidy()
 	o.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
 
 	if err := s.db.CassandraSession.Query(`INSERT INTO organizations (
@@ -118,7 +118,7 @@ lastmodified_by) VALUES(?,?,?,?,?,?,?)`,
 
 		o.Name,
 		o.DisplayName,
-		s.db.MarshallArrayOfAttributesToJSON(o.Attributes),
+		o.Attributes.Marshal(),
 		o.CreatedAt,
 		o.CreatedBy,
 		o.LastmodifiedAt,

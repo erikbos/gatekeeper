@@ -154,8 +154,8 @@ func (s *server) buildFilterChainEntry(l *listener.Listener, v shared.VirtualHos
 	}
 
 	// Check if we have a certificate and certificate key
-	_, certificateError := shared.GetAttribute(v.Attributes, attributeTLSCertificate)
-	_, certificateKeyError := shared.GetAttribute(v.Attributes, attributeTLSCertificateKey)
+	_, certificateError := v.Attributes.Get(attributeTLSCertificate)
+	_, certificateKeyError := v.Attributes.Get(attributeTLSCertificateKey)
 
 	// No certificate details, return and do not try to enable TLS
 	if certificateError != nil && certificateKeyError != nil {
@@ -280,11 +280,11 @@ func (s *server) buildRouteSpecifier(RouteGroup string) *hcm.HttpConnectionManag
 func buildAccessLog(config envoyLogConfig, v shared.VirtualHost) []*accesslog.AccessLog {
 
 	// Set access log behaviour based upon virtual host attributes
-	accessLogFileName, error := shared.GetAttribute(v.Attributes, attributeAccessLogFileName)
+	accessLogFileName, error := v.Attributes.Get(attributeAccessLogFileName)
 	if error == nil && accessLogFileName != "" {
 		return buildFileAccessLog(config.File.Fields, accessLogFileName)
 	}
-	accessLogClusterName, error := shared.GetAttribute(v.Attributes, attributeAccessLogClusterName)
+	accessLogClusterName, error := v.Attributes.Get(attributeAccessLogClusterName)
 	if error == nil && accessLogClusterName != "" {
 		return buildGRPCAccessLog(accessLogClusterName, v.Name, defaultClusterConnectTimeout, 0)
 	}
@@ -345,7 +345,7 @@ func buildGRPCAccessLog(clusterName, LogName string, timeout time.Duration, buff
 			LogName:             LogName,
 			GrpcService:         buildGRPCService(clusterName, timeout),
 			TransportApiVersion: core.ApiVersion_V3,
-			BufferSizeBytes:     protoUint32orNil(int(bufferSize)),
+			BufferSizeBytes:     protoUint32orNil(bufferSize),
 		},
 	}
 

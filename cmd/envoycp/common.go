@@ -57,7 +57,7 @@ func buildTransportSocket(resourceName string, tlsContext protoiface.MessageV1) 
 	}
 }
 
-func buildCommonTLSContext(resourceName string, attributes []shared.AttributeKeyValues) *tls.CommonTlsContext {
+func buildCommonTLSContext(resourceName string, attributes shared.Attributes) *tls.CommonTlsContext {
 
 	return &tls.CommonTlsContext{
 		AlpnProtocols:   buildALPNProtocols(resourceName, attributes),
@@ -66,9 +66,9 @@ func buildCommonTLSContext(resourceName string, attributes []shared.AttributeKey
 	}
 }
 
-func buildTLSCipherSuites(attributes []shared.AttributeKeyValues) []string {
+func buildTLSCipherSuites(attributes shared.Attributes) []string {
 
-	value, err := shared.GetAttribute(attributes, attributeTLSCipherSuites)
+	value, err := attributes.Get(attributeTLSCipherSuites)
 	if err == nil {
 		var ciphers []string
 
@@ -80,17 +80,17 @@ func buildTLSCipherSuites(attributes []shared.AttributeKeyValues) []string {
 	return nil
 }
 
-func buildTLSParameters(attributes []shared.AttributeKeyValues) *tls.TlsParameters {
+func buildTLSParameters(attributes shared.Attributes) *tls.TlsParameters {
 
 	tlsParameters := &tls.TlsParameters{
 		CipherSuites: buildTLSCipherSuites(attributes),
 	}
 
-	if minVersion, err := shared.GetAttribute(attributes, attributeTLSMinimumVersion); err == nil {
+	if minVersion, err := attributes.Get(attributeTLSMinimumVersion); err == nil {
 		tlsParameters.TlsMinimumProtocolVersion = buildTLSVersion(minVersion)
 	}
 
-	if maxVersion, err := shared.GetAttribute(attributes, attributeTLSMaximumVersion); err == nil {
+	if maxVersion, err := attributes.Get(attributeTLSMaximumVersion); err == nil {
 		tlsParameters.TlsMaximumProtocolVersion = buildTLSVersion(maxVersion)
 	}
 	return tlsParameters
@@ -112,9 +112,9 @@ func buildTLSVersion(version string) tls.TlsParameters_TlsProtocol {
 }
 
 // buildALPNOptions return supported ALPN protocols
-func buildALPNProtocols(resourceName string, attributes []shared.AttributeKeyValues) []string {
+func buildALPNProtocols(resourceName string, attributes shared.Attributes) []string {
 
-	value, err := shared.GetAttribute(attributes, attributeHTTPProtocol)
+	value, err := attributes.Get(attributeHTTPProtocol)
 	if err == nil {
 		switch value {
 		case attributeValueHTTPProtocol11:
@@ -131,10 +131,10 @@ func buildALPNProtocols(resourceName string, attributes []shared.AttributeKeyVal
 	return []string{"http/1.1"}
 }
 
-func buildTLSCertificates(attributes []shared.AttributeKeyValues) []*tls.TlsCertificate {
+func buildTLSCertificates(attributes shared.Attributes) []*tls.TlsCertificate {
 
-	certificate, certificateError := shared.GetAttribute(attributes, attributeTLSCertificate)
-	certificateKey, certificateKeyError := shared.GetAttribute(attributes, attributeTLSCertificateKey)
+	certificate, certificateError := attributes.Get(attributeTLSCertificate)
+	certificateKey, certificateKeyError := attributes.Get(attributeTLSCertificateKey)
 
 	if certificateError != nil && certificateKeyError != nil {
 		return nil
@@ -169,10 +169,10 @@ func protoUint32(i uint32) *wrappers.UInt32Value {
 	return &wrappers.UInt32Value{Value: i}
 }
 
-func protoUint32orNil(val int) *wrappers.UInt32Value {
+func protoUint32orNil(val uint32) *wrappers.UInt32Value {
 
 	if val == 0 {
 		return nil
 	}
-	return protoUint32(uint32(val))
+	return protoUint32(val)
 }

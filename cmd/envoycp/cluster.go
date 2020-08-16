@@ -100,7 +100,7 @@ func buildEnvoyClusterConfig(cluster shared.Cluster) *envoyCluster.Cluster {
 	}
 
 	// Add TLS and HTTP/2 configuration options in case we want to
-	value, err := shared.GetAttribute(cluster.Attributes, attributeTLSEnabled)
+	value, err := cluster.Attributes.Get(attributeTLSEnabled)
 	if err == nil && value == attributeValueTrue {
 		envoyCluster.TransportSocket = clusterTransportSocket(cluster)
 		envoyCluster.Http2ProtocolOptions = clusterHTTP2ProtocolOptions(cluster)
@@ -111,7 +111,7 @@ func buildEnvoyClusterConfig(cluster shared.Cluster) *envoyCluster.Cluster {
 
 func clusterConnectTimeout(cluster shared.Cluster) *duration.Duration {
 
-	connectTimeout := shared.GetAttributeAsDuration(cluster.Attributes,
+	connectTimeout := cluster.Attributes.GetAsDuration(
 		attributeConnectTimeout, defaultClusterConnectTimeout)
 
 	return ptypes.DurationProto(connectTimeout)
@@ -144,10 +144,10 @@ func buildEndpoint(hostname string, port int) []*endpoint.LocalityLbEndpoints {
 
 func clusterCircuitBreakers(cluster shared.Cluster) *envoyCluster.CircuitBreakers {
 
-	maxConnections := shared.GetAttributeAsInt(cluster.Attributes, attributeMaxConnections, 0)
-	maxPendingRequests := shared.GetAttributeAsInt(cluster.Attributes, attributeMaxPendingRequests, 0)
-	maxRequests := shared.GetAttributeAsInt(cluster.Attributes, attributeMaxRequests, 0)
-	maxRetries := shared.GetAttributeAsInt(cluster.Attributes, attributeMaxRetries, 0)
+	maxConnections := cluster.Attributes.GetAsUInt32(attributeMaxConnections, 0)
+	maxPendingRequests := cluster.Attributes.GetAsUInt32(attributeMaxPendingRequests, 0)
+	maxRequests := cluster.Attributes.GetAsUInt32(attributeMaxRequests, 0)
+	maxRetries := cluster.Attributes.GetAsUInt32(attributeMaxRetries, 0)
 
 	return &envoyCluster.CircuitBreakers{
 		Thresholds: []*envoyCluster.CircuitBreakers_Thresholds{{
@@ -162,25 +162,20 @@ func clusterCircuitBreakers(cluster shared.Cluster) *envoyCluster.CircuitBreaker
 // clusterHealthCheckConfig builds health configuration for a cluster
 func clusterHealthChecks(cluster shared.Cluster) []*core.HealthCheck {
 
-	healthCheckProtocol, err := shared.GetAttribute(cluster.Attributes, attributeHealthCheckProtocol)
-	healthCheckPath, _ := shared.GetAttribute(cluster.Attributes, attributeHealthCheckPath)
+	healthCheckProtocol, err := cluster.Attributes.Get(attributeHealthCheckProtocol)
+	healthCheckPath, _ := cluster.Attributes.Get(attributeHealthCheckPath)
 
 	if err == nil && healthCheckProtocol == attributeValueHealthCheckProtocolHTTP && healthCheckPath != "" {
 
-		healthCheckInterval := shared.GetAttributeAsDuration(cluster.Attributes,
-			attributeHealthCheckInterval, defaultHealthCheckInterval)
+		interval := cluster.Attributes.GetAsDuration(attributeHealthCheckInterval, defaultHealthCheckInterval)
 
-		healthCheckTimeout := shared.GetAttributeAsDuration(cluster.Attributes,
-			attributeHealthCheckTimeout, defaultHealthCheckTimeout)
+		timeout := cluster.Attributes.GetAsDuration(attributeHealthCheckTimeout, defaultHealthCheckTimeout)
 
-		healthCheckUnhealthyThreshold := shared.GetAttributeAsInt(cluster.Attributes,
-			attributeHealthCheckUnhealthyThreshold, defaultHealthCheckUnhealthyThreshold)
+		unhealthyThreshold := cluster.Attributes.GetAsUInt32(attributeHealthCheckUnhealthyThreshold, defaultHealthCheckUnhealthyThreshold)
 
-		healthCheckHealthyThreshold := shared.GetAttributeAsInt(cluster.Attributes,
-			attributeHealthCheckHealthyThreshold, defaultHealthCheckHealthyThreshold)
+		healthyThreshold := cluster.Attributes.GetAsUInt32(attributeHealthCheckHealthyThreshold, defaultHealthCheckHealthyThreshold)
 
-		healthCheckLogFileName := shared.GetAttributeAsString(cluster.Attributes,
-			attributeHealthCheckLogFile, "")
+		logFileName := cluster.Attributes.GetAsString(attributeHealthCheckLogFile, "")
 
 		healthCheck := &core.HealthCheck{
 			HealthChecker: &core.HealthCheck_HttpHealthCheck_{
@@ -189,13 +184,13 @@ func clusterHealthChecks(cluster shared.Cluster) []*core.HealthCheck {
 					CodecClientType: clusterHealthCodec(cluster),
 				},
 			},
-			Interval:           ptypes.DurationProto(healthCheckInterval),
-			Timeout:            ptypes.DurationProto(healthCheckTimeout),
-			UnhealthyThreshold: protoUint32orNil(healthCheckUnhealthyThreshold),
-			HealthyThreshold:   protoUint32orNil(healthCheckHealthyThreshold),
+			Interval:           ptypes.DurationProto(interval),
+			Timeout:            ptypes.DurationProto(timeout),
+			UnhealthyThreshold: protoUint32orNil(unhealthyThreshold),
+			HealthyThreshold:   protoUint32orNil(healthyThreshold),
 		}
-		if healthCheckLogFileName != "" {
-			healthCheck.EventLogPath = healthCheckLogFileName
+		if logFileName != "" {
+			healthCheck.EventLogPath = logFileName
 		}
 
 		return append([]*core.HealthCheck{}, healthCheck)
@@ -205,7 +200,7 @@ func clusterHealthChecks(cluster shared.Cluster) []*core.HealthCheck {
 
 func clusterHealthCodec(cluster shared.Cluster) envoyType.CodecClientType {
 
-	value, err := shared.GetAttribute(cluster.Attributes, attributeHTTPProtocol)
+	value, err := cluster.Attributes.Get(attributeHTTPProtocol)
 	if err == nil {
 		switch value {
 		case attributeValueHTTPProtocol2:
@@ -225,7 +220,7 @@ func clusterHealthCodec(cluster shared.Cluster) envoyType.CodecClientType {
 // clusterCommonHTTPProtocolOptions sets HTTP options applicable to both HTTP/1 and /2
 func clusterCommonHTTPProtocolOptions(cluster shared.Cluster) *core.HttpProtocolOptions {
 
-	idleTimeout := shared.GetAttributeAsDuration(cluster.Attributes,
+	idleTimeout := cluster.Attributes.GetAsDuration(
 		attributeIdleTimeout, defaultClusterIdleTimeout)
 
 	return &core.HttpProtocolOptions{
@@ -236,7 +231,7 @@ func clusterCommonHTTPProtocolOptions(cluster shared.Cluster) *core.HttpProtocol
 // clusterHTTP2ProtocolOptions returns HTTP/2 parameters
 func clusterHTTP2ProtocolOptions(cluster shared.Cluster) *core.Http2ProtocolOptions {
 
-	value, err := shared.GetAttribute(cluster.Attributes, attributeHTTPProtocol)
+	value, err := cluster.Attributes.Get(attributeHTTPProtocol)
 	if err == nil {
 		switch value {
 		case attributeValueHTTPProtocol11:
@@ -266,7 +261,7 @@ func clusterTransportSocket(cluster shared.Cluster) *core.TransportSocket {
 // clusterSNIHostname sets SNI hostname used for upstream connections
 func clusterSNIHostname(cluster shared.Cluster) string {
 
-	value, err := shared.GetAttribute(cluster.Attributes, attributeSNIHostName)
+	value, err := cluster.Attributes.Get(attributeSNIHostName)
 	if err == nil && value != "" {
 		return value
 	}
@@ -275,7 +270,7 @@ func clusterSNIHostname(cluster shared.Cluster) string {
 
 func clusterDNSRefreshRate(cluster shared.Cluster) *duration.Duration {
 
-	refreshInterval := shared.GetAttributeAsDuration(cluster.Attributes,
+	refreshInterval := cluster.Attributes.GetAsDuration(
 		attributeDNSRefreshRate, defaultDNSRefreshRate)
 
 	return ptypes.DurationProto(refreshInterval)
@@ -283,7 +278,7 @@ func clusterDNSRefreshRate(cluster shared.Cluster) *duration.Duration {
 
 func clusterDNSResolvers(cluster shared.Cluster) []*core.Address {
 
-	value, err := shared.GetAttribute(cluster.Attributes, attributeDNSResolvers)
+	value, err := cluster.Attributes.Get(attributeDNSResolvers)
 	if err == nil {
 		var resolvers []*core.Address
 

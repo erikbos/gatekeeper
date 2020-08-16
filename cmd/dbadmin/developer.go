@@ -76,7 +76,7 @@ func (s *server) GetDeveloperAttributeByName(c *gin.Context) {
 		return
 	}
 
-	value, err := shared.GetAttribute(developer.Attributes, c.Param("attribute"))
+	value, err := developer.Attributes.Get(c.Param("attribute"))
 	if err != nil {
 		returnCanNotFindAttribute(c, c.Param("attribute"))
 		return
@@ -166,7 +166,7 @@ func (s *server) PostDeveloperAttributes(c *gin.Context) {
 	}
 
 	var body struct {
-		Attributes []shared.AttributeKeyValues `json:"attribute"`
+		Attributes shared.Attributes `json:"attribute"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
@@ -207,9 +207,7 @@ func (s *server) PostDeveloperAttributeByName(c *gin.Context) {
 	}
 
 	attributeToUpdate := c.Param("attribute")
-	developerToUpdate.Attributes = shared.UpdateAttribute(developerToUpdate.Attributes,
-		attributeToUpdate, body.Value)
-
+	developerToUpdate.Attributes.Set(attributeToUpdate, body.Value)
 	developerToUpdate.LastmodifiedBy = s.whoAmI()
 
 	if err := s.db.Developer.UpdateByName(developerToUpdate); err != nil {
@@ -230,15 +228,12 @@ func (s *server) DeleteDeveloperAttributeByName(c *gin.Context) {
 	}
 
 	attributeToDelete := c.Param("attribute")
-	updatedAttributes, index, oldValue :=
-		shared.DeleteAttribute(developerToUpdate.Attributes, attributeToDelete)
-	if index == -1 {
+	deleted, oldValue := developerToUpdate.Attributes.Delete(attributeToDelete)
+	if !deleted {
 		returnJSONMessage(c, http.StatusNotFound,
 			fmt.Errorf("Could not find attribute '%s'", attributeToDelete))
 		return
 	}
-	developerToUpdate.Attributes = updatedAttributes
-
 	developerToUpdate.LastmodifiedBy = s.whoAmI()
 
 	if err := s.db.Developer.UpdateByName(developerToUpdate); err != nil {

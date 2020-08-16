@@ -79,7 +79,7 @@ func (s *server) GetAPIProductAttributeByName(c *gin.Context) {
 		return
 	}
 
-	value, err := shared.GetAttribute(apiproduct.Attributes, c.Param("attribute"))
+	value, err := apiproduct.Attributes.Get(c.Param("attribute"))
 	if err != nil {
 		returnCanNotFindAttribute(c, c.Param("attribute"))
 		return
@@ -162,7 +162,7 @@ func (s *server) PostAPIProductAttributes(c *gin.Context) {
 	}
 
 	var body struct {
-		Attributes []shared.AttributeKeyValues `json:"attribute"`
+		Attributes shared.Attributes `json:"attribute"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
@@ -205,9 +205,7 @@ func (s *server) PostAPIProductAttributeByName(c *gin.Context) {
 	}
 
 	attributeToUpdate := c.Param("attribute")
-	apiproductToUpdate.Attributes = shared.UpdateAttribute(apiproductToUpdate.Attributes,
-		attributeToUpdate, body.Value)
-
+	apiproductToUpdate.Attributes.Set(attributeToUpdate, body.Value)
 	apiproductToUpdate.LastmodifiedBy = s.whoAmI()
 
 	if err := s.db.APIProduct.UpdateByName(apiproductToUpdate); err != nil {
@@ -231,15 +229,12 @@ func (s *server) DeleteAPIProductAttributeByName(c *gin.Context) {
 	}
 
 	attributeToDelete := c.Param("attribute")
-	updatedAttributes, index, oldValue :=
-		shared.DeleteAttribute(updatedAPIProduct.Attributes, attributeToDelete)
-	if index == -1 {
+	deleted, oldValue := updatedAPIProduct.Attributes.Delete(attributeToDelete)
+	if !deleted {
 		returnJSONMessage(c, http.StatusNotFound,
 			fmt.Errorf("Could not find attribute '%s'", attributeToDelete))
 		return
 	}
-	updatedAPIProduct.Attributes = updatedAttributes
-
 	updatedAPIProduct.LastmodifiedBy = s.whoAmI()
 
 	if err := s.db.APIProduct.UpdateByName(updatedAPIProduct); err != nil {

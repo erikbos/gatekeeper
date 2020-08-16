@@ -105,7 +105,7 @@ func (s *DeveloperAppStore) runGetDeveloperAppQuery(query string, queryParameter
 	for iterable.MapScan(m) {
 		developerapps = append(developerapps, shared.DeveloperApp{
 			AppID:            m["app_id"].(string),
-			Attributes:       s.db.UnmarshallJSONArrayOfAttributes(m["attributes"].(string)),
+			Attributes:       shared.DeveloperApp{}.Attributes.Unmarshal(m["attributes"].(string)),
 			CreatedAt:        m["created_at"].(int64),
 			CreatedBy:        m["created_by"].(string),
 			DisplayName:      m["display_name"].(string),
@@ -129,7 +129,7 @@ func (s *DeveloperAppStore) runGetDeveloperAppQuery(query string, queryParameter
 // UpdateByName UPSERTs a developer app
 func (s *DeveloperAppStore) UpdateByName(app *shared.DeveloperApp) error {
 
-	app.Attributes = shared.TidyAttributes(app.Attributes)
+	app.Attributes.Tidy()
 	app.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
 
 	if err := s.db.CassandraSession.Query(`INSERT INTO developer_apps (
@@ -149,7 +149,7 @@ lastmodified_by) VALUES(?,?,?,?,?,?,?,?,?,?,?)`,
 		app.DeveloperID,
 		app.Name,
 		app.DisplayName,
-		s.db.MarshallArrayOfAttributesToJSON(app.Attributes),
+		app.Attributes.Marshal(),
 		app.OrganizationName,
 		app.Status,
 		app.CreatedAt,
