@@ -100,7 +100,7 @@ func buildEnvoyClusterConfig(cluster shared.Cluster) *envoyCluster.Cluster {
 	}
 
 	// Add TLS and HTTP/2 configuration options in case we want to
-	value, err := cluster.Attributes.Get(attributeTLSEnabled)
+	value, err := cluster.Attributes.Get(attributeTLSEnable)
 	if err == nil && value == attributeValueTrue {
 		envoyCluster.TransportSocket = clusterTransportSocket(cluster)
 		envoyCluster.Http2ProtocolOptions = clusterHTTP2ProtocolOptions(cluster)

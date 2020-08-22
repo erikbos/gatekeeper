@@ -319,7 +319,7 @@ ol {
 <td>
 <ul>
 {{ range $attribute := .Attributes }}
-<li>{{ $attribute.Name }} : {{ $attribute.Value }}</li>
+<li>{{ $attribute.Name }} = {{ $attribute.Value }}</li>
 {{ end }}
 </ul>
 </td>

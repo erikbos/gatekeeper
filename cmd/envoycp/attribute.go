@@ -44,7 +44,7 @@ const (
 	// Cluster attributes
 	attributeConnectTimeout                = "ConnectTimeout"
 	attributeIdleTimeout                   = "IdleTimeout"
-	attributeTLSEnabled                    = "TLSEnabled"
+	attributeTLSEnable                     = "TLSEnable"
 	attributeSNIHostName                   = "SNIHostName"
 	attributeHealthCheckProtocol           = "HealthCheckProtocol"
 	attributeHealthCheckPath               = "HealthCheckPath"
@@ -96,7 +96,7 @@ func warnForUnknownVirtualHostAttributes(virtualhost shared.VirtualHost) {
 		attributeAccessLogFileName:    true,
 		attributeAccessLogClusterName: true,
 		attributeHTTPProtocol:         true,
-		attributeTLSEnabled:           true,
+		attributeTLSEnable:            true,
 		attributeTLSMinimumVersion:    true,
 		attributeTLSMaximumVersion:    true,
 		attributeTLSCertificate:       true,
@@ -139,7 +139,7 @@ func warnForUnknownClusterAttributes(cluster shared.Cluster) {
 	var validClusterAttributes = map[string]bool{
 		attributeConnectTimeout:                true,
 		attributeIdleTimeout:                   true,
-		attributeTLSEnabled:                    true,
+		attributeTLSEnable:                     true,
 		attributeTLSMinimumVersion:             true,
 		attributeTLSMaximumVersion:             true,
 		attributeTLSCipherSuites:               true,

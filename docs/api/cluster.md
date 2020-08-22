@@ -71,7 +71,7 @@ A cluster defines an upstream backend. Each provides one or more APIs to be cons
 | MaxPendingRequests            | The maximum number of pending requests that Envoy will allow to the upstream cluster    | 1024                         |
 | MaxRequests                   | The maximum number of parallel requests that Envoy will make to the upstream cluster    | 1024                         |
 | MaxRetries                    | The maximum number of parallel retries that Envoy will allow to the upstream cluster    | 3                            |
-| TLSEnabled                    | Whether to enable TLS or not, HTTP/2 always uses TLS                                    | true, false                  |
+| TLSEnable                     | Whether to enable TLS or not, HTTP/2 always uses TLS                                    | true, false                  |
 | SNIHostName                   | Hostname to send during TLS handshake (if not set hostname will be used)           |                              |
 | TLSMinimumVersion             | Minimum version of TLS to use                                                           | TLSv10,TLSv11, TLSv12 TLSv13 |
 | TLSMaximumVersion             | Maximum version of TLS to use                                                           | TLSv10,TLSv11, TLSv12 TLSv13 |
