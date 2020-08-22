@@ -45,7 +45,7 @@ func (a *authorizationServer) GetVirtualHostConfigFromDatabase() {
 			}
 		}
 		if xdsPushNeeded {
-			a.IncreaseCounterConfigLoad("virtualhosts")
+			a.IncreaseMetricConfigLoad("virtualhosts")
 		}
 		time.Sleep(virtualHostDataRefreshInterval)
 	}
@@ -92,7 +92,7 @@ func (a *authorizationServer) GetRouteConfigFromDatabase() {
 			}
 		}
 		if xdsPushNeeded {
-			a.IncreaseCounterConfigLoad("routes")
+			a.IncreaseMetricConfigLoad("routes")
 		}
 		time.Sleep(routeDataRefreshInterval)
 	}

@@ -32,7 +32,7 @@ content-type: application/json
     ],
     "port": 80,
     "routeGroup": "routes_80",
-    "policies": "geoiplookup",
+    "policies": "lookupGeoIP",
     "organizationName": "petstore",
     "attributes": [
         {
@@ -65,7 +65,7 @@ content-type: application/json
     ],
     "port": 443,
     "routeGroup": "routes_443",
-    "policies": "geoiplookup,checkapikey",
+    "policies": "lookupGeoIP,checkAPIKey",
     "organizationName": "petstore",
     "attributes": [
         {
@@ -117,7 +117,7 @@ content-type: application/json
   ],
   "port": 443,
   "routeGroup": "routes_443",
-  "policies": "geoiplookup,checkapikey",
+  "policies": "lookupGeoIP,checkAPIKey",
   "organizationName": "petstore",
   "attributes": [
       {

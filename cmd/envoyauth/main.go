@@ -30,7 +30,7 @@ type authorizationServer struct {
 	db           *db.Database
 	cache        *Cache
 	oauth        *oauthServer
-	g            *shared.Geoip
+	geoip        *shared.Geoip
 	metrics      metricsCollection
 }
 
@@ -42,7 +42,6 @@ func main() {
 
 	a := authorizationServer{}
 	a.config = loadConfiguration(filename)
-	// FIXME we should check if we have all required parameters (use viper package?)
 
 	shared.SetLoggingConfiguration(a.config.LogLevel)
 
@@ -55,7 +54,7 @@ func main() {
 	a.cache = newCache(&a.config.Cache)
 
 	if a.config.Geoip.Filename != "" {
-		a.g, err = shared.OpenGeoipDatabase(a.config.Geoip.Filename)
+		a.geoip, err = shared.OpenGeoipDatabase(a.config.Geoip.Filename)
 		if err != nil {
 			log.Fatalf("Geoip db load failed: %v", err)
 		}

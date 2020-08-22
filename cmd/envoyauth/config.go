@@ -25,7 +25,7 @@ type APIAuthConfig struct {
 	EnvoyAuth envoyAuthConfig          `yaml:"envoyauth"` // Envoyauth configuration
 	OAuth     oauthServerConfig        `yaml:"oauth"`     // OAuth configuration
 	Database  cassandra.DatabaseConfig `yaml:"database"`  // Database configuration
-	Cache     cacheConfig              `yaml:"cache"`     // In-mem cache configuration
+	Cache     cacheConfig              `yaml:"cache"`     // In-memory cache configuration
 	Geoip     shared.Geoip             `yaml:"geoip"`     // Geoip lookup configuration
 }
 

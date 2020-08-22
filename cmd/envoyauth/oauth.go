@@ -24,9 +24,9 @@ import (
 
 // oauthServerConfig contains our configuration
 type oauthServerConfig struct {
-	Listen         string `yaml:"listen"`
-	TokenIssuePath string `yaml:"tokenissuepath"`
-	TokenInfoPath  string `yaml:"tokeninfopath"`
+	Listen         string `yaml:"listen"`         // OAuth Address and port to listen
+	TokenIssuePath string `yaml:"tokenissuepath"` // Path to request access tokens (e.g. "/oauth2/token")
+	TokenInfoPath  string `yaml:"tokeninfopath"`  // Path to request info about token (e.g. "/oauth2/info")
 }
 
 type oauthServer struct {
@@ -43,7 +43,7 @@ type oauthServer struct {
 func StartOAuthServer(a *authorizationServer) {
 	// shared.StartLogging(myName, version, buildTime)
 
-	// Do not try to start oauth system if we do not have a configuration
+	// Do not start oauth system if we do not have a listenport
 	if a.config.OAuth.Listen == "" {
 		return
 	}
@@ -58,7 +58,7 @@ func StartOAuthServer(a *authorizationServer) {
 	// shared.SetLoggingConfiguration(server.config.LogLevel)
 	// server.readiness.RegisterMetrics(myName)
 
-	registerOAuthMetrics(&server)
+	server.registerOAuthMetrics()
 
 	server.prepareOAuthInstance()
 
@@ -68,10 +68,8 @@ func StartOAuthServer(a *authorizationServer) {
 	server.ginEngine.Use(gin.LoggerWithFormatter(shared.LogHTTPRequest))
 	server.ginEngine.Use(shared.AddRequestID())
 
-	if server.config.TokenIssuePath != "" {
+	if server.config.TokenIssuePath != "" && server.config.TokenInfoPath != "" {
 		server.ginEngine.POST(server.config.TokenIssuePath, server.handleTokenIssueRequest)
-	}
-	if server.config.TokenInfoPath != "" {
 		server.ginEngine.GET(server.config.TokenInfoPath, server.handleTokenInfo)
 	}
 
@@ -142,8 +140,8 @@ func (o *oauthServer) handleTokenInfo(c *gin.Context) {
 	// We want to prevent showing client_id / client_secret for example.
 	status := tokenInfoAnswer{
 		Valid:     true,
-		CreatedAt: tokenInfo.GetAccessCreateAt(),
-		ExpiresAt: tokenInfo.GetAccessCreateAt().Add(tokenInfo.GetAccessExpiresIn()),
+		CreatedAt: tokenInfo.GetAccessCreateAt().UTC(),
+		ExpiresAt: tokenInfo.GetAccessCreateAt().Add(tokenInfo.GetAccessExpiresIn()).UTC(),
 		Scope:     tokenInfo.GetScope(),
 	}
 
@@ -151,7 +149,7 @@ func (o *oauthServer) handleTokenInfo(c *gin.Context) {
 	c.JSON(http.StatusOK, status)
 }
 
-func registerOAuthMetrics(o *oauthServer) {
+func (o *oauthServer) registerOAuthMetrics() {
 
 	o.tokenIssueRequests = prometheus.NewCounterVec(
 		prometheus.CounterOpts{

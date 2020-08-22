@@ -60,10 +60,14 @@ An apiproduct defines a set paths which are allowed to be accessed. Policies can
 
 ## Policy specification
 
-The policies field can contain a comma separate list of policies which will be applied before sending the request upstream to a backend.
+The policies field can contain a comma separate list of policies will be evaluated before sending the request upstream to a backend.
 
 | attribute name       | purpose                                                                  |
 | -------------------- | ------------------------------------------------------------------------ |
+| checkAPIKey          | Verify apikey                                                            |
+| checkOAuth2          | Verify OAuth2 accesstoken                                                |
+| removeAPIKeyFromQP   | Remove apikey from query parameters                                      |
+| lookupGeoIP          | Set country and state of connecting ip address as metadata               |
 | checkIPAccessList    | Validate source ip address against developerapp attribute _IPAccessList_ |
 | checkReferer         | Validate Host header against developerapp attribute _Referer_            |
 | sendAPIKey           | send apikey used to upstream                                             |

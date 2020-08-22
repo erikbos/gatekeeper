@@ -65,6 +65,17 @@ All attributes listed above are mapped on configuration properties of [Envoy lis
 
 The virtual host options exposed this way are a subset of Envoy's capabilities, in general any listener configuration option Envoy supports can be exposed  this way. Feel free to open an issue if you need more of Envoy's functionality exposed.
 
+## Policy specification
+
+The policies field can contain a comma separate list of policies which will be evaluated.
+
+| attribute name       | purpose                                                                  |
+| -------------------- | ------------------------------------------------------------------------ |
+| checkAPIKey          | Verify apikey                                                            |
+| checkOAuth2          | Verify OAuth2 accesstoken                                                |
+| removeAPIKeyFromQP   | Remove apikey from query parameters                                      |
+| lookupGeoIP          | Set country and state of connecting ip address as metadata               |
+
 ## Background
 
 Envoycp checks the database for new or changed virtualhosts every second. Unrecognized attributes will be ignored and a warning will be logged. In case of any changes envoy will compile a new proxy configuration and send it to all envoyproxy instances.
@@ -83,7 +94,7 @@ Two virtual hosts sharing one certificate:
     ],
     "port": 443,
     "routeGroup": "routes_443",
-    "policies": "geoiplookup,checkapikey",
+    "policies": "lookupGeoIP,checkAPIKey",
     "organizationName": "petstore",
     "attributes": [
         {

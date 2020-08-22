@@ -5,17 +5,15 @@ import (
 )
 
 type metricsCollection struct {
-	configLoads              *prometheus.CounterVec
-	authLatencyHistogram     prometheus.Summary
-	connectInfoFailures      prometheus.Counter
-	requestsPerCountry       *prometheus.CounterVec
-	requestsApikeyNotFound   *prometheus.CounterVec
-	requestsAccepted         *prometheus.CounterVec
-	requestsRejected         *prometheus.CounterVec
-	apiProductPolicy         *prometheus.CounterVec
-	apiProductPolicyUnknown  *prometheus.CounterVec
-	virtualHostPolicy        *prometheus.CounterVec
-	virtualHostPolicyUnknown *prometheus.CounterVec
+	configLoads            *prometheus.CounterVec
+	authLatencyHistogram   prometheus.Summary
+	connectInfoFailures    prometheus.Counter
+	requestsPerCountry     *prometheus.CounterVec
+	requestsApikeyNotFound *prometheus.CounterVec
+	requestsAccepted       *prometheus.CounterVec
+	requestsRejected       *prometheus.CounterVec
+	Policy                 *prometheus.CounterVec
+	PolicyUnknown          *prometheus.CounterVec
 }
 
 // registerMetrics registers our operational metrics
@@ -72,33 +70,19 @@ func (a *authorizationServer) registerMetrics() {
 			},
 		})
 
-	a.metrics.apiProductPolicy = prometheus.NewCounterVec(
+	a.metrics.Policy = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: applicationName,
-			Name:      "apiproduct_policy_hits_total",
-			Help:      "Total number of product policy hits.",
-		}, []string{"apiproduct", "policy"})
+			Name:      "policy_hits_total",
+			Help:      "Total number of policy hits.",
+		}, []string{"scope", "policy"})
 
-	a.metrics.apiProductPolicyUnknown = prometheus.NewCounterVec(
+	a.metrics.PolicyUnknown = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: applicationName,
-			Name:      "apiproduct_policy_unknown_total",
-			Help:      "Total number of unknown product policy hits.",
-		}, []string{"apiproduct", "policy"})
-
-	a.metrics.virtualHostPolicy = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Namespace: applicationName,
-			Name:      "virtualhost_policy_hits_total",
-			Help:      "Total number of virtualhost policy hits.",
-		}, []string{"virtualhost", "policy"})
-
-	a.metrics.virtualHostPolicyUnknown = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Namespace: applicationName,
-			Name:      "virtualhost_policy_unknown_total",
-			Help:      "Total number of unknown virtualhost policy hits.",
-		}, []string{"virtualhost", "policy"})
+			Name:      "policy_unknown_total",
+			Help:      "Total number of unknown policy hits.",
+		}, []string{"scope", "policy"})
 
 	prometheus.MustRegister(a.metrics.configLoads)
 	prometheus.MustRegister(a.metrics.connectInfoFailures)
@@ -107,10 +91,8 @@ func (a *authorizationServer) registerMetrics() {
 	prometheus.MustRegister(a.metrics.requestsAccepted)
 	prometheus.MustRegister(a.metrics.requestsRejected)
 	prometheus.MustRegister(a.metrics.authLatencyHistogram)
-	prometheus.MustRegister(a.metrics.apiProductPolicy)
-	prometheus.MustRegister(a.metrics.apiProductPolicyUnknown)
-	prometheus.MustRegister(a.metrics.virtualHostPolicy)
-	prometheus.MustRegister(a.metrics.virtualHostPolicyUnknown)
+	prometheus.MustRegister(a.metrics.Policy)
+	prometheus.MustRegister(a.metrics.PolicyUnknown)
 }
 
 // increaseCounterApikeyNotfound requests with unknown apikey
@@ -149,7 +131,17 @@ func (a *authorizationServer) IncreaseCounterRequestAccept(r *requestInfo) {
 }
 
 // IncreaseCounterRequestAccept counts requests that are accepted
-func (a *authorizationServer) IncreaseCounterConfigLoad(what string) {
+func (a *authorizationServer) IncreaseMetricConfigLoad(what string) {
 
 	a.metrics.configLoads.WithLabelValues(what).Inc()
+}
+
+func (a *authorizationServer) IncreaseMetricPolicy(scope, name string) {
+
+	a.metrics.Policy.WithLabelValues(scope, name).Inc()
+}
+
+func (a *authorizationServer) IncreaseMetricPolicyUnknown(scope, name string) {
+
+	a.metrics.PolicyUnknown.WithLabelValues(scope, name).Inc()
 }

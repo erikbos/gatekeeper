@@ -7,7 +7,6 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-	"strings"
 
 	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	authservice "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
@@ -33,6 +32,7 @@ type requestInfo struct {
 	URL             *url.URL
 	queryParameters url.Values
 	apikey          *string
+	oauth2token     *string
 	vhost           *shared.VirtualHost
 	developer       *shared.Developer
 	developerApp    *shared.DeveloperApp
@@ -77,45 +77,60 @@ func (a *authorizationServer) Check(ctx context.Context, authRequest *authservic
 		return rejectRequest(http.StatusNotFound, nil, nil, "unknown vhost")
 	}
 
-	// upstreamHeaders will receive all new headers to add before request goes upstream
-	upstreamHeaders := make(map[string]string)
-
-	// dynamicMetadata will receive all metadata to be used by next envoy filters
-	// examples are: ratelimiter and extra fields to be logged
-	dynamicMetadata := make(map[string]string)
-
-	if request.vhost.Policies != "" {
-		errorStatusCode, err := a.handlePolicies(request, &request.vhost.Policies, a.handleVhostPolicy, upstreamHeaders)
-		// In case a policy wants us to stop we reject call
-		if err != nil {
-			a.increaseCounterRequestRejected(request)
-			return rejectRequest(errorStatusCode, nil, dynamicMetadata, err.Error())
-		}
+	vhostPolicyOutcome := &PolicyChainResponse{}
+	if request.vhost != nil && request.vhost.Policies != "" {
+		vhostPolicyOutcome = (&PolicyChain{
+			authServer: a,
+			request:    request,
+			scope:      policyScopeVhost,
+		}).Evaluate()
 	}
 
-	// In case HTTP method is OPTIONS we skip parsing product/upstream policy
-	// as we're not sending anything upstream, Envoy should answer all OPTIONS requests
-	if request.httpRequest.Method != "OPTIONS" {
-		if request.APIProduct.Policies != "" {
-			errorStatusCode, err := a.handlePolicies(request, &request.APIProduct.Policies, a.handlePolicy, upstreamHeaders)
-			// In case a policy wants us to stop we reject call
-			if err != nil {
-				compileMetadata(request, dynamicMetadata)
-
-				a.increaseCounterRequestRejected(request)
-				return rejectRequest(errorStatusCode, nil, dynamicMetadata, err.Error())
-			}
-		}
+	APIProductPolicyOutcome := &PolicyChainResponse{}
+	if request.APIProduct != nil && request.APIProduct.Policies != "" {
+		APIProductPolicyOutcome = (&PolicyChain{
+			authServer: a,
+			request:    request,
+			scope:      policyScopeAPIProduct,
+		}).Evaluate()
 	}
 
-	for k, v := range upstreamHeaders {
-		log.Debugf("upstream header: %s = %s", k, v)
-	}
+	log.Debugf("vhostPolicyOutcome: %+v", vhostPolicyOutcome)
+	log.Debugf("APIProductPolicyOutcome: %+v", APIProductPolicyOutcome)
 
-	compileMetadata(request, dynamicMetadata)
+	// We reject call in case both vhost & apiproduct policy did not authenticate call
+	if (vhostPolicyOutcome != nil && vhostPolicyOutcome.authenticated == false) &&
+		(APIProductPolicyOutcome != nil && APIProductPolicyOutcome.authenticated == false) {
+
+		a.increaseCounterRequestRejected(request)
+
+		return rejectRequest(vhostPolicyOutcome.deniedStatusCode,
+			mergeMapsStringString(vhostPolicyOutcome.upstreamHeaders,
+				APIProductPolicyOutcome.upstreamHeaders),
+			mergeMapsStringString(vhostPolicyOutcome.upstreamDynamicMetadata,
+				APIProductPolicyOutcome.upstreamDynamicMetadata),
+			vhostPolicyOutcome.deniedMessage)
+	}
 
 	a.IncreaseCounterRequestAccept(request)
-	return allowRequest(upstreamHeaders, dynamicMetadata)
+
+	return allowRequest(
+		mergeMapsStringString(vhostPolicyOutcome.upstreamHeaders,
+			APIProductPolicyOutcome.upstreamHeaders),
+		mergeMapsStringString(vhostPolicyOutcome.upstreamDynamicMetadata,
+			APIProductPolicyOutcome.upstreamDynamicMetadata))
+}
+
+// mergeMapsStringString returns merged map[string]string
+// it overwriting duplicate keys, you should handle that if there is a need
+func mergeMapsStringString(maps ...map[string]string) map[string]string {
+	result := make(map[string]string)
+	for _, m := range maps {
+		for k, v := range m {
+			result[k] = v
+		}
+	}
+	return result
 }
 
 // FIXME this should be lookup in map instead of for loops
@@ -136,54 +151,7 @@ func (a *authorizationServer) lookupVhost(hostname, protocol string) (*shared.Vi
 	return nil, errors.New("vhost not found")
 }
 
-// handlePolicies invokes all policy functions to set additional upstream headers
-func (a *authorizationServer) handlePolicies(request *requestInfo, policies *string,
-	policyHandler function, newUpstreamHeaders map[string]string) (int, error) {
-
-	for _, policy := range strings.Split(*policies, ",") {
-		trimmedPolicy := strings.TrimSpace(policy)
-		headersToAdd, err := policyHandler(&trimmedPolicy, request)
-
-		// Stop and return error in case policy indicates we must stop
-		if err != nil {
-			return http.StatusForbidden, err
-		}
-
-		// Add policy generated headers for upstream
-		for key, value := range headersToAdd {
-			newUpstreamHeaders[key] = value
-		}
-	}
-	return http.StatusOK, nil
-}
-
-func compileMetadata(request *requestInfo, metadata map[string]string) {
-
-	if request.developer != nil {
-		if request.developer.Email != "" {
-			metadata["developerEmail"] = request.developer.Email
-		}
-		if request.developer.DeveloperID != "" {
-			metadata["developerID"] = request.developer.DeveloperID
-		}
-	}
-	if request.developerApp != nil {
-		if request.developerApp.AppID != "" {
-			metadata["developerAppID"] = request.developerApp.AppID
-		}
-		if request.developerApp.Name != "" {
-			metadata["developerAppName"] = request.developerApp.Name
-		}
-	}
-	if request.APIProduct != nil && request.APIProduct.Name != "" {
-		metadata["APIProduct"] = request.APIProduct.Name
-	}
-	if request.apikey != nil {
-		metadata["apikey"] = *request.apikey
-	}
-}
-
-// allowRequest authorizates customer request to go upstream
+// allowRequest answers Envoyproxy to authorizates request to go upstream
 func allowRequest(headers, metadata map[string]string) (*authservice.CheckResponse, error) {
 
 	response := &authservice.CheckResponse{
@@ -192,17 +160,20 @@ func allowRequest(headers, metadata map[string]string) (*authservice.CheckRespon
 		},
 		HttpResponse: &authservice.CheckResponse_OkResponse{
 			OkResponse: &authservice.OkHttpResponse{
-				Headers:         buildHeadersList(headers),
+				Headers: buildHeadersList(headers),
+				// TODO this should be removed with go control plane 0.9.8
 				DynamicMetadata: buildDynamicMetadataList(metadata),
 			},
 		},
+		// TODO uncomment in case of go control plane 0.9.8
+		// DynamicMetadata: buildDynamicMetadataList(metadata),
 	}
 	log.Printf("allowRequest: %+v", response)
 
 	return response, nil
 }
 
-// rejectCall answers to Envoy to reject HTTP request
+// rejectCall answers Envoyproxy to reject HTTP request
 func rejectRequest(statusCode int, headers, metadata map[string]string,
 	message string) (*authservice.CheckResponse, error) {
 
@@ -230,10 +201,10 @@ func rejectRequest(statusCode int, headers, metadata map[string]string,
 				},
 				Headers: buildHeadersList(headers),
 				Body:    buildJSONErrorMessage(&message),
-				// FIXME this is not yet supported by envoy
-				//				DynamicMetadata: buildDynamicMetadataList(metadata),
 			},
 		},
+		// TODO uncomment in case of go control plane > 0.9.8
+		// DynamicMetadata: buildDynamicMetadataList(metadata),
 	}
 	log.Printf("rejectCall: %v", response)
 	return response, nil
@@ -287,19 +258,16 @@ func getRequestInfo(req *authservice.CheckRequest) (*requestInfo, error) {
 	newConnection := requestInfo{
 		httpRequest: req.Attributes.Request.Http,
 	}
-	ipaddress, ok := newConnection.httpRequest.Headers["x-forwarded-for"]
-	if ok {
+	if ipaddress, ok := newConnection.httpRequest.Headers["x-forwarded-for"]; ok {
 		newConnection.IP = net.ParseIP(ipaddress)
 	}
 
 	var err error
-	newConnection.URL, err = url.ParseRequestURI(newConnection.httpRequest.Path)
-	if err != nil {
+	if newConnection.URL, err = url.ParseRequestURI(newConnection.httpRequest.Path); err != nil {
 		return nil, errors.New("could not parse url")
 	}
 
-	newConnection.queryParameters, _ = url.ParseQuery(newConnection.URL.RawQuery)
-	if err != nil {
+	if newConnection.queryParameters, err = url.ParseQuery(newConnection.URL.RawQuery); err != nil {
 		return nil, errors.New("could not parse query parameters")
 	}
 
