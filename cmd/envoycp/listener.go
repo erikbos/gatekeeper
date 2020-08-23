@@ -192,9 +192,20 @@ func (s *server) buildConnectionManager(httpFilters []*hcm.HttpFilter, v shared.
 		CodecType:        hcm.HttpConnectionManager_AUTO,
 		StatPrefix:       "ingress_http",
 		UseRemoteAddress: protoBool(true),
-		RouteSpecifier:   s.buildRouteSpecifier(v.RouteGroup),
-		HttpFilters:      httpFilters,
-		AccessLog:        buildAccessLog(s.config.Envoyproxy.Logging, v),
+		// From https://www.envoyproxy.io/docs/envoy/latest/configuration/best_practices/edge#best-practices-edge
+		// FIXME these files should be config file parameters
+		CommonHttpProtocolOptions: &core.HttpProtocolOptions{
+			IdleTimeout: ptypes.DurationProto(15 * time.Minute),
+		},
+		Http2ProtocolOptions: &core.Http2ProtocolOptions{
+			MaxConcurrentStreams:        protoUint32(100),
+			InitialConnectionWindowSize: protoUint32(65536),
+			InitialStreamWindowSize:     protoUint32(1048576),
+		},
+		RouteSpecifier: s.buildRouteSpecifierRDS(v.RouteGroup),
+		// RouteSpecifier:   s.buildRouteSpecifier(v.RouteGroup),
+		HttpFilters: httpFilters,
+		AccessLog:   buildAccessLog(s.config.Envoyproxy.Logging, v),
 	}
 }
 
@@ -284,34 +295,24 @@ func (s *server) extAuthzWithRequestBody() *extauthz.BufferSettings {
 	return nil
 }
 
-func (s *server) buildRouteSpecifier(RouteGroup string) *hcm.HttpConnectionManager_RouteConfig {
-	return &hcm.HttpConnectionManager_RouteConfig{
-		RouteConfig: s.buildEnvoyVirtualHostRouteConfig(RouteGroup, s.routes),
-	}
-}
+// Not necessary anymore as we receive routes via RDS (buildRouteSpecifierRDS)
+//
+// func (s *server) buildRouteSpecifier(RouteGroup string) *hcm.HttpConnectionManager_RouteConfig {
 
-// func buildRouteSpecifierRDS(RouteGroup string) *hcm.HttpConnectionManager_Rds {
-// 	// TODO
-// 	XdsCluster := "xds_cluster"
-
-// 	return &hcm.HttpConnectionManager_Rds{
-// 		Rds: &hcm.Rds{
-// 			RouteConfigName: RouteGroup,
-// 			ConfigSource: &core.ConfigSource{
-// 				ConfigSourceSpecifier: &core.ConfigSource_ApiConfigSource{
-// 					ApiConfigSource: &core.ApiConfigSource{
-// 						ApiType: core.ApiConfigSource_GRPC,
-// 						GrpcServices: []*core.GrpcService{{
-// 							TargetSpecifier: &core.GrpcService_EnvoyGrpc_{
-// 								EnvoyGrpc: &core.GrpcService_EnvoyGrpc{ClusterName: XdsCluster},
-// 							},
-// 						}},
-// 					},
-// 				},
-// 			},
-// 		},
+// 	return &hcm.HttpConnectionManager_RouteConfig{
+// 		RouteConfig: s.buildEnvoyVirtualHostRouteConfig(RouteGroup, s.routes),
 // 	}
 // }
+
+func (s *server) buildRouteSpecifierRDS(routeGroup string) *hcm.HttpConnectionManager_Rds {
+
+	return &hcm.HttpConnectionManager_Rds{
+		Rds: &hcm.Rds{
+			RouteConfigName: routeGroup,
+			ConfigSource:    buildConfigSource(s.config.XDS.Cluster, s.config.XDS.Timeout),
+		},
+	}
+}
 
 func buildAccessLog(config envoyLogConfig, v shared.VirtualHost) []*accesslog.AccessLog {
 

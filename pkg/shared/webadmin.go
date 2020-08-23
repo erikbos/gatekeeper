@@ -120,7 +120,7 @@ func ShowIndexPage(c *gin.Context, e *gin.Engine, applicationName string) {
 		applicationName, e.Routes(),
 	}
 	c.Status(http.StatusOK)
-	c.Header("Content-type", "text/html")
+	c.Header("Content-type", "text/html; charset=utf-8")
 	t.Execute(c.Writer, templateVariables)
 }
 

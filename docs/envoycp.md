@@ -48,7 +48,9 @@ The supported fields are:
 | database.connectattempts             | Number of attempts to establish connection                                          | 5                             |
 | database.queryretries                | Number of times to retry query                                                      | 2                             |
 | xds.grpclisten                       | listen address and port for XDS requests from Envoyproxy                            | 0.0.0.0:9901                  |
-| xds.configpushinterval               | Frequency of checking changes to configuration                                      | 1s                            |
+| xds.configpushinterval               | Frequency of making new XDS configuration snapshots                                 | 1s                            |
+| xds.cluster                          | Name of cluster that runs XDS                                                       |                               |
+| xds.timeout                          | Maximum duration of XDS requests                                                    | 2s                            |
 | envoyproxy.extauthz.enable           | Enable or disable Envoyproxy-wide request authentication via envoyauth              | true / false                  |
 | envoyproxy.extauthz.cluster          | Name of cluster which runs envoyauth                                                |                               |
 | envoyproxy.extauthz.timeout          | Maximum allowed duration of authentication requests to envoyauth                    |                               |

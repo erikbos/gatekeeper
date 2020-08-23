@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net"
-	"net/http"
 	"time"
 
 	clusterservice "github.com/envoyproxy/go-control-plane/envoy/service/cluster/v3"
@@ -28,7 +27,7 @@ type xdsNotifyMesssage struct {
 // StartXDS brings up XDS system
 func (s *server) StartXDS(notifications chan xdsNotifyMesssage) {
 
-	s.xdsCache = cache.NewSnapshotCache(true, cache.IDHash{}, logger{})
+	s.xdsCache = cache.NewSnapshotCache(false, cache.IDHash{}, logger{})
 	streamCallbacks := &callbacks{
 		signal:   make(chan struct{}),
 		fetches:  0,
@@ -38,8 +37,6 @@ func (s *server) StartXDS(notifications chan xdsNotifyMesssage) {
 	s.xds = xds.NewServer(context.Background(), s.xdsCache, streamCallbacks)
 
 	go s.GRPCManagementServer()
-	go s.HTTPManagementGateway()
-
 	for {
 		select {
 		case n := <-notifications:
@@ -71,30 +68,6 @@ func (s *server) GRPCManagementServer() {
 
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("failed to start GRPC server: %v", err)
-	}
-}
-
-type xdsHTTPGatewayWrapper struct {
-	Server xds.HTTPGateway
-}
-
-// this wrapper is required:
-// - xds.HTTPGateway function proto mismatches http.Handler because it returns error
-// - we can pass xdsHTTPGatewayWrapper to http.ListenAndServe
-func (h xdsHTTPGatewayWrapper) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	h.Server.ServeHTTP(r)
-}
-
-// HTTPManagementGateway starts http xds listener
-func (s *server) HTTPManagementGateway() {
-
-	log.Info("HTTP XDS listening on ", s.config.XDS.HTTPListen)
-	err := http.ListenAndServe(s.config.XDS.HTTPListen,
-		xdsHTTPGatewayWrapper{
-			Server: xds.HTTPGateway{},
-		})
-	if err != nil {
-		log.Fatalf("failed to HTTP serve: %v", err)
 	}
 }
 

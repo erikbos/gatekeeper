@@ -31,6 +31,8 @@ type xdsConfig struct {
 	GRPCListen         string        `yaml:"grpclisten"`         // grpc listen port
 	HTTPListen         string        `yaml:"httplisten"`         // http listen port
 	ConfigPushInterval time.Duration `yaml:"configpushinterval"` // XDS Config push update interval to envoyproxy
+	Cluster            string        `yaml:"cluster"`            // Name of cluster providing XDS service
+	Timeout            time.Duration `yaml:"timeout"`            // Max duration of request to XDS cluster
 }
 
 type envoyProxyConfig struct {

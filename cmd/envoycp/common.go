@@ -30,15 +30,32 @@ func buildAddress(hostname string, port int) *core.Address {
 	}
 }
 
-func buildGRPCService(clusterName string, d time.Duration) *core.GrpcService {
+func buildGRPCService(clusterName string, timeout time.Duration) *core.GrpcService {
 
 	return &core.GrpcService{
-		Timeout: ptypes.DurationProto(d),
+		Timeout: ptypes.DurationProto(timeout),
 		TargetSpecifier: &core.GrpcService_EnvoyGrpc_{
 			EnvoyGrpc: &core.GrpcService_EnvoyGrpc{
 				ClusterName: clusterName,
 			},
 		},
+	}
+}
+
+func buildConfigSource(cluster string, timeout time.Duration) *core.ConfigSource {
+
+	grpcService := []*core.GrpcService{
+		buildGRPCService(cluster, timeout),
+	}
+	return &core.ConfigSource{
+		ConfigSourceSpecifier: &core.ConfigSource_ApiConfigSource{
+			ApiConfigSource: &core.ApiConfigSource{
+				ApiType:             core.ApiConfigSource_GRPC,
+				GrpcServices:        grpcService,
+				TransportApiVersion: core.ApiVersion_V3,
+			},
+		},
+		ResourceApiVersion: core.ApiVersion_V3,
 	}
 }
 

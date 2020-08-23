@@ -16,5 +16,5 @@ func (logger logger) Errorf(format string, args ...interface{}) {
 	log.Errorf(format, args...)
 }
 func (logger logger) Debugf(format string, args ...interface{}) {
-	log.Debugf(format, args...)
+	log.Infof(format, args...)
 }

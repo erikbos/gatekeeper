@@ -123,7 +123,7 @@ func (s *server) showHTTPForwarding(c *gin.Context) {
 	}{
 		virtualhosts, routes, clusters, apiproducts,
 	}
-	c.Header("Content-type", "text/html")
+	c.Header("Content-type", "text/html; charset=utf-8")
 	c.Status(http.StatusOK)
 	t.Execute(c.Writer, templateVariables)
 }
