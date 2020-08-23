@@ -39,6 +39,7 @@ type envoyProxyConfig struct {
 	ExtAuthz    extAuthzConfig    `yaml:"extauthz"`    // Extauthz configuration options
 	Logging     envoyLogConfig    `yaml:"logging"`     // Logging configuration options
 	RateLimiter rateLimiterConfig `yaml:"ratelimiter"` // Ratelimiter configuration options
+	Misc        miscConfig        `yaml:"misc"`        // Miscellaneous configuration options
 }
 
 type extAuthzConfig struct {
@@ -68,6 +69,14 @@ type envoyLogConfig struct {
 		LogName    string        `yaml:"logname"`    // Logname to use in acceas log
 		Timeout    time.Duration `yaml:"timeout"`    // Timeout for connecting to access log cluster
 	} `yaml:"grpc"`
+}
+
+type miscConfig struct {
+	HTTPIdleTimeout             time.Duration `yaml:"httpidletimeout"`             // Timeout for HTTP traffic
+	MaxConcurrentStreams        uint32        `yaml:"maxconcurrentstreams"`        // MaxConcurrentStreams setting
+	InitialConnectionWindowSize uint32        `yaml:"initialconnectionwindowsize"` // InitialConnectionWindowSize setting
+	InitialStreamWindowSize     uint32        `yaml:"initialstreamwindowsize"`     // InitialStreamWindowSize setting
+	ServerName                  string        `yaml:"servername"`                  // ServerName for HTTP responses
 }
 
 const (

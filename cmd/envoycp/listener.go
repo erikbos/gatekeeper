@@ -15,6 +15,7 @@ import (
 	ratelimit "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/ratelimit/v3"
 	hcm "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 	tls "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/tls/v3"
+	envoymatcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
 	cache "github.com/envoyproxy/go-control-plane/pkg/cache/types"
 	"github.com/envoyproxy/go-control-plane/pkg/wellknown"
 	"github.com/golang/protobuf/ptypes"
@@ -186,26 +187,29 @@ func (s *server) buildFilterChainEntry(l *listener.Listener, v shared.VirtualHos
 	return FilterChainEntry
 }
 
-func (s *server) buildConnectionManager(httpFilters []*hcm.HttpFilter, v shared.VirtualHost) *hcm.HttpConnectionManager {
+func (s *server) buildConnectionManager(httpFilters []*hcm.HttpFilter,
+	vhost shared.VirtualHost) *hcm.HttpConnectionManager {
+
+	proxyConfig := &s.config.Envoyproxy
 
 	return &hcm.HttpConnectionManager{
 		CodecType:        hcm.HttpConnectionManager_AUTO,
 		StatPrefix:       "ingress_http",
 		UseRemoteAddress: protoBool(true),
-		// From https://www.envoyproxy.io/docs/envoy/latest/configuration/best_practices/edge#best-practices-edge
-		// FIXME these files should be config file parameters
+		HttpFilters:      httpFilters,
+		RouteSpecifier:   s.buildRouteSpecifierRDS(vhost.RouteGroup),
+		AccessLog:        buildAccessLog(proxyConfig.Logging, vhost),
+
 		CommonHttpProtocolOptions: &core.HttpProtocolOptions{
-			IdleTimeout: ptypes.DurationProto(15 * time.Minute),
+			IdleTimeout: ptypes.DurationProto(proxyConfig.Misc.HTTPIdleTimeout),
 		},
 		Http2ProtocolOptions: &core.Http2ProtocolOptions{
-			MaxConcurrentStreams:        protoUint32(100),
-			InitialConnectionWindowSize: protoUint32(65536),
-			InitialStreamWindowSize:     protoUint32(1048576),
+			MaxConcurrentStreams:        protoUint32(proxyConfig.Misc.MaxConcurrentStreams),
+			InitialConnectionWindowSize: protoUint32(proxyConfig.Misc.InitialConnectionWindowSize),
+			InitialStreamWindowSize:     protoUint32(proxyConfig.Misc.InitialStreamWindowSize),
 		},
-		RouteSpecifier: s.buildRouteSpecifierRDS(v.RouteGroup),
-		// RouteSpecifier:   s.buildRouteSpecifier(v.RouteGroup),
-		HttpFilters: httpFilters,
-		AccessLog:   buildAccessLog(s.config.Envoyproxy.Logging, v),
+		ServerName:       proxyConfig.Misc.ServerName,
+		LocalReplyConfig: buildLocalOverWrite(vhost),
 	}
 }
 
@@ -396,4 +400,67 @@ func buildGRPCAccessLog(clusterName, LogName string, timeout time.Duration, buff
 			TypedConfig: accessLogTypedConf,
 		},
 	}}
+}
+
+// buildLocalOverWrite generates all the local rewrites Envoyproxy should do
+func buildLocalOverWrite(vhost shared.VirtualHost) *hcm.LocalReplyConfig {
+
+	return &hcm.LocalReplyConfig{
+		Mappers: []*hcm.ResponseMapper{
+			buildLocalOverWrite429to403(vhost),
+		},
+	}
+}
+
+func buildLocalOverWrite429to403(vhost shared.VirtualHost) *hcm.ResponseMapper {
+
+	// This matches on
+	// 1) response status code 429
+	// 2) metadata path "envoy.filters.http.ext_authz" (wellknown.HTTPExternalAuthorization)
+	// 3) checks for presence of key "rl429to403"
+	return &hcm.ResponseMapper{
+		Filter: &accesslog.AccessLogFilter{
+			FilterSpecifier: &accesslog.AccessLogFilter_AndFilter{
+				AndFilter: &accesslog.AndFilter{
+					Filters: []*accesslog.AccessLogFilter{
+						{
+							FilterSpecifier: &accesslog.AccessLogFilter_StatusCodeFilter{
+								StatusCodeFilter: &accesslog.StatusCodeFilter{
+									Comparison: &accesslog.ComparisonFilter{
+										Op: accesslog.ComparisonFilter_EQ,
+										Value: &core.RuntimeUInt32{
+											DefaultValue: 429,
+											RuntimeKey:   "rl429to403",
+										},
+									},
+								},
+							},
+						},
+						{
+							FilterSpecifier: &accesslog.AccessLogFilter_MetadataFilter{
+								MetadataFilter: &accesslog.MetadataFilter{
+									Matcher: &envoymatcher.MetadataMatcher{
+										Filter: wellknown.HTTPExternalAuthorization,
+										Path: []*envoymatcher.MetadataMatcher_PathSegment{
+											{
+												Segment: &envoymatcher.MetadataMatcher_PathSegment_Key{
+													Key: "rl429to403",
+												},
+											},
+										},
+										Value: &envoymatcher.ValueMatcher{
+											MatchPattern: &envoymatcher.ValueMatcher_PresentMatch{
+												PresentMatch: true,
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		StatusCode: protoUint32(403),
+	}
 }
