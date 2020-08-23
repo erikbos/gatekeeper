@@ -11,6 +11,7 @@ import (
 	route "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
 	envoyauth "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/ext_authz/v3"
 	envoymatcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
+	envoytypemetadata "github.com/envoyproxy/go-control-plane/envoy/type/metadata/v3"
 	envoytype "github.com/envoyproxy/go-control-plane/envoy/type/v3"
 	cache "github.com/envoyproxy/go-control-plane/pkg/cache/types"
 	"github.com/envoyproxy/go-control-plane/pkg/wellknown"
@@ -219,7 +220,8 @@ func buildRouteActionCluster(routeEntry shared.Route) *route.Route_Route {
 		}
 	}
 
-	action.Route.RequestMirrorPolicies = buildRequestMirrorPolicy(routeEntry)
+	action.Route.RateLimits = buildRateLimits(routeEntry)
+	action.Route.RequestMirrorPolicies = buildRequestMirrorPolicies(routeEntry)
 
 	return action
 }
@@ -258,7 +260,7 @@ func buildWeightedClusters(routeEntry shared.Route) *route.RouteAction_WeightedC
 	}
 }
 
-func buildRequestMirrorPolicy(routeEntry shared.Route) []*route.RouteAction_RequestMirrorPolicy {
+func buildRequestMirrorPolicies(routeEntry shared.Route) []*route.RouteAction_RequestMirrorPolicy {
 
 	mirrorCluster := routeEntry.Attributes.GetAsString(attributeRequestMirrorClusterName, "")
 	mirrorPercentage := routeEntry.Attributes.GetAsString(attributeRequestMirrorPercentage, "")
@@ -480,6 +482,48 @@ func buildHeadersList(headers map[string]string) []*core.HeaderValueOption {
 		})
 	}
 	return headerList
+}
+
+func buildRateLimits(routeEntry shared.Route) []*route.RateLimit {
+
+	value, err := routeEntry.Attributes.Get(attributeDisableRateLimiter)
+	if err == nil && value == attributeValueTrue {
+		return nil
+	}
+
+	return []*route.RateLimit{{
+		Actions: []*route.RateLimit_Action{{
+			ActionSpecifier: &route.RateLimit_Action_DynamicMetadata{
+				DynamicMetadata: &route.RateLimit_Action_DynamicMetaData{
+					DescriptorKey: "1",
+					MetadataKey: &envoytypemetadata.MetadataKey{
+						Key: wellknown.HTTPExternalAuthorization,
+						Path: []*envoytypemetadata.MetadataKey_PathSegment{{
+							Segment: &envoytypemetadata.MetadataKey_PathSegment_Key{
+								Key: "42",
+							},
+						}},
+					},
+					DefaultValue: "5",
+				},
+			},
+		}},
+		Stage: protoUint32(0),
+		Limit: &route.RateLimit_Override{
+			OverrideSpecifier: &route.RateLimit_Override_DynamicMetadata_{
+				DynamicMetadata: &route.RateLimit_Override_DynamicMetadata{
+					MetadataKey: &envoytypemetadata.MetadataKey{
+						Key: wellknown.HTTPExternalAuthorization,
+						Path: []*envoytypemetadata.MetadataKey_PathSegment{{
+							Segment: &envoytypemetadata.MetadataKey_PathSegment_Key{
+								Key: "rl",
+							},
+						}},
+					},
+				},
+			},
+		},
+	}}
 }
 
 func buildRetryPolicy(routeEntry shared.Route) *route.RetryPolicy {

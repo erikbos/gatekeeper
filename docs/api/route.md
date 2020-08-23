@@ -50,7 +50,8 @@ Every route can have optional attributes which control what Envoy will do to mat
 
 | attribute name           | purpose                                                       | possible values        |
 | ------------------------ | ------------------------------------------------------------- | ---------------------- |
-| DisableAuthentication    | Disable authentication via extauthz on route                  | true                   |
+| DisableAuthentication    | Disable request authentication via extauthz                   | false, true            |
+| DisableRateLimiter       | Disable ratelimiting of request                               | false, true            |
 | DirectResponseStatusCode | Return an arbitrary HTTP response directly, without proxying. | 200                    |
 | DirectResponseBody       | Responsebody to return when direct response is done           | Hello World            |
 | RedirectStatusCode       | Return an HTTP redirect                                       | 301,302,303,307 or 308 |

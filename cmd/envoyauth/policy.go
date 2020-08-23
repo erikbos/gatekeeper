@@ -274,26 +274,29 @@ func policyQPS1(request *requestInfo) *PolicyResponse {
 		return nil
 	}
 
-	quotaAttributeName := request.APIProduct.Name + "_quotaPerSecond"
-	quotaKey := *request.apikey + "_a_" + quotaAttributeName
+	// quotaAttributeName := request.APIProduct.Name + "_quotaPerSecond"
+	// quotaKey := *request.apikey + "_a_" + quotaAttributeName
 
+	quotaAttributeName := request.APIProduct.Name + "_quotaPerSecond"
 	value, err := request.developerApp.Attributes.Get(quotaAttributeName)
 	if err == nil && value != "" {
 		return &PolicyResponse{
-			headers: map[string]string{
-				"QPS-Quota-Key": quotaKey,
-				"QPS-Rate":      value,
-				"QPS-Source":    "app",
+			metadata: map[string]string{
+				"rl.requests_per_unit": value,
+				"rl.unit":              "SECOND",
+				"rl.scope":             "app",
+				// "QPS-Quota-Key":        quotaKey,
 			},
 		}
 	}
 	value, err = request.APIProduct.Attributes.Get(quotaAttributeName)
 	if err == nil && value != "" {
 		return &PolicyResponse{
-			headers: map[string]string{
-				"QPS-Quota-Key": quotaKey,
-				"QPS-Rate":      value,
-				"QPS-Source":    "apiproduct",
+			metadata: map[string]string{
+				"rl.requests_per_unit": value,
+				"rl.unit":              "SECOND",
+				"rl.scope":             "apiproduct",
+				// "QPS-Quota-Key":        quotaKey,
 			},
 		}
 	}

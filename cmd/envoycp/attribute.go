@@ -15,6 +15,7 @@ const (
 
 	// Route attributes
 	attributeDisableAuthentication    = "DisableAuthentication"
+	attributeDisableRateLimiter       = "DisableRateLimiter"
 	attributeDirectResponseStatusCode = "DirectResponseStatusCode"
 	attributeDirectResponseBody       = "DirectResponseBody"
 	attributeRedirectStatusCode       = "RedirectStatusCode"
@@ -112,6 +113,7 @@ func warnForUnknownRouteAttributes(route shared.Route) {
 
 	var validRouteAttributes = map[string]bool{
 		attributeDisableAuthentication:    true,
+		attributeDisableRateLimiter:       true,
 		attributeDirectResponseStatusCode: true,
 		attributeDirectResponseBody:       true,
 		attributePrefixRewrite:            true,

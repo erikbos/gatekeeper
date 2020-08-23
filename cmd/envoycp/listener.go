@@ -8,9 +8,11 @@ import (
 	accesslog "github.com/envoyproxy/go-control-plane/envoy/config/accesslog/v3"
 	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	listener "github.com/envoyproxy/go-control-plane/envoy/config/listener/v3"
+	ratelimitconf "github.com/envoyproxy/go-control-plane/envoy/config/ratelimit/v3"
 	fileaccesslog "github.com/envoyproxy/go-control-plane/envoy/extensions/access_loggers/file/v3"
 	grpcaccesslog "github.com/envoyproxy/go-control-plane/envoy/extensions/access_loggers/grpc/v3"
 	extauthz "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/ext_authz/v3"
+	ratelimit "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/ratelimit/v3"
 	hcm "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 	tls "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/tls/v3"
 	cache "github.com/envoyproxy/go-control-plane/pkg/cache/types"
@@ -209,13 +211,21 @@ func (s *server) buildFilter() []*hcm.HttpFilter {
 			Name: wellknown.CORS,
 		},
 		{
+			Name: wellknown.HTTPRateLimit,
+			ConfigType: &hcm.HttpFilter_TypedConfig{
+				TypedConfig: s.buildRateLimiterFilterConfig(),
+			},
+		},
+		{
 			Name: wellknown.Router,
 		},
 	}
 }
 
 func (s *server) buildExtAuthzFilterConfig() *anypb.Any {
-	if s.config.Envoyproxy.ExtAuthz.Cluster == "" {
+
+	if !s.config.Envoyproxy.ExtAuthz.Enable ||
+		s.config.Envoyproxy.ExtAuthz.Cluster == "" {
 		return nil
 	}
 
@@ -236,6 +246,32 @@ func (s *server) buildExtAuthzFilterConfig() *anypb.Any {
 		log.Panic(err)
 	}
 	return extAuthzTypedConf
+}
+
+func (s *server) buildRateLimiterFilterConfig() *anypb.Any {
+
+	if !s.config.Envoyproxy.RateLimiter.Enable ||
+		s.config.Envoyproxy.RateLimiter.Cluster == "" {
+		return nil
+	}
+
+	ratelimit := &ratelimit.RateLimit{
+		Domain:          s.config.Envoyproxy.RateLimiter.Domain,
+		Stage:           0,
+		FailureModeDeny: s.config.Envoyproxy.RateLimiter.FailureModeDeny,
+		Timeout:         ptypes.DurationProto(s.config.Envoyproxy.RateLimiter.Timeout),
+		RateLimitService: &ratelimitconf.RateLimitServiceConfig{
+			GrpcService: buildGRPCService(s.config.Envoyproxy.RateLimiter.Cluster,
+				s.config.Envoyproxy.RateLimiter.Timeout),
+			TransportApiVersion: core.ApiVersion_V3,
+		},
+	}
+
+	ratelimitTypedConf, err := ptypes.MarshalAny(ratelimit)
+	if err != nil {
+		log.Panic(err)
+	}
+	return ratelimitTypedConf
 }
 
 func (s *server) extAuthzWithRequestBody() *extauthz.BufferSettings {

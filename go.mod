@@ -6,9 +6,9 @@ require (
 	github.com/bmatcuk/doublestar v1.3.2
 	github.com/coocood/freecache v1.1.1
 	github.com/dchest/uniuri v0.0.0-20200228104902-7aecb25e1fe5
-	github.com/envoyproxy/go-control-plane v0.9.7-0.20200811182123-112a4904c4b0
+	github.com/envoyproxy/go-control-plane v0.9.7-0.20200822152138-e25c9f156170
 	github.com/gin-gonic/gin v1.6.3
-	github.com/gocql/gocql v0.0.0-20200624222514-34081eda590e
+	github.com/gocql/gocql v0.0.0-20200815110948-5378c8f664e9
 	github.com/gogo/googleapis v1.4.0
 	github.com/golang/protobuf v1.4.2
 	github.com/golang/snappy v0.0.1 // indirect

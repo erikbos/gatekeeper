@@ -126,7 +126,7 @@ func (a *authorizationServer) IsRequestPathAllowed(organization, requestPath str
 			}
 		}
 	}
-	return nil, errors.New("No product entitlement for requested path")
+	return nil, errors.New("Not authorized for requested path")
 }
 
 // getAPIPRoduct retrieves an API Product through mem cache
