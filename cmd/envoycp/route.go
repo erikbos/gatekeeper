@@ -202,6 +202,8 @@ func buildRouteActionCluster(routeEntry shared.Route) *route.Route_Route {
 			Cors:                 buildCorsPolicy(routeEntry),
 			HostRewriteSpecifier: buildHostRewriteSpecifier(routeEntry),
 			RetryPolicy:          buildRetryPolicy(routeEntry),
+			Timeout: ptypes.DurationProto(routeEntry.Attributes.GetAsDuration(attributeTimeout,
+				defaultRouteTimeout)),
 		},
 	}
 
@@ -532,10 +534,10 @@ func buildRetryPolicy(routeEntry shared.Route) *route.RetryPolicy {
 	if RetryOn == "" {
 		return nil
 	}
-	perTryTimeout := routeEntry.Attributes.GetAsDuration(attributePerTryTimeout, perRetryTimeout)
+	perTryTimeout := routeEntry.Attributes.GetAsDuration(attributePerTryTimeout, defaultPerRetryTimeout)
 	numRetries := uint32(routeEntry.Attributes.GetAsUInt32(attributeNumRetries, 2))
 	RetriableStatusCodes := buildStatusCodesSlice(
-		routeEntry.Attributes.GetAsString(attributeRetryOnStatusCodes, "503"))
+		routeEntry.Attributes.GetAsString(attributeRetryOnStatusCodes, defaultRetryStatusCodes))
 
 	return &route.RetryPolicy{
 		RetryOn:              RetryOn,

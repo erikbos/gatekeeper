@@ -38,9 +38,12 @@ const (
 	attributeRetryOnStatusCodes       = "RetryOnStatusCodes"
 	attributeRequestMirrorClusterName = "RequestMirrorClusterName"
 	attributeRequestMirrorPercentage  = "RequestMirrorPercentage"
+	attributeTimeout                  = "Timeout"
 
 	// Default route configuration values
-	perRetryTimeout = 500 * time.Millisecond
+	defaultRouteTimeout     = 20 * time.Second
+	defaultPerRetryTimeout  = 500 * time.Millisecond
+	defaultRetryStatusCodes = "500,503,504"
 
 	// Cluster attributes
 	attributeConnectTimeout                = "ConnectTimeout"
@@ -130,6 +133,7 @@ func warnForUnknownRouteAttributes(route shared.Route) {
 		attributeRetryOnStatusCodes:       true,
 		attributeRequestMirrorClusterName: true,
 		attributeRequestMirrorPercentage:  true,
+		attributeTimeout:                  true,
 	}
 
 	warnForUnknownAttribute("Route", route.Name,
