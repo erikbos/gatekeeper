@@ -2,8 +2,6 @@ package main
 
 import (
 	"strings"
-	"sync"
-	"time"
 
 	envoyCluster "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
 	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
@@ -18,65 +16,15 @@ import (
 	"github.com/erikbos/gatekeeper/pkg/shared"
 )
 
-const (
-	clusterDataRefreshInterval = 2 * time.Second
-)
-
-// FIXME this does not detect removed records
-// getClusterConfigFromDatabase continuously gets the current configuration
-func (s *server) GetClusterConfigFromDatabase(n chan xdsNotifyMesssage) {
-
-	var clustersLastUpdate int64
-	var clusterMutex sync.Mutex
-
-	for {
-		var xdsPushNeeded bool
-
-		newClusterList, err := s.db.Cluster.GetAll()
-		if err != nil {
-			log.Errorf("Could not retrieve clusters from database (%s)", err)
-		} else {
-			// Is one of the cluster updated since last time pushed config to Envoy?
-			if clustersLastUpdate == 0 {
-				log.Info("Initial load of clusters")
-			}
-			for _, cluster := range newClusterList {
-				if cluster.LastmodifiedAt > clustersLastUpdate {
-					clusterMutex.Lock()
-					s.clusters = newClusterList
-					clusterMutex.Unlock()
-
-					clustersLastUpdate = shared.GetCurrentTimeMilliseconds()
-					xdsPushNeeded = true
-
-					warnForUnknownClusterAttributes(cluster)
-				}
-			}
-		}
-		if xdsPushNeeded {
-			n <- xdsNotifyMesssage{
-				resource: "cluster",
-			}
-			// Increase xds deployment metric
-			s.metrics.xdsDeployments.WithLabelValues("clusters").Inc()
-		}
-		time.Sleep(clusterDataRefreshInterval)
-	}
-}
-
-// GetClusterCount returns number of clusters
-func (s *server) GetClusterCount() float64 {
-
-	return float64(len(s.clusters))
-}
-
 // getClusterConfig returns array of all envoy clusters
 func (s *server) getEnvoyClusterConfig() ([]cache.Resource, error) {
 
 	envoyClusters := []cache.Resource{}
 
-	for _, s := range s.clusters {
-		envoyClusters = append(envoyClusters, buildEnvoyClusterConfig(s))
+	for _, cluster := range s.dbentities.GetClusters() {
+		warnForUnknownClusterAttributes(cluster)
+
+		envoyClusters = append(envoyClusters, buildEnvoyClusterConfig(cluster))
 	}
 
 	return envoyClusters, nil

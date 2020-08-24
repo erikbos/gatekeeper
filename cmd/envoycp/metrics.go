@@ -17,21 +17,27 @@ func (s *server) registerMetrics() {
 			Namespace: applicationName,
 			Name:      "xds_virtualhosts_total",
 			Help:      "Total number of clusters.",
-		}, s.GetVirtualHostCount)
+		}, func() float64 {
+			return float64(s.dbentities.GetVirtualHostCount())
+		})
 
 	metricRoutesCount := prometheus.NewGaugeFunc(
 		prometheus.GaugeOpts{
 			Namespace: applicationName,
 			Name:      "xds_routes_total",
 			Help:      "Total number of routes.",
-		}, s.GetRouteCount)
+		}, func() float64 {
+			return float64(s.dbentities.GetRouteCount())
+		})
 
 	metricClustersCount := prometheus.NewGaugeFunc(
 		prometheus.GaugeOpts{
 			Namespace: applicationName,
 			Name:      "xds_clusters_total",
 			Help:      "Total number of clusters.",
-		}, s.GetClusterCount)
+		}, func() float64 {
+			return float64(s.dbentities.GetClusterCount())
+		})
 
 	s.metrics.xdsDeployments = prometheus.NewCounterVec(
 		prometheus.CounterOpts{

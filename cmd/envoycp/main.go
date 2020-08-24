@@ -3,8 +3,6 @@ package main
 import (
 	"flag"
 
-	"github.com/envoyproxy/go-control-plane/pkg/cache/v3"
-	xds "github.com/envoyproxy/go-control-plane/pkg/server/v3"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 
@@ -24,16 +22,12 @@ const (
 )
 
 type server struct {
-	config       *EnvoyCPConfig
-	ginEngine    *gin.Engine
-	db           *db.Database
-	readiness    *shared.Readiness
-	virtualhosts []shared.VirtualHost
-	routes       []shared.Route
-	clusters     []shared.Cluster
-	xds          xds.Server
-	xdsCache     cache.SnapshotCache
-	metrics      metricsCollection
+	config     *EnvoyCPConfig
+	ginEngine  *gin.Engine
+	db         *db.Database
+	dbentities *db.Entityloader
+	readiness  *shared.Readiness
+	metrics    metricsCollection
 }
 
 func main() {
@@ -60,9 +54,9 @@ func main() {
 	s.registerMetrics()
 	go s.StartWebAdminServer()
 
-	xdsNotify := make(chan xdsNotifyMesssage)
-	go s.GetVirtualHostConfigFromDatabase(xdsNotify)
-	go s.GetRouteConfigFromDatabase(xdsNotify)
-	go s.GetClusterConfigFromDatabase(xdsNotify)
-	s.StartXDS(xdsNotify)
+	s.dbentities = db.NewEntityLoader(s.db, s.config.XDS.ConfigCompileInterval)
+	s.dbentities.Run()
+
+	x := newXDS(s, s.config.XDS, s.dbentities.GetNotifyChannel())
+	x.Start()
 }

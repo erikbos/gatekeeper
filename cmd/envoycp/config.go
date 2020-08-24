@@ -27,14 +27,6 @@ type EnvoyCPConfig struct {
 	Envoyproxy envoyProxyConfig         `yaml:"envoyproxy"` // Envoyproxy configuration
 }
 
-type xdsConfig struct {
-	GRPCListen         string        `yaml:"grpclisten"`         // grpc listen port
-	HTTPListen         string        `yaml:"httplisten"`         // http listen port
-	ConfigPushInterval time.Duration `yaml:"configpushinterval"` // XDS Config push update interval to envoyproxy
-	Cluster            string        `yaml:"cluster"`            // Name of cluster providing XDS service
-	Timeout            time.Duration `yaml:"timeout"`            // Max duration of request to XDS cluster
-}
-
 type envoyProxyConfig struct {
 	ExtAuthz    extAuthzConfig    `yaml:"extauthz"`    // Extauthz configuration options
 	Logging     envoyLogConfig    `yaml:"logging"`     // Logging configuration options
@@ -92,9 +84,8 @@ func loadConfiguration(filename *string) *EnvoyCPConfig {
 			LogFileName: defaultWebAdminLogFileName,
 		},
 		XDS: xdsConfig{
-			GRPCListen:         defaultXDSGRPCListen,
-			HTTPListen:         defaultXDSHTTPListen,
-			ConfigPushInterval: defaultConfigPushInterval,
+			GRPCListen:            defaultXDSGRPCListen,
+			ConfigCompileInterval: defaultConfigPushInterval,
 		},
 	}
 

@@ -21,8 +21,7 @@ database:
 
 xds:
   grpclisten: 0.0.0.0:9901
-  httplisten: 0.0.0.0:9903
-  configpushinterval: 2s
+  configcompileinterval: 2s
   cluster: envoycp
   timeout: 2s
 

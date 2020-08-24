@@ -4,8 +4,6 @@ import (
 	"encoding/base64"
 	"strconv"
 	"strings"
-	"sync"
-	"time"
 
 	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	route "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
@@ -23,63 +21,16 @@ import (
 	"github.com/erikbos/gatekeeper/pkg/shared"
 )
 
-const (
-	routeDataRefreshInterval = 2 * time.Second
-)
-
-// FIXME this does not detect removed records
-// GetRouteConfigFromDatabase continuously gets the current configuration
-func (s *server) GetRouteConfigFromDatabase(n chan xdsNotifyMesssage) {
-	var routesLastUpdate int64
-	var routeMutex sync.Mutex
-
-	for {
-		var xdsPushNeeded bool
-
-		newRouteList, err := s.db.Route.GetAll()
-		if err != nil {
-			log.Errorf("Could not retrieve routes from database (%s)", err)
-		} else {
-			if routesLastUpdate == 0 {
-				log.Info("Initial load of routes")
-			}
-			for _, route := range newRouteList {
-				// Is a cluster updated since last time we stored it?
-				if route.LastmodifiedAt > routesLastUpdate {
-					routeMutex.Lock()
-					s.routes = newRouteList
-					routeMutex.Unlock()
-
-					routesLastUpdate = shared.GetCurrentTimeMilliseconds()
-					xdsPushNeeded = true
-
-					warnForUnknownRouteAttributes(route)
-				}
-			}
-		}
-		if xdsPushNeeded {
-			n <- xdsNotifyMesssage{
-				resource: "route",
-			}
-			s.metrics.xdsDeployments.WithLabelValues("routes").Inc()
-		}
-		time.Sleep(routeDataRefreshInterval)
-	}
-}
-
-// GetRouteCount returns number of routes
-func (s *server) GetRouteCount() float64 {
-	return float64(len(s.routes))
-}
-
 // getEnvoyRouteConfig returns array of all envoy routes
 func (s *server) getEnvoyRouteConfig() ([]cache.Resource, error) {
 	var envoyRoutes []cache.Resource
 
-	RouteGroupNames := s.getRouteGroupNames(s.routes)
+	RouteGroupNames := s.getRouteGroupNames(s.dbentities.GetRoutes())
 	for RouteGroupName := range RouteGroupNames {
-		log.Infof("Adding routegroup '%s'", RouteGroupName)
-		envoyRoutes = append(envoyRoutes, s.buildEnvoyVirtualHostRouteConfig(RouteGroupName, s.routes))
+		log.Infof("XDS adding routegroup '%s'", RouteGroupName)
+		envoyRoutes = append(envoyRoutes,
+			s.buildEnvoyVirtualHostRouteConfig(RouteGroupName,
+				s.dbentities.GetRoutes()))
 	}
 
 	return envoyRoutes, nil
@@ -88,7 +39,7 @@ func (s *server) getEnvoyRouteConfig() ([]cache.Resource, error) {
 // getVirtualHostPorts returns set of unique RouteGroup names
 func (s *server) getRouteGroupNames(vhosts []shared.Route) map[string]bool {
 	RouteGroupNames := map[string]bool{}
-	for _, routeEntry := range s.routes {
+	for _, routeEntry := range s.dbentities.GetRoutes() {
 		RouteGroupNames[routeEntry.RouteGroup] = true
 	}
 	return RouteGroupNames
@@ -115,6 +66,8 @@ func (s *server) buildEnvoyRoutes(RouteGroup string, routes []shared.Route) []*r
 	var envoyRoutes []*route.Route
 
 	for _, route := range routes {
+		warnForUnknownRouteAttributes(route)
+
 		if route.RouteGroup == RouteGroup {
 			envoyRoutes = append(envoyRoutes, s.buildEnvoyRoute(route))
 		}

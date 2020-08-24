@@ -40,9 +40,7 @@ func (s *server) StartWebAdminServer() {
 	s.ginEngine.GET(shared.ConfigDumpPath, s.ConfigDump)
 
 	log.Info("Webadmin listening on ", s.config.WebAdmin.Listen)
-	if err := s.ginEngine.Run(s.config.WebAdmin.Listen); err != nil {
-		log.Fatal(err)
-	}
+	log.Fatal(s.ginEngine.Run(s.config.WebAdmin.Listen))
 }
 
 // ShowWebAdminHomePage shows home page

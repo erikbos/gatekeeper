@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"sync"
 	"time"
 
 	accesslog "github.com/envoyproxy/go-control-plane/envoy/config/accesslog/v3"
@@ -27,55 +26,9 @@ import (
 )
 
 const (
-	virtualHostDataRefreshInterval = 2 * time.Second
-	extAuthzTimeout                = 100 * time.Millisecond
+	// virtualHostDataRefreshInterval = 2 * time.Second
+	extAuthzTimeout = 100 * time.Millisecond
 )
-
-// FIXME this does not detect removed records
-// GetVirtualHostConfigFromDatabase continuously gets the current configuration
-func (s *server) GetVirtualHostConfigFromDatabase(n chan xdsNotifyMesssage) {
-	var virtualHostsLastUpdate int64
-	var virtualHostsMutex sync.Mutex
-
-	for {
-		var xdsPushNeeded bool
-
-		newVirtualHosts, err := s.db.Virtualhost.GetAll()
-		if err != nil {
-			log.Errorf("Could not retrieve virtualhosts from database (%s)", err)
-		} else {
-			if virtualHostsLastUpdate == 0 {
-				log.Info("Initial load of virtualhosts")
-			}
-			for _, virtualhost := range newVirtualHosts {
-				// Is a virtualhosts updated since last time we stored it?
-				if virtualhost.LastmodifiedAt > virtualHostsLastUpdate {
-					virtualHostsMutex.Lock()
-					s.virtualhosts = newVirtualHosts
-					virtualHostsMutex.Unlock()
-
-					virtualHostsLastUpdate = shared.GetCurrentTimeMilliseconds()
-					xdsPushNeeded = true
-
-					warnForUnknownVirtualHostAttributes(virtualhost)
-				}
-			}
-		}
-		if xdsPushNeeded {
-			n <- xdsNotifyMesssage{
-				resource: "virtualhost",
-			}
-			// Increase xds deployment metric
-			s.metrics.xdsDeployments.WithLabelValues("virtualhosts").Inc()
-		}
-		time.Sleep(virtualHostDataRefreshInterval)
-	}
-}
-
-// GetVirtualHostCount returns number of virtualhosts
-func (s *server) GetVirtualHostCount() float64 {
-	return float64(len(s.virtualhosts))
-}
 
 // getEnvoyListenerConfig returns array of envoy listeners
 func (s *server) getEnvoyListenerConfig() ([]cache.Resource, error) {
@@ -83,7 +36,7 @@ func (s *server) getEnvoyListenerConfig() ([]cache.Resource, error) {
 
 	uniquePorts := s.getVirtualHostPorts()
 	for port := range uniquePorts {
-		log.Infof("Adding listener & vhosts on port %d", port)
+		log.Infof("XDS adding listener & vhosts on port %d", port)
 		envoyListeners = append(envoyListeners, s.buildEnvoyListenerConfig(port))
 	}
 	return envoyListeners, nil
@@ -92,7 +45,7 @@ func (s *server) getEnvoyListenerConfig() ([]cache.Resource, error) {
 // getVirtualHostPorts return unique set of ports from vhost configuration
 func (s *server) getVirtualHostPorts() map[int]bool {
 	listenerPorts := map[int]bool{}
-	for _, virtualhost := range s.virtualhosts {
+	for _, virtualhost := range s.dbentities.GetVirtualhosts() {
 		listenerPorts[virtualhost.Port] = true
 	}
 	return listenerPorts
@@ -102,7 +55,9 @@ func (s *server) getVirtualHostPorts() map[int]bool {
 func (s *server) getVirtualHostsOfRouteGroup(RouteGroupName string) []string {
 	var virtualHostsInRouteGroup []string
 
-	for _, virtualhost := range s.virtualhosts {
+	for _, virtualhost := range s.dbentities.GetVirtualhosts() {
+		warnForUnknownVirtualHostAttributes(virtualhost)
+
 		if virtualhost.RouteGroup == RouteGroupName {
 			virtualHostsInRouteGroup = append(virtualHostsInRouteGroup, virtualhost.VirtualHosts...)
 		}
@@ -119,7 +74,7 @@ func (s *server) buildEnvoyListenerConfig(port int) *listener.Listener {
 	}
 
 	// add all vhosts belonging to this listener's port
-	for _, virtualhost := range s.virtualhosts {
+	for _, virtualhost := range s.dbentities.GetVirtualhosts() {
 		if virtualhost.Port == port {
 			newListener.FilterChains = append(newListener.FilterChains, s.buildFilterChainEntry(newListener, virtualhost))
 		}

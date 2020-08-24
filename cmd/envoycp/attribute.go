@@ -133,6 +133,12 @@ func warnForUnknownRouteAttributes(route shared.Route) {
 		attributeRetryOnStatusCodes:       true,
 		attributeRequestMirrorClusterName: true,
 		attributeRequestMirrorPercentage:  true,
+		attributeRedirectStatusCode:       true,
+		attributeRedirectScheme:           true,
+		attributeRedirectHostName:         true,
+		attributeRedirectPort:             true,
+		attributeRedirectPath:             true,
+		attributeRedirectStripQuery:       true,
 		attributeTimeout:                  true,
 	}
 
