@@ -27,6 +27,12 @@ type EntityChangeNotification struct {
 	Resource string // Name of resource type that has been changed
 }
 
+const (
+	EntityTypeVirtualhost = "virtualhost"
+	EntityTypeRoute       = "route"
+	EntityTypeCluster     = "cluster"
+)
+
 // NewEntityLoader returns a new entity loader
 func NewEntityLoader(database *Database, interval time.Duration) *Entityloader {
 
@@ -38,7 +44,7 @@ func NewEntityLoader(database *Database, interval time.Duration) *Entityloader {
 }
 
 // Run continously monitors the database for configuration entities
-func (g *Entityloader) Run() {
+func (g *Entityloader) Start() {
 
 	go g.LoadContinously()
 }
@@ -57,7 +63,7 @@ func (g *Entityloader) LoadContinously() {
 		} else {
 			if g.virtualHostConfigChanged(newVirtualHosts) {
 				log.Info("Virtualhost configuration loaded")
-				g.notify <- EntityChangeNotification{Resource: "virtualhost"}
+				g.notify <- EntityChangeNotification{Resource: EntityTypeVirtualhost}
 			}
 		}
 
@@ -66,7 +72,7 @@ func (g *Entityloader) LoadContinously() {
 		} else {
 			if g.routeConfigChanged(newRoutes) {
 				log.Info("Route configuration loaded")
-				g.notify <- EntityChangeNotification{Resource: "route"}
+				g.notify <- EntityChangeNotification{Resource: EntityTypeRoute}
 			}
 		}
 
@@ -75,7 +81,7 @@ func (g *Entityloader) LoadContinously() {
 		} else {
 			if g.clusterConfigChanged(newClusters) {
 				log.Info("Cluster configuration loaded")
-				g.notify <- EntityChangeNotification{Resource: "cluster"}
+				g.notify <- EntityChangeNotification{Resource: EntityTypeCluster}
 			}
 		}
 
@@ -171,8 +177,8 @@ func (g *Entityloader) GetClusterCount() int {
 	return len(g.clusters)
 }
 
-// GetNotifyChannel returns notification channel
-func (g *Entityloader) GetNotifyChannel() chan EntityChangeNotification {
+// GetChannel returns notification channel
+func (g *Entityloader) GetChannel() chan EntityChangeNotification {
 
 	return g.notify
 }

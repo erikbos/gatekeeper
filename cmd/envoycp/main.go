@@ -12,13 +12,13 @@ import (
 )
 
 var (
-	version   string
-	buildTime string
+	version   string // Git version of build, set by Makefile
+	buildTime string // Build time, set by Makefile
 )
 
 const (
-	applicationName       = "envoycp"
-	defaultConfigFileName = "envoycp-config.yaml"
+	applicationName       = "envoycp"             // Name of application, used in Prometheus metrics
+	defaultConfigFileName = "envoycp-config.yaml" // Default configuration file
 )
 
 type server struct {
@@ -54,9 +54,11 @@ func main() {
 	s.registerMetrics()
 	go s.StartWebAdminServer()
 
+	// Start continously loading of virtual host, routes & cluster data
 	s.dbentities = db.NewEntityLoader(s.db, s.config.XDS.ConfigCompileInterval)
-	s.dbentities.Run()
+	s.dbentities.Start()
 
-	x := newXDS(s, s.config.XDS, s.dbentities.GetNotifyChannel())
+	// Start XDS control plane service
+	x := newXDS(s, s.config.XDS, s.dbentities.GetChannel())
 	x.Start()
 }

@@ -22,7 +22,7 @@ import (
 )
 
 type envoyAuthConfig struct {
-	Listen string `yaml:"listen"`
+	Listen string `yaml:"listen"` // GRPC Address and port to listen for control plane
 }
 
 // requestInfo holds all information of a request
@@ -41,7 +41,7 @@ type requestInfo struct {
 }
 
 // startGRPCAuthorizationServer starts extauthz grpc listener
-func (a *authorizationServer) startGRPCAuthorizationServer() {
+func (a *authorizationServer) StartAuthorizationServer() {
 
 	lis, err := net.Listen("tcp", a.config.EnvoyAuth.Listen)
 	if err != nil {
@@ -58,7 +58,8 @@ func (a *authorizationServer) startGRPCAuthorizationServer() {
 }
 
 // Check (called by Envoy) to authenticate & authorize a HTTP request
-func (a *authorizationServer) Check(ctx context.Context, authRequest *authservice.CheckRequest) (*authservice.CheckResponse, error) {
+func (a *authorizationServer) Check(ctx context.Context,
+	authRequest *authservice.CheckRequest) (*authservice.CheckResponse, error) {
 
 	timer := prometheus.NewTimer(a.metrics.authLatencyHistogram)
 	defer timer.ObserveDuration()
@@ -71,7 +72,7 @@ func (a *authorizationServer) Check(ctx context.Context, authRequest *authservic
 	a.logRequestDebug(request)
 
 	// FIXME not sure if x-forwarded-proto the way to determine original tcp port used
-	request.vhost, err = a.lookupVhost(request.httpRequest.Host, request.httpRequest.Headers["x-forwarded-proto"])
+	request.vhost, err = a.vhosts.Lookup(request.httpRequest.Host, request.httpRequest.Headers["x-forwarded-proto"])
 	if err != nil {
 		a.increaseCounterRequestRejected(request)
 		return rejectRequest(http.StatusNotFound, nil, nil, "unknown vhost")
@@ -131,24 +132,6 @@ func mergeMapsStringString(maps ...map[string]string) map[string]string {
 		}
 	}
 	return result
-}
-
-// FIXME this should be lookup in map instead of for loops
-// FIXXE map should have a key vhost:port
-func (a *authorizationServer) lookupVhost(hostname, protocol string) (*shared.VirtualHost, error) {
-
-	for _, vhostEntry := range a.virtualhosts {
-		for _, vhost := range vhostEntry.VirtualHosts {
-			if vhost == hostname {
-				if (vhostEntry.Port == 80 && protocol == "http") ||
-					(vhostEntry.Port == 443 && protocol == "https") {
-					return &vhostEntry, nil
-				}
-			}
-		}
-	}
-
-	return nil, errors.New("vhost not found")
 }
 
 // allowRequest answers Envoyproxy to authorizates request to go upstream

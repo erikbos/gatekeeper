@@ -1,99 +1,81 @@
 package main
 
 import (
+	"errors"
+	"strings"
 	"sync"
-	"time"
 
 	log "github.com/sirupsen/logrus"
 
+	"github.com/erikbos/gatekeeper/pkg/db"
 	"github.com/erikbos/gatekeeper/pkg/shared"
 )
 
-const (
-	virtualHostDataRefreshInterval = 2 * time.Second
-	routeDataRefreshInterval       = 2 * time.Second
-)
+type vhostMapping struct {
+	dbentities *db.Entityloader
+	vhosts     map[vhostMapEntry]shared.VirtualHost
+}
 
-// var virtualhostsMap map[string]string
+type vhostMapEntry struct {
+	vhost string
+	port  int
+}
 
-// GetVirtualHostConfigFromDatabase continuously gets the current configuration
-func (a *authorizationServer) GetVirtualHostConfigFromDatabase() {
-	var virtualHostsLastUpdate int64
-	var virtualHostsMutex sync.Mutex
+func newVhostMapping(d *db.Entityloader) *vhostMapping {
 
-	for {
-		var xdsPushNeeded bool
-
-		newVirtualHosts, err := a.db.Virtualhost.GetAll()
-		if err != nil {
-			log.Errorf("Could not retrieve virtualhosts from database (%s)", err)
-		} else {
-			if virtualHostsLastUpdate == 0 {
-				log.Info("Initial load of virtualhosts")
-			}
-			for _, virtualhost := range newVirtualHosts {
-				// Is a virtualhosts updated since last time we stored it?
-				if virtualhost.LastmodifiedAt > virtualHostsLastUpdate {
-					virtualHostsMutex.Lock()
-					a.virtualhosts = newVirtualHosts
-					// virtualhostsMap = a.buildVhostMap()
-					virtualHostsMutex.Unlock()
-
-					virtualHostsLastUpdate = shared.GetCurrentTimeMilliseconds()
-					xdsPushNeeded = true
-				}
-			}
-		}
-		if xdsPushNeeded {
-			a.IncreaseMetricConfigLoad("virtualhosts")
-		}
-		time.Sleep(virtualHostDataRefreshInterval)
+	return &vhostMapping{
+		dbentities: d,
 	}
 }
 
-func (a *authorizationServer) buildVhostMap() map[string]string {
+func (v *vhostMapping) WaitFor(e chan db.EntityChangeNotification) {
+	for {
+		select {
+		case n := <-e:
+			log.Infof("Database change notify received for entity group '%s'", n.Resource)
 
-	m := make(map[string]string)
+			if n.Resource == db.EntityTypeVirtualhost || n.Resource == db.EntityTypeRoute {
+				log.Printf("%+v", v.buildVhostMap())
+			}
+		}
+	}
+}
 
-	for _, virtualhost := range a.virtualhosts {
+func (v *vhostMapping) buildVhostMap() map[vhostMapEntry]shared.VirtualHost {
+
+	newVhosts := make(map[vhostMapEntry]shared.VirtualHost)
+
+	for _, virtualhost := range v.dbentities.GetVirtualhosts() {
+		virtualhost.Attributes = shared.Attributes{}
+
 		for _, host := range virtualhost.VirtualHosts {
-			m[host] = virtualhost.RouteGroup
+			newVhosts[vhostMapEntry{strings.ToLower(host),
+				virtualhost.Port}] = virtualhost
 		}
 	}
 
-	return m
+	var m sync.Mutex
+	m.Lock()
+	v.vhosts = newVhosts
+	m.Unlock()
+
+	return newVhosts
 }
 
-// GetRouteConfigFromDatabase continuously gets the current configuration
-func (a *authorizationServer) GetRouteConfigFromDatabase() {
-	var routesLastUpdate int64
-	var routeMutex sync.Mutex
+// FIXME this should be lookup in map instead of for loops
+// FIXXE map should have a key vhost:port
+func (v *vhostMapping) Lookup(hostname, protocol string) (*shared.VirtualHost, error) {
 
-	for {
-		var xdsPushNeeded bool
-
-		newRouteList, err := a.db.Route.GetAll()
-		if err != nil {
-			log.Errorf("Could not retrieve routes from database (%s)", err)
-		} else {
-			if routesLastUpdate == 0 {
-				log.Info("Initial load of routes done")
-			}
-			for _, route := range newRouteList {
-				// Is a cluster updated since last time we stored it?
-				if route.LastmodifiedAt > routesLastUpdate {
-					routeMutex.Lock()
-					a.routes = newRouteList
-					routeMutex.Unlock()
-
-					routesLastUpdate = shared.GetCurrentTimeMilliseconds()
-					xdsPushNeeded = true
+	for _, vhostEntry := range v.vhosts {
+		for _, vhost := range vhostEntry.VirtualHosts {
+			if vhost == hostname {
+				if (vhostEntry.Port == 80 && protocol == "http") ||
+					(vhostEntry.Port == 443 && protocol == "https") {
+					return &vhostEntry, nil
 				}
 			}
 		}
-		if xdsPushNeeded {
-			a.IncreaseMetricConfigLoad("routes")
-		}
-		time.Sleep(routeDataRefreshInterval)
 	}
+
+	return nil, errors.New("vhost not found")
 }

@@ -26,7 +26,6 @@ import (
 )
 
 const (
-	// virtualHostDataRefreshInterval = 2 * time.Second
 	extAuthzTimeout = 100 * time.Millisecond
 )
 

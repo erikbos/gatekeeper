@@ -12,13 +12,13 @@ import (
 )
 
 var (
-	version   string
-	buildTime string
+	version   string // Git version of build, set by Makefile
+	buildTime string // Build time, set by Makefile
 )
 
 const (
-	applicationName       = "dbadmin"
-	defaultConfigFileName = "dbadmin-config.yaml"
+	applicationName       = "dbadmin"             // Name of application, used in Prometheus metrics
+	defaultConfigFileName = "dbadmin-config.yaml" // Default configuration file
 )
 
 type server struct {

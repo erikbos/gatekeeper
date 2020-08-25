@@ -38,11 +38,6 @@ type xdsConfig struct {
 	Timeout               time.Duration `yaml:"timeout"`               // Max duration of request to XDS cluster
 }
 
-// xdsNotifyMesssage tells us configuration has changed
-type xdsNotifyMesssage struct {
-	resource string // Resource type that has been changed ("virtualhost", "route", "cluster")
-}
-
 func newXDS(s server, config xdsConfig, signal <-chan db.EntityChangeNotification) *XDS {
 
 	return &XDS{
@@ -64,7 +59,7 @@ func (x *XDS) Start() {
 	for {
 		select {
 		case n := <-x.notify:
-			log.Infof("XDS change notify received for resource group '%s'", n.Resource)
+			log.Infof("Database change notify received for entity group '%s'", n.Resource)
 
 			x.server.metrics.xdsDeployments.WithLabelValues(n.Resource).Inc()
 

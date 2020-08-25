@@ -82,7 +82,7 @@ func (s *OAuthStore) runGetOAuthAccessTokenQuery(query, queryParameter string) (
 	}
 	s.db.metrics.QueryHit(oauthMetricLabel)
 
-	log.Printf("runGetOAuthAccessTokenQuery: %+v", accessToken)
+	// log.Printf("runGetOAuthAccessTokenQuery: %+v", accessToken)
 	return &accessToken, nil
 }
 
