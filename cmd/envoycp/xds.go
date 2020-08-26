@@ -107,7 +107,9 @@ func (x *XDS) CreateNewSnapshot(streamCallbacks *callback) {
 
 	// Update snapshot cache for each connected Envoy we are aware of
 	for _, node := range streamCallbacks.connections {
-		x.snapshotCache.SetSnapshot(node.Id, x.snapshotLatest)
+		if err := x.snapshotCache.SetSnapshot(node.Id, x.snapshotLatest); err != nil {
+			log.Warningf("Could not set snapshot for node '%s'", node.Id)
+		}
 	}
 }
 
@@ -128,7 +130,9 @@ func (x *XDS) CompileSnapshotsForNewNodes(signal <-chan newNode) {
 		// provide this Envoy a configuration as its connection was registered by OnStreamRequest().
 		if x.snapshotCacheVersion != 0 {
 			// Update cache for this newly connect Envoy we have not seen before
-			x.snapshotCache.SetSnapshot(newNode.nodeID, x.snapshotLatest)
+			if err := x.snapshotCache.SetSnapshot(newNode.nodeID, x.snapshotLatest); err != nil {
+				log.Warningf("Could not set snapshot for node '%s'", newNode.nodeID)
+			}
 		}
 	}
 }

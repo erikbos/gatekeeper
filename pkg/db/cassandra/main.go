@@ -38,7 +38,7 @@ func New(config DatabaseConfig, serviceName string,
 
 	cassandraClusterConfig := buildClusterConfig(config)
 
-	if createSchema == true {
+	if createSchema {
 		// Connect to system keyspace first as our keyspace does not exist yet
 		cassandraClusterConfig.Keyspace = "system"
 		db, err := connect(cassandraClusterConfig, config)
@@ -47,7 +47,9 @@ func New(config DatabaseConfig, serviceName string,
 		}
 
 		// Create keyspace with specific replication count
-		createKeyspace(db, config.Keyspace, replicationCount)
+		if err := createKeyspace(db, config.Keyspace, replicationCount); err != nil {
+			return nil, err
+		}
 		// Close session: we cannot use it any further,
 		// as we are connected to the wrong keyspace: we need to reconnect.
 		db.Close()
@@ -60,7 +62,7 @@ func New(config DatabaseConfig, serviceName string,
 		return nil, err
 	}
 	// Create tables within keyspace if requested
-	if createSchema == true {
+	if createSchema {
 		if err := createTables(cassandraSession); err != nil {
 			return nil, err
 		}
@@ -94,7 +96,7 @@ func buildClusterConfig(config DatabaseConfig) *gocql.ClusterConfig {
 
 	clusterConfig.Port = config.Port
 
-	if config.TLS.Enable == true {
+	if config.TLS.Enable {
 		// Empty struct to enable TLS
 		clusterConfig.SslOpts = &gocql.SslOptions{}
 

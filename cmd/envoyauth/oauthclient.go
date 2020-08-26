@@ -23,7 +23,7 @@ func NewOAuthClientTokenStore(database *db.Database, cache *Cache) oauth2.Client
 	}
 }
 
-// GetByID retrieves token based upon tokenid
+// GetByID retrieves access token based upon tokenid
 func (clientstore *ClientTokenStore) GetByID(id string) (oauth2.ClientInfo, error) {
 
 	if id == "" {
@@ -39,7 +39,11 @@ func (clientstore *ClientTokenStore) GetByID(id string) (oauth2.ClientInfo, erro
 			// FIX ME increase unknown apikey counter (not an error state)
 			return nil, err
 		}
-		clientstore.cache.StoreDeveloperAppKey(&id, credential)
+		// Store retrieved credential in cache, in case of error we proceed as we can
+		// statisfy the request as we did retrieve succesful from database
+		if err = clientstore.cache.StoreDeveloperAppKey(&id, credential); err != nil {
+			log.Debugf("Could not store OAuth2 credential '%s' in cache", id)
+		}
 	}
 
 	// TODO increase fetch client id metric, label what=reject (good!)

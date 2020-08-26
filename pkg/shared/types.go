@@ -92,7 +92,7 @@ type VirtualHost struct {
 	DisplayName      string      `json:"displayName"`      // Friendly display name of route
 	VirtualHosts     StringSlice `json:"virtualHosts"`     // List of virtualhosts
 	Port             int         `json:"port"`             // tcp port to listen on
-	RouteGroup       string      `json:"RouteGroup"`       // Routegroup to forward traffic to
+	RouteGroup       string      `json:"routeGroup"`       // Routegroup to forward traffic to
 	Policies         string      `json:"policies"`         // Comma separated list of policynames, to apply to requests
 	Attributes       Attributes  `json:"attributes"`       // Attributes of this virtual host
 	OrganizationName string      `json:"organizationName"` // Organization this virtual hosts belongs to (not used)

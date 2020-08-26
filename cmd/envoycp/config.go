@@ -15,7 +15,6 @@ const (
 	defaultWebAdminListen      = "0.0.0.0:9902"
 	defaultWebAdminLogFileName = "envoycp-admin.log"
 	defaultXDSGRPCListen       = "0.0.0.0:9901"
-	defaultXDSHTTPListen       = "0.0.0.0:9903"
 )
 
 // EnvoyCPConfig contains our startup configuration data

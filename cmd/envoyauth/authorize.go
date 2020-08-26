@@ -100,8 +100,8 @@ func (a *authorizationServer) Check(ctx context.Context,
 	log.Debugf("APIProductPolicyOutcome: %+v", APIProductPolicyOutcome)
 
 	// We reject call in case both vhost & apiproduct policy did not authenticate call
-	if (vhostPolicyOutcome != nil && vhostPolicyOutcome.authenticated == false) &&
-		(APIProductPolicyOutcome != nil && APIProductPolicyOutcome.authenticated == false) {
+	if (vhostPolicyOutcome != nil && !vhostPolicyOutcome.authenticated) &&
+		(APIProductPolicyOutcome != nil && !APIProductPolicyOutcome.authenticated) {
 
 		a.increaseCounterRequestRejected(request)
 

@@ -84,7 +84,7 @@ func (attributes *Attributes) Set(name, value string) {
 		}
 	}
 	// In case it is an new attribute append it
-	if existingAttribute == false {
+	if !existingAttribute {
 		updatedAttributes = append(updatedAttributes, Attribute{
 			Name:  name,
 			Value: value,

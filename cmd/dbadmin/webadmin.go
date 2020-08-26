@@ -77,6 +77,7 @@ func (s *server) showConfiguration(c *gin.Context) {
 // showForwarding pretty prints the current forwarding table from database
 func (s *server) showHTTPForwarding(c *gin.Context) {
 
+	// Retrieve all configuration entities
 	virtualhosts, err := s.db.Virtualhost.GetAll()
 	if err != nil {
 		returnJSONMessage(c, http.StatusServiceUnavailable, err)
@@ -98,12 +99,16 @@ func (s *server) showHTTPForwarding(c *gin.Context) {
 		return
 	}
 
+	// Supporting functions embedded in template
 	templateFunctions := template.FuncMap{
+		// Prints timestamp in ISO8601 format
 		"ISO8601": shared.TimeMillisecondsToString,
+
+		// Prints a comma separated string as HTML ordered/numbered list
 		"OrderedList": func(stringToSplit string) string {
 			out := "<ol>"
-			for _, policy := range strings.Split(stringToSplit, ",") {
-				out += fmt.Sprintf("<li>%s</li>", strings.TrimSpace(policy))
+			for _, value := range strings.Split(stringToSplit, ",") {
+				out += fmt.Sprintf("<li>%s</li>", strings.TrimSpace(value))
 			}
 			out += "</ol>\n"
 			return out
@@ -116,16 +121,16 @@ func (s *server) showHTTPForwarding(c *gin.Context) {
 		return
 	}
 	templateVariables := struct {
-		V []shared.VirtualHost
-		R []shared.Route
-		C []shared.Cluster
-		P []shared.APIProduct
+		Virtualhosts []shared.VirtualHost
+		Routes       []shared.Route
+		Clusters     []shared.Cluster
+		APIProducts  []shared.APIProduct
 	}{
 		virtualhosts, routes, clusters, apiproducts,
 	}
 	c.Header("Content-type", "text/html; charset=utf-8")
 	c.Status(http.StatusOK)
-	t.Execute(c.Writer, templateVariables)
+	_ = t.Execute(c.Writer, templateVariables)
 }
 
 const pageTemplate string = `
@@ -167,8 +172,13 @@ ol {
 </head>
 <body>
 
-<h1>Virtualhosts</h1>
+{{/* We put these in vars to be able to do nested ranges */}}
+{{$virtualhosts := .Virtualhosts}}
+{{$routes := .Routes}}
+{{$clusters := .Clusters}}
+{{$apiproducts := .APIProducts}}
 
+<h1>Virtualhosts</h1>
 <table border=1>
 <tr>
 <th>Organization</th>
@@ -183,43 +193,44 @@ ol {
 <th>LastmodifiedBy</th>
 </tr>
 
-{{range .V }}
+{{range $vhost := $virtualhosts}}
 <tr>
-<td><a href="/v1/organizations/{{ .OrganizationName }}">{{ .OrganizationName }}</a>
-<td><a href="/v1/virtualhosts/{{ .Name}}">{{ .Name }}</a>
-<td>{{ .DisplayName }}</td>
-<td>{{ .Port }}</td>
+<td><a href="/v1/organizations/{{$vhost.OrganizationName}}">{{$vhost.OrganizationName}}</a>
+<td><a href="/v1/virtualhosts/{{$vhost.Name}}">{{$vhost.Name}}</a>
+<td>{{$vhost.DisplayName}}</td>
+<td>{{$vhost.Port}}</td>
 <td>
 <ul>
-{{ range $vhost := .VirtualHosts }}
-<li>{{ $vhost }}</li>
-{{ end }}
+{{range $hostname := $vhost.VirtualHosts}}
+<li>{{$hostname}}</li>
+{{end}}
 </ul>
 </td>
 <td>
 <ul>
-{{ range $attribute := .Attributes }}
+{{range $attribute := $vhost.Attributes}}
 <li>
-{{ if or (eq $attribute.Name "TLSCertificate") (eq $attribute.Name "TLSCertificateKey") }}
-{{ $attribute.Name }} = [redacted]
-{{ else }}
-{{ $attribute.Name }} = {{ $attribute.Value }}
-{{ end }}
+{{if or (eq $attribute.Name "TLSCertificate") (eq $attribute.Name "TLSCertificateKey")}}
+{{$attribute.Name}} = [redacted]
+{{else}}
+{{$attribute.Name}} = {{$attribute.Value}}
+{{end}}
 </li>
-{{ end }}
+{{end}}
 </ul>
 </td>
-<td>{{ OrderedList .Policies }}</td>
-<td>{{ .RouteGroup }}</td>
-<td>{{ ISO8601 .LastmodifiedAt }}</td>
-<td>{{ .LastmodifiedBy }}</td>
+<td>{{$vhost.Policies | OrderedList}}</td>
+<td>{{$vhost.RouteGroup}}</td>
+<td>{{$vhost.LastmodifiedAt | ISO8601}}</td>
+<td>{{$vhost.LastmodifiedBy}}</td>
 </tr>
-{{ end }}
+{{end}}
 
 </table>
 
-<h1>Routes</h1>
 
+
+<h1>Routes</h1>
 <table border=1>
 <tr>
 <th>RouteName</th>
@@ -233,29 +244,30 @@ ol {
 <th>LastmodifiedBy</th>
 </tr>
 
-{{range .R }}
+{{range $r := $routes}}
 <tr>
-<td><a href="/v1/routes/{{ .Name }}">{{ .Name }}</a>
-<td>{{ .DisplayName }}</td>
-<td>{{ .RouteGroup }}</td>
-<td>{{ .Path }}</td>
-<td>{{ .PathType }}</td>
-<td><a href="/v1/clusters/{{ .Cluster }}">{{ .Cluster }}</a>
+<td><a href="/v1/routes/{{$r.Name}}">{{$r.Name}}</a>
+<td>{{$r.DisplayName}}</td>
+<td>{{$r.RouteGroup}}</td>
+<td>{{$r.Path}}</td>
+<td>{{$r.PathType}}</td>
+<td><a href="/v1/clusters/{{$r.Cluster}}">{{$r.Cluster}}</a>
 <td>
 <ul>
-{{range $attribute := .Attributes }}
-<li>{{ $attribute.Name }} = {{ $attribute.Value }}</li>
+{{range $attribute := $r.Attributes}}
+<li>{{$attribute.Name}} = {{$attribute.Value}}</li>
 {{end}}
 </ul>
 </td>
-<td>{{ ISO8601 .LastmodifiedAt }}</td>
-<td>{{ .LastmodifiedBy }}</td>
+<td>{{$r.LastmodifiedAt | ISO8601}}</td>
+<td>{{$r.LastmodifiedBy}}</td>
 </tr>
-{{ end }}
+{{end}}
 </table>
 
-<h1>Clusters</h1>
 
+
+<h1>Clusters</h1>
 <table border=1>
 <tr>
 <th>ClusterName</th>
@@ -267,27 +279,28 @@ ol {
 <th>LastmodifiedBy</th>
 </tr>
 
-{{ range .C }}
+{{range $c := $clusters}}
 <tr>
-<td><a href="/v1/clusters/{{ .Name }}">{{ .Name }}</a>
-<td>{{ .DisplayName }}</td>
-<td>{{ .HostName }}</td>
-<td>{{ .Port }}</td>
+<td><a href="/v1/clusters/{{$c.Name}}">{{$c.Name}}</a>
+<td>{{$c.DisplayName}}</td>
+<td>{{$c.HostName}}</td>
+<td>{{$c.Port}}</td>
 <td>
 <ul>
-{{ range $attribute := .Attributes }}
-<li>{{ $attribute.Name }} = {{ $attribute.Value }}</li>
-{{ end }}
+{{range $attribute := $c.Attributes}}
+<li>{{$attribute.Name}} = {{$attribute.Value}}</li>
+{{end}}
 </ul>
 </td>
-<td>{{ ISO8601 .LastmodifiedAt}}</td>
-<td>{{ .LastmodifiedBy}}</td>
+<td>{{$c.LastmodifiedAt | ISO8601}}</td>
+<td>{{$c.LastmodifiedBy}}</td>
 </tr>
-{{ end }}
+{{end}}
 </table>
 
-<h1>API Products</h1>
 
+
+<h1>API Products</h1>
 <table border=1>
 <tr>
 <th>Organization</th>
@@ -302,30 +315,30 @@ ol {
 <th>LastmodifiedBy</th>
 </tr>
 
-{{range .P}}
+{{range $a := $apiproducts}}
 <tr>
-<td>{{ .OrganizationName }}</td>
-<td><a href="/v1/organizations/{{ .OrganizationName }}/apiproducts/{{ .Name }}">{{ .Name }}</a>
-<td>{{ .DisplayName }}</td>
-<td>{{ .Description }}</td>
-<td>{{ .RouteGroup }}</td>
+<td>{{$a.OrganizationName}}</td>
+<td><a href="/v1/organizations/{{$a.OrganizationName}}/apiproducts/{{$a.Name}}">{{$a.Name}}</a>
+<td>{{$a.DisplayName}}</td>
+<td>{{$a.Description}}</td>
+<td>{{$a.RouteGroup}}</td>
 <td>
 <ul>
-{{range $path := .Paths}}
-<li>{{ $path }}</li>
-{{ end }}
+{{range $path := $a.Paths}}
+<li>{{$path}}</li>
+{{end}}
 </ul>
 </td>
 <td>
 <ul>
-{{ range $attribute := .Attributes }}
-<li>{{ $attribute.Name }} = {{ $attribute.Value }}</li>
-{{ end }}
+{{range $attribute := .Attributes}}
+<li>{{$attribute.Name}} = {{$attribute.Value}}</li>
+{{end}}
 </ul>
 </td>
-<td>{{ OrderedList .Policies }}</td>
-<td>{{ ISO8601 .LastmodifiedAt }}</td>
-<td>{{ .LastmodifiedBy }}</td>
+<td>{{$a.Policies | OrderedList}}</td>
+<td>{{$a.LastmodifiedAt | ISO8601}}</td>
+<td>{{$a.LastmodifiedBy}}</td>
 </tr>
 {{end}}
 </table>

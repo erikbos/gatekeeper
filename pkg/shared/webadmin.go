@@ -121,7 +121,7 @@ func ShowIndexPage(c *gin.Context, e *gin.Engine, applicationName string) {
 	}
 	c.Status(http.StatusOK)
 	c.Header("Content-type", "text/html; charset=utf-8")
-	t.Execute(c.Writer, templateVariables)
+	_ = t.Execute(c.Writer, templateVariables)
 }
 
 const adminIndexPageTemplate = `

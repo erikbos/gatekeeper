@@ -27,6 +27,7 @@ type EntityChangeNotification struct {
 	Resource string // Name of resource type that has been changed
 }
 
+// Entity types that we load and send via notification channel
 const (
 	EntityTypeVirtualhost = "virtualhost"
 	EntityTypeRoute       = "route"
@@ -43,7 +44,7 @@ func NewEntityLoader(database *Database, interval time.Duration) *Entityloader {
 	}
 }
 
-// Run continously monitors the database for configuration entities
+// Start continously monitors the database for configuration entities
 func (g *Entityloader) Start() {
 
 	go g.LoadContinously()

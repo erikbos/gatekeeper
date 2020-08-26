@@ -66,7 +66,11 @@ func (tokenstore *TokenStore) GetByAccess(access string) (oauth2.TokenInfo, erro
 			// TODO increase unknown oauth access counter (not an error state)
 			return nil, err
 		}
-		tokenstore.cache.StoreAccessToken(&access, token)
+		// Store retrieved token in cache, in case of error we proceed as we can
+		// statisfy the request as we did retrieve succesful from database
+		if err = tokenstore.cache.StoreAccessToken(&access, token); err != nil {
+			log.Debugf("Could not store OAuth access token '%s' in cache", access)
+		}
 	}
 	return toOAuthTokenStore(token)
 }

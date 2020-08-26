@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/bmatcuk/doublestar"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/erikbos/gatekeeper/pkg/shared"
 )
@@ -37,18 +38,28 @@ func (a *authorizationServer) getAPIKeyDevDevAppDetails(request *requestInfo) er
 			// FIX ME increase unknown apikey counter (not an error state)
 			return errors.New("Could not find apikey")
 		}
-		a.cache.StoreDeveloperAppKey(request.apikey, request.appCredential)
+		// Store retrieved app credential in cache, in case of error we proceed as we can
+		// statisfy the request as we did retrieve succesful from database
+		if err = a.cache.StoreDeveloperAppKey(request.apikey, request.appCredential); err != nil {
+			log.Debugf("Could not store apikey '%s' in cache", request.apikey)
+		}
 	}
 
 	request.developerApp, err = a.cache.GetDeveloperApp(&request.appCredential.AppID)
 	// in case we do not have developer app in cache let's try to retrieve it from database
 	if err != nil {
-		request.developerApp, err = a.db.DeveloperApp.GetByID(request.vhost.OrganizationName, request.appCredential.AppID)
+		request.developerApp, err = a.db.DeveloperApp.GetByID(request.vhost.OrganizationName,
+			request.appCredential.AppID)
 		if err != nil {
 			// FIX ME increase counter as every apikey should link to dev app (error state)
 			return errors.New("Could not find developer app of this apikey")
 		}
-		a.cache.StoreDeveloperApp(&request.developerApp.AppID, request.developerApp)
+		// Store retrieved developer app in cache, in case of error we proceed as we can
+		// statisfy the request as we did retrieve succesful from database
+		if err = a.cache.StoreDeveloperApp(&request.developerApp.AppID, request.developerApp); err != nil {
+			log.Debugf("Could not store developer app id '%s' in cache",
+				request.developerApp.AppID)
+		}
 	}
 
 	request.developer, err = a.cache.GetDeveloper(&request.developerApp.DeveloperID)
@@ -59,7 +70,12 @@ func (a *authorizationServer) getAPIKeyDevDevAppDetails(request *requestInfo) er
 			// FIX ME increase counter as every devapp should link to developer (error state)
 			return errors.New("Could not find developer of developer app")
 		}
-		a.cache.StoreDeveloper(&request.developer.DeveloperID, request.developer)
+		// Store retrieved developer in cache, in case of error we proceed as we can
+		// statisfy the request as we did retrieve succesful from database
+		if err = a.cache.StoreDeveloper(&request.developer.DeveloperID, request.developer); err != nil {
+			log.Debugf("Could not store developer id '%s' in cache",
+				request.developer.DeveloperID)
+		}
 	}
 
 	return nil
@@ -139,8 +155,11 @@ func (a *authorizationServer) getAPIProduct(organization, apiproductname *string
 	if err != nil {
 		product, err = a.db.APIProduct.GetByName(*organization, *apiproductname)
 		if err == nil {
-			// In case we successfully retrieve from db we store in cache
-			a.cache.StoreAPIProduct(organization, apiproductname, product)
+			// Store retrieved APIProduct in cache, in case of error we proceed as we can
+			// statisfy the request as we did retrieve succesful from database
+			if err2 := a.cache.StoreAPIProduct(organization, apiproductname, product); err2 != nil {
+				log.Debugf("Could not store api product '%s' in cache", apiproductname)
+			}
 		}
 	}
 	return product, err
