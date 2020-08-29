@@ -37,7 +37,9 @@ The supported fields are:
 | ------------------------------------ | ----------------------------------------------------------------------------------- | ----------------------------- |
 | webadmin.listen                      | Webadmin address and port                                                           | 0.0.0.0:2113                  |
 | webadmin.ipacl                       | Webadmin ip acl, without this no access                                             | 172.16.0.0/19                 |
-| webadmin.logfilename                 | Filename of webadmin access log                                                     | /var/log/envoyproxy.log       |
+| webadmin.certfile                    | TLS certificate file                                                                |                               |
+| webadmin.keyfile                     | TLS certificate key file                                                            |                               |
+| webadmin.logfile                     | Access log file                                                                     | /var/log/envoycp.log          |
 | database.hostname                    | Cassandra hostname to connect to                                                    | cassandra                     |
 | database.port                        | Cassandra port to connect on                                                        | 9042 / 10350                  |
 | database.tls                         | Enable TLS for database session                                                     | true / false                  |
@@ -48,7 +50,7 @@ The supported fields are:
 | database.connectattempts             | Number of attempts to establish connection                                          | 5                             |
 | database.queryretries                | Number of times to retry query                                                      | 2                             |
 | xds.grpclisten                       | listen address and port for XDS requests from Envoyproxy                            | 0.0.0.0:9901                  |
-| xds.configcompileinterval               | Minimum interval between XDS configuration snapshots                             | 1s                            |
+| xds.configcompileinterval            | Minimum interval between XDS configuration snapshots                                | 1s                            |
 | xds.cluster                          | Name of cluster that runs XDS                                                       |                               |
 | xds.timeout                          | Maximum duration of XDS requests                                                    | 2s                            |
 | envoyproxy.extauthz.enable           | Enable or disable Envoyproxy-wide request authentication via envoyauth              | true / false                  |
@@ -58,5 +60,5 @@ The supported fields are:
 | envoyproxy.extauthz.requestbodysize  | Number of bytes of request body envoyproxy should forward to envoyauth              | 300                           |
 | envoyproxy.logging.grpc.cluster      | if set, configure envoyproxy to stream accesslog to this cluster                    | accesslogcluster              |
 | envoyproxy.logging.grpc.logname      | envoyproxy's logname when streaming accesslogs                                      | proxy                         |
-| envoyproxy.logging.file.logfilename  | if set, config envoyproxy to write accesslogs to this local file                    | /var/log/envoyproxyaccess.log |
+| envoyproxy.logging.file.logfile      | if set, config envoyproxy to write accesslogs to this local file                    | /var/log/envoyproxyaccess.log |
 | envoyproxy.logging.file.fields       | [fields to log](https://www.envoyproxy.io/docs/envoy/latest/configuration/observability/access_log/usage) | [Example field logging config](/example/deployment/docker/envoycp.yaml) |

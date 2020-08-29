@@ -10,8 +10,8 @@ import (
 
 const (
 	// Virtual host attributes
-	attributeAccessLogFileName    = "AccessLogFileName"
-	attributeAccessLogClusterName = "AccessLogClusterName"
+	attributeAccessLogFile    = "AccessLogFile"
+	attributeAccessLogCluster = "AccessLogCluster"
 
 	// Route attributes
 	attributeDisableAuthentication    = "DisableAuthentication"
@@ -36,7 +36,7 @@ const (
 	attributePerTryTimeout            = "PerTryTimeout"
 	attributeNumRetries               = "NumRetries"
 	attributeRetryOnStatusCodes       = "RetryOnStatusCodes"
-	attributeRequestMirrorClusterName = "RequestMirrorClusterName"
+	attributeRequestMirrorCluster     = "RequestMirrorCluster"
 	attributeRequestMirrorPercentage  = "RequestMirrorPercentage"
 	attributeTimeout                  = "Timeout"
 
@@ -56,7 +56,7 @@ const (
 	attributeHealthCheckTimeout            = "HealthCheckTimeout"
 	attributeHealthCheckUnhealthyThreshold = "HealthCheckUnhealthyThreshold"
 	attributeHealthCheckHealthyThreshold   = "HealthCheckHealthyThreshold"
-	attributeHealthCheckLogFile            = "HealthCheckLogFileName"
+	attributeHealthCheckLogFile            = "HealthCheckLogFile"
 	attributeMaxConnections                = "MaxConnections"
 	attributeMaxPendingRequests            = "MaxPendingRequests"
 	attributeMaxRequests                   = "MaxRequests"
@@ -97,15 +97,15 @@ const (
 func warnForUnknownVirtualHostAttributes(virtualhost shared.VirtualHost) {
 
 	var validVirtualHostAttributes = map[string]bool{
-		attributeAccessLogFileName:    true,
-		attributeAccessLogClusterName: true,
-		attributeHTTPProtocol:         true,
-		attributeTLSEnable:            true,
-		attributeTLSMinimumVersion:    true,
-		attributeTLSMaximumVersion:    true,
-		attributeTLSCertificate:       true,
-		attributeTLSCertificateKey:    true,
-		attributeTLSCipherSuites:      true,
+		attributeAccessLogFile:     true,
+		attributeAccessLogCluster:  true,
+		attributeHTTPProtocol:      true,
+		attributeTLSEnable:         true,
+		attributeTLSMinimumVersion: true,
+		attributeTLSMaximumVersion: true,
+		attributeTLSCertificate:    true,
+		attributeTLSCertificateKey: true,
+		attributeTLSCipherSuites:   true,
 	}
 
 	warnForUnknownAttribute("Virtualhost", virtualhost.Name,
@@ -131,7 +131,7 @@ func warnForUnknownRouteAttributes(route shared.Route) {
 		attributePerTryTimeout:            true,
 		attributeNumRetries:               true,
 		attributeRetryOnStatusCodes:       true,
-		attributeRequestMirrorClusterName: true,
+		attributeRequestMirrorCluster:     true,
 		attributeRequestMirrorPercentage:  true,
 		attributeRedirectStatusCode:       true,
 		attributeRedirectScheme:           true,

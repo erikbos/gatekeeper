@@ -209,7 +209,6 @@ Set multiple upstream clusters for a route:
 
 Upstream clusters need to be separated by comma. Each need to be assigned a load balancing weight using *:weight* suffix.
 
-
 ```json
 
 {
@@ -235,7 +234,7 @@ Requst mirror to a separate cluster.
     "cluster": "people",
     "attributes": [
     {
-        "name": "RequestMirrorClusterName",
+        "name": "RequestMirrorCluster",
         "value": "people_v2"
     },
     {

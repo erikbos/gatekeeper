@@ -41,7 +41,7 @@ func (a *authorizationServer) getAPIKeyDevDevAppDetails(request *requestInfo) er
 		// Store retrieved app credential in cache, in case of error we proceed as we can
 		// statisfy the request as we did retrieve succesful from database
 		if err = a.cache.StoreDeveloperAppKey(request.apikey, request.appCredential); err != nil {
-			log.Debugf("Could not store apikey '%s' in cache", request.apikey)
+			log.Debugf("Could not store apikey '%s' in cache", *request.apikey)
 		}
 	}
 
@@ -114,15 +114,15 @@ func checkDevAndKeyValidity(request *requestInfo) error {
 // - if not 403
 
 func (a *authorizationServer) IsRequestPathAllowed(organization, requestPath string,
-	appcredential *shared.DeveloperAppKey) (*shared.APIProduct, error) {
+	credential *shared.DeveloperAppKey) (*shared.APIProduct, error) {
 
 	// Does this apikey have any products assigned?
-	if len(appcredential.APIProducts) == 0 {
+	if len(credential.APIProducts) == 0 {
 		return nil, errors.New("No active products")
 	}
 
 	// Iterate over this key's apiproducts
-	for _, apiproduct := range appcredential.APIProducts {
+	for _, apiproduct := range credential.APIProducts {
 		if apiproduct.Status == "approved" {
 
 			// apiproductDetails, err := a.db.GetAPIProductByName(organization, apiproduct.Apiproduct)
@@ -158,7 +158,7 @@ func (a *authorizationServer) getAPIProduct(organization, apiproductname *string
 			// Store retrieved APIProduct in cache, in case of error we proceed as we can
 			// statisfy the request as we did retrieve succesful from database
 			if err2 := a.cache.StoreAPIProduct(organization, apiproductname, product); err2 != nil {
-				log.Debugf("Could not store api product '%s' in cache", apiproductname)
+				log.Debugf("Could not store api product '%s' in cache", *apiproductname)
 			}
 		}
 	}

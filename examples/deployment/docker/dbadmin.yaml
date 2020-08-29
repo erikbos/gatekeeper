@@ -6,7 +6,7 @@ loglevel: debug
 webadmin:
   listen: 0.0.0.0:7777
   ipacl: 0.0.0.0/0
-  logfilename: dbadmin-access.log
+  logfile: dbadmin-access.log
 
 database:
   hostname: cassandra

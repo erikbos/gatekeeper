@@ -123,7 +123,7 @@ func clusterHealthChecks(cluster shared.Cluster) []*core.HealthCheck {
 
 		healthyThreshold := cluster.Attributes.GetAsUInt32(attributeHealthCheckHealthyThreshold, defaultHealthCheckHealthyThreshold)
 
-		logFileName := cluster.Attributes.GetAsString(attributeHealthCheckLogFile, "")
+		logFile := cluster.Attributes.GetAsString(attributeHealthCheckLogFile, "")
 
 		healthCheck := &core.HealthCheck{
 			HealthChecker: &core.HealthCheck_HttpHealthCheck_{
@@ -137,8 +137,8 @@ func clusterHealthChecks(cluster shared.Cluster) []*core.HealthCheck {
 			UnhealthyThreshold: protoUint32orNil(unhealthyThreshold),
 			HealthyThreshold:   protoUint32orNil(healthyThreshold),
 		}
-		if logFileName != "" {
-			healthCheck.EventLogPath = logFileName
+		if logFile != "" {
+			healthCheck.EventLogPath = logFile
 		}
 
 		return append([]*core.HealthCheck{}, healthCheck)

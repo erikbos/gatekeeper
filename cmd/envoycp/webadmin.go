@@ -14,15 +14,19 @@ import (
 )
 
 type webAdminConfig struct {
-	Listen      string `yaml:"listen"`      // Address and port to listen
-	IPACL       string `yaml:"ipacl"`       // ip accesslist (e.g. "10.0.0.0/8,192.168.0.0/16")
-	LogFileName string `yaml:"logfilename"` // Filename for writing admin access logs
+	Listen  string `yaml:"listen"`  // Address and port to listen
+	IPACL   string `yaml:"ipacl"`   // ip accesslist (e.g. "10.0.0.0/8,192.168.0.0/16")
+	LogFile string `yaml:"logfile"` // File for writing admin access logs
+	TLS     struct {
+		certFile string `yaml:"certfile"` // TLS certifcate file
+		keyFile  string `yaml:"keyfile"`  // TLS certifcate key file
+	} `yaml:"tls"`
 }
 
 // StartWebAdminServer starts the admin web UI
 func (s *server) StartWebAdminServer() {
 
-	if logFile, err := os.Create(s.config.WebAdmin.LogFileName); err == nil {
+	if logFile, err := os.Create(s.config.WebAdmin.LogFile); err == nil {
 		gin.DefaultWriter = io.MultiWriter(logFile)
 	}
 
@@ -40,6 +44,12 @@ func (s *server) StartWebAdminServer() {
 	s.ginEngine.GET(shared.ConfigDumpPath, s.ConfigDump)
 
 	log.Info("Webadmin listening on ", s.config.WebAdmin.Listen)
+	if s.config.WebAdmin.TLS.certFile != "" &&
+		s.config.WebAdmin.TLS.keyFile != "" {
+
+		log.Fatal(s.ginEngine.RunTLS(s.config.WebAdmin.Listen,
+			s.config.WebAdmin.TLS.certFile, s.config.WebAdmin.TLS.keyFile))
+	}
 	log.Fatal(s.ginEngine.Run(s.config.WebAdmin.Listen))
 }
 

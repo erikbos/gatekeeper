@@ -217,7 +217,7 @@ func buildWeightedClusters(routeEntry shared.Route) *route.RouteAction_WeightedC
 
 func buildRequestMirrorPolicies(routeEntry shared.Route) []*route.RouteAction_RequestMirrorPolicy {
 
-	mirrorCluster := routeEntry.Attributes.GetAsString(attributeRequestMirrorClusterName, "")
+	mirrorCluster := routeEntry.Attributes.GetAsString(attributeRequestMirrorCluster, "")
 	mirrorPercentage := routeEntry.Attributes.GetAsString(attributeRequestMirrorPercentage, "")
 
 	if mirrorCluster == "" || mirrorPercentage == "" {

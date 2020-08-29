@@ -60,13 +60,11 @@ func (r *Readiness) GetChannel() chan ReadinessMessage {
 
 // readinessMainLoop runs continously in background waiting for messages
 func (r *Readiness) readinessMainLoop() {
-	for {
-		select {
-		case msg := <-r.channel:
-			log.Debugf("readiness msg '%+v'", msg)
 
-			r.updateReadinessState(msg.Up, msg.Message)
-		}
+	for msg := range r.channel {
+		log.Debugf("readiness msg '%+v'", msg)
+
+		r.updateReadinessState(msg.Up, msg.Message)
 	}
 }
 

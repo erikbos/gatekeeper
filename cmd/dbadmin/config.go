@@ -27,8 +27,8 @@ func loadConfiguration(filename *string) *DBAdminConfig {
 	config := DBAdminConfig{
 		LogLevel: defaultLogLevel,
 		WebAdmin: webAdminConfig{
-			Listen:      defaultWebAdminListen,
-			LogFileName: defaultWebAdminLogFileName,
+			Listen:  defaultWebAdminListen,
+			LogFile: defaultWebAdminLogFileName,
 		},
 	}
 

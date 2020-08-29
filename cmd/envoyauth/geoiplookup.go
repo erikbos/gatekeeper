@@ -1,4 +1,4 @@
-package shared
+package main
 
 import (
 	"fmt"
@@ -10,7 +10,7 @@ import (
 
 // Geoip hold our configuration
 type Geoip struct {
-	Filename string `yaml:"filename"`
+	Database string `yaml:"database"`
 	mdb      *maxminddb.Reader
 }
 
@@ -46,7 +46,7 @@ func OpenGeoipDatabase(filename string) (*Geoip, error) {
 
 	var err error
 	g := Geoip{
-		Filename: filename,
+		Database: filename,
 	}
 
 	g.mdb, err = maxminddb.Open(filename)

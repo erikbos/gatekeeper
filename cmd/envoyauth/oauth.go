@@ -56,16 +56,14 @@ func newOAuthServer(config *oauthServerConfig, db *db.Database, cache *Cache) *o
 	}
 }
 
-// Start runs our public endpoint
+// Start starts OAuth2 public endpoints to request new access token
+// or get info about an access info
 func (oauth *oauthServer) Start() {
-	// shared.StartLogging(myName, version, buildTime)
-
 	// Do not start oauth system if we do not have a listenport
 	if oauth.config.Listen == "" {
 		return
 	}
 
-	// shared.SetLoggingConfiguration(server.config.LogLevel)
 	// server.readiness.RegisterMetrics(myName)
 
 	oauth.registerMetrics()

@@ -28,15 +28,15 @@ func newVhostMapping(d *db.Entityloader) *vhostMapping {
 	}
 }
 
-func (v *vhostMapping) WaitFor(e chan db.EntityChangeNotification) {
-	for {
-		select {
-		case n := <-e:
-			log.Infof("Database change notify received for entity group '%s'", n.Resource)
+func (v *vhostMapping) WaitFor(entityNotifications chan db.EntityChangeNotification) {
 
-			if n.Resource == db.EntityTypeVirtualhost || n.Resource == db.EntityTypeRoute {
-				log.Printf("%+v", v.buildVhostMap())
-			}
+	for changedEntity := range entityNotifications {
+		log.Infof("Database change notify received for entity group '%s'",
+			changedEntity.Resource)
+
+		if changedEntity.Resource == db.EntityTypeVirtualhost ||
+			changedEntity.Resource == db.EntityTypeRoute {
+			log.Printf("%+v", v.buildVhostMap())
 		}
 	}
 }

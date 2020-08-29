@@ -29,7 +29,7 @@ func (clientstore *ClientTokenStore) GetByID(id string) (oauth2.ClientInfo, erro
 	if id == "" {
 		return nil, nil
 	}
-	log.Infof("OAuthClientTokenStore: GetByID: %s", id)
+	log.Debugf("OAuthClientTokenStore: GetByID: %s", id)
 
 	credential, err := clientstore.cache.GetDeveloperAppKey(&id)
 	// in case we do not have this apikey in cache let's try to retrieve it from database

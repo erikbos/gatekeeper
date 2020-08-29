@@ -5,7 +5,7 @@ loglevel: info
 webadmin:
   listen: 0.0.0.0:9902
   ipacl: 0.0.0.0/0
-  logfilename: envoycp-admin.log
+  logfile: envoycp-admin.log
 
 # Cassandra settings
 database:
@@ -47,7 +47,7 @@ envoyproxy:
     #   timeout: 5s
     #   buffersize: 10485760
     file:
-      logfilename: /dev/stdout
+      logfile: /dev/stdout
       fields:
         downstream.remoteaddress: '%DOWNSTREAM_REMOTE_ADDRESS%'
         downstream.clientaddress: '%DOWNSTREAM_REMOTE_ADDRESS_WITHOUT_PORT%'

@@ -7,7 +7,6 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/erikbos/gatekeeper/pkg/db/cassandra"
-	"github.com/erikbos/gatekeeper/pkg/shared"
 )
 
 const (
@@ -26,7 +25,7 @@ type APIAuthConfig struct {
 	OAuth     oauthServerConfig        `yaml:"oauth"`     // OAuth configuration
 	Database  cassandra.DatabaseConfig `yaml:"database"`  // Database configuration
 	Cache     cacheConfig              `yaml:"cache"`     // In-memory cache configuration
-	Geoip     shared.Geoip             `yaml:"geoip"`     // Geoip lookup configuration
+	Geoip     Geoip                    `yaml:"geoip"`     // Geoip lookup configuration
 }
 
 func loadConfiguration(filename *string) *APIAuthConfig {
@@ -34,8 +33,8 @@ func loadConfiguration(filename *string) *APIAuthConfig {
 	config := APIAuthConfig{
 		LogLevel: defaultLogLevel,
 		WebAdmin: webAdminConfig{
-			Listen:      defaultWebAdminListen,
-			LogFileName: defaultWebAdminLogFileName,
+			Listen:  defaultWebAdminListen,
+			LogFile: defaultWebAdminLogFileName,
 		},
 		EnvoyAuth: envoyAuthConfig{
 			Listen: defaultAuthGRPCListen,

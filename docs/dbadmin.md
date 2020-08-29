@@ -43,7 +43,9 @@ The supported fields are:
 | loglevel                 | logging level of application               | info / debug         |
 | webadmin.listen          | Webadmin address and port                  | 0.0.0.0:7777         |
 | webadmin.ipacl           | Webadmin ip acl, without this no access    | 172.16.0.0/19        |
-| webadmin.logfilename     | Filename of webadmin access log            | /var/log/dbadmin.log |
+| webadmin.certfile        | TLS certificate file                       |                      |
+| webadmin.keyfile         | TLS certificate key file                   |                      |
+| webadmin.logfile         | Access log file                            | /var/log/dbadmin.log |
 | database.hostname        | Cassandra hostname to connect to           | cassandra            |
 | database.port            | Cassandra port to connect on               | 9042 / 10350         |
 | database.tls             | Enable TLS for database session            | true / false         |

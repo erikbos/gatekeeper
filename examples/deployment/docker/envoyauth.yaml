@@ -16,7 +16,7 @@ oauth:
 webadmin:
   listen: 0.0.0.0:2113
   ipacl: 0.0.0.0/0
-  logfilename: envoyauth-admin.log
+  logfile: envoyauth-admin.log
 
 database:
   hostname: cassandra

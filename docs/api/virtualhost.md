@@ -58,8 +58,8 @@ _For POST content-type: application/json is required._
 | TLSMinimumVersion    | Minimum version of TLS to use                        | TLSv10,TLSv11, TLSv12 TLSv13 |
 | TLSMaximumVersion    | Maximum version of TLS to use                        | TLSv10,TLSv11, TLSv12 TLSv13 |
 | TLSCipherSuites      | Allowed TLS cipher suite                             |                              |
-| AccessLogFileName    | Filename for storing access logs                     |                              |
-| AccessLogClusterName | Name of cluster to send access logs to               |                              |
+| AccessLogFile        | File for storing access logs                         |                              |
+| AccessLogCluster     | Cluster to send access logs to                       |                              |
 
 All attributes listed above are mapped on configuration properties of [Envoy listener API specifications](https://www.envoyproxy.io/docs/envoy/latest/api-v3/api/v3/listener.proto#listener) for detailed explanation of purpose and allowed value of each attribute.
 

@@ -51,8 +51,8 @@ type rateLimiterConfig struct {
 
 type envoyLogConfig struct {
 	File struct {
-		LogFileName string            `yaml:"logfilename"` // Filename to write access logs to
-		Fields      map[string]string `yaml:"fields"`      // Field names and field values to log
+		LogFile string            `yaml:"logfile"` // Filename to write access logs to
+		Fields  map[string]string `yaml:"fields"`  // Field names and field values to log
 	} `yaml:"file"`
 	GRPC struct {
 		BufferSize uint32        `yaml:"buffersize"` // Buffersize for streaming access logs
@@ -71,7 +71,7 @@ type miscConfig struct {
 }
 
 const (
-	defaultConfigPushInterval = 2 * time.Second
+	defaultConfigCompileInterval = 2 * time.Second
 )
 
 func loadConfiguration(filename *string) *EnvoyCPConfig {
@@ -79,12 +79,12 @@ func loadConfiguration(filename *string) *EnvoyCPConfig {
 	config := EnvoyCPConfig{
 		LogLevel: defaultLogLevel,
 		WebAdmin: webAdminConfig{
-			Listen:      defaultWebAdminListen,
-			LogFileName: defaultWebAdminLogFileName,
+			Listen:  defaultWebAdminListen,
+			LogFile: defaultWebAdminLogFileName,
 		},
 		XDS: xdsConfig{
 			GRPCListen:            defaultXDSGRPCListen,
-			ConfigCompileInterval: defaultConfigPushInterval,
+			ConfigCompileInterval: defaultConfigCompileInterval,
 		},
 	}
 

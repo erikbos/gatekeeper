@@ -31,7 +31,7 @@ type authorizationServer struct {
 	vhosts     *vhostMapping
 	cache      *Cache
 	oauth      *oauthServer
-	geoip      *shared.Geoip
+	geoip      *Geoip
 	readiness  *shared.Readiness
 	metrics    metricsCollection
 }
@@ -54,8 +54,8 @@ func main() {
 	}
 	a.cache = newCache(&a.config.Cache)
 
-	if a.config.Geoip.Filename != "" {
-		a.geoip, err = shared.OpenGeoipDatabase(a.config.Geoip.Filename)
+	if a.config.Geoip.Database != "" {
+		a.geoip, err = OpenGeoipDatabase(a.config.Geoip.Database)
 		if err != nil {
 			log.Fatalf("Geoip db load failed: %v", err)
 		}

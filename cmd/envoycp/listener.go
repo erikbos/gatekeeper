@@ -25,10 +25,6 @@ import (
 	"github.com/erikbos/gatekeeper/pkg/shared"
 )
 
-const (
-	extAuthzTimeout = 100 * time.Millisecond
-)
-
 // getEnvoyListenerConfig returns array of envoy listeners
 func (s *server) getEnvoyListenerConfig() ([]cache.Resource, error) {
 	envoyListeners := []cache.Resource{}
@@ -275,18 +271,18 @@ func (s *server) buildRouteSpecifierRDS(routeGroup string) *hcm.HttpConnectionMa
 func buildAccessLog(config envoyLogConfig, v shared.VirtualHost) []*accesslog.AccessLog {
 
 	// Set access log behaviour based upon virtual host attributes
-	accessLogFileName, error := v.Attributes.Get(attributeAccessLogFileName)
-	if error == nil && accessLogFileName != "" {
-		return buildFileAccessLog(config.File.Fields, accessLogFileName)
+	accessLogFile, error := v.Attributes.Get(attributeAccessLogFile)
+	if error == nil && accessLogFile != "" {
+		return buildFileAccessLog(config.File.Fields, accessLogFile)
 	}
-	accessLogClusterName, error := v.Attributes.Get(attributeAccessLogClusterName)
-	if error == nil && accessLogClusterName != "" {
-		return buildGRPCAccessLog(accessLogClusterName, v.Name, defaultClusterConnectTimeout, 0)
+	accessLogCluster, error := v.Attributes.Get(attributeAccessLogCluster)
+	if error == nil && accessLogCluster != "" {
+		return buildGRPCAccessLog(accessLogCluster, v.Name, defaultClusterConnectTimeout, 0)
 	}
 
 	// Fallback is default logging based upon configfile
-	if config.File.LogFileName != "" {
-		return buildFileAccessLog(config.File.Fields, config.File.LogFileName)
+	if config.File.LogFile != "" {
+		return buildFileAccessLog(config.File.Fields, config.File.LogFile)
 	}
 	if config.GRPC.Cluster != "" {
 		return buildGRPCAccessLog(config.GRPC.Cluster, v.Name, config.GRPC.Timeout, config.GRPC.BufferSize)
