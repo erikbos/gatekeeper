@@ -1,6 +1,6 @@
-# Virtualhost
+# Listener
 
-A virtualhost defines listing port, virtual settings and incoming connectivity parameters.
+A listener defines listing port, virtual settings and incoming connectivity parameters.
 
 _Listening port, http host(s) and TLS settings are all configured in a virtual host._
 
@@ -8,20 +8,20 @@ _Listening port, http host(s) and TLS settings are all configured in a virtual h
 
 | Method | Path                                             | What                                   |
 | ------ | ------------------------------------------------ | -------------------------------------- |
-| GET    | /v1/virtualhosts                                 | retrieve all virtualhosts              |
-| POST   | /v1/virtualhosts                                 | creates a new virtualhost              |
-| GET    | /v1/virtualhosts/_virtualhost_                   | retrieve a virtualhost                 |
-| POST   | /v1/virtualhosts/_virtualhost_                   | updates an existing virtualhost        |
-| DELETE | /v1/virtualhosts/_virtualhost_                   | deletes a virtualhost                  |
-| GET    | /v1/virtualhosts/_virtualhost_/attributes        | retrieve all attributes of virtualhost |
-| POST   | /v1/virtualhosts/_virtualhost_/attributes        | update all attribute of virtualhost    |
-| GET    | /v1/virtualhosts/_virtualhost_/attributes/_name_ | retrieve attribute of virtualhost      |
-| POST   | /v1/virtualhosts/_virtualhost_/attributes/_name_ | update attribute of virtualhost        |
-| DELETE | /v1/virtualhosts/_virtualhost_/attributes/_name_ | delete attribute of virtualhost        |
+| GET    | /v1/listeners                                 | retrieve all listeners              |
+| POST   | /v1/listeners                                 | creates a new listener              |
+| GET    | /v1/listeners/_listener_                   | retrieve a listener                 |
+| POST   | /v1/listeners/_listener_                   | updates an existing listener        |
+| DELETE | /v1/listeners/_listener_                   | deletes a listener                  |
+| GET    | /v1/listeners/_listener_/attributes        | retrieve all attributes of listener |
+| POST   | /v1/listeners/_listener_/attributes        | update all attribute of listener    |
+| GET    | /v1/listeners/_listener_/attributes/_name_ | retrieve attribute of listener      |
+| POST   | /v1/listeners/_listener_/attributes/_name_ | update attribute of listener        |
+| DELETE | /v1/listeners/_listener_/attributes/_name_ | delete attribute of listener        |
 
 _For POST content-type: application/json is required._
 
-## Example virtualhost definition
+## Example listener definition
 
 ```json
 {
@@ -78,7 +78,7 @@ The policies field can contain a comma separate list of policies which will be e
 
 ## Background
 
-Envoycp checks the database for new or changed virtualhosts every second. Unrecognized attributes will be ignored and a warning will be logged. In case of any changes envoy will compile a new proxy configuration and send it to all envoyproxy instances.
+Envoycp checks the database for new or changed listeners every second. Unrecognized attributes will be ignored and a warning will be logged. In case of any changes envoy will compile a new proxy configuration and send it to all envoyproxy instances.
 
 ## More examples
 

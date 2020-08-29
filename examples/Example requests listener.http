@@ -1,12 +1,12 @@
 # Example REST calls for cluster
 
 
-### Get all virtualhosts
-GET http://{{hostname}}/v1/virtualhosts
+### Get all listeners
+GET http://{{hostname}}/v1/listeners
 
 
-### Create virtualhost
-POST http://{{hostname}}/v1/virtualhosts HTTP/1.1
+### Create listener
+POST http://{{hostname}}/v1/listeners HTTP/1.1
 content-type: application/json
 
 {
@@ -20,8 +20,12 @@ content-type: application/json
     "routeGroup": "routes_80"
 }
 
+
+###
+DELETE http://{{hostname}}/v1/listeners/example_80 HTTP/1.1
+
 ### Update a virtual host
-POST http://{{hostname}}/v1/virtualhosts/example_80 HTTP/1.1
+POST http://{{hostname}}/v1/listeners HTTP/1.1
 content-type: application/json
 
 {
@@ -43,7 +47,7 @@ content-type: application/json
 }
 
 ###
-POST http://{{hostname}}/v1/virtualhosts
+POST http://{{hostname}}/v1/listeners
 content-type: application/json
 
 {
@@ -53,7 +57,11 @@ content-type: application/json
 }
 
 ###
-POST http://{{hostname}}/v1/virtualhosts/example_443_1
+DELETE http://{{hostname}}/v1/listeners/example_443_1
+
+
+###
+POST http://{{hostname}}/v1/listeners/example_443_1
 content-type: application/json
 
 {
@@ -92,7 +100,7 @@ content-type: application/json
 }
 
 ###
-POST http://{{hostname}}/v1/virtualhosts
+POST http://{{hostname}}/v1/listeners
 content-type: application/json
 
 {
@@ -105,7 +113,7 @@ content-type: application/json
 
 
 ###
-POST http://{{hostname}}/v1/virtualhosts/example_443_2
+POST http://{{hostname}}/v1/listeners/example_443_2
 content-type: application/json
 
 {
@@ -148,17 +156,17 @@ content-type: application/json
 }
 
 ###
-DELETE http://{{hostname}}/v1/virtualhosts/example_80
+DELETE http://{{hostname}}/v1/listeners/example_80
 
 
 ###
-DELETE http://{{hostname}}/v1/virtualhosts/example_443_1
+DELETE http://{{hostname}}/v1/listeners/example_443_1
 
 ###
-DELETE http://{{hostname}}/v1/virtualhosts/example_443_2
+DELETE http://{{hostname}}/v1/listeners/example_443_2
 
 
 
 ###
-DELETE http://{{hostname}}/v1/virtualhosts/test
+DELETE http://{{hostname}}/v1/listeners/test
 

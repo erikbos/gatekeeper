@@ -45,7 +45,7 @@ func createTables(s *gocql.Session) error {
 
 var createTablesCQL = [...]string{
 
-	`CREATE TABLE IF NOT EXISTS virtual_hosts (
+	`CREATE TABLE IF NOT EXISTS listeners (
     attributes text,
     created_at bigint,
     created_by text,

@@ -15,7 +15,7 @@ const (
 	// Prometheus label for metrics of db interactions
 	routeMetricLabel = "routes"
 
-	// List of organization columns we use
+	// List of route columns we use
 	routeColumns = `name,
 display_name,
 route_group,

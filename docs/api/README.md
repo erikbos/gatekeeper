@@ -2,7 +2,7 @@
 
 Gatekeeper has a REST API to configure all entities in the system:
 
-1. [virtualhosts](virtualhost.md)
+1. [listeners](listener.md)
 2. [routes](route.md)
 3. [clusters](cluster.md)
 4. [organizations](organization.md)

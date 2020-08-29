@@ -4,7 +4,7 @@ DBadmin provides the REST API to create, read, update, delete all entities of Ga
 
 For each entity there is a detailed API description available:
 
-1. [virtualhosts](docs/api/virtualhost.md)
+1. [listeners](docs/api/listener.md)
 2. [routes](docs/api/route.md)
 3. [clusters](docs/api/cluster.md)
 4. [organizations](docs/api/organization.md)

@@ -50,7 +50,7 @@ func StartWebAdminServer(s *server) {
 	s.registerAPIProductRoutes(s.ginEngine)
 	s.registerClusterRoutes(s.ginEngine)
 	s.registerRouteRoutes(s.ginEngine)
-	s.registerVirtualHostRoutes(s.ginEngine)
+	s.registerListenerRoutes(s.ginEngine)
 
 	s.ginEngine.GET("/", s.ShowWebAdminHomePage)
 	s.ginEngine.GET(shared.LivenessCheckPath, shared.LivenessProbe)
@@ -86,7 +86,7 @@ func (s *server) showConfiguration(c *gin.Context) {
 func (s *server) showHTTPForwarding(c *gin.Context) {
 
 	// Retrieve all configuration entities
-	virtualhosts, err := s.db.Virtualhost.GetAll()
+	listeners, err := s.db.Listener.GetAll()
 	if err != nil {
 		returnJSONMessage(c, http.StatusServiceUnavailable, err)
 		return
@@ -129,12 +129,12 @@ func (s *server) showHTTPForwarding(c *gin.Context) {
 		return
 	}
 	templateVariables := struct {
-		Virtualhosts []shared.VirtualHost
-		Routes       []shared.Route
-		Clusters     []shared.Cluster
-		APIProducts  []shared.APIProduct
+		Listeners   []shared.Listener
+		Routes      []shared.Route
+		Clusters    []shared.Cluster
+		APIProducts []shared.APIProduct
 	}{
-		virtualhosts, routes, clusters, apiproducts,
+		listeners, routes, clusters, apiproducts,
 	}
 	c.Header("Content-type", "text/html; charset=utf-8")
 	c.Status(http.StatusOK)
@@ -181,19 +181,19 @@ ol {
 <body>
 
 {{/* We put these in vars to be able to do nested ranges */}}
-{{$virtualhosts := .Virtualhosts}}
+{{$listeners := .Listeners}}
 {{$routes := .Routes}}
 {{$clusters := .Clusters}}
 {{$apiproducts := .APIProducts}}
 
-<h1>Virtualhosts</h1>
+<h1>Listeners</h1>
 <table border=1>
 <tr>
 <th>Organization</th>
 <th>Name</th>
 <th>DisplayName</th>
 <th>Port</th>
-<th>Vhosts</th>
+<th>Virtualhosts</th>
 <th>Attributes</th>
 <th>Policies</th>
 <th>RouteGroup</th>
@@ -201,22 +201,22 @@ ol {
 <th>LastmodifiedBy</th>
 </tr>
 
-{{range $vhost := $virtualhosts}}
+{{range $listener := $listeners}}
 <tr>
-<td><a href="/v1/organizations/{{$vhost.OrganizationName}}">{{$vhost.OrganizationName}}</a>
-<td><a href="/v1/virtualhosts/{{$vhost.Name}}">{{$vhost.Name}}</a>
-<td>{{$vhost.DisplayName}}</td>
-<td>{{$vhost.Port}}</td>
+<td><a href="/v1/organizations/{{$listener.OrganizationName}}">{{$listener.OrganizationName}}</a>
+<td><a href="/v1/listeners/{{$listener.Name}}">{{$listener.Name}}</a>
+<td>{{$listener.DisplayName}}</td>
+<td>{{$listener.Port}}</td>
 <td>
 <ul>
-{{range $hostname := $vhost.VirtualHosts}}
+{{range $hostname := $listener.VirtualHosts}}
 <li>{{$hostname}}</li>
 {{end}}
 </ul>
 </td>
 <td>
 <ul>
-{{range $attribute := $vhost.Attributes}}
+{{range $attribute := $listener.Attributes}}
 <li>
 {{if or (eq $attribute.Name "TLSCertificate") (eq $attribute.Name "TLSCertificateKey")}}
 {{$attribute.Name}} = [redacted]
@@ -227,10 +227,10 @@ ol {
 {{end}}
 </ul>
 </td>
-<td>{{$vhost.Policies | OrderedList}}</td>
-<td>{{$vhost.RouteGroup}}</td>
-<td>{{$vhost.LastmodifiedAt | ISO8601}}</td>
-<td>{{$vhost.LastmodifiedBy}}</td>
+<td>{{$listener.Policies | OrderedList}}</td>
+<td>{{$listener.RouteGroup}}</td>
+<td>{{$listener.LastmodifiedAt | ISO8601}}</td>
+<td>{{$listener.LastmodifiedBy}}</td>
 </tr>
 {{end}}
 

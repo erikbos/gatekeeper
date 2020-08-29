@@ -1,10 +1,10 @@
 # Intro
 
-Envoycp is the control plane for envoyproxy. It configures all listeners, virtualhosts, routes and their specifics in envoyproxy.
+Envoycp is the control plane for envoyproxy. It configures all listeners, listeners, routes and their specifics in envoyproxy.
 
 ## How does it work
 
-Envoycp continously monitors the database for updates changes to virtualhosts, routes and clusters. In case there is a change a new envoyproxy configuration will be compiled and pushed to all envoyproxy.
+Envoycp continously monitors the database for updates changes to listeners, routes and clusters. In case there is a change a new envoyproxy configuration will be compiled and pushed to all envoyproxy.
 
 ## Envoycp endpoints
 

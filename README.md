@@ -30,7 +30,7 @@ For backend teams:
 
 * Envoyproxy offer detailed request metrics on error rates, response latencies, request size.
 
-* Security: Gatekeeper supports TLS for [downstream](docs/api/virtualhost.md) and [upstream](docs/api/cluster.md) traffic.
+* Security: Gatekeeper supports TLS for [downstream](docs/api/listener.md) and [upstream](docs/api/cluster.md) traffic.
 
 * Dynamic Routing: Gatekeeper can [route](docs/api/route.md) traffic across multiple backends.
 

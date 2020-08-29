@@ -74,7 +74,7 @@ const (
 	defaultHealthCheckHealthyThreshold   = 2
 	defaultDNSRefreshRate                = 5 * time.Second
 
-	// Attributes shared amongst virtualhost & cluster
+	// Attributes shared amongst listener & cluster
 	attributeTLSCertificate    = "TLSCertificate"
 	attributeTLSCertificateKey = "TLSCertificateKey"
 	attributeTLSMinimumVersion = "TLSMinimumVersion"
@@ -94,9 +94,9 @@ const (
 	attributeValueHealthCheckProtocolHTTP = "HTTP"
 )
 
-func warnForUnknownVirtualHostAttributes(virtualhost shared.VirtualHost) {
+func warnForUnknownListenerAttributes(listener shared.Listener) {
 
-	var validVirtualHostAttributes = map[string]bool{
+	var validListenerAttributes = map[string]bool{
 		attributeAccessLogFile:     true,
 		attributeAccessLogCluster:  true,
 		attributeHTTPProtocol:      true,
@@ -108,8 +108,8 @@ func warnForUnknownVirtualHostAttributes(virtualhost shared.VirtualHost) {
 		attributeTLSCipherSuites:   true,
 	}
 
-	warnForUnknownAttribute("Virtualhost", virtualhost.Name,
-		virtualhost.Attributes, validVirtualHostAttributes)
+	warnForUnknownAttribute("Listener", listener.Name,
+		listener.Attributes, validListenerAttributes)
 }
 
 func warnForUnknownRouteAttributes(route shared.Route) {

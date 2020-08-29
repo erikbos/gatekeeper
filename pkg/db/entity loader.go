@@ -11,15 +11,15 @@ import (
 
 // Entityloader bla
 type Entityloader struct {
-	db                     *Database                     // Database handle
-	configRefreshInterval  time.Duration                 // Interval between database loads
-	notify                 chan EntityChangeNotification // Notification channel to emit change events
-	virtualhosts           []shared.VirtualHost          // All virtualhosts loaded from database
-	routes                 []shared.Route                // All routes loaded from database
-	clusters               []shared.Cluster              // All clusters loaded from database
-	virtualHostsLastUpdate int64                         // Timestamp of most recent load of virtualhosts
-	routesLastUpdate       int64                         // Timestamp of most recent load of routes
-	clustersLastUpdate     int64                         // Timestamp of most recent load of clusters
+	db                    *Database                     // Database handle
+	configRefreshInterval time.Duration                 // Interval between database loads
+	notify                chan EntityChangeNotification // Notification channel to emit change events
+	listeners             []shared.Listener             // All listeners loaded from database
+	routes                []shared.Route                // All routes loaded from database
+	clusters              []shared.Cluster              // All clusters loaded from database
+	listenersLastUpdate   int64                         // Timestamp of most recent load of listeners
+	routesLastUpdate      int64                         // Timestamp of most recent load of routes
+	clustersLastUpdate    int64                         // Timestamp of most recent load of clusters
 }
 
 // EntityChangeNotification is the msg send when we noticed a change in an entity
@@ -29,9 +29,9 @@ type EntityChangeNotification struct {
 
 // Entity types that we load and send via notification channel
 const (
-	EntityTypeVirtualhost = "virtualhost"
-	EntityTypeRoute       = "route"
-	EntityTypeCluster     = "cluster"
+	EntityTypeListener = "listener"
+	EntityTypeRoute    = "route"
+	EntityTypeCluster  = "cluster"
 )
 
 // NewEntityLoader returns a new entity loader
@@ -50,7 +50,7 @@ func (g *Entityloader) Start() {
 	go g.LoadContinously()
 }
 
-// LoadContinously continuously loads virtual hosts, routes
+// LoadContinously continuously loads listeners, routes
 // and clusters entities from database and updates the in-memory list
 // in case a changed entity has been detect a notification will be send
 //
@@ -59,17 +59,17 @@ func (g *Entityloader) Start() {
 func (g *Entityloader) LoadContinously() {
 
 	for {
-		if newVirtualHosts, err := g.db.Virtualhost.GetAll(); err != nil {
-			log.Errorf("Could not retrieve virtualhosts from database (%s)", err)
+		if newListeners, err := g.db.Listener.GetAll(); err != nil {
+			log.Errorf("Could not retrieve listeners from database (%s)", err)
 		} else {
-			if g.virtualHostConfigChanged(newVirtualHosts) {
-				log.Info("Virtualhost configuration loaded")
-				g.notify <- EntityChangeNotification{Resource: EntityTypeVirtualhost}
+			if g.listenerConfigChanged(newListeners) {
+				log.Info("Listener configuration loaded")
+				g.notify <- EntityChangeNotification{Resource: EntityTypeListener}
 			}
 		}
 
 		if newRoutes, err := g.db.Route.GetAll(); err != nil {
-			log.Errorf("Could not retrieve virtualhosts from database (%s)", err)
+			log.Errorf("Could not retrieve listeners from database (%s)", err)
 		} else {
 			if g.routeConfigChanged(newRoutes) {
 				log.Info("Route configuration loaded")
@@ -78,7 +78,7 @@ func (g *Entityloader) LoadContinously() {
 		}
 
 		if newClusters, err := g.db.Cluster.GetAll(); err != nil {
-			log.Errorf("Could not retrieve virtualhosts from database (%s)", err)
+			log.Errorf("Could not retrieve listeners from database (%s)", err)
 		} else {
 			if g.clusterConfigChanged(newClusters) {
 				log.Info("Cluster configuration loaded")
@@ -90,18 +90,18 @@ func (g *Entityloader) LoadContinously() {
 	}
 }
 
-func (g *Entityloader) virtualHostConfigChanged(newConfig []shared.VirtualHost) bool {
+func (g *Entityloader) listenerConfigChanged(newConfig []shared.Listener) bool {
 
-	for _, virtualhost := range newConfig {
-		if g.virtualHostsLastUpdate == 0 ||
-			virtualhost.LastmodifiedAt > g.virtualHostsLastUpdate {
+	for _, listener := range newConfig {
+		if g.listenersLastUpdate == 0 ||
+			listener.LastmodifiedAt > g.listenersLastUpdate {
 
 			var m sync.Mutex
 			m.Lock()
-			g.virtualhosts = newConfig
+			g.listeners = newConfig
 			m.Unlock()
 
-			g.virtualHostsLastUpdate = shared.GetCurrentTimeMilliseconds()
+			g.listenersLastUpdate = shared.GetCurrentTimeMilliseconds()
 			return true
 		}
 	}
@@ -142,13 +142,13 @@ func (g *Entityloader) clusterConfigChanged(newConfig []shared.Cluster) bool {
 	return false
 }
 
-// GetVirtualhosts returns all virtualhosts
-func (g *Entityloader) GetVirtualhosts() []shared.VirtualHost {
+// GetListeners returns all listeners
+func (g *Entityloader) GetListeners() []shared.Listener {
 
-	return g.virtualhosts
+	return g.listeners
 }
 
-// GetRoutes returns all virtualhosts
+// GetRoutes returns all listeners
 func (g *Entityloader) GetRoutes() []shared.Route {
 
 	return g.routes
@@ -160,10 +160,10 @@ func (g *Entityloader) GetClusters() []shared.Cluster {
 	return g.clusters
 }
 
-// GetVirtualHostCount returns number of virtualhosts
-func (g *Entityloader) GetVirtualHostCount() int {
+// GetListenerCount returns number of listeners
+func (g *Entityloader) GetListenerCount() int {
 
-	return len(g.virtualhosts)
+	return len(g.listeners)
 }
 
 // GetRouteCount returns number of routes

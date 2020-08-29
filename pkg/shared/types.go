@@ -37,7 +37,7 @@ type Developer struct {
 type DeveloperApp struct {
 	AppID            string     `json:"appId"`                   // Id of developer app (not changable)
 	DeveloperID      string     `json:"developerId"`             // Id of developer (not changable)
-	OrganizationName string     `json:"organizationName"`        // Organization this virtual hosts belongs to (not used)
+	OrganizationName string     `json:"organizationName"`        // Organization this developer app belongs to (not used)
 	Status           string     `json:"status"`                  // Activation status of developer application
 	Attributes       Attributes `json:"attributes"`              // Attributes of developer application
 	Name             string     `json:"name" binding:"required"` // Name of developer application
@@ -57,7 +57,7 @@ type DeveloperAppKey struct {
 	ExpiresAt        int64              `json:"expiresAt"`        // Expiry date in epoch milliseconds
 	IssuedAt         int64              `json:"issuesAt"`         // Issue date in epoch milliseconds
 	AppID            string             `json:"AppId"`            // Developer app id
-	OrganizationName string             `json:"organizationName"` // Organization this virtual hosts belongs to
+	OrganizationName string             `json:"organizationName"` // Organization this credential belongs to
 	Status           string             `json:"status"`           // Status (should be "approved" to allow access)
 }
 
@@ -79,27 +79,27 @@ type APIProduct struct {
 	Paths            StringSlice `json:"paths"`            // List of paths this apiproduct applies to
 	Attributes       Attributes  `json:"attributes"`       // Attributes of this apiproduct
 	Policies         string      `json:"policies"`         // Comma separated list of policynames, to apply to requests
-	OrganizationName string      `json:"organizationName"` // Organization this virtual hosts belongs to (not used)
+	OrganizationName string      `json:"organizationName"` // Organization this api product belongs to (not used)
 	CreatedAt        int64       `json:"createdAt"`        // Created at timestamp in epoch milliseconds
 	CreatedBy        string      `json:"createdBy"`        // Name of user who created this apiproduct
 	LastmodifiedAt   int64       `json:"lastmodifiedAt"`   // Last modified at timestamp in epoch milliseconds
 	LastmodifiedBy   string      `json:"lastmodifiedBy"`   // Name of user who last updated this apiproduct
 }
 
-// VirtualHost contains everything about downstream configuration of virtual hosts
-type VirtualHost struct {
+// Listener contains everything about downstream configuration of listener and virtual hosts
+type Listener struct {
 	Name             string      `json:"name"`             // Name of virtual host (not changable)
 	DisplayName      string      `json:"displayName"`      // Friendly display name of route
-	VirtualHosts     StringSlice `json:"virtualHosts"`     // Virtualhosts of this listener
+	VirtualHosts     StringSlice `json:"virtualHosts"`     // Listeners of this listener
 	Port             int         `json:"port"`             // tcp port to listen on
 	RouteGroup       string      `json:"routeGroup"`       // Routegroup to forward traffic to
 	Policies         string      `json:"policies"`         // Comma separated list of policynames, to apply to requests
 	Attributes       Attributes  `json:"attributes"`       // Attributes of this virtual host
-	OrganizationName string      `json:"organizationName"` // Organization this virtual hosts belongs to (not used)
+	OrganizationName string      `json:"organizationName"` // Organization this listener belongs to (not used)
 	CreatedAt        int64       `json:"createdAt"`        // Created at timestamp in epoch milliseconds
-	CreatedBy        string      `json:"createdBy"`        // Name of user who created this virtualhost
+	CreatedBy        string      `json:"createdBy"`        // Name of user who created this listener
 	LastmodifiedAt   int64       `json:"lastmodifiedAt"`   // Last modified at timestamp in epoch milliseconds
-	LastmodifiedBy   string      `json:"lastmodifiedBy"`   // Name of user who last updated this virtualhost
+	LastmodifiedBy   string      `json:"lastmodifiedBy"`   // Name of user who last updated this listener
 }
 
 // Route holds configuration of one or more routes

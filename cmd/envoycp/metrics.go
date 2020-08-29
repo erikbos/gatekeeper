@@ -12,13 +12,13 @@ type metricsCollection struct {
 // registerMetrics registers envoycp operational metrics
 func (s *server) registerMetrics() {
 
-	metricVirtualHostsCount := prometheus.NewGaugeFunc(
+	metricListenersCount := prometheus.NewGaugeFunc(
 		prometheus.GaugeOpts{
 			Namespace: applicationName,
-			Name:      "xds_virtualhosts_total",
+			Name:      "xds_listeners_total",
 			Help:      "Total number of clusters.",
 		}, func() float64 {
-			return float64(s.dbentities.GetVirtualHostCount())
+			return float64(s.dbentities.GetListenerCount())
 		})
 
 	metricRoutesCount := prometheus.NewGaugeFunc(
@@ -53,7 +53,7 @@ func (s *server) registerMetrics() {
 			Help:      "Total number of XDS messages.",
 		}, []string{"messagetype"})
 
-	prometheus.MustRegister(metricVirtualHostsCount)
+	prometheus.MustRegister(metricListenersCount)
 	prometheus.MustRegister(metricRoutesCount)
 	prometheus.MustRegister(metricClustersCount)
 	prometheus.MustRegister(s.metrics.xdsDeployments)

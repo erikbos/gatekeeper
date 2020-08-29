@@ -76,7 +76,7 @@ func New(config DatabaseConfig, serviceName string,
 	dbConfig.metrics.register(serviceName, config.Hostname)
 
 	database := db.Database{
-		Virtualhost:  NewVirtualhostStore(&dbConfig),
+		Listener:     NewListenerStore(&dbConfig),
 		Route:        NewRouteStore(&dbConfig),
 		Cluster:      NewClusterStore(&dbConfig),
 		Organization: NewOrganizationStore(&dbConfig),

@@ -3,7 +3,7 @@ package db
 type (
 	// Database is our overall database interface
 	Database struct {
-		Virtualhost  VirtualhostStore
+		Listener     ListenerStore
 		Route        RouteStore
 		Cluster      ClusterStore
 		Organization OrganizationStore

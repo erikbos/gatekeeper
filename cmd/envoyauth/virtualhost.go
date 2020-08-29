@@ -13,7 +13,7 @@ import (
 
 type vhostMapping struct {
 	dbentities *db.Entityloader
-	vhosts     map[vhostMapEntry]shared.VirtualHost
+	listeners  map[vhostMapEntry]shared.Listener
 }
 
 type vhostMapEntry struct {
@@ -34,44 +34,44 @@ func (v *vhostMapping) WaitFor(entityNotifications chan db.EntityChangeNotificat
 		log.Infof("Database change notify received for entity group '%s'",
 			changedEntity.Resource)
 
-		if changedEntity.Resource == db.EntityTypeVirtualhost ||
+		if changedEntity.Resource == db.EntityTypeListener ||
 			changedEntity.Resource == db.EntityTypeRoute {
 			log.Printf("%+v", v.buildVhostMap())
 		}
 	}
 }
 
-func (v *vhostMapping) buildVhostMap() map[vhostMapEntry]shared.VirtualHost {
+func (v *vhostMapping) buildVhostMap() map[vhostMapEntry]shared.Listener {
 
-	newVhosts := make(map[vhostMapEntry]shared.VirtualHost)
+	newListeners := make(map[vhostMapEntry]shared.Listener)
 
-	for _, virtualhost := range v.dbentities.GetVirtualhosts() {
-		virtualhost.Attributes = shared.Attributes{}
+	for _, listener := range v.dbentities.GetListeners() {
+		listener.Attributes = shared.Attributes{}
 
-		for _, host := range virtualhost.VirtualHosts {
-			newVhosts[vhostMapEntry{strings.ToLower(host),
-				virtualhost.Port}] = virtualhost
+		for _, host := range listener.VirtualHosts {
+			newListeners[vhostMapEntry{strings.ToLower(host),
+				listener.Port}] = listener
 		}
 	}
 
 	var m sync.Mutex
 	m.Lock()
-	v.vhosts = newVhosts
+	v.listeners = newListeners
 	m.Unlock()
 
-	return newVhosts
+	return newListeners
 }
 
 // FIXME this should be lookup in map instead of for loops
 // FIXXE map should have a key vhost:port
-func (v *vhostMapping) Lookup(hostname, protocol string) (*shared.VirtualHost, error) {
+func (v *vhostMapping) Lookup(hostname, protocol string) (*shared.Listener, error) {
 
-	for _, vhostEntry := range v.vhosts {
-		for _, vhost := range vhostEntry.VirtualHosts {
+	for _, listener := range v.listeners {
+		for _, vhost := range listener.VirtualHosts {
 			if vhost == hostname {
-				if (vhostEntry.Port == 80 && protocol == "http") ||
-					(vhostEntry.Port == 443 && protocol == "https") {
-					return &vhostEntry, nil
+				if (listener.Port == 80 && protocol == "http") ||
+					(listener.Port == 443 && protocol == "https") {
+					return &listener, nil
 				}
 			}
 		}

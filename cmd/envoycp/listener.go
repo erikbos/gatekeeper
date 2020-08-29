@@ -29,7 +29,7 @@ import (
 func (s *server) getEnvoyListenerConfig() ([]cache.Resource, error) {
 	envoyListeners := []cache.Resource{}
 
-	uniquePorts := s.getVirtualHostPorts()
+	uniquePorts := s.getListenerPorts()
 	for port := range uniquePorts {
 		log.Infof("XDS adding listener & vhosts on port %d", port)
 		envoyListeners = append(envoyListeners, s.buildEnvoyListenerConfig(port))
@@ -37,27 +37,27 @@ func (s *server) getEnvoyListenerConfig() ([]cache.Resource, error) {
 	return envoyListeners, nil
 }
 
-// getVirtualHostPorts return unique set of ports from vhost configuration
-func (s *server) getVirtualHostPorts() map[int]bool {
+// getListenerPorts return unique set of ports from vhost configuration
+func (s *server) getListenerPorts() map[int]bool {
 	listenerPorts := map[int]bool{}
-	for _, virtualhost := range s.dbentities.GetVirtualhosts() {
-		listenerPorts[virtualhost.Port] = true
+	for _, listener := range s.dbentities.GetListeners() {
+		listenerPorts[listener.Port] = true
 	}
 	return listenerPorts
 }
 
-// getVirtualHostPorts return unique set of ports from vhost configuration
-func (s *server) getVirtualHostsOfRouteGroup(RouteGroupName string) []string {
-	var virtualHostsInRouteGroup []string
+// getListenerPorts return unique set of ports from vhost configuration
+func (s *server) getListenersOfRouteGroup(RouteGroupName string) []string {
+	var ListenersInRouteGroup []string
 
-	for _, virtualhost := range s.dbentities.GetVirtualhosts() {
-		warnForUnknownVirtualHostAttributes(virtualhost)
+	for _, listener := range s.dbentities.GetListeners() {
+		warnForUnknownListenerAttributes(listener)
 
-		if virtualhost.RouteGroup == RouteGroupName {
-			virtualHostsInRouteGroup = append(virtualHostsInRouteGroup, virtualhost.VirtualHosts...)
+		if listener.RouteGroup == RouteGroupName {
+			ListenersInRouteGroup = append(ListenersInRouteGroup, listener.VirtualHosts...)
 		}
 	}
-	return virtualHostsInRouteGroup
+	return ListenersInRouteGroup
 }
 
 func (s *server) buildEnvoyListenerConfig(port int) *listener.Listener {
@@ -69,9 +69,9 @@ func (s *server) buildEnvoyListenerConfig(port int) *listener.Listener {
 	}
 
 	// add all vhosts belonging to this listener's port
-	for _, virtualhost := range s.dbentities.GetVirtualhosts() {
-		if virtualhost.Port == port {
-			newListener.FilterChains = append(newListener.FilterChains, s.buildFilterChainEntry(newListener, virtualhost))
+	for _, listener := range s.dbentities.GetListeners() {
+		if listener.Port == port {
+			newListener.FilterChains = append(newListener.FilterChains, s.buildFilterChainEntry(newListener, listener))
 		}
 	}
 
@@ -87,7 +87,7 @@ func buildListenerFilterHTTP() []*listener.ListenerFilter {
 	}
 }
 
-func (s *server) buildFilterChainEntry(l *listener.Listener, v shared.VirtualHost) *listener.FilterChain {
+func (s *server) buildFilterChainEntry(l *listener.Listener, v shared.Listener) *listener.FilterChain {
 
 	httpFilter := s.buildFilter()
 
@@ -128,7 +128,7 @@ func (s *server) buildFilterChainEntry(l *listener.Listener, v shared.VirtualHos
 			ServerNames: v.VirtualHosts,
 		}
 
-	// Set TLS configuration based upon virtualhosts attributes
+	// Set TLS configuration based upon listeners attributes
 	downStreamTLSConfig := &tls.DownstreamTlsContext{
 		CommonTlsContext: buildCommonTLSContext(v.Name, v.Attributes),
 	}
@@ -138,7 +138,7 @@ func (s *server) buildFilterChainEntry(l *listener.Listener, v shared.VirtualHos
 }
 
 func (s *server) buildConnectionManager(httpFilters []*hcm.HttpFilter,
-	vhost shared.VirtualHost) *hcm.HttpConnectionManager {
+	vhost shared.Listener) *hcm.HttpConnectionManager {
 
 	proxyConfig := &s.config.Envoyproxy
 
@@ -254,7 +254,7 @@ func (s *server) extAuthzWithRequestBody() *extauthz.BufferSettings {
 // func (s *server) buildRouteSpecifier(RouteGroup string) *hcm.HttpConnectionManager_RouteConfig {
 
 // 	return &hcm.HttpConnectionManager_RouteConfig{
-// 		RouteConfig: s.buildEnvoyVirtualHostRouteConfig(RouteGroup, s.routes),
+// 		RouteConfig: s.buildEnvoyListenerRouteConfig(RouteGroup, s.routes),
 // 	}
 // }
 
@@ -268,7 +268,7 @@ func (s *server) buildRouteSpecifierRDS(routeGroup string) *hcm.HttpConnectionMa
 	}
 }
 
-func buildAccessLog(config envoyLogConfig, v shared.VirtualHost) []*accesslog.AccessLog {
+func buildAccessLog(config envoyLogConfig, v shared.Listener) []*accesslog.AccessLog {
 
 	// Set access log behaviour based upon virtual host attributes
 	accessLogFile, error := v.Attributes.Get(attributeAccessLogFile)
@@ -353,7 +353,7 @@ func buildGRPCAccessLog(clusterName, LogName string, timeout time.Duration, buff
 }
 
 // buildLocalOverWrite generates all the local rewrites Envoyproxy should do
-func buildLocalOverWrite(vhost shared.VirtualHost) *hcm.LocalReplyConfig {
+func buildLocalOverWrite(vhost shared.Listener) *hcm.LocalReplyConfig {
 
 	return &hcm.LocalReplyConfig{
 		Mappers: []*hcm.ResponseMapper{
@@ -362,7 +362,7 @@ func buildLocalOverWrite(vhost shared.VirtualHost) *hcm.LocalReplyConfig {
 	}
 }
 
-func buildLocalOverWrite429to403(vhost shared.VirtualHost) *hcm.ResponseMapper {
+func buildLocalOverWrite429to403(vhost shared.Listener) *hcm.ResponseMapper {
 
 	// This matches on
 	// 1) response status code 429

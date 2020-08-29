@@ -33,7 +33,7 @@ type requestInfo struct {
 	queryParameters url.Values
 	apikey          *string
 	oauth2token     *string
-	vhost           *shared.VirtualHost
+	vhost           *shared.Listener
 	developer       *shared.Developer
 	developerApp    *shared.DeveloperApp
 	appCredential   *shared.DeveloperAppKey

@@ -18,7 +18,7 @@ type PolicyChain struct {
 }
 
 const (
-	policyScopeVhost      = "virtualhost"
+	policyScopeVhost      = "listener"
 	policyScopeAPIProduct = "apiproduct"
 )
 

@@ -29,14 +29,14 @@ func (s *server) getEnvoyRouteConfig() ([]cache.Resource, error) {
 	for RouteGroupName := range RouteGroupNames {
 		log.Infof("XDS adding routegroup '%s'", RouteGroupName)
 		envoyRoutes = append(envoyRoutes,
-			s.buildEnvoyVirtualHostRouteConfig(RouteGroupName,
+			s.buildEnvoyListenerRouteConfig(RouteGroupName,
 				s.dbentities.GetRoutes()))
 	}
 
 	return envoyRoutes, nil
 }
 
-// getVirtualHostPorts returns set of unique RouteGroup names
+// getListenerPorts returns set of unique RouteGroup names
 func (s *server) getRouteGroupNames(vhosts []shared.Route) map[string]bool {
 	RouteGroupNames := map[string]bool{}
 	for _, routeEntry := range s.dbentities.GetRoutes() {
@@ -45,8 +45,8 @@ func (s *server) getRouteGroupNames(vhosts []shared.Route) map[string]bool {
 	return RouteGroupNames
 }
 
-// buildEnvoyVirtualHostRouteConfig builds vhost and route configuration of one RouteGroup
-func (s *server) buildEnvoyVirtualHostRouteConfig(RouteGroup string,
+// buildEnvoyListenerRouteConfig builds vhost and route configuration of one RouteGroup
+func (s *server) buildEnvoyListenerRouteConfig(RouteGroup string,
 	routes []shared.Route) *route.RouteConfiguration {
 
 	return &route.RouteConfiguration{
@@ -54,7 +54,7 @@ func (s *server) buildEnvoyVirtualHostRouteConfig(RouteGroup string,
 		VirtualHosts: []*route.VirtualHost{
 			{
 				Name:    RouteGroup,
-				Domains: s.getVirtualHostsOfRouteGroup(RouteGroup),
+				Domains: s.getListenersOfRouteGroup(RouteGroup),
 				Routes:  s.buildEnvoyRoutes(RouteGroup, routes),
 			},
 		},
