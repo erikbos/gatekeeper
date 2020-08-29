@@ -11,7 +11,7 @@ const (
 	createKeyspaceCQL = "CREATE KEYSPACE IF NOT EXISTS %s WITH replication = {'class': 'SimpleStrategy', 'replication_factor': %d };"
 )
 
-// CreateDatabase creates database if it does not exist yet
+// createKeyspace creates keyspace if it does not yet exist
 func createKeyspace(s *gocql.Session, keyspace string, replicationCount int) error {
 
 	log.Infof("Creating keyspace '%s' with replication count '%d' if not existing", keyspace, replicationCount)
@@ -27,7 +27,7 @@ func createKeyspace(s *gocql.Session, keyspace string, replicationCount int) err
 	return nil
 }
 
-// CreateTables adds required tables if they do not yet exist
+// createTables adds required tables if they do not yet exist
 func createTables(s *gocql.Session) error {
 
 	log.Info("Creating all tables if not existing")

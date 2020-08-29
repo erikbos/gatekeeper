@@ -10,8 +10,24 @@ import (
 	"github.com/erikbos/gatekeeper/pkg/shared"
 )
 
-// Prometheus label for metrics of db interactions
-const routeMetricLabel = "routes"
+const (
+
+	// Prometheus label for metrics of db interactions
+	routeMetricLabel = "routes"
+
+	// List of organization columns we use
+	routeColumns = `name,
+display_name,
+route_group,
+path,
+path_type,
+cluster,
+attributes,
+created_at,
+created_by,
+lastmodified_at,
+lastmodified_by`
+)
 
 // RouteStore holds our route config
 type RouteStore struct {
@@ -72,17 +88,17 @@ func (s *RouteStore) runGetRouteQuery(query string, queryParameters ...interface
 	m := make(map[string]interface{})
 	for iter.MapScan(m) {
 		routes = append(routes, shared.Route{
-			Attributes:     shared.Route{}.Attributes.Unmarshal(m["attributes"].(string)),
-			Name:           m["name"].(string),
-			DisplayName:    m["display_name"].(string),
-			RouteGroup:     m["route_group"].(string),
-			Path:           m["path"].(string),
-			PathType:       m["path_type"].(string),
-			Cluster:        m["cluster"].(string),
-			CreatedAt:      m["created_at"].(int64),
-			CreatedBy:      m["created_by"].(string),
-			LastmodifiedAt: m["lastmodified_at"].(int64),
-			LastmodifiedBy: m["lastmodified_by"].(string),
+			Name:           columnValueString(m, "name"),
+			DisplayName:    columnValueString(m, "display_name"),
+			RouteGroup:     columnValueString(m, "route_group"),
+			Path:           columnValueString(m, "path"),
+			PathType:       columnValueString(m, "path_type"),
+			Cluster:        columnValueString(m, "cluster"),
+			Attributes:     shared.Route{}.Attributes.Unmarshal(columnValueString(m, "attributes")),
+			CreatedAt:      columnValueInt64(m, "created_at"),
+			CreatedBy:      columnValueString(m, "created_by"),
+			LastmodifiedAt: columnValueInt64(m, "lastmodified_at"),
+			LastmodifiedBy: columnValueString(m, "lastmodified_by"),
 		})
 		m = map[string]interface{}{}
 	}
@@ -100,19 +116,8 @@ func (s *RouteStore) UpdateRouteByName(route *shared.Route) error {
 	route.Attributes.Tidy()
 	route.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
 
-	if err := s.db.CassandraSession.Query(`INSERT INTO routes (
-name,
-display_name,
-route_group,
-path,
-path_type,
-cluster,
-attributes,
-created_at,
-created_by,
-lastmodified_at,
-lastmodified_by) VALUES(?,?,?,?,?,?,?,?,?,?,?)`,
-
+	query := "INSERT INTO routes (" + routeColumns + ") VALUES(?,?,?,?,?,?,?,?,?,?,?)"
+	if err := s.db.CassandraSession.Query(query,
 		route.Name,
 		route.DisplayName,
 		route.RouteGroup,

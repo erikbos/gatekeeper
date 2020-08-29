@@ -9,8 +9,23 @@ import (
 	"github.com/erikbos/gatekeeper/pkg/shared"
 )
 
-// Prometheus label for metrics of db interactions
-const appsMetricLabel = "developerapps"
+const (
+	// Prometheus label for metrics of db interactions
+	developerAppsMetricLabel = "developerapps"
+
+	// List of developer app columns we use
+	developerAppColumns = `app_id,
+developer_id,
+name,
+display_name,
+attributes,
+organization_name,
+status,
+created_at,
+created_by,
+lastmodified_at,
+lastmodified_by`
+)
 
 // DeveloperAppStore holds our database config
 type DeveloperAppStore struct {
@@ -27,55 +42,55 @@ func NewDeveloperAppStore(database *Database) *DeveloperAppStore {
 // GetByOrganization retrieves all developer apps belonging to an organization
 func (s *DeveloperAppStore) GetByOrganization(organizationName string) ([]shared.DeveloperApp, error) {
 
-	query := "SELECT * FROM developer_apps WHERE organization_name = ? ALLOW FILTERING"
+	query := "SELECT " + developerAppColumns + " FROM developer_apps WHERE organization_name = ? ALLOW FILTERING"
 	developerapps, err := s.runGetDeveloperAppQuery(query, organizationName)
 	if err != nil {
 		return []shared.DeveloperApp{}, err
 	}
 
 	if len(developerapps) == 0 {
-		s.db.metrics.QueryMiss(appsMetricLabel)
+		s.db.metrics.QueryMiss(developerAppsMetricLabel)
 		return developerapps,
 			fmt.Errorf("Can not find developer apps in organization '%s'", organizationName)
 	}
 
-	s.db.metrics.QueryHit(appsMetricLabel)
+	s.db.metrics.QueryHit(developerAppsMetricLabel)
 	return developerapps, nil
 }
 
 // GetByName returns a developer app
 func (s *DeveloperAppStore) GetByName(organization, developerAppName string) (*shared.DeveloperApp, error) {
 
-	query := "SELECT * FROM developer_apps WHERE organization_name = ? AND name = ? LIMIT 1"
+	query := "SELECT " + developerAppColumns + " FROM developer_apps WHERE organization_name = ? AND name = ? LIMIT 1"
 	developerapps, err := s.runGetDeveloperAppQuery(query, organization, developerAppName)
 	if err != nil {
 		return nil, err
 	}
 
 	if len(developerapps) == 0 {
-		s.db.metrics.QueryMiss(appsMetricLabel)
+		s.db.metrics.QueryMiss(developerAppsMetricLabel)
 		return nil, fmt.Errorf("Can not find developer app '%s'", developerAppName)
 	}
 
-	s.db.metrics.QueryHit(appsMetricLabel)
+	s.db.metrics.QueryHit(developerAppsMetricLabel)
 	return &developerapps[0], nil
 }
 
 // GetByID returns a developer app
 func (s *DeveloperAppStore) GetByID(organization, developerAppID string) (*shared.DeveloperApp, error) {
 
-	query := "SELECT * FROM developer_apps WHERE app_id = ? LIMIT 1"
+	query := "SELECT " + developerAppColumns + " FROM developer_apps WHERE app_id = ? LIMIT 1"
 	developerapps, err := s.runGetDeveloperAppQuery(query, developerAppID)
 	if err != nil {
 		return nil, err
 	}
 
 	if len(developerapps) == 0 {
-		s.db.metrics.QueryMiss(appsMetricLabel)
+		s.db.metrics.QueryMiss(developerAppsMetricLabel)
 		return nil, fmt.Errorf("Can not find developer app id '%s'", developerAppID)
 	}
 
-	s.db.metrics.QueryHit(appsMetricLabel)
+	s.db.metrics.QueryHit(developerAppsMetricLabel)
 	return &developerapps[0], nil
 }
 
@@ -85,11 +100,11 @@ func (s *DeveloperAppStore) GetCountByDeveloperID(developerID string) int {
 	var developerAppCount int
 	query := "SELECT count(*) FROM developer_apps WHERE developer_id = ?"
 	if err := s.db.CassandraSession.Query(query, developerID).Scan(&developerAppCount); err != nil {
-		s.db.metrics.QueryMiss(appsMetricLabel)
+		s.db.metrics.QueryMiss(developerAppsMetricLabel)
 		return -1
 	}
 
-	s.db.metrics.QueryHit(appsMetricLabel)
+	s.db.metrics.QueryHit(developerAppsMetricLabel)
 	return developerAppCount
 }
 
@@ -104,17 +119,17 @@ func (s *DeveloperAppStore) runGetDeveloperAppQuery(query string, queryParameter
 	m := make(map[string]interface{})
 	for iterable.MapScan(m) {
 		developerapps = append(developerapps, shared.DeveloperApp{
-			AppID:            m["app_id"].(string),
+			AppID:            columnValueString(m, "app_id"),
+			DeveloperID:      columnValueString(m, "developer_id"),
+			Name:             columnValueString(m, "name"),
+			DisplayName:      columnValueString(m, "display_name"),
 			Attributes:       shared.DeveloperApp{}.Attributes.Unmarshal(m["attributes"].(string)),
-			CreatedAt:        m["created_at"].(int64),
-			CreatedBy:        m["created_by"].(string),
-			DisplayName:      m["display_name"].(string),
-			LastmodifiedAt:   m["lastmodified_at"].(int64),
-			LastmodifiedBy:   m["lastmodified_by"].(string),
-			Name:             m["name"].(string),
-			OrganizationName: m["organization_name"].(string),
-			DeveloperID:      m["developer_id"].(string),
-			Status:           m["status"].(string),
+			OrganizationName: columnValueString(m, "organization_name"),
+			Status:           columnValueString(m, "status"),
+			CreatedAt:        columnValueInt64(m, "created_at"),
+			CreatedBy:        columnValueString(m, "created_by"),
+			LastmodifiedAt:   columnValueInt64(m, "lastmodified_at"),
+			LastmodifiedBy:   columnValueString(m, "lastmodified_by"),
 		})
 		m = map[string]interface{}{}
 	}
@@ -132,19 +147,8 @@ func (s *DeveloperAppStore) UpdateByName(app *shared.DeveloperApp) error {
 	app.Attributes.Tidy()
 	app.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
 
-	if err := s.db.CassandraSession.Query(`INSERT INTO developer_apps (
-app_id,
-developer_id,
-name,
-display_name,
-attributes,
-organization_name,
-status,
-created_at,
-created_by,
-lastmodified_at,
-lastmodified_by) VALUES(?,?,?,?,?,?,?,?,?,?,?)`,
-
+	query := "INSERT INTO developer_apps (" + developerAppColumns + ") VALUES(?,?,?,?,?,?,?,?,?,?,?)"
+	if err := s.db.CassandraSession.Query(query,
 		app.AppID,
 		app.DeveloperID,
 		app.Name,

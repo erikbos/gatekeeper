@@ -9,8 +9,26 @@ import (
 	"github.com/erikbos/gatekeeper/pkg/shared"
 )
 
-// Prometheus label for metrics of db interactions
-const developerMetricLabel = "developers"
+const (
+	// Prometheus label for metrics of db interactions
+	developerMetricLabel = "developers"
+
+	// List of developer columns we use
+	developerColumns = `developer_id,
+apps,
+attributes,
+organization_name,
+status,
+user_name,
+email,
+first_name,
+last_name,
+suspended_till,
+created_at,
+created_by,
+lastmodified_at,
+lastmodified_by`
+)
 
 // DeveloperStore holds our database config
 type DeveloperStore struct {
@@ -27,7 +45,7 @@ func NewDeveloperStore(database *Database) *DeveloperStore {
 // GetByOrganization retrieves all developer belonging to an organization
 func (s *DeveloperStore) GetByOrganization(organizationName string) ([]shared.Developer, error) {
 
-	query := "SELECT * FROM developers WHERE organization_name = ? ALLOW FILTERING"
+	query := "SELECT " + developerColumns + " FROM developers WHERE organization_name = ? ALLOW FILTERING"
 	developers, err := s.runGetDeveloperQuery(query, organizationName)
 	if err != nil {
 		return []shared.Developer{}, err
@@ -61,7 +79,7 @@ func (s *DeveloperStore) GetCountByOrganization(organizationName string) int {
 // GetByEmail retrieves a developer from database
 func (s *DeveloperStore) GetByEmail(developerOrganization, developerEmail string) (*shared.Developer, error) {
 
-	query := "SELECT * FROM developers WHERE organization_name = ? AND email = ? LIMIT 1 ALLOW FILTERING"
+	query := "SELECT " + developerColumns + " FROM developers WHERE organization_name = ? AND email = ? LIMIT 1 ALLOW FILTERING"
 	developers, err := s.runGetDeveloperQuery(query, developerOrganization, developerEmail)
 	if err != nil {
 		return &shared.Developer{}, err
@@ -79,7 +97,7 @@ func (s *DeveloperStore) GetByEmail(developerOrganization, developerEmail string
 // GetByID retrieves a developer from database
 func (s *DeveloperStore) GetByID(developerID string) (*shared.Developer, error) {
 
-	query := "SELECT * FROM developers WHERE developer_id = ? LIMIT 1"
+	query := "SELECT " + developerColumns + " FROM developers WHERE developer_id = ? LIMIT 1"
 	developers, err := s.runGetDeveloperQuery(query, developerID)
 	if err != nil {
 		return nil, err
@@ -107,20 +125,20 @@ func (s *DeveloperStore) runGetDeveloperQuery(query string, queryParameters ...i
 	m := make(map[string]interface{})
 	for iterable.MapScan(m) {
 		developers = append(developers, shared.Developer{
-			Apps:             shared.Developer{}.Apps.Unmarshal(m["apps"].(string)),
-			Attributes:       shared.Developer{}.Attributes.Unmarshal(m["attributes"].(string)),
-			DeveloperID:      m["developer_id"].(string),
-			CreatedAt:        m["created_at"].(int64),
-			CreatedBy:        m["created_by"].(string),
-			Email:            m["email"].(string),
-			FirstName:        m["first_name"].(string),
-			LastName:         m["last_name"].(string),
-			LastmodifiedAt:   m["lastmodified_at"].(int64),
-			LastmodifiedBy:   m["lastmodified_by"].(string),
-			OrganizationName: m["organization_name"].(string),
-			Status:           m["status"].(string),
-			SuspendedTill:    m["suspended_till"].(int64),
-			UserName:         m["user_name"].(string),
+			DeveloperID:      columnValueString(m, "developer_id"),
+			Apps:             shared.Developer{}.Apps.Unmarshal(columnValueString(m, "apps")),
+			Attributes:       shared.Developer{}.Attributes.Unmarshal(columnValueString(m, "attributes")),
+			OrganizationName: columnValueString(m, "organization_name"),
+			Status:           columnValueString(m, "status"),
+			UserName:         columnValueString(m, "user_name"),
+			Email:            columnValueString(m, "email"),
+			FirstName:        columnValueString(m, "first_name"),
+			LastName:         columnValueString(m, "last_name"),
+			SuspendedTill:    columnValueInt64(m, "suspended_till"),
+			CreatedAt:        columnValueInt64(m, "created_at"),
+			CreatedBy:        columnValueString(m, "created_by"),
+			LastmodifiedAt:   columnValueInt64(m, "lastmodified_at"),
+			LastmodifiedBy:   columnValueString(m, "lastmodified_by"),
 		})
 		m = map[string]interface{}{}
 	}
@@ -137,22 +155,8 @@ func (s *DeveloperStore) UpdateByName(dev *shared.Developer) error {
 	dev.Attributes.Tidy()
 	dev.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
 
-	if err := s.db.CassandraSession.Query(`INSERT INTO developers (
-developer_id,
-apps,
-attributes,
-organization_name,
-status,
-user_name,
-email,
-first_name,
-last_name,
-suspended_till,
-created_at,
-created_by,
-lastmodified_at,
-lastmodified_by) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-
+	query := "INSERT INTO developers (" + developerColumns + ") VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+	if err := s.db.CassandraSession.Query(query,
 		dev.DeveloperID,
 		dev.Apps.Marshal(),
 		dev.Attributes.Marshal(),

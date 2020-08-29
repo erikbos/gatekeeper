@@ -9,8 +9,22 @@ import (
 	"github.com/erikbos/gatekeeper/pkg/shared"
 )
 
-// Prometheus label for metrics of db interactions
-const appCredentialsMetricLabel = "credentials"
+const (
+
+	// Prometheus label for metrics of db interactions
+	appCredentialsMetricLabel = "credentials"
+
+	// List of credential columns we use
+	appCredentialsColumn = `consumer_key,
+consumer_secret,
+api_products,
+attributes,
+app_id,
+organization_name,
+status,
+issued_at,
+expires_at`
+)
 
 // CredentialStore holds our database config
 type CredentialStore struct {
@@ -31,10 +45,10 @@ func (s *CredentialStore) GetByKey(organizationName, key *string) (*shared.Devel
 	var err error
 
 	if organizationName == nil {
-		query := "SELECT * FROM credentials WHERE consumer_key = ? LIMIT 1"
+		query := "SELECT " + appCredentialsColumn + " FROM credentials WHERE consumer_key = ? LIMIT 1"
 		appcredentials, err = s.runGetAppCredentialQuery(query, key)
 	} else {
-		query := "SELECT * FROM credentials WHERE consumer_key = ? AND organization_name = ? LIMIT 1 ALLOW FILTERING"
+		query := "SELECT " + appCredentialsColumn + " FROM credentials WHERE consumer_key = ? AND organization_name = ? LIMIT 1 ALLOW FILTERING"
 		appcredentials, err = s.runGetAppCredentialQuery(query, key, organizationName)
 	}
 	if err != nil {
@@ -53,7 +67,7 @@ func (s *CredentialStore) GetByKey(organizationName, key *string) (*shared.Devel
 // GetByDeveloperAppID returns an array with apikey details of a developer app
 func (s *CredentialStore) GetByDeveloperAppID(developerAppID string) ([]shared.DeveloperAppKey, error) {
 
-	query := "SELECT * FROM credentials WHERE app_id = ?"
+	query := "SELECT " + appCredentialsColumn + " FROM credentials WHERE app_id = ?"
 	appcredentials, err := s.runGetAppCredentialQuery(query, developerAppID)
 	if err != nil {
 		return nil, err
@@ -96,15 +110,15 @@ func (s *CredentialStore) runGetAppCredentialQuery(query string, queryParameters
 	m := make(map[string]interface{})
 	for iterable.MapScan(m) {
 		appcredentials = append(appcredentials, shared.DeveloperAppKey{
-			ConsumerKey:      m["consumer_key"].(string),
-			ConsumerSecret:   m["consumer_secret"].(string),
+			ConsumerKey:      columnValueString(m, "consumer_key"),
+			ConsumerSecret:   columnValueString(m, "consumer_secret"),
 			APIProducts:      shared.DeveloperAppKey{}.APIProducts.Unmarshal(m["api_products"].(string)),
 			Attributes:       shared.DeveloperAppKey{}.Attributes.Unmarshal(m["attributes"].(string)),
-			ExpiresAt:        m["expires_at"].(int64),
-			IssuedAt:         m["issued_at"].(int64),
-			AppID:            m["app_id"].(string),
-			OrganizationName: m["organization_name"].(string),
-			Status:           m["status"].(string),
+			AppID:            columnValueString(m, "app_id"),
+			OrganizationName: columnValueString(m, "organization_name"),
+			Status:           columnValueString(m, "status"),
+			IssuedAt:         columnValueInt64(m, "issued_at"),
+			ExpiresAt:        columnValueInt64(m, "expires_at"),
 		})
 		m = map[string]interface{}{}
 	}
@@ -121,17 +135,8 @@ func (s *CredentialStore) UpdateByKey(c *shared.DeveloperAppKey) error {
 
 	c.Attributes.Tidy()
 
-	if err := s.db.CassandraSession.Query(`INSERT INTO credentials (
-consumer_key,
-consumer_secret,
-api_products,
-attributes,
-app_id,
-organization_name,
-status,
-issued_at,
-expires_at) VALUES(?,?,?,?,?,?,?,?,?)`,
-
+	query := "INSERT INTO credentials (" + appCredentialsColumn + ") VALUES(?,?,?,?,?,?,?,?,?)"
+	if err := s.db.CassandraSession.Query(query,
 		c.ConsumerKey,
 		c.ConsumerSecret,
 		c.APIProducts.Marshal(),

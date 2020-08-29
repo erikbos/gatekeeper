@@ -10,8 +10,19 @@ import (
 	"github.com/erikbos/gatekeeper/pkg/shared"
 )
 
-// Prometheus label for metrics of db interactions
-const organizationMetricLabel = "organizations"
+const (
+	// Prometheus label for metrics of db interactions
+	organizationMetricLabel = "organizations"
+
+	// List of organization columns we use
+	organizationColumns = `name,
+display_name,
+attributes,
+created_at,
+created_by,
+lastmodified_at,
+lastmodified_by`
+)
 
 // OrganizationStore holds our database config
 type OrganizationStore struct {
@@ -29,7 +40,7 @@ func NewOrganizationStore(database *Database) *OrganizationStore {
 func (s *OrganizationStore) GetAll() ([]shared.Organization, error) {
 
 	// FIXME this ugly workaround to have to pass an argument
-	query := "SELECT * FROM organizations ALLOW FILTERING"
+	query := "SELECT " + organizationColumns + " FROM organizations ALLOW FILTERING"
 	organizations, err := s.runGetOrganizationQuery(query, "")
 	if err != nil {
 		return []shared.Organization{}, fmt.Errorf("Cannot retrieve list of organizations (%s)", err)
@@ -47,7 +58,7 @@ func (s *OrganizationStore) GetAll() ([]shared.Organization, error) {
 // GetByName retrieves an organization
 func (s *OrganizationStore) GetByName(organizationName string) (*shared.Organization, error) {
 
-	query := "SELECT * FROM organizations WHERE name = ? LIMIT 1"
+	query := "SELECT " + organizationColumns + " FROM organizations WHERE name = ? LIMIT 1"
 	organizations, err := s.runGetOrganizationQuery(query, organizationName)
 	if err != nil {
 		return nil, err
@@ -84,13 +95,13 @@ func (s *OrganizationStore) runGetOrganizationQuery(query, queryParameter string
 	m := make(map[string]interface{})
 	for iter.MapScan(m) {
 		organizations = append(organizations, shared.Organization{
-			Attributes:     shared.Organization{}.Attributes.Unmarshal(m["attributes"].(string)),
-			CreatedAt:      m["created_at"].(int64),
-			CreatedBy:      m["created_by"].(string),
-			DisplayName:    m["display_name"].(string),
-			LastmodifiedAt: m["lastmodified_at"].(int64),
-			LastmodifiedBy: m["lastmodified_by"].(string),
-			Name:           m["name"].(string),
+			Name:           columnValueString(m, "name"),
+			DisplayName:    columnValueString(m, "display_name"),
+			Attributes:     shared.Organization{}.Attributes.Unmarshal(columnValueString(m, "attributes")),
+			CreatedAt:      columnValueInt64(m, "created_at"),
+			CreatedBy:      columnValueString(m, "created_by"),
+			LastmodifiedAt: columnValueInt64(m, "lastmodified_at"),
+			LastmodifiedBy: columnValueString(m, "lastmodified_by"),
 		})
 		m = map[string]interface{}{}
 	}
@@ -107,15 +118,8 @@ func (s *OrganizationStore) UpdateByName(o *shared.Organization) error {
 	o.Attributes.Tidy()
 	o.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
 
-	if err := s.db.CassandraSession.Query(`INSERT INTO organizations (
-name,
-display_name,
-attributes,
-created_at,
-created_by,
-lastmodified_at,
-lastmodified_by) VALUES(?,?,?,?,?,?,?)`,
-
+	query := "INSERT INTO organizations (" + organizationColumns + ") VALUES(?,?,?,?,?,?,?)"
+	if err := s.db.CassandraSession.Query(query,
 		o.Name,
 		o.DisplayName,
 		o.Attributes.Marshal(),

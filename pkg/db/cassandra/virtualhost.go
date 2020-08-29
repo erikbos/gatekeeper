@@ -10,8 +10,24 @@ import (
 	"github.com/erikbos/gatekeeper/pkg/shared"
 )
 
-// Prometheus label for metrics of db interactions
-const virtualHostMetricLabel = "virtualhosts"
+const (
+	// Prometheus label for metrics of db interactions
+	virtualHostMetricLabel = "virtualhosts"
+
+	// List of organization columns we use
+	virtualColumns = `name,
+display_name,
+virtual_hosts,
+port,
+route_group,
+policies,
+attributes,
+organization_name,
+created_at,
+created_by,
+lastmodified_at,
+lastmodified_by`
+)
 
 // VirtualhostStore holds our OrganizationStore config
 type VirtualhostStore struct {
@@ -28,7 +44,7 @@ func NewVirtualhostStore(database *Database) *VirtualhostStore {
 // GetAll retrieves all virtualhosts
 func (s *VirtualhostStore) GetAll() ([]shared.VirtualHost, error) {
 
-	query := "SELECT * FROM virtual_hosts"
+	query := "SELECT " + virtualColumns + " FROM virtual_hosts"
 	virtualhosts, err := s.runGetVirtualHostQuery(query)
 	if err != nil {
 		return []shared.VirtualHost{}, err
@@ -46,7 +62,7 @@ func (s *VirtualhostStore) GetAll() ([]shared.VirtualHost, error) {
 // GetByName retrieves a virtualhost
 func (s *VirtualhostStore) GetByName(virtualHost string) (*shared.VirtualHost, error) {
 
-	query := "SELECT * FROM virtual_hosts WHERE name = ? LIMIT 1"
+	query := "SELECT " + virtualColumns + " FROM virtual_hosts WHERE name = ? LIMIT 1"
 	virtualhosts, err := s.runGetVirtualHostQuery(query, virtualHost)
 	if err != nil {
 		return nil, err
@@ -74,18 +90,18 @@ func (s *VirtualhostStore) runGetVirtualHostQuery(query string,
 	m := make(map[string]interface{})
 	for iter.MapScan(m) {
 		virtualhosts = append(virtualhosts, shared.VirtualHost{
-			Name:             m["name"].(string),
-			DisplayName:      m["display_name"].(string),
-			Port:             m["port"].(int),
-			VirtualHosts:     shared.VirtualHost{}.VirtualHosts.Unmarshal(m["virtual_hosts"].(string)),
-			Attributes:       shared.VirtualHost{}.Attributes.Unmarshal(m["attributes"].(string)),
-			RouteGroup:       m["route_group"].(string),
-			Policies:         m["policies"].(string),
-			OrganizationName: m["organization_name"].(string),
-			CreatedAt:        m["created_at"].(int64),
-			CreatedBy:        m["created_by"].(string),
-			LastmodifiedAt:   m["lastmodified_at"].(int64),
-			LastmodifiedBy:   m["lastmodified_by"].(string),
+			Name:             columnValueString(m, "name"),
+			DisplayName:      columnValueString(m, "display_name"),
+			VirtualHosts:     shared.VirtualHost{}.VirtualHosts.Unmarshal(columnValueString(m, "virtual_hosts")),
+			Port:             columnValueInt(m, "port"),
+			RouteGroup:       columnValueString(m, "route_group"),
+			Policies:         columnValueString(m, "policies"),
+			Attributes:       shared.VirtualHost{}.Attributes.Unmarshal(columnValueString(m, "attributes")),
+			OrganizationName: columnValueString(m, "organization_name"),
+			CreatedAt:        columnValueInt64(m, "created_at"),
+			CreatedBy:        columnValueString(m, "created_by"),
+			LastmodifiedAt:   columnValueInt64(m, "lastmodified_at"),
+			LastmodifiedBy:   columnValueString(m, "lastmodified_by"),
 		})
 		m = map[string]interface{}{}
 	}
@@ -103,20 +119,8 @@ func (s *VirtualhostStore) UpdateByName(vhost *shared.VirtualHost) error {
 	vhost.Attributes.Tidy()
 	vhost.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
 
-	if err := s.db.CassandraSession.Query(`INSERT INTO virtual_hosts (
-name,
-display_name,
-virtual_hosts,
-port,
-route_group,
-policies,
-attributes,
-organization_name,
-created_at,
-created_by,
-lastmodified_at,
-lastmodified_by) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)`,
-
+	query := "INSERT INTO virtual_hosts (" + virtualColumns + ") VALUES(?,?,?,?,?,?,?,?,?,?,?,?)"
+	if err := s.db.CassandraSession.Query(query,
 		vhost.Name,
 		vhost.DisplayName,
 		vhost.VirtualHosts.Marshal(),

@@ -10,8 +10,24 @@ import (
 	"github.com/erikbos/gatekeeper/pkg/shared"
 )
 
-// Prometheus label for metrics of db interactions
-const apiProductsMetricLabel = "apiproducts"
+const (
+	// Prometheus label for metrics of db interactions
+	apiProductsMetricLabel = "apiproducts"
+
+	// List of apiproduct columns we use
+	apiProductsColumns = `name,
+display_name,
+description,
+attributes,
+route_group,
+paths,
+policies,
+created_at,
+created_by,
+lastmodified_at,
+lastmodified_by,
+organization_name`
+)
 
 // APIProductStore holds our database config
 type APIProductStore struct {
@@ -27,7 +43,8 @@ func NewAPIProductStore(database *Database) *APIProductStore {
 
 // GetAll retrieves all api products
 func (s *APIProductStore) GetAll() ([]shared.APIProduct, error) {
-	query := "SELECT * FROM api_products"
+
+	query := "SELECT " + apiProductsColumns + " FROM api_products"
 
 	apiproducts, err := s.runGetAPIProductQuery(query)
 	if err != nil {
@@ -46,7 +63,7 @@ func (s *APIProductStore) GetAll() ([]shared.APIProduct, error) {
 
 // GetByOrganization retrieves all api products belonging to an organization
 func (s *APIProductStore) GetByOrganization(organizationName string) ([]shared.APIProduct, error) {
-	query := "SELECT * FROM api_products WHERE organization_name = ? ALLOW FILTERING"
+	query := "SELECT " + apiProductsColumns + " FROM api_products WHERE organization_name = ? ALLOW FILTERING"
 
 	apiproducts, err := s.runGetAPIProductQuery(query, organizationName)
 	if err != nil {
@@ -67,7 +84,7 @@ func (s *APIProductStore) GetByOrganization(organizationName string) ([]shared.A
 // GetByName returns an apiproduct
 func (s *APIProductStore) GetByName(organizationName, apiproductName string) (*shared.APIProduct, error) {
 
-	query := "SELECT * FROM api_products WHERE organization_name = ? AND name = ? LIMIT 1"
+	query := "SELECT " + apiProductsColumns + " FROM api_products WHERE organization_name = ? AND name = ? LIMIT 1"
 
 	apiproducts, err := s.runGetAPIProductQuery(query, organizationName, apiproductName)
 	if err != nil {
@@ -104,18 +121,18 @@ func (s *APIProductStore) runGetAPIProductQuery(query string, queryParameters ..
 	m := make(map[string]interface{})
 	for iter.MapScan(m) {
 		apiproducts = append(apiproducts, shared.APIProduct{
-			Name:             m["name"].(string),
-			DisplayName:      m["display_name"].(string),
+			Name:             columnValueString(m, "name"),
+			DisplayName:      columnValueString(m, "display_name"),
 			Description:      m["description"].(string),
-			Paths:            shared.APIProduct{}.Paths.Unmarshal(m["paths"].(string)),
-			Attributes:       shared.APIProduct{}.Attributes.Unmarshal(m["attributes"].(string)),
+			Attributes:       shared.APIProduct{}.Attributes.Unmarshal(columnValueString(m, "attributes")),
 			RouteGroup:       m["route_group"].(string),
-			OrganizationName: m["organization_name"].(string),
+			Paths:            shared.APIProduct{}.Paths.Unmarshal(columnValueString(m, "paths")),
 			Policies:         m["policies"].(string),
-			CreatedAt:        m["created_at"].(int64),
-			CreatedBy:        m["created_by"].(string),
-			LastmodifiedAt:   m["lastmodified_at"].(int64),
-			LastmodifiedBy:   m["lastmodified_by"].(string),
+			CreatedAt:        columnValueInt64(m, "created_at"),
+			CreatedBy:        columnValueString(m, "created_by"),
+			LastmodifiedAt:   columnValueInt64(m, "lastmodified_at"),
+			LastmodifiedBy:   columnValueString(m, "lastmodified_by"),
+			OrganizationName: m["organization_name"].(string),
 		})
 		m = map[string]interface{}{}
 	}
@@ -134,19 +151,8 @@ func (s *APIProductStore) UpdateByName(p *shared.APIProduct) error {
 	p.Attributes.Tidy()
 	p.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
 
-	if err := s.db.CassandraSession.Query(`INSERT INTO api_products (
-name,
-display_name,
-attributes,
-route_group,
-paths,
-policies,
-created_at,
-created_by,
-lastmodified_at,
-lastmodified_by,
-organization_name) VALUES(?,?,?,?,?,?,?,?,?,?,?)`,
-
+	query := "INSERT INTO api_products (" + apiProductsColumns + ") VALUES(?,?,?,?,?,?,?,?,?,?,?)"
+	if err := s.db.CassandraSession.Query(query,
 		p.Name,
 		p.DisplayName,
 		p.Attributes.Marshal(),

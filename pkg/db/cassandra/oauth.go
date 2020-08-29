@@ -9,8 +9,27 @@ import (
 	"github.com/erikbos/gatekeeper/pkg/shared"
 )
 
-// Prometheus label for metrics of db interactions
-const oauthMetricLabel = "oauth"
+const (
+	// Prometheus label for metrics of db interactions
+	oauthMetricLabel = "oauth"
+	// Default TTL for OAuth token row, Cassandra will expire row afer this period
+	defaultOAuthtokenTTL = 86400
+
+	// List of columns we use
+	oauthColumns = `client_id,
+user_id,
+redirect_uri,
+scope,
+code,
+code_created_at,
+code_expires_in,
+access,
+access_created_at,
+access_expires_in,
+refresh,
+refresh_created_at,
+refresh_expires_in`
+)
 
 // OAuthStore holds our database config
 type OAuthStore struct {
@@ -27,24 +46,21 @@ func NewOAuthStore(database *Database) *OAuthStore {
 // OAuthAccessTokenGetByAccess retrieves an access token
 func (s *OAuthStore) OAuthAccessTokenGetByAccess(accessToken string) (*shared.OAuthAccessToken, error) {
 
-	query := "SELECT * FROM oauth_access_token WHERE access = ? LIMIT 1"
-
+	query := "SELECT " + oauthColumns + " FROM oauth_access_token WHERE access = ? LIMIT 1"
 	return s.runGetOAuthAccessTokenQuery(query, accessToken)
 }
 
 // OAuthAccessTokenGetByCode retrieves token by code
 func (s *OAuthStore) OAuthAccessTokenGetByCode(code string) (*shared.OAuthAccessToken, error) {
 
-	query := "SELECT * FROM oauth_access_token WHERE code = ? LIMIT 1"
-
+	query := "SELECT " + oauthColumns + " FROM oauth_access_token WHERE code = ? LIMIT 1"
 	return s.runGetOAuthAccessTokenQuery(query, code)
 }
 
 // OAuthAccessTokenGetByRefresh retrieves token by refreshcode
 func (s *OAuthStore) OAuthAccessTokenGetByRefresh(refresh string) (*shared.OAuthAccessToken, error) {
 
-	query := "SELECT * FROM oauth_access_token WHERE refresh = ? LIMIT 1"
-
+	query := "SELECT " + oauthColumns + " FROM oauth_access_token WHERE refresh = ? LIMIT 1"
 	return s.runGetOAuthAccessTokenQuery(query, refresh)
 }
 
@@ -60,19 +76,19 @@ func (s *OAuthStore) runGetOAuthAccessTokenQuery(query, queryParameter string) (
 	m := make(map[string]interface{})
 	for iterable.MapScan(m) {
 		accessToken = shared.OAuthAccessToken{
-			ClientID:         m["client_id"].(string),
-			UserID:           m["user_id"].(string),
-			RedirectURI:      m["redirect_uri"].(string),
-			Scope:            m["scope"].(string),
-			Code:             m["code"].(string),
-			CodeCreatedAt:    m["code_created_at"].(int64),
-			CodeExpiresIn:    m["code_expires_in"].(int64),
-			Access:           m["access"].(string),
-			AccessCreatedAt:  m["access_created_at"].(int64),
-			AccessExpiresIn:  m["access_expires_in"].(int64),
-			Refresh:          m["refresh"].(string),
-			RefreshCreatedAt: m["refresh_created_at"].(int64),
-			RefreshExpiresIn: m["refresh_expires_in"].(int64),
+			ClientID:         columnValueString(m, "client_id"),
+			UserID:           columnValueString(m, "user_id"),
+			RedirectURI:      columnValueString(m, "redirect_uri"),
+			Scope:            columnValueString(m, "scope"),
+			Code:             columnValueString(m, "code"),
+			CodeCreatedAt:    columnValueInt64(m, "code_created_at"),
+			CodeExpiresIn:    columnValueInt64(m, "code_expires_in"),
+			Access:           columnValueString(m, "access"),
+			AccessCreatedAt:  columnValueInt64(m, "access_created_at"),
+			AccessExpiresIn:  columnValueInt64(m, "access_expires_in"),
+			Refresh:          columnValueString(m, "refresh"),
+			RefreshCreatedAt: columnValueInt64(m, "refresh_created_at"),
+			RefreshExpiresIn: columnValueInt64(m, "refresh_expires_in"),
 		}
 	}
 	if err := iterable.Close(); err != nil {
@@ -89,22 +105,13 @@ func (s *OAuthStore) runGetOAuthAccessTokenQuery(query, queryParameter string) (
 // OAuthAccessTokenCreate UPSERTs an organization in database
 func (s *OAuthStore) OAuthAccessTokenCreate(t *shared.OAuthAccessToken) error {
 
-	// log.Printf("OAuthAccessTokenCreate: %+v", t)
-	if err := s.db.CassandraSession.Query(`INSERT INTO oauth_access_token (
-client_id,
-user_id,
-redirect_uri,
-scope,
-code,
-code_created_at,
-code_expires_in,
-access,
-access_created_at,
-access_expires_in,
-refresh,
-refresh_created_at,
-refresh_expires_in) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-
+	// Add TTL to each inserted token so it will be expired by database itself.
+	//
+	// OAuth layer will check CreatedAt + ExpiresIn but does not actively delete,
+	// this way we keep our access token table clean.
+	query := fmt.Sprintf("INSERT INTO oauth_access_token ("+oauthColumns+
+		") VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?) USING TTL %d", defaultOAuthtokenTTL)
+	if err := s.db.CassandraSession.Query(query,
 		t.ClientID,
 		t.UserID,
 		t.RedirectURI,

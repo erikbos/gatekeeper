@@ -10,8 +10,21 @@ import (
 	"github.com/erikbos/gatekeeper/pkg/shared"
 )
 
-// Prometheus label for metrics of db interactions
-const clusterMetricLabel = "clusters"
+const (
+	// Prometheus label for metrics of db interactions
+	clusterMetricLabel = "clusters"
+
+	// List of cluster columns we use
+	clusterColumns = `name,
+display_name,
+host_name,
+port,
+attributes,
+created_at,
+created_by,
+lastmodified_at,
+lastmodified_by`
+)
 
 // ClusterStore holds our database config
 type ClusterStore struct {
@@ -28,7 +41,7 @@ func NewClusterStore(database *Database) *ClusterStore {
 // GetAll retrieves all clusters
 func (s *ClusterStore) GetAll() ([]shared.Cluster, error) {
 
-	query := "SELECT * FROM clusters"
+	query := "SELECT " + clusterColumns + " FROM clusters"
 	clusters, err := s.runGetClusterQuery(query)
 	if err != nil {
 		return []shared.Cluster{}, err
@@ -46,7 +59,7 @@ func (s *ClusterStore) GetAll() ([]shared.Cluster, error) {
 // GetByName retrieves a cluster from database
 func (s *ClusterStore) GetByName(clusterName string) (*shared.Cluster, error) {
 
-	query := "SELECT * FROM clusters WHERE name = ? LIMIT 1"
+	query := "SELECT " + clusterColumns + " FROM clusters WHERE name = ? LIMIT 1"
 	clusters, err := s.runGetClusterQuery(query, clusterName)
 
 	if err != nil {
@@ -73,15 +86,15 @@ func (s *ClusterStore) runGetClusterQuery(query string, queryParameters ...inter
 	m := make(map[string]interface{})
 	for iter.MapScan(m) {
 		clusters = append(clusters, shared.Cluster{
-			Name:           m["name"].(string),
-			HostName:       m["host_name"].(string),
-			Port:           m["port"].(int),
-			Attributes:     shared.Cluster{}.Attributes.Unmarshal(m["attributes"].(string)),
-			CreatedAt:      m["created_at"].(int64),
-			CreatedBy:      m["created_by"].(string),
-			DisplayName:    m["display_name"].(string),
-			LastmodifiedAt: m["lastmodified_at"].(int64),
-			LastmodifiedBy: m["lastmodified_by"].(string),
+			Name:           columnValueString(m, "name"),
+			DisplayName:    columnValueString(m, "display_name"),
+			HostName:       columnValueString(m, "host_name"),
+			Port:           columnValueInt(m, "port"),
+			Attributes:     shared.Cluster{}.Attributes.Unmarshal(columnValueString(m, "attributes")),
+			CreatedAt:      columnValueInt64(m, "created_at"),
+			CreatedBy:      columnValueString(m, "created_by"),
+			LastmodifiedAt: columnValueInt64(m, "lastmodified_at"),
+			LastmodifiedBy: columnValueString(m, "lastmodified_by"),
 		})
 		m = map[string]interface{}{}
 	}
@@ -99,17 +112,8 @@ func (s *ClusterStore) UpdateByName(c *shared.Cluster) error {
 	c.Attributes.Tidy()
 	c.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
 
-	if err := s.db.CassandraSession.Query(`INSERT INTO clusters (
-name,
-display_name,
-host_name,
-port,
-attributes,
-created_at,
-created_by,
-lastmodified_at,
-lastmodified_by) VALUES(?,?,?,?,?,?,?,?,?)`,
-
+	query := "INSERT INTO clusters (" + clusterColumns + ") VALUES(?,?,?,?,?,?,?,?,?)"
+	if err := s.db.CassandraSession.Query(query,
 		c.Name,
 		c.DisplayName,
 		c.HostName,
@@ -122,7 +126,6 @@ lastmodified_by) VALUES(?,?,?,?,?,?,?,?,?)`,
 
 		return fmt.Errorf("Can not update cluster '%s' (%v)", c.Name, err)
 	}
-
 	return nil
 }
 
