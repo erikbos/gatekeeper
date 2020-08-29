@@ -70,8 +70,9 @@ func (p PolicyChain) Evaluate() *PolicyChainResponse {
 
 		trimmedPolicyName := strings.TrimSpace(policyName)
 		policyResult := (&Policy{
-			request:    p.request,
-			authServer: p.authServer,
+			request:             p.request,
+			authServer:          p.authServer,
+			PolicyChainResponse: &policyChainResult,
 		}).Evaluate(trimmedPolicyName, p.request)
 
 		log.Debugf("Evaluate policy: %s/%s => %+v", p.scope, trimmedPolicyName, policyResult)
@@ -93,7 +94,7 @@ func (p PolicyChain) Evaluate() *PolicyChainResponse {
 			}
 
 			// In case policy wants to deny request we do so with provided status code
-			if policyResult.denied == true {
+			if policyResult.denied {
 				policyChainResult.denied = policyResult.denied
 				policyChainResult.deniedStatusCode = policyResult.deniedStatusCode
 				policyChainResult.deniedMessage = policyResult.deniedMessage

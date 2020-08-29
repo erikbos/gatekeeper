@@ -19,6 +19,8 @@ type Policy struct {
 	authServer *authorizationServer
 	// Request information
 	request *requestInfo
+	// Current state of policy evaluation
+	*PolicyChainResponse
 }
 
 // PolicyResponse holds output of policy evaluation
@@ -53,7 +55,7 @@ const (
 )
 
 // Evaluate executes single policy statement
-func (p Policy) Evaluate(policy string, request *requestInfo) *PolicyResponse {
+func (p *Policy) Evaluate(policy string, request *requestInfo) *PolicyResponse {
 
 	switch policy {
 	case "checkAPIKey":
@@ -61,7 +63,7 @@ func (p Policy) Evaluate(policy string, request *requestInfo) *PolicyResponse {
 	case "checkOAuth2":
 		return checkOAuth2(request, p.authServer)
 	case "removeAPIKeyFromQP":
-		return removeAPIKeyFromQP(request)
+		return p.removeAPIKeyFromQP()
 	case "lookupGeoIP":
 		return lookupGeoIP(request, p.authServer)
 	case "qps":
@@ -231,14 +233,19 @@ func buildMetadata(request *requestInfo) map[string]string {
 }
 
 // removeAPIKeyFromQP sets path to requested path without any query parameters
-func removeAPIKeyFromQP(request *requestInfo) *PolicyResponse {
+func (p *Policy) removeAPIKeyFromQP() *PolicyResponse {
 
-	request.queryParameters.Del("apikey")
+	// We only update :path in case we know request goes upstream
+	if !p.PolicyChainResponse.authenticated {
+		return nil
+	}
+
+	p.request.queryParameters.Del("apikey")
 
 	// We remove query parameters by having envoyauth overwrite the path
 	return &PolicyResponse{
 		headers: map[string]string{
-			":path": request.URL.Path + "?" + request.queryParameters.Encode(),
+			":path": p.request.URL.Path + "?" + p.request.queryParameters.Encode(),
 		},
 	}
 }
