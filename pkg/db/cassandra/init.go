@@ -63,7 +63,6 @@ var createTablesCQL = [...]string{
 
 	`CREATE TABLE IF NOT EXISTS routes (
     attributes text,
-    cluster text,
     created_at bigint,
     created_by text,
     display_name text,

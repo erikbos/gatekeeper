@@ -28,7 +28,12 @@ A route defines how a specific path needs to handled and forwarded on. All opera
     "routeGroup": "routes_443",
     "path": "/ticketshop",
     "pathType": "prefix",
-    "cluster": "ticketshop"
+    "attributes": [
+        {
+        "name": "Cluster",
+        "value": "ticketshop"
+        }
+    ]
 }
 ```
 
@@ -46,27 +51,29 @@ A route defines how a specific path needs to handled and forwarded on. All opera
 
 ## Attribute specification
 
-Every route can have optional attributes which control what Envoy will do to match the incoming request, respond directly without contacting a backend, or to add additional headers before the request is forwarded upstream.
+Every route can have optional attributes which control what Envoy will do to match the incoming request, respond directly without contacting a backend, or to add additional headers before the request is forwarded to an upstream cluster.
 
-| attribute name           | purpose                                                       | possible values        |
-| ------------------------ | ------------------------------------------------------------- | ---------------------- |
-| DisableAuthentication    | Disable request authentication via extauthz                   | false, true            |
-| DisableRateLimiter       | Disable ratelimiting of request                               | false, true            |
-| DirectResponseStatusCode | Return an arbitrary HTTP response directly, without proxying. | 200                    |
-| DirectResponseBody       | Responsebody to return when direct response is done           | Hello World            |
-| RedirectStatusCode       | Return an HTTP redirect                                       | 301,302,303,307 or 308 |
-| RedirectScheme           | Set HTTP scheme when generating a redirect                    | http or https          |
-| RedirectHostName         | Set hostname when generating a redirect                       | www.example.com        |
-| RedirectPort             | Set port when generating a redirect                           | 443                    |
-| RedirectPath             | Set path when generating a redirect                           | /test/                 |
-| RedirectStripQuery       | Enable removal of query parameters when redirecting           | true                   |
-| PrefixRewrite            | Rewrites path when contacting upstream                        |                        |
-| CORSAllowCredentials     | Specifies whether the resource allows credentials             | false                  |
+| attribute name           | purpose                                                       | possible values         |
+| ------------------------ | ------------------------------------------------------------- | ----------------------- |
+| Cluster                  | Name of upstream cluster to forward requests to               |                         |
+| WeightedClusters         | Weighted list of clusters to load balance requests across     | backend:95,newbackend:5 |
+| DisableAuthentication    | Disable request authentication via extauthz                   | false, true             |
+| DisableRateLimiter       | Disable ratelimiting of request                               | false, true             |
+| DirectResponseStatusCode | Return an arbitrary HTTP response directly, without proxying. | 200                     |
+| DirectResponseBody       | Responsebody to return when direct response is done           | Hello World             |
+| RedirectStatusCode       | Return an HTTP redirect                                       | 301,302,303,307 or 308  |
+| RedirectScheme           | Set HTTP scheme when generating a redirect                    | http or https           |
+| RedirectHostName         | Set hostname when generating a redirect                       | www.example.com         |
+| RedirectPort             | Set port when generating a redirect                           | 443                     |
+| RedirectPath             | Set path when generating a redirect                           | /test/                  |
+| RedirectStripQuery       | Enable removal of query parameters when redirecting           | true                    |
+| PrefixRewrite            | Rewrites path when contacting upstream                        |                         |
+| CORSAllowCredentials     | Specifies whether the resource allows credentials             | false                   |
 | CORSAllowMethods         | Specifies the content for the [Access-Control-Allow-Methods](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Methods) header    |                 |
 | CORSAllowHeaders         | Specifies the content for the [Access-Control-Allow-Headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Headers) header     |                 |
 | CORSExposeHeaders        | Specifies the content for the [Access-Control-Expose-Headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Expose-Headers) header    |                 |
 | CORSMaxAge               | Specifies the content for the [Access-Control-Max-Age](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Max-Age) header           |                 |
-| HostHeader               | HTTP host header to set when forwarding to upstream cluster                 |                 |
+| HostHeader               | HTTP host header to set when forwarding to upstream cluster           |                 |
 | BasicAuth                | HTTP Basic authentication header to set when contact upstream cluster | user:secret     |
 | RetryOn                  | Specifies the conditions under which retry takes place.               | [See envoy documentation](https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/router_filter#config-http-filters-router-x-envoy-retry-on)|
 | PerTryTimeout            | Specify upstream timeout per retry attempt                            | 150ms           |
@@ -92,7 +99,6 @@ Direct response by envoy without forwarding to upstream cluster:
     "routeGroup": "routes_80",
     "path": "/",
     "pathType": "prefix",
-    "cluster": "none",
     "attributes": [
     {
         "name": "DirectResponseStatusCode",
@@ -115,7 +121,6 @@ Redirect /login to another URL
     "routeGroup": "routes_80",
     "path": "/login",
     "pathType": "prefix",
-    "cluster": "none",
     "attributes": [
         {
             "name": "RedirectStatusCode",
@@ -147,8 +152,11 @@ Enable handling of Cross-Origin Resource Sharing (CORS):
     "routeGroup": "routes_443",
     "path": "/people",
     "pathType": "prefix",
-    "cluster": "people",
     "attributes": [
+    {
+        "name": "Cluster",
+        "value": "people"
+    },
     {
         "name": "CORSAllowMethods",
         "value": "GET,POST,DELETE,OPTIONS"
@@ -183,8 +191,11 @@ Set route specific request retry behaviour to reduce error rates:
     "routeGroup": "routes_443",
     "path": "/people",
     "pathType": "prefix",
-    "cluster": "people",
     "attributes": [
+    {
+        "name": "Cluster",
+        "value": "people"
+    },
     {
         "name": "NumRetries",
         "value": "3"
@@ -205,9 +216,9 @@ Set route specific request retry behaviour to reduce error rates:
 }
 ```
 
-Set multiple upstream clusters for a route:
+Set multiple weighted upstream clusters for a route:
 
-Upstream clusters need to be separated by comma. Each need to be assigned a load balancing weight using *:weight* suffix.
+Upstream clusters need to be separated by comma. Each need to be assigned a load balancing weight using *:value* suffix.
 
 ```json
 
@@ -217,7 +228,12 @@ Upstream clusters need to be separated by comma. Each need to be assigned a load
     "routeGroup": "routes_443",
     "path": "/people",
     "pathType": "prefix",
-    "cluster": "people:50,people2:75",
+    "attributes": [
+        {
+            "name": "WeightedClusters",
+            "value": "people:25,people:75"
+        }
+    ]
 }
 ```
 
@@ -231,8 +247,11 @@ Requst mirror to a separate cluster.
     "routeGroup": "routes_443",
     "path": "/people",
     "pathType": "prefix",
-    "cluster": "people",
     "attributes": [
+    {
+        "name": "Cluster",
+        "value": "people"
+    },
     {
         "name": "RequestMirrorCluster",
         "value": "people_v2"

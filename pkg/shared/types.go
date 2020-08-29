@@ -109,7 +109,6 @@ type Route struct {
 	RouteGroup     string     `json:"RouteGroup"`     // Routegroup this route is part of
 	Path           string     `json:"path"`           // Path of route
 	PathType       string     `json:"pathType"`       // Type of pathmatching: path, prefix, regexp
-	Cluster        string     `json:"cluster"`        // Name of cluster to forward traffic to
 	Attributes     Attributes `json:"attributes"`     // Attributes of this route
 	CreatedAt      int64      `json:"createdAt"`      // Created at timestamp in epoch milliseconds
 	CreatedBy      string     `json:"createdBy"`      // Name of user who created this route

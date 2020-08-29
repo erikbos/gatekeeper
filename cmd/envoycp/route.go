@@ -69,7 +69,9 @@ func (s *server) buildEnvoyRoutes(RouteGroup string, routes []shared.Route) []*r
 		warnForUnknownRouteAttributes(route)
 
 		if route.RouteGroup == RouteGroup {
-			envoyRoutes = append(envoyRoutes, s.buildEnvoyRoute(route))
+			if routeToAdd := s.buildEnvoyRoute(route); routeToAdd != nil {
+				envoyRoutes = append(envoyRoutes, routeToAdd)
+			}
 		}
 	}
 	return envoyRoutes
@@ -89,7 +91,7 @@ func (s *server) buildEnvoyRoute(routeEntry shared.Route) *route.Route {
 	}
 
 	// disable extauth if requested.
-	// extauth is first configed filter, so this needs to be done before anything else
+	// extauth is first configured filter, so this needs to be done before anything else
 	if _, err := routeEntry.Attributes.Get(attributeDisableAuthentication); err == nil {
 		envoyRoute.TypedPerFilterConfig = buildRoutePerFilterConfig(routeEntry)
 	}
@@ -107,8 +109,16 @@ func (s *server) buildEnvoyRoute(routeEntry shared.Route) *route.Route {
 	}
 
 	// Add cluster(s) to forward this route to
-	if routeEntry.Cluster != "" {
+	_, err1 := routeEntry.Attributes.Get(attributeCluster)
+	_, err2 := routeEntry.Attributes.Get(attributeWeightedClusters)
+	if err1 != nil || err2 != nil {
 		envoyRoute.Action = buildRouteActionCluster(routeEntry)
+	}
+
+	// Stop in case we do not have any route action defined
+	// Envoyproxy does not accept routes without action
+	if envoyRoute.Action == nil {
+		return nil
 	}
 
 	// In case route-level attributes exist we might additional upstream headers
@@ -165,14 +175,14 @@ func buildRouteActionCluster(routeEntry shared.Route) *route.Route_Route {
 		action.Route.PrefixRewrite = prefixRewrite
 	}
 
-	if routeEntry.Cluster != "" {
-		if strings.Contains(routeEntry.Cluster, ",") {
-			action.Route.ClusterSpecifier = buildWeightedClusters(routeEntry)
-		} else {
-			action.Route.ClusterSpecifier = &route.RouteAction_Cluster{
-				Cluster: routeEntry.Cluster,
-			}
+	if cluster, err := routeEntry.Attributes.Get(attributeCluster); err == nil {
+		action.Route.ClusterSpecifier = &route.RouteAction_Cluster{
+			Cluster: cluster,
 		}
+	}
+
+	if _, err := routeEntry.Attributes.Get(attributeWeightedClusters); err == nil {
+		action.Route.ClusterSpecifier = buildWeightedClusters(routeEntry)
 	}
 
 	action.Route.RateLimits = buildRateLimits(routeEntry)
@@ -183,18 +193,23 @@ func buildRouteActionCluster(routeEntry shared.Route) *route.Route_Route {
 
 func buildWeightedClusters(routeEntry shared.Route) *route.RouteAction_WeightedClusters {
 
+	weightedClusterSpec, err := routeEntry.Attributes.Get(attributeWeightedClusters)
+	if err != nil || weightedClusterSpec == "" {
+		return nil
+	}
+
 	weightedClusters := make([]*route.WeightedCluster_ClusterWeight, 0)
 	var clusterWeight, totalWeight int
 
-	for _, cluster := range strings.Split(routeEntry.Cluster, ",") {
+	for _, cluster := range strings.Split(weightedClusterSpec, ",") {
 
 		clusterConfig := strings.Split(cluster, ":")
 
 		if len(clusterConfig) == 2 {
 			clusterWeight, _ = strconv.Atoi(clusterConfig[1])
 		} else {
-			log.Warningf("Route '%s' cluster '%s' subcluster '%s' does not have weight value",
-				routeEntry.Name, routeEntry.Cluster, cluster)
+			log.Warningf("Route '%s' weighted cluster '%s' does not have weight value",
+				routeEntry.Name, cluster)
 
 			clusterWeight = 1
 		}
@@ -226,8 +241,8 @@ func buildRequestMirrorPolicies(routeEntry shared.Route) []*route.RouteAction_Re
 
 	percentage, _ := strconv.Atoi(mirrorPercentage)
 	if percentage < 0 || percentage > 100 {
-		log.Warningf("Route '%s' cluster '%s' incorrect request mirror percentage '%s'",
-			routeEntry.Name, routeEntry.Cluster, mirrorPercentage)
+		log.Warningf("Route '%s' mirror cluster '%s' incorrect request mirror percentage '%s'",
+			routeEntry.Name, mirrorCluster, mirrorPercentage)
 		return nil
 	}
 

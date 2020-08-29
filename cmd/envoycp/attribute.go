@@ -14,6 +14,8 @@ const (
 	attributeAccessLogCluster = "AccessLogCluster"
 
 	// Route attributes
+	attributeCluster                  = "Cluster"
+	attributeWeightedClusters         = "WeightedClusters"
 	attributeDisableAuthentication    = "DisableAuthentication"
 	attributeDisableRateLimiter       = "DisableRateLimiter"
 	attributeDirectResponseStatusCode = "DirectResponseStatusCode"
@@ -115,6 +117,8 @@ func warnForUnknownListenerAttributes(listener shared.Listener) {
 func warnForUnknownRouteAttributes(route shared.Route) {
 
 	var validRouteAttributes = map[string]bool{
+		attributeCluster:                  true,
+		attributeWeightedClusters:         true,
 		attributeDisableAuthentication:    true,
 		attributeDisableRateLimiter:       true,
 		attributeDirectResponseStatusCode: true,

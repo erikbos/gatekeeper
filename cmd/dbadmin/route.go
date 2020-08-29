@@ -133,7 +133,6 @@ func (s *server) PostRoute(c *gin.Context) {
 	routeToUpdate.RouteGroup = updateRequest.RouteGroup
 	routeToUpdate.Path = updateRequest.Path
 	routeToUpdate.PathType = updateRequest.PathType
-	routeToUpdate.Cluster = updateRequest.Cluster
 	routeToUpdate.Attributes = updateRequest.Attributes
 
 	if err := s.db.Route.UpdateRouteByName(routeToUpdate); err != nil {

@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"sort"
 	"strings"
 	"text/template"
 
@@ -122,6 +123,14 @@ func (s *server) showHTTPForwarding(c *gin.Context) {
 			return out
 		},
 	}
+
+	// Sort routes alphabetically on routegroup, paths
+	sort.SliceStable(routes, func(i, j int) bool {
+		if routes[i].RouteGroup == routes[j].RouteGroup {
+			return routes[i].Path < routes[j].Path
+		}
+		return routes[i].RouteGroup < routes[j].RouteGroup
+	})
 
 	t, err := template.New("page").Funcs(templateFunctions).Parse(pageTemplate)
 	if err != nil {
@@ -246,7 +255,6 @@ ol {
 <th>RouteGroup</th>
 <th>Path</th>
 <th>PathType</th>
-<th>Cluster</th>
 <th>Attributes</th>
 <th>LastmodifiedAt</th>
 <th>LastmodifiedBy</th>
@@ -259,11 +267,18 @@ ol {
 <td>{{$r.RouteGroup}}</td>
 <td>{{$r.Path}}</td>
 <td>{{$r.PathType}}</td>
-<td><a href="/v1/clusters/{{$r.Cluster}}">{{$r.Cluster}}</a>
 <td>
 <ul>
 {{range $attribute := $r.Attributes}}
-<li>{{$attribute.Name}} = {{$attribute.Value}}</li>
+
+<li>
+{{if eq $attribute.Name "Cluster"}}
+{{$attribute.Name}} = <a href="/v1/clusters/{{$attribute.Value}}">{{$attribute.Value}}</a>
+{{else}}
+{{$attribute.Name}} = {{$attribute.Value}}
+{{end}}
+</li>
+
 {{end}}
 </ul>
 </td>

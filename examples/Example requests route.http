@@ -26,7 +26,6 @@ content-type: application/json
     "routeGroup": "routes_80",
     "path": "/",
     "pathType": "path",
-    "cluster": "none",
     "attributes": [
     {
         "name": "DirectResponseStatusCode",
@@ -40,16 +39,21 @@ content-type: application/json
 }
 
 ###
-POST http://{{hostname}}/v1/routes HTTP/1.1
+POST http://{{hostname}}/v1/routes/people_crap HTTP/1.1
 content-type: application/json
 
 {
-    "name": "people",
+    "name": "people_crap",
     "displayName": "Default people",
     "routeGroup": "routes_443",
     "path": "/people",
     "pathType": "prefix",
-    "cluster": "people"
+        "attributes": [
+    {
+        "name": "Cluster",
+        "value": "people"
+    }]
+
 }
 
 
@@ -63,8 +67,11 @@ content-type: application/json
     "routeGroup": "routes_443",
     "path": "/people",
     "pathType": "prefix",
-    "cluster": "people",
     "attributes": [
+    {
+        "name": "Cluster",
+        "value": "people"
+    },
     {
         "name": "CORSAllowMethods",
         "value": "GET,POST,DELETE,OPTIONS"
@@ -112,6 +119,55 @@ content-type: application/json
     ]
 }
 
+
+###
+POST http://{{hostname}}/v1/routes/people_mirror HTTP/1.1
+content-type: application/json
+
+{
+    "name": "people_mirror",
+    "displayName": "Default people",
+    "routeGroup": "routes_443",
+    "path": "/people_mirror",
+    "pathType": "prefix",
+    "attributes": [
+    {
+        "name": "Cluster",
+        "value": "people"
+    },
+    {
+        "name": "RequestMirrorCluster",
+        "value": "people"
+    },
+    {
+        "name": "RequestMirrorPercentage",
+        "value": "5"
+    }
+    ]
+}
+
+###
+POST http://{{hostname}}/v1/routes/people_weighted HTTP/1.1
+content-type: application/json
+
+{
+    "name": "people_weighted",
+    "displayName": "Default people",
+    "routeGroup": "routes_443",
+    "path": "/people_weighted",
+    "pathType": "prefix",
+    "attributes": [
+    {
+        "name": "Cl2uster",
+        "value": "people"
+    },
+    {
+        "name": "WeightedClusters",
+        "value": "people:25,people:75"
+    }
+    ]
+}
+
 ###
 
 POST http://{{hostname}}/v1/routes/route_403_test HTTP/1.1
@@ -123,7 +179,6 @@ content-type: application/json
     "routeGroup": "routes_443",
     "path": "/403",
     "pathType": "prefix",
-    "cluster": "",
     "attributes": [
     {
         "name": "DirectResponseStatusCode",
@@ -162,6 +217,7 @@ content-type: application/json
     }
     ],
 }
+
 
 ###
 DELETE http://{{hostname}}/v1/routes/default80 HTTP/1.1

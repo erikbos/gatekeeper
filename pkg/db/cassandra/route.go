@@ -21,7 +21,6 @@ display_name,
 route_group,
 path,
 path_type,
-cluster,
 attributes,
 created_at,
 created_by,
@@ -93,7 +92,6 @@ func (s *RouteStore) runGetRouteQuery(query string, queryParameters ...interface
 			RouteGroup:     columnValueString(m, "route_group"),
 			Path:           columnValueString(m, "path"),
 			PathType:       columnValueString(m, "path_type"),
-			Cluster:        columnValueString(m, "cluster"),
 			Attributes:     shared.Route{}.Attributes.Unmarshal(columnValueString(m, "attributes")),
 			CreatedAt:      columnValueInt64(m, "created_at"),
 			CreatedBy:      columnValueString(m, "created_by"),
@@ -116,14 +114,13 @@ func (s *RouteStore) UpdateRouteByName(route *shared.Route) error {
 	route.Attributes.Tidy()
 	route.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
 
-	query := "INSERT INTO routes (" + routeColumns + ") VALUES(?,?,?,?,?,?,?,?,?,?,?)"
+	query := "INSERT INTO routes (" + routeColumns + ") VALUES(?,?,?,?,?,?,?,?,?,?)"
 	if err := s.db.CassandraSession.Query(query,
 		route.Name,
 		route.DisplayName,
 		route.RouteGroup,
 		route.Path,
 		route.PathType,
-		route.Cluster,
 		route.Attributes.Marshal(),
 		route.CreatedAt,
 		route.CreatedBy,
