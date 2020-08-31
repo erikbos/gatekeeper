@@ -12,7 +12,7 @@ require (
 	github.com/gogo/googleapis v1.4.0
 	github.com/golang/protobuf v1.4.2
 	github.com/golang/snappy v0.0.1 // indirect
-	github.com/google/uuid v1.1.1
+	github.com/google/uuid v1.1.2
 	github.com/oschwald/maxminddb-golang v1.7.0
 	github.com/prometheus/client_golang v1.7.1
 	github.com/sirupsen/logrus v1.6.0
