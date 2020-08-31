@@ -9,7 +9,7 @@ import (
 	"github.com/erikbos/gatekeeper/pkg/shared"
 )
 
-// Entityloader bla
+// Entityloader contains up to date configuration of listeners, routes and clusters
 type Entityloader struct {
 	db                    *Database                     // Database handle
 	configRefreshInterval time.Duration                 // Interval between database loads
@@ -20,6 +20,7 @@ type Entityloader struct {
 	listenersLastUpdate   int64                         // Timestamp of most recent load of listeners
 	routesLastUpdate      int64                         // Timestamp of most recent load of routes
 	clustersLastUpdate    int64                         // Timestamp of most recent load of clusters
+	mutex                 sync.Mutex                    // Mutex to use when updating
 }
 
 // EntityChangeNotification is the msg send when we noticed a change in an entity
@@ -50,11 +51,10 @@ func (g *Entityloader) Start() {
 	go g.LoadContinously()
 }
 
-// LoadContinously continuously loads listeners, routes
-// and clusters entities from database and updates the in-memory list
-// in case a changed entity has been detect a notification will be send
+// LoadContinously continuously loads listeners, routes and clusters
+// entities from database and updates the in-memory slices.
 //
-// FIXME this code does not detect removed records
+// In case a changed entity has been detect a notification will be sent
 //
 func (g *Entityloader) LoadContinously() {
 
@@ -62,17 +62,17 @@ func (g *Entityloader) LoadContinously() {
 		if newListeners, err := g.db.Listener.GetAll(); err != nil {
 			log.Errorf("Could not retrieve listeners from database (%s)", err)
 		} else {
-			if g.listenerConfigChanged(newListeners) {
-				log.Info("Listener configuration loaded")
+			if g.checkForChangeListeners(newListeners) {
+				log.Info("Listener configuration reloaded")
 				g.notify <- EntityChangeNotification{Resource: EntityTypeListener}
 			}
 		}
 
 		if newRoutes, err := g.db.Route.GetAll(); err != nil {
-			log.Errorf("Could not retrieve listeners from database (%s)", err)
+			log.Errorf("Could not retrieve routes from database (%s)", err)
 		} else {
-			if g.routeConfigChanged(newRoutes) {
-				log.Info("Route configuration loaded")
+			if g.checkForChangedRoutes(newRoutes) {
+				log.Info("Route configuration reloaded")
 				g.notify <- EntityChangeNotification{Resource: EntityTypeRoute}
 			}
 		}
@@ -80,8 +80,8 @@ func (g *Entityloader) LoadContinously() {
 		if newClusters, err := g.db.Cluster.GetAll(); err != nil {
 			log.Errorf("Could not retrieve listeners from database (%s)", err)
 		} else {
-			if g.clusterConfigChanged(newClusters) {
-				log.Info("Cluster configuration loaded")
+			if g.checkForChangedClusters(newClusters) {
+				log.Info("Cluster configuration reloaded")
 				g.notify <- EntityChangeNotification{Resource: EntityTypeCluster}
 			}
 		}
@@ -90,56 +90,85 @@ func (g *Entityloader) LoadContinously() {
 	}
 }
 
-func (g *Entityloader) listenerConfigChanged(newConfig []shared.Listener) bool {
+// checkForChangedListeners if the loaded list of listeners is shorter
+// or one entry has been updated
+func (g *Entityloader) checkForChangeListeners(loadedListeners []shared.Listener) bool {
 
-	for _, listener := range newConfig {
-		if g.listenersLastUpdate == 0 ||
-			listener.LastmodifiedAt > g.listenersLastUpdate {
+	// In case we have less routes one or more was deleted
+	if len(loadedListeners) < len(g.listeners) {
+		g.updateListeners(loadedListeners)
+		return true
+	}
 
-			var m sync.Mutex
-			m.Lock()
-			g.listeners = newConfig
-			m.Unlock()
-
-			g.listenersLastUpdate = shared.GetCurrentTimeMilliseconds()
+	for _, listener := range loadedListeners {
+		if g.listenersLastUpdate == 0 || listener.LastmodifiedAt > g.listenersLastUpdate {
+			g.updateListeners(loadedListeners)
 			return true
 		}
 	}
 	return false
 }
 
-func (g *Entityloader) routeConfigChanged(newConfig []shared.Route) bool {
+func (g *Entityloader) updateListeners(newListeners []shared.Listener) {
 
-	for _, route := range newConfig {
+	g.mutex.Lock()
+	g.listeners = newListeners
+	g.mutex.Unlock()
+	g.listenersLastUpdate = shared.GetCurrentTimeMilliseconds()
+}
+
+// checkForChangedRoutes if the loaded list of routes is shorter
+// or one entry has been updated
+func (g *Entityloader) checkForChangedRoutes(loadedRoutes []shared.Route) bool {
+
+	// In case we have less routes one or more was deleted
+	if len(loadedRoutes) < len(g.routes) {
+		g.updateRoutes(loadedRoutes)
+		return true
+	}
+
+	for _, route := range loadedRoutes {
 		if g.routesLastUpdate == 0 || route.LastmodifiedAt > g.routesLastUpdate {
-
-			var m sync.Mutex
-			m.Lock()
-			g.routes = newConfig
-			m.Unlock()
-
-			g.routesLastUpdate = shared.GetCurrentTimeMilliseconds()
+			g.updateRoutes(loadedRoutes)
 			return true
 		}
 	}
 	return false
 }
 
-func (g *Entityloader) clusterConfigChanged(newConfig []shared.Cluster) bool {
+func (g *Entityloader) updateRoutes(newRoutes []shared.Route) {
 
-	for _, cluster := range newConfig {
+	g.mutex.Lock()
+	g.routes = newRoutes
+	g.mutex.Unlock()
+	g.routesLastUpdate = shared.GetCurrentTimeMilliseconds()
+}
+
+// checkForChangeClusters checks if the loaded list of clusters is shorter
+// or one entry has been updated
+func (g *Entityloader) checkForChangedClusters(loadedClusters []shared.Cluster) bool {
+
+	// In case we have less routes one or more was deleted
+	if len(loadedClusters) < len(g.clusters) {
+		g.updateClusters(loadedClusters)
+		return true
+	}
+
+	for _, cluster := range loadedClusters {
 		if g.clustersLastUpdate == 0 || cluster.LastmodifiedAt > g.clustersLastUpdate {
-
-			var m sync.Mutex
-			m.Lock()
-			g.clusters = newConfig
-			m.Unlock()
-
-			g.clustersLastUpdate = shared.GetCurrentTimeMilliseconds()
+			g.updateClusters(loadedClusters)
 			return true
 		}
 	}
 	return false
+}
+
+func (g *Entityloader) updateClusters(newClusters []shared.Cluster) {
+
+	g.mutex.Lock()
+	g.clusters = newClusters
+	g.mutex.Unlock()
+	g.clustersLastUpdate = shared.GetCurrentTimeMilliseconds()
 }
 
 // GetListeners returns all listeners

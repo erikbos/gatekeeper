@@ -53,6 +53,7 @@ const (
 	attributeTLSEnable                     = "TLSEnable"
 	attributeSNIHostName                   = "SNIHostName"
 	attributeHealthCheckProtocol           = "HealthCheckProtocol"
+	attributeHealthHostHeader              = "HealthCheckHostHeader"
 	attributeHealthCheckPath               = "HealthCheckPath"
 	attributeHealthCheckInterval           = "HealthCheckInterval"
 	attributeHealthCheckTimeout            = "HealthCheckTimeout"

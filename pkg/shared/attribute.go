@@ -29,7 +29,7 @@ func (attributes *Attributes) Get(name string) (string, error) {
 	return "", errors.New("Attribute not found")
 }
 
-// GetAsString returns attribute value (or provided default) as type string
+// GetAsString returns attribute value (or provided default if not found) as type string
 func (attributes *Attributes) GetAsString(name, defaultValue string) string {
 
 	value, err := attributes.Get(name)

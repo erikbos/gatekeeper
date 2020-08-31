@@ -90,7 +90,7 @@ type APIProduct struct {
 type Listener struct {
 	Name             string      `json:"name"`             // Name of virtual host (not changable)
 	DisplayName      string      `json:"displayName"`      // Friendly display name of route
-	VirtualHosts     StringSlice `json:"virtualHosts"`     // Listeners of this listener
+	VirtualHosts     StringSlice `json:"virtualHosts"`     // Virtual hosts of this listener
 	Port             int         `json:"port"`             // tcp port to listen on
 	RouteGroup       string      `json:"routeGroup"`       // Routegroup to forward traffic to
 	Policies         string      `json:"policies"`         // Comma separated list of policynames, to apply to requests

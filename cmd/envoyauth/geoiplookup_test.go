@@ -1,14 +1,17 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGeoLookupIPs(t *testing.T) {
-	testData := []struct {
+	assert := assert.New(t)
+
+	tests := []struct {
 		ipsubnet string
 		country  string
 	}{
@@ -22,13 +25,10 @@ func TestGeoLookupIPs(t *testing.T) {
 	if err != nil {
 		log.Fatalf("failed to open geoip database: %v", err)
 	}
-	for index, testSubnet := range testData {
-		t.Run(fmt.Sprintf("%d", index), func(t *testing.T) {
-			ipaddress := net.ParseIP(testSubnet.ipsubnet)
-			country, _ := g.GetCountryAndState(ipaddress)
-			if country != testSubnet.country {
-				t.Errorf("Lookup of (%s) was incorrect, got: %s, want: %s.", testSubnet.ipsubnet, country, testSubnet.country)
-			}
-		})
+	for _, test := range tests {
+		ipaddress := net.ParseIP(test.ipsubnet)
+		country, _ := g.GetCountryAndState(ipaddress)
+
+		assert.Equalf(test.country, country, "GeoIP lookup mismatch")
 	}
 }

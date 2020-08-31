@@ -124,12 +124,25 @@ func (s *server) showHTTPForwarding(c *gin.Context) {
 		},
 	}
 
-	// Sort routes alphabetically on routegroup, paths
+	// Sort listeners tes by routegroup, paths
+	sort.SliceStable(listeners, func(i, j int) bool {
+		if listeners[i].Port == listeners[j].Port {
+			return listeners[i].Name < listeners[j].Name
+		}
+		return listeners[i].Port < listeners[j].Port
+	})
+
+	// Sort routes by routegroup, paths
 	sort.SliceStable(routes, func(i, j int) bool {
 		if routes[i].RouteGroup == routes[j].RouteGroup {
 			return routes[i].Path < routes[j].Path
 		}
 		return routes[i].RouteGroup < routes[j].RouteGroup
+	})
+
+	// Sort clusters by name
+	sort.SliceStable(clusters, func(i, j int) bool {
+		return clusters[i].Name < clusters[j].Name
 	})
 
 	t, err := template.New("page").Funcs(templateFunctions).Parse(pageTemplate)
@@ -202,7 +215,7 @@ ol {
 <th>Name</th>
 <th>DisplayName</th>
 <th>Port</th>
-<th>Virtualhosts</th>
+<th>VirtualHosts</th>
 <th>Attributes</th>
 <th>Policies</th>
 <th>RouteGroup</th>

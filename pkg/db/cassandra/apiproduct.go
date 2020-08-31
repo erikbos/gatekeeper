@@ -151,10 +151,11 @@ func (s *APIProductStore) UpdateByName(p *shared.APIProduct) error {
 	p.Attributes.Tidy()
 	p.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
 
-	query := "INSERT INTO api_products (" + apiProductsColumns + ") VALUES(?,?,?,?,?,?,?,?,?,?,?)"
+	query := "INSERT INTO api_products (" + apiProductsColumns + ") VALUES(?,?,?,?,?,?,?,?,?,?,?,?)"
 	if err := s.db.CassandraSession.Query(query,
 		p.Name,
 		p.DisplayName,
+		p.Description,
 		p.Attributes.Marshal(),
 		p.RouteGroup,
 		p.Paths.Marshal(),

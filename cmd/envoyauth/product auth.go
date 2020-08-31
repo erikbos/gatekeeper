@@ -133,7 +133,7 @@ func (a *authorizationServer) IsRequestPathAllowed(organization, requestPath str
 			} else {
 				// Iterate over all paths of apiproduct and try to match with path of request
 				for _, productPath := range apiproductDetails.Paths {
-					// log.Debugf("IsRequestPathAllowed() Matching path %s in %s", requestPath, productPath)
+					// log.Debugf("IsRequestPathAllowed() Matching product path %s to %s", productPath, requestPath)
 					if ok, _ := doublestar.Match(productPath, requestPath); ok {
 						// log.Debugf("IsRequestPathAllowed: match!")
 						return apiproductDetails, nil

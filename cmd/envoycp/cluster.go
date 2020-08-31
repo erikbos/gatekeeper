@@ -115,19 +115,26 @@ func clusterHealthChecks(cluster shared.Cluster) []*core.HealthCheck {
 
 	if err == nil && healthCheckProtocol == attributeValueHealthCheckProtocolHTTP && healthCheckPath != "" {
 
-		interval := cluster.Attributes.GetAsDuration(attributeHealthCheckInterval, defaultHealthCheckInterval)
+		hostName := cluster.Attributes.GetAsString(attributeHealthHostHeader, cluster.HostName)
 
-		timeout := cluster.Attributes.GetAsDuration(attributeHealthCheckTimeout, defaultHealthCheckTimeout)
+		interval := cluster.Attributes.GetAsDuration(attributeHealthCheckInterval,
+			defaultHealthCheckInterval)
 
-		unhealthyThreshold := cluster.Attributes.GetAsUInt32(attributeHealthCheckUnhealthyThreshold, defaultHealthCheckUnhealthyThreshold)
+		timeout := cluster.Attributes.GetAsDuration(attributeHealthCheckTimeout,
+			defaultHealthCheckTimeout)
 
-		healthyThreshold := cluster.Attributes.GetAsUInt32(attributeHealthCheckHealthyThreshold, defaultHealthCheckHealthyThreshold)
+		unhealthyThreshold := cluster.Attributes.GetAsUInt32(attributeHealthCheckUnhealthyThreshold,
+			defaultHealthCheckUnhealthyThreshold)
+
+		healthyThreshold := cluster.Attributes.GetAsUInt32(attributeHealthCheckHealthyThreshold,
+			defaultHealthCheckHealthyThreshold)
 
 		logFile := cluster.Attributes.GetAsString(attributeHealthCheckLogFile, "")
 
 		healthCheck := &core.HealthCheck{
 			HealthChecker: &core.HealthCheck_HttpHealthCheck_{
 				HttpHealthCheck: &core.HealthCheck_HttpHealthCheck{
+					Host:            hostName,
 					Path:            healthCheckPath,
 					CodecClientType: clusterHealthCodec(cluster),
 				},
@@ -151,6 +158,9 @@ func clusterHealthCodec(cluster shared.Cluster) envoyType.CodecClientType {
 	value, err := cluster.Attributes.Get(attributeHTTPProtocol)
 	if err == nil {
 		switch value {
+		case attributeValueHTTPProtocol11:
+			return envoyType.CodecClientType_HTTP1
+
 		case attributeValueHTTPProtocol2:
 			return envoyType.CodecClientType_HTTP2
 
@@ -187,11 +197,13 @@ func clusterHTTP2ProtocolOptions(cluster shared.Cluster) *core.Http2ProtocolOpti
 		case attributeValueHTTPProtocol2:
 			// according to spec we need to return at least empty struct to enable HTTP/2
 			return &core.Http2ProtocolOptions{}
+		default:
+			log.Warnf("clusterHTTP2ProtocolOptions: '%s' has attribute '%s' with unknown value '%s'",
+				cluster.Name, attributeHTTPProtocol, value)
+			return nil
 		}
 	}
-
-	log.Warnf("ClusterProtocol: '%s' has attribute '%s' with unknown value '%s'",
-		cluster.Name, attributeHTTPProtocol, value)
+	// Attribute was not set, we do not have to set HTTP/2 options
 	return nil
 }
 
