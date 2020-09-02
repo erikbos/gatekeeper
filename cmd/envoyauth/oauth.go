@@ -2,12 +2,12 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus"
+	log "github.com/sirupsen/logrus"
 	"gopkg.in/oauth2.v3"
 	"gopkg.in/oauth2.v3/manage"
 	"gopkg.in/oauth2.v3/server"
@@ -24,7 +24,11 @@ import (
 
 // oauthServerConfig contains our configuration
 type oauthServerConfig struct {
-	Listen         string `yaml:"listen"`         // OAuth Address and port to listen
+	Listen string `yaml:"listen"` // OAuth Address and port to listen
+	TLS    struct {
+		certFile string `yaml:"certfile"` // TLS certifcate file
+		keyFile  string `yaml:"keyfile"`  // TLS certifcate key file
+	} `yaml:"tls"`
 	TokenIssuePath string `yaml:"tokenissuepath"` // Path to request access tokens (e.g. "/oauth2/token")
 	TokenInfoPath  string `yaml:"tokeninfopath"`  // Path to request info about token (e.g. "/oauth2/info")
 }
@@ -63,24 +67,30 @@ func (oauth *oauthServer) Start() {
 	if oauth.config.Listen == "" {
 		return
 	}
-
-	// server.readiness.RegisterMetrics(myName)
+	if oauth.config.TokenIssuePath == "" {
+		log.Warn("OAuth TokenIssuePath needs to be configured")
+		return
+	}
 
 	oauth.registerMetrics()
-
 	oauth.prepareOAuthInstance()
 
 	gin.SetMode(gin.ReleaseMode)
-
 	oauth.ginEngine = gin.New()
 	oauth.ginEngine.Use(gin.LoggerWithFormatter(shared.LogHTTPRequest))
 	oauth.ginEngine.Use(shared.AddRequestID())
 
-	if oauth.config.TokenIssuePath != "" && oauth.config.TokenInfoPath != "" {
-		oauth.ginEngine.POST(oauth.config.TokenIssuePath, oauth.handleTokenIssueRequest)
+	oauth.ginEngine.POST(oauth.config.TokenIssuePath, oauth.handleTokenIssueRequest)
+	// TokenInfo is an optional endpoint
+	if oauth.config.TokenInfoPath != "" {
 		oauth.ginEngine.GET(oauth.config.TokenInfoPath, oauth.handleTokenInfo)
 	}
 
+	log.Info("OAuth2 listening on ", oauth.config.Listen)
+	if oauth.config.TLS.certFile != "" && oauth.config.TLS.keyFile != "" {
+		log.Fatal(oauth.ginEngine.RunTLS(oauth.config.Listen,
+			oauth.config.TLS.certFile, oauth.config.TLS.keyFile))
+	}
 	log.Panic(oauth.ginEngine.Run(oauth.config.Listen))
 }
 
