@@ -142,7 +142,7 @@ func (s *server) buildConnectionManager(httpFilters []*hcm.HttpFilter,
 
 	proxyConfig := &s.config.Envoyproxy
 
-	return &hcm.HttpConnectionManager{
+	connectionManager := &hcm.HttpConnectionManager{
 		CodecType:        hcm.HttpConnectionManager_AUTO,
 		StatPrefix:       "ingress_http",
 		UseRemoteAddress: protoBool(true),
@@ -154,40 +154,53 @@ func (s *server) buildConnectionManager(httpFilters []*hcm.HttpFilter,
 			IdleTimeout: ptypes.DurationProto(proxyConfig.Misc.HTTPIdleTimeout),
 		},
 		Http2ProtocolOptions: &core.Http2ProtocolOptions{
-			MaxConcurrentStreams:        protoUint32(proxyConfig.Misc.MaxConcurrentStreams),
-			InitialConnectionWindowSize: protoUint32(proxyConfig.Misc.InitialConnectionWindowSize),
-			InitialStreamWindowSize:     protoUint32(proxyConfig.Misc.InitialStreamWindowSize),
+			MaxConcurrentStreams:        protoUint32orNil(proxyConfig.Misc.MaxConcurrentStreams),
+			InitialConnectionWindowSize: protoUint32orNil(proxyConfig.Misc.InitialConnectionWindowSize),
+			InitialStreamWindowSize:     protoUint32orNil(proxyConfig.Misc.InitialStreamWindowSize),
 		},
-		ServerName:       proxyConfig.Misc.ServerName,
 		LocalReplyConfig: buildLocalOverWrite(vhost),
 	}
+	if proxyConfig.Misc.ServerName != "" {
+		connectionManager.ServerName = proxyConfig.Misc.ServerName
+	}
+
+	return connectionManager
 }
 
 func (s *server) buildFilter() []*hcm.HttpFilter {
 
-	return []*hcm.HttpFilter{
-		{
+	httpFilter := make([]*hcm.HttpFilter, 0, 10)
+
+	if extAuthz := s.buildHTTPFilterExtAuthzConfig(); extAuthz != nil {
+		httpFilter = append(httpFilter, &hcm.HttpFilter{
 			Name: wellknown.HTTPExternalAuthorization,
 			ConfigType: &hcm.HttpFilter_TypedConfig{
-				TypedConfig: s.buildExtAuthzFilterConfig(),
+				TypedConfig: extAuthz,
 			},
-		},
-		{
-			Name: wellknown.CORS,
-		},
-		{
+		})
+	}
+
+	httpFilter = append(httpFilter, &hcm.HttpFilter{
+		Name: wellknown.CORS,
+	})
+
+	if ratelimiter := s.buildHTTPFilterRateLimiterConfig(); ratelimiter != nil {
+		httpFilter = append(httpFilter, &hcm.HttpFilter{
 			Name: wellknown.HTTPRateLimit,
 			ConfigType: &hcm.HttpFilter_TypedConfig{
-				TypedConfig: s.buildRateLimiterFilterConfig(),
+				TypedConfig: ratelimiter,
 			},
-		},
-		{
-			Name: wellknown.Router,
-		},
+		})
 	}
+
+	httpFilter = append(httpFilter, &hcm.HttpFilter{
+		Name: wellknown.Router,
+	})
+
+	return httpFilter
 }
 
-func (s *server) buildExtAuthzFilterConfig() *anypb.Any {
+func (s *server) buildHTTPFilterExtAuthzConfig() *anypb.Any {
 
 	if !s.config.Envoyproxy.ExtAuthz.Enable ||
 		s.config.Envoyproxy.ExtAuthz.Cluster == "" {
@@ -213,7 +226,7 @@ func (s *server) buildExtAuthzFilterConfig() *anypb.Any {
 	return extAuthzTypedConf
 }
 
-func (s *server) buildRateLimiterFilterConfig() *anypb.Any {
+func (s *server) buildHTTPFilterRateLimiterConfig() *anypb.Any {
 
 	if !s.config.Envoyproxy.RateLimiter.Enable ||
 		s.config.Envoyproxy.RateLimiter.Cluster == "" {
