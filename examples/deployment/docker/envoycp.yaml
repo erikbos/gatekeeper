@@ -80,12 +80,11 @@ envoyproxy:
         upstream.transportfailurereason: '%UPSTREAM_TRANSPORT_FAILURE_REASON%'
         upstream.responsetime: '%RESP(X-ENVOY-UPSTREAM-SERVICE-TIME)%'
 
-
-        apim.developerEmail: '%DYNAMIC_METADATA(envoy.filters.http.ext_authz:developerEmail)%'
-        apim.developerID: '%DYNAMIC_METADATA(envoy.filters.http.ext_authz:developerID)%'
-        apim.developerAppID: '%DYNAMIC_METADATA(envoy.filters.http.ext_authz:developerAppID)%'
-        apim.developerAppName: '%DYNAMIC_METADATA(envoy.filters.http.ext_authz:developerAppName)%'
-        apim.APIProduct: '%DYNAMIC_METADATA(envoy.filters.http.ext_authz:APIProduct)%'
+        developer.email: '%DYNAMIC_METADATA(envoy.filters.http.ext_authz:developer.email)%'
+        developer.id: '%DYNAMIC_METADATA(envoy.filters.http.ext_authz:developer.id)%'
+        app.id: '%DYNAMIC_METADATA(envoy.filters.http.ext_authz:app.id)%'
+        app.name: '%DYNAMIC_METADATA(envoy.filters.http.ext_authz:app.name)%'
+        apiproduct.name: '%DYNAMIC_METADATA(envoy.filters.http.ext_authz:apiproduct.name)%'
 
         geoip.country: '%DYNAMIC_METADATA(envoy.filters.http.ext_authz:geoip.country)%'
         geoip.state: '%DYNAMIC_METADATA(envoy.filters.http.ext_authz:geoip.state)%'

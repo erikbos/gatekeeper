@@ -46,10 +46,11 @@ const (
 	metadataAuthMethodValueOAuth2 = "oauth2"
 	metadataAuthAPIKey            = "auth.apikey"
 	metadataAuthOAuth2Token       = "auth.oauth2token"
-	metadataDeveloperEmail        = "apim.developerEmail"
-	metadataDeveloperID           = "apim.developerID"
-	metadataDeveloperAppName      = "apim.developerAppName"
-	metadataDeveloperAppID        = "apim.developerAppID"
+	metadataDeveloperEmail        = "developer.email"
+	metadataDeveloperID           = "developer.id"
+	metadataAppName               = "app.name"
+	metadataAppID                 = "app.id"
+	metadataAPIProductName        = "apiproduct.name"
 	metadataGeoIPCountry          = "geoip.country"
 	metadataGeoIPState            = "geoip.state"
 )
@@ -211,14 +212,14 @@ func buildMetadata(request *requestInfo) map[string]string {
 	}
 	if request.developerApp != nil {
 		if request.developerApp.AppID != "" {
-			m[metadataDeveloperAppID] = request.developerApp.AppID
+			m[metadataAppID] = request.developerApp.AppID
 		}
 		if request.developerApp.Name != "" {
-			m[metadataDeveloperAppName] = request.developerApp.Name
+			m[metadataAppName] = request.developerApp.Name
 		}
 	}
 	if request.APIProduct != nil && request.APIProduct.Name != "" {
-		m["APIProduct"] = request.APIProduct.Name
+		m[metadataAPIProductName] = request.APIProduct.Name
 	}
 	if request.apikey != nil {
 		m[metadataAuthMethod] = metadataAuthMethodValueAPIKey
