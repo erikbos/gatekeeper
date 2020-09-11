@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/x509"
+	"encoding/pem"
 	"fmt"
 	"io"
 	"net/http"
@@ -8,6 +10,7 @@ import (
 	"sort"
 	"strings"
 	"text/template"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -108,20 +111,11 @@ func (s *server) showHTTPForwarding(c *gin.Context) {
 		return
 	}
 
-	// Supporting functions embedded in template
+	// Supporting functions embedded in template with {{value | <functioname}}
 	templateFunctions := template.FuncMap{
-		// Prints timestamp in ISO8601 format
-		"ISO8601": shared.TimeMillisecondsToString,
-
-		// Prints a comma separated string as HTML ordered/numbered list
-		"OrderedList": func(stringToSplit string) string {
-			out := "<ol>"
-			for _, value := range strings.Split(stringToSplit, ",") {
-				out += fmt.Sprintf("<li>%s</li>", strings.TrimSpace(value))
-			}
-			out += "</ol>\n"
-			return out
-		},
+		"ISO8601":            shared.TimeMillisecondsToString,
+		"OrderedList":        HMTLOrderedList,
+		"CertificateDetails": HTMLCertificateDetails,
 	}
 
 	// Sort listeners tes by routegroup, paths
@@ -241,7 +235,7 @@ ol {
 {{range $attribute := $listener.Attributes}}
 <li>
 {{if or (eq $attribute.Name "TLSCertificate") (eq $attribute.Name "TLSCertificateKey")}}
-{{$attribute.Name}} = [redacted]
+{{$attribute.Name}} = {{$attribute | CertificateDetails}}
 {{else}}
 {{$attribute.Name}} = {{$attribute.Value}}
 {{end}}
@@ -379,3 +373,45 @@ ol {
 {{end}}
 </table>
 `
+
+// HMTLOrderedList prints a comma separated string as HTML ordered and numbered list
+func HMTLOrderedList(stringToSplit string) string {
+
+	out := "<ol>"
+	for _, value := range strings.Split(stringToSplit, ",") {
+		out += fmt.Sprintf("<li>%s</li>", strings.TrimSpace(value))
+	}
+	out += "</ol>\n"
+
+	return out
+}
+
+// HTMLCertificateDetails prints summary of certificate attributes
+func HTMLCertificateDetails(attribute shared.Attribute) string {
+
+	switch attribute.Name {
+	case "TLSCertificateKey":
+		// We never shown a private key
+		return "[redacted]"
+	case "TLSCertificate":
+		return certDetails([]byte(attribute.Value))
+	}
+	return "unknown"
+}
+
+func certDetails(certificate []byte) string {
+
+	block, rest := pem.Decode(certificate)
+	if block == nil || len(rest) > 0 {
+		return fmt.Sprintf("[Cannot parse '%s' as .pem certificate]", certificate)
+	}
+	cert, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		return fmt.Sprintf("[Cannot parse asn.1 data in '%s']", certificate)
+	}
+
+	return fmt.Sprintf("[Serial=%s, CN=%s, DNS=%s, NotAfter=%s]",
+		cert.SerialNumber.Text(16), cert.Subject.CommonName,
+		cert.DNSNames, cert.NotAfter.UTC().Format(time.RFC3339))
+
+}
