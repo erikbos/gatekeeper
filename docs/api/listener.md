@@ -2,14 +2,14 @@
 
 A listener defines listing port, virtual settings and incoming connectivity parameters.
 
-_Listening port, http host(s) and TLS settings are all configured in a virtual host._
+_TCP listening port, http virtualhost(s) and TLS settings are configured together in a listener._
 
 ## Supported methods and paths
 
-| Method | Path                                             | What                                   |
-| ------ | ------------------------------------------------ | -------------------------------------- |
-| GET    | /v1/listeners                                 | retrieve all listeners              |
-| POST   | /v1/listeners                                 | creates a new listener              |
+| Method | Path                                       | What                                |
+| ------ | ------------------------------------------ | ----------------------------------- |
+| GET    | /v1/listeners                              | retrieve all listeners              |
+| POST   | /v1/listeners                              | creates a new listener              |
 | GET    | /v1/listeners/_listener_                   | retrieve a listener                 |
 | POST   | /v1/listeners/_listener_                   | updates an existing listener        |
 | DELETE | /v1/listeners/_listener_                   | deletes a listener                  |
@@ -63,7 +63,7 @@ _For POST content-type: application/json is required._
 
 All attributes listed above are mapped on configuration properties of [Envoy listener API specifications](https://www.envoyproxy.io/docs/envoy/latest/api-v3/api/v3/listener.proto#listener) for detailed explanation of purpose and allowed value of each attribute.
 
-The virtual host options exposed this way are a subset of Envoy's capabilities, in general any listener configuration option Envoy supports can be exposed  this way. Feel free to open an issue if you need more of Envoy's functionality exposed.
+The listener options exposed this way are a subset of Envoy's capabilities, in general any listener configuration option Envoy supports can be exposed  this way. Feel free to open an issue if you need more of Envoy's functionality exposed.
 
 ## Policy specification
 
@@ -82,7 +82,7 @@ Envoycp checks the database for new or changed listeners every second. Unrecogni
 
 ## More examples
 
-Two virtual hosts sharing one certificate:
+One listener with two virtual hosts sharing one certificate:
 
 ```json
 {

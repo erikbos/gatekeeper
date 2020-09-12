@@ -7,6 +7,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/erikbos/gatekeeper/pkg/shared"
+	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
 const (
@@ -41,17 +42,17 @@ func NewListenerStore(database *Database) *ListenerStore {
 }
 
 // GetAll retrieves all listeners
-func (s *ListenerStore) GetAll() ([]shared.Listener, error) {
+func (s *ListenerStore) GetAll() (types.Listeners, error) {
 
 	query := "SELECT " + listenerColumns + " FROM listeners"
 	listeners, err := s.runGetListenerQuery(query)
 	if err != nil {
-		return []shared.Listener{}, err
+		return types.Listeners{}, err
 	}
 
 	if len(listeners) == 0 {
 		s.db.metrics.QueryMiss(listenerMetricLabel)
-		return []shared.Listener{}, nil
+		return types.Listeners{}, nil
 	}
 
 	s.db.metrics.QueryHit(listenerMetricLabel)
@@ -59,7 +60,7 @@ func (s *ListenerStore) GetAll() ([]shared.Listener, error) {
 }
 
 // GetByName retrieves a listener
-func (s *ListenerStore) GetByName(listenerName string) (*shared.Listener, error) {
+func (s *ListenerStore) GetByName(listenerName string) (*types.Listener, error) {
 
 	query := "SELECT " + listenerColumns + " FROM listeners WHERE name = ? LIMIT 1"
 	listeners, err := s.runGetListenerQuery(query, listenerName)
@@ -78,24 +79,24 @@ func (s *ListenerStore) GetByName(listenerName string) (*shared.Listener, error)
 
 // runGetListenerQuery executes CQL query and returns resultset
 func (s *ListenerStore) runGetListenerQuery(query string,
-	queryParameters ...interface{}) ([]shared.Listener, error) {
+	queryParameters ...interface{}) (types.Listeners, error) {
 
 	timer := prometheus.NewTimer(s.db.metrics.LookupHistogram)
 	defer timer.ObserveDuration()
 
-	var listeners []shared.Listener
+	var listeners types.Listeners
 
 	iter := s.db.CassandraSession.Query(query, queryParameters...).Iter()
 	m := make(map[string]interface{})
 	for iter.MapScan(m) {
-		listeners = append(listeners, shared.Listener{
+		listeners = append(listeners, types.Listener{
 			Name:             columnValueString(m, "name"),
 			DisplayName:      columnValueString(m, "display_name"),
-			VirtualHosts:     shared.Listener{}.VirtualHosts.Unmarshal(columnValueString(m, "virtual_hosts")),
+			VirtualHosts:     types.Listener{}.VirtualHosts.Unmarshal(columnValueString(m, "virtual_hosts")),
 			Port:             columnValueInt(m, "port"),
 			RouteGroup:       columnValueString(m, "route_group"),
 			Policies:         columnValueString(m, "policies"),
-			Attributes:       shared.Listener{}.Attributes.Unmarshal(columnValueString(m, "attributes")),
+			Attributes:       types.Listener{}.Attributes.Unmarshal(columnValueString(m, "attributes")),
 			OrganizationName: columnValueString(m, "organization_name"),
 			CreatedAt:        columnValueInt64(m, "created_at"),
 			CreatedBy:        columnValueString(m, "created_by"),
@@ -107,13 +108,13 @@ func (s *ListenerStore) runGetListenerQuery(query string,
 	// In case query failed we return query error
 	if err := iter.Close(); err != nil {
 		log.Error(err)
-		return []shared.Listener{}, err
+		return types.Listeners{}, err
 	}
 	return listeners, nil
 }
 
 // UpdateByName updates a listener
-func (s *ListenerStore) UpdateByName(vhost *shared.Listener) error {
+func (s *ListenerStore) UpdateByName(vhost *types.Listener) error {
 
 	vhost.Attributes.Tidy()
 	vhost.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()

@@ -8,6 +8,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/erikbos/gatekeeper/pkg/shared"
+	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
 const (
@@ -41,17 +42,17 @@ func NewRouteStore(database *Database) *RouteStore {
 }
 
 // GetAll retrieves all routes
-func (s *RouteStore) GetAll() ([]shared.Route, error) {
+func (s *RouteStore) GetAll() (types.Routes, error) {
 
 	query := "SELECT * FROM routes"
 	routes, err := s.runGetRouteQuery(query)
 	if err != nil {
-		return []shared.Route{}, err
+		return types.Routes{}, err
 	}
 
 	if len(routes) == 0 {
 		s.db.metrics.QueryMiss(routeMetricLabel)
-		return []shared.Route{}, errors.New("Can not retrieve list of routes")
+		return types.Routes{}, errors.New("Can not retrieve list of routes")
 	}
 
 	s.db.metrics.QueryHit(routeMetricLabel)
@@ -59,7 +60,7 @@ func (s *RouteStore) GetAll() ([]shared.Route, error) {
 }
 
 // GetRouteByName retrieves a route from database
-func (s *RouteStore) GetRouteByName(routeName string) (*shared.Route, error) {
+func (s *RouteStore) GetRouteByName(routeName string) (*types.Route, error) {
 
 	query := "SELECT * FROM routes WHERE name = ? LIMIT 1"
 	routes, err := s.runGetRouteQuery(query, routeName)
@@ -77,8 +78,8 @@ func (s *RouteStore) GetRouteByName(routeName string) (*shared.Route, error) {
 }
 
 // runGetRouteQuery executes CQL query and returns resultset
-func (s *RouteStore) runGetRouteQuery(query string, queryParameters ...interface{}) ([]shared.Route, error) {
-	var routes []shared.Route
+func (s *RouteStore) runGetRouteQuery(query string, queryParameters ...interface{}) (types.Routes, error) {
+	var routes types.Routes
 
 	timer := prometheus.NewTimer(s.db.metrics.LookupHistogram)
 	defer timer.ObserveDuration()
@@ -86,13 +87,13 @@ func (s *RouteStore) runGetRouteQuery(query string, queryParameters ...interface
 	iter := s.db.CassandraSession.Query(query, queryParameters...).Iter()
 	m := make(map[string]interface{})
 	for iter.MapScan(m) {
-		routes = append(routes, shared.Route{
+		routes = append(routes, types.Route{
 			Name:           columnValueString(m, "name"),
 			DisplayName:    columnValueString(m, "display_name"),
 			RouteGroup:     columnValueString(m, "route_group"),
 			Path:           columnValueString(m, "path"),
 			PathType:       columnValueString(m, "path_type"),
-			Attributes:     shared.Route{}.Attributes.Unmarshal(columnValueString(m, "attributes")),
+			Attributes:     types.Route{}.Attributes.Unmarshal(columnValueString(m, "attributes")),
 			CreatedAt:      columnValueInt64(m, "created_at"),
 			CreatedBy:      columnValueString(m, "created_by"),
 			LastmodifiedAt: columnValueInt64(m, "lastmodified_at"),
@@ -103,13 +104,13 @@ func (s *RouteStore) runGetRouteQuery(query string, queryParameters ...interface
 	// In case query failed we return query error
 	if err := iter.Close(); err != nil {
 		log.Error(err)
-		return []shared.Route{}, err
+		return types.Routes{}, err
 	}
 	return routes, nil
 }
 
 // UpdateRouteByName UPSERTs an route
-func (s *RouteStore) UpdateRouteByName(route *shared.Route) error {
+func (s *RouteStore) UpdateRouteByName(route *types.Route) error {
 
 	route.Attributes.Tidy()
 	route.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()

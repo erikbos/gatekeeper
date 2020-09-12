@@ -8,12 +8,12 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/erikbos/gatekeeper/pkg/db"
-	"github.com/erikbos/gatekeeper/pkg/shared"
+	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
 type vhostMapping struct {
 	dbentities *db.Entityloader
-	listeners  map[vhostMapEntry]shared.Listener
+	listeners  map[vhostMapEntry]types.Listener
 }
 
 type vhostMapEntry struct {
@@ -31,7 +31,7 @@ func newVhostMapping(d *db.Entityloader) *vhostMapping {
 func (v *vhostMapping) WaitFor(entityNotifications chan db.EntityChangeNotification) {
 
 	for changedEntity := range entityNotifications {
-		log.Infof("Database change notify received for entity group '%s'",
+		log.Infof("Database change notify received for entity '%s'",
 			changedEntity.Resource)
 
 		if changedEntity.Resource == db.EntityTypeListener ||
@@ -41,12 +41,12 @@ func (v *vhostMapping) WaitFor(entityNotifications chan db.EntityChangeNotificat
 	}
 }
 
-func (v *vhostMapping) buildVhostMap() map[vhostMapEntry]shared.Listener {
+func (v *vhostMapping) buildVhostMap() map[vhostMapEntry]types.Listener {
 
-	newListeners := make(map[vhostMapEntry]shared.Listener)
+	newListeners := make(map[vhostMapEntry]types.Listener)
 
 	for _, listener := range v.dbentities.GetListeners() {
-		listener.Attributes = shared.Attributes{}
+		listener.Attributes = types.Attributes{}
 
 		for _, host := range listener.VirtualHosts {
 			newListeners[vhostMapEntry{strings.ToLower(host),
@@ -64,7 +64,7 @@ func (v *vhostMapping) buildVhostMap() map[vhostMapEntry]shared.Listener {
 
 // FIXME this should be lookup in map instead of for loops
 // FIXXE map should have a key vhost:port
-func (v *vhostMapping) Lookup(hostname, protocol string) (*shared.Listener, error) {
+func (v *vhostMapping) Lookup(hostname, protocol string) (*types.Listener, error) {
 
 	for _, listener := range v.listeners {
 		for _, vhost := range listener.VirtualHosts {

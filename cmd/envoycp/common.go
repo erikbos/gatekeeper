@@ -11,7 +11,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/runtime/protoiface"
 
-	"github.com/erikbos/gatekeeper/pkg/shared"
+	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
 // buildAddress builds an Envoy address to connect to
@@ -74,7 +74,7 @@ func buildTransportSocket(resourceName string, tlsContext protoiface.MessageV1) 
 	}
 }
 
-func buildCommonTLSContext(resourceName string, attributes shared.Attributes) *tls.CommonTlsContext {
+func buildCommonTLSContext(resourceName string, attributes types.Attributes) *tls.CommonTlsContext {
 
 	return &tls.CommonTlsContext{
 		AlpnProtocols:   buildALPNProtocols(resourceName, attributes),
@@ -83,9 +83,9 @@ func buildCommonTLSContext(resourceName string, attributes shared.Attributes) *t
 	}
 }
 
-func buildTLSCipherSuites(attributes shared.Attributes) []string {
+func buildTLSCipherSuites(attributes types.Attributes) []string {
 
-	value, err := attributes.Get(attributeTLSCipherSuites)
+	value, err := attributes.Get(types.AttributeTLSCipherSuites)
 	if err == nil {
 		var ciphers []string
 
@@ -97,17 +97,17 @@ func buildTLSCipherSuites(attributes shared.Attributes) []string {
 	return nil
 }
 
-func buildTLSParameters(attributes shared.Attributes) *tls.TlsParameters {
+func buildTLSParameters(attributes types.Attributes) *tls.TlsParameters {
 
 	tlsParameters := &tls.TlsParameters{
 		CipherSuites: buildTLSCipherSuites(attributes),
 	}
 
-	if minVersion, err := attributes.Get(attributeTLSMinimumVersion); err == nil {
+	if minVersion, err := attributes.Get(types.AttributeTLSMinimumVersion); err == nil {
 		tlsParameters.TlsMinimumProtocolVersion = buildTLSVersion(minVersion)
 	}
 
-	if maxVersion, err := attributes.Get(attributeTLSMaximumVersion); err == nil {
+	if maxVersion, err := attributes.Get(types.AttributeTLSMaximumVersion); err == nil {
 		tlsParameters.TlsMaximumProtocolVersion = buildTLSVersion(maxVersion)
 	}
 	return tlsParameters
@@ -116,42 +116,42 @@ func buildTLSParameters(attributes shared.Attributes) *tls.TlsParameters {
 func buildTLSVersion(version string) tls.TlsParameters_TlsProtocol {
 
 	switch version {
-	case attributeValueTLSVersion10:
+	case types.AttributeValueTLSVersion10:
 		return tls.TlsParameters_TLSv1_0
-	case attributeValueTLSVersion11:
+	case types.AttributeAccessLogCluster:
 		return tls.TlsParameters_TLSv1_1
-	case attributeValueTLSVersion12:
+	case types.AttributeValueTLSVersion12:
 		return tls.TlsParameters_TLSv1_2
-	case attributeValueTLSVersion13:
+	case types.AttributeValueTLSVersion13:
 		return tls.TlsParameters_TLSv1_3
 	}
 	return tls.TlsParameters_TLS_AUTO
 }
 
 // buildALPNOptions return supported ALPN protocols
-func buildALPNProtocols(resourceName string, attributes shared.Attributes) []string {
+func buildALPNProtocols(resourceName string, attributes types.Attributes) []string {
 
-	value, err := attributes.Get(attributeHTTPProtocol)
+	value, err := attributes.Get(types.AttributeHTTPProtocol)
 	if err == nil {
 		switch value {
-		case attributeValueHTTPProtocol11:
+		case types.AttributeValueHTTPProtocol11:
 			return []string{"http/1.1"}
 
-		case attributeValueHTTPProtocol2:
+		case types.AttributeValueHTTPProtocol2:
 			return []string{"h2", "http/1.1"}
 
 		default:
 			log.Warnf("Resource '%s' has attribute '%s' with unsupported value '%s'",
-				resourceName, attributeHTTPProtocol, value)
+				resourceName, types.AttributeHTTPProtocol, value)
 		}
 	}
 	return []string{"http/1.1"}
 }
 
-func buildTLSCertificates(attributes shared.Attributes) []*tls.TlsCertificate {
+func buildTLSCertificates(attributes types.Attributes) []*tls.TlsCertificate {
 
-	certificate, certificateError := attributes.Get(attributeTLSCertificate)
-	certificateKey, certificateKeyError := attributes.Get(attributeTLSCertificateKey)
+	certificate, certificateError := attributes.Get(types.AttributeTLSCertificate)
+	certificateKey, certificateKeyError := attributes.Get(types.AttributeTLSCertificateKey)
 
 	if certificateError != nil && certificateKeyError != nil {
 		return nil

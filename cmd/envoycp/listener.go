@@ -22,7 +22,7 @@ import (
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/structpb"
 
-	"github.com/erikbos/gatekeeper/pkg/shared"
+	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
 // getEnvoyListenerConfig returns array of envoy listeners
@@ -51,7 +51,9 @@ func (s *server) getListenersOfRouteGroup(RouteGroupName string) []string {
 	var ListenersInRouteGroup []string
 
 	for _, listener := range s.dbentities.GetListeners() {
-		warnForUnknownListenerAttributes(listener)
+		if err := listener.ConfigCheck(); err != nil {
+			log.Warningf("Listener '%s' %s", listener.Name, err)
+		}
 
 		if listener.RouteGroup == RouteGroupName {
 			ListenersInRouteGroup = append(ListenersInRouteGroup, listener.VirtualHosts...)
@@ -87,7 +89,7 @@ func buildListenerFilterHTTP() []*listener.ListenerFilter {
 	}
 }
 
-func (s *server) buildFilterChainEntry(l *listener.Listener, v shared.Listener) *listener.FilterChain {
+func (s *server) buildFilterChainEntry(l *listener.Listener, v types.Listener) *listener.FilterChain {
 
 	httpFilter := s.buildFilter()
 
@@ -107,8 +109,8 @@ func (s *server) buildFilterChainEntry(l *listener.Listener, v shared.Listener) 
 	}
 
 	// Check if we have a certificate and certificate key
-	_, certificateError := v.Attributes.Get(attributeTLSCertificate)
-	_, certificateKeyError := v.Attributes.Get(attributeTLSCertificateKey)
+	_, certificateError := v.Attributes.Get(types.AttributeTLSCertificate)
+	_, certificateKeyError := v.Attributes.Get(types.AttributeTLSCertificateKey)
 
 	// No certificate details, return and do not try to enable TLS
 	if certificateError != nil && certificateKeyError != nil {
@@ -138,7 +140,7 @@ func (s *server) buildFilterChainEntry(l *listener.Listener, v shared.Listener) 
 }
 
 func (s *server) buildConnectionManager(httpFilters []*hcm.HttpFilter,
-	vhost shared.Listener) *hcm.HttpConnectionManager {
+	vhost types.Listener) *hcm.HttpConnectionManager {
 
 	proxyConfig := &s.config.Envoyproxy
 
@@ -281,16 +283,16 @@ func (s *server) buildRouteSpecifierRDS(routeGroup string) *hcm.HttpConnectionMa
 	}
 }
 
-func buildAccessLog(config envoyLogConfig, v shared.Listener) []*accesslog.AccessLog {
+func buildAccessLog(config envoyLogConfig, v types.Listener) []*accesslog.AccessLog {
 
 	// Set access log behaviour based upon virtual host attributes
-	accessLogFile, error := v.Attributes.Get(attributeAccessLogFile)
+	accessLogFile, error := v.Attributes.Get(types.AttributeAccessLogFile)
 	if error == nil && accessLogFile != "" {
 		return buildFileAccessLog(config.File.Fields, accessLogFile)
 	}
-	accessLogCluster, error := v.Attributes.Get(attributeAccessLogCluster)
+	accessLogCluster, error := v.Attributes.Get(types.AttributeAccessLogCluster)
 	if error == nil && accessLogCluster != "" {
-		return buildGRPCAccessLog(accessLogCluster, v.Name, defaultClusterConnectTimeout, 0)
+		return buildGRPCAccessLog(accessLogCluster, v.Name, types.DefaultClusterConnectTimeout, 0)
 	}
 
 	// Fallback is default logging based upon configfile
@@ -366,7 +368,7 @@ func buildGRPCAccessLog(clusterName, LogName string, timeout time.Duration, buff
 }
 
 // buildLocalOverWrite generates all the local rewrites Envoyproxy should do
-func buildLocalOverWrite(vhost shared.Listener) *hcm.LocalReplyConfig {
+func buildLocalOverWrite(vhost types.Listener) *hcm.LocalReplyConfig {
 
 	return &hcm.LocalReplyConfig{
 		Mappers: []*hcm.ResponseMapper{
@@ -375,7 +377,7 @@ func buildLocalOverWrite(vhost shared.Listener) *hcm.LocalReplyConfig {
 	}
 }
 
-func buildLocalOverWrite429to403(vhost shared.Listener) *hcm.ResponseMapper {
+func buildLocalOverWrite429to403(vhost types.Listener) *hcm.ResponseMapper {
 
 	// This matches on
 	// 1) response status code 429

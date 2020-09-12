@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/erikbos/gatekeeper/pkg/shared"
+	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
 func (s *server) registerDeveloperAppRoutes(r *gin.Engine) {
@@ -122,7 +123,7 @@ func (s *server) GetDeveloperAppAttributeByName(c *gin.Context) {
 // PostCreateDeveloperApp creates a developer application
 func (s *server) PostCreateDeveloperApp(c *gin.Context) {
 
-	var newDeveloperApp shared.DeveloperApp
+	var newDeveloperApp types.DeveloperApp
 	if err := c.ShouldBindJSON(&newDeveloperApp); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
@@ -182,7 +183,7 @@ func (s *server) PostDeveloperApp(c *gin.Context) {
 		return
 	}
 
-	var updateRequest shared.DeveloperApp
+	var updateRequest types.DeveloperApp
 	if err := c.ShouldBindJSON(&updateRequest); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
@@ -215,7 +216,7 @@ func (s *server) PostDeveloperAppAttributes(c *gin.Context) {
 	}
 
 	var body struct {
-		Attributes shared.Attributes `json:"attribute"`
+		Attributes types.Attributes `json:"attribute"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)

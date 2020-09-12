@@ -7,6 +7,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/erikbos/gatekeeper/pkg/shared"
+	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
 // CheckProductEntitlement loads developer, dev app, apiproduct details,
@@ -114,7 +115,7 @@ func checkDevAndKeyValidity(request *requestInfo) error {
 // - if not 403
 
 func (a *authorizationServer) IsRequestPathAllowed(organization, requestPath string,
-	credential *shared.DeveloperAppKey) (*shared.APIProduct, error) {
+	credential *types.DeveloperAppKey) (*types.APIProduct, error) {
 
 	// Does this apikey have any products assigned?
 	if len(credential.APIProducts) == 0 {
@@ -146,9 +147,9 @@ func (a *authorizationServer) IsRequestPathAllowed(organization, requestPath str
 }
 
 // getAPIPRoduct retrieves an API Product through mem cache
-func (a *authorizationServer) getAPIProduct(organization, apiproductname *string) (*shared.APIProduct, error) {
+func (a *authorizationServer) getAPIProduct(organization, apiproductname *string) (*types.APIProduct, error) {
 
-	var product *shared.APIProduct
+	var product *types.APIProduct
 
 	product, err := a.cache.GetAPIProduct(organization, apiproductname)
 	// in case we do not have product in cache let's try to retrieve it from database

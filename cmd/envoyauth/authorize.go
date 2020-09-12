@@ -18,7 +18,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/structpb"
 
-	"github.com/erikbos/gatekeeper/pkg/shared"
+	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
 type envoyAuthConfig struct {
@@ -33,11 +33,11 @@ type requestInfo struct {
 	queryParameters url.Values
 	apikey          *string
 	oauth2token     *string
-	vhost           *shared.Listener
-	developer       *shared.Developer
-	developerApp    *shared.DeveloperApp
-	appCredential   *shared.DeveloperAppKey
-	APIProduct      *shared.APIProduct
+	vhost           *types.Listener
+	developer       *types.Developer
+	developerApp    *types.DeveloperApp
+	appCredential   *types.DeveloperAppKey
+	APIProduct      *types.APIProduct
 }
 
 // startGRPCAuthorizationServer starts extauthz grpc listener

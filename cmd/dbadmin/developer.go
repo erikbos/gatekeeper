@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/erikbos/gatekeeper/pkg/shared"
+	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
 // registerDeveloperRoutes registers all routes we handle
@@ -89,7 +90,7 @@ func (s *server) GetDeveloperAttributeByName(c *gin.Context) {
 // PostCreateDeveloper creates a new developer
 func (s *server) PostCreateDeveloper(c *gin.Context) {
 
-	var newDeveloper shared.Developer
+	var newDeveloper types.Developer
 	if err := c.ShouldBindJSON(&newDeveloper); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
@@ -133,7 +134,7 @@ func (s *server) PostDeveloper(c *gin.Context) {
 		return
 	}
 
-	var updateRequest shared.Developer
+	var updateRequest types.Developer
 	if err := c.ShouldBindJSON(&updateRequest); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
@@ -166,7 +167,7 @@ func (s *server) PostDeveloperAttributes(c *gin.Context) {
 	}
 
 	var body struct {
-		Attributes shared.Attributes `json:"attribute"`
+		Attributes types.Attributes `json:"attribute"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)

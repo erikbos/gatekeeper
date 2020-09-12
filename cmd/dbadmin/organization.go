@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/erikbos/gatekeeper/pkg/shared"
+	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
 // registerOrganizationRoutes registers all routes we handle
@@ -89,7 +90,7 @@ func (s *server) GetOrganizationAttributeByName(c *gin.Context) {
 // PostCreateOrganization creates an organization
 func (s *server) PostCreateOrganization(c *gin.Context) {
 
-	var newOrganization shared.Organization
+	var newOrganization types.Organization
 	if err := c.ShouldBindJSON(&newOrganization); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
@@ -124,7 +125,7 @@ func (s *server) PostOrganization(c *gin.Context) {
 		return
 	}
 
-	var updatedOrganization shared.Organization
+	var updatedOrganization types.Organization
 	if err := c.ShouldBindJSON(&updatedOrganization); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
@@ -153,7 +154,7 @@ func (s *server) PostOrganizationAttributes(c *gin.Context) {
 	}
 
 	var receivedAttributes struct {
-		Attributes shared.Attributes `json:"attribute"`
+		Attributes types.Attributes `json:"attribute"`
 	}
 	if err := c.ShouldBindJSON(&receivedAttributes); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)

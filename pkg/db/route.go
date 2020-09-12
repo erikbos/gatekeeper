@@ -1,20 +1,18 @@
 package db
 
-import (
-	"github.com/erikbos/gatekeeper/pkg/shared"
-)
+import "github.com/erikbos/gatekeeper/pkg/types"
 
 type (
 	// RouteStore the route information storage interface
 	RouteStore interface {
 		// GetAll retrieves all routes
-		GetAll() ([]shared.Route, error)
+		GetAll() (types.Routes, error)
 
 		// GetRouteByName retrieves a route from database
-		GetRouteByName(routeName string) (*shared.Route, error)
+		GetRouteByName(routeName string) (*types.Route, error)
 
 		// UpdateRouteByName UPSERTs an route
-		UpdateRouteByName(route *shared.Route) error
+		UpdateRouteByName(route *types.Route) error
 
 		// DeleteRouteByName deletes a route
 		DeleteRouteByName(routeToDelete string) error

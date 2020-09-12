@@ -1,4 +1,4 @@
-package shared
+package types
 
 import (
 	"encoding/json"
@@ -17,6 +17,38 @@ type Attribute struct {
 
 // Attributes holds one or more attributes
 type Attributes []Attribute
+
+// Attributes which are shared amongst listener, route and cluster
+const (
+
+	// AttributeTLSCertificate holds pem encoded certicate
+	AttributeTLSCertificate = "TLSCertificate"
+
+	// AttributeTLSCertificateKey holds certicate key
+	AttributeTLSCertificateKey = "TLSCertificateKey"
+
+	// AttributeTLSMinimumVersion determines minimum TLS version accepted
+	AttributeTLSMinimumVersion = "TLSMinimumVersion"
+
+	// AttributeTLSMaximumVersion determines maximum TLS version accepted
+	AttributeTLSMaximumVersion = "TLSMaximumVersion"
+
+	// AttributeTLSCipherSuites determines set of allowed TLS ciphers
+	AttributeTLSCipherSuites = "TLSCipherSuites"
+
+	// AttributeTLSCipherSuites sets HTTP protocol to accept
+	AttributeHTTPProtocol = "HTTPProtocol"
+
+	AttributeValueTrue                    = "true"
+	AttributeValueTLSVersion10            = "TLSv10"
+	AttributeValueTLSVersion11            = "TLSv11"
+	AttributeValueTLSVersion12            = "TLSv12"
+	AttributeValueTLSVersion13            = "TLSv13"
+	AttributeValueHTTPProtocol11          = "HTTP/1.1"
+	AttributeValueHTTPProtocol2           = "HTTP/2"
+	AttributeValueHTTPProtocol3           = "HTTP/3"
+	AttributeValueHealthCheckProtocolHTTP = "HTTP"
+)
 
 // Get return one named attribute from attributes
 func (attributes *Attributes) Get(name string) (string, error) {

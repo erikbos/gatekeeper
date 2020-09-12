@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/erikbos/gatekeeper/pkg/shared"
+	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
 // registerRouteRoutes registers all routes we handle
@@ -87,7 +88,7 @@ func (s *server) GetRouteAttributeByName(c *gin.Context) {
 // PostCreateRoute creates a route
 func (s *server) PostCreateRoute(c *gin.Context) {
 
-	var newRoute shared.Route
+	var newRoute types.Route
 	if err := c.ShouldBindJSON(&newRoute); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
@@ -122,7 +123,7 @@ func (s *server) PostRoute(c *gin.Context) {
 		return
 	}
 
-	var updateRequest shared.Route
+	var updateRequest types.Route
 	if err := c.ShouldBindJSON(&updateRequest); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
@@ -153,7 +154,7 @@ func (s *server) PostRouteAttributes(c *gin.Context) {
 	}
 
 	var body struct {
-		Attributes shared.Attributes `json:"attribute"`
+		Attributes types.Attributes `json:"attribute"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)

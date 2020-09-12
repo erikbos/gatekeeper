@@ -7,6 +7,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/erikbos/gatekeeper/pkg/shared"
+	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
 const (
@@ -40,12 +41,12 @@ func NewDeveloperAppStore(database *Database) *DeveloperAppStore {
 }
 
 // GetByOrganization retrieves all developer apps belonging to an organization
-func (s *DeveloperAppStore) GetByOrganization(organizationName string) ([]shared.DeveloperApp, error) {
+func (s *DeveloperAppStore) GetByOrganization(organizationName string) (types.DeveloperApps, error) {
 
 	query := "SELECT " + developerAppColumns + " FROM developer_apps WHERE organization_name = ? ALLOW FILTERING"
 	developerapps, err := s.runGetDeveloperAppQuery(query, organizationName)
 	if err != nil {
-		return []shared.DeveloperApp{}, err
+		return types.DeveloperApps{}, err
 	}
 
 	if len(developerapps) == 0 {
@@ -59,7 +60,7 @@ func (s *DeveloperAppStore) GetByOrganization(organizationName string) ([]shared
 }
 
 // GetByName returns a developer app
-func (s *DeveloperAppStore) GetByName(organization, developerAppName string) (*shared.DeveloperApp, error) {
+func (s *DeveloperAppStore) GetByName(organization, developerAppName string) (*types.DeveloperApp, error) {
 
 	query := "SELECT " + developerAppColumns + " FROM developer_apps WHERE organization_name = ? AND name = ? LIMIT 1"
 	developerapps, err := s.runGetDeveloperAppQuery(query, organization, developerAppName)
@@ -77,7 +78,7 @@ func (s *DeveloperAppStore) GetByName(organization, developerAppName string) (*s
 }
 
 // GetByID returns a developer app
-func (s *DeveloperAppStore) GetByID(organization, developerAppID string) (*shared.DeveloperApp, error) {
+func (s *DeveloperAppStore) GetByID(organization, developerAppID string) (*types.DeveloperApp, error) {
 
 	query := "SELECT " + developerAppColumns + " FROM developer_apps WHERE app_id = ? LIMIT 1"
 	developerapps, err := s.runGetDeveloperAppQuery(query, developerAppID)
@@ -109,8 +110,8 @@ func (s *DeveloperAppStore) GetCountByDeveloperID(developerID string) int {
 }
 
 // runGetDeveloperAppQuery executes CQL query and returns resulset
-func (s *DeveloperAppStore) runGetDeveloperAppQuery(query string, queryParameters ...interface{}) ([]shared.DeveloperApp, error) {
-	var developerapps []shared.DeveloperApp
+func (s *DeveloperAppStore) runGetDeveloperAppQuery(query string, queryParameters ...interface{}) (types.DeveloperApps, error) {
+	var developerapps types.DeveloperApps
 
 	timer := prometheus.NewTimer(s.db.metrics.LookupHistogram)
 	defer timer.ObserveDuration()
@@ -118,12 +119,12 @@ func (s *DeveloperAppStore) runGetDeveloperAppQuery(query string, queryParameter
 	iterable := s.db.CassandraSession.Query(query, queryParameters...).Iter()
 	m := make(map[string]interface{})
 	for iterable.MapScan(m) {
-		developerapps = append(developerapps, shared.DeveloperApp{
+		developerapps = append(developerapps, types.DeveloperApp{
 			AppID:            columnValueString(m, "app_id"),
 			DeveloperID:      columnValueString(m, "developer_id"),
 			Name:             columnValueString(m, "name"),
 			DisplayName:      columnValueString(m, "display_name"),
-			Attributes:       shared.DeveloperApp{}.Attributes.Unmarshal(m["attributes"].(string)),
+			Attributes:       types.DeveloperApp{}.Attributes.Unmarshal(m["attributes"].(string)),
 			OrganizationName: columnValueString(m, "organization_name"),
 			Status:           columnValueString(m, "status"),
 			CreatedAt:        columnValueInt64(m, "created_at"),
@@ -136,13 +137,13 @@ func (s *DeveloperAppStore) runGetDeveloperAppQuery(query string, queryParameter
 	// In case query failed we return query error
 	if err := iterable.Close(); err != nil {
 		log.Error(err)
-		return []shared.DeveloperApp{}, err
+		return types.DeveloperApps{}, err
 	}
 	return developerapps, nil
 }
 
 // UpdateByName UPSERTs a developer app
-func (s *DeveloperAppStore) UpdateByName(app *shared.DeveloperApp) error {
+func (s *DeveloperAppStore) UpdateByName(app *types.DeveloperApp) error {
 
 	app.Attributes.Tidy()
 	app.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()

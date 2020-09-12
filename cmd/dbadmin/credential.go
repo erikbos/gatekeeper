@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/erikbos/gatekeeper/pkg/shared"
+	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
 func (s *server) registerCredentialRoutes(r *gin.Engine) {
@@ -77,7 +78,7 @@ func (s *server) PostCreateDeveloperAppKey(c *gin.Context) {
 		return
 	}
 
-	newAppCredential := shared.DeveloperAppKey{
+	newAppCredential := types.DeveloperAppKey{
 		ExpiresAt:        -1,
 		IssuedAt:         shared.GetCurrentTimeMilliseconds(),
 		AppID:            developerApp.AppID,
@@ -85,7 +86,7 @@ func (s *server) PostCreateDeveloperAppKey(c *gin.Context) {
 		Status:           "approved",
 	}
 
-	var receivedCredential shared.DeveloperAppKey
+	var receivedCredential types.DeveloperAppKey
 	err = c.ShouldBindJSON(&receivedCredential)
 
 	if err == nil && receivedCredential.ConsumerKey != "" {
@@ -106,7 +107,7 @@ func (s *server) PostCreateDeveloperAppKey(c *gin.Context) {
 // PostUpdateDeveloperAppKeyByKey creates key for developerapp
 func (s *server) PostUpdateDeveloperAppKeyByKey(c *gin.Context) {
 
-	var receivedAppCredential shared.DeveloperAppKey
+	var receivedAppCredential types.DeveloperAppKey
 	if err := c.ShouldBindJSON(&receivedAppCredential); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return

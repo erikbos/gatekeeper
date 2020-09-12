@@ -3,10 +3,9 @@ package cassandra
 import (
 	"fmt"
 
+	"github.com/erikbos/gatekeeper/pkg/types"
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
-
-	"github.com/erikbos/gatekeeper/pkg/shared"
 )
 
 const (
@@ -39,9 +38,9 @@ func NewCredentialStore(database *Database) *CredentialStore {
 }
 
 // GetByKey returns details of a single apikey
-func (s *CredentialStore) GetByKey(organizationName, key *string) (*shared.DeveloperAppKey, error) {
+func (s *CredentialStore) GetByKey(organizationName, key *string) (*types.DeveloperAppKey, error) {
 
-	var appcredentials []shared.DeveloperAppKey
+	var appcredentials types.DeveloperAppKeys
 	var err error
 
 	if organizationName == nil {
@@ -65,7 +64,7 @@ func (s *CredentialStore) GetByKey(organizationName, key *string) (*shared.Devel
 }
 
 // GetByDeveloperAppID returns an array with apikey details of a developer app
-func (s *CredentialStore) GetByDeveloperAppID(developerAppID string) ([]shared.DeveloperAppKey, error) {
+func (s *CredentialStore) GetByDeveloperAppID(developerAppID string) (types.DeveloperAppKeys, error) {
 
 	query := "SELECT " + appCredentialsColumn + " FROM credentials WHERE app_id = ?"
 	appcredentials, err := s.runGetAppCredentialQuery(query, developerAppID)
@@ -99,9 +98,9 @@ func (s *CredentialStore) GetCountByDeveloperAppID(developerAppID string) int {
 }
 
 // runAppCredentialQuery executes CQL query and returns resulset
-func (s *CredentialStore) runGetAppCredentialQuery(query string, queryParameters ...interface{}) ([]shared.DeveloperAppKey, error) {
+func (s *CredentialStore) runGetAppCredentialQuery(query string, queryParameters ...interface{}) (types.DeveloperAppKeys, error) {
 
-	var appcredentials []shared.DeveloperAppKey
+	var appcredentials types.DeveloperAppKeys
 
 	timer := prometheus.NewTimer(s.db.metrics.LookupHistogram)
 	defer timer.ObserveDuration()
@@ -109,11 +108,11 @@ func (s *CredentialStore) runGetAppCredentialQuery(query string, queryParameters
 	iterable := s.db.CassandraSession.Query(query, queryParameters...).Iter()
 	m := make(map[string]interface{})
 	for iterable.MapScan(m) {
-		appcredentials = append(appcredentials, shared.DeveloperAppKey{
+		appcredentials = append(appcredentials, types.DeveloperAppKey{
 			ConsumerKey:      columnValueString(m, "consumer_key"),
 			ConsumerSecret:   columnValueString(m, "consumer_secret"),
-			APIProducts:      shared.DeveloperAppKey{}.APIProducts.Unmarshal(m["api_products"].(string)),
-			Attributes:       shared.DeveloperAppKey{}.Attributes.Unmarshal(m["attributes"].(string)),
+			APIProducts:      types.DeveloperAppKey{}.APIProducts.Unmarshal(m["api_products"].(string)),
+			Attributes:       types.DeveloperAppKey{}.Attributes.Unmarshal(m["attributes"].(string)),
 			AppID:            columnValueString(m, "app_id"),
 			OrganizationName: columnValueString(m, "organization_name"),
 			Status:           columnValueString(m, "status"),
@@ -131,7 +130,7 @@ func (s *CredentialStore) runGetAppCredentialQuery(query string, queryParameters
 }
 
 // UpdateByKey UPSERTs credentials in database
-func (s *CredentialStore) UpdateByKey(c *shared.DeveloperAppKey) error {
+func (s *CredentialStore) UpdateByKey(c *types.DeveloperAppKey) error {
 
 	c.Attributes.Tidy()
 

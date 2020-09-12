@@ -3,10 +3,9 @@ package cassandra
 import (
 	"fmt"
 
+	"github.com/erikbos/gatekeeper/pkg/types"
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
-
-	"github.com/erikbos/gatekeeper/pkg/shared"
 )
 
 const (
@@ -44,30 +43,30 @@ func NewOAuthStore(database *Database) *OAuthStore {
 }
 
 // OAuthAccessTokenGetByAccess retrieves an access token
-func (s *OAuthStore) OAuthAccessTokenGetByAccess(accessToken string) (*shared.OAuthAccessToken, error) {
+func (s *OAuthStore) OAuthAccessTokenGetByAccess(accessToken string) (*types.OAuthAccessToken, error) {
 
 	query := "SELECT " + oauthColumns + " FROM oauth_access_token WHERE access = ? LIMIT 1"
 	return s.runGetOAuthAccessTokenQuery(query, accessToken)
 }
 
 // OAuthAccessTokenGetByCode retrieves token by code
-func (s *OAuthStore) OAuthAccessTokenGetByCode(code string) (*shared.OAuthAccessToken, error) {
+func (s *OAuthStore) OAuthAccessTokenGetByCode(code string) (*types.OAuthAccessToken, error) {
 
 	query := "SELECT " + oauthColumns + " FROM oauth_access_token WHERE code = ? LIMIT 1"
 	return s.runGetOAuthAccessTokenQuery(query, code)
 }
 
 // OAuthAccessTokenGetByRefresh retrieves token by refreshcode
-func (s *OAuthStore) OAuthAccessTokenGetByRefresh(refresh string) (*shared.OAuthAccessToken, error) {
+func (s *OAuthStore) OAuthAccessTokenGetByRefresh(refresh string) (*types.OAuthAccessToken, error) {
 
 	query := "SELECT " + oauthColumns + " FROM oauth_access_token WHERE refresh = ? LIMIT 1"
 	return s.runGetOAuthAccessTokenQuery(query, refresh)
 }
 
 // runGetOAuthAccessTokenQuery executes CQL query and returns resultset
-func (s *OAuthStore) runGetOAuthAccessTokenQuery(query, queryParameter string) (*shared.OAuthAccessToken, error) {
+func (s *OAuthStore) runGetOAuthAccessTokenQuery(query, queryParameter string) (*types.OAuthAccessToken, error) {
 
-	var accessToken shared.OAuthAccessToken
+	var accessToken types.OAuthAccessToken
 
 	timer := prometheus.NewTimer(s.db.metrics.LookupHistogram)
 	defer timer.ObserveDuration()
@@ -75,7 +74,7 @@ func (s *OAuthStore) runGetOAuthAccessTokenQuery(query, queryParameter string) (
 	iterable := s.db.CassandraSession.Query(query, queryParameter).Iter()
 	m := make(map[string]interface{})
 	for iterable.MapScan(m) {
-		accessToken = shared.OAuthAccessToken{
+		accessToken = types.OAuthAccessToken{
 			ClientID:         columnValueString(m, "client_id"),
 			UserID:           columnValueString(m, "user_id"),
 			RedirectURI:      columnValueString(m, "redirect_uri"),
@@ -103,7 +102,7 @@ func (s *OAuthStore) runGetOAuthAccessTokenQuery(query, queryParameter string) (
 }
 
 // OAuthAccessTokenCreate UPSERTs an organization in database
-func (s *OAuthStore) OAuthAccessTokenCreate(t *shared.OAuthAccessToken) error {
+func (s *OAuthStore) OAuthAccessTokenCreate(t *types.OAuthAccessToken) error {
 
 	// Add TTL to each inserted token so it will be expired by database itself.
 	//

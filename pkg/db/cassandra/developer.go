@@ -7,6 +7,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/erikbos/gatekeeper/pkg/shared"
+	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
 const (
@@ -43,12 +44,12 @@ func NewDeveloperStore(database *Database) *DeveloperStore {
 }
 
 // GetByOrganization retrieves all developer belonging to an organization
-func (s *DeveloperStore) GetByOrganization(organizationName string) ([]shared.Developer, error) {
+func (s *DeveloperStore) GetByOrganization(organizationName string) (types.Developers, error) {
 
 	query := "SELECT " + developerColumns + " FROM developers WHERE organization_name = ? ALLOW FILTERING"
 	developers, err := s.runGetDeveloperQuery(query, organizationName)
 	if err != nil {
-		return []shared.Developer{}, err
+		return types.Developers{}, err
 	}
 
 	if len(developers) == 0 {
@@ -77,12 +78,12 @@ func (s *DeveloperStore) GetCountByOrganization(organizationName string) int {
 }
 
 // GetByEmail retrieves a developer from database
-func (s *DeveloperStore) GetByEmail(developerOrganization, developerEmail string) (*shared.Developer, error) {
+func (s *DeveloperStore) GetByEmail(developerOrganization, developerEmail string) (*types.Developer, error) {
 
 	query := "SELECT " + developerColumns + " FROM developers WHERE organization_name = ? AND email = ? LIMIT 1 ALLOW FILTERING"
 	developers, err := s.runGetDeveloperQuery(query, developerOrganization, developerEmail)
 	if err != nil {
-		return &shared.Developer{}, err
+		return &types.Developer{}, err
 	}
 
 	if len(developers) == 0 {
@@ -95,7 +96,7 @@ func (s *DeveloperStore) GetByEmail(developerOrganization, developerEmail string
 }
 
 // GetByID retrieves a developer from database
-func (s *DeveloperStore) GetByID(developerID string) (*shared.Developer, error) {
+func (s *DeveloperStore) GetByID(developerID string) (*types.Developer, error) {
 
 	query := "SELECT " + developerColumns + " FROM developers WHERE developer_id = ? LIMIT 1"
 	developers, err := s.runGetDeveloperQuery(query, developerID)
@@ -113,9 +114,9 @@ func (s *DeveloperStore) GetByID(developerID string) (*shared.Developer, error) 
 }
 
 // runDeveloperQuery executes CQL query and returns resultset
-func (s *DeveloperStore) runGetDeveloperQuery(query string, queryParameters ...interface{}) ([]shared.Developer, error) {
+func (s *DeveloperStore) runGetDeveloperQuery(query string, queryParameters ...interface{}) (types.Developers, error) {
 
-	var developers []shared.Developer
+	var developers types.Developers
 
 	timer := prometheus.NewTimer(s.db.metrics.LookupHistogram)
 	defer timer.ObserveDuration()
@@ -124,10 +125,10 @@ func (s *DeveloperStore) runGetDeveloperQuery(query string, queryParameters ...i
 	iterable := s.db.CassandraSession.Query(query, queryParameters...).PageSize(100).Iter()
 	m := make(map[string]interface{})
 	for iterable.MapScan(m) {
-		developers = append(developers, shared.Developer{
+		developers = append(developers, types.Developer{
 			DeveloperID:      columnValueString(m, "developer_id"),
-			Apps:             shared.Developer{}.Apps.Unmarshal(columnValueString(m, "apps")),
-			Attributes:       shared.Developer{}.Attributes.Unmarshal(columnValueString(m, "attributes")),
+			Apps:             types.Developer{}.Apps.Unmarshal(columnValueString(m, "apps")),
+			Attributes:       types.Developer{}.Attributes.Unmarshal(columnValueString(m, "attributes")),
 			OrganizationName: columnValueString(m, "organization_name"),
 			Status:           columnValueString(m, "status"),
 			UserName:         columnValueString(m, "user_name"),
@@ -144,13 +145,13 @@ func (s *DeveloperStore) runGetDeveloperQuery(query string, queryParameters ...i
 	}
 	if err := iterable.Close(); err != nil {
 		log.Error(err)
-		return []shared.Developer{}, err
+		return types.Developers{}, err
 	}
 	return developers, nil
 }
 
 // UpdateByName UPSERTs a developer in database
-func (s *DeveloperStore) UpdateByName(dev *shared.Developer) error {
+func (s *DeveloperStore) UpdateByName(dev *types.Developer) error {
 
 	dev.Attributes.Tidy()
 	dev.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()

@@ -8,6 +8,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/erikbos/gatekeeper/pkg/shared"
+	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
 const (
@@ -42,13 +43,13 @@ func NewAPIProductStore(database *Database) *APIProductStore {
 }
 
 // GetAll retrieves all api products
-func (s *APIProductStore) GetAll() ([]shared.APIProduct, error) {
+func (s *APIProductStore) GetAll() (types.APIProducts, error) {
 
 	query := "SELECT " + apiProductsColumns + " FROM api_products"
 
 	apiproducts, err := s.runGetAPIProductQuery(query)
 	if err != nil {
-		return []shared.APIProduct{}, err
+		return types.APIProducts{}, err
 	}
 
 	if len(apiproducts) == 0 {
@@ -62,12 +63,12 @@ func (s *APIProductStore) GetAll() ([]shared.APIProduct, error) {
 }
 
 // GetByOrganization retrieves all api products belonging to an organization
-func (s *APIProductStore) GetByOrganization(organizationName string) ([]shared.APIProduct, error) {
+func (s *APIProductStore) GetByOrganization(organizationName string) (types.APIProducts, error) {
 	query := "SELECT " + apiProductsColumns + " FROM api_products WHERE organization_name = ? ALLOW FILTERING"
 
 	apiproducts, err := s.runGetAPIProductQuery(query, organizationName)
 	if err != nil {
-		return []shared.APIProduct{}, err
+		return types.APIProducts{}, err
 	}
 
 	if len(apiproducts) == 0 {
@@ -82,7 +83,7 @@ func (s *APIProductStore) GetByOrganization(organizationName string) ([]shared.A
 }
 
 // GetByName returns an apiproduct
-func (s *APIProductStore) GetByName(organizationName, apiproductName string) (*shared.APIProduct, error) {
+func (s *APIProductStore) GetByName(organizationName, apiproductName string) (*types.APIProduct, error) {
 
 	query := "SELECT " + apiProductsColumns + " FROM api_products WHERE organization_name = ? AND name = ? LIMIT 1"
 
@@ -101,8 +102,8 @@ func (s *APIProductStore) GetByName(organizationName, apiproductName string) (*s
 }
 
 // runGetAPIProductQuery executes CQL query and returns resultset
-func (s *APIProductStore) runGetAPIProductQuery(query string, queryParameters ...interface{}) ([]shared.APIProduct, error) {
-	var apiproducts []shared.APIProduct
+func (s *APIProductStore) runGetAPIProductQuery(query string, queryParameters ...interface{}) (types.APIProducts, error) {
+	var apiproducts types.APIProducts
 
 	timer := prometheus.NewTimer(s.db.metrics.LookupHistogram)
 	defer timer.ObserveDuration()
@@ -115,18 +116,18 @@ func (s *APIProductStore) runGetAPIProductQuery(query string, queryParameters ..
 	}
 	if iter.NumRows() == 0 {
 		_ = iter.Close()
-		return []shared.APIProduct{}, nil
+		return types.APIProducts{}, nil
 	}
 
 	m := make(map[string]interface{})
 	for iter.MapScan(m) {
-		apiproducts = append(apiproducts, shared.APIProduct{
+		apiproducts = append(apiproducts, types.APIProduct{
 			Name:             columnValueString(m, "name"),
 			DisplayName:      columnValueString(m, "display_name"),
 			Description:      m["description"].(string),
-			Attributes:       shared.APIProduct{}.Attributes.Unmarshal(columnValueString(m, "attributes")),
+			Attributes:       types.APIProduct{}.Attributes.Unmarshal(columnValueString(m, "attributes")),
 			RouteGroup:       m["route_group"].(string),
-			Paths:            shared.APIProduct{}.Paths.Unmarshal(columnValueString(m, "paths")),
+			Paths:            types.APIProduct{}.Paths.Unmarshal(columnValueString(m, "paths")),
 			Policies:         m["policies"].(string),
 			CreatedAt:        columnValueInt64(m, "created_at"),
 			CreatedBy:        columnValueString(m, "created_by"),
@@ -139,14 +140,14 @@ func (s *APIProductStore) runGetAPIProductQuery(query string, queryParameters ..
 
 	if err := iter.Close(); err != nil {
 		log.Error(err)
-		return []shared.APIProduct{}, err
+		return types.APIProducts{}, err
 	}
 
 	return apiproducts, nil
 }
 
 // UpdateByName UPSERTs an apiproduct in database
-func (s *APIProductStore) UpdateByName(p *shared.APIProduct) error {
+func (s *APIProductStore) UpdateByName(p *types.APIProduct) error {
 
 	p.Attributes.Tidy()
 	p.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()

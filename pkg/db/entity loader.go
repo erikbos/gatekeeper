@@ -7,6 +7,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/erikbos/gatekeeper/pkg/shared"
+	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
 // Entityloader contains up to date configuration of listeners, routes and clusters
@@ -14,9 +15,9 @@ type Entityloader struct {
 	db                    *Database                     // Database handle
 	configRefreshInterval time.Duration                 // Interval between database loads
 	notify                chan EntityChangeNotification // Notification channel to emit change events
-	listeners             []shared.Listener             // All listeners loaded from database
-	routes                []shared.Route                // All routes loaded from database
-	clusters              []shared.Cluster              // All clusters loaded from database
+	listeners             types.Listeners               // All listeners loaded from database
+	routes                types.Routes                  // All routes loaded from database
+	clusters              types.Clusters                // All clusters loaded from database
 	listenersLastUpdate   int64                         // Timestamp of most recent load of listeners
 	routesLastUpdate      int64                         // Timestamp of most recent load of routes
 	clustersLastUpdate    int64                         // Timestamp of most recent load of clusters
@@ -92,7 +93,7 @@ func (g *Entityloader) LoadContinously() {
 
 // checkForChangedListeners if the loaded list of listeners is shorter
 // or one entry has been updated
-func (g *Entityloader) checkForChangeListeners(loadedListeners []shared.Listener) bool {
+func (g *Entityloader) checkForChangeListeners(loadedListeners types.Listeners) bool {
 
 	// In case we have less routes one or more was deleted
 	if len(loadedListeners) < len(g.listeners) {
@@ -109,7 +110,7 @@ func (g *Entityloader) checkForChangeListeners(loadedListeners []shared.Listener
 	return false
 }
 
-func (g *Entityloader) updateListeners(newListeners []shared.Listener) {
+func (g *Entityloader) updateListeners(newListeners types.Listeners) {
 
 	g.mutex.Lock()
 	g.listeners = newListeners
@@ -119,7 +120,7 @@ func (g *Entityloader) updateListeners(newListeners []shared.Listener) {
 
 // checkForChangedRoutes if the loaded list of routes is shorter
 // or one entry has been updated
-func (g *Entityloader) checkForChangedRoutes(loadedRoutes []shared.Route) bool {
+func (g *Entityloader) checkForChangedRoutes(loadedRoutes types.Routes) bool {
 
 	// In case we have less routes one or more was deleted
 	if len(loadedRoutes) < len(g.routes) {
@@ -136,7 +137,7 @@ func (g *Entityloader) checkForChangedRoutes(loadedRoutes []shared.Route) bool {
 	return false
 }
 
-func (g *Entityloader) updateRoutes(newRoutes []shared.Route) {
+func (g *Entityloader) updateRoutes(newRoutes types.Routes) {
 
 	g.mutex.Lock()
 	g.routes = newRoutes
@@ -146,7 +147,7 @@ func (g *Entityloader) updateRoutes(newRoutes []shared.Route) {
 
 // checkForChangeClusters checks if the loaded list of clusters is shorter
 // or one entry has been updated
-func (g *Entityloader) checkForChangedClusters(loadedClusters []shared.Cluster) bool {
+func (g *Entityloader) checkForChangedClusters(loadedClusters types.Clusters) bool {
 
 	// In case we have less routes one or more was deleted
 	if len(loadedClusters) < len(g.clusters) {
@@ -163,7 +164,7 @@ func (g *Entityloader) checkForChangedClusters(loadedClusters []shared.Cluster) 
 	return false
 }
 
-func (g *Entityloader) updateClusters(newClusters []shared.Cluster) {
+func (g *Entityloader) updateClusters(newClusters types.Clusters) {
 
 	g.mutex.Lock()
 	g.clusters = newClusters
@@ -172,19 +173,19 @@ func (g *Entityloader) updateClusters(newClusters []shared.Cluster) {
 }
 
 // GetListeners returns all listeners
-func (g *Entityloader) GetListeners() []shared.Listener {
+func (g *Entityloader) GetListeners() types.Listeners {
 
 	return g.listeners
 }
 
 // GetRoutes returns all listeners
-func (g *Entityloader) GetRoutes() []shared.Route {
+func (g *Entityloader) GetRoutes() types.Routes {
 
 	return g.routes
 }
 
 // GetClusters returns number of clusters
-func (g *Entityloader) GetClusters() []shared.Cluster {
+func (g *Entityloader) GetClusters() types.Clusters {
 
 	return g.clusters
 }

@@ -9,6 +9,7 @@ import (
 
 	"github.com/erikbos/gatekeeper/pkg/db"
 	"github.com/erikbos/gatekeeper/pkg/shared"
+	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
 // TokenStore holds our database config
@@ -31,7 +32,7 @@ func (tokenstore *TokenStore) Create(info oauth2.TokenInfo) (err error) {
 
 	log.Debugf("OAuthTokenStore: Create: %s", info.GetAccess())
 
-	token := shared.OAuthAccessToken{
+	token := types.OAuthAccessToken{
 		// FIXME do we need all fields
 		ClientID:         info.GetClientID(),
 		UserID:           info.GetUserID(),
@@ -103,7 +104,7 @@ func (tokenstore *TokenStore) GetByRefresh(refresh string) (oauth2.TokenInfo, er
 	return toOAuthTokenStore(token)
 }
 
-func toOAuthTokenStore(token *shared.OAuthAccessToken) (oauth2.TokenInfo, error) {
+func toOAuthTokenStore(token *types.OAuthAccessToken) (oauth2.TokenInfo, error) {
 
 	return &models.Token{
 		// FIXME do we need all fields

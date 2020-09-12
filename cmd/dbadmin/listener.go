@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/erikbos/gatekeeper/pkg/shared"
+	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
 // registerListenerRoutes registers all listeners we handle
@@ -87,7 +88,7 @@ func (s *server) GetListenerAttributeByName(c *gin.Context) {
 // PostCreateListener creates a virtual host
 func (s *server) PostCreateListener(c *gin.Context) {
 
-	var newListener shared.Listener
+	var newListener types.Listener
 	if err := c.ShouldBindJSON(&newListener); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
@@ -122,7 +123,7 @@ func (s *server) PostListener(c *gin.Context) {
 		return
 	}
 
-	var updateRequest shared.Listener
+	var updateRequest types.Listener
 	if err := c.ShouldBindJSON(&updateRequest); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
@@ -155,7 +156,7 @@ func (s *server) PostListenerAttributes(c *gin.Context) {
 	}
 
 	var body struct {
-		Attributes shared.Attributes `json:"attribute"`
+		Attributes types.Attributes `json:"attribute"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)

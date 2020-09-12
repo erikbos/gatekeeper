@@ -8,6 +8,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/erikbos/gatekeeper/pkg/shared"
+	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
 const (
@@ -37,13 +38,13 @@ func NewOrganizationStore(database *Database) *OrganizationStore {
 }
 
 // GetAll retrieves all organizations
-func (s *OrganizationStore) GetAll() ([]shared.Organization, error) {
+func (s *OrganizationStore) GetAll() (types.Organizations, error) {
 
 	// FIXME this ugly workaround to have to pass an argument
 	query := "SELECT " + organizationColumns + " FROM organizations ALLOW FILTERING"
 	organizations, err := s.runGetOrganizationQuery(query, "")
 	if err != nil {
-		return []shared.Organization{}, fmt.Errorf("Cannot retrieve list of organizations (%s)", err)
+		return types.Organizations{}, fmt.Errorf("Cannot retrieve list of organizations (%s)", err)
 	}
 
 	if len(organizations) == 0 {
@@ -56,7 +57,7 @@ func (s *OrganizationStore) GetAll() ([]shared.Organization, error) {
 }
 
 // GetByName retrieves an organization
-func (s *OrganizationStore) GetByName(organizationName string) (*shared.Organization, error) {
+func (s *OrganizationStore) GetByName(organizationName string) (*types.Organization, error) {
 
 	query := "SELECT " + organizationColumns + " FROM organizations WHERE name = ? LIMIT 1"
 	organizations, err := s.runGetOrganizationQuery(query, organizationName)
@@ -74,8 +75,8 @@ func (s *OrganizationStore) GetByName(organizationName string) (*shared.Organiza
 }
 
 // runGetOrganizationQuery executes CQL query and returns resultset
-func (s *OrganizationStore) runGetOrganizationQuery(query, queryParameter string) ([]shared.Organization, error) {
-	var organizations []shared.Organization
+func (s *OrganizationStore) runGetOrganizationQuery(query, queryParameter string) (types.Organizations, error) {
+	var organizations types.Organizations
 
 	timer := prometheus.NewTimer(s.db.metrics.LookupHistogram)
 	defer timer.ObserveDuration()
@@ -89,15 +90,15 @@ func (s *OrganizationStore) runGetOrganizationQuery(query, queryParameter string
 
 	if iter.NumRows() == 0 {
 		_ = iter.Close()
-		return []shared.Organization{}, nil
+		return types.Organizations{}, nil
 	}
 
 	m := make(map[string]interface{})
 	for iter.MapScan(m) {
-		organizations = append(organizations, shared.Organization{
+		organizations = append(organizations, types.Organization{
 			Name:           columnValueString(m, "name"),
 			DisplayName:    columnValueString(m, "display_name"),
-			Attributes:     shared.Organization{}.Attributes.Unmarshal(columnValueString(m, "attributes")),
+			Attributes:     types.Organization{}.Attributes.Unmarshal(columnValueString(m, "attributes")),
 			CreatedAt:      columnValueInt64(m, "created_at"),
 			CreatedBy:      columnValueString(m, "created_by"),
 			LastmodifiedAt: columnValueInt64(m, "lastmodified_at"),
@@ -107,13 +108,13 @@ func (s *OrganizationStore) runGetOrganizationQuery(query, queryParameter string
 	}
 	if err := iter.Close(); err != nil {
 		log.Error(err)
-		return []shared.Organization{}, err
+		return types.Organizations{}, err
 	}
 	return organizations, nil
 }
 
 // UpdateByName UPSERTs an organization
-func (s *OrganizationStore) UpdateByName(o *shared.Organization) error {
+func (s *OrganizationStore) UpdateByName(o *types.Organization) error {
 
 	o.Attributes.Tidy()
 	o.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()

@@ -1,20 +1,18 @@
 package db
 
-import (
-	"github.com/erikbos/gatekeeper/pkg/shared"
-)
+import "github.com/erikbos/gatekeeper/pkg/types"
 
 type (
 	// OrganizationStore the organization information storage interface
 	OrganizationStore interface {
 		// GetAll retrieves all organizations
-		GetAll() ([]shared.Organization, error)
+		GetAll() (types.Organizations, error)
 
 		// GetByName retrieves an organization
-		GetByName(organizationName string) (*shared.Organization, error)
+		GetByName(organizationName string) (*types.Organization, error)
 
 		// UpdateByName UPSERTs an organization
-		UpdateByName(o *shared.Organization) error
+		UpdateByName(o *types.Organization) error
 
 		// DeleteByName deletes an organization
 		DeleteByName(organizationToDelete string) error

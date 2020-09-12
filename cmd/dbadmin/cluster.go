@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/erikbos/gatekeeper/pkg/shared"
+	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
 // registerClusterRoutes registers all routes we handle
@@ -87,7 +88,7 @@ func (s *server) GetClusterAttributeByName(c *gin.Context) {
 // PostCreateCluster creates a cluster
 func (s *server) PostCreateCluster(c *gin.Context) {
 
-	var newCluster shared.Cluster
+	var newCluster types.Cluster
 	if err := c.ShouldBindJSON(&newCluster); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
@@ -120,7 +121,7 @@ func (s *server) PostCluster(c *gin.Context) {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
 	}
-	var updateRequest shared.Cluster
+	var updateRequest types.Cluster
 	if err := c.ShouldBindJSON(&updateRequest); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
@@ -152,7 +153,7 @@ func (s *server) PostClusterAttributes(c *gin.Context) {
 	}
 
 	var body struct {
-		Attributes shared.Attributes `json:"attribute"`
+		Attributes types.Attributes `json:"attribute"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)

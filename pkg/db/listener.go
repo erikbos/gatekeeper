@@ -1,20 +1,18 @@
 package db
 
-import (
-	"github.com/erikbos/gatekeeper/pkg/shared"
-)
+import "github.com/erikbos/gatekeeper/pkg/types"
 
 type (
 	// ListenerStore is the listener information storage interface
 	ListenerStore interface {
 		// GetAll retrieves all listeners
-		GetAll() ([]shared.Listener, error)
+		GetAll() (types.Listeners, error)
 
 		// GetByName retrieves a listener
-		GetByName(listener string) (*shared.Listener, error)
+		GetByName(listener string) (*types.Listener, error)
 
 		// UpdateByName updates a listener
-		UpdateByName(vhost *shared.Listener) error
+		UpdateByName(vhost *types.Listener) error
 
 		// DeleteByName deletes a listener
 		DeleteByName(listenerToDelete string) error

@@ -59,7 +59,7 @@ func (x *XDS) Start() {
 	for {
 		select {
 		case n := <-x.notify:
-			log.Infof("Database change notify received for entity group '%s'", n.Resource)
+			log.Infof("Database change notify received for entity '%s'", n.Resource)
 
 			x.server.metrics.xdsDeployments.WithLabelValues(n.Resource).Inc()
 

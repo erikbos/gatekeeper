@@ -8,7 +8,7 @@ import (
 	"github.com/coocood/freecache"
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/erikbos/gatekeeper/pkg/shared"
+	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
 // cacheConfig contains our start configuration
@@ -46,7 +46,7 @@ func getDeveloperCacheKey(id *string) []byte {
 }
 
 // StoreDeveloper stores a Developer in cache
-func (c *Cache) StoreDeveloper(developerID *string, developer *shared.Developer) error {
+func (c *Cache) StoreDeveloper(developerID *string, developer *types.Developer) error {
 
 	if c.freecache == nil {
 		return nil
@@ -60,7 +60,7 @@ func (c *Cache) StoreDeveloper(developerID *string, developer *shared.Developer)
 }
 
 // GetDeveloper gets a Developer from cache
-func (c *Cache) GetDeveloper(developerID *string) (*shared.Developer, error) {
+func (c *Cache) GetDeveloper(developerID *string) (*types.Developer, error) {
 
 	if c.freecache == nil {
 		return nil, nil
@@ -68,7 +68,7 @@ func (c *Cache) GetDeveloper(developerID *string) (*shared.Developer, error) {
 
 	cached, err := c.freecache.Get(getDeveloperCacheKey(developerID))
 	if err == nil && cached != nil {
-		var developer shared.Developer
+		var developer types.Developer
 
 		err = gob.NewDecoder(bytes.NewBuffer(cached)).Decode(&developer)
 		if err == nil {
@@ -88,7 +88,7 @@ func getDeveloperAppCacheKey(id *string) []byte {
 }
 
 // StoreDeveloperApp stores a Developer in cache
-func (c *Cache) StoreDeveloperApp(AppID *string, app *shared.DeveloperApp) error {
+func (c *Cache) StoreDeveloperApp(AppID *string, app *types.DeveloperApp) error {
 
 	if c.freecache == nil {
 		return nil
@@ -102,7 +102,7 @@ func (c *Cache) StoreDeveloperApp(AppID *string, app *shared.DeveloperApp) error
 }
 
 // GetDeveloperApp gets an App from cache
-func (c *Cache) GetDeveloperApp(AppID *string) (*shared.DeveloperApp, error) {
+func (c *Cache) GetDeveloperApp(AppID *string) (*types.DeveloperApp, error) {
 
 	if c.freecache == nil {
 		return nil, nil
@@ -110,7 +110,7 @@ func (c *Cache) GetDeveloperApp(AppID *string) (*shared.DeveloperApp, error) {
 
 	cached, err := c.freecache.Get(getDeveloperAppCacheKey(AppID))
 	if err == nil && cached != nil {
-		var app shared.DeveloperApp
+		var app types.DeveloperApp
 
 		err = gob.NewDecoder(bytes.NewBuffer(cached)).Decode(&app)
 		if err == nil {
@@ -130,7 +130,7 @@ func getDeveloperAppKeyCacheKey(id *string) []byte {
 }
 
 // StoreDeveloperAppKey stores a DeveloperAppKey in cache
-func (c *Cache) StoreDeveloperAppKey(apikey *string, appkey *shared.DeveloperAppKey) error {
+func (c *Cache) StoreDeveloperAppKey(apikey *string, appkey *types.DeveloperAppKey) error {
 
 	if c.freecache == nil {
 		return nil
@@ -144,7 +144,7 @@ func (c *Cache) StoreDeveloperAppKey(apikey *string, appkey *shared.DeveloperApp
 }
 
 // GetDeveloperAppKey gets an apikey from cache
-func (c *Cache) GetDeveloperAppKey(apikey *string) (*shared.DeveloperAppKey, error) {
+func (c *Cache) GetDeveloperAppKey(apikey *string) (*types.DeveloperAppKey, error) {
 
 	if c.freecache == nil {
 		return nil, nil
@@ -152,7 +152,7 @@ func (c *Cache) GetDeveloperAppKey(apikey *string) (*shared.DeveloperAppKey, err
 
 	cached, err := c.freecache.Get(getDeveloperAppKeyCacheKey(apikey))
 	if err == nil && cached != nil {
-		var apikey shared.DeveloperAppKey
+		var apikey types.DeveloperAppKey
 
 		err = gob.NewDecoder(bytes.NewBuffer(cached)).Decode(&apikey)
 		if err == nil {
@@ -172,7 +172,7 @@ func getAPIProductCacheKey(org, id *string) []byte {
 }
 
 // StoreAPIProduct stores an APIProduct in cache
-func (c *Cache) StoreAPIProduct(org, productname *string, apiproduct *shared.APIProduct) error {
+func (c *Cache) StoreAPIProduct(org, productname *string, apiproduct *types.APIProduct) error {
 
 	if c.freecache == nil {
 		return nil
@@ -186,7 +186,7 @@ func (c *Cache) StoreAPIProduct(org, productname *string, apiproduct *shared.API
 }
 
 // GetAPIProduct gets an APIProduct from cache
-func (c *Cache) GetAPIProduct(org, productname *string) (*shared.APIProduct, error) {
+func (c *Cache) GetAPIProduct(org, productname *string) (*types.APIProduct, error) {
 
 	if c.freecache == nil {
 		return nil, nil
@@ -194,7 +194,7 @@ func (c *Cache) GetAPIProduct(org, productname *string) (*shared.APIProduct, err
 
 	cached, err := c.freecache.Get(getAPIProductCacheKey(org, productname))
 	if err == nil && cached != nil {
-		var apiproduct shared.APIProduct
+		var apiproduct types.APIProduct
 
 		err = gob.NewDecoder(bytes.NewBuffer(cached)).Decode(&apiproduct)
 		if err == nil {
@@ -212,7 +212,7 @@ func getAccessTokenCacheKey(name *string) []byte {
 }
 
 // StoreAccessToken stores an OAuthAccessToken in cache
-func (c *Cache) StoreAccessToken(name *string, accessToken *shared.OAuthAccessToken) error {
+func (c *Cache) StoreAccessToken(name *string, accessToken *types.OAuthAccessToken) error {
 
 	if c.freecache == nil {
 		return nil
@@ -226,7 +226,7 @@ func (c *Cache) StoreAccessToken(name *string, accessToken *shared.OAuthAccessTo
 }
 
 // GetAccessToken gets an OAuthAccessToken from cache
-func (c *Cache) GetAccessToken(name *string) (*shared.OAuthAccessToken, error) {
+func (c *Cache) GetAccessToken(name *string) (*types.OAuthAccessToken, error) {
 
 	if c.freecache == nil {
 		return nil, nil
@@ -234,7 +234,7 @@ func (c *Cache) GetAccessToken(name *string) (*shared.OAuthAccessToken, error) {
 
 	cached, err := c.freecache.Get(getAccessTokenCacheKey(name))
 	if err == nil && cached != nil {
-		var accessToken shared.OAuthAccessToken
+		var accessToken types.OAuthAccessToken
 
 		err = gob.NewDecoder(bytes.NewBuffer(cached)).Decode(&accessToken)
 		if err == nil {

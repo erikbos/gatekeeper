@@ -7,7 +7,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"sort"
 	"strings"
 	"text/template"
 	"time"
@@ -17,6 +16,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/erikbos/gatekeeper/pkg/shared"
+	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
 type webAdminConfig struct {
@@ -118,26 +118,10 @@ func (s *server) showHTTPForwarding(c *gin.Context) {
 		"CertificateDetails": HTMLCertificateDetails,
 	}
 
-	// Sort listeners tes by routegroup, paths
-	sort.SliceStable(listeners, func(i, j int) bool {
-		if listeners[i].Port == listeners[j].Port {
-			return listeners[i].Name < listeners[j].Name
-		}
-		return listeners[i].Port < listeners[j].Port
-	})
-
-	// Sort routes by routegroup, paths
-	sort.SliceStable(routes, func(i, j int) bool {
-		if routes[i].RouteGroup == routes[j].RouteGroup {
-			return routes[i].Path < routes[j].Path
-		}
-		return routes[i].RouteGroup < routes[j].RouteGroup
-	})
-
-	// Sort clusters by name
-	sort.SliceStable(clusters, func(i, j int) bool {
-		return clusters[i].Name < clusters[j].Name
-	})
+	// Order all entries to make the overview more readable
+	listeners.Sort()
+	routes.Sort()
+	clusters.Sort()
 
 	t, err := template.New("page").Funcs(templateFunctions).Parse(pageTemplate)
 	if err != nil {
@@ -145,10 +129,10 @@ func (s *server) showHTTPForwarding(c *gin.Context) {
 		return
 	}
 	templateVariables := struct {
-		Listeners   []shared.Listener
-		Routes      []shared.Route
-		Clusters    []shared.Cluster
-		APIProducts []shared.APIProduct
+		Listeners   types.Listeners
+		Routes      types.Routes
+		Clusters    types.Clusters
+		APIProducts types.APIProducts
 	}{
 		listeners, routes, clusters, apiproducts,
 	}
@@ -387,7 +371,7 @@ func HMTLOrderedList(stringToSplit string) string {
 }
 
 // HTMLCertificateDetails prints summary of certificate attributes
-func HTMLCertificateDetails(attribute shared.Attribute) string {
+func HTMLCertificateDetails(attribute types.Attribute) string {
 
 	switch attribute.Name {
 	case "TLSCertificateKey":

@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/erikbos/gatekeeper/pkg/shared"
+	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
 // registerAPIProductRoutes registers all routes we handle
@@ -92,7 +93,7 @@ func (s *server) GetAPIProductAttributeByName(c *gin.Context) {
 // PostCreateAPIProduct creates a new APIProduct
 func (s *server) PostCreateAPIProduct(c *gin.Context) {
 
-	var newAPIProduct shared.APIProduct
+	var newAPIProduct types.APIProduct
 	if err := c.ShouldBindJSON(&newAPIProduct); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
@@ -129,7 +130,7 @@ func (s *server) PostAPIProduct(c *gin.Context) {
 		return
 	}
 
-	var updateRequest shared.APIProduct
+	var updateRequest types.APIProduct
 	if err := c.ShouldBindJSON(&updateRequest); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)
 		return
@@ -162,7 +163,7 @@ func (s *server) PostAPIProductAttributes(c *gin.Context) {
 	}
 
 	var body struct {
-		Attributes shared.Attributes `json:"attribute"`
+		Attributes types.Attributes `json:"attribute"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
 		returnJSONMessage(c, http.StatusBadRequest, err)

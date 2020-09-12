@@ -8,6 +8,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/erikbos/gatekeeper/pkg/shared"
+	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
 const (
@@ -39,17 +40,17 @@ func NewClusterStore(database *Database) *ClusterStore {
 }
 
 // GetAll retrieves all clusters
-func (s *ClusterStore) GetAll() ([]shared.Cluster, error) {
+func (s *ClusterStore) GetAll() (types.Clusters, error) {
 
 	query := "SELECT " + clusterColumns + " FROM clusters"
 	clusters, err := s.runGetClusterQuery(query)
 	if err != nil {
-		return []shared.Cluster{}, err
+		return types.Clusters{}, err
 	}
 
 	if len(clusters) == 0 {
 		s.db.metrics.QueryMiss(clusterMetricLabel)
-		return []shared.Cluster{}, errors.New("Can not retrieve list of clusters")
+		return types.Clusters{}, errors.New("Can not retrieve list of clusters")
 	}
 
 	s.db.metrics.QueryHit(clusterMetricLabel)
@@ -57,7 +58,7 @@ func (s *ClusterStore) GetAll() ([]shared.Cluster, error) {
 }
 
 // GetByName retrieves a cluster from database
-func (s *ClusterStore) GetByName(clusterName string) (*shared.Cluster, error) {
+func (s *ClusterStore) GetByName(clusterName string) (*types.Cluster, error) {
 
 	query := "SELECT " + clusterColumns + " FROM clusters WHERE name = ? LIMIT 1"
 	clusters, err := s.runGetClusterQuery(query, clusterName)
@@ -76,8 +77,8 @@ func (s *ClusterStore) GetByName(clusterName string) (*shared.Cluster, error) {
 }
 
 // runGetClusterQuery executes CQL query and returns resultset
-func (s *ClusterStore) runGetClusterQuery(query string, queryParameters ...interface{}) ([]shared.Cluster, error) {
-	var clusters []shared.Cluster
+func (s *ClusterStore) runGetClusterQuery(query string, queryParameters ...interface{}) (types.Clusters, error) {
+	var clusters types.Clusters
 
 	timer := prometheus.NewTimer(s.db.metrics.LookupHistogram)
 	defer timer.ObserveDuration()
@@ -85,12 +86,12 @@ func (s *ClusterStore) runGetClusterQuery(query string, queryParameters ...inter
 	iter := s.db.CassandraSession.Query(query, queryParameters...).Iter()
 	m := make(map[string]interface{})
 	for iter.MapScan(m) {
-		clusters = append(clusters, shared.Cluster{
+		clusters = append(clusters, types.Cluster{
 			Name:           columnValueString(m, "name"),
 			DisplayName:    columnValueString(m, "display_name"),
 			HostName:       columnValueString(m, "host_name"),
 			Port:           columnValueInt(m, "port"),
-			Attributes:     shared.Cluster{}.Attributes.Unmarshal(columnValueString(m, "attributes")),
+			Attributes:     types.Cluster{}.Attributes.Unmarshal(columnValueString(m, "attributes")),
 			CreatedAt:      columnValueInt64(m, "created_at"),
 			CreatedBy:      columnValueString(m, "created_by"),
 			LastmodifiedAt: columnValueInt64(m, "lastmodified_at"),
@@ -101,13 +102,13 @@ func (s *ClusterStore) runGetClusterQuery(query string, queryParameters ...inter
 	// In case query failed we return query error
 	if err := iter.Close(); err != nil {
 		log.Error(err)
-		return []shared.Cluster{}, err
+		return types.Clusters{}, err
 	}
 	return clusters, nil
 }
 
 // UpdateByName UPSERTs an cluster in database
-func (s *ClusterStore) UpdateByName(c *shared.Cluster) error {
+func (s *ClusterStore) UpdateByName(c *types.Cluster) error {
 
 	c.Attributes.Tidy()
 	c.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
