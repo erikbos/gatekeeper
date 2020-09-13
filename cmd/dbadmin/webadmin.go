@@ -197,8 +197,7 @@ ol {
 <th>Attributes</th>
 <th>Policies</th>
 <th>RouteGroup</th>
-<th>LastmodifiedAt</th>
-<th>LastmodifiedBy</th>
+<th>Lastmodified</th>
 </tr>
 
 {{range $listener := $listeners}}
@@ -229,8 +228,7 @@ ol {
 </td>
 <td>{{$listener.Policies | OrderedList}}</td>
 <td>{{$listener.RouteGroup}}</td>
-<td>{{$listener.LastmodifiedAt | ISO8601}}</td>
-<td>{{$listener.LastmodifiedBy}}</td>
+<td>{{$listener.LastmodifiedAt | ISO8601}} <br> {{$listener.LastmodifiedBy}}</td>
 </tr>
 {{end}}
 
@@ -247,8 +245,7 @@ ol {
 <th>Path</th>
 <th>PathType</th>
 <th>Attributes</th>
-<th>LastmodifiedAt</th>
-<th>LastmodifiedBy</th>
+<th>Lastmodified</th>
 </tr>
 
 {{range $r := $routes}}
@@ -273,8 +270,7 @@ ol {
 {{end}}
 </ul>
 </td>
-<td>{{$r.LastmodifiedAt | ISO8601}}</td>
-<td>{{$r.LastmodifiedBy}}</td>
+<td>{{$r.LastmodifiedAt | ISO8601}} <br> {{$r.LastmodifiedBy}}</td>
 </tr>
 {{end}}
 </table>
@@ -289,8 +285,7 @@ ol {
 <th>HostName</th>
 <th>Port</th>
 <th>Attributes</th>
-<th>LastmodifiedAt</th>
-<th>LastmodifiedBy</th>
+<th>Lastmodified</th>
 </tr>
 
 {{range $c := $clusters}}
@@ -306,8 +301,7 @@ ol {
 {{end}}
 </ul>
 </td>
-<td>{{$c.LastmodifiedAt | ISO8601}}</td>
-<td>{{$c.LastmodifiedBy}}</td>
+<td>{{$c.LastmodifiedAt | ISO8601}} <br> {{$c.LastmodifiedBy}}</td>
 </tr>
 {{end}}
 </table>
@@ -325,8 +319,7 @@ ol {
 <th>Paths</th>
 <th>Attributes</th>
 <th>Policies</th>
-<th>LastmodifiedAt</th>
-<th>LastmodifiedBy</th>
+<th>Lastmodified</th>
 </tr>
 
 {{range $a := $apiproducts}}
@@ -351,8 +344,7 @@ ol {
 </ul>
 </td>
 <td>{{$a.Policies | OrderedList}}</td>
-<td>{{$a.LastmodifiedAt | ISO8601}}</td>
-<td>{{$a.LastmodifiedBy}}</td>
+<td>{{$a.LastmodifiedAt | ISO8601}} <br> {{$a.LastmodifiedBy}}</td>
 </tr>
 {{end}}
 </table>
