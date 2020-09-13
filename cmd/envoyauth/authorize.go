@@ -212,10 +212,12 @@ func buildHeadersList(headers map[string]string) []*core.HeaderValueOption {
 	return headerList
 }
 
-// buildDynamicMetadataList creates struct for all additional metadata to be returned when accepting a request
-// purpose is:
-// 1) have accesslog log additional fields which are not susposed to go upstream as HTTP headers
-// 2) to provide configuration to ratelimiter filter
+// buildDynamicMetadataList creates struct for all additional metadata to be returned when accepting a request.
+//
+// Potential use cases:
+// 1) insert metadata into upstream headers using %DYNAMIC_METADATA%
+// 2) have accesslog log metadata which are not susposed to go upstream as HTTP headers
+// 3) to provide configuration to ratelimiter filter
 func buildDynamicMetadataList(metadata map[string]string) *structpb.Struct {
 
 	if len(metadata) == 0 {

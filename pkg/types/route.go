@@ -49,13 +49,13 @@ const (
 	// HTTP scheme when generating a redirect
 	AttributeRedirectScheme = "RedirectScheme"
 
-	// hostname when generating a redirect
+	// Hostname when generating a redirect
 	AttributeRedirectHostName = "RedirectHostName"
 
-	// port when generating a redirect
+	// Port when generating a redirect
 	AttributeRedirectPort = "RedirectPort"
 
-	// path when generating a redirect
+	// Path when generating a redirect
 	AttributeRedirectPath = "RedirectPath"
 
 	// Enable removal of query parameters when redirecting
@@ -82,7 +82,10 @@ const (
 	// Host header to set when forwarding to upstream cluster
 	AttributeHostHeader = "HostHeader"
 
-	// Basic authentication header to set when contact upstream cluster
+	// Additional header(s) to set before forwarding upstream
+	AttributeHeaders = "Headers"
+
+	// Basic authentication header to set before forwarding upstream
 	AttributeBasicAuth = "BasicAuth"
 
 	// Conditions under which retry takes place
@@ -152,6 +155,7 @@ var validRouteAttributes = map[string]bool{
 	AttributeCORSExposeHeaders:        true,
 	AttributeCORSMaxAge:               true,
 	AttributeHostHeader:               true,
+	AttributeHeaders:                  true,
 	AttributeBasicAuth:                true,
 	AttributeRetryOn:                  true,
 	AttributePerTryTimeout:            true,

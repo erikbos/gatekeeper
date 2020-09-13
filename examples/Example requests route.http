@@ -101,6 +101,10 @@ content-type: application/json
         "value": "www.example.com"
     },
     {
+        "name": "Headers",
+        "value": "service=public!appid=%DYNAMIC_METADATA([\"envoy.filters.http.ext_authz\", \"app.id\"])%"
+    },
+    {
         "name": "NumRetries",
         "value": "3"
     },

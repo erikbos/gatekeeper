@@ -125,7 +125,8 @@ func (s *server) buildEnvoyRoute(routeEntry types.Route) *route.Route {
 
 	// In case route-level attributes exist we might additional upstream headers
 	upstreamHeaders := make(map[string]string)
-	handleBasicAuthAttribute(routeEntry, upstreamHeaders)
+	buildUpstreamHeaders(routeEntry, upstreamHeaders)
+	buildBasicAuth(routeEntry, upstreamHeaders)
 	envoyRoute.RequestHeadersToAdd = buildHeadersList(upstreamHeaders)
 
 	return envoyRoute
@@ -428,7 +429,21 @@ func buildRouteActionRedirectResponse(routeEntry types.Route) *route.Route_Redir
 	return &response
 }
 
-func handleBasicAuthAttribute(routeEntry types.Route, headersToAdd map[string]string) {
+func buildUpstreamHeaders(routeEntry types.Route, headersToAdd map[string]string) {
+
+	headers, err := routeEntry.Attributes.Get(types.AttributeHeaders)
+	if err != nil {
+		return
+	}
+	// TODO we use ! as separator for multiple headers...
+	for _, header := range strings.Split(headers, "!") {
+		if headervalue := strings.Split(header, "="); len(headervalue) == 2 {
+			headersToAdd[headervalue[0]] = headervalue[1]
+		}
+	}
+}
+
+func buildBasicAuth(routeEntry types.Route, headersToAdd map[string]string) {
 
 	usernamePassword, err := routeEntry.Attributes.Get(types.AttributeBasicAuth)
 	if err == nil && usernamePassword != "" {
