@@ -1,6 +1,7 @@
 package cassandra
 
 import (
+	"crypto/tls"
 	"fmt"
 	"time"
 
@@ -97,8 +98,12 @@ func buildClusterConfig(config DatabaseConfig) *gocql.ClusterConfig {
 	clusterConfig.Port = config.Port
 
 	if config.TLS.Enable {
-		// Empty struct to enable TLS
-		clusterConfig.SslOpts = &gocql.SslOptions{}
+		// Enable TLS, minimum TLS1.2
+		clusterConfig.SslOpts = &gocql.SslOptions{
+			Config: &tls.Config{
+				MinVersion: tls.VersionTLS12,
+			},
+		}
 
 		if config.TLS.Capath != "" {
 			clusterConfig.SslOpts.CaPath = config.TLS.Capath
