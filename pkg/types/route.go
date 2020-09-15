@@ -32,10 +32,10 @@ const (
 	AttributeWeightedClusters = "WeightedClusters"
 
 	// Enable authentication via extauthz
-	Authentication = "Authentication"
+	AttributeAuthentication = "Authentication"
 
-	// Disable ratelimiting of request
-	AttributeDisableRateLimiter = "DisableRateLimiter"
+	// Enable ratelimiting
+	AttributeRateLimiting = "RateLimiting"
 
 	// Return an arbitrary HTTP response directly, without proxying
 	AttributeDirectResponseStatusCode = "DirectResponseStatusCode"
@@ -144,8 +144,8 @@ func (r *Route) ConfigCheck() error {
 var validRouteAttributes = map[string]bool{
 	AttributeCluster:                  true,
 	AttributeWeightedClusters:         true,
-	Authentication:                    true,
-	AttributeDisableRateLimiter:       true,
+	AttributeAuthentication:           true,
+	AttributeRateLimiting:             true,
 	AttributeDirectResponseStatusCode: true,
 	AttributeDirectResponseBody:       true,
 	AttributePrefixRewrite:            true,

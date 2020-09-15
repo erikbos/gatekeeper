@@ -469,13 +469,18 @@ func buildHeadersList(headers map[string]string) []*core.HeaderValueOption {
 	return headerList
 }
 
+// buildRateLimits returns ratelimit configuration for a route
 func buildRateLimits(routeEntry types.Route) []*route.RateLimit {
 
-	value, err := routeEntry.Attributes.Get(types.AttributeDisableRateLimiter)
-	if err == nil && value == types.AttributeValueTrue {
+	// In case attribute RateLimiting does not exist or is not set to true
+	// no ratelimiting enabled
+	value, err := routeEntry.Attributes.Get(types.AttributeRateLimiting)
+	if err != nil || value != types.AttributeValueTrue {
 		return nil
 	}
 
+	// Enable ratelimiting
+	// TOD (fix configuration)
 	return []*route.RateLimit{{
 		Actions: []*route.RateLimit_Action{{
 			ActionSpecifier: &route.RateLimit_Action_DynamicMetadata{
@@ -572,7 +577,7 @@ func perRouteAuthzFilterConfig(routeEntry types.Route) *anypb.Any {
 
 	// In case attribute AuthzAuthentication=true is set for this route
 	// we enable authz on this route by not configuring filter settings for this route
-	value, err := routeEntry.Attributes.Get(types.Authentication)
+	value, err := routeEntry.Attributes.Get(types.AttributeAuthentication)
 	if err == nil && value == types.AttributeValueTrue {
 		return nil
 	}
