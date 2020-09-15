@@ -31,8 +31,8 @@ const (
 	// Weighted list of clusters to load balance requests across
 	AttributeWeightedClusters = "WeightedClusters"
 
-	// Disable request authentication via extauthz
-	AttributeDisableAuthentication = "DisableAuthentication"
+	// Enable authentication via extauthz
+	Authentication = "Authentication"
 
 	// Disable ratelimiting of request
 	AttributeDisableRateLimiter = "DisableRateLimiter"
@@ -144,7 +144,7 @@ func (r *Route) ConfigCheck() error {
 var validRouteAttributes = map[string]bool{
 	AttributeCluster:                  true,
 	AttributeWeightedClusters:         true,
-	AttributeDisableAuthentication:    true,
+	Authentication:                    true,
 	AttributeDisableRateLimiter:       true,
 	AttributeDirectResponseStatusCode: true,
 	AttributeDirectResponseBody:       true,

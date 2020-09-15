@@ -17,6 +17,7 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
 	log "github.com/sirupsen/logrus"
+	"google.golang.org/protobuf/types/known/anypb"
 
 	"github.com/erikbos/gatekeeper/pkg/types"
 )
@@ -92,11 +93,8 @@ func (s *server) buildEnvoyRoute(routeEntry types.Route) *route.Route {
 		Match: routeMatch,
 	}
 
-	// disable extauth if requested.
-	// extauth is first configured filter, so this needs to be done before anything else
-	if _, err := routeEntry.Attributes.Get(types.AttributeDisableAuthentication); err == nil {
-		envoyRoute.TypedPerFilterConfig = buildRoutePerFilterConfig(routeEntry)
-	}
+	// Set all route specific filter options
+	envoyRoute.TypedPerFilterConfig = buildPerRouteFilterConfig(routeEntry)
 
 	// Add direct response if configured: in this case Envoy itself will answer
 	if _, err := routeEntry.Attributes.Get(types.AttributeDirectResponseStatusCode); err == nil {
@@ -552,29 +550,49 @@ func buildStatusCodesSlice(statusCodes string) []uint32 {
 	return statusCodeSlice
 }
 
-func buildRoutePerFilterConfig(routeEntry types.Route) map[string]*any.Any {
+func buildPerRouteFilterConfig(routeEntry types.Route) map[string]*any.Any {
 
-	perFilterConfigMap := make(map[string]*any.Any)
+	perRouteFilterConfigMap := make(map[string]*any.Any)
 
-	value, err := routeEntry.Attributes.Get(types.AttributeDisableAuthentication)
-	if err == nil && value == types.AttributeValueTrue {
-		perFilterExtAuthzConfig := envoyauth.ExtAuthzPerRoute{
-			Override: &envoyauth.ExtAuthzPerRoute_Disabled{
-				Disabled: true,
-			},
-		}
-
-		b := proto.NewBuffer(nil)
-		b.SetDeterministic(true)
-		_ = b.Marshal(&perFilterExtAuthzConfig)
-
-		filter := &any.Any{
-			TypeUrl: "type.googleapis.com/" + proto.MessageName(&perFilterExtAuthzConfig),
-			Value:   b.Bytes(),
-		}
-
-		perFilterConfigMap[wellknown.HTTPExternalAuthorization] = filter
+	if authzFilterConfig := perRouteAuthzFilterConfig(routeEntry); authzFilterConfig != nil {
+		perRouteFilterConfigMap[wellknown.HTTPExternalAuthorization] = authzFilterConfig
 	}
 
-	return perFilterConfigMap
+	if len(perRouteFilterConfigMap) != 0 {
+		return perRouteFilterConfigMap
+	}
+	return nil
+}
+
+// perRouteAuthzFilterConfig sets all the authz specific filter options of a route
+func perRouteAuthzFilterConfig(routeEntry types.Route) *anypb.Any {
+
+	// filter http.ext_authz is always inline in the default filter chain configuration
+	//
+
+	// In case attribute AuthzAuthentication=true is set for this route
+	// we enable authz on this route by not configuring filter settings for this route
+	value, err := routeEntry.Attributes.Get(types.Authentication)
+	if err == nil && value == types.AttributeValueTrue {
+		return nil
+	}
+
+	// Our default HTTP forwarding behaviour is to not authenticate,
+	// hence we need to disable this filter per route
+	perFilterExtAuthzConfig := envoyauth.ExtAuthzPerRoute{
+		Override: &envoyauth.ExtAuthzPerRoute_Disabled{
+			Disabled: true,
+		},
+	}
+
+	b := proto.NewBuffer(nil)
+	b.SetDeterministic(true)
+	_ = b.Marshal(&perFilterExtAuthzConfig)
+
+	filter := &any.Any{
+		TypeUrl: "type.googleapis.com/" + proto.MessageName(&perFilterExtAuthzConfig),
+		Value:   b.Bytes(),
+	}
+
+	return filter
 }

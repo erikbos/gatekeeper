@@ -57,7 +57,7 @@ Every route can have optional attributes which control what Envoy will do to mat
 | ------------------------ | ------------------------------------------------------------- | ----------------------- |
 | Cluster                  | Name of upstream cluster to forward requests to               |                         |
 | WeightedClusters         | Weighted list of clusters to load balance requests across     | backend:95,newbackend:5 |
-| DisableAuthentication    | Disable request authentication via extauthz                   | false, true             |
+| Authentication           | Enable request authentication via extauthz                    | false, true             |
 | DisableRateLimiter       | Disable ratelimiting of request                               | false, true             |
 | DirectResponseStatusCode | Return an arbitrary HTTP response directly, without proxying. | 200                     |
 | DirectResponseBody       | Responsebody to return when direct response is done           | Hello World             |
