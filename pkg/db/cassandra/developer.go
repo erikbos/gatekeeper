@@ -49,6 +49,7 @@ func (s *DeveloperStore) GetByOrganization(organizationName string) (types.Devel
 	query := "SELECT " + developerColumns + " FROM developers WHERE organization_name = ? ALLOW FILTERING"
 	developers, err := s.runGetDeveloperQuery(query, organizationName)
 	if err != nil {
+		s.db.metrics.QueryMiss(developerMetricLabel)
 		return types.Developers{}, err
 	}
 

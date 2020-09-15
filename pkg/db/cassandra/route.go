@@ -1,7 +1,6 @@
 package cassandra
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -47,12 +46,8 @@ func (s *RouteStore) GetAll() (types.Routes, error) {
 	query := "SELECT * FROM routes"
 	routes, err := s.runGetRouteQuery(query)
 	if err != nil {
-		return types.Routes{}, err
-	}
-
-	if len(routes) == 0 {
 		s.db.metrics.QueryMiss(routeMetricLabel)
-		return types.Routes{}, errors.New("Can not retrieve list of routes")
+		return types.Routes{}, err
 	}
 
 	s.db.metrics.QueryHit(routeMetricLabel)

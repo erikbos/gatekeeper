@@ -1,7 +1,6 @@
 package cassandra
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -45,12 +44,8 @@ func (s *ClusterStore) GetAll() (types.Clusters, error) {
 	query := "SELECT " + clusterColumns + " FROM clusters"
 	clusters, err := s.runGetClusterQuery(query)
 	if err != nil {
-		return types.Clusters{}, err
-	}
-
-	if len(clusters) == 0 {
 		s.db.metrics.QueryMiss(clusterMetricLabel)
-		return types.Clusters{}, errors.New("Can not retrieve list of clusters")
+		return types.Clusters{}, err
 	}
 
 	s.db.metrics.QueryHit(clusterMetricLabel)

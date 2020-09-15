@@ -44,15 +44,11 @@ func (s *OrganizationStore) GetAll() (types.Organizations, error) {
 	query := "SELECT " + organizationColumns + " FROM organizations ALLOW FILTERING"
 	organizations, err := s.runGetOrganizationQuery(query, "")
 	if err != nil {
-		return types.Organizations{}, fmt.Errorf("Cannot retrieve list of organizations (%s)", err)
-	}
-
-	if len(organizations) == 0 {
 		s.db.metrics.QueryMiss(organizationMetricLabel)
-	} else {
-		s.db.metrics.QueryHit(organizationMetricLabel)
+		return types.Organizations{}, err
 	}
 
+	s.db.metrics.QueryHit(organizationMetricLabel)
 	return organizations, nil
 }
 
@@ -62,6 +58,7 @@ func (s *OrganizationStore) GetByName(organizationName string) (*types.Organizat
 	query := "SELECT " + organizationColumns + " FROM organizations WHERE name = ? LIMIT 1"
 	organizations, err := s.runGetOrganizationQuery(query, organizationName)
 	if err != nil {
+		s.db.metrics.QueryMiss(organizationMetricLabel)
 		return nil, err
 	}
 

@@ -47,12 +47,8 @@ func (s *ListenerStore) GetAll() (types.Listeners, error) {
 	query := "SELECT " + listenerColumns + " FROM listeners"
 	listeners, err := s.runGetListenerQuery(query)
 	if err != nil {
-		return types.Listeners{}, err
-	}
-
-	if len(listeners) == 0 {
 		s.db.metrics.QueryMiss(listenerMetricLabel)
-		return types.Listeners{}, nil
+		return types.Listeners{}, err
 	}
 
 	s.db.metrics.QueryHit(listenerMetricLabel)

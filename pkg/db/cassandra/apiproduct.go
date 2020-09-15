@@ -49,13 +49,8 @@ func (s *APIProductStore) GetAll() (types.APIProducts, error) {
 
 	apiproducts, err := s.runGetAPIProductQuery(query)
 	if err != nil {
-		return types.APIProducts{}, err
-	}
-
-	if len(apiproducts) == 0 {
-		//db.metrics.QueryMiss
 		s.db.metrics.QueryMiss(apiProductsMetricLabel)
-		return apiproducts, fmt.Errorf("Can not find apiproducts")
+		return types.APIProducts{}, err
 	}
 
 	s.db.metrics.QueryHit(apiProductsMetricLabel)
@@ -68,11 +63,11 @@ func (s *APIProductStore) GetByOrganization(organizationName string) (types.APIP
 
 	apiproducts, err := s.runGetAPIProductQuery(query, organizationName)
 	if err != nil {
+		s.db.metrics.QueryMiss(apiProductsMetricLabel)
 		return types.APIProducts{}, err
 	}
 
 	if len(apiproducts) == 0 {
-		//db.metrics.QueryMiss
 		s.db.metrics.QueryMiss(apiProductsMetricLabel)
 		return apiproducts,
 			fmt.Errorf("Can not find apiproducts in organization %s", organizationName)
@@ -89,6 +84,7 @@ func (s *APIProductStore) GetByName(organizationName, apiproductName string) (*t
 
 	apiproducts, err := s.runGetAPIProductQuery(query, organizationName, apiproductName)
 	if err != nil {
+		s.db.metrics.QueryMiss(apiProductsMetricLabel)
 		return nil, err
 	}
 

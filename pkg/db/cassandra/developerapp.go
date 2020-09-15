@@ -46,14 +46,15 @@ func (s *DeveloperAppStore) GetByOrganization(organizationName string) (types.De
 	query := "SELECT " + developerAppColumns + " FROM developer_apps WHERE organization_name = ? ALLOW FILTERING"
 	developerapps, err := s.runGetDeveloperAppQuery(query, organizationName)
 	if err != nil {
+		s.db.metrics.QueryMiss(developerAppsMetricLabel)
 		return types.DeveloperApps{}, err
 	}
 
-	if len(developerapps) == 0 {
-		s.db.metrics.QueryMiss(developerAppsMetricLabel)
-		return developerapps,
-			fmt.Errorf("Can not find developer apps in organization '%s'", organizationName)
-	}
+	// if len(developerapps) == 0 {
+	// 	s.db.metrics.QueryMiss(developerAppsMetricLabel)
+	// 	return developerapps,
+	// 		fmt.Errorf("Can not find developer apps in organization '%s'", organizationName)
+	// }
 
 	s.db.metrics.QueryHit(developerAppsMetricLabel)
 	return developerapps, nil
@@ -65,6 +66,7 @@ func (s *DeveloperAppStore) GetByName(organization, developerAppName string) (*t
 	query := "SELECT " + developerAppColumns + " FROM developer_apps WHERE organization_name = ? AND name = ? LIMIT 1"
 	developerapps, err := s.runGetDeveloperAppQuery(query, organization, developerAppName)
 	if err != nil {
+		s.db.metrics.QueryMiss(developerAppsMetricLabel)
 		return nil, err
 	}
 

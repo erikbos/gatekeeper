@@ -21,12 +21,12 @@ to build Containers for [dbadmin](docs/dbadmin.md), [envoyauth](docs/envoyauth.m
 
 The following starts all containers for Gatekeeper using compose: one-node Cassandra instance, envoyproxy, envoyauth, envoycp and dbadmin
 ```sh
-docker-compose -f examples/deployment/docker/cassandra.yaml up
+docker-compose -f examples/deployment/docker/gatekeeper.yaml up
 ```
 
 Please note:
 
-no* At startup database schema will be created (Using dbadmin cmdline argument *--create-tables*)
+* At startup database schema will be created (Using dbadmin cmdline argument *--create-tables*)
 * Database will be configured as a single node by changing its replication count to 1 (Using dbadmin cmdline argument *--create-tables*
 * For production do not use replication count of 1(!)
 * To persist the database across restarts the directory /tmp/cassandra_data is used.
