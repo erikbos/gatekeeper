@@ -36,8 +36,8 @@ The supported fields are:
 | ------------------------------------ | ----------------------------------------------------------------------------------- | ----------------------------- |
 | webadmin.listen                      | Webadmin address and port                                                           | 0.0.0.0:2113                  |
 | webadmin.ipacl                       | Webadmin ip acl, without this no access                                             | 172.16.0.0/19                 |
-| webadmin.certfile                    | TLS certificate file                                                                |                               |
-| webadmin.keyfile                     | TLS certificate key file                                                            |                               |
+| webadmin.tls.certfile                | TLS certificate file                                                                |                               |
+| webadmin.tls.keyfile                 | TLS certificate key file                                                            |                               |
 | webadmin.logfile                     | Access log file                                                                     | /var/log/envoycp.log          |
 | database.hostname                    | Cassandra hostname to connect to                                                    | cassandra                     |
 | database.port                        | Cassandra port to connect on                                                        | 9042 / 10350                  |
