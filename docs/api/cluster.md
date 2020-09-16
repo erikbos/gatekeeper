@@ -17,7 +17,30 @@ A cluster defines an upstream backend. Each provides one or more APIs to be cons
 | POST   | /v1/clusters/_clustername_/attributes/_name_ | update one cluster attribute       |
 | DELETE | /v1/clusters/_clustername_/attributes/_name_ | delete one cluster attribute       |
 
-* For POST content-type: application/json is required.
+_For POST content-type: application/json is required._
+
+## Example cluster entity
+
+Cluster `ticketshop` running on `ticketbackend.svc` port `80`:
+
+```json
+{
+    "name": "ticketshop",
+    "displayName": "Ticket API",
+    "hostName": "ticketbackend.svc",
+    "port": 80,
+    "attributes": [
+        {
+        "name": "ConnectTimeout",
+        "value": "5s"
+    },
+    {
+        "name": "IdleTimeout",
+        "value": "15s"
+    }
+    ]
+}
+```
 
 ## Fields specification
 
@@ -66,7 +89,7 @@ Envoycp monitors the database for changed clusters at `xds.configcompileinterval
 
 ## Example cluster configurations
 
-Cluster `ticketshop` running on `ticketbackend.svc` port `80`.
+Cluster `ticketshop` running on `ticketbackend.svc` port `80`:
 
 ```json
 {

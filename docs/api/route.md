@@ -17,11 +17,11 @@ A route defines how requests for an exact path or path prefix needs to handled: 
 | POST   | /v1/routes/_routename_/attributes/_name_ | Update one route attribute       |
 | DELETE | /v1/routes/_routename_/attributes/_name_ | Delete one route attribute       |
 
-* For POST content-type: application/json is required.
+_For POST content-type: application/json is required._
 
 ## Example route entity
 
-Forward all traffic for path `/ticket` of route group `route_443` to upstream cluster `ticketshop`.
+Forward all traffic for path `/ticket` of route group `route_443` to upstream cluster `ticketshop`:
 
 ```json
 {
@@ -94,7 +94,7 @@ Envoycp monitors the database for changed routes at `xds.configcompileinterval` 
 
 ## Example route configurations
 
-Forward all traffic for path `/ticket` of routeGroup `route_443` to upstream cluster `ticketshop`.
+Forward all traffic for path `/ticket` of routeGroup `route_443` to upstream cluster `ticketshop`:
 
 ```json
 {
@@ -112,7 +112,7 @@ Forward all traffic for path `/ticket` of routeGroup `route_443` to upstream clu
 }
 ```
 
-Direct response by Envoy with status code `200` and `responsebody` for path `/` (no upstream will be contacted)
+Direct response by Envoy, without contacting an upstream cluster, with status code `200` and `responsebody` for path `/`:
 
 ```json
 {
@@ -164,7 +164,7 @@ Redirect path prefix `/login` using status code `301` to `https://www.example.co
 }
 ```
 
-Forward `/people` to cluster `people` and enable handling of [CORS](https://en.wikipedia.org/wiki/Cross-origin_resource_sharing) by Envoy.
+Forward `/people` to cluster `people` and enable handling of [CORS](https://en.wikipedia.org/wiki/Cross-origin_resource_sharing) by Envoy:
 
 ```json
 {
@@ -254,7 +254,7 @@ Set multiple upstream clusters for path `/people`, use weight distribution `25` 
 }
 ```
 
-Request forwarding of path `/people` to upstream cluster `people`, while mirroring `12%` of those requests to second upstream cluster `people_v2`
+Request forwarding of path `/people` to upstream cluster `people`, while mirroring `12%` of those requests to second upstream cluster `people_v2`:
 
 ```json
 {

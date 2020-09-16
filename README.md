@@ -44,23 +44,23 @@ Gatekeeper provides API entitlement management:
 
 ## Repository structure
 
-* [build](build): Scripts for packaging Gatekeeper components in Docker images
-
 * [docs](docs): All documentation:
 
-  * [Architecture](docs/deployment/architecture.md) Architecture
+  * [Architecture](docs/deployment/architecture.md) High-level overview.
 
-  * [deployment](docs/deployment/README.md): Deployment documentation of each component
+  * [deployment](docs/): Deployment documentation of each component.
 
-  * [api](docs/api/README.md): management API specification
+  * [api](docs/api/): management API specification.
 
-  * [examples](docs/api/examples/README.md): Example management API calls
+  * [examples](docs/api/examples/): Example management API calls.
 
-* [deployment](deployment/docker/README.md): example Docker compose configuration
+* [build](build): Scripts for packaging Gatekeeper components in Docker images.
 
-* [cmd](cmd): Source code of individual Gatekeeper components
+* [deployment](deployment/docker/): example Docker compose configuration.
 
-* [pkg](pkg): Source code of shared Gatekeeper components
+* [cmd](cmd): Source code of individual Gatekeeper components.
+
+* [pkg](pkg): Source code of shared Gatekeeper components.
 
 ## Contributing and support
 

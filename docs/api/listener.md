@@ -19,6 +19,23 @@ A listener defines tcp listening port, virtual host and TLS configuration parame
 
 _For POST content-type: application/json is required._
 
+## Example listener entity
+
+HTTP listener on port `80` mapping incoming requests for http virtual host `www.petstore.com` to routegroup `routes_80`
+
+```json
+{
+    "name": "example_80",
+    "displayName": "Example Inc.",
+    "virtualHosts": [
+         "www.petstore.com"
+    ],
+    "port": 80,
+    "organizationName": "petstore",
+    "routeGroup": "routes_80"
+}
+```
+
 ## Fields specification
 
 | fieldname        | optional  | purpose                                           |
