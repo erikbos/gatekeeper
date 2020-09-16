@@ -1,37 +1,39 @@
 # Route
 
-A route defines how a specific path needs to handled and forwarded on. All operations which are applied at HTTP-level to every request are configured here.
+A route defines how requests for an exact path or path prefix needs to handled: forwarding to an upstream cluster, mirroring, [CORS](https://en.wikipedia.org/wiki/Cross-origin_resource_sharing), etc. Most of these need to be configured using specific attributes.
 
-## Supported methods and paths
+## Supported operations
 
 | Method | Path                                     | What                             |
 | ------ | ---------------------------------------- | -------------------------------- |
-| GET    | /v1/routes                               | retrieve all routes              |
-| POST   | /v1/routes                               | creates a new route              |
-| GET    | /v1/routes/_routename_                   | retrieve a route                 |
-| POST   | /v1/routes/_routename_                   | updates an existing route        |
-| DELETE | /v1/routes/_routename_                   | deletes a routes                 |
-| GET    | /v1/routes/_routename_/attributes        | retrieve all attributes of route |
-| POST   | /v1/routes/_routename_/attributes        | update all attribute of route    |
-| GET    | /v1/routes/_routename_/attributes/_name_ | retrieve attribute of route      |
-| POST   | /v1/routes/_routename_/attributes/_name_ | update attribute of route        |
-| DELETE | /v1/routes/_routename_/attributes/_name_ | delete attribute of route        |
+| GET    | /v1/routes                               | Retrieve all routes              |
+| POST   | /v1/routes                               | Creates a new route              |
+| GET    | /v1/routes/_routename_                   | Retrieve a route                 |
+| POST   | /v1/routes/_routename_                   | Updates an existing route        |
+| DELETE | /v1/routes/_routename_                   | Deletes a routes                 |
+| GET    | /v1/routes/_routename_/attributes        | Retrieve all route attributes    |
+| POST   | /v1/routes/_routename_/attributes        | Update all route attributes      |
+| GET    | /v1/routes/_routename_/attributes/_name_ | Retrieve one route attribute     |
+| POST   | /v1/routes/_routename_/attributes/_name_ | Update one route attribute       |
+| DELETE | /v1/routes/_routename_/attributes/_name_ | Delete one route attribute       |
 
 * For POST content-type: application/json is required.
 
-## Example route definition
+## Example route entity
+
+Forward all traffic for path `/ticket` of route group `route_443` to upstream cluster `ticketshop`.
 
 ```json
 {
-    "name": "default_ticketshop",
-    "displayName": "Default route ticketshop",
+    "name": "ticketshop",
+    "displayName": "ticketshop v1 API",
     "routeGroup": "routes_443",
     "path": "/ticketshop",
     "pathType": "prefix",
     "attributes": [
         {
-        "name": "Cluster",
-        "value": "ticketshop"
+            "name": "Cluster",
+            "value": "ticketshop"
         }
     ]
 }
@@ -39,15 +41,16 @@ A route defines how a specific path needs to handled and forwarded on. All opera
 
 ## Fields specification
 
-| fieldname   | optional  | purpose                                                     |
-| ----------- | --------- | ----------------------------------------------------------- |
-| name        | mandatory | name (cannot be updated afterwards)                         |
-| displayName | optional  | friendly name                                               |
-| path        | mandatory | path to match on                                            |
-| pathType    | mandatory | _path_ for an exact path match                              |
-|             |           | _prefix_ to match a route starting with a particular string |
-|             |           | _regexp_ use a (RE2) regular expression to match            |
-| routeGroup  | mandatory | routing table name                                          |
+| fieldname   | optional  | purpose                                                         |
+| ----------- | --------- | --------------------------------------------------------------- |
+| name        | mandatory | name (cannot be updated afterwards)                             |
+| displayName | optional  | friendly name                                                   |
+| path        | mandatory | path to match on                                                |
+| pathType    | mandatory | Use _path_ for an exact path match                              |
+|             |           | Use _prefix_ to match a path starting with a particular prefix  |
+|             |           | Use _regexp_ to match using a [RE2](https://en.wikipedia.org/wiki/RE2_(software)) regular expression |
+| routeGroup  | mandatory | routing table name                                              |
+| attributes  | optional  | Specific configuration to apply                                 |
 
 ## Attribute specification
 
@@ -74,23 +77,42 @@ Every route can have optional attributes which control what Envoy will do to mat
 | CORSExposeHeaders        | Specifies the content for the [Access-Control-Expose-Headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Expose-Headers) header    |                 |
 | CORSMaxAge               | Specifies the content for the [Access-Control-Max-Age](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Max-Age) header           |                 |
 | HostHeader               | HTTP host header to set when forwarding to upstream cluster           |                 |
+| Headers | Additional HTTP headers to set when forwarding to upstream cluster                     |                 |
 | BasicAuth                | HTTP Basic authentication header to set when contact upstream cluster | user:secret     |
 | RetryOn                  | Specifies the conditions under which retry takes place.               | [See envoy documentation](https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/router_filter#config-http-filters-router-x-envoy-retry-on)|
 | PerTryTimeout            | Specify upstream timeout per retry attempt                            | 150ms           |
 | NumRetries               | Specify the allowed number of retries                                 | 1               |
 | RetryOnStatusCodes       | Upstream status codes which are to be retried                         | 503,504         |
 
-All attributes listed above are mapped on configuration properties of [Envoy route API specifications](https://www.envoyproxy.io/docs/envoy/latest/api-v3/api/v3/route/route_components.proto#envoy-api-msg-route-route) for detailed explanation of purpose and allowed value of each attribute.
+All attributes listed above are mapped onto configuration properties of [Envoy route API specifications](https://www.envoyproxy.io/docs/envoy/latest/api-v3/api/v3/route/route_components.proto#envoy-api-msg-route-route) for detailed explanation of purpose and allowed value of each attribute.
 
 The route options exposed this way are a subset of Envoy's capabilities, in general any route configuration option Envoy supports can be exposed  this way. Feel free to open an issue if you need more of Envoy's functionality exposed.
 
-## Background
+## Envoycp control plane
 
-Envoycp checks the database for new or changed routes every second. Unrecognized attributes will be ignored and a warning will be logged. In case of any changes envoycp will compile a new proxy configuration and push it to all envoyproxy instances.
+Envoycp monitors the database for changed routes at `xds.configcompileinterval` interval. In case of changes envoycp will compile a new Envoy configuration and notify all envoyproxy instances.
 
-## More examples
+## Example route configurations
 
-Direct response by envoy without forwarding to upstream cluster:
+Forward all traffic for path `/ticket` of routeGroup `route_443` to upstream cluster `ticketshop`.
+
+```json
+{
+    "name": "ticketshop",
+    "displayName": "ticketshop v1 API",
+    "routeGroup": "routes_443",
+    "path": "/ticketshop",
+    "pathType": "prefix",
+    "attributes": [
+        {
+            "name": "Cluster",
+            "value": "ticketshop"
+        }
+    ]
+}
+```
+
+Direct response by Envoy with status code `200` and `responsebody` for path `/` (no upstream will be contacted)
 
 ```json
 {
@@ -98,21 +120,21 @@ Direct response by envoy without forwarding to upstream cluster:
     "displayName": "Default HTTP route",
     "routeGroup": "routes_80",
     "path": "/",
-    "pathType": "prefix",
+    "pathType": "path",
     "attributes": [
-    {
-        "name": "DirectResponseStatusCode",
-        "value": "200"
-    },
-    {
-        "name": "DirectResponseBody",
-        "value": "We do not support plain HTTP anymore, please use HTTPS"
-    }
+        {
+            "name": "DirectResponseStatusCode",
+            "value": "200"
+        },
+        {
+            "name": "DirectResponseBody",
+            "value": "We do not support plain HTTP anymore, please use HTTPS"
+        }
     ]
 }
 ```
 
-Redirect /login to another URL
+Redirect path prefix `/login` using status code `301` to `https://www.example.com/new_login`:
 
 ```json
 {
@@ -142,10 +164,9 @@ Redirect /login to another URL
 }
 ```
 
-Enable handling of Cross-Origin Resource Sharing (CORS):
+Forward `/people` to cluster `people` and enable handling of [CORS](https://en.wikipedia.org/wiki/Cross-origin_resource_sharing) by Envoy.
 
 ```json
-
 {
     "name": "people",
     "displayName": "Default people",
@@ -153,38 +174,37 @@ Enable handling of Cross-Origin Resource Sharing (CORS):
     "path": "/people",
     "pathType": "prefix",
     "attributes": [
-    {
-        "name": "Cluster",
-        "value": "people"
-    },
-    {
-        "name": "CORSAllowMethods",
-        "value": "GET,POST,DELETE,OPTIONS"
-    },
-    {
-        "name": "CORSAllowHeaders",
-        "value": "User-Agent-X"
-    },
-    {
-        "name": "CORSExposeHeaders",
-        "value": "Shoesize"
-    },
-    {
-        "name": "CORSMaxAge",
-        "value": "3600"
-    },
-    {
-        "name": "CORSAllowCredentials",
-        "value": "true"
-    }
+        {
+            "name": "Cluster",
+            "value": "people"
+        },
+        {
+            "name": "CORSAllowMethods",
+            "value": "GET,POST,DELETE,OPTIONS"
+        },
+        {
+            "name": "CORSAllowHeaders",
+            "value": "User-Agent-X"
+        },
+        {
+            "name": "CORSExposeHeaders",
+            "value": "Shoesize"
+        },
+        {
+            "name": "CORSMaxAge",
+            "value": "3600"
+        },
+        {
+            "name": "CORSAllowCredentials",
+            "value": "true"
+        }
     ]
 }
 ```
 
-Set route specific request retry behaviour to reduce error rates:
+Forward `/people` to cluster `people` and configure up to `3` request retries in case upstream cluster returns `503,504`:
 
 ```json
-
 {
     "name": "people",
     "displayName": "Default people",
@@ -192,36 +212,33 @@ Set route specific request retry behaviour to reduce error rates:
     "path": "/people",
     "pathType": "prefix",
     "attributes": [
-    {
-        "name": "Cluster",
-        "value": "people"
-    },
-    {
-        "name": "NumRetries",
-        "value": "3"
-    },
-    {
-        "name": "RetryOn",
-        "value": "connect-failure,refused-stream,unavailable,cancelled,retriable-status-codes"
-    },
-    {
-        "name": "PerTryTimeout",
-        "value": "250ms"
-    },
-    {
-        "name": "RetryOnStatusCodes",
-        "value": "503,504"
-    }
+        {
+            "name": "Cluster",
+            "value": "people"
+        },
+        {
+            "name": "NumRetries",
+            "value": "3"
+        },
+        {
+            "name": "RetryOn",
+            "value": "connect-failure,refused-stream,unavailable,cancelled,retriable-status-codes"
+        },
+        {
+            "name": "PerTryTimeout",
+            "value": "250ms"
+        },
+        {
+            "name": "RetryOnStatusCodes",
+            "value": "503,504"
+        }
     ]
 }
 ```
 
-Set multiple weighted upstream clusters for a route:
-
-Upstream clusters need to be separated by comma. Each need to be assigned a load balancing weight using *:value* suffix.
+Set multiple upstream clusters for path `/people`, use weight distribution `25` / `75`. Multiple upstream clusters can be separated by comma. Each need to be assigned a load balancing weight using *:value* suffix.
 
 ```json
-
 {
     "name": "people",
     "displayName": "Default people",
@@ -237,10 +254,9 @@ Upstream clusters need to be separated by comma. Each need to be assigned a load
 }
 ```
 
-Requst mirror to a separate cluster.
+Request forwarding of path `/people` to upstream cluster `people`, while mirroring `12%` of those requests to second upstream cluster `people_v2`
 
 ```json
-
 {
     "name": "people",
     "displayName": "Default people",
@@ -248,21 +264,18 @@ Requst mirror to a separate cluster.
     "path": "/people",
     "pathType": "prefix",
     "attributes": [
-    {
-        "name": "Cluster",
-        "value": "people"
-    },
-    {
-        "name": "RequestMirrorCluster",
-        "value": "people_v2"
-    },
-    {
-        "name": "RequestMirrorPercentage",
-        "value": "12"
-    }
+        {
+            "name": "Cluster",
+            "value": "people"
+        },
+        {
+            "name": "RequestMirrorCluster",
+            "value": "people_v2"
+        },
+        {
+            "name": "RequestMirrorPercentage",
+            "value": "12"
+        }
     ]
 }
 ```
-
-Upstream clusters need to be separated by comma.
-Each need to be assigned a load balancing weight using *:weight* suffix.

@@ -2,7 +2,7 @@
 
 A cluster defines an upstream backend. Each provides one or more APIs to be consumed by application developers. Attributes can be set to configure connectivity related settings like TLS, timeouts, health checks, connection handling, retry behaviour, etc.
 
-## Supported methods and paths
+## Supported operations
 
 | Method | Path                                         | What                               |
 | ------ | -------------------------------------------- | ---------------------------------- |
@@ -10,35 +10,14 @@ A cluster defines an upstream backend. Each provides one or more APIs to be cons
 | POST   | /v1/clusters                                 | creates a new cluster              |
 | GET    | /v1/clusters/_clustername_                   | retrieve a cluster                 |
 | POST   | /v1/clusters/_clustername_                   | updates an existing cluster        |
-| DELETE | /v1/clusters/_clustername_                   | deletes a cluster                  |
+| DELETE | /v1/clusters/_clustername_                   | delete cluster                     |
 | GET    | /v1/clusters/_clustername_/attributes        | retrieve all attributes of cluster |
 | POST   | /v1/clusters/_clustername_/attributes        | updates all attributes of cluster  |
-| GET    | /v1/clusters/_clustername_/attributes/_name_ | retrieve attribute of cluster      |
-| POST   | /v1/clusters/_clustername_/attributes/_name_ | updates attribute of cluster       |
-| DELETE | /v1/clusters/_clustername_/attributes/_name_ | delete attribute of cluster        |
+| GET    | /v1/clusters/_clustername_/attributes/_name_ | retrieve one cluster attribute     |
+| POST   | /v1/clusters/_clustername_/attributes/_name_ | update one cluster attribute       |
+| DELETE | /v1/clusters/_clustername_/attributes/_name_ | delete one cluster attribute       |
 
 * For POST content-type: application/json is required.
-
-## Example cluster definition
-
-```json
-{
-    "name": "ticketshop",
-    "displayName": "Ticket API",
-    "hostName": "ticketbackend.svc",
-    "port": 80,
-    "attributes": [
-        {
-        "name": "ConnectTimeout",
-        "value": "7s"
-    },
-    {
-        "name": "IdleTimeout",
-        "value": "4s"
-    }
-    ]
-}
-```
 
 ## Fields specification
 
@@ -56,9 +35,9 @@ A cluster defines an upstream backend. Each provides one or more APIs to be cons
 | ----------------------------- | --------------------------------------------------------------------------------------- | ---------------------------- |
 | ConnectTimeout                | The timeout for new network connections to cluster                                      | 1s                           |
 | IdleTimeout                   | The idle timeout for connections, for the period in which there are no active requests. | 60s                          |
-| DNSLookupFamily               | IP network address family for contact cluster                                           | IPv6                         |
+| DNSLookupFamily               | IP network address family to use when resolving cluster hostname                        | IPv6                         |
 | DNSRefreshRate                | Refreshrate for resolving cluster hostname                                              | 5s                           |
-| DNSResolvers                  | Resolver ip address to resolve cluster hostname (multiple can be comma separated)       | 1.1.1.1,8.8.8.8              |
+| DNSResolvers                  | Resolver ip address(es) to resolve cluster hostname (multiple can be comma separated)   | 1.1.1.1,8.8.8.8              |
 | HealthCheckProtocol           | Network protocol to use for health check                                                | HTTP                         |
 | HealthCheckPath               | HTTP Path of health check probe                                                         | /liveness                    |
 | HealthCheckInterval           | Health check interval                                                                   | 5s                           |
@@ -72,16 +51,102 @@ A cluster defines an upstream backend. Each provides one or more APIs to be cons
 | MaxRequests                   | The maximum number of parallel requests that Envoy will make to the upstream cluster    | 1024                         |
 | MaxRetries                    | The maximum number of parallel retries that Envoy will allow to the upstream cluster    | 3                            |
 | TLSEnable                     | Whether to enable TLS or not, HTTP/2 always uses TLS                                    | true, false                  |
-| SNIHostName                   | Hostname to send during TLS handshake (if not set hostname will be used)           |                              |
+| SNIHostName                   | Hostname to send during TLS handshake (if not set hostname will be used)                |                              |
 | TLSMinimumVersion             | Minimum version of TLS to use                                                           | TLSv10,TLSv11, TLSv12 TLSv13 |
 | TLSMaximumVersion             | Maximum version of TLS to use                                                           | TLSv10,TLSv11, TLSv12 TLSv13 |
 | TLSCipherSuites               | Allowed TLS cipher suite                                                                |                              |
 
-All attributes listed above are mapped on configuration properties of [Envoy Cluster API specifications](https://www.envoyproxy.io/docs/envoy/latest/api-v3/api/v3/cluster.proto#cluster) for detailed explanation of purpose and allowed value of each attribute.
+All attributes listed above are mapped onto configuration properties of [Envoy Cluster API specifications](https://www.envoyproxy.io/docs/envoy/latest/api-v3/api/v3/cluster.proto#cluster) for detailed explanation of purpose and allowed value of each attribute.
 
 The cluster options exposed this way are a subset of Envoy's capabilities, in general any cluster configuration option Envoy supports can be exposed  this way. Feel free to open an issue if you need more of Envoy's functionality exposed.
 
-## Background
+## Envoycp control plane
 
-Envoycp checks the database for new or changed clusters every second. Unrecognized attributes will be ignored and a warning will be logged. In case of any changes envoycp will compile a new proxy configuration and push it to all envoyproxy instances.
+Envoycp monitors the database for changed clusters at `xds.configcompileinterval` interval. In case of changes envoycp will compile a new Envoy configuration and notify all envoyproxy instances.
 
+## Example cluster configurations
+
+Cluster `ticketshop` running on `ticketbackend.svc` port `80`.
+
+```json
+{
+    "name": "ticketshop",
+    "displayName": "Ticket API",
+    "hostName": "ticketbackend.svc",
+    "port": 80,
+    "attributes": [
+        {
+        "name": "ConnectTimeout",
+        "value": "5s"
+    },
+    {
+        "name": "IdleTimeout",
+        "value": "15s"
+    }
+    ]
+}
+```
+
+Cluster `people` with elaborate TLS, health check and DNS resolving settings:
+
+```json
+{
+    "name": "people",
+    "displayName": "People API",
+    "hostName": "127.0.0.1",
+    "port": 8000,
+    "attributes": [
+    {
+        "name": "TLSEnable",
+        "value": "true"
+    },
+    {
+        "name": "TLSMinimumVersion",
+        "value": "TLSv12"
+    },
+    {
+        "name": "TLSCipherSuites",
+        "value": "[ECDHE-ECDSA-AES128-GCM-SHA256|ECDHE-ECDSA-CHACHA20-POLY1305],ECDHE-ECDSA-AES256-GCM-SHA384"
+    },
+    {
+        "name": "HTTPProtocol",
+        "value": "HTTP/2"
+    },
+    {
+        "name": "SNIHostName",
+        "value": "www.example.com"
+    },
+    {
+        "name": "HealthCheckProtocol",
+        "value": "HTTP"
+    },
+    {
+        "name": "MaxConnections",
+        "value": "700"
+    },
+    {
+        "name": "HealthCheckPath",
+        "value": "/people/1"
+    },
+    {
+        "name": "HealthCheckInterval",
+        "value": "2s"
+    },
+    {
+        "name": "HealthCheckTimeout",
+        "value": "1s"
+    },
+    {
+        "name": "HealthCheckLogFile",
+        "value": "/tmp/healthcheck.log"
+    },
+    {
+        "name": "DNSRefreshRate",
+        "value": "5s"
+    },
+    {
+        "name": "DNSResolvers",
+        "value": "8.8.8.8,1.1.1.1"
+    }
+    ]
+}

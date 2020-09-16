@@ -1,8 +1,8 @@
 # Intro
 
-DBadmin provides the REST API to create, read, update, delete all entities of Gatekeeper's configuration database.
+DBadmin provides a REST API to create, read, update, delete entities of Gatekeeper's configuration database.
 
-For each entity there is a detailed API description available:
+For each entity a detailed API description is available:
 
 1. [listeners](docs/api/listener.md)
 2. [routes](docs/api/route.md)
@@ -20,9 +20,9 @@ Dbadmin exposes one endpoint:
 | name     | scope   | protocol | purpose                                                     |
 | -------- | ------- | -------- | ----------------------------------------------------------- |
 | webadmin | private | http     | create, read, update, delete for all configuration entities |
-| webadmin | private | http     | admin console, prometheus metrics, etc                      |
+|          |         |          | admin console, prometheus metrics, etc                      |
 
-The _webadmin.listen_ config field should be used to set listening address and port.
+The `webadmin.listen` config field should be used to set listening address and port.
 
 Scope:
 
@@ -32,7 +32,7 @@ Scope:
 
 ### Configuration
 
-Dbadmin requires a starup configuration which needs to be provided as YAML file, see below for the supported fields, see [config/dbadmin-config-default.yaml[(For an example dbadmin configuration file).
+Dbadmin requires a starup configuration which needs to be provided as YAML file, see below for the supported fields. For an example configuration file see [dbadmin.yaml](../deployment/docker/dbadmin.yaml).
 
 ### Dbadmin configuration file
 

@@ -15,7 +15,7 @@ Envoycp exposes two endpoints:
 | webadmin | private | http     | admin console, prometheus metrics, etc |
 | xds      | private | grpc     | xds configuration with envoyproxy      |
 
-For each there is a corresponding _*.listen_ config field option to set listening address and port.
+Both `webadmin.listen` and `xds.listen` should be set to configure listening address and port.
 
 Scope:
 
@@ -26,8 +26,7 @@ Scope:
 
 ### Configuration
 
-Envoycp requires a starup configuration which needs to be provided as YAML file, see below for the supported fields. See
-[config/envoycp-config-default.yaml[(For an example envoycp configuration file).
+Envoycp requires a starup configuration which needs to be provided as YAML file, see below for the supported fields. For an example configuration file see [envoycp.yaml](../deployment/docker/envoycp.yaml).
 
 ### Envoycp configuration file
 

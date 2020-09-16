@@ -1,27 +1,72 @@
 # Listener
 
-A listener defines listing port, virtual settings and incoming connectivity parameters.
+A listener defines tcp listening port, virtual host and TLS configuration parameters.
 
-_TCP listening port, http virtualhost(s) and TLS settings are configured together in a listener._
+## Supported operations
 
-## Supported methods and paths
-
-| Method | Path                                       | What                                |
-| ------ | ------------------------------------------ | ----------------------------------- |
-| GET    | /v1/listeners                              | retrieve all listeners              |
-| POST   | /v1/listeners                              | creates a new listener              |
-| GET    | /v1/listeners/_listener_                   | retrieve a listener                 |
-| POST   | /v1/listeners/_listener_                   | updates an existing listener        |
-| DELETE | /v1/listeners/_listener_                   | deletes a listener                  |
-| GET    | /v1/listeners/_listener_/attributes        | retrieve all attributes of listener |
-| POST   | /v1/listeners/_listener_/attributes        | update all attribute of listener    |
-| GET    | /v1/listeners/_listener_/attributes/_name_ | retrieve attribute of listener      |
-| POST   | /v1/listeners/_listener_/attributes/_name_ | update attribute of listener        |
-| DELETE | /v1/listeners/_listener_/attributes/_name_ | delete attribute of listener        |
+| Method | Path                                       | What                             |
+| ------ | ------------------------------------------ | -------------------------------- |
+| GET    | /v1/listeners                              | Retrieve all listeners           |
+| POST   | /v1/listeners                              | Creates a new listener           |
+| GET    | /v1/listeners/_listener_                   | Retrieve a listener              |
+| POST   | /v1/listeners/_listener_                   | Updates an existing listener     |
+| DELETE | /v1/listeners/_listener_                   | Deletes a listener               |
+| GET    | /v1/listeners/_listener_/attributes        | Retrieve all listener attributes |
+| POST   | /v1/listeners/_listener_/attributes        | Update all listener attributes   |
+| GET    | /v1/listeners/_listener_/attributes/_name_ | Retrieve one listener attribute  |
+| POST   | /v1/listeners/_listener_/attributes/_name_ | Udate one listenerattribute      |
+| DELETE | /v1/listeners/_listener_/attributes/_name_ | Delete one listener attribute    |
 
 _For POST content-type: application/json is required._
 
-## Example listener definition
+## Fields specification
+
+| fieldname        | optional  | purpose                                           |
+| ---------------- | --------- | ------------------------------------------------- |
+| name             | mandatory | Name (cannot be updated afterwards)               |
+| displayName      | optional  | Friendly name                                     |
+| virtualHosts     | mandatory | Array of virtal hostnames                         |
+| port             | mandatory | Port Envoy needs to listen on                     |
+| organizationName | mandatory | Organization name                                 |
+| routeGroup       | mandatory | Indicate which http routing table will be applied |
+| attributes       | optional  | Specific configuration to apply                   |
+
+## Attribute specification
+
+| attribute name       | purpose                                              | possible values              |
+| -------------------- | ---------------------------------------------------- | ---------------------------- |
+| HTTPProtocol         | Highest HTTP protocol to support                     | HTTP/1.1, HTTP/2, HTTP/3     |
+| TLSEnable            | Whether to enable TLS or not, HTTP/2 always uses TLS | true, false                  |
+| TLSCertificate       | Certificate to use for TLS                           |                              |
+| TLSCertificateKey    | Key of certificate                                   |                              |
+| TLSMinimumVersion    | Minimum version of TLS to use                        | TLSv10,TLSv11, TLSv12 TLSv13 |
+| TLSMaximumVersion    | Maximum version of TLS to use                        | TLSv10,TLSv11, TLSv12 TLSv13 |
+| TLSCipherSuites      | Allowed TLS cipher suite                             |                              |
+| AccessLogFile        | File for storing access logs                         |                              |
+| AccessLogCluster     | Cluster to send access logs to                       |                              |
+
+All attributes listed above are mapped onto configuration properties of [Envoy listener API specifications](https://www.envoyproxy.io/docs/envoy/latest/api-v3/api/v3/listener.proto#listener) for detailed explanation of purpose and allowed value of each attribute.
+
+The listener options exposed this way are a subset of Envoy's capabilities, in general any listener configuration option Envoy supports can be exposed  this way. Feel free to open an issue if you need more of Envoy's functionality exposed.
+
+## Policy specification
+
+The policies field can contain a comma separate list of policies which will be evaluated.
+
+| attribute name       | purpose                                                                  |
+| -------------------- | ------------------------------------------------------------------------ |
+| checkAPIKey          | Verify apikey                                                            |
+| checkOAuth2          | Verify OAuth2 accesstoken                                                |
+| removeAPIKeyFromQP   | Remove apikey from query parameters                                      |
+| lookupGeoIP          | Set country and state of connecting ip address as [Dynamic Metadata](https://www.envoyproxy.io/docs/envoy/latest/configuration/advanced/well_known_dynamic_metadata) |
+
+## Envoycp control plane
+
+Envoycp monitors database for changed listeners at `xds.configcompileinterval` interval. In case of changes envoycp will compile a new Envoy configuration and notify all envoyproxy instances.
+
+## Example listener configurations
+
+HTTP listener on port `80` mapping incoming requests for http virtual host `www.petstore.com` to routegroup `routes_80`
 
 ```json
 {
@@ -36,53 +81,7 @@ _For POST content-type: application/json is required._
 }
 ```
 
-## Fields specification
-
-| fieldname        | optional  | purpose                                           |
-| ---------------- | --------- | ------------------------------------------------- |
-| name             | mandatory | name (cannot be updated afterwards)               |
-| displayName      | optional  | friendly name                                     |
-| virtualHosts     | mandatory | array of virtal hostnames                         |
-| port             | mandatory | port Envoy will listen on                         |
-| organizationName | mandatory | organization name                                 |
-| routeGroup       | mandatory | indicate which http routing table will be applied |
-
-## Attribute specification
-
-| attribute name       | purpose                                              | possible values              |
-| -------------------- | ---------------------------------------------------- | ---------------------------- |
-| HTTPProtocol         | Highest HTTP protocol to support                     | HTTP/1.1, HTTP/2, HTTP/3     |
-| TLSEnabled           | Whether to enable TLS or not, HTTP/2 always uses TLS | true, false                  |
-| TLSCertificate       | Certificate to use for TLS                           |                              |
-| TLSCertificateKey    | Key of certificate                                   |                              |
-| TLSMinimumVersion    | Minimum version of TLS to use                        | TLSv10,TLSv11, TLSv12 TLSv13 |
-| TLSMaximumVersion    | Maximum version of TLS to use                        | TLSv10,TLSv11, TLSv12 TLSv13 |
-| TLSCipherSuites      | Allowed TLS cipher suite                             |                              |
-| AccessLogFile        | File for storing access logs                         |                              |
-| AccessLogCluster     | Cluster to send access logs to                       |                              |
-
-All attributes listed above are mapped on configuration properties of [Envoy listener API specifications](https://www.envoyproxy.io/docs/envoy/latest/api-v3/api/v3/listener.proto#listener) for detailed explanation of purpose and allowed value of each attribute.
-
-The listener options exposed this way are a subset of Envoy's capabilities, in general any listener configuration option Envoy supports can be exposed  this way. Feel free to open an issue if you need more of Envoy's functionality exposed.
-
-## Policy specification
-
-The policies field can contain a comma separate list of policies which will be evaluated.
-
-| attribute name       | purpose                                                                  |
-| -------------------- | ------------------------------------------------------------------------ |
-| checkAPIKey          | Verify apikey                                                            |
-| checkOAuth2          | Verify OAuth2 accesstoken                                                |
-| removeAPIKeyFromQP   | Remove apikey from query parameters                                      |
-| lookupGeoIP          | Set country and state of connecting ip address as metadata               |
-
-## Background
-
-Envoycp checks the database for new or changed listeners every second. Unrecognized attributes will be ignored and a warning will be logged. In case of any changes envoy will compile a new proxy configuration and send it to all envoyproxy instances.
-
-## More examples
-
-One listener with two virtual hosts sharing one certificate:
+One listener with two virtual hosts sharing a TLS certificate:
 
 ```json
 {

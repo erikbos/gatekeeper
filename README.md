@@ -16,6 +16,24 @@ Gatekeeper is an Gatekeeper proxy with rich API entitlement functionality. It us
 
 ## Introduction
 
+Gatekeeper offers a simple REST [api](docs/api/README.md) to unlock Envoyproxy's advancing routing capabilities:
+
+* Gatekeeper supports TLS for [downstream](docs/api/listener.md) and [upstream](docs/api/cluster.md) traffic.
+
+* Dynamic Routing: Gatekeeper can [route](docs/api/route.md) traffic across multiple backends.
+
+* High Availability: by allowing [retry behaviour](docs/api/route.md) to be configured per path to reduce error rates.
+
+* Health Checks: Gatekeeper can actively [monitor](docs/api/cluster.md) backends.
+
+* Gatekeeper's authentication has detailed metrics on authentication and authorization.
+
+* Envoyproxy offer detailed request metrics on error rates, response latencies, request size.
+
+* Ease of deployment: it consists out 3 containers and a Cassandra database as data store.
+
+* Designed for multi cloud region deployment by default.
+
 Gatekeeper provides API entitlement management:
 
 * Administration of API [developers](docs/api/developer.md) and their [applications](docs/api/developerapp.md).
@@ -24,44 +42,21 @@ Gatekeeper provides API entitlement management:
 
 * Authenticate and authorize developer applications using [API Keys and/or OAuth2](docs/api/key.md).
 
-For backend teams:
-
-* Gatekeeper's authentication has detailed metrics on authentication and authorization
-
-* Envoyproxy offer detailed request metrics on error rates, response latencies, request size.
-
-* Security: Gatekeeper supports TLS for [downstream](docs/api/listener.md) and [upstream](docs/api/cluster.md) traffic.
-
-* Dynamic Routing: Gatekeeper can [route](docs/api/route.md) traffic across multiple backends.
-
-* High Availbility: by allowing [retry behaviour](docs/api/route.md) to be configured per path to reduce error rates.
-
-* Health Checks: Gatekeeper can actively [monitor](docs/api/cluster.md) backends.
-
-* Ease of deployment: it consists out 3 containers and a Cassandra database as backend.
-
-## Getting Started
-
-* [Use Cases](docs/use-cases.md)
-
-* [Architecture](docs/architecture.md)
-
-* [Deployment](docs/deployment.md)
-
 ## Repository structure
 
-* [build](build): Scripts for packaging Gatekeeper components in a Docker images
+* [build](build): Scripts for packaging Gatekeeper components in Docker images
 
-* [configs](configs): Example configuration files for Gatekeeper components
+* [docs](docs): All documentation:
 
-* [docs](docs): Extended documentation (use cases, architecture, api specs, etc.)
-  * [api](docs/api/README.md)
-  * [Deployment guide](docs/deployment.md)
+  * [Architecture](docs/deployment/architecture.md) Architecture
 
-* [examples](examples): Example management API calls to configure Gatekeeper
-  * [deployment/docker](examples/deployment/docker): example Docker compose configuration
+  * [deployment](docs/deployment/README.md): Deployment documentation of each component
 
-* [scripts](scripts): Scripts to deploy Gatekeeper
+  * [api](docs/api/README.md): management API specification
+
+  * [examples](docs/api/examples/README.md): Example management API calls
+
+* [deployment](deployment/docker/README.md): example Docker compose configuration
 
 * [cmd](cmd): Source code of individual Gatekeeper components
 

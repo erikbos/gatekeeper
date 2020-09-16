@@ -5,7 +5,7 @@
 GET http://{{hostname}}/v1/clusters
 
 
-### Create a new cluster
+### Create a new cluster named `people`
 POST http://{{hostname}}/v1/clusters HTTP/1.1
 content-type: application/json
 
@@ -27,7 +27,7 @@ content-type: application/json
 }
 
 
-### Update an existing cluster 
+### Update an existing cluster called `people`
 POST http://{{hostname}}/v1/clusters/people HTTP/1.1
 content-type: application/json
 
@@ -38,7 +38,7 @@ content-type: application/json
     "port": 8000,
     "attributes": [
     {
-        "name": "TLSEnabled",
+        "name": "TLSEnable",
         "value": "true"
     },
     {
@@ -135,7 +135,7 @@ content-type: application/json
     "port": 8000,
     "attributes": [
     {
-        "name": "TLSEnabled",
+        "name": "TLSEnable",
         "value": "true"
     },
     {

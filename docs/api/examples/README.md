@@ -1,6 +1,6 @@
 # Introduction
 
-This directory contains some example API calls.
+This directory contains example API calls for the management API.
 
 A convenient way to execute these is using Visual Code's [REST Client](https://github.com/Huachao/vscode-restclient).
 This will allow you to edit and execute API calls directly from within Visual Code.

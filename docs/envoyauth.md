@@ -16,7 +16,7 @@ Envoyauth exposes multiple endpoints:
 | envoyauth | private | grpc     | authentication requests by envoyproxy  |
 | oauth     | public  | http     | OAuth2 request for access tokens       |
 
-For each there is a corresponding _endpoint.listen_ config field option to set listening address and port.
+For each there is a corresponding `<endpoint>.listen` config field option to set listening address and port.
 
 Scope:
 
@@ -27,27 +27,27 @@ Scope:
 
 ### Configuration
 
-Envoyauth requires a starup configuration which needs to be provided as YAML file, see below for the supported fields. See [config/envoyauth-config-default.yaml[(For an example envoyauth configuration file).
+Envoyauth requires a startup configuration which needs to be provided as YAML file, see below for the supported fields. For an example configuration file see [envoyauth.yaml](../deployment/docker/envoyauth.yaml).
 
 The configuration of envoyproxy to have it forward requests to envoyauth for authentication is done by envoycp.
 
 ### Envoycp
 
-Envoyproxy's authentication configuration is pushed by envoycp, envoycp's configuration section _xds.extauthz_ determine whether it's enabled, what the clustername, timeouts, etc.
+Envoyproxy's authentication configuration is pushed by envoycp, envoycp's configuration section `xds.extauthz` determine whether it's enabled, what the clustername, timeouts, etc.
 
-The envoycp section _xds.extauthz_ contains parameters like:
+The envoycp section `xds.extauthz` contains parameters like:
 
-- _enabled_, envoyproxy-wide switch to enable or disable forwarding requests to envoyauth
-- _cluster_, name of cluster which runs envoyauth
-- _timeout_, maximum allowed duration of authentication requests to envoyauth
-- _failuremodeallow_, in case envoyauth fails should requests be forwarded or not
-- _requestbodysize_, number of bytes of the request body envoyproxy should forward to envoyauth. This is a prerequisite for envoyauth being able to inspect the body of a request.
+- `enabled` envoyproxy-wide switch to enable or disable forwarding requests to envoyauth
+- `cluster` name of cluster which runs envoyauth
+- `timeout` maximum allowed duration of authentication requests to envoyauth
+- `failuremodeallow` in case envoyauth fails should requests be forwarded or not
+- `requestbodysize` number of bytes of the request body envoyproxy should forward to envoyauth. This is a prerequisite for envoyauth being able to inspect the body of a request.
 
 These configuration paramters get pushed out to every new envoyproxy instance.
 
-#### Disable authentication for a route
+#### Enable authentication for a route
 
-Envoyproxy can be configured to skip authentication for a specific route. This is done by adding the attribute "DisableAthentication" with value "true" for a specific route.
+By default authentication for a route is disabled. To have Envoyproxy forward request to the authentication cluster set [route attribute](api/route.md#Attribute) `Authentication` to `true`. The name of the authentication cluster is configured as `envoyproxy.extauthz.cluster` in envoycp's configuration.
 
 ### Caching
 
