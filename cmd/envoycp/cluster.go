@@ -16,6 +16,10 @@ import (
 	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
+const (
+	unknownClusterAttributeWarning = "Cluster '%s' has attribute '%s' with unknown value '%s'"
+)
+
 // getClusterConfig returns array of all envoy clusters
 func (s *server) getEnvoyClusterConfig() ([]cache.Resource, error) {
 
@@ -39,14 +43,15 @@ func buildEnvoyClusterConfig(cluster types.Cluster) *envoyCluster.Cluster {
 		Name:                      cluster.Name,
 		ConnectTimeout:            clusterConnectTimeout(cluster),
 		ClusterDiscoveryType:      &envoyCluster.Cluster_Type{Type: envoyCluster.Cluster_LOGICAL_DNS},
-		DnsLookupFamily:           envoyCluster.Cluster_V4_ONLY,
+		DnsLookupFamily:           clusterDNSLookupFamily(cluster),
 		DnsResolvers:              clusterDNSResolvers(cluster),
 		DnsRefreshRate:            clusterDNSRefreshRate(cluster),
-		LbPolicy:                  envoyCluster.Cluster_ROUND_ROBIN,
+		LbPolicy:                  clusterLbPolicy(cluster),
 		LoadAssignment:            clusterLoadAssignment(cluster),
 		HealthChecks:              clusterHealthChecks(cluster),
 		CommonHttpProtocolOptions: clusterCommonHTTPProtocolOptions(cluster),
 		CircuitBreakers:           clusterCircuitBreakers(cluster),
+		TrackClusterStats:         clusterTrackClusterStats(cluster),
 	}
 
 	// Add TLS and HTTP/2 configuration options in case we want to
@@ -65,6 +70,34 @@ func clusterConnectTimeout(cluster types.Cluster) *duration.Duration {
 		types.AttributeConnectTimeout, types.DefaultClusterConnectTimeout)
 
 	return ptypes.DurationProto(connectTimeout)
+}
+
+func clusterLbPolicy(cluster types.Cluster) envoyCluster.Cluster_LbPolicy {
+
+	value, err := cluster.Attributes.Get(types.AttributeLbPolicy)
+	if err == nil {
+		switch value {
+		case types.AttributeValueLBRoundRobin:
+			return envoyCluster.Cluster_ROUND_ROBIN
+
+		case types.AttributeValueLBLeastRequest:
+			return envoyCluster.Cluster_LEAST_REQUEST
+
+		case types.AttributeValueLBRingHash:
+			return envoyCluster.Cluster_RING_HASH
+
+		case types.AttributeValueLBRandom:
+			return envoyCluster.Cluster_RANDOM
+
+		case types.AttributeValueLBMaglev:
+			return envoyCluster.Cluster_MAGLEV
+
+		default:
+			log.Warnf(unknownClusterAttributeWarning,
+				cluster.Name, types.AttributeLbPolicy, value)
+		}
+	}
+	return envoyCluster.Cluster_ROUND_ROBIN
 }
 
 func clusterLoadAssignment(cluster types.Cluster) *endpoint.ClusterLoadAssignment {
@@ -106,6 +139,15 @@ func clusterCircuitBreakers(cluster types.Cluster) *envoyCluster.CircuitBreakers
 			MaxRequests:        protoUint32orNil(maxRequests),
 			MaxRetries:         protoUint32orNil(maxRetries),
 		}},
+	}
+}
+
+// clusterTrackClusterStats build cluster statistics configuration
+func clusterTrackClusterStats(cluster types.Cluster) *envoyCluster.TrackClusterStats {
+
+	return &envoyCluster.TrackClusterStats{
+		TimeoutBudgets:       true,
+		RequestResponseSizes: true,
 	}
 }
 
@@ -170,7 +212,7 @@ func clusterHealthCodec(cluster types.Cluster) envoyType.CodecClientType {
 			return envoyType.CodecClientType_HTTP3
 
 		default:
-			log.Warnf("Cluster '%s' has attribute '%s' with unknown value '%s'",
+			log.Warnf(unknownClusterAttributeWarning,
 				cluster.Name, types.AttributeHTTPProtocol, value)
 		}
 	}
@@ -200,7 +242,7 @@ func clusterHTTP2ProtocolOptions(cluster types.Cluster) *core.Http2ProtocolOptio
 			// according to spec we need to return at least empty struct to enable HTTP/2
 			return &core.Http2ProtocolOptions{}
 		default:
-			log.Warnf("clusterHTTP2ProtocolOptions: '%s' has attribute '%s' with unknown value '%s'",
+			log.Warnf(unknownClusterAttributeWarning,
 				cluster.Name, types.AttributeHTTPProtocol, value)
 			return nil
 		}
@@ -228,6 +270,25 @@ func clusterSNIHostname(cluster types.Cluster) string {
 		return value
 	}
 	return cluster.HostName
+}
+
+func clusterDNSLookupFamily(cluster types.Cluster) envoyCluster.Cluster_DnsLookupFamily {
+
+	value, err := cluster.Attributes.Get(types.AttributeDNSLookupFamiliy)
+	if err == nil {
+		switch value {
+		case types.AttributeValueDNSIPV4Only:
+			return envoyCluster.Cluster_V4_ONLY
+		case types.AttributeValueDNSIPV6Only:
+			return envoyCluster.Cluster_V6_ONLY
+		case types.AttributeValueDNSAUTO:
+			return envoyCluster.Cluster_AUTO
+		default:
+			log.Warnf(unknownClusterAttributeWarning,
+				cluster.Name, types.AttributeDNSLookupFamiliy, value)
+		}
+	}
+	return envoyCluster.Cluster_AUTO
 }
 
 func clusterDNSRefreshRate(cluster types.Cluster) *duration.Duration {

@@ -86,6 +86,10 @@ content-type: application/json
         "value": "5s"
     },
     {
+        "name": "DNSLookupFamily",
+        "value": "V4_ONLY"
+    },
+    {
         "name": "DNSResolvers",
         "value": "8.8.8.8,1.1.1.1"
     }

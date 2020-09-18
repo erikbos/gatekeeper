@@ -74,11 +74,27 @@ const (
 	// AttributeDNSLookupFamiliy sets IP network address family to use for contacting cluster
 	AttributeDNSLookupFamiliy = "DNSLookupFamily"
 
+	// AttributeValueDNSIPV4Only set IPv4 dns resolving
+	AttributeValueDNSIPV4Only = "V4_ONLY"
+
+	// AttributeValueDNSIPV6Only set IPv6 dns resolving
+	AttributeValueDNSIPV6Only = "V6_ONLY"
+
+	// AttributeValueDNSAUTO set IPv4 or IPv6 dns resolving
+	AttributeValueDNSAUTO = "AUTO"
+
 	// AttributeDNSRefreshRate sets refresh rate for resolving cluster hostname
 	AttributeDNSRefreshRate = "DNSRefreshRate"
 
 	// AttributeDNSResolvers sets resolver ip address to resolve cluster hostname (multiple can be comma separated)
 	AttributeDNSResolvers = "DNSResolvers"
+
+	AttributeLbPolicy            = "LbPolicy"
+	AttributeValueLBRoundRobin   = "ROUND_ROBIN"
+	AttributeValueLBLeastRequest = "LEAST_REQUEST"
+	AttributeValueLBRingHash     = "RING_HASH"
+	AttributeValueLBRandom       = "RANDOM"
+	AttributeValueLBMaglev       = "MAGLEV"
 
 	// DefaultClusterConnectTimeout holds default connection timeout
 	DefaultClusterConnectTimeout = 5 * time.Second
@@ -125,12 +141,16 @@ func (c *Cluster) ConfigCheck() error {
 var validClusterAttributes = map[string]bool{
 	AttributeConnectTimeout:                true,
 	AttributeIdleTimeout:                   true,
+	AttributeDNSLookupFamiliy:              true,
+	AttributeDNSRefreshRate:                true,
+	AttributeDNSResolvers:                  true,
 	AttributeTLSEnable:                     true,
 	AttributeTLSMinimumVersion:             true,
 	AttributeTLSMaximumVersion:             true,
 	AttributeTLSCipherSuites:               true,
 	AttributeHTTPProtocol:                  true,
 	AttributeSNIHostName:                   true,
+	AttributeLbPolicy:                      true,
 	AttributeHealthCheckProtocol:           true,
 	AttributeHealthCheckPath:               true,
 	AttributeHealthCheckInterval:           true,
@@ -142,7 +162,4 @@ var validClusterAttributes = map[string]bool{
 	AttributeMaxPendingRequests:            true,
 	AttributeMaxRequests:                   true,
 	AttributeMaxRetries:                    true,
-	AttributeDNSLookupFamiliy:              true,
-	AttributeDNSRefreshRate:                true,
-	AttributeDNSResolvers:                  true,
 }

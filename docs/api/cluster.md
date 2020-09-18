@@ -58,9 +58,16 @@ Cluster `ticketshop` running on `ticketbackend.svc` port `80`:
 | ----------------------------- | --------------------------------------------------------------------------------------- | ---------------------------- |
 | ConnectTimeout                | The timeout for new network connections to cluster                                      | 1s                           |
 | IdleTimeout                   | The idle timeout for connections, for the period in which there are no active requests. | 60s                          |
-| DNSLookupFamily               | IP network address family to use when resolving cluster hostname                        | IPv6                         |
+| DNSLookupFamily               | IP network address family to use when resolving cluster hostname                        | IPV4_ONLY,IPV6_ONLY,Auto     |
 | DNSRefreshRate                | Refreshrate for resolving cluster hostname                                              | 5s                           |
 | DNSResolvers                  | Resolver ip address(es) to resolve cluster hostname (multiple can be comma separated)   | 1.1.1.1,8.8.8.8              |
+| TLSEnable                     | Whether to enable TLS or not, HTTP/2 always uses TLS                                    | true, false                  |
+| SNIHostName                   | Hostname to send during TLS handshake (if not set hostname will be used)                |                              |
+| TLSMinimumVersion             | Minimum version of TLS to use                                                           | TLSv10,TLSv11, TLSv12 TLSv13 |
+| TLSMaximumVersion             | Maximum version of TLS to use                                                           | TLSv10,TLSv11, TLSv12 TLSv13 |
+| TLSCipherSuites               | Allowed TLS cipher suite                                                                |                              |
+| HTTPProtocol                  | Protocol to use when contacting upstream                                                | HTTP/1.1, HTTP/2, HTTP/3     |
+| LbPolicy                      | Endpoint load balancing algorithm (ROUND_ROBIN,LEAST_REQUEST,RING_HASH,RANDOM,MAGLEV)   |                              |
 | HealthCheckProtocol           | Network protocol to use for health check                                                | HTTP                         |
 | HealthCheckPath               | HTTP Path of health check probe                                                         | /liveness                    |
 | HealthCheckInterval           | Health check interval                                                                   | 5s                           |
@@ -68,16 +75,10 @@ Cluster `ticketshop` running on `ticketbackend.svc` port `80`:
 | HealthCheckUnhealthyThreshold | Threshold of events before declaring cluster unhealth                                   | 3                            |
 | HealthCheckHealthyThreshold   | Threshold of events before declaring clustern health                                    | 1                            |
 | HealthCheckLogFile            | Logfile name for healthcheck probes                                                     | /tmp/healthcheck             |
-| HTTPProtocol                  | Protocol to use when contacting upstream                                                | HTTP/1.1, HTTP/2, HTTP/3     |
 | MaxConnections                | The maximum number of connections that Envoy will make to the upstream cluster          | 1000                         |
 | MaxPendingRequests            | The maximum number of pending requests that Envoy will allow to the upstream cluster    | 1024                         |
 | MaxRequests                   | The maximum number of parallel requests that Envoy will make to the upstream cluster    | 1024                         |
 | MaxRetries                    | The maximum number of parallel retries that Envoy will allow to the upstream cluster    | 3                            |
-| TLSEnable                     | Whether to enable TLS or not, HTTP/2 always uses TLS                                    | true, false                  |
-| SNIHostName                   | Hostname to send during TLS handshake (if not set hostname will be used)                |                              |
-| TLSMinimumVersion             | Minimum version of TLS to use                                                           | TLSv10,TLSv11, TLSv12 TLSv13 |
-| TLSMaximumVersion             | Maximum version of TLS to use                                                           | TLSv10,TLSv11, TLSv12 TLSv13 |
-| TLSCipherSuites               | Allowed TLS cipher suite                                                                |                              |
 
 All attributes listed above are mapped onto configuration properties of [Envoy Cluster API specifications](https://www.envoyproxy.io/docs/envoy/latest/api-v3/api/v3/cluster.proto#cluster) for detailed explanation of purpose and allowed value of each attribute.
 

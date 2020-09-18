@@ -264,15 +264,6 @@ func (s *server) extAuthzWithRequestBody() *extauthz.BufferSettings {
 	return nil
 }
 
-// Not necessary anymore as we receive routes via RDS (buildRouteSpecifierRDS)
-//
-// func (s *server) buildRouteSpecifier(RouteGroup string) *hcm.HttpConnectionManager_RouteConfig {
-
-// 	return &hcm.HttpConnectionManager_RouteConfig{
-// 		RouteConfig: s.buildEnvoyListenerRouteConfig(RouteGroup, s.routes),
-// 	}
-// }
-
 func (s *server) buildRouteSpecifierRDS(routeGroup string) *hcm.HttpConnectionManager_Rds {
 
 	return &hcm.HttpConnectionManager_Rds{
