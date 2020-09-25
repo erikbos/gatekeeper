@@ -6,7 +6,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/erikbos/gatekeeper/pkg/shared"
 	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
@@ -39,32 +38,33 @@ func NewClusterStore(database *Database) *ClusterStore {
 }
 
 // GetAll retrieves all clusters
-func (s *ClusterStore) GetAll() (types.Clusters, error) {
+func (s *ClusterStore) GetAll() (types.Clusters, types.Error) {
 
 	query := "SELECT " + clusterColumns + " FROM clusters"
 	clusters, err := s.runGetClusterQuery(query)
 	if err != nil {
-		s.db.metrics.QueryMiss(clusterMetricLabel)
-		return types.Clusters{}, err
+		s.db.metrics.QueryFailed(clusterMetricLabel)
+		return types.NullClusters, types.NewDatabaseError(err)
 	}
 
 	s.db.metrics.QueryHit(clusterMetricLabel)
 	return clusters, nil
 }
 
-// GetByName retrieves a cluster from database
-func (s *ClusterStore) GetByName(clusterName string) (*types.Cluster, error) {
+// Get retrieves a cluster from database
+func (s *ClusterStore) Get(clusterName string) (*types.Cluster, types.Error) {
 
 	query := "SELECT " + clusterColumns + " FROM clusters WHERE name = ? LIMIT 1"
 	clusters, err := s.runGetClusterQuery(query, clusterName)
-
 	if err != nil {
-		return nil, err
+		s.db.metrics.QueryFailed(clusterMetricLabel)
+		return nil, types.NewDatabaseError(err)
 	}
 
 	if len(clusters) == 0 {
 		s.db.metrics.QueryMiss(clusterMetricLabel)
-		return nil, fmt.Errorf("Can not find cluster (%s)", clusterName)
+		return nil, types.NewItemNotFoundError(
+			fmt.Errorf("Can not find cluster (%s)", clusterName))
 	}
 
 	s.db.metrics.QueryHit(clusterMetricLabel)
@@ -102,11 +102,8 @@ func (s *ClusterStore) runGetClusterQuery(query string, queryParameters ...inter
 	return clusters, nil
 }
 
-// UpdateByName UPSERTs an cluster in database
-func (s *ClusterStore) UpdateByName(c *types.Cluster) error {
-
-	c.Attributes.Tidy()
-	c.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
+// Update UPSERTs an cluster in database
+func (s *ClusterStore) Update(c *types.Cluster) types.Error {
 
 	query := "INSERT INTO clusters (" + clusterColumns + ") VALUES(?,?,?,?,?,?,?,?,?)"
 	if err := s.db.CassandraSession.Query(query,
@@ -120,19 +117,20 @@ func (s *ClusterStore) UpdateByName(c *types.Cluster) error {
 		c.LastmodifiedAt,
 		c.LastmodifiedBy).Exec(); err != nil {
 
-		return fmt.Errorf("Can not update cluster '%s' (%v)", c.Name, err)
+		s.db.metrics.QueryFailed(clusterMetricLabel)
+		return types.NewDatabaseError(
+			fmt.Errorf("Cannot update cluster '%s'", c.Name))
 	}
 	return nil
 }
 
-// DeleteByName deletes a cluster
-func (s *ClusterStore) DeleteByName(clusterToDelete string) error {
-
-	_, err := s.GetByName(clusterToDelete)
-	if err != nil {
-		return err
-	}
+// Delete deletes a cluster
+func (s *ClusterStore) Delete(clusterToDelete string) types.Error {
 
 	query := "DELETE FROM clusters WHERE name = ?"
-	return s.db.CassandraSession.Query(query, clusterToDelete).Exec()
+	if err := s.db.CassandraSession.Query(query, clusterToDelete).Exec(); err != nil {
+		s.db.metrics.QueryFailed(clusterMetricLabel)
+		return types.NewDatabaseError(err)
+	}
+	return nil
 }

@@ -6,7 +6,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/erikbos/gatekeeper/pkg/shared"
 	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
@@ -42,31 +41,35 @@ func NewListenerStore(database *Database) *ListenerStore {
 }
 
 // GetAll retrieves all listeners
-func (s *ListenerStore) GetAll() (types.Listeners, error) {
+func (s *ListenerStore) GetAll() (types.Listeners, types.Error) {
 
 	query := "SELECT " + listenerColumns + " FROM listeners"
 	listeners, err := s.runGetListenerQuery(query)
 	if err != nil {
-		s.db.metrics.QueryMiss(listenerMetricLabel)
-		return types.Listeners{}, err
+		s.db.metrics.QueryFailed(listenerMetricLabel)
+		return types.NullListeners, types.NewDatabaseError(err)
+
 	}
 
 	s.db.metrics.QueryHit(listenerMetricLabel)
 	return listeners, nil
 }
 
-// GetByName retrieves a listener
-func (s *ListenerStore) GetByName(listenerName string) (*types.Listener, error) {
+// Get retrieves a listener
+func (s *ListenerStore) Get(listenerName string) (*types.Listener, types.Error) {
 
 	query := "SELECT " + listenerColumns + " FROM listeners WHERE name = ? LIMIT 1"
 	listeners, err := s.runGetListenerQuery(query, listenerName)
 	if err != nil {
-		return nil, err
+		s.db.metrics.QueryFailed(listenerMetricLabel)
+		return nil, types.NewDatabaseError(err)
+
 	}
 
 	if len(listeners) == 0 {
 		s.db.metrics.QueryMiss(listenerMetricLabel)
-		return nil, fmt.Errorf("Can not find listener (%s)", listenerName)
+		return nil, types.NewItemNotFoundError(
+			fmt.Errorf("Can not find listener '%s'", listenerName))
 	}
 
 	s.db.metrics.QueryHit(listenerMetricLabel)
@@ -109,40 +112,38 @@ func (s *ListenerStore) runGetListenerQuery(query string,
 	return listeners, nil
 }
 
-// UpdateByName updates a listener
-func (s *ListenerStore) UpdateByName(vhost *types.Listener) error {
-
-	vhost.Attributes.Tidy()
-	vhost.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
+// Update updates a listener
+func (s *ListenerStore) Update(l *types.Listener) types.Error {
 
 	query := "INSERT INTO listeners (" + listenerColumns + ") VALUES(?,?,?,?,?,?,?,?,?,?,?,?)"
 	if err := s.db.CassandraSession.Query(query,
-		vhost.Name,
-		vhost.DisplayName,
-		vhost.VirtualHosts.Marshal(),
-		vhost.Port,
-		vhost.RouteGroup,
-		vhost.Policies,
-		vhost.Attributes.Marshal(),
-		vhost.OrganizationName,
-		vhost.CreatedAt,
-		vhost.CreatedBy,
-		vhost.LastmodifiedAt,
-		vhost.LastmodifiedBy).Exec(); err != nil {
+		l.Name,
+		l.DisplayName,
+		l.VirtualHosts.Marshal(),
+		l.Port,
+		l.RouteGroup,
+		l.Policies,
+		l.Attributes.Marshal(),
+		l.OrganizationName,
+		l.CreatedAt,
+		l.CreatedBy,
+		l.LastmodifiedAt,
+		l.LastmodifiedBy).Exec(); err != nil {
 
-		return fmt.Errorf("Cannot update listener '%s', '%v'", vhost.Name, err)
+		s.db.metrics.QueryFailed(listenerMetricLabel)
+		return types.NewDatabaseError(
+			fmt.Errorf("Cannot update listener '%s'", l.Name))
 	}
 	return nil
 }
 
-// DeleteByName deletes a listener
-func (s *ListenerStore) DeleteByName(listenerToDelete string) error {
-
-	_, err := s.GetByName(listenerToDelete)
-	if err != nil {
-		return err
-	}
+// Delete deletes a listener
+func (s *ListenerStore) Delete(listenerToDelete string) types.Error {
 
 	query := "DELETE FROM listeners WHERE name = ?"
-	return s.db.CassandraSession.Query(query, listenerToDelete).Exec()
+	if err := s.db.CassandraSession.Query(query, listenerToDelete).Exec(); err != nil {
+		s.db.metrics.QueryFailed(listenerMetricLabel)
+		return types.NewDatabaseError(err)
+	}
+	return nil
 }

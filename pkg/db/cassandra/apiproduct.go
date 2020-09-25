@@ -7,7 +7,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/erikbos/gatekeeper/pkg/shared"
 	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
@@ -43,14 +42,14 @@ func NewAPIProductStore(database *Database) *APIProductStore {
 }
 
 // GetAll retrieves all api products
-func (s *APIProductStore) GetAll() (types.APIProducts, error) {
+func (s *APIProductStore) GetAll() (types.APIProducts, types.Error) {
 
 	query := "SELECT " + apiProductsColumns + " FROM api_products"
 
 	apiproducts, err := s.runGetAPIProductQuery(query)
 	if err != nil {
-		s.db.metrics.QueryMiss(apiProductsMetricLabel)
-		return types.APIProducts{}, err
+		s.db.metrics.QueryFailed(apiProductsMetricLabel)
+		return types.APIProducts{}, types.NewDatabaseError(err)
 	}
 
 	s.db.metrics.QueryHit(apiProductsMetricLabel)
@@ -58,39 +57,40 @@ func (s *APIProductStore) GetAll() (types.APIProducts, error) {
 }
 
 // GetByOrganization retrieves all api products belonging to an organization
-func (s *APIProductStore) GetByOrganization(organizationName string) (types.APIProducts, error) {
+func (s *APIProductStore) GetByOrganization(organizationName string) (types.APIProducts, types.Error) {
 	query := "SELECT " + apiProductsColumns + " FROM api_products WHERE organization_name = ? ALLOW FILTERING"
 
 	apiproducts, err := s.runGetAPIProductQuery(query, organizationName)
 	if err != nil {
-		s.db.metrics.QueryMiss(apiProductsMetricLabel)
-		return types.APIProducts{}, err
+		s.db.metrics.QueryFailed(apiProductsMetricLabel)
+		return types.APIProducts{}, types.NewDatabaseError(err)
 	}
 
 	if len(apiproducts) == 0 {
 		s.db.metrics.QueryMiss(apiProductsMetricLabel)
-		return apiproducts,
-			fmt.Errorf("Can not find apiproducts in organization %s", organizationName)
+		return apiproducts, types.NewItemNotFoundError(
+			fmt.Errorf("Can not find apiproducts in organization '%s'", organizationName))
 	}
 
 	s.db.metrics.QueryHit(apiProductsMetricLabel)
 	return apiproducts, nil
 }
 
-// GetByName returns an apiproduct
-func (s *APIProductStore) GetByName(organizationName, apiproductName string) (*types.APIProduct, error) {
+// Get returns an apiproduct
+func (s *APIProductStore) Get(organizationName, apiproductName string) (*types.APIProduct, types.Error) {
 
 	query := "SELECT " + apiProductsColumns + " FROM api_products WHERE organization_name = ? AND name = ? LIMIT 1"
 
 	apiproducts, err := s.runGetAPIProductQuery(query, organizationName, apiproductName)
 	if err != nil {
-		s.db.metrics.QueryMiss(apiProductsMetricLabel)
-		return nil, err
+		s.db.metrics.QueryFailed(apiProductsMetricLabel)
+		return nil, types.NewDatabaseError(err)
 	}
 
 	if len(apiproducts) == 0 {
 		s.db.metrics.QueryMiss(apiProductsMetricLabel)
-		return nil, fmt.Errorf("Could not find apiproduct (%s)", apiproductName)
+		return nil, types.NewItemNotFoundError(
+			fmt.Errorf("Could not find apiproduct '%s'", apiproductName))
 	}
 
 	s.db.metrics.QueryHit(apiProductsMetricLabel)
@@ -142,11 +142,8 @@ func (s *APIProductStore) runGetAPIProductQuery(query string, queryParameters ..
 	return apiproducts, nil
 }
 
-// UpdateByName UPSERTs an apiproduct in database
-func (s *APIProductStore) UpdateByName(p *types.APIProduct) error {
-
-	p.Attributes.Tidy()
-	p.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
+// Update UPSERTs an apiproduct in database
+func (s *APIProductStore) Update(p *types.APIProduct) types.Error {
 
 	query := "INSERT INTO api_products (" + apiProductsColumns + ") VALUES(?,?,?,?,?,?,?,?,?,?,?,?)"
 	if err := s.db.CassandraSession.Query(query,
@@ -163,19 +160,26 @@ func (s *APIProductStore) UpdateByName(p *types.APIProduct) error {
 		p.LastmodifiedBy,
 		p.OrganizationName).Exec(); err != nil {
 
-		return fmt.Errorf("Can not update apiproduct '%s' (%v)", p.Name, err)
+		s.db.metrics.QueryFailed(apiProductsMetricLabel)
+		return types.NewDatabaseError(
+			fmt.Errorf("Cannot update apiproduct '%s'", p.Name))
 	}
 	return nil
 }
 
-// DeleteByName deletes an apiproduct
-func (s *APIProductStore) DeleteByName(organizationName, apiProduct string) error {
+// Delete deletes an apiproduct
+func (s *APIProductStore) Delete(organizationName, apiProduct string) types.Error {
 
-	apiproduct, err := s.GetByName(organizationName, apiProduct)
+	apiproduct, err := s.Get(organizationName, apiProduct)
 	if err != nil {
+		s.db.metrics.QueryFailed(apiProductsMetricLabel)
 		return err
 	}
 
 	query := "DELETE FROM api_products WHERE name = ?"
-	return s.db.CassandraSession.Query(query, apiproduct.Name).Exec()
+	if err := s.db.CassandraSession.Query(query, apiproduct.Name).Exec(); err != nil {
+		s.db.metrics.QueryFailed(apiProductsMetricLabel)
+		return types.NewDatabaseError(err)
+	}
+	return nil
 }

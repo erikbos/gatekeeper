@@ -6,15 +6,15 @@ type (
 	// ListenerStore is the listener information storage interface
 	ListenerStore interface {
 		// GetAll retrieves all listeners
-		GetAll() (types.Listeners, error)
+		GetAll() (types.Listeners, types.Error)
 
-		// GetByName retrieves a listener
-		GetByName(listener string) (*types.Listener, error)
+		// Get retrieves a listener
+		Get(listener string) (*types.Listener, types.Error)
 
-		// UpdateByName updates a listener
-		UpdateByName(vhost *types.Listener) error
+		// Update updates a listener
+		Update(listener *types.Listener) types.Error
 
-		// DeleteByName deletes a listener
-		DeleteByName(listenerToDelete string) error
+		// Delete deletes a listener
+		Delete(listenerToDelete string) types.Error
 	}
 )

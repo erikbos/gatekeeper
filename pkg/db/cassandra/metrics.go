@@ -8,6 +8,7 @@ type metricsCollection struct {
 	hostname            string
 	LookupHitsCounter   *prometheus.CounterVec
 	LookupMissesCounter *prometheus.CounterVec
+	LookupFailedCounter *prometheus.CounterVec
 	LookupHistogram     prometheus.Summary
 }
 
@@ -29,6 +30,13 @@ func (m *metricsCollection) register(serviceName, hostName string) {
 			Help:      "Number of unsuccessful database lookups.",
 		}, []string{"hostname", "table"})
 
+	m.LookupFailedCounter = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: serviceName,
+			Name:      "database_lookup_failed_total",
+			Help:      "Number of failed database lookups.",
+		}, []string{"hostname", "table"})
+
 	m.LookupHistogram = prometheus.NewSummary(
 		prometheus.SummaryOpts{
 			Name: serviceName + "_database_lookup_latency",
@@ -40,6 +48,7 @@ func (m *metricsCollection) register(serviceName, hostName string) {
 
 	prometheus.MustRegister(m.LookupHitsCounter)
 	prometheus.MustRegister(m.LookupMissesCounter)
+	prometheus.MustRegister(m.LookupFailedCounter)
 	prometheus.MustRegister(m.LookupHistogram)
 }
 
@@ -51,4 +60,9 @@ func (m *metricsCollection) QueryHit(tableName string) {
 // QueryMiss increases negative metric counter
 func (m *metricsCollection) QueryMiss(tableName string) {
 	m.LookupMissesCounter.WithLabelValues(m.hostname, tableName).Inc()
+}
+
+// QueryFailed increases failed metric counter
+func (m *metricsCollection) QueryFailed(tableName string) {
+	m.LookupFailedCounter.WithLabelValues(m.hostname, tableName).Inc()
 }

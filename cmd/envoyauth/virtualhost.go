@@ -46,7 +46,7 @@ func (v *vhostMapping) buildVhostMap() map[vhostMapEntry]types.Listener {
 	newListeners := make(map[vhostMapEntry]types.Listener)
 
 	for _, listener := range v.dbentities.GetListeners() {
-		listener.Attributes = types.Attributes{}
+		listener.Attributes = types.NullAttributes
 
 		for _, host := range listener.VirtualHosts {
 			newListeners[vhostMapEntry{strings.ToLower(host),

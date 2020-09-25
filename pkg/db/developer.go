@@ -6,21 +6,21 @@ type (
 	// DeveloperStore the developer information storage interface
 	DeveloperStore interface {
 		// GetByOrganization retrieves all developer belonging to an organization
-		GetByOrganization(organizationName string) (types.Developers, error)
+		GetByOrganization(organizationName string) (types.Developers, types.Error)
 
 		// GetCountByOrganization retrieves number of developer belonging to an organization
-		GetCountByOrganization(organizationName string) int
+		GetCountByOrganization(organizationName string) (int, types.Error)
 
 		// GetByEmail retrieves a developer
-		GetByEmail(developerOrganization, developerEmail string) (*types.Developer, error)
+		GetByEmail(developerOrganization, developerEmail string) (*types.Developer, types.Error)
 
 		// GetByID retrieves a developer
-		GetByID(developerID string) (*types.Developer, error)
+		GetByID(developerID string) (*types.Developer, types.Error)
 
-		// UpdateByName UPSERTs a developer
-		UpdateByName(dev *types.Developer) error
+		// Update UPSERTs a developer
+		Update(dev *types.Developer) types.Error
 
-		// DeleteByEmail deletes a developer
-		DeleteByEmail(organizationName, developerEmail string) error
+		// DeleteByID deletes a developer
+		DeleteByID(organizationName, developerID string) types.Error
 	}
 )

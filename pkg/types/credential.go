@@ -4,19 +4,44 @@ import "encoding/json"
 
 // DeveloperAppKey contains an apikey entitlement
 type DeveloperAppKey struct {
-	ConsumerKey      string             `json:"consumerKey"`      // apikey of this credential
-	ConsumerSecret   string             `json:"consumerSecret"`   // secretid of crendetial, to be used in OAuth2 token rq
-	APIProducts      APIProductStatuses `json:"apiProducts"`      // List of apiproduct which can be accessed
-	Attributes       Attributes         `json:"attributes"`       // Attributes of credential
-	ExpiresAt        int64              `json:"expiresAt"`        // Expiry date in epoch milliseconds
-	IssuedAt         int64              `json:"issuesAt"`         // Issue date in epoch milliseconds
-	AppID            string             `json:"AppId"`            // Developer app id
-	OrganizationName string             `json:"organizationName"` // Organization this credential belongs to
-	Status           string             `json:"status"`           // Status (should be "approved" to allow access)
+	// apikey of this credential
+	ConsumerKey string `json:"consumerKey"`
+
+	// secretid of crendetial, to be used in OAuth2 token rq
+	ConsumerSecret string `json:"consumerSecret"`
+
+	// List of apiproduct which can be accessed
+	APIProducts APIProductStatuses `json:"apiProducts"`
+
+	// Attributes of credential
+	Attributes Attributes `json:"attributes"`
+
+	// Expiry date in epoch milliseconds
+	ExpiresAt int64 `json:"expiresAt"`
+
+	// Issue date in epoch milliseconds
+	IssuedAt int64 `json:"issuesAt"`
+
+	// Developer app id
+	AppID string `json:"AppId"`
+
+	// Organization this credential belongs to
+	OrganizationName string `json:"organizationName"`
+
+	// Status (should be "approved" to allow access)
+	Status string `json:"status"`
 }
 
 // DeveloperAppKeys holds one or more apikeys
 type DeveloperAppKeys []DeveloperAppKey
+
+var (
+	// NullDeveloperAppKey is an empty key type
+	NullDeveloperAppKey = DeveloperAppKey{}
+
+	// NullDeveloperAppKeys is an empty key slice
+	NullDeveloperAppKeys = DeveloperAppKeys{}
+)
 
 // APIProductStatus contains whether an apikey's assigned apiproduct has been approved
 type APIProductStatus struct {

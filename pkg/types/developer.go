@@ -2,21 +2,56 @@ package types
 
 // Developer contains everything about a Developer
 type Developer struct {
-	DeveloperID      string      `json:"developerId"`                  // Id of developer (not changable)
-	Status           string      `json:"status"`                       // Status of developer (should be "approved" to allow access)
-	OrganizationName string      `json:"organizationName"`             // Organization this developer belongs to
-	Apps             StringSlice `json:"apps"`                         // Name of developer applications of this developer
-	Attributes       Attributes  `json:"attributes"`                   // Attributes of developer
-	Email            string      `json:"email" binding:"required"`     // Email address
-	UserName         string      `json:"userName" binding:"required"`  // Username
-	FirstName        string      `json:"firstName" binding:"required"` // First name
-	LastName         string      `json:"lastName" binding:"required"`  // Last name
-	CreatedAt        int64       `json:"createdAt"`                    // Created at timestamp in epoch milliseconds
-	CreatedBy        string      `json:"createdBy"`                    // Name of user who created this organiz
-	SuspendedTill    int64       `json:"suspendedTill"`                // if set developer is suspend till this time, epoch milliseconds
-	LastmodifiedAt   int64       `json:"lastmodifiedAt"`               // Last modified at timestamp in epoch milliseconds
-	LastmodifiedBy   string      `json:"lastmodifiedBy"`               // Name of user who last updated this organization
+	// Id of developer (not changable)
+	DeveloperID string `json:"developerId"`
+
+	// Status of developer (should be "approved" to allow access)
+	Status string `json:"status"`
+
+	// Organization this developer belongs to
+	OrganizationName string `json:"organizationName"`
+
+	// Name of developer applications of this developer
+	Apps StringSlice `json:"apps"`
+
+	// Attributes of developer
+	Attributes Attributes `json:"attributes"`
+
+	// Email address
+	Email string `json:"email" binding:"required"`
+
+	// Username
+	UserName string `json:"userName" binding:"required"`
+
+	// First name
+	FirstName string `json:"firstName" binding:"required"`
+
+	// Last name
+	LastName string `json:"lastName" binding:"required"`
+
+	// Created at timestamp in epoch milliseconds
+	CreatedAt int64 `json:"createdAt"`
+
+	// Name of user who created this organiz
+	CreatedBy string `json:"createdBy"`
+
+	// if set developer is suspend till this time, epoch milliseconds
+	SuspendedTill int64 `json:"suspendedTill"`
+
+	// Last modified at timestamp in epoch milliseconds
+	LastmodifiedAt int64 `json:"lastmodifiedAt"`
+
+	// Name of user who last updated this organization
+	LastmodifiedBy string `json:"lastmodifiedBy"`
 }
 
 // Developers holds one or more developers
 type Developers []Developer
+
+var (
+	// NullDeveloper is an empty developer type
+	NullDeveloper = Developer{}
+
+	// NullDevelopers is an empty developer slice
+	NullDevelopers = Developers{}
+)

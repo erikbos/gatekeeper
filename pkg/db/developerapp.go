@@ -6,21 +6,21 @@ type (
 	// DeveloperAppStore the developer app information storage interface
 	DeveloperAppStore interface {
 		// GetByOrganization retrieves all developer apps belonging to an organization
-		GetByOrganization(organizationName string) (types.DeveloperApps, error)
+		GetByOrganization(organizationName string) (types.DeveloperApps, types.Error)
 
 		// GetByName returns a developer app
-		GetByName(organization, developerAppName string) (*types.DeveloperApp, error)
+		GetByName(organization, developerAppName string) (*types.DeveloperApp, types.Error)
 
 		// GetByID returns a developer app
-		GetByID(organization, developerAppID string) (*types.DeveloperApp, error)
+		GetByID(organization, developerAppID string) (*types.DeveloperApp, types.Error)
 
 		// GetCountByDeveloperID retrieves number of apps belonging to a developer
-		GetCountByDeveloperID(developerID string) int
+		GetCountByDeveloperID(developerID string) (int, types.Error)
 
 		// UpdateByName UPSERTs a developer app
-		UpdateByName(app *types.DeveloperApp) error
+		Update(app *types.DeveloperApp) types.Error
 
 		// DeleteByID deletes a developer app
-		DeleteByID(organizationName, developerAppID string) error
+		DeleteByID(organizationName, developerAppID string) types.Error
 	}
 )

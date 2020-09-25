@@ -6,15 +6,15 @@ type (
 	// ClusterStore the cluster information storage interface
 	ClusterStore interface {
 		// GetAll retrieves all clusters
-		GetAll() (types.Clusters, error)
+		GetAll() (types.Clusters, types.Error)
 
-		// GetByName retrieves a cluster from database
-		GetByName(clusterName string) (*types.Cluster, error)
+		// Get retrieves a cluster from database
+		Get(clusterName string) (*types.Cluster, types.Error)
 
-		// UpdateByName UPSERTs an cluster in database
-		UpdateByName(c *types.Cluster) error
+		// Update UPSERTs an cluster in database
+		Update(c *types.Cluster) types.Error
 
-		// UpdateByName UPSERTs an cluster in database
-		DeleteByName(clusterToDelete string) error
+		// Update UPSERTs an cluster in database
+		Delete(clusterToDelete string) types.Error
 	}
 )

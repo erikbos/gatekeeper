@@ -6,18 +6,18 @@ type (
 	// APIProductStore the apiproduct information storage interface
 	APIProductStore interface {
 		// GetAll retrieves all api products
-		GetAll() (types.APIProducts, error)
+		GetAll() (types.APIProducts, types.Error)
 
 		// GetByOrganization retrieves all api products belonging to an organization
-		GetByOrganization(organizationName string) (types.APIProducts, error)
+		GetByOrganization(organizationName string) (types.APIProducts, types.Error)
 
-		// GetByName returns an apiproduct
-		GetByName(organizationName, apiproductName string) (*types.APIProduct, error)
+		// Get returns an apiproduct
+		Get(organizationName, apiproductName string) (*types.APIProduct, types.Error)
 
-		// UpdateByName UPSERTs an apiproduct in database
-		UpdateByName(p *types.APIProduct) error
+		// Update UPSERTs an apiproduct in database
+		Update(p *types.APIProduct) types.Error
 
-		// DeleteByName deletes an apiproduct
-		DeleteByName(organizationName, apiProduct string) error
+		// Delete deletes an apiproduct
+		Delete(organizationName, apiProduct string) types.Error
 	}
 )

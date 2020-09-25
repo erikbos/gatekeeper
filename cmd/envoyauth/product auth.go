@@ -154,7 +154,7 @@ func (a *authorizationServer) getAPIProduct(organization, apiproductname *string
 	product, err := a.cache.GetAPIProduct(organization, apiproductname)
 	// in case we do not have product in cache let's try to retrieve it from database
 	if err != nil {
-		product, err = a.db.APIProduct.GetByName(*organization, *apiproductname)
+		product, err = a.db.APIProduct.Get(*organization, *apiproductname)
 		if err == nil {
 			// Store retrieved APIProduct in cache, in case of error we proceed as we can
 			// statisfy the request as we did retrieve succesful from database

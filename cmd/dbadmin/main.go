@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/erikbos/gatekeeper/cmd/dbadmin/handler"
 	"github.com/erikbos/gatekeeper/pkg/db"
 	"github.com/erikbos/gatekeeper/pkg/db/cassandra"
 	"github.com/erikbos/gatekeeper/pkg/shared"
@@ -23,8 +24,9 @@ const (
 
 type server struct {
 	config    *DBAdminConfig
-	ginEngine *gin.Engine
+	router    *gin.Engine
 	db        *db.Database
+	handler   *handler.Handler
 	readiness *shared.Readiness
 }
 

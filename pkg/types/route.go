@@ -8,20 +8,47 @@ import (
 
 // Route holds configuration of a route
 type Route struct {
-	Name           string     `json:"name"`           // Name of route (not changable)
-	DisplayName    string     `json:"displayName"`    // Friendly display name of route
-	RouteGroup     string     `json:"RouteGroup"`     // Routegroup this route is part of
-	Path           string     `json:"path"`           // Path of route
-	PathType       string     `json:"pathType"`       // Type of pathmatching: path, prefix, regexp
-	Attributes     Attributes `json:"attributes"`     // Attributes of this route
-	CreatedAt      int64      `json:"createdAt"`      // Created at timestamp in epoch milliseconds
-	CreatedBy      string     `json:"createdBy"`      // Name of user who created this route
-	LastmodifiedAt int64      `json:"lastmodifiedAt"` // Last modified at timestamp in epoch milliseconds
-	LastmodifiedBy string     `json:"lastmodifiedBy"` // Name of user who last updated this route
+	// Name of route (not changable)
+	Name string `json:"name"`
+
+	// Friendly display name of route
+	DisplayName string `json:"displayName"`
+
+	// Routegroup this route is part of
+	RouteGroup string `json:"RouteGroup"`
+
+	// Path of route
+	Path string `json:"path"`
+
+	// Type of pathmatching: path, prefix, regexp
+	PathType string `json:"pathType"`
+
+	// Attributes of this route
+	Attributes Attributes `json:"attributes"`
+
+	// Created at timestamp in epoch milliseconds
+	CreatedAt int64 `json:"createdAt"`
+
+	// Name of user who created this route
+	CreatedBy string `json:"createdBy"`
+
+	// Last modified at timestamp in epoch milliseconds
+	LastmodifiedAt int64 `json:"lastmodifiedAt"`
+
+	// Name of user who last updated this route
+	LastmodifiedBy string `json:"lastmodifiedBy"`
 }
 
 // Routes holds one or more routes
 type Routes []Route
+
+var (
+	// NullRoute is an empty route type
+	NullRoute = Route{}
+
+	// NullRoutes is an empty route slice
+	NullRoutes = Routes{}
+)
 
 // Attributes supported on a route
 const (

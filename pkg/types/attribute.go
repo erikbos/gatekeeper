@@ -2,7 +2,7 @@ package types
 
 import (
 	"encoding/json"
-	"errors"
+	"fmt"
 	"sort"
 	"strconv"
 	"strings"
@@ -11,12 +11,29 @@ import (
 
 // Attribute is an array with attributes of developer or developer app
 type Attribute struct {
-	Name  string `json:"name"`  // Attribute name
-	Value string `json:"value"` // Attribute value
+	// Attribute name, minimum required length is 5
+	Name string `json:"name" binding:"required,min=5"`
+
+	// Attribute value, minimum required length is 1
+	Value string `json:"value" binding:"required,min=1"`
 }
 
 // Attributes holds one or more attributes
 type Attributes []Attribute
+
+var (
+	// NullAttribute is an empty attribute type
+	NullAttribute = Attribute{}
+
+	// NullAttributes is an empty attributes slice
+	NullAttributes = Attributes{}
+)
+
+// AttributeValue is the single attribute type we receive from API
+type AttributeValue struct {
+	// Attribute value, minimum required length is 1
+	Value string `json:"value" binding:"required,min=1"`
+}
 
 // Attributes which are shared amongst listener, route and cluster
 const (
@@ -51,14 +68,14 @@ const (
 )
 
 // Get return one named attribute from attributes
-func (attributes *Attributes) Get(name string) (string, error) {
+func (attributes *Attributes) Get(name string) (string, Error) {
 
 	for _, element := range *attributes {
 		if element.Name == name {
 			return element.Value, nil
 		}
 	}
-	return "", errors.New("Attribute not found")
+	return "", NewItemNotFoundError(fmt.Errorf("Cannot find attribute '%s'", name))
 }
 
 // GetAsString returns attribute value (or provided default if not found) as type string
@@ -97,34 +114,34 @@ func (attributes *Attributes) GetAsDuration(name string, defaultDuration time.Du
 	return defaultDuration
 }
 
-// Set updates or adds attribute in slice.
-func (attributes *Attributes) Set(name, value string) {
+// Set updates or adds attribute in slice. Returns old value if attribute already existed.
+func (attributes *Attributes) Set(attributeValue Attribute) (oldValue string, oldValuePresent bool) {
 
 	updatedAttributes := Attributes{}
 
-	var existingAttribute bool
 	for _, oldAttribute := range *attributes {
 		// In case attribute exists overwrite it
-		if oldAttribute.Name == name {
-			existingAttribute = true
-			updatedAttributes = append(updatedAttributes, Attribute{
-				Name:  name,
-				Value: value,
-			})
+		if oldAttribute.Name == attributeValue.Name {
+			oldValuePresent = true
+			oldValue = oldAttribute.Value
+
+			updatedAttributes = append(updatedAttributes, attributeValue)
 		} else {
 			updatedAttributes = append(updatedAttributes, oldAttribute)
 		}
 	}
 	// In case it is an new attribute append it
-	if !existingAttribute {
-		updatedAttributes = append(updatedAttributes, Attribute{
-			Name:  name,
-			Value: value,
-		})
+	if !oldValuePresent {
+		updatedAttributes = append(updatedAttributes, attributeValue)
 	}
 
 	// Overwrite existing slice with new slice
 	*attributes = updatedAttributes
+
+	if oldValuePresent {
+		return oldValue, true
+	}
+	return "", false
 }
 
 // Tidy removes duplicate, trims all names & values and sorts attribute by name
@@ -157,12 +174,11 @@ func (attributes *Attributes) Tidy() {
 }
 
 // Delete removes attribute from slice. Returns delete status and deleted attribute's value
-func (attributes *Attributes) Delete(name string) (deleted bool, oldValue string) {
+func (attributes *Attributes) Delete(name string) (valueOfDeletedAttribute string, e Error) {
 
 	updatedAttributes := Attributes{}
 
 	var attributeDeleted bool
-	var valueOfDeletedAttribute string
 
 	for _, attribute := range *attributes {
 		if attribute.Name == name {
@@ -176,9 +192,9 @@ func (attributes *Attributes) Delete(name string) (deleted bool, oldValue string
 	*attributes = updatedAttributes
 
 	if attributeDeleted {
-		return true, valueOfDeletedAttribute
+		return valueOfDeletedAttribute, nil
 	}
-	return false, ""
+	return "", NewItemNotFoundError(fmt.Errorf("Could not delete attribute '%s'", name))
 }
 
 // Unmarshal unpacks JSON array of attributes
@@ -192,7 +208,7 @@ func (attributes Attributes) Unmarshal(jsonArrayOfAttributes string) Attributes 
 			return attributes
 		}
 	}
-	return nil
+	return NullAttributes
 }
 
 // Marshal packs slice of attributes into JSON

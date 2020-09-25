@@ -6,7 +6,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/erikbos/gatekeeper/pkg/shared"
 	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
@@ -41,38 +40,39 @@ func NewDeveloperAppStore(database *Database) *DeveloperAppStore {
 }
 
 // GetByOrganization retrieves all developer apps belonging to an organization
-func (s *DeveloperAppStore) GetByOrganization(organizationName string) (types.DeveloperApps, error) {
+func (s *DeveloperAppStore) GetByOrganization(organizationName string) (types.DeveloperApps, types.Error) {
 
 	query := "SELECT " + developerAppColumns + " FROM developer_apps WHERE organization_name = ? ALLOW FILTERING"
 	developerapps, err := s.runGetDeveloperAppQuery(query, organizationName)
 	if err != nil {
 		s.db.metrics.QueryMiss(developerAppsMetricLabel)
-		return types.DeveloperApps{}, err
+		return types.NullDeveloperApps, types.NewDatabaseError(err)
 	}
 
-	// if len(developerapps) == 0 {
-	// 	s.db.metrics.QueryMiss(developerAppsMetricLabel)
-	// 	return developerapps,
-	// 		fmt.Errorf("Can not find developer apps in organization '%s'", organizationName)
-	// }
+	if len(developerapps) == 0 {
+		s.db.metrics.QueryMiss(developerAppsMetricLabel)
+		return types.NullDeveloperApps, types.NewItemNotFoundError(
+			fmt.Errorf("Can not find developer apps in organization '%s'", organizationName))
+	}
 
 	s.db.metrics.QueryHit(developerAppsMetricLabel)
 	return developerapps, nil
 }
 
 // GetByName returns a developer app
-func (s *DeveloperAppStore) GetByName(organization, developerAppName string) (*types.DeveloperApp, error) {
+func (s *DeveloperAppStore) GetByName(organization, developerAppName string) (*types.DeveloperApp, types.Error) {
 
 	query := "SELECT " + developerAppColumns + " FROM developer_apps WHERE organization_name = ? AND name = ? LIMIT 1"
 	developerapps, err := s.runGetDeveloperAppQuery(query, organization, developerAppName)
 	if err != nil {
 		s.db.metrics.QueryMiss(developerAppsMetricLabel)
-		return nil, err
+		return nil, types.NewDatabaseError(err)
 	}
 
 	if len(developerapps) == 0 {
 		s.db.metrics.QueryMiss(developerAppsMetricLabel)
-		return nil, fmt.Errorf("Can not find developer app '%s'", developerAppName)
+		return nil, types.NewItemNotFoundError(
+			fmt.Errorf("Can not find developer app '%s'", developerAppName))
 	}
 
 	s.db.metrics.QueryHit(developerAppsMetricLabel)
@@ -80,17 +80,18 @@ func (s *DeveloperAppStore) GetByName(organization, developerAppName string) (*t
 }
 
 // GetByID returns a developer app
-func (s *DeveloperAppStore) GetByID(organization, developerAppID string) (*types.DeveloperApp, error) {
+func (s *DeveloperAppStore) GetByID(organization, developerAppID string) (*types.DeveloperApp, types.Error) {
 
 	query := "SELECT " + developerAppColumns + " FROM developer_apps WHERE app_id = ? LIMIT 1"
 	developerapps, err := s.runGetDeveloperAppQuery(query, developerAppID)
 	if err != nil {
-		return nil, err
+		return nil, types.NewDatabaseError(err)
 	}
 
 	if len(developerapps) == 0 {
 		s.db.metrics.QueryMiss(developerAppsMetricLabel)
-		return nil, fmt.Errorf("Can not find developer app id '%s'", developerAppID)
+		return nil, types.NewItemNotFoundError(
+			fmt.Errorf("Can not find developer app id '%s'", developerAppID))
 	}
 
 	s.db.metrics.QueryHit(developerAppsMetricLabel)
@@ -98,17 +99,17 @@ func (s *DeveloperAppStore) GetByID(organization, developerAppID string) (*types
 }
 
 // GetCountByDeveloperID retrieves number of apps belonging to a developer
-func (s *DeveloperAppStore) GetCountByDeveloperID(developerID string) int {
+func (s *DeveloperAppStore) GetCountByDeveloperID(developerID string) (int, types.Error) {
 
 	var developerAppCount int
 	query := "SELECT count(*) FROM developer_apps WHERE developer_id = ?"
 	if err := s.db.CassandraSession.Query(query, developerID).Scan(&developerAppCount); err != nil {
 		s.db.metrics.QueryMiss(developerAppsMetricLabel)
-		return -1
+		return -1, types.NewDatabaseError(err)
 	}
 
 	s.db.metrics.QueryHit(developerAppsMetricLabel)
-	return developerAppCount
+	return developerAppCount, nil
 }
 
 // runGetDeveloperAppQuery executes CQL query and returns resulset
@@ -144,11 +145,8 @@ func (s *DeveloperAppStore) runGetDeveloperAppQuery(query string, queryParameter
 	return developerapps, nil
 }
 
-// UpdateByName UPSERTs a developer app
-func (s *DeveloperAppStore) UpdateByName(app *types.DeveloperApp) error {
-
-	app.Attributes.Tidy()
-	app.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
+// Update UPSERTs a developer app
+func (s *DeveloperAppStore) Update(app *types.DeveloperApp) types.Error {
 
 	query := "INSERT INTO developer_apps (" + developerAppColumns + ") VALUES(?,?,?,?,?,?,?,?,?,?,?)"
 	if err := s.db.CassandraSession.Query(query,
@@ -164,14 +162,15 @@ func (s *DeveloperAppStore) UpdateByName(app *types.DeveloperApp) error {
 		app.LastmodifiedAt,
 		app.LastmodifiedBy).Exec(); err != nil {
 
-		return fmt.Errorf("Cannot update developer app '%s' (%v)",
-			app.AppID, err)
+		s.db.metrics.QueryFailed(developerAppsMetricLabel)
+		return types.NewDatabaseError(
+			fmt.Errorf("Cannot update developer app '%s'", app.AppID))
 	}
 	return nil
 }
 
 // DeleteByID deletes a developer app
-func (s *DeveloperAppStore) DeleteByID(organizationName, developerAppID string) error {
+func (s *DeveloperAppStore) DeleteByID(organizationName, developerAppID string) types.Error {
 
 	_, err := s.GetByID(organizationName, developerAppID)
 	if err != nil {
@@ -179,5 +178,9 @@ func (s *DeveloperAppStore) DeleteByID(organizationName, developerAppID string) 
 	}
 
 	query := "DELETE FROM developer_apps WHERE app_id = ?"
-	return s.db.CassandraSession.Query(query, developerAppID).Exec()
+	if err := s.db.CassandraSession.Query(query, developerAppID).Exec(); err != nil {
+		s.db.metrics.QueryFailed(developerAppsMetricLabel)
+		return types.NewDatabaseError(err)
+	}
+	return nil
 }

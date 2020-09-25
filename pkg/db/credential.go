@@ -6,18 +6,15 @@ type (
 	// CredentialStore the cluster information storage interface
 	CredentialStore interface {
 		// GetByKey returns details of a single apikey
-		GetByKey(organizationName, key *string) (*types.DeveloperAppKey, error)
+		GetByKey(organizationName, key *string) (*types.DeveloperAppKey, types.Error)
 
 		// GetByDeveloperAppID returns an array with apikey details of a developer app
-		GetByDeveloperAppID(developerAppID string) (types.DeveloperAppKeys, error)
-
-		// GetCountByDeveloperAppID retrieves number of keys beloning to developer app
-		GetCountByDeveloperAppID(developerAppID string) int
+		GetByDeveloperAppID(developerAppID string) (types.DeveloperAppKeys, types.Error)
 
 		// UpdateByKey UPSERTs credentials
-		UpdateByKey(c *types.DeveloperAppKey) error
+		UpdateByKey(c *types.DeveloperAppKey) types.Error
 
 		// DeleteByKey deletes credentials
-		DeleteByKey(organizationName, consumerKey string) error
+		DeleteByKey(organizationName, consumerKey string) types.Error
 	}
 )

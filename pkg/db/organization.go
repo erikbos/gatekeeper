@@ -6,15 +6,15 @@ type (
 	// OrganizationStore the organization information storage interface
 	OrganizationStore interface {
 		// GetAll retrieves all organizations
-		GetAll() (types.Organizations, error)
+		GetAll() (types.Organizations, types.Error)
 
-		// GetByName retrieves an organization
-		GetByName(organizationName string) (*types.Organization, error)
+		// Get retrieves an organization
+		Get(organizationName string) (*types.Organization, types.Error)
 
-		// UpdateByName UPSERTs an organization
-		UpdateByName(o *types.Organization) error
+		// Update UPSERTs an organization
+		Update(o *types.Organization) types.Error
 
-		// DeleteByName deletes an organization
-		DeleteByName(organizationToDelete string) error
+		// Delete deletes an organization
+		Delete(organizationToDelete string) types.Error
 	}
 )

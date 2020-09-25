@@ -6,15 +6,15 @@ type (
 	// RouteStore the route information storage interface
 	RouteStore interface {
 		// GetAll retrieves all routes
-		GetAll() (types.Routes, error)
+		GetAll() (types.Routes, types.Error)
 
-		// GetRouteByName retrieves a route from database
-		GetRouteByName(routeName string) (*types.Route, error)
+		// Get retrieves a route from database
+		Get(routeName string) (*types.Route, types.Error)
 
-		// UpdateRouteByName UPSERTs an route
-		UpdateRouteByName(route *types.Route) error
+		// Update UPSERTs an route
+		Update(route *types.Route) types.Error
 
-		// DeleteRouteByName deletes a route
-		DeleteRouteByName(routeToDelete string) error
+		// Delete deletes a route
+		Delete(routeToDelete string) types.Error
 	}
 )

@@ -7,22 +7,52 @@ import (
 
 // Listener contains everything about downstream configuration of listener and http virtual hosts
 type Listener struct {
-	Name             string      `json:"name"`             // Name of listener (not changable)
-	DisplayName      string      `json:"displayName"`      // Friendly display name of listener
-	VirtualHosts     StringSlice `json:"virtualHosts"`     // Virtual hosts of this listener
-	Port             int         `json:"port"`             // tcp port to listen on
-	RouteGroup       string      `json:"routeGroup"`       // Routegroup to forward traffic to
-	Policies         string      `json:"policies"`         // Comma separated list of policynames, to apply to requests
-	Attributes       Attributes  `json:"attributes"`       // Attributes of this listener
-	OrganizationName string      `json:"organizationName"` // Organization this listener belongs to (not used)
-	CreatedAt        int64       `json:"createdAt"`        // Created at timestamp in epoch milliseconds
-	CreatedBy        string      `json:"createdBy"`        // Name of user who created this listener
-	LastmodifiedAt   int64       `json:"lastmodifiedAt"`   // Last modified at timestamp in epoch milliseconds
-	LastmodifiedBy   string      `json:"lastmodifiedBy"`   // Name of user who last updated this listener
+	// Name of listener (not changable)
+	Name string `json:"name"`
+
+	// Friendly display name of listener
+	DisplayName string `json:"displayName"`
+
+	// Virtual hosts of this listener
+	VirtualHosts StringSlice `json:"virtualHosts"`
+
+	// tcp port to listen on
+	Port int `json:"port"`
+
+	// Routegroup to forward traffic to
+	RouteGroup string `json:"routeGroup"`
+
+	// Comma separated list of policynames, to apply to requests
+	Policies string `json:"policies"`
+
+	// Attributes of this listener
+	Attributes Attributes `json:"attributes"`
+
+	// Organization this listener belongs to (not used)
+	OrganizationName string `json:"organizationName"`
+
+	// Created at timestamp in epoch milliseconds
+	CreatedAt int64 `json:"createdAt"`
+	// Name of user who created this listener
+
+	CreatedBy string `json:"createdBy"`
+	// Last modified at timestamp in epoch milliseconds
+	LastmodifiedAt int64 `json:"lastmodifiedAt"`
+
+	// Name of user who last updated this listener
+	LastmodifiedBy string `json:"lastmodifiedBy"`
 }
 
 // Listeners holds one or more Listeners
 type Listeners []Listener
+
+var (
+	// NullListener is an empty listener type
+	NullListener = Listener{}
+
+	// NullListeners is an empty listener slice
+	NullListeners = Listeners{}
+)
 
 // listener specific attributes
 const (

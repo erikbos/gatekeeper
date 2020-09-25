@@ -7,7 +7,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/erikbos/gatekeeper/pkg/shared"
 	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
@@ -38,33 +37,34 @@ func NewOrganizationStore(database *Database) *OrganizationStore {
 }
 
 // GetAll retrieves all organizations
-func (s *OrganizationStore) GetAll() (types.Organizations, error) {
+func (s *OrganizationStore) GetAll() (types.Organizations, types.Error) {
 
 	// FIXME this ugly workaround to have to pass an argument
 	query := "SELECT " + organizationColumns + " FROM organizations ALLOW FILTERING"
 	organizations, err := s.runGetOrganizationQuery(query, "")
 	if err != nil {
-		s.db.metrics.QueryMiss(organizationMetricLabel)
-		return types.Organizations{}, err
+		s.db.metrics.QueryFailed(organizationMetricLabel)
+		return types.NullOrganizations, types.NewDatabaseError(err)
 	}
 
 	s.db.metrics.QueryHit(organizationMetricLabel)
 	return organizations, nil
 }
 
-// GetByName retrieves an organization
-func (s *OrganizationStore) GetByName(organizationName string) (*types.Organization, error) {
+// Get retrieves an organization
+func (s *OrganizationStore) Get(organizationName string) (*types.Organization, types.Error) {
 
 	query := "SELECT " + organizationColumns + " FROM organizations WHERE name = ? LIMIT 1"
 	organizations, err := s.runGetOrganizationQuery(query, organizationName)
 	if err != nil {
-		s.db.metrics.QueryMiss(organizationMetricLabel)
-		return nil, err
+		s.db.metrics.QueryFailed(organizationMetricLabel)
+		return nil, types.NewDatabaseError(err)
 	}
 
 	if len(organizations) == 0 {
 		s.db.metrics.QueryMiss(organizationMetricLabel)
-		return nil, fmt.Errorf("Can not find organization (%s)", organizationName)
+		return nil, types.NewItemNotFoundError(
+			fmt.Errorf("Cannot find organization '%s'", organizationName))
 	}
 
 	s.db.metrics.QueryHit(organizationMetricLabel)
@@ -85,11 +85,6 @@ func (s *OrganizationStore) runGetOrganizationQuery(query, queryParameter string
 		iter = s.db.CassandraSession.Query(query, queryParameter).Iter()
 	}
 
-	if iter.NumRows() == 0 {
-		_ = iter.Close()
-		return types.Organizations{}, nil
-	}
-
 	m := make(map[string]interface{})
 	for iter.MapScan(m) {
 		organizations = append(organizations, types.Organization{
@@ -105,16 +100,13 @@ func (s *OrganizationStore) runGetOrganizationQuery(query, queryParameter string
 	}
 	if err := iter.Close(); err != nil {
 		log.Error(err)
-		return types.Organizations{}, err
+		return types.NullOrganizations, err
 	}
 	return organizations, nil
 }
 
-// UpdateByName UPSERTs an organization
-func (s *OrganizationStore) UpdateByName(o *types.Organization) error {
-
-	o.Attributes.Tidy()
-	o.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
+// Update UPSERTs an organization
+func (s *OrganizationStore) Update(o *types.Organization) types.Error {
 
 	query := "INSERT INTO organizations (" + organizationColumns + ") VALUES(?,?,?,?,?,?,?)"
 	if err := s.db.CassandraSession.Query(query,
@@ -126,19 +118,20 @@ func (s *OrganizationStore) UpdateByName(o *types.Organization) error {
 		o.LastmodifiedAt,
 		o.LastmodifiedBy).Exec(); err != nil {
 
-		return fmt.Errorf("Cannot update organization '%s' (%v)", o.Name, err)
+		s.db.metrics.QueryFailed(organizationMetricLabel)
+		return types.NewDatabaseError(
+			fmt.Errorf("Cannot update organization '%s'", o.Name))
 	}
 	return nil
 }
 
-// DeleteByName deletes an organization
-func (s *OrganizationStore) DeleteByName(organizationToDelete string) error {
-
-	_, err := s.GetByName(organizationToDelete)
-	if err != nil {
-		return err
-	}
+// Delete deletes an organization
+func (s *OrganizationStore) Delete(organizationToDelete string) types.Error {
 
 	query := "DELETE FROM organizations WHERE name = ?"
-	return s.db.CassandraSession.Query(query, organizationToDelete).Exec()
+	if err := s.db.CassandraSession.Query(query, organizationToDelete).Exec(); err != nil {
+		s.db.metrics.QueryFailed(organizationMetricLabel)
+		return types.NewDatabaseError(err)
+	}
+	return nil
 }

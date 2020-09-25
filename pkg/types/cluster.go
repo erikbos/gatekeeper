@@ -8,85 +8,110 @@ import (
 
 // Cluster holds configuration of an upstream cluster
 type Cluster struct {
-	Name           string     `json:"name"`           // Name of cluster (not changable)
-	DisplayName    string     `json:"displayName"`    // Friendly display name of cluster
-	HostName       string     `json:"hostName"`       // Hostname of cluster
-	Port           int        `json:"port"`           // tcp port of cluster
-	Attributes     Attributes `json:"attributes"`     // Attributes of this cluster
-	CreatedAt      int64      `json:"createdAt"`      // Created at timestamp in epoch milliseconds
-	CreatedBy      string     `json:"createdBy"`      // Name of user who created this cluster
-	LastmodifiedAt int64      `json:"lastmodifiedAt"` // Last modified at timestamp in epoch milliseconds
-	LastmodifiedBy string     `json:"lastmodifiedBy"` // Name of user who last updated this cluster
+	// Name of cluster (not changable)
+	Name string `json:"name"`
+
+	// Friendly display name of cluster
+	DisplayName string `json:"displayName"`
+	// Hostname of cluster
+	HostName string `json:"hostName"`
+
+	// tcp port of cluster
+	Port int `json:"port"`
+
+	// Attributes of this cluster
+	Attributes Attributes `json:"attributes"`
+
+	// Created at timestamp in epoch milliseconds
+	CreatedAt int64 `json:"createdAt"`
+
+	// Name of user who created this cluster
+	CreatedBy string `json:"createdBy"`
+
+	// Last modified at timestamp in epoch milliseconds
+	LastmodifiedAt int64 `json:"lastmodifiedAt"`
+
+	// Name of user who last updated this cluster
+	LastmodifiedBy string `json:"lastmodifiedBy"`
 }
 
 // Clusters holds one or more clusters
 type Clusters []Cluster
 
+var (
+	// NullCluster is an empty cluster type
+	NullCluster = Cluster{}
+
+	// NullClusters is an empty cluster slice
+	NullClusters = Clusters{}
+)
+
+// Cluster specific attributes
 const (
-	// AttributeConnectTimeout is timeout for new network connections to cluster
+	// Timeout for new network connections to cluster
 	AttributeConnectTimeout = "ConnectTimeout"
 
-	// AttributeIdleTimeout is idle timeout for connections, for the period in which there are no active requests
+	// Tdle timeout for connections, for the period in which there are no active requests
 	AttributeIdleTimeout = "IdleTimeout"
 
-	// AttributeTLSEnable determines whether to enable TLS or not, HTTP/2 always uses TLS
+	// Determines whether to enable TLS or not, HTTP/2 always uses TLS
 	AttributeTLSEnable = "TLSEnable"
 
-	// AttributeSNIHostName holds hostname to send during TLS handshake (if not set a cluster's hostname will be used)
+	// Holds hostname to send during TLS handshake (if not set a cluster's hostname will be used)
 	AttributeSNIHostName = "SNIHostName"
 
-	// AttributeHealthCheckProtocol determines network protocol to use for health check
+	// Sets network protocol to use for health check
 	AttributeHealthCheckProtocol = "HealthCheckProtocol"
 
-	// AttributeHealthHostHeader determines host header to use for health check
+	// Determines host header to use for health check
 	AttributeHealthHostHeader = "HealthCheckHostHeader"
 
-	// AttributeHealthCheckPath determines http path of health check probe
+	// Determines http path of health check probe
 	AttributeHealthCheckPath = "HealthCheckPath"
 
-	// AttributeHealthCheckInterval determines health check interval
+	// Health check interval for probes
 	AttributeHealthCheckInterval = "HealthCheckInterval"
 
-	// AttributeHealthCheckTimeout determines health check timeout
+	// Health check timeout
 	AttributeHealthCheckTimeout = "HealthCheckTimeout"
 
-	// AttributeHealthCheckUnhealthyThreshold sets threshold of attempts before declaring cluster unhealthly
+	// Threshold of attempts before declaring cluster unhealthly
 	AttributeHealthCheckUnhealthyThreshold = "HealthCheckUnhealthyThreshold"
 
-	// AttributeHealthCheckHealthyThreshold sets threshold of attempts before declaring cluster healthly
+	// Threshold of attempts before declaring cluster healthly
 	AttributeHealthCheckHealthyThreshold = "HealthCheckHealthyThreshold"
 
-	// AttributeHealthCheckLogFile determines logfile name for healthcheck probes
+	// Logfile name for healthcheck probes
 	AttributeHealthCheckLogFile = "HealthCheckLogFile"
 
-	// AttributeMaxConnections determines maximum number of connects to cluster
+	// Maximum number of connects to cluster
 	AttributeMaxConnections = "MaxConnections"
 
-	// AttributeMaxPendingRequests sets maximum number of pending cluster requests
+	// Maximum number of pending cluster requests
 	AttributeMaxPendingRequests = "MaxPendingRequests"
 
-	// AttributeMaxRequests sets maximum number of parallel requests to cluster
+	// Maximum number of parallel requests to cluster
 	AttributeMaxRequests = "MaxRequests"
 
-	// AttributeMaxRetries sets maximum number of retries to cluster
+	// Maximum number of retries to cluster
 	AttributeMaxRetries = "MaxRetries"
 
-	// AttributeDNSLookupFamiliy sets IP network address family to use for contacting cluster
+	// IP network address family to use for contacting cluster
 	AttributeDNSLookupFamiliy = "DNSLookupFamily"
 
-	// AttributeValueDNSIPV4Only set IPv4 dns resolving
+	// dns resolving using v4 only
 	AttributeValueDNSIPV4Only = "V4_ONLY"
 
-	// AttributeValueDNSIPV6Only set IPv6 dns resolving
+	// dns resolving using v6 only
 	AttributeValueDNSIPV6Only = "V6_ONLY"
 
-	// AttributeValueDNSAUTO set IPv4 or IPv6 dns resolving
+	// dns resolving via both v4 & v6
 	AttributeValueDNSAUTO = "AUTO"
 
-	// AttributeDNSRefreshRate sets refresh rate for resolving cluster hostname
+	// Refresh rate for resolving cluster hostname
 	AttributeDNSRefreshRate = "DNSRefreshRate"
 
-	// AttributeDNSResolvers sets resolver ip address to resolve cluster hostname (multiple can be comma separated)
+	// Resolver ip address(es) to use for dns resolution (multiple can be comma separated)
 	AttributeDNSResolvers = "DNSResolvers"
 
 	AttributeLbPolicy            = "LbPolicy"
@@ -96,25 +121,25 @@ const (
 	AttributeValueLBRandom       = "RANDOM"
 	AttributeValueLBMaglev       = "MAGLEV"
 
-	// DefaultClusterConnectTimeout holds default connection timeout
+	// Default connection timeout
 	DefaultClusterConnectTimeout = 5 * time.Second
 
-	// DefaultClusterIdleTimeout holds default cluster connect idle timeout
+	// Default cluster connect idle timeout
 	DefaultClusterIdleTimeout = 15 * time.Minute
 
-	// DefaultHealthCheckInterval holds default health check interval
+	// Default health check interval
 	DefaultHealthCheckInterval = 5 * time.Second
 
-	// DefaultHealthCheckTimeout holds default health check timeout
+	// Default health check timeout
 	DefaultHealthCheckTimeout = 10 * time.Second
 
-	// DefaultHealthCheckUnhealthyThreshold holds default unhealthy threshold
+	// Default unhealthy threshold
 	DefaultHealthCheckUnhealthyThreshold = 2
 
-	// DefaultHealthCheckHealthyThreshold holds default healthy threshold
+	// Default healthy threshold
 	DefaultHealthCheckHealthyThreshold = 2
 
-	// DefaultDNSRefreshRate holds default dns resolution interval of cluster hostname
+	// Default dns resolution interval of cluster hostname
 	DefaultDNSRefreshRate = 5 * time.Second
 )
 

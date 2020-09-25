@@ -6,7 +6,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/erikbos/gatekeeper/pkg/shared"
 	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
@@ -41,31 +40,33 @@ func NewRouteStore(database *Database) *RouteStore {
 }
 
 // GetAll retrieves all routes
-func (s *RouteStore) GetAll() (types.Routes, error) {
+func (s *RouteStore) GetAll() (types.Routes, types.Error) {
 
 	query := "SELECT * FROM routes"
 	routes, err := s.runGetRouteQuery(query)
 	if err != nil {
-		s.db.metrics.QueryMiss(routeMetricLabel)
-		return types.Routes{}, err
+		s.db.metrics.QueryFailed(routeMetricLabel)
+		return types.NullRoutes, types.NewDatabaseError(err)
 	}
 
 	s.db.metrics.QueryHit(routeMetricLabel)
 	return routes, nil
 }
 
-// GetRouteByName retrieves a route from database
-func (s *RouteStore) GetRouteByName(routeName string) (*types.Route, error) {
+// Get retrieves a route from database
+func (s *RouteStore) Get(routeName string) (*types.Route, types.Error) {
 
 	query := "SELECT * FROM routes WHERE name = ? LIMIT 1"
 	routes, err := s.runGetRouteQuery(query, routeName)
 	if err != nil {
-		return nil, err
+		s.db.metrics.QueryFailed(routeMetricLabel)
+		return nil, types.NewDatabaseError(err)
 	}
 
 	if len(routes) == 0 {
 		s.db.metrics.QueryMiss(routeMetricLabel)
-		return nil, fmt.Errorf("Can not find route (%s)", routeName)
+		return nil, types.NewItemNotFoundError(
+			fmt.Errorf("Can not find route '%s'", routeName))
 	}
 
 	s.db.metrics.QueryHit(routeMetricLabel)
@@ -104,38 +105,36 @@ func (s *RouteStore) runGetRouteQuery(query string, queryParameters ...interface
 	return routes, nil
 }
 
-// UpdateRouteByName UPSERTs an route
-func (s *RouteStore) UpdateRouteByName(route *types.Route) error {
-
-	route.Attributes.Tidy()
-	route.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
+// Update UPSERTs an route
+func (s *RouteStore) Update(r *types.Route) types.Error {
 
 	query := "INSERT INTO routes (" + routeColumns + ") VALUES(?,?,?,?,?,?,?,?,?,?)"
 	if err := s.db.CassandraSession.Query(query,
-		route.Name,
-		route.DisplayName,
-		route.RouteGroup,
-		route.Path,
-		route.PathType,
-		route.Attributes.Marshal(),
-		route.CreatedAt,
-		route.CreatedBy,
-		route.LastmodifiedAt,
-		route.LastmodifiedBy).Exec(); err != nil {
+		r.Name,
+		r.DisplayName,
+		r.RouteGroup,
+		r.Path,
+		r.PathType,
+		r.Attributes.Marshal(),
+		r.CreatedAt,
+		r.CreatedBy,
+		r.LastmodifiedAt,
+		r.LastmodifiedBy).Exec(); err != nil {
 
-		return fmt.Errorf("Cannot update route '%s' (%v)", route.Name, err)
+		s.db.metrics.QueryFailed(routeMetricLabel)
+		return types.NewDatabaseError(
+			fmt.Errorf("Cannot update route '%s'", r.Name))
 	}
 	return nil
 }
 
-// DeleteRouteByName deletes a route
-func (s *RouteStore) DeleteRouteByName(routeToDelete string) error {
-
-	_, err := s.GetRouteByName(routeToDelete)
-	if err != nil {
-		return err
-	}
+// Delete deletes a route
+func (s *RouteStore) Delete(routeToDelete string) types.Error {
 
 	query := "DELETE FROM routes WHERE name = ?"
-	return s.db.CassandraSession.Query(query, routeToDelete).Exec()
+	if err := s.db.CassandraSession.Query(query, routeToDelete).Exec(); err != nil {
+		s.db.metrics.QueryFailed(routeMetricLabel)
+		return types.NewDatabaseError(err)
+	}
+	return nil
 }

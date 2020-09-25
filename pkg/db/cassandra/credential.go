@@ -3,9 +3,10 @@ package cassandra
 import (
 	"fmt"
 
-	"github.com/erikbos/gatekeeper/pkg/types"
 	"github.com/prometheus/client_golang/prometheus"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
 const (
@@ -38,7 +39,7 @@ func NewCredentialStore(database *Database) *CredentialStore {
 }
 
 // GetByKey returns details of a single apikey
-func (s *CredentialStore) GetByKey(organizationName, key *string) (*types.DeveloperAppKey, error) {
+func (s *CredentialStore) GetByKey(organizationName, key *string) (*types.DeveloperAppKey, types.Error) {
 
 	var appcredentials types.DeveloperAppKeys
 	var err error
@@ -51,12 +52,14 @@ func (s *CredentialStore) GetByKey(organizationName, key *string) (*types.Develo
 		appcredentials, err = s.runGetAppCredentialQuery(query, key, organizationName)
 	}
 	if err != nil {
-		return nil, err
+		s.db.metrics.QueryFailed(appCredentialsMetricLabel)
+		return nil, types.NewDatabaseError(err)
 	}
 
 	if len(appcredentials) == 0 {
 		s.db.metrics.QueryMiss(appCredentialsMetricLabel)
-		return nil, fmt.Errorf("Can not find apikey '%s'", *key)
+		return nil, types.NewItemNotFoundError(
+			fmt.Errorf("Can not find apikey '%s'", *key))
 	}
 
 	s.db.metrics.QueryHit(appCredentialsMetricLabel)
@@ -64,37 +67,24 @@ func (s *CredentialStore) GetByKey(organizationName, key *string) (*types.Develo
 }
 
 // GetByDeveloperAppID returns an array with apikey details of a developer app
-func (s *CredentialStore) GetByDeveloperAppID(developerAppID string) (types.DeveloperAppKeys, error) {
+func (s *CredentialStore) GetByDeveloperAppID(developerAppID string) (types.DeveloperAppKeys, types.Error) {
 
 	query := "SELECT " + appCredentialsColumn + " FROM credentials WHERE app_id = ?"
 	appcredentials, err := s.runGetAppCredentialQuery(query, developerAppID)
 	if err != nil {
-		return nil, err
+		s.db.metrics.QueryFailed(appCredentialsMetricLabel)
+		return nil, types.NewDatabaseError(err)
 	}
 
 	if len(appcredentials) == 0 {
 		s.db.metrics.QueryMiss(appCredentialsMetricLabel)
 		// Not being able to find a developer is not an error
-		return appcredentials, nil
+		return appcredentials, types.NewItemNotFoundError(
+			fmt.Errorf("Can not find api keys of developer app id '%s'", developerAppID))
 	}
 
 	s.db.metrics.QueryHit(appCredentialsMetricLabel)
 	return appcredentials, nil
-}
-
-// GetCountByDeveloperAppID retrieves number of keys beloning to developer app
-func (s *CredentialStore) GetCountByDeveloperAppID(developerAppID string) int {
-
-	var AppCredentialCount int
-
-	query := "SELECT count(*) FROM credentials WHERE app_id = ?"
-	if err := s.db.CassandraSession.Query(query, developerAppID).Scan(&AppCredentialCount); err != nil {
-		s.db.metrics.QueryMiss(appCredentialsMetricLabel)
-		return -1
-	}
-
-	s.db.metrics.QueryHit(appCredentialsMetricLabel)
-	return AppCredentialCount
 }
 
 // runAppCredentialQuery executes CQL query and returns resulset
@@ -130,9 +120,7 @@ func (s *CredentialStore) runGetAppCredentialQuery(query string, queryParameters
 }
 
 // UpdateByKey UPSERTs credentials in database
-func (s *CredentialStore) UpdateByKey(c *types.DeveloperAppKey) error {
-
-	c.Attributes.Tidy()
+func (s *CredentialStore) UpdateByKey(c *types.DeveloperAppKey) types.Error {
 
 	query := "INSERT INTO credentials (" + appCredentialsColumn + ") VALUES(?,?,?,?,?,?,?,?,?)"
 	if err := s.db.CassandraSession.Query(query,
@@ -146,19 +134,20 @@ func (s *CredentialStore) UpdateByKey(c *types.DeveloperAppKey) error {
 		c.IssuedAt,
 		c.ExpiresAt).Exec(); err != nil {
 
-		return fmt.Errorf("Can not update credential '%s', (%v)", c.ConsumerKey, err)
+		s.db.metrics.QueryFailed(appCredentialsMetricLabel)
+		return types.NewDatabaseError(
+			fmt.Errorf("Cannot update credential '%s'", c.ConsumerKey))
 	}
 	return nil
 }
 
 // DeleteByKey deletes credentials
-func (s *CredentialStore) DeleteByKey(organizationName, consumerKey string) error {
-
-	_, err := s.GetByKey(&organizationName, &consumerKey)
-	if err != nil {
-		return err
-	}
+func (s *CredentialStore) DeleteByKey(organizationName, consumerKey string) types.Error {
 
 	query := "DELETE FROM credentials WHERE consumer_key = ?"
-	return s.db.CassandraSession.Query(query, consumerKey).Exec()
+	if err := s.db.CassandraSession.Query(query, consumerKey).Exec(); err != nil {
+		s.db.metrics.QueryFailed(appCredentialsMetricLabel)
+		return types.NewDatabaseError(err)
+	}
+	return nil
 }
