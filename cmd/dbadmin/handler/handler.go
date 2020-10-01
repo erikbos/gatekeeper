@@ -128,9 +128,9 @@ func handleBadRequest(e error) handlerResponse {
 	return handlerResponse{error: types.NewBadRequestError(e)}
 }
 
-func handleUnauthorized(e error) handlerResponse {
-	return handlerResponse{error: types.NewUnauthorizedError(e)}
-}
+// func handleUnauthorized(e error) handlerResponse {
+// 	return handlerResponse{error: types.NewUnauthorizedError(e)}
+// }
 
 // handleNameMismatch when an entity update request has a name mismatch between name of entity in url path
 // vs name of entity in POSTed JSON name field

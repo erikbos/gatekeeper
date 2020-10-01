@@ -1,11 +1,9 @@
 package handler
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 
 	"github.com/erikbos/gatekeeper/pkg/types"
 )
@@ -15,17 +13,17 @@ func (h *Handler) registerDeveloperAppRoutes(r *gin.RouterGroup) {
 	r.GET("/organizations/:organization/apps/:application", h.handler(h.getByName))
 
 	r.GET("/organizations/:organization/developers/:developer/apps", h.handler(h.getDeveloperAppsByDeveloperEmail))
-	r.POST("/organizations/:organization/developers/:developer/apps", h.handler(h.postCreateDeveloperApp))
+	r.POST("/organizations/:organization/developers/:developer/apps", h.handler(h.createDeveloperApp))
 
 	r.GET("/organizations/:organization/developers/:developer/apps/:application", h.handler(h.getByName))
-	r.POST("/organizations/:organization/developers/:developer/apps/:application", h.handler(h.postDeveloperApp))
+	r.POST("/organizations/:organization/developers/:developer/apps/:application", h.handler(h.updateDeveloperApp))
 	r.DELETE("/organizations/:organization/developers/:developer/apps/:application", h.handler(h.deleteDeveloperAppByName))
 
 	r.GET("/organizations/:organization/developers/:developer/apps/:application/attributes", h.handler(h.getDeveloperAppAttributes))
 	r.POST("/organizations/:organization/developers/:developer/apps/:application/attributes", h.handler(h.updateDeveloperAppAttributes))
 
 	r.GET("/organizations/:organization/developers/:developer/apps/:application/attributes/:attribute", h.handler(h.getDeveloperAppAttributeByName))
-	r.POST("/organizations/:organization/developers/:developer/apps/:application/attributes/:attribute", h.handler(h.postDeveloperAppAttributeByName))
+	r.POST("/organizations/:organization/developers/:developer/apps/:application/attributes/:attribute", h.handler(h.updateDeveloperAppAttributeByName))
 	r.DELETE("/organizations/:organization/developers/:developer/apps/:application/attributes/:attribute", h.handler(h.deleteDeveloperAppAttributeByName))
 }
 
@@ -99,14 +97,14 @@ func (h *Handler) getDeveloperAppAttributeByName(c *gin.Context) handlerResponse
 	return handleOK(attributeValue)
 }
 
-// PostCreateDeveloperApp creates a developer application
-func (h *Handler) postCreateDeveloperApp(c *gin.Context) handlerResponse {
+// createDeveloperApp creates a developer application
+func (h *Handler) createDeveloperApp(c *gin.Context) handlerResponse {
 
 	var newDeveloperApp types.DeveloperApp
 	if err := c.ShouldBindJSON(&newDeveloperApp); err != nil {
 		return handleBadRequest(err)
 	}
-	_, err := h.service.Developer.Get(c.Param(organizationParameter), c.Param(developerParameter))
+	developer, err := h.service.Developer.Get(c.Param(organizationParameter), c.Param(developerParameter))
 	if err != nil {
 		return handleError(err)
 	}
@@ -115,15 +113,16 @@ func (h *Handler) postCreateDeveloperApp(c *gin.Context) handlerResponse {
 		return handleError(types.NewBadRequestError(
 			fmt.Errorf("Developer app '%s' already exists", existingDeveloperApp.Name)))
 	}
-	storedDeveloperApp, err := h.service.DeveloperApp.Update(c.Param(organizationParameter), newDeveloperApp, h.who(c))
+	storedDeveloperApp, err := h.service.DeveloperApp.Create(c.Param(organizationParameter),
+		developer.Email, newDeveloperApp, h.who(c))
 	if err != nil {
 		return handleError(err)
 	}
 	return handleCreated(storedDeveloperApp)
 }
 
-// postDeveloperApp updates an existing developer
-func (h *Handler) postDeveloperApp(c *gin.Context) handlerResponse {
+// updateDeveloperApp updates an existing developer
+func (h *Handler) updateDeveloperApp(c *gin.Context) handlerResponse {
 
 	var updateRequest types.DeveloperApp
 	if err := c.ShouldBindJSON(&updateRequest); err != nil {
@@ -134,10 +133,6 @@ func (h *Handler) postDeveloperApp(c *gin.Context) handlerResponse {
 		return handleNameMismatch()
 	}
 	_, err := h.service.Developer.Get(c.Param(organizationParameter), c.Param(developerParameter))
-	if err != nil {
-		return handleError(err)
-	}
-	_, err = h.service.DeveloperApp.GetByName(organizationParameter, c.Param(developerAppParameter))
 	if err != nil {
 		return handleError(err)
 	}
@@ -157,11 +152,6 @@ func (h *Handler) updateDeveloperAppAttributes(c *gin.Context) handlerResponse {
 	if err := c.ShouldBindJSON(&receivedAttributes); err != nil {
 		return handleBadRequest(err)
 	}
-
-	if len(receivedAttributes.Attributes) == 0 {
-		return handleBadRequest(errors.New("No attributes posted"))
-	}
-
 	_, err := h.service.Developer.Get(c.Param(organizationParameter), c.Param(developerParameter))
 	if err != nil {
 		return handleError(err)
@@ -170,25 +160,19 @@ func (h *Handler) updateDeveloperAppAttributes(c *gin.Context) handlerResponse {
 	if err != nil {
 		return handleError(err)
 	}
-
-	developerAppToUpdate.Attributes.SetMultiple(receivedAttributes.Attributes)
-
-	_, err = h.service.DeveloperApp.Update(c.Param(organizationParameter), *developerAppToUpdate, h.who(c))
-	if err != nil {
+	if err := h.service.DeveloperApp.UpdateAttributes(c.Param(organizationParameter),
+		developerAppToUpdate.Name, receivedAttributes.Attributes, h.who(c)); err != nil {
 		return handleError(err)
 	}
 	return handleOKAttributes(developerAppToUpdate.Attributes)
 }
 
-// postDeveloperAppAttributeByName update an attribute of developer
-func (h *Handler) postDeveloperAppAttributeByName(c *gin.Context) handlerResponse {
+// updateDeveloperAppAttributeByName update an attribute of developer
+func (h *Handler) updateDeveloperAppAttributeByName(c *gin.Context) handlerResponse {
 
-	var receivedValue struct {
-		Value string `json:"value"`
-	}
+	var receivedValue types.AttributeValue
 	if err := c.ShouldBindJSON(&receivedValue); err != nil {
 		return handleBadRequest(err)
-
 	}
 	newAttribute := types.Attribute{
 		Name:  c.Param(attributeParameter),
@@ -227,51 +211,10 @@ func (h *Handler) deleteDeveloperAppByName(c *gin.Context) handlerResponse {
 	if err != nil {
 		return handleError(err)
 	}
-
 	developerApp, err := h.service.DeveloperApp.Delete(c.Param(organizationParameter),
 		developer.DeveloperID, c.Param(developerParameter), h.who(c))
 	if err != nil {
 		return handleError(err)
 	}
 	return handleOK(developerApp)
-
-	// AppCredentialCount := h.db.Credential.GetCountByDeveloperAppID(developerApp.AppID)
-	// AppCredentialCount := 1
-	// if AppCredentialCount == -1 {
-	// 	returnJSONMessage(c, http.StatusInternalServerError,
-	// 		fmt.Errorf("Could not retrieve number of api keys of developer app '%s'",
-	// 			developerApp.Name))
-	// 	return
-	// }
-	// if AppCredentialCount > 0 {
-	// 	returnJSONMessage(c, http.StatusForbidden,
-	// 		fmt.Errorf("Cannot delete developer app '%s' with %d apikeys",
-	// 			developerApp.Name, AppCredentialCount))
-	// 	return
-	// }
-	// err = h.db.DeveloperApp.DeleteByID(developerApp.OrganizationName, developerApp.AppID)
-	// if err != nil {
-	// 	returnJSONMessage(c, http.StatusServiceUnavailable, err)
-	// 	return
-	// }
-
-	// // Remove app from the apps field in developer entry as well
-	// for i := 0; i < len(developer.Apps); i++ {
-	// 	if developer.Apps[i] == c.Param("application") {
-	// 		developer.Apps = append(developer.Apps[:i], developer.Apps[i+1:]...)
-	// 		i-- // form the remove item index to start iterate next item
-	// 	}
-	// }
-
-	// developerApp.LastmodifiedBy = h.GetSessionUser(c)
-	// if err := h.db.Developer.UpdateByName(developer); err != nil {
-	// 	returnJSONMessage(c, http.StatusBadRequest, err)
-	// 	return
-	// }
-	// c.IndentedJSON(http.StatusOK, developerApp)
-}
-
-// generateAppID creates unique primary key for developer app row
-func generateAppID() string {
-	return (uuid.New().String())
 }

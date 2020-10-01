@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"github.com/dchest/uniuri"
 	"github.com/gin-gonic/gin"
 
 	"github.com/erikbos/gatekeeper/pkg/types"
@@ -165,10 +164,4 @@ func (h *Handler) deleteDeveloper(c *gin.Context) handlerResponse {
 		return handleError(err)
 	}
 	return handleOK(developer)
-}
-
-// generatePrimaryKeyOfDeveloper creates primary key for developer db row
-func generatePrimaryKeyOfDeveloper(organization, developer string) string {
-
-	return (uniuri.New())
 }

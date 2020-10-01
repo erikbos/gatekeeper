@@ -124,7 +124,7 @@ func (a *AuthHandler) ValidatePassword(username, password string) (user *types.U
 // IsPathAllowedByUser checks whether user is allowed to access a path
 func (a *AuthHandler) IsPathAllowedByUser(user *types.User, method, path string) bool {
 
-	log.Debug("IsPathAllowedByUser: %s, %s, %s", user.Name, method, path)
+	log.Debugf("IsPathAllowedByUser: %s, %s, %s", user.Name, method, path)
 	for _, roleName := range user.Roles {
 		if role, err := a.entityCache.GetRole(roleName); err == nil {
 			if role.PathAllowed(method, path) {

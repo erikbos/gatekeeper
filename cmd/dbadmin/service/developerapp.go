@@ -61,10 +61,10 @@ func (das *DeveloperAppService) GetAttribute(organizationName, developerAppName,
 }
 
 // Create creates a new developerApp
-func (das *DeveloperAppService) Create(organizationName, developerName string,
+func (das *DeveloperAppService) Create(organizationName, developerEmail string,
 	newDeveloperApp types.DeveloperApp, who Requester) (types.DeveloperApp, types.Error) {
 
-	developer, err := das.db.Developer.GetByEmail(organizationName, developerName)
+	developer, err := das.db.Developer.GetByEmail(organizationName, developerEmail)
 	if err != nil {
 		return types.NullDeveloperApp, err
 	}

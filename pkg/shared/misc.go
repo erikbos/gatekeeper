@@ -33,9 +33,8 @@ func CheckIPinAccessList(ip net.IP, ipAccessList string) bool {
 				// OK, we have a match
 				return true
 			}
-		} else {
-			//	log.Debugf("FIXME increase unparsable ip ACL counter")
 		}
+		// We should not parse ACL, let's continue
 	}
 	// source ip did not match any of the ACL subnets, request rejected
 	return false

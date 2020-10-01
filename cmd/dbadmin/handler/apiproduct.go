@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"github.com/dchest/uniuri"
 	"github.com/gin-gonic/gin"
 
 	"github.com/erikbos/gatekeeper/pkg/types"
@@ -162,10 +161,4 @@ func (h *Handler) deleteAPIProduct(c *gin.Context) handlerResponse {
 		return handleError(err)
 	}
 	return handleOK(deletedAPIproduct)
-}
-
-// generatePrimaryKeyOfAPIProduct creates primary key for apiproduct db row
-func generatePrimaryKeyOfAPIProduct(organization, apiproduct string) string {
-
-	return (uniuri.New())
 }

@@ -49,7 +49,8 @@ func StartWebAdminServer(s *server, enableAPIAuthentication bool) {
 	s.router.GET(shared.ReadinessCheckPath, s.readiness.ReadinessProbe)
 	s.router.GET(shared.MetricsPath, gin.WrapH(promhttp.Handler()))
 	s.router.GET(shared.ConfigDumpPath, s.showConfiguration)
-	s.router.GET(showHTTPForwardingPath, s.showHTTPForwarding)
+	s.router.GET(showHTTPForwardingPath, s.showHTTPForwardingPage)
+	s.router.GET(showUserRolesPath, s.showUserRolePage)
 
 	log.Info("Webadmin listening on ", s.config.WebAdmin.Listen)
 	if s.config.WebAdmin.TLS.certFile != "" &&

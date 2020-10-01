@@ -16,8 +16,8 @@ Authorization: Basic admin passwd
     "allows": [
         {
             "methods": [
-                "get",
-                "post"
+                "GET",
+                "POST",
             ],
             "paths": [
                 "/**"
@@ -33,12 +33,13 @@ Authorization: Basic admin passwd
 
 {
     "name": "administrator",
+    "displayName": "Administrator role",
     "allows": [
         {
             "methods": [
-                "get",
-                "post",
-                "delete"
+                "GET",
+                "POST",
+                "DELETE"
             ],
             "paths": [
                 "/v1/**"
@@ -46,7 +47,7 @@ Authorization: Basic admin passwd
         },
         {
             "methods": [
-                "get"
+                "GET"
             ],
             "paths": [
                 "/v1/cluster/*"

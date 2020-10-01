@@ -18,9 +18,9 @@ require (
 	github.com/prometheus/client_golang v1.7.1
 	github.com/sirupsen/logrus v1.7.0
 	github.com/stretchr/testify v1.6.1
-	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
-	golang.org/x/net v0.0.0-20200519113804-d87ec0cfa476 // indirect
-	google.golang.org/genproto v0.0.0-20200929141702-51c3e5b607fe
+	golang.org/x/crypto v0.0.0-20201001193750-eb9a90e9f9cb
+	golang.org/x/net v0.0.0-20200930145003-4acb6c075d10 // indirect
+	google.golang.org/genproto v0.0.0-20201001141541-efaab9d3c4f7
 	google.golang.org/grpc v1.32.0
 	google.golang.org/protobuf v1.25.0
 	gopkg.in/oauth2.v3 v3.12.0

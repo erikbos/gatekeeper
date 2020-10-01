@@ -4,6 +4,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 	"text/template"
@@ -16,10 +17,12 @@ import (
 )
 
 const (
-	showHTTPForwardingPath = "show_http_forwarding"
-	contentType            = "content-type"
-	contentTypeYAML        = "text/yaml; charset=utf-8"
-	contentTypeHTML        = "text/html; charset=utf-8"
+	showHTTPForwardingPath = "show/http_forwarding"
+	showUserRolesPath      = "show/user_role"
+
+	contentType     = "content-type"
+	contentTypeYAML = "text/yaml; charset=utf-8"
+	contentTypeHTML = "text/html; charset=utf-8"
 )
 
 // ShowWebAdminHomePage shows home page
@@ -35,8 +38,8 @@ func (s *server) showConfiguration(c *gin.Context) {
 	c.String(http.StatusOK, fmt.Sprint(s.config))
 }
 
-// showForwarding pretty prints the current forwarding table from database
-func (s *server) showHTTPForwarding(c *gin.Context) {
+// showHTTPForwardingPage pretty prints the current forwarding table from database
+func (s *server) showHTTPForwardingPage(c *gin.Context) {
 
 	// Retrieve all configuration entities
 	listeners, err := s.db.Listener.GetAll()
@@ -59,20 +62,14 @@ func (s *server) showHTTPForwarding(c *gin.Context) {
 		returnJSONMessage(c, http.StatusServiceUnavailable, err)
 		return
 	}
-
-	// Supporting functions embedded in template invoked with "{{value | <functioname}}"
-	templateFunctions := template.FuncMap{
-		"ISO8601":            shared.TimeMillisecondsToString,
-		"OrderedList":        HMTLOrderedList,
-		"CertificateDetails": HTMLCertificateDetails,
-	}
-
 	// Order all entries to make page more readable
 	listeners.Sort()
 	routes.Sort()
 	clusters.Sort()
 
-	templateEngine, templateError := template.New("page").Funcs(templateFunctions).Parse(pageTemplate)
+	wholePageTemplate := pageHeading("HTTP forwarding configuration") + templateHTTPForwarding
+	templateEngine, templateError := template.New("page").
+		Funcs(embeddedTemplateFunctions()).Parse(wholePageTemplate)
 	if templateError != nil {
 		returnJSONMessage(c, http.StatusServiceUnavailable, err)
 		return
@@ -90,43 +87,7 @@ func (s *server) showHTTPForwarding(c *gin.Context) {
 	_ = templateEngine.Execute(c.Writer, templateVariables)
 }
 
-const pageTemplate string = `
-<!DOCTYPE html>
-<html>
-<head>
-<title>HTTP forwarding configuration</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBzdGFuZGFsb25lPSJubyI/Pgo8IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDIwMDEwOTA0Ly9FTiIKICJodHRwOi8vd3d3LnczLm9yZy9UUi8yMDAxL1JFQy1TVkctMjAwMTA5MDQvRFREL3N2ZzEwLmR0ZCI+CjxzdmcgdmVyc2lvbj0iMS4wIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciCiB3aWR0aD0iNDguMDAwMDAwcHQiIGhlaWdodD0iNDguMDAwMDAwcHQiIHZpZXdCb3g9IjAgMCA0OC4wMDAwMDAgNDguMDAwMDAwIgogcHJlc2VydmVBc3BlY3RSYXRpbz0ieE1pZFlNaWQgbWVldCI+CjxtZXRhZGF0YT4KQ3JlYXRlZCBieSBwb3RyYWNlIDEuMTUsIHdyaXR0ZW4gYnkgUGV0ZXIgU2VsaW5nZXIgMjAwMS0yMDE3CjwvbWV0YWRhdGE+CjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDAuMDAwMDAwLDQ4LjAwMDAwMCkgc2NhbGUoMC4xMDAwMDAsLTAuMTAwMDAwKSIKZmlsbD0iIzAwMDAwMCIgc3Ryb2tlPSJub25lIj4KPHBhdGggZD0iTTIwOSAzOTIgYy0xMTYgLTc0IC0xODQgLTIzNSAtMTI5IC0zMDUgMTEgLTE0IDI5IC0yOSA0MCAtMzIgMzIgLTEwCjk0IDEzIDEyNSA0NiBsMzAgMzEgNSAtMzkgYzQgLTMzIDkgLTM4IDMzIC00MSAyMiAtMyAzNyA2IDY3IDM2IDIyIDIyIDQwIDQ4CjQwIDU4IDAgMTUgLTYgMTIgLTI5IC0xNSAtMTUgLTE5IC0zMiAtMzIgLTM4IC0zMCAtNiAyIDcgNjMgMzMgMTU0IDI0IDgzIDQ0CjE1MyA0NCAxNTggMCAxNCAtNTkgNyAtNjggLTkgLTggLTE0IC0xMCAtMTQgLTIxIDAgLTIxIDI2IC04MSAyMCAtMTMyIC0xMnoKbTExOCAtMjMgYzMzIC02OCAtNzkgLTI2OSAtMTQ5IC0yNjkgLTg4IDAgLTM1IDIwNiA3MSAyNzggNDIgMjcgNjIgMjUgNzggLTl6Ii8+CjwvZz4KPC9zdmc+Cg==">
-<style>
-table {
-	font-family: sans-serif;
-	font-size: medium;
-	border-collapse: collapse;
-	text-align: left;
-}
-th {
-	border: 1px solid #000000;
-	text-align: left;
-	padding: 8px;
-}
-tr:nth-child(even) {
-	background-color: #dddddd;
-	border: 1px solid #dddddd;
-}
-td {
-	border: 1px solid #000000;
-	text-align: left;
-	padding: 8px;
-}
-ul {
-	list-style-type: none;
-	margin: 0px;
-	padding: 0px;
-}
-ol {
-	padding: 15px;
-}
-</style>
-</head>
+const templateHTTPForwarding string = `
 <body>
 
 {{/* We put these in vars to be able to do nested ranges */}}
@@ -297,7 +258,177 @@ ol {
 </tr>
 {{end}}
 </table>
+</bod>
 `
+
+// showUserRolesPath pretty prints user and roles from database
+func (s *server) showUserRolePage(c *gin.Context) {
+
+	// Retrieve all user entities
+	users, err := s.db.User.GetAll()
+	if err != nil {
+		log.Print("q1")
+		returnJSONMessage(c, http.StatusServiceUnavailable, err)
+		return
+	}
+	roles, err := s.db.Role.GetAll()
+	if err != nil {
+		log.Print("q2")
+		returnJSONMessage(c, http.StatusServiceUnavailable, err)
+		return
+	}
+	// Order all entries to make page more readable
+	users.Sort()
+	roles.Sort()
+
+	wholePageTemplate := pageHeading("User and Roles") + pageTemplateUsersAndRoles
+	templateEngine, templateError := template.New("page").
+		Funcs(embeddedTemplateFunctions()).Parse(wholePageTemplate)
+	if templateError != nil {
+		returnJSONMessage(c, http.StatusServiceUnavailable, err)
+		return
+	}
+	templateVariables := struct {
+		Users types.Users
+		Roles types.Roles
+	}{
+		users, roles,
+	}
+	c.Header(contentType, contentTypeHTML)
+	c.Status(http.StatusOK)
+	_ = templateEngine.Execute(c.Writer, templateVariables)
+}
+
+const pageTemplateUsersAndRoles string = `
+<body>
+
+{{/* We put these in vars to be able to do nested ranges */}}
+{{$users := .Users}}
+{{$roles := .Roles}}
+
+<h1>Users</h1>
+<table border=1>
+
+<tr>
+<th>Name</th>
+<th>DisplayName</th>
+<th>Status</th>
+<th>Roles</th>
+<th>CreatedBy</th>
+<th>CreatedAt</th>
+<th>LastmodifiedBy</th>
+<th>LastmodifiedAt</th>
+</tr>
+
+{{range $user := $users}}
+<tr>
+<td><a href="/v1/users/{{$user.Name}}">{{$user.Name}}</a>
+<td>{{$user.DisplayName}}</td>
+<td>{{$user.Status}}</td>
+<td><ul>{{range $role := $user.Roles}}<li>{{$role}}</li>{{end}}</ul></td>
+<td>{{$user.CreatedBy}}</td>
+<td>{{$user.CreatedAt | ISO8601}}</td>
+<td>{{$user.LastmodifiedBy}}</td>
+<td>{{$user.LastmodifiedAt | ISO8601}}</td>
+</tr>
+{{end}}
+
+</table>
+
+<h1>Roles</h1>
+<table border=1>
+
+<tr>
+<th>Name</th>
+<th>DisplayName</th>
+<th>Allowed</th>
+<th>CreatedBy</th>
+<th>CreatedAt</th>
+<th>LastmodifiedBy</th>
+<th>LastmodifiedAt</th>
+</tr>
+
+{{range $role := $roles}}
+<tr>
+<td><a href="/v1/roles/{{$role.Name}}">{{$role.Name}}</a>
+<td>{{$role.DisplayName}}</td>
+
+<td>
+<table>
+<tr><th>Methods</th><th>Paths</th></tr>
+{{range $allow := $role.Allows}}
+<tr>
+<td><ul>{{range $methods := $allow.Methods}}<li>{{$methods}}</li>{{end}}</ul></td>
+<td><ul>{{range $paths := $allow.Paths}}<li>{{$paths}}</li>{{end}}</ul></td>
+{{end}}
+</table>
+</td>
+
+<td>{{$role.CreatedBy}}</td>
+<td>{{$role.CreatedAt | ISO8601}}</td>
+<td>{{$role.LastmodifiedBy}}</td>
+<td>{{$role.LastmodifiedAt | ISO8601}}</td>
+</tr>
+{{end}}
+
+</table>
+</body>
+`
+
+func pageHeading(title string) string {
+
+	return fmt.Sprintf(pageTemplateHeading, title)
+}
+
+const pageTemplateHeading string = `
+<!DOCTYPE html>
+<html>
+<head>
+<title>%s</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBzdGFuZGFsb25lPSJubyI/Pgo8IURPQ1RZUEUgc3ZnIFBVQkxJQyAiLS8vVzNDLy9EVEQgU1ZHIDIwMDEwOTA0Ly9FTiIKICJodHRwOi8vd3d3LnczLm9yZy9UUi8yMDAxL1JFQy1TVkctMjAwMTA5MDQvRFREL3N2ZzEwLmR0ZCI+CjxzdmcgdmVyc2lvbj0iMS4wIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciCiB3aWR0aD0iNDguMDAwMDAwcHQiIGhlaWdodD0iNDguMDAwMDAwcHQiIHZpZXdCb3g9IjAgMCA0OC4wMDAwMDAgNDguMDAwMDAwIgogcHJlc2VydmVBc3BlY3RSYXRpbz0ieE1pZFlNaWQgbWVldCI+CjxtZXRhZGF0YT4KQ3JlYXRlZCBieSBwb3RyYWNlIDEuMTUsIHdyaXR0ZW4gYnkgUGV0ZXIgU2VsaW5nZXIgMjAwMS0yMDE3CjwvbWV0YWRhdGE+CjxnIHRyYW5zZm9ybT0idHJhbnNsYXRlKDAuMDAwMDAwLDQ4LjAwMDAwMCkgc2NhbGUoMC4xMDAwMDAsLTAuMTAwMDAwKSIKZmlsbD0iIzAwMDAwMCIgc3Ryb2tlPSJub25lIj4KPHBhdGggZD0iTTIwOSAzOTIgYy0xMTYgLTc0IC0xODQgLTIzNSAtMTI5IC0zMDUgMTEgLTE0IDI5IC0yOSA0MCAtMzIgMzIgLTEwCjk0IDEzIDEyNSA0NiBsMzAgMzEgNSAtMzkgYzQgLTMzIDkgLTM4IDMzIC00MSAyMiAtMyAzNyA2IDY3IDM2IDIyIDIyIDQwIDQ4CjQwIDU4IDAgMTUgLTYgMTIgLTI5IC0xNSAtMTUgLTE5IC0zMiAtMzIgLTM4IC0zMCAtNiAyIDcgNjMgMzMgMTU0IDI0IDgzIDQ0CjE1MyA0NCAxNTggMCAxNCAtNTkgNyAtNjggLTkgLTggLTE0IC0xMCAtMTQgLTIxIDAgLTIxIDI2IC04MSAyMCAtMTMyIC0xMnoKbTExOCAtMjMgYzMzIC02OCAtNzkgLTI2OSAtMTQ5IC0yNjkgLTg4IDAgLTM1IDIwNiA3MSAyNzggNDIgMjcgNjIgMjUgNzggLTl6Ii8+CjwvZz4KPC9zdmc+Cg==">
+<style>
+table {
+	font-family: sans-serif;
+	font-size: medium;
+	border-collapse: collapse;
+	text-align: left;
+}
+th {
+	border: 1px solid #000000;
+	text-align: left;
+	padding: 8px;
+}
+tr:nth-child(even) {
+	background-color: #dddddd;
+	border: 1px solid #dddddd;
+}
+td {
+	border: 1px solid #000000;
+	text-align: left;
+	padding: 8px;
+}
+ul {
+	list-style-type: none;
+	margin: 0px;
+	padding: 0px;
+}
+ol {
+	padding: 15px;
+}
+</style>
+</head>
+`
+
+// embeddedTemplateFunctions returns configuration for all custom template functions
+func embeddedTemplateFunctions() template.FuncMap {
+
+	// Supporting functions embedded in template invoked with "{{value | <functioname}}"
+	return template.FuncMap{
+		"ISO8601":            shared.TimeMillisecondsToString,
+		"OrderedList":        HMTLOrderedList,
+		"CertificateDetails": HTMLCertificateDetails,
+	}
+}
 
 // HMTLOrderedList prints a comma separated string as HTML ordered and numbered list
 func HMTLOrderedList(stringToSplit string) string {

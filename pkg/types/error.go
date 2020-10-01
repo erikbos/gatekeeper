@@ -46,7 +46,7 @@ func (e *errDetails) Error() string {
 
 // ErrorDetails returns the (internal) details of the occured error
 func (e *errDetails) ErrorDetails() string {
-	return fmt.Sprintf("%s", e.details)
+	return e.details
 }
 
 // ErrorDetails returns the type of error

@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/json"
+	"sort"
 	"strings"
 
 	"github.com/bmatcuk/doublestar"
@@ -66,7 +67,6 @@ var (
 // PathAllowed checks whether a role allows to access a path
 func (role *Role) PathAllowed(requestMethod, requestPath string) bool {
 
-	// log.Printf("PathAllowed: %s, %s, %s", role.Name, requestMethod, requestPath)
 	for _, allow := range role.Allows {
 		if isMethodAllowed(allow.Methods, requestMethod) &&
 			isPathAllowed(allow.Paths, requestPath) {
@@ -80,7 +80,6 @@ func (role *Role) PathAllowed(requestMethod, requestPath string) bool {
 // isMethodAllowed checks if methods exists in a slice of methods
 func isMethodAllowed(methods []string, requestMethod string) bool {
 
-	// log.Printf("checkIsMethodAllowed: %+v %s", methods, requestMethod)
 	for _, method := range methods {
 		if requestMethod == strings.ToUpper(method) {
 			return true
@@ -121,4 +120,12 @@ func (a *Allows) Marshal() string {
 		return string(json)
 	}
 	return "[]"
+}
+
+// Sort a slice of users
+func (roles Roles) Sort() {
+	// Sort roles by name
+	sort.SliceStable(roles, func(i, j int) bool {
+		return roles[i].Name < roles[j].Name
+	})
 }

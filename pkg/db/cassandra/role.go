@@ -101,7 +101,7 @@ func (s *RoleStore) runGetRoleQuery(query string, queryParameters ...interface{}
 // Update UPSERTs an role in database
 func (s *RoleStore) Update(c *types.Role) types.Error {
 
-	query := "INSERT INTO roles (" + roleColumns + ") VALUES(?,?,?,?,?,?)"
+	query := "INSERT INTO roles (" + roleColumns + ") VALUES(?,?,?,?,?,?,?)"
 	if err := s.db.CassandraSession.Query(query,
 		c.Name,
 		c.DisplayName,

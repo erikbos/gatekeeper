@@ -1,5 +1,7 @@
 package types
 
+import "sort"
+
 // User holds an user
 //
 // Field validation (binding) is done using https://godoc.org/github.com/go-playground/validator
@@ -42,3 +44,11 @@ var (
 	// NullUsers is an empty user slice
 	NullUsers = Users{}
 )
+
+// Sort a slice of users
+func (users Users) Sort() {
+	// Sort users by name
+	sort.SliceStable(users, func(i, j int) bool {
+		return users[i].Name < users[j].Name
+	})
+}
