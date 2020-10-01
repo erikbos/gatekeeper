@@ -7,20 +7,20 @@ import (
 )
 
 // registerListenerRoutes registers all routes we handle
-func (h *Handler) registerListenerRoutes(r *gin.Engine) {
-	r.GET("/v1/listeners", h.handler(h.getAllListeners))
-	r.POST("/v1/listeners", h.handler(h.createListener))
+func (h *Handler) registerListenerRoutes(r *gin.RouterGroup) {
+	r.GET("/listeners", h.handler(h.getAllListeners))
+	r.POST("/listeners", h.handler(h.createListener))
 
-	r.GET("/v1/listeners/:listener", h.handler(h.getListener))
-	r.POST("/v1/listeners/:listener", h.handler(h.updateListener))
-	r.DELETE("/v1/listeners/:listener", h.handler(h.deleteListener))
+	r.GET("/listeners/:listener", h.handler(h.getListener))
+	r.POST("/listeners/:listener", h.handler(h.updateListener))
+	r.DELETE("/listeners/:listener", h.handler(h.deleteListener))
 
-	r.GET("/v1/listeners/:listener/attributes", h.handler(h.getListenerAttributes))
-	r.POST("/v1/listeners/:listener/attributes", h.handler(h.updateListenerAttributes))
+	r.GET("/listeners/:listener/attributes", h.handler(h.getListenerAttributes))
+	r.POST("/listeners/:listener/attributes", h.handler(h.updateListenerAttributes))
 
-	r.GET("/v1/listeners/:listener/attributes/:attribute", h.handler(h.getListenerAttribute))
-	r.POST("/v1/listeners/:listener/attributes/:attribute", h.handler(h.updateListenerAttribute))
-	r.DELETE("/v1/listeners/:listener/attributes/:attribute", h.handler(h.deleteListenerAttribute))
+	r.GET("/listeners/:listener/attributes/:attribute", h.handler(h.getListenerAttribute))
+	r.POST("/listeners/:listener/attributes/:attribute", h.handler(h.updateListenerAttribute))
+	r.DELETE("/listeners/:listener/attributes/:attribute", h.handler(h.deleteListenerAttribute))
 }
 
 const (
@@ -79,12 +79,7 @@ func (h *Handler) createListener(c *gin.Context) handlerResponse {
 	if err := c.ShouldBindJSON(&newListener); err != nil {
 		return handleBadRequest(err)
 	}
-
-	// Automatically set default fields
-	newListener.CreatedBy = h.GetSessionUser(c)
-	newListener.LastmodifiedBy = h.GetSessionUser(c)
-
-	storedListener, err := h.service.Listener.Create(newListener)
+	storedListener, err := h.service.Listener.Create(newListener, h.who(c))
 	if err != nil {
 		return handleError(err)
 	}
@@ -98,11 +93,11 @@ func (h *Handler) updateListener(c *gin.Context) handlerResponse {
 	if err := c.ShouldBindJSON(&updatedListener); err != nil {
 		return handleBadRequest(err)
 	}
-
-	// Automatically set default fields
-	updatedListener.LastmodifiedBy = h.GetSessionUser(c)
-
-	storedListener, err := h.service.Listener.Update(updatedListener)
+	// listername in path must match listername in posted body
+	if updatedListener.Name != c.Param(listenerParameter) {
+		return handleNameMismatch()
+	}
+	storedListener, err := h.service.Listener.Update(updatedListener, h.who(c))
 	if err != nil {
 		return handleError(err)
 	}
@@ -118,11 +113,8 @@ func (h *Handler) updateListenerAttributes(c *gin.Context) handlerResponse {
 	if err := c.ShouldBindJSON(&receivedAttributes); err != nil {
 		return handleBadRequest(err)
 	}
-	// FIXME we should set LastmodifiedBy
-	// updatedListener.Attributes = receivedAttributes.Attributes
-	// updatedListener.LastmodifiedBy = h.GetSessionUser(c)
-
-	if err := h.service.Listener.UpdateAttributes(c.Param(listenerParameter), receivedAttributes.Attributes); err != nil {
+	if err := h.service.Listener.UpdateAttributes(c.Param(listenerParameter),
+		receivedAttributes.Attributes, h.who(c)); err != nil {
 		return handleError(err)
 	}
 	return handleOKAttributes(receivedAttributes.Attributes)
@@ -135,14 +127,12 @@ func (h *Handler) updateListenerAttribute(c *gin.Context) handlerResponse {
 	if err := c.ShouldBindJSON(&receivedValue); err != nil {
 		return handleBadRequest(err)
 	}
-
 	newAttribute := types.Attribute{
 		Name:  c.Param(attributeParameter),
 		Value: receivedValue.Value,
 	}
-
-	// FIXME we should set LastmodifiedBy
-	if err := h.service.Listener.UpdateAttribute(c.Param(listenerParameter), newAttribute); err != nil {
+	if err := h.service.Listener.UpdateAttribute(c.Param(listenerParameter),
+		newAttribute, h.who(c)); err != nil {
 		return handleError(err)
 	}
 	return handleOKAttribute(newAttribute)
@@ -152,7 +142,8 @@ func (h *Handler) updateListenerAttribute(c *gin.Context) handlerResponse {
 func (h *Handler) deleteListenerAttribute(c *gin.Context) handlerResponse {
 
 	attributeToDelete := c.Param(attributeParameter)
-	oldValue, err := h.service.Listener.DeleteAttribute(c.Param(listenerParameter), attributeToDelete)
+	oldValue, err := h.service.Listener.DeleteAttribute(c.Param(listenerParameter),
+		attributeToDelete, h.who(c))
 	if err != nil {
 		return handleBadRequest(err)
 	}
@@ -165,7 +156,7 @@ func (h *Handler) deleteListenerAttribute(c *gin.Context) handlerResponse {
 // deleteListener deletes an listener
 func (h *Handler) deleteListener(c *gin.Context) handlerResponse {
 
-	deletedListener, err := h.service.Listener.Delete(c.Param(listenerParameter))
+	deletedListener, err := h.service.Listener.Delete(c.Param(listenerParameter), h.who(c))
 	if err != nil {
 		return handleError(err)
 	}

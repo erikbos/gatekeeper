@@ -63,8 +63,8 @@ Cluster `ticketshop` running on `ticketbackend.svc` port `80`:
 | DNSResolvers                  | Resolver ip address(es) to resolve cluster hostname (multiple can be comma separated)   | 1.1.1.1,8.8.8.8              |
 | TLSEnable                     | Whether to enable TLS or not, HTTP/2 always uses TLS                                    | true, false                  |
 | SNIHostName                   | Hostname to send during TLS handshake (if not set hostname will be used)                |                              |
-| TLSMinimumVersion             | Minimum version of TLS to use                                                           | TLSv10,TLSv11, TLSv12 TLSv13 |
-| TLSMaximumVersion             | Maximum version of TLS to use                                                           | TLSv10,TLSv11, TLSv12 TLSv13 |
+| TLSMinimumVersion             | Minimum version of TLS to use                                                           | TLS1.0,TLS1.1, TLS1.2 TLS1.3 |
+| TLSMaximumVersion             | Maximum version of TLS to use                                                           | TLS1.0,TLS1.1, TLS1.2 TLS1.3 |
 | TLSCipherSuites               | Allowed TLS cipher suite                                                                |                              |
 | HTTPProtocol                  | Protocol to use when contacting upstream                                                | HTTP/1.1, HTTP/2, HTTP/3     |
 | LbPolicy                      | Endpoint load balancing algorithm (ROUND_ROBIN,LEAST_REQUEST,RING_HASH,RANDOM,MAGLEV)   |                              |
@@ -126,7 +126,7 @@ Cluster `people` with elaborate TLS, health check and DNS resolving settings:
     },
     {
         "name": "TLSMinimumVersion",
-        "value": "TLSv12"
+        "value": "TLS1.2"
     },
     {
         "name": "TLSCipherSuites",

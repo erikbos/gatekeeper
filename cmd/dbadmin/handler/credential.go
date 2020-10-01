@@ -1,20 +1,19 @@
 package handler
 
 import (
-	"github.com/dchest/uniuri"
 	"github.com/gin-gonic/gin"
 
 	"github.com/erikbos/gatekeeper/pkg/shared"
 	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
-func (h *Handler) registerCredentialRoutes(r *gin.Engine) {
-	r.GET("/v1/organizations/:organization/developers/:developer/apps/:application/keys", h.handler(h.getDeveloperAppKeys))
-	r.POST("/v1/organizations/:organization/developers/:developer/apps/:application/keys", h.handler(h.createDeveloperAppKey))
+func (h *Handler) registerCredentialRoutes(r *gin.RouterGroup) {
+	r.GET("/organizations/:organization/developers/:developer/apps/:application/keys", h.handler(h.getDeveloperAppKeys))
+	r.POST("/organizations/:organization/developers/:developer/apps/:application/keys", h.handler(h.createDeveloperAppKey))
 
-	r.GET("/v1/organizations/:organization/developers/:developer/apps/:application/keys/:key", h.handler(h.getDeveloperAppKeyByKey))
-	r.POST("/v1/organizations/:organization/developers/:developer/apps/:application/keys/:key", h.handler(h.updateDeveloperAppKeyByKey))
-	r.DELETE("/v1/organizations/:organization/developers/:developer/apps/:application/keys/:key", h.handler(h.deleteDeveloperAppKeyByKey))
+	r.GET("/organizations/:organization/developers/:developer/apps/:application/keys/:key", h.handler(h.getDeveloperAppKeyByKey))
+	r.POST("/organizations/:organization/developers/:developer/apps/:application/keys/:key", h.handler(h.updateDeveloperAppKeyByKey))
+	r.DELETE("/organizations/:organization/developers/:developer/apps/:application/keys/:key", h.handler(h.deleteDeveloperAppKeyByKey))
 }
 
 const (
@@ -68,7 +67,6 @@ func (h *Handler) createDeveloperAppKey(c *gin.Context) handlerResponse {
 	if err != nil {
 		return handleBadRequest(err)
 	}
-
 	newAppCredential := types.DeveloperAppKey{
 		ExpiresAt:        -1,
 		IssuedAt:         shared.GetCurrentTimeMilliseconds(),
@@ -79,12 +77,9 @@ func (h *Handler) createDeveloperAppKey(c *gin.Context) handlerResponse {
 	if errJSON == nil && receivedCredential.ConsumerKey != "" {
 		newAppCredential.ConsumerKey = receivedCredential.ConsumerKey
 		newAppCredential.ConsumerSecret = receivedCredential.ConsumerSecret
-	} else {
-		newAppCredential.ConsumerKey = generateConsumerKey()
-		newAppCredential.ConsumerSecret = generateConsumerSecret()
 	}
 
-	storedAppCredential, err := h.service.Credential.Update(newAppCredential)
+	storedAppCredential, err := h.service.Credential.Update(newAppCredential, h.who(c))
 	if err != nil {
 		return handleError(err)
 	}
@@ -100,6 +95,12 @@ func (h *Handler) updateDeveloperAppKeyByKey(c *gin.Context) handlerResponse {
 	}
 
 	key := c.Param(keyParameter)
+
+	// apikey in path must match consumer key in posted body
+	if receivedAppCredential.ConsumerKey != key {
+		return handleNameMismatch()
+	}
+
 	organization := c.Param(organizationParameter)
 	AppCredential, err := h.service.Credential.Get(organization, key)
 	if err != nil {
@@ -112,7 +113,7 @@ func (h *Handler) updateDeveloperAppKeyByKey(c *gin.Context) handlerResponse {
 	AppCredential.ExpiresAt = receivedAppCredential.ExpiresAt
 	AppCredential.Status = receivedAppCredential.Status
 
-	storedAppCredential, err := h.service.Credential.Update(*AppCredential)
+	storedAppCredential, err := h.service.Credential.Update(*AppCredential, h.who(c))
 	if err != nil {
 		return handleError(err)
 	}
@@ -122,21 +123,10 @@ func (h *Handler) updateDeveloperAppKeyByKey(c *gin.Context) handlerResponse {
 // deleteDeveloperAppKeyByKey deletes apikey of developer app
 func (h *Handler) deleteDeveloperAppKeyByKey(c *gin.Context) handlerResponse {
 
-	deletedAppCredential, err := h.service.Credential.Delete(c.Param(organizationParameter), c.Param(keyParameter))
+	deletedAppCredential, err := h.service.Credential.Delete(c.Param(organizationParameter),
+		c.Param(keyParameter), h.who(c))
 	if err != nil {
 		return handleError(err)
 	}
 	return handleOK(deletedAppCredential)
-}
-
-// generateConsumerKey returns a random string to be used as apikey (32 character base62)
-func generateConsumerKey() string {
-
-	return uniuri.NewLen(32)
-}
-
-// generateConsumerSecret returns a random string to be used as consumer key (16 character base62)
-func generateConsumerSecret() string {
-
-	return uniuri.New()
 }

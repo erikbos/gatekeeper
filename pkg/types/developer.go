@@ -1,6 +1,8 @@
 package types
 
 // Developer contains everything about a Developer
+//
+// Field validation (binding) is done using https://godoc.org/github.com/go-playground/validator
 type Developer struct {
 	// Id of developer (not changable)
 	DeveloperID string `json:"developerId"`

@@ -1,9 +1,11 @@
 package types
 
 // APIProduct type contains everything about an API product
+//
+// Field validation (binding) is done using https://godoc.org/github.com/go-playground/validator
 type APIProduct struct {
 	// Name of apiproduct (not changable)
-	Name string `json:"name"`
+	Name string `json:"name" binding:"required,min=5"`
 
 	// Friendly display name of route
 	DisplayName string `json:"displayName"`
@@ -15,7 +17,7 @@ type APIProduct struct {
 	RouteGroup string `json:"RouteGroup"`
 
 	// List of paths this apiproduct applies to
-	Paths StringSlice `json:"paths"`
+	Paths StringSlice `json:"paths" binding:"required,min=1"`
 
 	// Attributes of this apiproduct
 	Attributes Attributes `json:"attributes"`

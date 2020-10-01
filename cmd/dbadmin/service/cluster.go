@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/erikbos/gatekeeper/pkg/db"
 	"github.com/erikbos/gatekeeper/pkg/shared"
@@ -10,13 +11,14 @@ import (
 
 // ClusterService is
 type ClusterService struct {
-	db *db.Database
+	db        *db.Database
+	changelog *Changelog
 }
 
 // NewClusterService returns a new cluster instance
-func NewClusterService(database *db.Database) *ClusterService {
+func NewClusterService(database *db.Database, c *Changelog) *ClusterService {
 
-	return &ClusterService{db: database}
+	return &ClusterService{db: database, changelog: c}
 }
 
 // GetAll returns all clusters
@@ -52,7 +54,8 @@ func (cs *ClusterService) GetAttribute(clusterName, attributeName string) (value
 }
 
 // Create creates an cluster
-func (cs *ClusterService) Create(newCluster types.Cluster) (types.Cluster, types.Error) {
+func (cs *ClusterService) Create(newCluster types.Cluster, who Requester) (
+	types.Cluster, types.Error) {
 
 	existingCluster, err := cs.db.Cluster.Get(newCluster.Name)
 	if err == nil {
@@ -61,84 +64,105 @@ func (cs *ClusterService) Create(newCluster types.Cluster) (types.Cluster, types
 	}
 	// Automatically set default fields
 	newCluster.CreatedAt = shared.GetCurrentTimeMilliseconds()
+	newCluster.CreatedBy = who.Username
 
-	err = cs.updateCluster(&newCluster)
+	err = cs.updateCluster(&newCluster, who)
+	cs.changelog.Create(newCluster, who)
 	return newCluster, err
 }
 
 // Update updates an existing cluster
-func (cs *ClusterService) Update(updatedCluster types.Cluster) (types.Cluster, types.Error) {
+func (cs *ClusterService) Update(updatedCluster types.Cluster,
+	who Requester) (types.Cluster, types.Error) {
 
-	clusterToUpdate, err := cs.db.Cluster.Get(updatedCluster.Name)
+	currentCluster, err := cs.db.Cluster.Get(updatedCluster.Name)
 	if err != nil {
 		return types.NullCluster, types.NewItemNotFoundError(err)
 	}
-	// Copy over the fields we allow to be updated
-	clusterToUpdate.HostName = updatedCluster.HostName
-	clusterToUpdate.Port = updatedCluster.Port
-	clusterToUpdate.DisplayName = updatedCluster.DisplayName
-	clusterToUpdate.Attributes = updatedCluster.Attributes
+	// Copy over fields we do not allow to be updated
+	updatedCluster.Name = currentCluster.Name
+	updatedCluster.CreatedAt = currentCluster.CreatedAt
+	updatedCluster.CreatedBy = currentCluster.CreatedBy
 
-	err = cs.updateCluster(&updatedCluster)
-	return *clusterToUpdate, err
+	err = cs.updateCluster(&updatedCluster, who)
+	cs.changelog.Update(currentCluster, updatedCluster, who)
+	return updatedCluster, err
 }
 
 // UpdateAttributes updates attributes of an cluster
-func (cs *ClusterService) UpdateAttributes(clusterName string, receivedAttributes types.Attributes) types.Error {
+func (cs *ClusterService) UpdateAttributes(clusterName string,
+	receivedAttributes types.Attributes, who Requester) types.Error {
 
-	updatedCluster, err := cs.db.Cluster.Get(clusterName)
+	currentCluster, err := cs.db.Cluster.Get(clusterName)
 	if err != nil {
 		return types.NewItemNotFoundError(err)
 	}
-	updatedCluster.Attributes = receivedAttributes
+	updatedCluster := currentCluster
+	updatedCluster.Attributes.SetMultiple(receivedAttributes)
 
-	return cs.updateCluster(updatedCluster)
+	err = cs.updateCluster(updatedCluster, who)
+	cs.changelog.Update(currentCluster, updatedCluster, who)
+	return err
 }
 
 // UpdateAttribute update an attribute of developer
-func (cs *ClusterService) UpdateAttribute(clusterName string, attributeValue types.Attribute) types.Error {
+func (cs *ClusterService) UpdateAttribute(clusterName string,
+	attributeValue types.Attribute, who Requester) types.Error {
 
-	updatedCluster, err := cs.db.Cluster.Get(clusterName)
+	currentCluster, err := cs.db.Cluster.Get(clusterName)
 	if err != nil {
 		return err
 	}
+	updatedCluster := currentCluster
 	updatedCluster.Attributes.Set(attributeValue)
-	return cs.updateCluster(updatedCluster)
+
+	err = cs.updateCluster(updatedCluster, who)
+	cs.changelog.Update(currentCluster, updatedCluster, who)
+	return err
 }
 
 // DeleteAttribute removes an attribute of an cluster and return its former value
-func (cs *ClusterService) DeleteAttribute(clusterName, attributeToDelete string) (string, types.Error) {
+func (cs *ClusterService) DeleteAttribute(clusterName, attributeToDelete string,
+	who Requester) (string, types.Error) {
 
-	updatedCluster, err := cs.db.Cluster.Get(clusterName)
+	currentCluster, err := cs.db.Cluster.Get(clusterName)
 	if err != nil {
 		return "", err
 	}
+	updatedCluster := currentCluster
 	oldValue, err := updatedCluster.Attributes.Delete(attributeToDelete)
 	if err != nil {
 		return "", err
 	}
-	return oldValue, cs.updateCluster(updatedCluster)
+
+	err = cs.updateCluster(updatedCluster, who)
+	cs.changelog.Update(currentCluster, updatedCluster, who)
+	return oldValue, err
 }
 
 // updateCluster updates last-modified field(s) and updates cluster in database
-func (cs *ClusterService) updateCluster(updatedCluster *types.Cluster) types.Error {
+func (cs *ClusterService) updateCluster(updatedCluster *types.Cluster, who Requester) types.Error {
 
 	updatedCluster.Attributes.Tidy()
 	updatedCluster.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
-
+	updatedCluster.LastmodifiedBy = who.Username
 	return cs.db.Cluster.Update(updatedCluster)
 }
 
 // Delete deletes an cluster
-func (cs *ClusterService) Delete(clusterName string) (deletedCluster types.Cluster, e types.Error) {
+func (cs *ClusterService) Delete(clusterName string, who Requester) (
+	deletedCluster types.Cluster, e types.Error) {
+
+	log.Printf("!%s!", clusterName)
 
 	cluster, err := cs.db.Cluster.Get(clusterName)
 	if err != nil {
 		return types.NullCluster, err
 	}
-	err = cs.db.Route.Delete(clusterName)
+	err = cs.db.Cluster.Delete(clusterName)
 	if err != nil {
 		return types.NullCluster, err
 	}
+	cs.changelog.Delete(cluster, who)
 	return *cluster, nil
 }

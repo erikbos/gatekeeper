@@ -1,0 +1,81 @@
+# Example REST calls for role
+
+
+### Get all roles
+GET http://{{hostname}}/v1/roles
+Authorization: Basic admin passwd
+
+
+### Create a new role named "admin"
+POST http://{{hostname}}/v1/roles HTTP/1.1
+content-type: application/json
+Authorization: Basic admin passwd
+
+{
+    "name": "administrator",
+    "allows": [
+        {
+            "methods": [
+                "get",
+                "post"
+            ],
+            "paths": [
+                "/**"
+            ]
+        }
+        ]
+}
+
+### Update an existing role called "admin"
+POST http://{{hostname}}/v1/roles/administrator HTTP/1.1
+content-type: application/json
+Authorization: Basic admin passwd
+
+{
+    "name": "administrator",
+    "allows": [
+        {
+            "methods": [
+                "get",
+                "post",
+                "delete"
+            ],
+            "paths": [
+                "/v1/**"
+            ]
+        },
+        {
+            "methods": [
+                "get"
+            ],
+            "paths": [
+                "/v1/cluster/*"
+            ]
+        }
+        ]
+}
+
+### Create a new role named "clusteradmin"
+POST http://{{hostname}}/v1/roles/clusteradmin HTTP/1.1
+content-type: application/json
+Authorization: Basic admin passwd
+
+{
+    "name": "clusteradmin",
+    "allows": [
+        {
+            "methods": [
+                "get",
+                "post"
+            ],
+            "paths": [
+                "/v1/clusters",
+                "/v1/clusters/*"
+            ]
+        }
+        ]
+}
+
+### Delete role "clusteradmin"
+DELETE http://{{hostname}}/v1/roles/clusteradmin
+Authorization: Basic admin passwd

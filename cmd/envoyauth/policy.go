@@ -159,7 +159,7 @@ func checkOAuth2(request *requestInfo, authServer *authorizationServer) *PolicyR
 		accessToken = authorizationHeader[len(prefix):]
 	} else {
 		// Could not get bearer token from authorization header
-		// Not a problem: apparently this request was meant to be authenticated using OAuth
+		// Not a problem: apparently this request was not meant to be authenticated using OAuth
 		return nil
 	}
 

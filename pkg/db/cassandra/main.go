@@ -86,6 +86,8 @@ func New(config DatabaseConfig, serviceName string,
 		APIProduct:   NewAPIProductStore(&dbConfig),
 		Credential:   NewCredentialStore(&dbConfig),
 		OAuth:        NewOAuthStore(&dbConfig),
+		User:         NewUserStore(&dbConfig),
+		Role:         NewRoleStore(&dbConfig),
 		Readiness:    NewReadiness(&dbConfig),
 	}
 	return &database, nil

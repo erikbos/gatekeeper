@@ -20,14 +20,14 @@ var (
 const (
 	applicationName       = "envoyauth"             // Name of application, used in Prometheus metrics
 	defaultConfigFileName = "envoyauth-config.yaml" // Default configuration file
-	entityLoadInterval    = 3 * time.Second         // interval between database entities refreshloads
+	entityRefreshInterval = 3 * time.Second         // interval between database entities refresh loads
 )
 
 type authorizationServer struct {
 	config     *APIAuthConfig
 	ginEngine  *gin.Engine
 	db         *db.Database
-	dbentities *db.Entityloader
+	dbentities *db.EntityCache
 	vhosts     *vhostMapping
 	cache      *Cache
 	oauth      *oauthServer
@@ -68,11 +68,18 @@ func main() {
 	go StartWebAdminServer(&a)
 
 	// Start continously loading of virtual host, routes & cluster data
-	a.dbentities = db.NewEntityLoader(a.db, entityLoadInterval)
+	entityCacheConf := db.EntityCacheConfig{
+		RefreshInterval: entityRefreshInterval,
+		Notify:          make(chan db.EntityChangeNotification),
+		Listener:        true,
+		Route:           true,
+		Cluster:         true,
+	}
+	a.dbentities = db.NewEntityCache(a.db, entityCacheConf)
 	a.dbentities.Start()
 
 	a.vhosts = newVhostMapping(a.dbentities)
-	go a.vhosts.WaitFor(a.dbentities.GetChannel())
+	go a.vhosts.WaitFor(entityCacheConf.Notify)
 
 	// // Start service for OAuth2 endpoints
 	a.oauth = newOAuthServer(&a.config.OAuth, a.db, a.cache)

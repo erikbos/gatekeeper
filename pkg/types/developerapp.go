@@ -1,6 +1,8 @@
 package types
 
 // DeveloperApp contains everything about a Developer Application
+//
+// Field validation (binding) is done using https://godoc.org/github.com/go-playground/validator
 type DeveloperApp struct {
 	// Id of developer app (not changable)
 	AppID string `json:"appId"`

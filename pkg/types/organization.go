@@ -1,9 +1,11 @@
 package types
 
 // Organization contains everything about an organization
+//
+// Field validation (binding) is done using https://godoc.org/github.com/go-playground/validator
 type Organization struct {
 	// Name of organization (not changable)
-	Name string `json:"name" binding:"required"`
+	Name string `json:"name" binding:"required,min=4"`
 
 	// Friendly name of organization, can be updated afterwards
 	DisplayName string `json:"displayName"`

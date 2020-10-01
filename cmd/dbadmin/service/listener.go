@@ -10,13 +10,14 @@ import (
 
 // ListenerService is
 type ListenerService struct {
-	db *db.Database
+	db        *db.Database
+	changelog *Changelog
 }
 
 // NewListenerService returns a new listener instance
-func NewListenerService(database *db.Database) *ListenerService {
+func NewListenerService(database *db.Database, c *Changelog) *ListenerService {
 
-	return &ListenerService{db: database}
+	return &ListenerService{db: database, changelog: c}
 }
 
 // GetAll returns all listeners
@@ -52,7 +53,7 @@ func (ls *ListenerService) GetAttribute(listenerName, attributeName string) (val
 }
 
 // Create creates an listener
-func (ls *ListenerService) Create(newListener types.Listener) (types.Listener, types.Error) {
+func (ls *ListenerService) Create(newListener types.Listener, who Requester) (types.Listener, types.Error) {
 
 	existingListener, err := ls.db.Listener.Get(newListener.Name)
 	if err == nil {
@@ -61,79 +62,93 @@ func (ls *ListenerService) Create(newListener types.Listener) (types.Listener, t
 	}
 	// Automatically set default fields
 	newListener.CreatedAt = shared.GetCurrentTimeMilliseconds()
-	err = ls.updateListener(&newListener)
+	newListener.CreatedBy = who.Username
+
+	err = ls.updateListener(&newListener, who)
+	ls.changelog.Create(newListener, who)
 	return newListener, err
 }
 
 // Update updates an existing listener
-func (ls *ListenerService) Update(updatedListener types.Listener) (types.Listener, types.Error) {
+func (ls *ListenerService) Update(updatedListener types.Listener, who Requester) (types.Listener, types.Error) {
 
-	listenerToUpdate, err := ls.db.Listener.Get(updatedListener.Name)
+	currentListener, err := ls.db.Listener.Get(updatedListener.Name)
 	if err != nil {
 		return types.NullListener, types.NewItemNotFoundError(err)
 	}
+	// Copy over fields we do not allow to be updated
+	updatedListener.Name = currentListener.Name
+	updatedListener.CreatedAt = currentListener.CreatedAt
+	updatedListener.CreatedBy = currentListener.CreatedBy
 
-	// Copy over fields we allow to be updated
-	listenerToUpdate.VirtualHosts = updatedListener.VirtualHosts
-	listenerToUpdate.Port = updatedListener.Port
-	listenerToUpdate.DisplayName = updatedListener.DisplayName
-	listenerToUpdate.Attributes = updatedListener.Attributes
-	listenerToUpdate.RouteGroup = updatedListener.RouteGroup
-	listenerToUpdate.Policies = updatedListener.Policies
-	listenerToUpdate.OrganizationName = updatedListener.OrganizationName
-
-	err = ls.updateListener(listenerToUpdate)
-	return *listenerToUpdate, err
+	err = ls.updateListener(&updatedListener, who)
+	ls.changelog.Update(currentListener, updatedListener, who)
+	return updatedListener, err
 }
 
 // UpdateAttributes updates attributes of an listener
-func (ls *ListenerService) UpdateAttributes(listenerName string, receivedAttributes types.Attributes) types.Error {
+func (ls *ListenerService) UpdateAttributes(listenerName string,
+	receivedAttributes types.Attributes, who Requester) types.Error {
 
-	updatedListener, err := ls.db.Listener.Get(listenerName)
+	currentListener, err := ls.db.Listener.Get(listenerName)
 	if err != nil {
 		return types.NewItemNotFoundError(err)
 	}
-	updatedListener.Attributes = receivedAttributes
-	return ls.updateListener(updatedListener)
+	updatedListener := currentListener
+	updatedListener.Attributes.SetMultiple(receivedAttributes)
+
+	err = ls.updateListener(updatedListener, who)
+	ls.changelog.Update(currentListener, updatedListener, who)
+	return err
 }
 
 // UpdateAttribute update an attribute of developer
 func (ls *ListenerService) UpdateAttribute(listenerName string,
-	attributeValue types.Attribute) types.Error {
+	attributeValue types.Attribute, who Requester) types.Error {
 
-	updatedListener, err := ls.db.Listener.Get(listenerName)
+	currentListener, err := ls.db.Listener.Get(listenerName)
 	if err != nil {
-		return err
+		return types.NewItemNotFoundError(err)
 	}
+	updatedListener := currentListener
 	updatedListener.Attributes.Set(attributeValue)
-	return ls.updateListener(updatedListener)
+
+	err = ls.updateListener(updatedListener, who)
+	ls.changelog.Update(currentListener, updatedListener, who)
+	return err
 }
 
 // DeleteAttribute removes an attribute of an listener
-func (ls *ListenerService) DeleteAttribute(listenerName, attributeToDelete string) (string, types.Error) {
+func (ls *ListenerService) DeleteAttribute(listenerName, attributeToDelete string,
+	who Requester) (string, types.Error) {
 
-	updatedListener, err := ls.db.Listener.Get(listenerName)
+	currentListener, err := ls.db.Listener.Get(listenerName)
 	if err != nil {
 		return "", err
 	}
+	updatedListener := currentListener
 	oldValue, err := updatedListener.Attributes.Delete(attributeToDelete)
 	if err != nil {
 		return "", err
 	}
-	return oldValue, ls.updateListener(updatedListener)
+
+	err = ls.updateListener(updatedListener, who)
+	ls.changelog.Update(currentListener, updatedListener, who)
+	return oldValue, err
 }
 
 // updateListener updates last-modified field(s) and updates cluster in database
-func (ls *ListenerService) updateListener(updatedListener *types.Listener) types.Error {
+func (ls *ListenerService) updateListener(updatedListener *types.Listener, who Requester) types.Error {
 
 	updatedListener.Attributes.Tidy()
 	updatedListener.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
-
+	updatedListener.LastmodifiedBy = who.Username
 	return ls.db.Listener.Update(updatedListener)
 }
 
 // Delete deletes an listener
-func (ls *ListenerService) Delete(listenerName string) (deletedListener types.Listener, e types.Error) {
+func (ls *ListenerService) Delete(listenerName string, who Requester) (
+	deletedListener types.Listener, e types.Error) {
 
 	listener, err := ls.db.Listener.Get(listenerName)
 	if err != nil {
@@ -150,6 +165,7 @@ func (ls *ListenerService) Delete(listenerName string) (deletedListener types.Li
 	if err != nil {
 		return types.NullListener, err
 	}
+	ls.changelog.Delete(listener, who)
 	return *listener, nil
 }
 

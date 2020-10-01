@@ -8,20 +8,20 @@ import (
 )
 
 // registerDeveloperRoutes registers all routes we handle
-func (h *Handler) registerDeveloperRoutes(r *gin.Engine) {
-	r.GET("/v1/organizations/:organization/developers", h.handler(h.getAllDevelopers))
-	r.POST("/v1/organizations/:organization/developers", h.handler(h.createDeveloper))
+func (h *Handler) registerDeveloperRoutes(r *gin.RouterGroup) {
+	r.GET("/organizations/:organization/developers", h.handler(h.getAllDevelopers))
+	r.POST("/organizations/:organization/developers", h.handler(h.createDeveloper))
 
-	r.GET("/v1/organizations/:organization/developers/:developer", h.handler(h.getDeveloper))
-	r.POST("/v1/organizations/:organization/developers/:developer", h.handler(h.updateDeveloper))
-	r.DELETE("/v1/organizations/:organization/developers/:developer", h.handler(h.deleteDeveloper))
+	r.GET("/organizations/:organization/developers/:developer", h.handler(h.getDeveloper))
+	r.POST("/organizations/:organization/developers/:developer", h.handler(h.updateDeveloper))
+	r.DELETE("/organizations/:organization/developers/:developer", h.handler(h.deleteDeveloper))
 
-	r.GET("/v1/organizations/:organization/developers/:developer/attributes", h.handler(h.getDeveloperAttributes))
-	r.POST("/v1/organizations/:organization/developers/:developer/attributes", h.handler(h.updateDeveloperAttributes))
+	r.GET("/organizations/:organization/developers/:developer/attributes", h.handler(h.getDeveloperAttributes))
+	r.POST("/organizations/:organization/developers/:developer/attributes", h.handler(h.updateDeveloperAttributes))
 
-	r.GET("/v1/organizations/:organization/developers/:developer/attributes/:attribute", h.handler(h.getDeveloperAttributeByName))
-	r.POST("/v1/organizations/:organization/developers/:developer/attributes/:attribute", h.handler(h.updateDeveloperAttributeByName))
-	r.DELETE("/v1/organizations/:organization/developers/:developer/attributes/:attribute", h.handler(h.deleteDeveloperAttributeByName))
+	r.GET("/organizations/:organization/developers/:developer/attributes/:attribute", h.handler(h.getDeveloperAttributeByName))
+	r.POST("/organizations/:organization/developers/:developer/attributes/:attribute", h.handler(h.updateDeveloperAttributeByName))
+	r.DELETE("/organizations/:organization/developers/:developer/attributes/:attribute", h.handler(h.deleteDeveloperAttributeByName))
 }
 
 const (
@@ -81,8 +81,8 @@ func (h *Handler) createDeveloper(c *gin.Context) handlerResponse {
 	if err := c.ShouldBindJSON(&newDeveloper); err != nil {
 		return handleBadRequest(err)
 	}
-
-	storedDeveloper, err := h.service.Developer.Create(c.Param(organizationParameter), newDeveloper)
+	storedDeveloper, err := h.service.Developer.Create(c.Param(organizationParameter),
+		newDeveloper, h.who(c))
 	if err != nil {
 		return handleError(err)
 	}
@@ -96,11 +96,11 @@ func (h *Handler) updateDeveloper(c *gin.Context) handlerResponse {
 	if err := c.ShouldBindJSON(&updatedDeveloper); err != nil {
 		return handleBadRequest(err)
 	}
-
-	// Automatically set default fields
-	updatedDeveloper.LastmodifiedBy = h.GetSessionUser(c)
-
-	storedDeveloper, err := h.service.Developer.Update(c.Param(organizationParameter), updatedDeveloper)
+	// developer name in path must match developer name in posted body
+	if updatedDeveloper.Email != c.Param(developerParameter) {
+		return handleNameMismatch()
+	}
+	storedDeveloper, err := h.service.Developer.Update(c.Param(organizationParameter), updatedDeveloper, h.who(c))
 	if err != nil {
 		return handleError(err)
 	}
@@ -116,11 +116,8 @@ func (h *Handler) updateDeveloperAttributes(c *gin.Context) handlerResponse {
 	if err := c.ShouldBindJSON(&receivedAttributes); err != nil {
 		return handleBadRequest(err)
 	}
-
-	// FIXME we should set LastmodifiedBy
-
 	if err := h.service.Developer.UpdateAttributes(c.Param(organizationParameter),
-		c.Param(developerParameter), receivedAttributes.Attributes); err != nil {
+		c.Param(developerParameter), receivedAttributes.Attributes, h.who(c)); err != nil {
 		return handleError(err)
 	}
 	return handleOKAttributes(receivedAttributes.Attributes)
@@ -133,15 +130,12 @@ func (h *Handler) updateDeveloperAttributeByName(c *gin.Context) handlerResponse
 	if err := c.ShouldBindJSON(&receivedValue); err != nil {
 		return handleBadRequest(err)
 	}
-
 	newAttribute := types.Attribute{
 		Name:  c.Param(attributeParameter),
 		Value: receivedValue.Value,
 	}
-
-	// FIXME we should set LastmodifiedBy
 	if err := h.service.Developer.UpdateAttribute(c.Param(organizationParameter),
-		c.Param(developerParameter), newAttribute); err != nil {
+		c.Param(developerParameter), newAttribute, h.who(c)); err != nil {
 		return handleError(err)
 	}
 	return handleOKAttribute(newAttribute)
@@ -152,7 +146,7 @@ func (h *Handler) deleteDeveloperAttributeByName(c *gin.Context) handlerResponse
 
 	attributeToDelete := c.Param(attributeParameter)
 	oldValue, err := h.service.Developer.DeleteAttribute(c.Param(organizationParameter),
-		c.Param(developerParameter), attributeToDelete)
+		c.Param(developerParameter), attributeToDelete, h.who(c))
 	if err != nil {
 		return handleBadRequest(err)
 	}
@@ -165,7 +159,8 @@ func (h *Handler) deleteDeveloperAttributeByName(c *gin.Context) handlerResponse
 // deleteDeveloper deletes of one developer
 func (h *Handler) deleteDeveloper(c *gin.Context) handlerResponse {
 
-	developer, err := h.service.Developer.Delete(c.Param(organizationParameter), c.Param(developerParameter))
+	developer, err := h.service.Developer.Delete(c.Param(organizationParameter),
+		c.Param(developerParameter), h.who(c))
 	if err != nil {
 		return handleError(err)
 	}

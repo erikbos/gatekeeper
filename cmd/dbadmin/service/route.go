@@ -10,13 +10,14 @@ import (
 
 // RouteService is
 type RouteService struct {
-	db *db.Database
+	db        *db.Database
+	changelog *Changelog
 }
 
 // NewRouteService returns a new route instance
-func NewRouteService(database *db.Database) *RouteService {
+func NewRouteService(database *db.Database, c *Changelog) *RouteService {
 
-	return &RouteService{db: database}
+	return &RouteService{db: database, changelog: c}
 }
 
 // GetAll returns all routes
@@ -52,7 +53,7 @@ func (rs *RouteService) GetAttribute(routeName, attributeName string) (value str
 }
 
 // Create creates an route
-func (rs *RouteService) Create(newRoute types.Route) (types.Route, types.Error) {
+func (rs *RouteService) Create(newRoute types.Route, who Requester) (types.Route, types.Error) {
 
 	existingRoute, err := rs.db.Route.Get(newRoute.Name)
 	if err == nil {
@@ -61,76 +62,94 @@ func (rs *RouteService) Create(newRoute types.Route) (types.Route, types.Error) 
 	}
 	// Automatically set default fields
 	newRoute.CreatedAt = shared.GetCurrentTimeMilliseconds()
+	newRoute.CreatedBy = who.Username
 
-	err = rs.updateRoute(&newRoute)
+	err = rs.updateRoute(&newRoute, who)
+	rs.changelog.Create(newRoute, who)
 	return newRoute, err
 }
 
 // Update updates an existing route
-func (rs *RouteService) Update(updatedRoute types.Route) (types.Route, types.Error) {
+func (rs *RouteService) Update(updatedRoute types.Route,
+	who Requester) (types.Route, types.Error) {
 
-	routeToUpdate, err := rs.db.Route.Get(updatedRoute.Name)
+	currentRoute, err := rs.db.Route.Get(updatedRoute.Name)
 	if err != nil {
 		return types.NullRoute, types.NewItemNotFoundError(err)
 	}
+	// Copy over fields we do not allow to be updated
+	updatedRoute.Name = currentRoute.Name
+	updatedRoute.CreatedAt = currentRoute.CreatedAt
+	updatedRoute.CreatedBy = currentRoute.CreatedBy
 
-	routeToUpdate.DisplayName = updatedRoute.DisplayName
-	routeToUpdate.RouteGroup = updatedRoute.RouteGroup
-	routeToUpdate.Path = updatedRoute.Path
-	routeToUpdate.PathType = updatedRoute.PathType
-	routeToUpdate.Attributes = updatedRoute.Attributes
-
-	err = rs.updateRoute(routeToUpdate)
-	return *routeToUpdate, err
+	err = rs.updateRoute(&updatedRoute, who)
+	rs.changelog.Update(currentRoute, updatedRoute, who)
+	return updatedRoute, err
 }
 
 // UpdateAttributes updates attributes of an route
-func (rs *RouteService) UpdateAttributes(routeName string, receivedAttributes types.Attributes) types.Error {
+func (rs *RouteService) UpdateAttributes(routeName string,
+	receivedAttributes types.Attributes, who Requester) types.Error {
 
-	updatedRoute, err := rs.db.Route.Get(routeName)
+	currentRoute, err := rs.db.Route.Get(routeName)
 	if err != nil {
 		return types.NewItemNotFoundError(err)
 	}
-	updatedRoute.Attributes = receivedAttributes
-	return rs.updateRoute(updatedRoute)
+	updatedRoute := currentRoute
+	updatedRoute.Attributes.SetMultiple(receivedAttributes)
+
+	err = rs.updateRoute(updatedRoute, who)
+	rs.changelog.Update(currentRoute, updatedRoute, who)
+	return err
 }
 
 // UpdateAttribute update an attribute of developer
-func (rs *RouteService) UpdateAttribute(routeName string, attributeValue types.Attribute) types.Error {
+func (rs *RouteService) UpdateAttribute(routeName string,
+	attributeValue types.Attribute, who Requester) types.Error {
 
-	updatedRoute, err := rs.db.Route.Get(routeName)
+	currentRoute, err := rs.db.Route.Get(routeName)
 	if err != nil {
 		return err
 	}
+	updatedRoute := currentRoute
 	updatedRoute.Attributes.Set(attributeValue)
-	return rs.updateRoute(updatedRoute)
+
+	err = rs.updateRoute(updatedRoute, who)
+	rs.changelog.Update(currentRoute, updatedRoute, who)
+	return err
 }
 
 // DeleteAttribute removes an attribute of an route
-func (rs *RouteService) DeleteAttribute(routeName, attributeToDelete string) (string, types.Error) {
+func (rs *RouteService) DeleteAttribute(routeName, attributeToDelete string,
+	who Requester) (string, types.Error) {
 
-	updatedRoute, err := rs.db.Route.Get(routeName)
+	currentRoute, err := rs.db.Route.Get(routeName)
 	if err != nil {
 		return "", err
 	}
+	updatedRoute := currentRoute
 	oldValue, err := updatedRoute.Attributes.Delete(attributeToDelete)
 	if err != nil {
 		return "", err
 	}
-	return oldValue, rs.updateRoute(updatedRoute)
+
+	err = rs.updateRoute(updatedRoute, who)
+	rs.changelog.Update(currentRoute, updatedRoute, who)
+	return oldValue, err
 }
 
 // updateRoute updates last-modified field(s) and updates route in database
-func (rs *RouteService) updateRoute(updatedRoute *types.Route) types.Error {
+func (rs *RouteService) updateRoute(updatedRoute *types.Route, who Requester) types.Error {
 
 	updatedRoute.Attributes.Tidy()
 	updatedRoute.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
-
+	updatedRoute.LastmodifiedBy = who.Username
 	return rs.db.Route.Update(updatedRoute)
 }
 
 // Delete deletes an route
-func (rs *RouteService) Delete(routeName string) (deletedRoute types.Route, e types.Error) {
+func (rs *RouteService) Delete(routeName string, who Requester) (
+	deletedRoute types.Route, e types.Error) {
 
 	route, err := rs.db.Route.Get(routeName)
 	if err != nil {
@@ -140,5 +159,6 @@ func (rs *RouteService) Delete(routeName string) (deletedRoute types.Route, e ty
 	if err != nil {
 		return types.NullRoute, err
 	}
+	rs.changelog.Delete(route, who)
 	return *route, nil
 }

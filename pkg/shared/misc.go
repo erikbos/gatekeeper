@@ -4,8 +4,6 @@ import (
 	"net"
 	"strings"
 	"time"
-
-	log "github.com/sirupsen/logrus"
 )
 
 // GetCurrentTimeMilliseconds returns current epoch time in milliseconds
@@ -36,7 +34,7 @@ func CheckIPinAccessList(ip net.IP, ipAccessList string) bool {
 				return true
 			}
 		} else {
-			log.Debugf("FIXME increase unparsable ip ACL counter")
+			//	log.Debugf("FIXME increase unparsable ip ACL counter")
 		}
 	}
 	// source ip did not match any of the ACL subnets, request rejected

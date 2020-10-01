@@ -3,6 +3,8 @@ package types
 import "encoding/json"
 
 // DeveloperAppKey contains an apikey entitlement
+//
+// Field validation (binding) is done using https://godoc.org/github.com/go-playground/validator
 type DeveloperAppKey struct {
 	// apikey of this credential
 	ConsumerKey string `json:"consumerKey"`

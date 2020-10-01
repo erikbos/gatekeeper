@@ -7,20 +7,20 @@ import (
 )
 
 // registerClusterRoutes registers all routes we handle
-func (h *Handler) registerClusterRoutes(r *gin.Engine) {
-	r.GET("/v1/clusters", h.handler(h.getAllClusters))
-	r.POST("/v1/clusters", h.handler(h.createCluster))
+func (h *Handler) registerClusterRoutes(r *gin.RouterGroup) {
+	r.GET("/clusters", h.handler(h.getAllClusters))
+	r.POST("/clusters", h.handler(h.createCluster))
 
-	r.GET("/v1/clusters/:cluster", h.handler(h.getCluster))
-	r.POST("/v1/clusters/:cluster", h.handler(h.updateCluster))
-	r.DELETE("/v1/clusters/:cluster", h.handler(h.deleteCluster))
+	r.GET("/clusters/:cluster", h.handler(h.getCluster))
+	r.POST("/clusters/:cluster", h.handler(h.updateCluster))
+	r.DELETE("/clusters/:cluster", h.handler(h.deleteCluster))
 
-	r.GET("/v1/clusters/:cluster/attributes", h.handler(h.getClusterAttributes))
-	r.POST("/v1/clusters/:cluster/attributes", h.handler(h.updateClusterAttributes))
+	r.GET("/clusters/:cluster/attributes", h.handler(h.getClusterAttributes))
+	r.POST("/clusters/:cluster/attributes", h.handler(h.updateClusterAttributes))
 
-	r.GET("/v1/clusters/:cluster/attributes/:attribute", h.handler(h.getClusterAttribute))
-	r.POST("/v1/clusters/:cluster/attributes/:attribute", h.handler(h.updateClusterAttribute))
-	r.DELETE("/v1/clusters/:cluster/attributes/:attribute", h.handler(h.deleteClusterAttribute))
+	r.GET("/clusters/:cluster/attributes/:attribute", h.handler(h.getClusterAttribute))
+	r.POST("/clusters/:cluster/attributes/:attribute", h.handler(h.updateClusterAttribute))
+	r.DELETE("/clusters/:cluster/attributes/:attribute", h.handler(h.deleteClusterAttribute))
 }
 
 const (
@@ -79,12 +79,7 @@ func (h *Handler) createCluster(c *gin.Context) handlerResponse {
 	if err := c.ShouldBindJSON(&newCluster); err != nil {
 		return handleBadRequest(err)
 	}
-
-	// Automatically set default fields
-	newCluster.CreatedBy = h.GetSessionUser(c)
-	newCluster.LastmodifiedBy = h.GetSessionUser(c)
-
-	storedCluster, err := h.service.Cluster.Create(newCluster)
+	storedCluster, err := h.service.Cluster.Create(newCluster, h.who(c))
 	if err != nil {
 		return handleError(err)
 	}
@@ -98,11 +93,11 @@ func (h *Handler) updateCluster(c *gin.Context) handlerResponse {
 	if err := c.ShouldBindJSON(&updatedCluster); err != nil {
 		return handleBadRequest(err)
 	}
-
-	// Automatically set default fields
-	updatedCluster.LastmodifiedBy = h.GetSessionUser(c)
-
-	storedCluster, err := h.service.Cluster.Update(updatedCluster)
+	// clustername in path must match clustername in posted body
+	if updatedCluster.Name != c.Param(clusterParameter) {
+		return handleNameMismatch()
+	}
+	storedCluster, err := h.service.Cluster.Update(updatedCluster, h.who(c))
 	if err != nil {
 		return handleError(err)
 	}
@@ -118,11 +113,8 @@ func (h *Handler) updateClusterAttributes(c *gin.Context) handlerResponse {
 	if err := c.ShouldBindJSON(&receivedAttributes); err != nil {
 		return handleBadRequest(err)
 	}
-	// FIXME we should set LastmodifiedBy
-	// updatedCluster.Attributes = receivedAttributes.Attributes
-	// updatedCluster.LastmodifiedBy = h.GetSessionUser(c)
-
-	if err := h.service.Cluster.UpdateAttributes(c.Param(clusterParameter), receivedAttributes.Attributes); err != nil {
+	if err := h.service.Cluster.UpdateAttributes(c.Param(clusterParameter),
+		receivedAttributes.Attributes, h.who(c)); err != nil {
 		return handleError(err)
 	}
 	return handleOKAttributes(receivedAttributes.Attributes)
@@ -135,14 +127,12 @@ func (h *Handler) updateClusterAttribute(c *gin.Context) handlerResponse {
 	if err := c.ShouldBindJSON(&receivedValue); err != nil {
 		return handleBadRequest(err)
 	}
-
 	newAttribute := types.Attribute{
 		Name:  c.Param(attributeParameter),
 		Value: receivedValue.Value,
 	}
-
-	// FIXME we should set LastmodifiedBy
-	if err := h.service.Cluster.UpdateAttribute(c.Param(clusterParameter), newAttribute); err != nil {
+	if err := h.service.Cluster.UpdateAttribute(c.Param(clusterParameter),
+		newAttribute, h.who(c)); err != nil {
 		return handleError(err)
 	}
 	return handleOKAttribute(newAttribute)
@@ -152,7 +142,8 @@ func (h *Handler) updateClusterAttribute(c *gin.Context) handlerResponse {
 func (h *Handler) deleteClusterAttribute(c *gin.Context) handlerResponse {
 
 	attributeToDelete := c.Param(attributeParameter)
-	oldValue, err := h.service.Cluster.DeleteAttribute(c.Param(clusterParameter), attributeToDelete)
+	oldValue, err := h.service.Cluster.DeleteAttribute(c.Param(clusterParameter),
+		attributeToDelete, h.who(c))
 	if err != nil {
 		return handleBadRequest(err)
 	}
@@ -165,7 +156,7 @@ func (h *Handler) deleteClusterAttribute(c *gin.Context) handlerResponse {
 // deleteCluster deletes an cluster
 func (h *Handler) deleteCluster(c *gin.Context) handlerResponse {
 
-	deletedCluster, err := h.service.Cluster.Delete(c.Param(clusterParameter))
+	deletedCluster, err := h.service.Cluster.Delete(c.Param(clusterParameter), h.who(c))
 	if err != nil {
 		return handleError(err)
 	}

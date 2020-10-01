@@ -6,24 +6,32 @@ import (
 	"html/template"
 	"net"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
 
+//
 const (
-	// LivenessCheckPath to be used by k8s checks
+	// Path to be used by k8s liveness check
 	LivenessCheckPath = "/liveness"
 
-	// ReadinessCheckPath to be used by k8s checks
+	// Path to be used by k8s readiness check
 	ReadinessCheckPath = "/readiness"
 
-	// MetricsPath is Prometheus metrics endpoint
+	// Prometheus metrics endpoint
 	MetricsPath = "/metrics"
 
-	// ConfigDumpPath endpoint for showing running configuration
+	// Path endpoint for showing running configuration
 	ConfigDumpPath = "/config_dump"
+
+	// Key of RequestID in request context
+	RequestIDKey = "RequestId"
+
+	// RequestID header
+	RequestIDHeader = "Request-Id"
 )
 
 // returnJSONMessage returns an error message
@@ -40,15 +48,6 @@ func returnJSONMessageAndAbort(c *gin.Context, statusCode int, msg error) {
 
 	returnJSONMessage(c, statusCode, msg)
 	c.Abort()
-}
-
-// AbortIfContentTypeNotJSON checks for json content-type and abort request
-func AbortIfContentTypeNotJSON(c *gin.Context) {
-
-	if c.Request.Header.Get("content-type") != "application/json" {
-		returnJSONMessageAndAbort(c, http.StatusUnsupportedMediaType,
-			errors.New("Content-type application/json required when submitting data"))
-	}
 }
 
 // WebAdminCheckIPACL checks if requestor's ip address matches ACL
@@ -83,8 +82,23 @@ func LogHTTPRequest(param gin.LogFormatterParams) string {
 		return ""
 	}
 
-	return fmt.Sprintf("%s - - %s \"%s %s %s\" %d %d \"%s\" \"%s\"\n",
+	// Get username of requestor
+	var user string
+	if value, ok := param.Keys[gin.AuthUserKey]; ok {
+		user = fmt.Sprint(value)
+	} else {
+		user = "-"
+	}
+
+	// Get requestID from context
+	var requestID string
+	if value, ok := param.Keys[RequestIDKey]; ok {
+		requestID = fmt.Sprint(value)
+	}
+
+	return fmt.Sprintf("%s - %s %s \"%s %s %s\" %d %d \"%s\" \"%s\" \"%s\"\n",
 		param.TimeStamp.Format(time.RFC3339),
+		user,
 		param.ClientIP,
 		param.Method,
 		param.Path,
@@ -92,7 +106,9 @@ func LogHTTPRequest(param gin.LogFormatterParams) string {
 		param.StatusCode,
 		param.Latency/time.Millisecond,
 		param.Request.UserAgent(),
-		param.ErrorMessage,
+		requestID,
+		// Remove any whitespace clutter to keep logs tidy
+		strings.TrimSpace(param.ErrorMessage),
 	)
 }
 
@@ -100,9 +116,22 @@ func LogHTTPRequest(param gin.LogFormatterParams) string {
 func AddRequestID() gin.HandlerFunc {
 
 	return func(c *gin.Context) {
-		c.Writer.Header().Set("Request-Id", uuid.New().String())
+		requestID := uuid.New().String()
+		// Save in request context
+		c.Set(RequestIDKey, requestID)
+		// Set http header
+		c.Writer.Header().Set(RequestIDHeader, requestID)
 		c.Next()
 	}
+}
+
+// GetRequestID returns RequestID from request context
+func GetRequestID(c *gin.Context) string {
+
+	if requestID, exists := c.Get(RequestIDKey); exists {
+		return fmt.Sprint(requestID)
+	}
+	return ""
 }
 
 //ShowIndexPage produces the index page based upon all registered routes

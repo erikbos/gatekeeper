@@ -10,13 +10,14 @@ import (
 
 // OrganizationService has the CRUD methods to manipulate the organization entity
 type OrganizationService struct {
-	db *db.Database
+	db        *db.Database
+	changelog *Changelog
 }
 
 // NewOrganizationService returns a new organization instance
-func NewOrganizationService(database *db.Database) *OrganizationService {
+func NewOrganizationService(database *db.Database, c *Changelog) *OrganizationService {
 
-	return &OrganizationService{db: database}
+	return &OrganizationService{db: database, changelog: c}
 }
 
 // GetAll returns all organizations
@@ -52,104 +53,120 @@ func (os *OrganizationService) GetAttribute(OrganizationName, attributeName stri
 }
 
 // Create creates an organization
-func (os *OrganizationService) Create(newOrganization types.Organization) (types.Organization, types.Error) {
+func (os *OrganizationService) Create(newOrganization types.Organization,
+	who Requester) (types.Organization, types.Error) {
 
 	existingOrganization, err := os.db.Organization.Get(newOrganization.Name)
 	if err == nil {
 		return types.NullOrganization, types.NewBadRequestError(
 			fmt.Errorf("Organization '%s' already exists", existingOrganization.Name))
 	}
-	// Automatically set default fields
+	// Set default fields
 	newOrganization.CreatedAt = shared.GetCurrentTimeMilliseconds()
+	newOrganization.CreatedBy = who.Username
 
-	err = os.updateOrganization(&newOrganization)
+	err = os.updateOrganization(&newOrganization, who)
+	os.changelog.Create(newOrganization, who)
 	return newOrganization, err
 }
 
 // Update updates an existing organization
-func (os *OrganizationService) Update(updatedOrganization types.Organization) (types.Organization, types.Error) {
+func (os *OrganizationService) Update(updatedOrganization types.Organization,
+	who Requester) (types.Organization, types.Error) {
 
-	organizationToUpdate, err := os.db.Organization.Get(updatedOrganization.Name)
+	currentOrganization, err := os.db.Organization.Get(updatedOrganization.Name)
 	if err != nil {
 		return types.NullOrganization, types.NewItemNotFoundError(err)
 	}
-	// Copy over fields we allow to be updated
-	organizationToUpdate.DisplayName = updatedOrganization.DisplayName
-	organizationToUpdate.Attributes = updatedOrganization.Attributes
+	// Copy over fields we do not allow to be updated
+	updatedOrganization.Name = currentOrganization.Name
+	updatedOrganization.CreatedAt = currentOrganization.CreatedAt
+	updatedOrganization.CreatedBy = currentOrganization.CreatedBy
 
-	err = os.updateOrganization(organizationToUpdate)
-	return *organizationToUpdate, err
+	err = os.updateOrganization(&updatedOrganization, who)
+	os.changelog.Update(currentOrganization, updatedOrganization, who)
+	return updatedOrganization, err
 }
 
 // UpdateAttributes updates attributes of an organization
-func (os *OrganizationService) UpdateAttributes(org string, receivedAttributes types.Attributes) types.Error {
+func (os *OrganizationService) UpdateAttributes(org string,
+	receivedAttributes types.Attributes, who Requester) types.Error {
 
-	updatedOrganization, err := os.db.Organization.Get(org)
+	currentOrganization, err := os.db.Organization.Get(org)
 	if err != nil {
 		return err
 	}
-	updatedOrganization.Attributes = receivedAttributes
-	return os.updateOrganization(updatedOrganization)
+	updatedOrganization := currentOrganization
+	updatedOrganization.Attributes.SetMultiple(receivedAttributes)
+
+	err = os.updateOrganization(updatedOrganization, who)
+	os.changelog.Update(currentOrganization, updatedOrganization, who)
+	return err
 }
 
 // UpdateAttribute update an attribute of organization
-func (os *OrganizationService) UpdateAttribute(org string, attributeValue types.Attribute) types.Error {
+func (os *OrganizationService) UpdateAttribute(org string,
+	attributeValue types.Attribute, who Requester) types.Error {
 
-	updatedOrganization, err := os.db.Organization.Get(org)
+	currentOrganization, err := os.db.Organization.Get(org)
 	if err != nil {
 		return err
 	}
+	updatedOrganization := currentOrganization
 	updatedOrganization.Attributes.Set(attributeValue)
-	return os.updateOrganization(updatedOrganization)
+
+	err = os.updateOrganization(updatedOrganization, who)
+	os.changelog.Update(currentOrganization, updatedOrganization, who)
+	return err
 }
 
 // DeleteAttribute removes an attribute of an organization
-func (os *OrganizationService) DeleteAttribute(organizationName, attributeToDelete string) (string, types.Error) {
+func (os *OrganizationService) DeleteAttribute(organizationName,
+	attributeToDelete string, who Requester) (string, types.Error) {
 
-	updatedOrganization, err := os.db.Organization.Get(organizationName)
+	currentOrganization, err := os.db.Organization.Get(organizationName)
 	if err != nil {
 		return "", err
 	}
+	updatedOrganization := currentOrganization
 	oldValue, err := updatedOrganization.Attributes.Delete(attributeToDelete)
 	if err != nil {
 		return "", err
 	}
-	return oldValue, os.updateOrganization(updatedOrganization)
+
+	err = os.updateOrganization(updatedOrganization, who)
+	os.changelog.Update(currentOrganization, updatedOrganization, who)
+	return oldValue, err
 }
 
 // updateOrganization updates last-modified field(s) and updates organization in database
-func (os *OrganizationService) updateOrganization(updatedOrganization *types.Organization) types.Error {
+func (os *OrganizationService) updateOrganization(updatedOrganization *types.Organization, who Requester) types.Error {
 
 	updatedOrganization.Attributes.Tidy()
 	updatedOrganization.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
-
+	updatedOrganization.LastmodifiedBy = who.Username
 	return os.db.Organization.Update(updatedOrganization)
 }
 
 // Delete deletes an organization
-func (os *OrganizationService) Delete(organizationName string) (deletedOrganization types.Organization, e types.Error) {
+func (os *OrganizationService) Delete(organizationName string, who Requester) (deletedOrganization types.Organization, e types.Error) {
 
 	organization, err := os.db.Organization.Get(organizationName)
 	if err != nil {
 		return types.NullOrganization, err
 	}
-
-	developerCount, err := os.db.Developer.GetCountByOrganization(organization.Name)
+	developersInOrganizationCount, err := os.db.Developer.GetCountByOrganization(organization.Name)
 	if err != nil {
 		return types.NullOrganization, err
 	}
-	switch developerCount {
-	case -1:
-		return types.NullOrganization, types.NewBadRequestError(
-			fmt.Errorf("Could not retrieve number of developers in organization"))
-	case 0:
-		if err := os.db.Organization.Delete(organization.Name); err != nil {
-			return types.NullOrganization, err
-		}
-		return *organization, nil
-	default:
-		return types.NullOrganization, types.NewPermissionDeniedError(
+	if developersInOrganizationCount > 0 {
+		return types.NullOrganization, types.NewUnauthorizedError(
 			fmt.Errorf("Cannot delete organization '%s' with %d active developers",
-				organization.Name, developerCount))
+				organization.Name, developersInOrganizationCount))
 	}
+	if err := os.db.Organization.Delete(organization.Name); err != nil {
+		return types.NullOrganization, err
+	}
+	os.changelog.Delete(organization, who)
+	return *organization, nil
 }

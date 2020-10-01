@@ -7,20 +7,20 @@ import (
 )
 
 // registerOrganizationRoutes registers all routes we handle
-func (h *Handler) registerOrganizationRoutes(r *gin.Engine) {
-	r.GET("/v1/organizations", h.handler(h.getAllOrganizations))
-	r.POST("/v1/organizations", h.handler(h.createOrganization))
+func (h *Handler) registerOrganizationRoutes(r *gin.RouterGroup) {
+	r.GET("/organizations", h.handler(h.getAllOrganizations))
+	r.POST("/organizations", h.handler(h.createOrganization))
 
-	r.GET("/v1/organizations/:organization", h.handler(h.getOrganization))
-	r.POST("/v1/organizations/:organization", h.handler(h.updateOrganization))
-	r.DELETE("/v1/organizations/:organization", h.handler(h.deleteOrganization))
+	r.GET("/organizations/:organization", h.handler(h.getOrganization))
+	r.POST("/organizations/:organization", h.handler(h.updateOrganization))
+	r.DELETE("/organizations/:organization", h.handler(h.deleteOrganization))
 
-	r.GET("/v1/organizations/:organization/attributes", h.handler(h.getOrganizationAttributes))
-	r.POST("/v1/organizations/:organization/attributes", h.handler(h.updateOrganizationAttributes))
+	r.GET("/organizations/:organization/attributes", h.handler(h.getOrganizationAttributes))
+	r.POST("/organizations/:organization/attributes", h.handler(h.updateOrganizationAttributes))
 
-	r.GET("/v1/organizations/:organization/attributes/:attribute", h.handler(h.getOrganizationAttribute))
-	r.POST("/v1/organizations/:organization/attributes/:attribute", h.handler(h.updateOrganizationAttribute))
-	r.DELETE("/v1/organizations/:organization/attributes/:attribute", h.handler(h.deleteOrganizationAttribute))
+	r.GET("/organizations/:organization/attributes/:attribute", h.handler(h.getOrganizationAttribute))
+	r.POST("/organizations/:organization/attributes/:attribute", h.handler(h.updateOrganizationAttribute))
+	r.DELETE("/organizations/:organization/attributes/:attribute", h.handler(h.deleteOrganizationAttribute))
 }
 
 const (
@@ -82,15 +82,11 @@ func (h *Handler) createOrganization(c *gin.Context) handlerResponse {
 	if err := c.ShouldBindJSON(&newOrganization); err != nil {
 		return handleBadRequest(err)
 	}
-
-	// Automatically set default fields
-	newOrganization.CreatedBy = h.GetSessionUser(c)
-	newOrganization.LastmodifiedBy = h.GetSessionUser(c)
-
-	if _, err := h.service.Organization.Create(newOrganization); err != nil {
+	storedOrganization, err := h.service.Organization.Create(newOrganization, h.who(c))
+	if err != nil {
 		return handleError(err)
 	}
-	return handleCreated(newOrganization)
+	return handleCreated(storedOrganization)
 }
 
 // updateOrganization updates an existing organization
@@ -100,14 +96,15 @@ func (h *Handler) updateOrganization(c *gin.Context) handlerResponse {
 	if err := c.ShouldBindJSON(&updatedOrganization); err != nil {
 		return handleBadRequest(err)
 	}
-
-	// Automatically set default fields
-	updatedOrganization.LastmodifiedBy = h.GetSessionUser(c)
-
-	if _, err := h.service.Organization.Update(updatedOrganization); err != nil {
+	// organization name in path must match organization name in posted body
+	if updatedOrganization.Name != c.Param(organizationParameter) {
+		return handleNameMismatch()
+	}
+	storedOrganization, err := h.service.Organization.Update(updatedOrganization, h.who(c))
+	if err != nil {
 		return handleError(err)
 	}
-	return handleOK(updatedOrganization)
+	return handleOK(storedOrganization)
 }
 
 // updateOrganizationAttributes updates attributes of an organization
@@ -119,11 +116,8 @@ func (h *Handler) updateOrganizationAttributes(c *gin.Context) handlerResponse {
 	if err := c.ShouldBindJSON(&receivedAttributes); err != nil {
 		return handleBadRequest(err)
 	}
-	// FIXME we should set LastmodifiedBy
-	// updatedOrganization.Attributes = receivedAttributes.Attributes
-	// updatedOrganization.LastmodifiedBy = h.GetSessionUser(c)
-
-	if err := h.service.Organization.UpdateAttributes(c.Param(organizationParameter), receivedAttributes.Attributes); err != nil {
+	if err := h.service.Organization.UpdateAttributes(c.Param(organizationParameter),
+		receivedAttributes.Attributes, h.who(c)); err != nil {
 		return handleError(err)
 	}
 	return handleOKAttributes(receivedAttributes.Attributes)
@@ -136,14 +130,12 @@ func (h *Handler) updateOrganizationAttribute(c *gin.Context) handlerResponse {
 	if err := c.ShouldBindJSON(&receivedValue); err != nil {
 		return handleBadRequest(err)
 	}
-
 	newAttribute := types.Attribute{
 		Name:  c.Param(attributeParameter),
 		Value: receivedValue.Value,
 	}
-
-	// FIXME we should set LastmodifiedBy
-	if err := h.service.Organization.UpdateAttribute(c.Param(organizationParameter), newAttribute); err != nil {
+	if err := h.service.Organization.UpdateAttribute(c.Param(organizationParameter),
+		newAttribute, h.who(c)); err != nil {
 		return handleError(err)
 	}
 	return handleOKAttribute(newAttribute)
@@ -153,7 +145,8 @@ func (h *Handler) updateOrganizationAttribute(c *gin.Context) handlerResponse {
 func (h *Handler) deleteOrganizationAttribute(c *gin.Context) handlerResponse {
 
 	attributeToDelete := c.Param(attributeParameter)
-	oldValue, err := h.service.Organization.DeleteAttribute(c.Param(organizationParameter), attributeToDelete)
+	oldValue, err := h.service.Organization.DeleteAttribute(c.Param(organizationParameter),
+		attributeToDelete, h.who(c))
 	if err != nil {
 		return handleBadRequest(err)
 	}
@@ -166,7 +159,7 @@ func (h *Handler) deleteOrganizationAttribute(c *gin.Context) handlerResponse {
 // deleteOrganization deletes an organization
 func (h *Handler) deleteOrganization(c *gin.Context) handlerResponse {
 
-	deletedOrganization, err := h.service.Organization.Delete(c.Param(organizationParameter))
+	deletedOrganization, err := h.service.Organization.Delete(c.Param(organizationParameter), h.who(c))
 	if err != nil {
 		return handleError(err)
 	}

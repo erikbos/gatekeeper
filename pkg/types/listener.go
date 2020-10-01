@@ -6,21 +6,23 @@ import (
 )
 
 // Listener contains everything about downstream configuration of listener and http virtual hosts
+//
+// Field validation (binding) is done using https://godoc.org/github.com/go-playground/validator
 type Listener struct {
 	// Name of listener (not changable)
-	Name string `json:"name"`
+	Name string `json:"name" binding:"required,min=4"`
 
 	// Friendly display name of listener
 	DisplayName string `json:"displayName"`
 
-	// Virtual hosts of this listener
-	VirtualHosts StringSlice `json:"virtualHosts"`
+	// Virtual hosts of this listener (at least one, each value must be a fqdn)
+	VirtualHosts StringSlice `json:"virtualHosts" binding:"required,min=1,dive,fqdn"`
 
 	// tcp port to listen on
-	Port int `json:"port"`
+	Port int `json:"port" binding:"required,min=1,max=65535"`
 
 	// Routegroup to forward traffic to
-	RouteGroup string `json:"routeGroup"`
+	RouteGroup string `json:"routeGroup" binding:"required"`
 
 	// Comma separated list of policynames, to apply to requests
 	Policies string `json:"policies"`
@@ -36,6 +38,7 @@ type Listener struct {
 	// Name of user who created this listener
 
 	CreatedBy string `json:"createdBy"`
+
 	// Last modified at timestamp in epoch milliseconds
 	LastmodifiedAt int64 `json:"lastmodifiedAt"`
 
@@ -61,6 +64,37 @@ const (
 
 	// Cluster to send access logs to
 	AttributeAccessLogCluster = "AccessLogCluster"
+)
+
+// Attributes which are shared amongst listener, route and cluster
+const (
+	// AttributeTLSCertificate holds pem encoded certicate
+	AttributeTLSCertificate = "TLSCertificate"
+
+	// AttributeTLSCertificateKey holds certicate key
+	AttributeTLSCertificateKey = "TLSCertificateKey"
+
+	// AttributeTLSMinimumVersion determines minimum TLS version accepted
+	AttributeTLSMinimumVersion = "TLSMinimumVersion"
+
+	// AttributeTLSMaximumVersion determines maximum TLS version accepted
+	AttributeTLSMaximumVersion = "TLSMaximumVersion"
+
+	// AttributeTLSCipherSuites determines set of allowed TLS ciphers
+	AttributeTLSCipherSuites = "TLSCipherSuites"
+
+	// AttributeTLSCipherSuites sets HTTP protocol to accept
+	AttributeHTTPProtocol = "HTTPProtocol"
+
+	AttributeValueTrue                    = "true"
+	AttributeValueTLSVersion10            = "TLS1.0"
+	AttributeValueTLSVersion11            = "TLS1.1"
+	AttributeValueTLSVersion12            = "TLS1.2"
+	AttributeValueTLSVersion13            = "TLS1.3"
+	AttributeValueHTTPProtocol11          = "HTTP/1.1"
+	AttributeValueHTTPProtocol2           = "HTTP/2"
+	AttributeValueHTTPProtocol3           = "HTTP/3"
+	AttributeValueHealthCheckProtocolHTTP = "HTTP"
 )
 
 // Sort a slice of listeners

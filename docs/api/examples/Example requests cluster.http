@@ -43,7 +43,7 @@ content-type: application/json
     },
     {
         "name": "TLSMinimumVersion",
-        "value": "TLSv12"
+        "value": "TLS1.2"
     },
     {
         "name": "TLSCipherSuites",
@@ -144,7 +144,7 @@ content-type: application/json
     },
     {
         "name": "TLSMinimumVersion",
-        "value": "TLSv12"
+        "value": "TLS1.2"
     },
     {
         "name": "TLSCipherSuites2",

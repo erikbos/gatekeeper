@@ -12,13 +12,14 @@ import (
 
 // DeveloperAppService is
 type DeveloperAppService struct {
-	db *db.Database
+	db        *db.Database
+	changelog *Changelog
 }
 
 // NewDeveloperAppService returns a new developerApp instance
-func NewDeveloperAppService(database *db.Database) *DeveloperAppService {
+func NewDeveloperAppService(database *db.Database, c *Changelog) *DeveloperAppService {
 
-	return &DeveloperAppService{db: database}
+	return &DeveloperAppService{db: database, changelog: c}
 }
 
 // GetByOrganization returns all developerApp apps
@@ -60,7 +61,8 @@ func (das *DeveloperAppService) GetAttribute(organizationName, developerAppName,
 }
 
 // Create creates a new developerApp
-func (das *DeveloperAppService) Create(organizationName, developerName string, newDeveloperApp types.DeveloperApp) (types.DeveloperApp, types.Error) {
+func (das *DeveloperAppService) Create(organizationName, developerName string,
+	newDeveloperApp types.DeveloperApp, who Requester) (types.DeveloperApp, types.Error) {
 
 	developer, err := das.db.Developer.GetByEmail(organizationName, developerName)
 	if err != nil {
@@ -73,90 +75,102 @@ func (das *DeveloperAppService) Create(organizationName, developerName string, n
 			fmt.Errorf("DeveloperApp '%s' already exists", existingDeveloperApp.Name))
 	}
 
+	// Automatically set default fields
+	newDeveloperApp.CreatedAt = shared.GetCurrentTimeMilliseconds()
+	newDeveloperApp.CreatedBy = who.Username
+
 	newDeveloperApp.AppID = generateAppID()
 	newDeveloperApp.DeveloperID = developer.DeveloperID
 	newDeveloperApp.OrganizationName = organizationName
 	// New developer starts actived
 	newDeveloperApp.Status = "active"
-	newDeveloperApp.CreatedAt = shared.GetCurrentTimeMilliseconds()
-	// newDeveloperApp.CreatedBy = h.GetSessionUser(c)
-	newDeveloperApp.LastmodifiedAt = newDeveloperApp.CreatedAt
-	// newDeveloperApp.LastmodifiedBy = h.GetSessionUser(c)
 
-	// Automatically set default fields
-	newDeveloperApp.CreatedAt = shared.GetCurrentTimeMilliseconds()
-
-	err = das.updateDeveloperApp(&newDeveloperApp)
+	err = das.updateDeveloperApp(&newDeveloperApp, who)
+	das.changelog.Create(newDeveloperApp, who)
 	return newDeveloperApp, err
 }
 
 // Update updates an existing developerApp
-func (das *DeveloperAppService) Update(organizationName string, updatedDeveloperApp types.DeveloperApp) (types.DeveloperApp, types.Error) {
+func (das *DeveloperAppService) Update(organizationName string, updatedDeveloperApp types.DeveloperApp,
+	who Requester) (types.DeveloperApp, types.Error) {
 
-	developerAppToUpdate, err := das.db.DeveloperApp.GetByID(organizationName, updatedDeveloperApp.AppID)
+	currentDeveloperApp, err := das.db.DeveloperApp.GetByID(organizationName, updatedDeveloperApp.AppID)
 	if err != nil {
 		return types.NullDeveloperApp, types.NewItemNotFoundError(err)
 	}
 
 	// Copy over the fields we allow to be updated
-	developerAppToUpdate.Name = updatedDeveloperApp.Name
-	developerAppToUpdate.DisplayName = updatedDeveloperApp.DisplayName
-	developerAppToUpdate.Attributes = updatedDeveloperApp.Attributes
-	developerAppToUpdate.Status = updatedDeveloperApp.Status
+	updatedDeveloperApp.Name = currentDeveloperApp.Name
+	updatedDeveloperApp.CreatedAt = currentDeveloperApp.CreatedAt
+	updatedDeveloperApp.CreatedBy = currentDeveloperApp.CreatedBy
 
-	err = das.updateDeveloperApp(developerAppToUpdate)
-	return *developerAppToUpdate, err
+	err = das.updateDeveloperApp(&updatedDeveloperApp, who)
+	das.changelog.Update(currentDeveloperApp, updatedDeveloperApp, who)
+	return updatedDeveloperApp, err
 }
 
 // UpdateAttributes updates attributes of an developerApp
-func (das *DeveloperAppService) UpdateAttributes(organizationName string, developerAppName string, receivedAttributes types.Attributes) types.Error {
+func (das *DeveloperAppService) UpdateAttributes(organizationName string, developerAppName string,
+	receivedAttributes types.Attributes, who Requester) types.Error {
 
-	updatedDeveloperApp, err := das.GetByName(organizationName, developerAppName)
+	currentDeveloperApp, err := das.GetByName(organizationName, developerAppName)
 	if err != nil {
 		return err
 	}
-	updatedDeveloperApp.Attributes = receivedAttributes
-	return das.updateDeveloperApp(updatedDeveloperApp)
+	updatedDeveloperApp := currentDeveloperApp
+	updatedDeveloperApp.Attributes.SetMultiple(receivedAttributes)
+
+	err = das.updateDeveloperApp(updatedDeveloperApp, who)
+	das.changelog.Update(currentDeveloperApp, updatedDeveloperApp, who)
+	return err
 }
 
 // UpdateAttribute update an attribute of developerApp
 func (das *DeveloperAppService) UpdateAttribute(organizationName string, developerAppName string,
-	attributeValue types.Attribute) types.Error {
+	attributeValue types.Attribute, who Requester) types.Error {
 
-	updatedDeveloperApp, err := das.GetByName(organizationName, developerAppName)
+	currentDeveloperApp, err := das.GetByName(organizationName, developerAppName)
 	if err != nil {
 		return err
 	}
+	updatedDeveloperApp := currentDeveloperApp
 	updatedDeveloperApp.Attributes.Set(attributeValue)
-	return das.updateDeveloperApp(updatedDeveloperApp)
+
+	err = das.updateDeveloperApp(updatedDeveloperApp, who)
+	das.changelog.Update(currentDeveloperApp, updatedDeveloperApp, who)
+	return err
 }
 
 // DeleteAttribute removes an attribute of an developerApp
-func (das *DeveloperAppService) DeleteAttribute(organizationName, developerAppName, attributeToDelete string) (string, types.Error) {
+func (das *DeveloperAppService) DeleteAttribute(organizationName, developerAppName,
+	attributeToDelete string, who Requester) (string, types.Error) {
 
-	updatedDeveloperApp, err := das.GetByName(organizationName, developerAppName)
+	currentDeveloperApp, err := das.GetByName(organizationName, developerAppName)
 	if err != nil {
 		return "", err
 	}
+	updatedDeveloperApp := currentDeveloperApp
 	oldValue, err := updatedDeveloperApp.Attributes.Delete(attributeToDelete)
 	if err != nil {
 		return "", err
 	}
-	return oldValue, das.updateDeveloperApp(updatedDeveloperApp)
+	err = das.updateDeveloperApp(updatedDeveloperApp, who)
+	das.changelog.Update(currentDeveloperApp, updatedDeveloperApp, who)
+	return oldValue, err
 }
 
 // updateDeveloperApp updates last-modified field(s) and updates developer app in database
-func (das *DeveloperAppService) updateDeveloperApp(updatedDeveloperApp *types.DeveloperApp) types.Error {
+func (das *DeveloperAppService) updateDeveloperApp(updatedDeveloperApp *types.DeveloperApp, who Requester) types.Error {
 
 	updatedDeveloperApp.Attributes.Tidy()
 	updatedDeveloperApp.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
-
+	updatedDeveloperApp.LastmodifiedBy = who.Username
 	return das.db.DeveloperApp.Update(updatedDeveloperApp)
 }
 
 // Delete deletes an developerApp
-func (das *DeveloperAppService) Delete(organizationName,
-	developerID, developerAppName string) (deletedDeveloperApp types.DeveloperApp, e types.Error) {
+func (das *DeveloperAppService) Delete(organizationName, developerID,
+	developerAppName string, who Requester) (deletedDeveloperApp types.DeveloperApp, e types.Error) {
 
 	developer, err := das.db.Developer.GetByID(developerID)
 	if err != nil {
@@ -194,6 +208,7 @@ func (das *DeveloperAppService) Delete(organizationName,
 	if err := das.db.Developer.Update(developer); err != nil {
 		return types.NullDeveloperApp, err
 	}
+	das.changelog.Delete(developerApp, who)
 	return *developerApp, nil
 }
 

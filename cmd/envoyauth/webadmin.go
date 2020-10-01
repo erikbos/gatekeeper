@@ -55,7 +55,7 @@ func StartWebAdminServer(a *authorizationServer) {
 
 // ShowWebAdminHomePage shows home page
 func (a *authorizationServer) ShowWebAdminHomePage(c *gin.Context) {
-	// FIXME feels like hack, is there a better way to pass gin engine context?
+
 	shared.ShowIndexPage(c, a.ginEngine, applicationName)
 }
 

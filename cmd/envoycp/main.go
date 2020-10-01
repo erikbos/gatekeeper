@@ -25,7 +25,7 @@ type server struct {
 	config     *EnvoyCPConfig
 	ginEngine  *gin.Engine
 	db         *db.Database
-	dbentities *db.Entityloader
+	dbentities *db.EntityCache
 	readiness  *shared.Readiness
 	metrics    metricsCollection
 }
@@ -55,10 +55,17 @@ func main() {
 	go s.StartWebAdminServer()
 
 	// Start continously loading of virtual host, routes & cluster data
-	s.dbentities = db.NewEntityLoader(s.db, s.config.XDS.ConfigCompileInterval)
+	entityCacheConf := db.EntityCacheConfig{
+		RefreshInterval: s.config.XDS.ConfigCompileInterval,
+		Notify:          make(chan db.EntityChangeNotification),
+		Listener:        true,
+		Route:           true,
+		Cluster:         true,
+	}
+	s.dbentities = db.NewEntityCache(s.db, entityCacheConf)
 	s.dbentities.Start()
 
 	// Start XDS control plane service
-	x := newXDS(s, s.config.XDS, s.dbentities.GetChannel())
+	x := newXDS(s, s.config.XDS, entityCacheConf.Notify)
 	x.Start()
 }

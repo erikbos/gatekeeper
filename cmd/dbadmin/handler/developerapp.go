@@ -10,23 +10,23 @@ import (
 	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
-func (h *Handler) registerDeveloperAppRoutes(r *gin.Engine) {
-	r.GET("/v1/organizations/:organization/apps", h.handler(h.getAllDevelopersApps))
-	r.GET("/v1/organizations/:organization/apps/:application", h.handler(h.getByName))
+func (h *Handler) registerDeveloperAppRoutes(r *gin.RouterGroup) {
+	r.GET("/organizations/:organization/apps", h.handler(h.getAllDevelopersApps))
+	r.GET("/organizations/:organization/apps/:application", h.handler(h.getByName))
 
-	r.GET("/v1/organizations/:organization/developers/:developer/apps", h.handler(h.getDeveloperAppsByDeveloperEmail))
-	r.POST("/v1/organizations/:organization/developers/:developer/apps", h.handler(h.postCreateDeveloperApp))
+	r.GET("/organizations/:organization/developers/:developer/apps", h.handler(h.getDeveloperAppsByDeveloperEmail))
+	r.POST("/organizations/:organization/developers/:developer/apps", h.handler(h.postCreateDeveloperApp))
 
-	r.GET("/v1/organizations/:organization/developers/:developer/apps/:application", h.handler(h.getByName))
-	r.POST("/v1/organizations/:organization/developers/:developer/apps/:application", h.handler(h.postDeveloperApp))
-	r.DELETE("/v1/organizations/:organization/developers/:developer/apps/:application", h.handler(h.deleteDeveloperAppByName))
+	r.GET("/organizations/:organization/developers/:developer/apps/:application", h.handler(h.getByName))
+	r.POST("/organizations/:organization/developers/:developer/apps/:application", h.handler(h.postDeveloperApp))
+	r.DELETE("/organizations/:organization/developers/:developer/apps/:application", h.handler(h.deleteDeveloperAppByName))
 
-	r.GET("/v1/organizations/:organization/developers/:developer/apps/:application/attributes", h.handler(h.getDeveloperAppAttributes))
-	r.POST("/v1/organizations/:organization/developers/:developer/apps/:application/attributes", h.handler(h.updateDeveloperAppAttributes))
+	r.GET("/organizations/:organization/developers/:developer/apps/:application/attributes", h.handler(h.getDeveloperAppAttributes))
+	r.POST("/organizations/:organization/developers/:developer/apps/:application/attributes", h.handler(h.updateDeveloperAppAttributes))
 
-	r.GET("/v1/organizations/:organization/developers/:developer/apps/:application/attributes/:attribute", h.handler(h.getDeveloperAppAttributeByName))
-	r.POST("/v1/organizations/:organization/developers/:developer/apps/:application/attributes/:attribute", h.handler(h.postDeveloperAppAttributeByName))
-	r.DELETE("/v1/organizations/:organization/developers/:developer/apps/:application/attributes/:attribute", h.handler(h.deleteDeveloperAppAttributeByName))
+	r.GET("/organizations/:organization/developers/:developer/apps/:application/attributes/:attribute", h.handler(h.getDeveloperAppAttributeByName))
+	r.POST("/organizations/:organization/developers/:developer/apps/:application/attributes/:attribute", h.handler(h.postDeveloperAppAttributeByName))
+	r.DELETE("/organizations/:organization/developers/:developer/apps/:application/attributes/:attribute", h.handler(h.deleteDeveloperAppAttributeByName))
 }
 
 const (
@@ -106,7 +106,6 @@ func (h *Handler) postCreateDeveloperApp(c *gin.Context) handlerResponse {
 	if err := c.ShouldBindJSON(&newDeveloperApp); err != nil {
 		return handleBadRequest(err)
 	}
-
 	_, err := h.service.Developer.Get(c.Param(organizationParameter), c.Param(developerParameter))
 	if err != nil {
 		return handleError(err)
@@ -116,8 +115,7 @@ func (h *Handler) postCreateDeveloperApp(c *gin.Context) handlerResponse {
 		return handleError(types.NewBadRequestError(
 			fmt.Errorf("Developer app '%s' already exists", existingDeveloperApp.Name)))
 	}
-
-	storedDeveloperApp, err := h.service.DeveloperApp.Update(c.Param(organizationParameter), newDeveloperApp)
+	storedDeveloperApp, err := h.service.DeveloperApp.Update(c.Param(organizationParameter), newDeveloperApp, h.who(c))
 	if err != nil {
 		return handleError(err)
 	}
@@ -131,7 +129,10 @@ func (h *Handler) postDeveloperApp(c *gin.Context) handlerResponse {
 	if err := c.ShouldBindJSON(&updateRequest); err != nil {
 		return handleBadRequest(err)
 	}
-
+	// developer name in path must match developer name in posted body
+	if updateRequest.Name != c.Param(developerAppParameter) {
+		return handleNameMismatch()
+	}
 	_, err := h.service.Developer.Get(c.Param(organizationParameter), c.Param(developerParameter))
 	if err != nil {
 		return handleError(err)
@@ -140,8 +141,7 @@ func (h *Handler) postDeveloperApp(c *gin.Context) handlerResponse {
 	if err != nil {
 		return handleError(err)
 	}
-
-	storedDeveloperApp, err := h.service.DeveloperApp.Update(c.Param(organizationParameter), updateRequest)
+	storedDeveloperApp, err := h.service.DeveloperApp.Update(c.Param(organizationParameter), updateRequest, h.who(c))
 	if err != nil {
 		return handleError(err)
 	}
@@ -171,10 +171,9 @@ func (h *Handler) updateDeveloperAppAttributes(c *gin.Context) handlerResponse {
 		return handleError(err)
 	}
 
-	developerAppToUpdate.Attributes = receivedAttributes.Attributes
-	developerAppToUpdate.LastmodifiedBy = h.GetSessionUser(c)
+	developerAppToUpdate.Attributes.SetMultiple(receivedAttributes.Attributes)
 
-	_, err = h.service.DeveloperApp.Update(c.Param(organizationParameter), *developerAppToUpdate)
+	_, err = h.service.DeveloperApp.Update(c.Param(organizationParameter), *developerAppToUpdate, h.who(c))
 	if err != nil {
 		return handleError(err)
 	}
@@ -191,15 +190,12 @@ func (h *Handler) postDeveloperAppAttributeByName(c *gin.Context) handlerRespons
 		return handleBadRequest(err)
 
 	}
-
 	newAttribute := types.Attribute{
 		Name:  c.Param(attributeParameter),
 		Value: receivedValue.Value,
 	}
-
-	// FIXME we should set LastmodifiedBy
 	if err := h.service.DeveloperApp.UpdateAttribute(c.Param(organizationParameter),
-		c.Param(developerAppParameter), newAttribute); err != nil {
+		c.Param(developerAppParameter), newAttribute, h.who(c)); err != nil {
 		return handleError(err)
 	}
 	return handleOKAttribute(newAttribute)
@@ -212,10 +208,9 @@ func (h *Handler) deleteDeveloperAppAttributeByName(c *gin.Context) handlerRespo
 	if err != nil {
 		return handleError(err)
 	}
-
 	attributeToDelete := c.Param(attributeParameter)
 	oldValue, err := h.service.DeveloperApp.DeleteAttribute(c.Param(organizationParameter), c.Param(developerAppParameter),
-		attributeToDelete)
+		attributeToDelete, h.who(c))
 	if err != nil {
 		return handleBadRequest(err)
 	}
@@ -234,7 +229,7 @@ func (h *Handler) deleteDeveloperAppByName(c *gin.Context) handlerResponse {
 	}
 
 	developerApp, err := h.service.DeveloperApp.Delete(c.Param(organizationParameter),
-		developer.DeveloperID, c.Param(developerParameter))
+		developer.DeveloperID, c.Param(developerParameter), h.who(c))
 	if err != nil {
 		return handleError(err)
 	}

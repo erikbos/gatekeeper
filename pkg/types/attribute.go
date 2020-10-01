@@ -9,12 +9,15 @@ import (
 	"time"
 )
 
-// Attribute is an array with attributes of developer or developer app
+// Attribute is an array with attributes
+//
+// Field validation settings (binding) are validated with
+// https://godoc.org/github.com/go-playground/validator
 type Attribute struct {
-	// Attribute name, minimum required length is 5
-	Name string `json:"name" binding:"required,min=5"`
+	// Attribute name, minimum required length is 4
+	Name string `json:"name" binding:"required,min=4"`
 
-	// Attribute value, minimum required length is 1
+	// Attribute value, minimum required length is 1 as we do not want empty values
 	Value string `json:"value" binding:"required,min=1"`
 }
 
@@ -34,38 +37,6 @@ type AttributeValue struct {
 	// Attribute value, minimum required length is 1
 	Value string `json:"value" binding:"required,min=1"`
 }
-
-// Attributes which are shared amongst listener, route and cluster
-const (
-
-	// AttributeTLSCertificate holds pem encoded certicate
-	AttributeTLSCertificate = "TLSCertificate"
-
-	// AttributeTLSCertificateKey holds certicate key
-	AttributeTLSCertificateKey = "TLSCertificateKey"
-
-	// AttributeTLSMinimumVersion determines minimum TLS version accepted
-	AttributeTLSMinimumVersion = "TLSMinimumVersion"
-
-	// AttributeTLSMaximumVersion determines maximum TLS version accepted
-	AttributeTLSMaximumVersion = "TLSMaximumVersion"
-
-	// AttributeTLSCipherSuites determines set of allowed TLS ciphers
-	AttributeTLSCipherSuites = "TLSCipherSuites"
-
-	// AttributeTLSCipherSuites sets HTTP protocol to accept
-	AttributeHTTPProtocol = "HTTPProtocol"
-
-	AttributeValueTrue                    = "true"
-	AttributeValueTLSVersion10            = "TLSv10"
-	AttributeValueTLSVersion11            = "TLSv11"
-	AttributeValueTLSVersion12            = "TLSv12"
-	AttributeValueTLSVersion13            = "TLSv13"
-	AttributeValueHTTPProtocol11          = "HTTP/1.1"
-	AttributeValueHTTPProtocol2           = "HTTP/2"
-	AttributeValueHTTPProtocol3           = "HTTP/3"
-	AttributeValueHealthCheckProtocolHTTP = "HTTP"
-)
 
 // Get return one named attribute from attributes
 func (attributes *Attributes) Get(name string) (string, Error) {
@@ -144,6 +115,15 @@ func (attributes *Attributes) Set(attributeValue Attribute) (oldValue string, ol
 	return "", false
 }
 
+// SetMultiple updates or adds multiple attribute. Returns error in case of isses
+func (attributes *Attributes) SetMultiple(attributeValues Attributes) Error {
+
+	for _, attribute := range attributeValues {
+		_, _ = attributes.Set(attribute)
+	}
+	return nil
+}
+
 // Tidy removes duplicate, trims all names & values and sorts attribute by name
 func (attributes *Attributes) Tidy() {
 	// Use map to record duplicates as we find them.
@@ -199,7 +179,6 @@ func (attributes *Attributes) Delete(name string) (valueOfDeletedAttribute strin
 
 // Unmarshal unpacks JSON array of attributes
 // Example input: [{"name":"Shoesize","value":"42"}, {"name":"Destination","value":"Mars"}]
-//
 func (attributes Attributes) Unmarshal(jsonArrayOfAttributes string) Attributes {
 
 	if jsonArrayOfAttributes != "" {
@@ -213,7 +192,6 @@ func (attributes Attributes) Unmarshal(jsonArrayOfAttributes string) Attributes 
 
 // Marshal packs slice of attributes into JSON
 // Example output: [{"name":"Shoesize","value":"42"}, {"name":"Destination","value":"Mars"}]
-//
 func (attributes Attributes) Marshal() string {
 
 	if len(attributes) > 0 {

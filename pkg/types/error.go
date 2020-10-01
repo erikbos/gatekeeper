@@ -3,27 +3,30 @@ package types
 import (
 	"errors"
 	"fmt"
+	"net/http"
 )
 
 var (
-	// ErrItemNotFound indicates the item could not be found
-	ErrItemNotFound = errors.New("Item could not be found")
+	// errUpdateFailure indicates item could not be updated
+	errUpdateFailure = errors.New("Could not update item")
 
-	// ErrUpdateFailure indicates item could not be updated
-	ErrUpdateFailure = errors.New("Could not update item")
+	// errBadRequest indicates we do not understand the requested action (400)
+	errBadRequest = errors.New("Bad request")
 
-	// ErrBadRequest indicates we do not understand to do the requested action
-	ErrBadRequest = errors.New("Bad request")
+	// errUnauthorized indicates we are not allowed to do the requested action (401)
+	errUnauthorized = errors.New("Unauthorized request")
 
-	// ErrPermissionDenied indicates we are not allowed to do the requested action
-	ErrPermissionDenied = errors.New("Permission denied")
+	// errForbidden indicates the requested action was understood but forbidden (403)
+	errForbidden = errors.New("Forbidden action")
 
-	// ErrDatabaseIssue indicates a database error
-	ErrDatabaseIssue = errors.New("Database issue")
+	// errItemNotFound indicates the item could not be found (404)
+	errItemNotFound = errors.New("Entity could not be found")
+
+	// errDatabaseIssue indicates a database error
+	errDatabaseIssue = errors.New("Database issue")
 )
 
-// Error is our  error type providing additional detail
-// on what happened
+// Error is our error type providing additional (internal error detail
 type Error interface {
 	Error() string
 	ErrorDetails() string
@@ -41,7 +44,7 @@ func (e *errDetails) Error() string {
 	return fmt.Sprintf("%v: %s", e.errtype, e.details)
 }
 
-// ErrorDetails returns the details of the occured error
+// ErrorDetails returns the (internal) details of the occured error
 func (e *errDetails) ErrorDetails() string {
 	return fmt.Sprintf("%s", e.details)
 }
@@ -51,39 +54,75 @@ func (e *errDetails) Type() error {
 	return e.errtype
 }
 
-// ErrorDetails returns the printable
+// ErrorDetails returns the printable error
 func (e *errDetails) TypeString() string {
 	return e.errtype.Error()
 }
 
 func newError(err error, details error) Error {
-	return &errDetails{
-		errtype: err,
-		details: details.Error(),
-	}
-}
 
-// NewItemNotFoundError returns a item not found error
-func NewItemNotFoundError(details error) Error {
-	return newError(ErrItemNotFound, details)
+	if details != nil {
+		return &errDetails{
+			errtype: err,
+			details: details.Error(),
+		}
+	}
+	return &errDetails{errtype: err}
 }
 
 // NewUpdateFailureError returns a item not found error
 func NewUpdateFailureError(details error) Error {
-	return newError(ErrUpdateFailure, details)
+	return newError(errUpdateFailure, details)
 }
 
-// NewBadRequestError returns a database error
+// NewBadRequestError returns a bad request error
 func NewBadRequestError(details error) Error {
-	return newError(ErrBadRequest, details)
+	return newError(errBadRequest, details)
 }
 
-// NewPermissionDeniedError returns a database error
-func NewPermissionDeniedError(details error) Error {
-	return newError(ErrPermissionDenied, details)
+// NewUnauthorizedError returns an unauthorized error
+func NewUnauthorizedError(details error) Error {
+	return newError(errUnauthorized, details)
+}
+
+// NewForbiddenError returns a forbidden action error
+func NewForbiddenError(details error) Error {
+	return newError(errForbidden, details)
+}
+
+// NewItemNotFoundError returns a item not found error
+func NewItemNotFoundError(details error) Error {
+	return newError(errItemNotFound, details)
 }
 
 // NewDatabaseError returns a database error
 func NewDatabaseError(details error) Error {
-	return newError(ErrDatabaseIssue, details)
+	return newError(errDatabaseIssue, details)
+}
+
+// HTTPErrorStatusCode returns HTTP status code for Error type
+func HTTPErrorStatusCode(e Error) int {
+
+	switch e.Type() {
+	case errUpdateFailure:
+		return http.StatusServiceUnavailable
+
+	case errBadRequest:
+		return http.StatusBadRequest
+
+	case errUnauthorized:
+		return http.StatusForbidden
+
+	case errForbidden:
+		return http.StatusForbidden
+
+	case errItemNotFound:
+		return http.StatusNotFound
+
+	case errDatabaseIssue:
+		return http.StatusServiceUnavailable
+
+	default:
+		return http.StatusServiceUnavailable
+	}
 }

@@ -7,20 +7,20 @@ import (
 )
 
 // registerRouteRoutes registers all routes we handle
-func (h *Handler) registerRouteRoutes(r *gin.Engine) {
-	r.GET("/v1/routes", h.handler(h.getAllRoutes))
-	r.POST("/v1/routes", h.handler(h.createRoute))
+func (h *Handler) registerRouteRoutes(r *gin.RouterGroup) {
+	r.GET("/routes", h.handler(h.getAllRoutes))
+	r.POST("/routes", h.handler(h.createRoute))
 
-	r.GET("/v1/routes/:route", h.handler(h.getRoute))
-	r.POST("/v1/routes/:route", h.handler(h.updateRoute))
-	r.DELETE("/v1/routes/:route", h.handler(h.deleteRoute))
+	r.GET("/routes/:route", h.handler(h.getRoute))
+	r.POST("/routes/:route", h.handler(h.updateRoute))
+	r.DELETE("/routes/:route", h.handler(h.deleteRoute))
 
-	r.GET("/v1/routes/:route/attributes", h.handler(h.getRouteAttributes))
-	r.POST("/v1/routes/:route/attributes", h.handler(h.updateRouteAttributes))
+	r.GET("/routes/:route/attributes", h.handler(h.getRouteAttributes))
+	r.POST("/routes/:route/attributes", h.handler(h.updateRouteAttributes))
 
-	r.GET("/v1/routes/:route/attributes/:attribute", h.handler(h.getRouteAttribute))
-	r.POST("/v1/routes/:route/attributes/:attribute", h.handler(h.updateRouteAttribute))
-	r.DELETE("/v1/routes/:route/attributes/:attribute", h.handler(h.deleteRouteAttribute))
+	r.GET("/routes/:route/attributes/:attribute", h.handler(h.getRouteAttribute))
+	r.POST("/routes/:route/attributes/:attribute", h.handler(h.updateRouteAttribute))
+	r.DELETE("/routes/:route/attributes/:attribute", h.handler(h.deleteRouteAttribute))
 }
 
 const (
@@ -79,12 +79,7 @@ func (h *Handler) createRoute(c *gin.Context) handlerResponse {
 	if err := c.ShouldBindJSON(&newRoute); err != nil {
 		return handleBadRequest(err)
 	}
-
-	// Automatically set default fields
-	newRoute.CreatedBy = h.GetSessionUser(c)
-	newRoute.LastmodifiedBy = h.GetSessionUser(c)
-
-	storedRoute, err := h.service.Route.Create(newRoute)
+	storedRoute, err := h.service.Route.Create(newRoute, h.who(c))
 	if err != nil {
 		return handleError(err)
 	}
@@ -98,11 +93,11 @@ func (h *Handler) updateRoute(c *gin.Context) handlerResponse {
 	if err := c.ShouldBindJSON(&updatedRoute); err != nil {
 		return handleBadRequest(err)
 	}
-
-	// Automatically set default fields
-	updatedRoute.LastmodifiedBy = h.GetSessionUser(c)
-
-	storedRoute, err := h.service.Route.Update(updatedRoute)
+	// routename in path must match routename in posted body
+	if updatedRoute.Name != c.Param(routeParameter) {
+		return handleNameMismatch()
+	}
+	storedRoute, err := h.service.Route.Update(updatedRoute, h.who(c))
 	if err != nil {
 		return handleError(err)
 	}
@@ -118,11 +113,7 @@ func (h *Handler) updateRouteAttributes(c *gin.Context) handlerResponse {
 	if err := c.ShouldBindJSON(&receivedAttributes); err != nil {
 		return handleBadRequest(err)
 	}
-	// FIXME we should set LastmodifiedBy
-	// updatedRoute.Attributes = receivedAttributes.Attributes
-	// updatedRoute.LastmodifiedBy = h.GetSessionUser(c)
-
-	if err := h.service.Route.UpdateAttributes(c.Param(routeParameter), receivedAttributes.Attributes); err != nil {
+	if err := h.service.Route.UpdateAttributes(c.Param(routeParameter), receivedAttributes.Attributes, h.who(c)); err != nil {
 		return handleError(err)
 	}
 	return handleOKAttributes(receivedAttributes.Attributes)
@@ -135,14 +126,11 @@ func (h *Handler) updateRouteAttribute(c *gin.Context) handlerResponse {
 	if err := c.ShouldBindJSON(&receivedValue); err != nil {
 		return handleBadRequest(err)
 	}
-
 	newAttribute := types.Attribute{
 		Name:  c.Param(attributeParameter),
 		Value: receivedValue.Value,
 	}
-
-	// FIXME we should set LastmodifiedBy
-	if err := h.service.Route.UpdateAttribute(c.Param(routeParameter), newAttribute); err != nil {
+	if err := h.service.Route.UpdateAttribute(c.Param(routeParameter), newAttribute, h.who(c)); err != nil {
 		return handleError(err)
 	}
 	return handleOKAttribute(newAttribute)
@@ -152,7 +140,7 @@ func (h *Handler) updateRouteAttribute(c *gin.Context) handlerResponse {
 func (h *Handler) deleteRouteAttribute(c *gin.Context) handlerResponse {
 
 	attributeToDelete := c.Param(attributeParameter)
-	oldValue, err := h.service.Route.DeleteAttribute(c.Param(routeParameter), attributeToDelete)
+	oldValue, err := h.service.Route.DeleteAttribute(c.Param(routeParameter), attributeToDelete, h.who(c))
 	if err != nil {
 		return handleBadRequest(err)
 	}
@@ -165,7 +153,7 @@ func (h *Handler) deleteRouteAttribute(c *gin.Context) handlerResponse {
 // deleteRoute deletes an route
 func (h *Handler) deleteRoute(c *gin.Context) handlerResponse {
 
-	deletedRoute, err := h.service.Route.Delete(c.Param(routeParameter))
+	deletedRoute, err := h.service.Route.Delete(c.Param(routeParameter), h.who(c))
 	if err != nil {
 		return handleError(err)
 	}

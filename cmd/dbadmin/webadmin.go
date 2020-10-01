@@ -24,7 +24,7 @@ type webAdminConfig struct {
 }
 
 // StartWebAdminServer starts the admin web UI
-func StartWebAdminServer(s *server) {
+func StartWebAdminServer(s *server, enableAPIAuthentication bool) {
 
 	if logFile, err := os.Create(s.config.WebAdmin.LogFile); err == nil {
 		gin.DefaultWriter = io.MultiWriter(logFile)
@@ -41,14 +41,15 @@ func StartWebAdminServer(s *server) {
 	s.router.Use(shared.AddRequestID())
 	s.router.Use(shared.WebAdminCheckIPACL(s.config.WebAdmin.IPACL))
 
-	s.handler = handler.NewHandler(s.router, s.db, service.NewService(s.db))
+	service := service.NewService(s.db)
+	s.handler = handler.NewHandler(s.router, s.db, service, enableAPIAuthentication)
 
 	s.router.GET("/", s.ShowWebAdminHomePage)
 	s.router.GET(shared.LivenessCheckPath, shared.LivenessProbe)
 	s.router.GET(shared.ReadinessCheckPath, s.readiness.ReadinessProbe)
 	s.router.GET(shared.MetricsPath, gin.WrapH(promhttp.Handler()))
 	s.router.GET(shared.ConfigDumpPath, s.showConfiguration)
-	s.router.GET("show_http_forwarding", s.showHTTPForwarding)
+	s.router.GET(showHTTPForwardingPath, s.showHTTPForwarding)
 
 	log.Info("Webadmin listening on ", s.config.WebAdmin.Listen)
 	if s.config.WebAdmin.TLS.certFile != "" &&

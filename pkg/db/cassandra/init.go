@@ -45,6 +45,36 @@ func createTables(s *gocql.Session) error {
 
 var createTablesCQL = [...]string{
 
+	`CREATE TABLE IF NOT EXISTS users (
+        name text,
+        display_name text,
+        password text,
+        status text,
+        roles text,
+        created_at bigint,
+        created_by text,
+        lastmodified_at bigint,
+        lastmodified_by text,
+        PRIMARY KEY (name)
+        )`,
+
+	// Default database user 'admin', password 'passwd', role 'admin'
+	`INSERT INTO users (name,password,status,roles,created_by,created_at,lastmodified_at) values('admin','passwd','active','["admin"]','initdb',toUnixTimestamp(now()),toUnixTimestamp(now())) IF NOT EXISTS`,
+
+	`CREATE TABLE IF NOT EXISTS roles (
+        name text,
+        display_name text,
+        allows text,
+        created_at bigint,
+        created_by text,
+        lastmodified_at bigint,
+        lastmodified_by text,
+        PRIMARY KEY (name)
+        )`,
+
+	// Default database role 'admin', allowing GET, POST, DELETE on /v1/* path
+	`INSERT INTO roles (name,allows,created_by,created_at,lastmodified_at) values('admin','[{"methods":["GET","POST","DELETE"],"paths":["/v1/**"]}]','initdb',toUnixTimestamp(now()),toUnixTimestamp(now())) IF NOT EXISTS`,
+
 	`CREATE TABLE IF NOT EXISTS listeners (
     attributes text,
     created_at bigint,

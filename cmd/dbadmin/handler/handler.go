@@ -1,9 +1,8 @@
 package handler
 
 import (
-	"fmt"
+	"errors"
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -14,94 +13,60 @@ import (
 
 // Handler contains our runtime parameters
 type Handler struct {
-	// db      *db.Database
 	service *service.Service
 }
 
-// NewHandler returns a newly setup Handler
-func NewHandler(ginEngine *gin.Engine, db *db.Database, s *service.Service) *Handler {
+// NewHandler sets up all API endpoint routes
+func NewHandler(g *gin.Engine, db *db.Database, s *service.Service, enableAPIAuthentication bool) *Handler {
+
+	// m := &Metrics{}
+	// m.register("Qqq")
+
+	// Insert authentication middleware for every /v1 prefix'ed API endpoint
+	apiRoutes := g.Group("/v1")
+	// apiRoutes.Use(metricsMiddleware(m))
+
+	if enableAPIAuthentication {
+		auth := newAuth(&s.User, &s.Role)
+		auth.Start(db)
+		apiRoutes.Use(auth.AuthenticateAndAuthorize)
+	}
 
 	handler := &Handler{
-		// db:      db,
 		service: s,
 	}
 
-	handler.registerListenerRoutes(ginEngine)
-	handler.registerRouteRoutes(ginEngine)
-	handler.registerClusterRoutes(ginEngine)
-	handler.registerOrganizationRoutes(ginEngine)
-	handler.registerDeveloperRoutes(ginEngine)
-	handler.registerDeveloperAppRoutes(ginEngine)
-	handler.registerCredentialRoutes(ginEngine)
-	handler.registerAPIProductRoutes(ginEngine)
-
+	// Register all API endpoint routes
+	handler.registerListenerRoutes(apiRoutes)
+	handler.registerRouteRoutes(apiRoutes)
+	handler.registerClusterRoutes(apiRoutes)
+	handler.registerOrganizationRoutes(apiRoutes)
+	handler.registerDeveloperRoutes(apiRoutes)
+	handler.registerDeveloperAppRoutes(apiRoutes)
+	handler.registerCredentialRoutes(apiRoutes)
+	handler.registerAPIProductRoutes(apiRoutes)
+	handler.registerUserRoutes(apiRoutes)
+	handler.registerRoleRoutes(apiRoutes)
 	return handler
 }
 
-//
-const (
-	// Error msg for no JSON
-	POSTWithoutNoJSONError = "Content-type application/json required when submitting data"
-
-	// SessionUserKey parameter key containing authenticated user doing this single API request
-	SessionUserKey = "AuthenticatedUser"
-)
-
-// StringMap is a shortcut for map[string]interface{}
-type StringMap map[string]interface{}
-
-type handlerResponse struct {
-	error        types.Error
-	created      bool
-	responseBody interface{}
-}
-
-func handleOK(body interface{}) handlerResponse {
-	return handlerResponse{error: nil, responseBody: body}
-}
-
-func handleCreated(body interface{}) handlerResponse {
-	return handlerResponse{error: nil, created: true, responseBody: body}
-}
-
-func handleOKAttribute(a types.Attribute) handlerResponse {
-	return handleOK(types.Attribute{Name: a.Name, Value: a.Value})
-}
-
-func handleOKAttributes(a types.Attributes) handlerResponse {
-	return handleOK(StringMap{"attribute": a})
-}
-
-func handleError(e types.Error) handlerResponse {
-	return handlerResponse{error: e}
-}
-
-func handleBadRequest(e error) handlerResponse {
-	return handlerResponse{error: types.NewBadRequestError(e)}
-}
-
-func handlePermissionDenied(e error) handlerResponse {
-	return handlerResponse{error: types.NewPermissionDeniedError(e)}
-}
-
+// handler wraps an API endpoint function and returns any returned object as
+// indented json, or in case of error generates an structured error message.
 func (h *Handler) handler(function func(c *gin.Context) handlerResponse) gin.HandlerFunc {
 
 	return func(c *gin.Context) {
-
-		// Set authenticated user for this session, placeholder for now
-		h.SetSessionUser(c, "rest-api@test")
-
-		// a POST needs to have content-type = application/json
+		// a POST request must have content-type = application/json
 		if POSTwithoutContentTypeJSON(c) {
-			ErrorMessage(c, http.StatusUnsupportedMediaType,
-				POSTWithoutNoJSONError, types.ErrBadRequest.Error())
+			showErrorMessageAndAbort(c, http.StatusUnsupportedMediaType,
+				types.NewBadRequestError(errors.New(
+					"Content-type application/json required when submitting data")))
 			return
 		}
 
+		// Invoke actual API endpoint function
 		response := function(c)
 		if response.error != nil {
-			ErrorMessage(c, httpErrorStatusCode(response),
-				response.error.TypeString(), response.error.ErrorDetails())
+			showErrorMessageAndAbort(c, types.HTTPErrorStatusCode(response.error), response.error)
 			return
 		}
 		if response.created {
@@ -112,10 +77,11 @@ func (h *Handler) handler(function func(c *gin.Context) handlerResponse) gin.Han
 	}
 }
 
-// POSTwithoutContentTypeJSON returns bool if request is POST with content-type = application/json
+// POSTwithoutContentTypeJSON returns boolean indicating whether
+// request has POST method without content-type = application/json
 func POSTwithoutContentTypeJSON(c *gin.Context) bool {
 
-	if c.Request.Method == "POST" {
+	if c.Request.Method == http.MethodPost {
 		if c.Request.Header.Get("content-type") != "application/json" {
 			return true
 		}
@@ -123,66 +89,75 @@ func POSTwithoutContentTypeJSON(c *gin.Context) bool {
 	return false
 }
 
-// httpErrorStatusCode returns HTTP status code for type
-func httpErrorStatusCode(response handlerResponse) int {
+// handlerResponse is used as return type for an HTTP endpoint to indicate
+// whether request successed or not, and to indicate the type of error.
+type handlerResponse struct {
+	error        types.Error
+	created      bool
+	responseBody interface{}
+}
 
-	switch response.error.Type() {
-	case types.ErrBadRequest:
-		return http.StatusBadRequest
+// StringMap is a shortcut for map[string]interface{}
+type StringMap map[string]interface{}
 
-	case types.ErrItemNotFound:
-		return http.StatusNotFound
+// handleOK returns 200 + json contents
+func handleOK(body interface{}) handlerResponse {
+	return handlerResponse{error: nil, responseBody: body}
+}
 
-	default:
-		return http.StatusServiceUnavailable
+// handleOKAttribute returns 200 + json contents of single attribute
+func handleOKAttribute(a types.Attribute) handlerResponse {
+	return handleOK(types.Attribute{Name: a.Name, Value: a.Value})
+}
+
+// handleOKAttributes returns 200 + json contents of multiple attributes
+func handleOKAttributes(a types.Attributes) handlerResponse {
+	return handleOK(StringMap{"attribute": a})
+}
+
+// handleCreated returns 201 + json contents
+func handleCreated(body interface{}) handlerResponse {
+	return handlerResponse{error: nil, created: true, responseBody: body}
+}
+
+func handleError(e types.Error) handlerResponse {
+	return handlerResponse{error: e}
+}
+
+func handleBadRequest(e error) handlerResponse {
+	return handlerResponse{error: types.NewBadRequestError(e)}
+}
+
+func handleUnauthorized(e error) handlerResponse {
+	return handlerResponse{error: types.NewUnauthorizedError(e)}
+}
+
+// handleNameMismatch when an entity update request has a name mismatch between name of entity in url path
+// vs name of entity in POSTed JSON name field
+func handleNameMismatch() handlerResponse {
+
+	return handlerResponse{
+		error: types.NewBadRequestError(errors.New("Name field value mismatch")),
 	}
 }
 
-// ErrorMessage returns a format error message back to requestor
-func ErrorMessage(c *gin.Context, statusCode int, err, details string) {
+func showErrorMessageAndAbort(c *gin.Context, statusCode int, e types.Error) {
 
-	c.IndentedJSON(statusCode, gin.H{
-		"error":   err,
-		"details": details,
-	})
+	// Save internal error details in request context so we can write it in access log later
+	c.Error(errors.New(e.ErrorDetails()))
+
+	// Show (public) error message
+	c.IndentedJSON(statusCode, StringMap{"error": e.ErrorDetails()})
+	c.Abort()
 }
 
-// SetSessionUser sets authenticated user for this session
-func (h *Handler) SetSessionUser(c *gin.Context, authenticateUser string) {
+// func metricsMiddleware(m *Metrics) gin.HandlerFunc {
 
-	//, placeholder for now
-	c.Set(SessionUserKey, authenticateUser)
-}
+// 	return func(c *gin.Context) {
 
-// GetSessionUser returns name of authenticated user requesting this API call
-func (h *Handler) GetSessionUser(c *gin.Context) string {
+// 		c.Next()
 
-	user, exists := c.Get(SessionUserKey)
-	if !exists {
-		user = ""
-	}
-	return fmt.Sprintf("%s", user)
-}
-
-func setLastModifiedHeader(c *gin.Context, timeStamp int64) {
-
-	c.Header("Last-Modified",
-		time.Unix(0, timeStamp*int64(time.Millisecond)).UTC().Format(http.TimeFormat))
-}
-
-// returnJSONMessage returns an error message
-func returnJSONMessage(c *gin.Context, statusCode int, errorMessage error) {
-
-	c.IndentedJSON(statusCode,
-		gin.H{
-			"message": fmt.Sprintf("%s", errorMessage),
-		})
-}
-
-func returnCanNotFindAttribute(c *gin.Context, name string) {
-
-	returnJSONMessage(c,
-		http.StatusNotFound,
-		fmt.Errorf("Could not find attribute '%s'", name),
-	)
-}
+// 		status := strconv.Itoa(c.Writer.Status())
+// 		m.QueryHit(c.Request.Method, c.FullPath(), status)
+// 	}
+// }

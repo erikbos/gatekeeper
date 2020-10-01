@@ -16,9 +16,10 @@ import (
 )
 
 const (
-	contentType     = "content-type"
-	contentTypeYAML = "text/yaml; charset=utf-8"
-	contentTypeHTML = "text/html; charset=utf-8"
+	showHTTPForwardingPath = "show_http_forwarding"
+	contentType            = "content-type"
+	contentTypeYAML        = "text/yaml; charset=utf-8"
+	contentTypeHTML        = "text/html; charset=utf-8"
 )
 
 // ShowWebAdminHomePage shows home page
@@ -340,7 +341,7 @@ func certDetails(certificate []byte) string {
 		cert.DNSNames, cert.NotAfter.UTC().Format(time.RFC3339))
 }
 
-// returnJSONMessage returns an error message
+// returnJSONMessage returns an public error message, it should not leak any internal details
 func returnJSONMessage(c *gin.Context, statusCode int, errorMessage error) {
 
 	c.IndentedJSON(statusCode,

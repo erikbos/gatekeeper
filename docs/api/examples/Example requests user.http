@@ -1,0 +1,57 @@
+# Example REST calls for user
+
+
+### Get all users
+GET http://{{hostname}}/v1/users/admin
+Authorization: Basic admin passwd
+
+
+### Create a new user named `admin`
+POST http://{{hostname}}/v1/users HTTP/1.1
+content-type: application/json
+Authorization: Basic admin passwd
+
+{
+    "name": "admin",
+    "password": "passwd",
+    "displayName": "Administrator",
+    "status": "active",
+    "roles": [
+        "admin"
+    ]
+}
+
+### Update an existing user called `admin`
+POST http://{{hostname}}/v1/users/admin HTTP/1.1
+content-type: application/json
+Authorization: Basic admin passwd
+
+{
+    "name": "admin",
+    "password": "passwd",
+    "displayName": "Administrator",
+    "status": "active",
+    "roles": [
+        "admin"
+    ]
+}
+
+
+### Create a new user named `clusteradmin`
+POST http://{{hostname}}/v1/users HTTP/1.1
+content-type: application/json
+Authorization: Basic admin passwd
+
+{
+    "name": "clusteradmin",
+    "password": "passwd",
+    "displayName": "Administrator",
+    "status": "active",
+    "roles": [
+        "clusteradmin"
+    ]
+}
+
+### Delete a user
+DELETE http://{{hostname}}/v1/users/clusteradmin
+Authorization: Basic admin passwd

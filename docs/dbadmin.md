@@ -32,7 +32,14 @@ Scope:
 
 ### Configuration
 
-Dbadmin requires a starup configuration which needs to be provided as YAML file, see below for the supported fields. For an example configuration file see [dbadmin.yaml](../deployment/docker/dbadmin.yaml).
+Dbadmin supports the following start up command line arguments:
+
+| argument | purpose                                                 | example                                            |
+| -------- | ------------------------------------------------------- | -------------------------------------------------- |
+| config   | startup configuration file, see below supported fields. | [dbadmin.yaml](../deployment/docker/dbadmin.yaml)  |
+| createschema | Create database schema and tables at startup, if these do not exist | |
+| replicacount | Use to indicate replica count for keyspace when using `createschema` | 3 |
+| enableapiauthentication | Enable REST API authentication, [users](api/user.md) and [roles](api/route.md) will be used for access and authorization `/v1/` path |
 
 ### Dbadmin configuration file
 

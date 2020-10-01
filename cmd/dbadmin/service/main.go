@@ -4,32 +4,20 @@ import (
 	"github.com/erikbos/gatekeeper/pkg/db"
 )
 
-// Service can manipulate all our entities
-type Service struct {
-	Organization *OrganizationService
-	Listener     *ListenerService
-	Route        *RouteService
-	Cluster      *ClusterService
-	Developer    *DeveloperService
-	DeveloperApp *DeveloperAppService
-	Credential   *CredentialService
-	APIProduct   *APIProductService
-}
-
 // NewService sets up a new service for all entities
-func NewService(db *db.Database) *Service {
+func NewService(database *db.Database) *Service {
 
+	changelog := NewChangelogService(database)
 	return &Service{
-		Organization: NewOrganizationService(db),
-		Listener:     NewListenerService(db),
-		Route:        NewRouteService(db),
-		Cluster:      NewClusterService(db),
-		Developer:    NewDeveloperService(db),
-		DeveloperApp: NewDeveloperAppService(db),
-		Credential:   NewCredentialService(db),
-		APIProduct:   NewAPIProductService(db),
+		Organization: NewOrganizationService(database, changelog),
+		Listener:     NewListenerService(database, changelog),
+		Route:        NewRouteService(database, changelog),
+		Cluster:      NewClusterService(database, changelog),
+		Developer:    NewDeveloperService(database, changelog),
+		DeveloperApp: NewDeveloperAppService(database, changelog),
+		Credential:   NewCredentialService(database, changelog),
+		APIProduct:   NewAPIProductService(database, changelog),
+		User:         NewUserService(database, changelog),
+		Role:         NewRoleService(database, changelog),
 	}
-}
-
-type Identity struct {
 }

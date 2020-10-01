@@ -60,6 +60,7 @@ content-type: application/json
 ###
 POST http://{{hostname}}/v1/routes/people HTTP/1.1
 content-type: application/json
+Authorization: basic admin passwd
 
 {
     "name": "people",

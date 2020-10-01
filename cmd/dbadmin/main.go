@@ -36,6 +36,7 @@ func main() {
 	filename := flag.String("config", defaultConfigFileName, "Configuration filename")
 	createSchema := flag.Bool("createschema", false, "Create database schema if it does not exist")
 	replicaCount := flag.Int("replicacount", 3, "Replica count to set for database schema")
+	enableAPIAuthentication := flag.Bool("enableapiauthentication", false, "Enable REST API authentication")
 	flag.Parse()
 
 	s := server{
@@ -54,6 +55,5 @@ func main() {
 	s.readiness = shared.StartReadiness(applicationName)
 	go s.db.RunReadinessCheck(s.readiness.GetChannel())
 
-	StartWebAdminServer(&s)
-
+	StartWebAdminServer(&s, *enableAPIAuthentication)
 }

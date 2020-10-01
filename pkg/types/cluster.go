@@ -7,17 +7,20 @@ import (
 )
 
 // Cluster holds configuration of an upstream cluster
+//
+// Field validation (binding) is done using https://godoc.org/github.com/go-playground/validator
 type Cluster struct {
 	// Name of cluster (not changable)
-	Name string `json:"name"`
+	Name string `json:"name" binding:"required,min=4"`
 
 	// Friendly display name of cluster
 	DisplayName string `json:"displayName"`
-	// Hostname of cluster
-	HostName string `json:"hostName"`
+
+	// Hostname of cluster (must be fqdn or ip address)
+	HostName string `json:"hostName" binding:"required,fqdn|ip"`
 
 	// tcp port of cluster
-	Port int `json:"port"`
+	Port int `json:"port" binding:"required,min=1,max=65535"`
 
 	// Attributes of this cluster
 	Attributes Attributes `json:"attributes"`

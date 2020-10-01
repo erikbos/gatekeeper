@@ -56,8 +56,8 @@ HTTP listener on port `80` mapping incoming requests for http virtual host `www.
 | TLSEnable            | Whether to enable TLS or not, HTTP/2 always uses TLS | true, false                  |
 | TLSCertificate       | Certificate to use for TLS                           |                              |
 | TLSCertificateKey    | Key of certificate                                   |                              |
-| TLSMinimumVersion    | Minimum version of TLS to use                        | TLSv10,TLSv11, TLSv12 TLSv13 |
-| TLSMaximumVersion    | Maximum version of TLS to use                        | TLSv10,TLSv11, TLSv12 TLSv13 |
+| TLSMinimumVersion    | Minimum version of TLS to use                        | TLS1.0,TLS1.1, TLS1.2 TLS1.3 |
+| TLSMaximumVersion    | Maximum version of TLS to use                        | TLS1.0,TLS1.1, TLS1.2 TLS1.3 |
 | TLSCipherSuites      | Allowed TLS cipher suite                             |                              |
 | AccessLogFile        | File for storing access logs                         |                              |
 | AccessLogCluster     | Cluster to send access logs to                       |                              |
@@ -83,7 +83,7 @@ Envoycp monitors database for changed listeners at `xds.configcompileinterval` i
 
 ## Example listener configurations
 
-HTTP listener on port `80` mapping incoming requests for http virtual host `www.petstore.com` to routegroup `routes_80`
+HTTP listener on port `80` mapping incoming requests for http virtual host `www.petstore.com` to routegroup `routes_80`:
 
 ```json
 {

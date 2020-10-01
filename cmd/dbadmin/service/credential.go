@@ -11,13 +11,14 @@ import (
 
 // CredentialService is
 type CredentialService struct {
-	db *db.Database
+	db        *db.Database
+	changelog *Changelog
 }
 
 // NewCredentialService returns a new credential instance
-func NewCredentialService(database *db.Database) *CredentialService {
+func NewCredentialService(database *db.Database, c *Changelog) *CredentialService {
 
-	return &CredentialService{db: database}
+	return &CredentialService{db: database, changelog: c}
 }
 
 // Get returns details of an credential
@@ -33,7 +34,8 @@ func (cs *CredentialService) GetByDeveloperAppID(developerAppID string) (cluster
 }
 
 // Create creates a credential
-func (cs *CredentialService) Create(newCredential types.DeveloperAppKey) (types.DeveloperAppKey, types.Error) {
+func (cs *CredentialService) Create(newCredential types.DeveloperAppKey,
+	who Requester) (types.DeveloperAppKey, types.Error) {
 
 	credentialToUpdate, err := cs.db.Credential.GetByKey(&newCredential.OrganizationName, &newCredential.ConsumerKey)
 	if err != nil {
@@ -51,26 +53,34 @@ func (cs *CredentialService) Create(newCredential types.DeveloperAppKey) (types.
 		newCredential.ConsumerSecret = generateCredentialConsumerSecret()
 	}
 
-	err = cs.db.Credential.UpdateByKey(credentialToUpdate)
+	err = cs.db.Credential.UpdateByKey(&newCredential)
+	cs.changelog.Create(newCredential, who)
 	return *credentialToUpdate, err
 }
 
 // Update updates an existing credential
-func (cs *CredentialService) Update(updatedCredential types.DeveloperAppKey) (types.DeveloperAppKey, types.Error) {
+func (cs *CredentialService) Update(updatedCredential types.DeveloperAppKey,
+	who Requester) (types.DeveloperAppKey, types.Error) {
 
-	credentialToUpdate, err := cs.db.Credential.GetByKey(&updatedCredential.OrganizationName, &updatedCredential.ConsumerKey)
+	currentCredential, err := cs.db.Credential.GetByKey(&updatedCredential.OrganizationName, &updatedCredential.ConsumerKey)
 	if err != nil {
 		return types.NullDeveloperAppKey, types.NewItemNotFoundError(err)
 	}
-	// Copy over the fields we allow to be updated
-	credentialToUpdate.APIProducts = updatedCredential.APIProducts
+	// Copy over fields we do not allow to be updated
+	updatedCredential.IssuedAt = currentCredential.IssuedAt
+	updatedCredential.ConsumerKey = currentCredential.ConsumerKey
+	updatedCredential.ConsumerSecret = currentCredential.ConsumerSecret
+	updatedCredential.AppID = currentCredential.AppID
+	updatedCredential.OrganizationName = currentCredential.OrganizationName
 
-	err = cs.db.Credential.UpdateByKey(credentialToUpdate)
-	return *credentialToUpdate, err
+	err = cs.db.Credential.UpdateByKey(&updatedCredential)
+	cs.changelog.Update(currentCredential, updatedCredential, who)
+	return updatedCredential, err
 }
 
 // Delete deletes an credential
-func (cs *CredentialService) Delete(organizationName, consumerKey string) (deletedCredential types.DeveloperAppKey, e types.Error) {
+func (cs *CredentialService) Delete(organizationName, consumerKey string,
+	who Requester) (deletedCredential types.DeveloperAppKey, e types.Error) {
 
 	credential, err := cs.db.Credential.GetByKey(&organizationName, &consumerKey)
 	if err != nil {
@@ -80,6 +90,7 @@ func (cs *CredentialService) Delete(organizationName, consumerKey string) (delet
 	if err != nil {
 		return types.NullDeveloperAppKey, err
 	}
+	cs.changelog.Delete(credential, who)
 	return *credential, nil
 
 }

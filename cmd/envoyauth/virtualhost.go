@@ -12,7 +12,7 @@ import (
 )
 
 type vhostMapping struct {
-	dbentities *db.Entityloader
+	dbentities *db.EntityCache
 	listeners  map[vhostMapEntry]types.Listener
 }
 
@@ -21,7 +21,7 @@ type vhostMapEntry struct {
 	port  int
 }
 
-func newVhostMapping(d *db.Entityloader) *vhostMapping {
+func newVhostMapping(d *db.EntityCache) *vhostMapping {
 
 	return &vhostMapping{
 		dbentities: d,

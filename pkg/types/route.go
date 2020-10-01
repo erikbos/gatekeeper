@@ -7,21 +7,23 @@ import (
 )
 
 // Route holds configuration of a route
+//
+// Field validation (binding) is done using https://godoc.org/github.com/go-playground/validator
 type Route struct {
 	// Name of route (not changable)
-	Name string `json:"name"`
+	Name string `json:"name" binding:"required,min=4"`
 
 	// Friendly display name of route
 	DisplayName string `json:"displayName"`
 
 	// Routegroup this route is part of
-	RouteGroup string `json:"RouteGroup"`
+	RouteGroup string `json:"RouteGroup" binding:"required,min=4"`
 
-	// Path of route
-	Path string `json:"path"`
+	// Path of route (should always start with a /)
+	Path string `json:"path" binding:"required,min=1,startswith=/"`
 
 	// Type of pathmatching: path, prefix, regexp
-	PathType string `json:"pathType"`
+	PathType string `json:"pathType" binding:"required,oneof=path prefix regexp"`
 
 	// Attributes of this route
 	Attributes Attributes `json:"attributes"`
