@@ -57,7 +57,3 @@ The supported fields are:
 | envoyproxy.extauthz.timeout          | Maximum allowed duration of authentication requests to envoyauth                    |                               |
 | envoyproxy.extauthz.failuremodeallow | In case envoyauth does not answer in time/fails should requests be forwarded or not | true / false                  |
 | envoyproxy.extauthz.requestbodysize  | Number of bytes of request body envoyproxy should forward to envoyauth              | 300                           |
-| envoyproxy.logging.grpc.cluster      | if set, configure envoyproxy to stream accesslog to this cluster                    | accesslogcluster              |
-| envoyproxy.logging.grpc.logname      | envoyproxy's logname when streaming accesslogs                                      | proxy                         |
-| envoyproxy.logging.file.logfile      | if set, config envoyproxy to write accesslogs to this local file                    | /var/log/envoyproxyaccess.log |
-| envoyproxy.logging.file.fields       | [fields to log](https://www.envoyproxy.io/docs/envoy/latest/configuration/observability/access_log/usage) | [Example field logging config](/example/deployment/docker/envoycp.yaml) |

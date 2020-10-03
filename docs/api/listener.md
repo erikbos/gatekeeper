@@ -50,17 +50,24 @@ HTTP listener on port `80` mapping incoming requests for http virtual host `www.
 
 ## Attribute specification
 
-| attribute name       | purpose                                              | possible values              |
-| -------------------- | ---------------------------------------------------- | ---------------------------- |
-| HTTPProtocol         | Highest HTTP protocol to support                     | HTTP/1.1, HTTP/2, HTTP/3     |
-| TLS                  | Whether to enable TLS or not, HTTP/2 always uses TLS | true, false                  |
-| TLSCertificate       | Certificate to use for TLS                           |                              |
-| TLSCertificateKey    | Key of certificate                                   |                              |
-| TLSMinimumVersion    | Minimum version of TLS to use                        | TLS1.0,TLS1.1, TLS1.2 TLS1.3 |
-| TLSMaximumVersion    | Maximum version of TLS to use                        | TLS1.0,TLS1.1, TLS1.2 TLS1.3 |
-| TLSCipherSuites      | Allowed TLS cipher suite                             |                              |
-| AccessLogFile        | File for storing access logs                         |                              |
-| AccessLogCluster     | Cluster to send access logs to                       |                              |
+| attribute name              | purpose                                            | possible values              |
+| --------------------------- | -------------------------------------------------- | ---------------------------- |
+| HTTPProtocol                | Highest HTTP protocol to support                   | HTTP/1.1, HTTP/2, HTTP/3     |
+| TLS                         | Enable TLS or not, HTTP/2 always uses TLS          | true, false                  |
+| TLSCertificate              | Certificate to use for TLS                         |                              |
+| TLSCertificateKey           | Key of certificate                                 |                              |
+| TLSMinimumVersion           | Minimum version of TLS to use                      | TLS1.0,TLS1.1, TLS1.2 TLS1.3 |
+| TLSMaximumVersion           | Maximum version of TLS to use                      | TLS1.0,TLS1.1, TLS1.2 TLS1.3 |
+| TLSCipherSuites             | Allowed TLS cipher suite                           |                              |
+| AccessLogFile               | File for writing access logs                       |                              |
+| AccessLogFileFields         | Fields to log when logging to file                 |                              |
+| AccessLogCluster            | Cluster to send access logs to                     |                              |
+| AccessLogClusterBufferSize  | Access log buffer size in bytes                    | 536870912                    |
+| ServerName                  | Server name to use                                 | eb                           |
+| IdleTimeout                 | Time out for closing sesion in case of no requests | 10m                          |
+| MaxConcurrentStreams        | HTTP/2 max concurrent streams per connection       | 10m                          |
+| InitialConnectionWindowSize | HTTP/2 initial connection window size              | 65536                        |
+| InitialStreamWindowSize     | HTTP/2 initial window size                         | 1048576                      |
 
 All attributes listed above are mapped onto configuration properties of [Envoy listener API specifications](https://www.envoyproxy.io/docs/envoy/latest/api-v3/api/v3/listener.proto#listener) for detailed explanation of purpose and allowed value of each attribute.
 

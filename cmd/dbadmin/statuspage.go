@@ -127,8 +127,8 @@ const templateHTTPForwarding string = `
 <ul>
 {{range $attribute := $listener.Attributes}}
 <li>
-{{if or (eq $attribute.Name "TLSCertificate") (eq $attribute.Name "TLSCertificateKey")}}
-{{$attribute.Name}} = {{$attribute | CertificateDetails}}
+{{if (eq $attribute.Name "TLSCertificate" "TLSCertificateKey" "AccessLogFileFields")}}
+{{$attribute.Name}} = {{$attribute | PrettyPrint}}
 {{else}}
 {{$attribute.Name}} = {{$attribute.Value}}
 {{end}}
@@ -420,9 +420,9 @@ func embeddedTemplateFunctions() template.FuncMap {
 
 	// Supporting functions embedded in template invoked with "{{value | <functioname}}"
 	return template.FuncMap{
-		"ISO8601":            shared.TimeMillisecondsToString,
-		"OrderedList":        HMTLOrderedList,
-		"CertificateDetails": HTMLCertificateDetails,
+		"ISO8601":     shared.TimeMillisecondsToString,
+		"OrderedList": HMTLOrderedList,
+		"PrettyPrint": prettyPrintAttribute,
 	}
 }
 
@@ -438,10 +438,12 @@ func HMTLOrderedList(stringToSplit string) string {
 	return out
 }
 
-// HTMLCertificateDetails prints summary of certificate attributes
-func HTMLCertificateDetails(attribute types.Attribute) string {
+// prettyPrintAttribute prints summary of length attribute values
+func prettyPrintAttribute(attribute types.Attribute) string {
 
 	switch attribute.Name {
+	case types.AttributeAccessLogFileFields:
+		return "[log fields]"
 	case types.AttributeTLSCertificateKey:
 		// We never shown private key itself
 		return "[redacted]"

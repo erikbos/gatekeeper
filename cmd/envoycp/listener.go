@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	accesslog "github.com/envoyproxy/go-control-plane/envoy/config/accesslog/v3"
@@ -23,6 +24,15 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 
 	"github.com/erikbos/gatekeeper/pkg/types"
+)
+
+const (
+	// Default HttpProtocolOptions idle timeout, as the period in which there are no active requests
+	listenerIdleTimeout = 5 * time.Minute
+
+	// Default buffer size for accesslogging via grpc
+	// (see https://www.envoyproxy.io/docs/envoy/latest/api-v3/extensions/access_loggers/grpc/v3/als.proto#extensions-access-loggers-grpc-v3-httpgrpcaccesslogconfig)
+	accessLogBufferSizeDefault = 16384
 )
 
 // getEnvoyListenerConfig returns array of envoy listeners
@@ -154,31 +164,24 @@ func (s *server) buildFilterChainEntry(l *listener.Listener, v types.Listener) *
 }
 
 func (s *server) buildConnectionManager(httpFilters []*hcm.HttpFilter,
-	vhost types.Listener) *hcm.HttpConnectionManager {
-
-	// get generic Envoy settings from our own static startup configuration
-	proxyConfig := &s.config.Envoyproxy
+	listener types.Listener) *hcm.HttpConnectionManager {
 
 	connectionManager := &hcm.HttpConnectionManager{
-		CodecType:        hcm.HttpConnectionManager_AUTO,
-		StatPrefix:       "ingress_http",
-		UseRemoteAddress: protoBool(true),
-		HttpFilters:      httpFilters,
-		RouteSpecifier:   s.buildRouteSpecifierRDS(vhost.RouteGroup),
-		AccessLog:        buildAccessLog(proxyConfig.Logging, vhost),
-
-		CommonHttpProtocolOptions: &core.HttpProtocolOptions{
-			IdleTimeout: ptypes.DurationProto(proxyConfig.Misc.HTTPIdleTimeout),
-		},
-		Http2ProtocolOptions: &core.Http2ProtocolOptions{
-			MaxConcurrentStreams:        protoUint32orNil(proxyConfig.Misc.MaxConcurrentStreams),
-			InitialConnectionWindowSize: protoUint32orNil(proxyConfig.Misc.InitialConnectionWindowSize),
-			InitialStreamWindowSize:     protoUint32orNil(proxyConfig.Misc.InitialStreamWindowSize),
-		},
-		LocalReplyConfig: buildLocalOverWrite(vhost),
+		CodecType:                 hcm.HttpConnectionManager_AUTO,
+		StatPrefix:                "ingress_http",
+		UseRemoteAddress:          protoBool(true),
+		HttpFilters:               httpFilters,
+		RouteSpecifier:            s.buildRouteSpecifierRDS(listener.RouteGroup),
+		AccessLog:                 buildAccessLog(listener),
+		CommonHttpProtocolOptions: buildCommonHTTPProtocolOptions(listener),
+		Http2ProtocolOptions:      buildHTTP2ProtocolOptions(listener),
+		LocalReplyConfig:          buildLocalOverWrite(listener),
 	}
-	if proxyConfig.Misc.ServerName != "" {
-		connectionManager.ServerName = proxyConfig.Misc.ServerName
+
+	// Override Server response header
+	if serverName, error := listener.Attributes.Get(
+		types.AttributeServerName); error == nil {
+		connectionManager.ServerName = serverName
 	}
 
 	return connectionManager
@@ -290,42 +293,43 @@ func (s *server) buildRouteSpecifierRDS(routeGroup string) *hcm.HttpConnectionMa
 	}
 }
 
-func buildAccessLog(config envoyLogConfig, v types.Listener) []*accesslog.AccessLog {
+func buildAccessLog(listener types.Listener) []*accesslog.AccessLog {
 
-	// Set access log behaviour based upon virtual host access log attributes
-	accessLogFile, error := v.Attributes.Get(types.AttributeAccessLogFile)
-	if error == nil && accessLogFile != "" {
-		return buildFileAccessLog(config.File.Fields, accessLogFile)
+	accessLog := make([]*accesslog.AccessLog, 0, 10)
+
+	// Set up access logging to file, in case we have a filename
+	accessLogFile, error := listener.Attributes.Get(types.AttributeAccessLogFile)
+	accessLogFileFields, error2 := listener.Attributes.Get(types.AttributeAccessLogFileFields)
+	if error == nil && accessLogFile != "" &&
+		error2 == nil && accessLogFileFields != "" {
+		accessLog = append(accessLog, buildFileAccessLog(accessLogFile, accessLogFileFields))
 	}
-	accessLogCluster, error := v.Attributes.Get(types.AttributeAccessLogCluster)
+
+	// Set up access logging to cluster, in case we have a cluster name
+	accessLogCluster, error := listener.Attributes.Get(types.AttributeAccessLogCluster)
 	if error == nil && accessLogCluster != "" {
-		return buildGRPCAccessLog(accessLogCluster, v.Name, types.DefaultClusterConnectTimeout, 0)
-	}
+		// Get the buffer size so envoy can cache in memory
+		accessLogClusterBuffer := listener.Attributes.GetAsUInt32(
+			types.AttributeAccessLogClusterBufferSize, accessLogBufferSizeDefault)
 
-	// Fallback is default logging based upon configfile
-	if config.File.LogFile != "" {
-		return buildFileAccessLog(config.File.Fields, config.File.LogFile)
+		accessLog = append(accessLog, buildGRPCAccessLog(accessLogCluster, listener.Name,
+			types.DefaultClusterConnectTimeout, accessLogClusterBuffer))
 	}
-	if config.GRPC.Cluster != "" {
-		return buildGRPCAccessLog(config.GRPC.Cluster, v.Name, config.GRPC.Timeout, config.GRPC.BufferSize)
-	}
-	return nil
+	return accessLog
 }
 
-func buildFileAccessLog(fields map[string]string, path string) []*accesslog.AccessLog {
-
-	if len(fields) == 0 {
-		log.Warnf("To do file access logging a logfield definition in envoycp configuration is required")
-		return nil
-	}
+func buildFileAccessLog(path, fields string) *accesslog.AccessLog {
 
 	jsonFormat := &structpb.Struct{
 		Fields: map[string]*structpb.Value{},
 	}
-	for field, fieldFormat := range fields {
-		if fieldFormat != "" {
-			jsonFormat.Fields[field] = &structpb.Value{
-				Kind: &structpb.Value_StringValue{StringValue: fieldFormat},
+	for _, fieldFormat := range strings.Split(fields, ",") {
+		fieldConfig := strings.Split(fieldFormat, "=")
+		if len(fieldConfig) == 2 {
+			jsonFormat.Fields[fieldConfig[0]] = &structpb.Value{
+				Kind: &structpb.Value_StringValue{
+					StringValue: fieldConfig[1],
+				},
 			}
 		}
 	}
@@ -343,15 +347,15 @@ func buildFileAccessLog(fields map[string]string, path string) []*accesslog.Acce
 	if err != nil {
 		log.Panic(err)
 	}
-	return []*accesslog.AccessLog{{
+	return &accesslog.AccessLog{
 		Name: wellknown.FileAccessLog,
 		ConfigType: &accesslog.AccessLog_TypedConfig{
 			TypedConfig: accessLogTypedConf,
 		},
-	}}
+	}
 }
 
-func buildGRPCAccessLog(clusterName, LogName string, timeout time.Duration, bufferSize uint32) []*accesslog.AccessLog {
+func buildGRPCAccessLog(clusterName, LogName string, timeout time.Duration, bufferSize uint32) *accesslog.AccessLog {
 
 	accessLogConf := &grpcaccesslog.HttpGrpcAccessLogConfig{
 		CommonConfig: &grpcaccesslog.CommonGrpcAccessLogConfig{
@@ -366,12 +370,35 @@ func buildGRPCAccessLog(clusterName, LogName string, timeout time.Duration, buff
 	if err != nil {
 		log.Panic(err)
 	}
-	return []*accesslog.AccessLog{{
+	return &accesslog.AccessLog{
 		Name: wellknown.HTTPGRPCAccessLog,
 		ConfigType: &accesslog.AccessLog_TypedConfig{
 			TypedConfig: accessLogTypedConf,
 		},
-	}}
+	}
+}
+
+func buildCommonHTTPProtocolOptions(listener types.Listener) *core.HttpProtocolOptions {
+
+	idleTimeout := listener.Attributes.GetAsDuration(
+		types.AttributeIdleTimeout, listenerIdleTimeout)
+
+	return &core.HttpProtocolOptions{
+		IdleTimeout: ptypes.DurationProto(idleTimeout),
+	}
+}
+
+func buildHTTP2ProtocolOptions(listener types.Listener) *core.Http2ProtocolOptions {
+
+	maxConcurrentStreams := listener.Attributes.GetAsUInt32(types.AttributeMaxConcurrentStreams, 0)
+	initialConnectionWindowSize := listener.Attributes.GetAsUInt32(types.AttributeInitialConnectionWindowSize, 0)
+	initialStreamWindowSize := listener.Attributes.GetAsUInt32(types.AttributeInitialStreamWindowSize, 0)
+
+	return &core.Http2ProtocolOptions{
+		MaxConcurrentStreams:        protoUint32orNil(maxConcurrentStreams),
+		InitialConnectionWindowSize: protoUint32orNil(initialConnectionWindowSize),
+		InitialStreamWindowSize:     protoUint32orNil(initialStreamWindowSize),
+	}
 }
 
 // buildLocalOverWrite generates all the local rewrites Envoyproxy should do

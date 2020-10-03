@@ -28,9 +28,7 @@ type EnvoyCPConfig struct {
 
 type envoyProxyConfig struct {
 	ExtAuthz    extAuthzConfig    `yaml:"extauthz"`    // Extauthz configuration options
-	Logging     envoyLogConfig    `yaml:"logging"`     // Logging configuration options
 	RateLimiter rateLimiterConfig `yaml:"ratelimiter"` // Ratelimiter configuration options
-	Misc        miscConfig        `yaml:"misc"`        // Miscellaneous configuration options
 }
 
 type extAuthzConfig struct {
@@ -47,27 +45,6 @@ type rateLimiterConfig struct {
 	Timeout         time.Duration `yaml:"timeout"`         // Max duration of call to ext authz cluster
 	FailureModeDeny bool          `yaml:"failuremodedeny"` // Forward request in case ratelimiting does not respond time
 	Domain          string        `yaml:"domain"`
-}
-
-type envoyLogConfig struct {
-	File struct {
-		LogFile string            `yaml:"logfile"` // Filename to write access logs to
-		Fields  map[string]string `yaml:"fields"`  // Field names and field values to log
-	} `yaml:"file"`
-	GRPC struct {
-		BufferSize uint32        `yaml:"buffersize"` // Buffersize for streaming access logs
-		Cluster    string        `yaml:"cluster"`    // Cluster to stream access logs to
-		LogName    string        `yaml:"logname"`    // Logname to use in acceas log
-		Timeout    time.Duration `yaml:"timeout"`    // Timeout for connecting to access log cluster
-	} `yaml:"grpc"`
-}
-
-type miscConfig struct {
-	HTTPIdleTimeout             time.Duration `yaml:"httpidletimeout"`             // Timeout for HTTP traffic
-	MaxConcurrentStreams        uint32        `yaml:"maxconcurrentstreams"`        // MaxConcurrentStreams setting
-	InitialConnectionWindowSize uint32        `yaml:"initialconnectionwindowsize"` // InitialConnectionWindowSize setting
-	InitialStreamWindowSize     uint32        `yaml:"initialstreamwindowsize"`     // InitialStreamWindowSize setting
-	ServerName                  string        `yaml:"servername"`                  // ServerName for HTTP responses
 }
 
 const (

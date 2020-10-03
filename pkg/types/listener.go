@@ -62,8 +62,26 @@ const (
 	// File for storing access logs
 	AttributeAccessLogFile = "AccessLogFile"
 
+	// Field configuration for access logging to file
+	AttributeAccessLogFileFields = "AccessLogFileFields"
+
 	// Cluster to send access logs to
 	AttributeAccessLogCluster = "AccessLogCluster"
+
+	// In memory buffer size for access logs
+	AttributeAccessLogClusterBufferSize = "AccessLogClusterBufferSize"
+
+	// Server name to respond with
+	AttributeServerName = "ServerName"
+
+	//
+	AttributeMaxConcurrentStreams = "MaxConcurrentStreams"
+
+	//
+	AttributeInitialConnectionWindowSize = "InitialConnectionWindowSize"
+
+	//
+	AttributeInitialStreamWindowSize = "InitialStreamWindowSize"
 )
 
 // Attributes which are shared amongst listener, route and cluster
@@ -122,13 +140,18 @@ func (l *Listener) ConfigCheck() error {
 
 // validListenerAttributes contains all valid attribute names for a listener
 var validListenerAttributes = map[string]bool{
-	AttributeAccessLogFile:     true,
-	AttributeAccessLogCluster:  true,
-	AttributeHTTPProtocol:      true,
-	AttributeTLS:               true,
-	AttributeTLSMinimumVersion: true,
-	AttributeTLSMaximumVersion: true,
-	AttributeTLSCertificate:    true,
-	AttributeTLSCertificateKey: true,
-	AttributeTLSCipherSuites:   true,
+	AttributeAccessLogFile:               true,
+	AttributeAccessLogCluster:            true,
+	AttributeAccessLogClusterBufferSize:  true,
+	AttributeHTTPProtocol:                true,
+	AttributeTLS:                         true,
+	AttributeTLSMinimumVersion:           true,
+	AttributeTLSMaximumVersion:           true,
+	AttributeTLSCertificate:              true,
+	AttributeTLSCertificateKey:           true,
+	AttributeTLSCipherSuites:             true,
+	AttributeServerName:                  true,
+	AttributeMaxConcurrentStreams:        true,
+	AttributeInitialConnectionWindowSize: true,
+	AttributeInitialStreamWindowSize:     true,
 }
