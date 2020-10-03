@@ -50,6 +50,13 @@ func returnJSONMessageAndAbort(c *gin.Context, statusCode int, msg error) {
 	c.Abort()
 }
 
+// setLastModified adds Last-Modified timestamp to response
+func setLastModified(c *gin.Context, timestamp int64) {
+
+	c.Header("Last-Modified",
+		time.Unix(0, timestamp*int64(time.Millisecond)).Format(time.RFC822))
+}
+
 // WebAdminCheckIPACL checks if requestor's ip address matches ACL
 func WebAdminCheckIPACL(ipAccessList string) gin.HandlerFunc {
 
@@ -107,7 +114,7 @@ func LogHTTPRequest(param gin.LogFormatterParams) string {
 		param.Latency/time.Millisecond,
 		param.Request.UserAgent(),
 		requestID,
-		// Remove any whitespace clutter to keep logs tidy
+		// Remove any whitespace clutter in error messages to keep logs tidy
 		strings.TrimSpace(param.ErrorMessage),
 	)
 }

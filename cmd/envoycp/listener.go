@@ -38,31 +38,28 @@ func (s *server) getEnvoyListenerConfig() ([]cache.Resource, error) {
 }
 
 // getListenerPorts return unique set of ports from vhost configuration
-func (s *server) getListenerPorts() map[int]bool {
-	listenerPorts := map[int]bool{}
+func (s *server) getListenerPorts() map[uint32]bool {
+
+	listenerPorts := map[uint32]bool{}
 	for _, listener := range s.dbentities.GetListeners() {
-		listenerPorts[listener.Port] = true
+		listenerPorts[uint32(listener.Port)] = true
 	}
 	return listenerPorts
 }
 
-// getListenerPorts return unique set of ports from vhost configuration
-func (s *server) getListenersOfRouteGroup(RouteGroupName string) []string {
-	var ListenersInRouteGroup []string
+// getVhostsInRouteGroup return all vhosts in a route group
+func (s *server) getVhostsInRouteGroup(routeGroupName string) []string {
+	var VhostsInRouteGroup []string
 
 	for _, listener := range s.dbentities.GetListeners() {
-		if err := listener.ConfigCheck(); err != nil {
-			log.Warningf("Listener '%s' %s", listener.Name, err)
-		}
-
-		if listener.RouteGroup == RouteGroupName {
-			ListenersInRouteGroup = append(ListenersInRouteGroup, listener.VirtualHosts...)
+		if listener.RouteGroup == routeGroupName {
+			VhostsInRouteGroup = append(VhostsInRouteGroup, listener.VirtualHosts...)
 		}
 	}
-	return ListenersInRouteGroup
+	return VhostsInRouteGroup
 }
 
-func (s *server) buildEnvoyListenerConfig(port int) *listener.Listener {
+func (s *server) buildEnvoyListenerConfig(port uint32) *listener.Listener {
 
 	newListener := &listener.Listener{
 		Name:            fmt.Sprintf("port_%d", port),
@@ -72,8 +69,19 @@ func (s *server) buildEnvoyListenerConfig(port int) *listener.Listener {
 
 	// add all vhosts belonging to this listener's port
 	for _, listener := range s.dbentities.GetListeners() {
-		if listener.Port == port {
+		if listener.Port == int(port) {
 			newListener.FilterChains = append(newListener.FilterChains, s.buildFilterChainEntry(newListener, listener))
+
+			TLSEnabled := listener.Attributes.GetAsString(types.AttributeTLS, "")
+			// In case of a second non TLS listener on the same port we stop as
+			// we can add only one entry in the filter chain match for non-TLS
+			//
+			// as a result the setting attributes of the second (or third) listener on same port
+			// will be ignored: all share the settings of the first configured listener
+			if TLSEnabled != types.AttributeValueTrue {
+				log.Warnf("Multiple non-TLS listeners on port '%d', ignoring attributes of '%s'", port, listener.Name)
+				break
+			}
 		}
 	}
 
@@ -106,6 +114,12 @@ func (s *server) buildFilterChainEntry(l *listener.Listener, v types.Listener) *
 				TypedConfig: managerProtoBuf,
 			},
 		}},
+	}
+
+	// Is TLS-enabled set to true?
+	value := v.Attributes.GetAsString(types.AttributeTLS, "")
+	if value != types.AttributeValueTrue {
+		return FilterChainEntry
 	}
 
 	// Check if we have a certificate and certificate key
@@ -142,6 +156,7 @@ func (s *server) buildFilterChainEntry(l *listener.Listener, v types.Listener) *
 func (s *server) buildConnectionManager(httpFilters []*hcm.HttpFilter,
 	vhost types.Listener) *hcm.HttpConnectionManager {
 
+	// get generic Envoy settings from our own static startup configuration
 	proxyConfig := &s.config.Envoyproxy
 
 	connectionManager := &hcm.HttpConnectionManager{
@@ -255,6 +270,7 @@ func (s *server) buildHTTPFilterRateLimiterConfig() *anypb.Any {
 }
 
 func (s *server) extAuthzWithRequestBody() *extauthz.BufferSettings {
+
 	if s.config.Envoyproxy.ExtAuthz.RequestBodySize > 0 {
 		return &extauthz.BufferSettings{
 			MaxRequestBytes:     uint32(s.config.Envoyproxy.ExtAuthz.RequestBodySize),
@@ -276,7 +292,7 @@ func (s *server) buildRouteSpecifierRDS(routeGroup string) *hcm.HttpConnectionMa
 
 func buildAccessLog(config envoyLogConfig, v types.Listener) []*accesslog.AccessLog {
 
-	// Set access log behaviour based upon virtual host attributes
+	// Set access log behaviour based upon virtual host access log attributes
 	accessLogFile, error := v.Attributes.Get(types.AttributeAccessLogFile)
 	if error == nil && accessLogFile != "" {
 		return buildFileAccessLog(config.File.Fields, accessLogFile)
@@ -374,6 +390,7 @@ func buildLocalOverWrite429to403(vhost types.Listener) *hcm.ResponseMapper {
 	// 1) response status code 429
 	// 2) metadata path "envoy.filters.http.ext_authz" (wellknown.HTTPExternalAuthorization)
 	// 3) checks for presence of key "rl429to403"
+	// 4) set respons status code to 403
 	return &hcm.ResponseMapper{
 		Filter: &accesslog.AccessLogFilter{
 			FilterSpecifier: &accesslog.AccessLogFilter_AndFilter{

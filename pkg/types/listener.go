@@ -87,6 +87,7 @@ const (
 	AttributeHTTPProtocol = "HTTPProtocol"
 
 	AttributeValueTrue                    = "true"
+	AttributeValueFalse                   = "false"
 	AttributeValueTLSVersion10            = "TLS1.0"
 	AttributeValueTLSVersion11            = "TLS1.1"
 	AttributeValueTLSVersion12            = "TLS1.2"
@@ -124,7 +125,7 @@ var validListenerAttributes = map[string]bool{
 	AttributeAccessLogFile:     true,
 	AttributeAccessLogCluster:  true,
 	AttributeHTTPProtocol:      true,
-	AttributeTLSEnable:         true,
+	AttributeTLS:               true,
 	AttributeTLSMinimumVersion: true,
 	AttributeTLSMaximumVersion: true,
 	AttributeTLSCertificate:    true,

@@ -102,8 +102,16 @@ Authorization: basic admin passwd
         "value": "www.example.com"
     },
     {
-        "name": "Headers",
-        "value": "service=public!appid=%DYNAMIC_METADATA([\"envoy.filters.http.ext_authz\", \"app.id\"])%"
+        "name": "HeadersToAdd1",
+        "value": "appid=%DYNAMIC_METADATA([\"envoy.filters.http.ext_authz\", \"app.id\"])%"
+    },
+    {
+        "name": "HeadersToAdd2",
+        "value": "service=public"
+    },
+    {
+      "name": "HeadersToRemove",
+      "value": "Delete-This-Header,Content-Type"
     },
     {
         "name": "NumRetries",

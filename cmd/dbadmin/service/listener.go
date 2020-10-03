@@ -154,12 +154,15 @@ func (ls *ListenerService) Delete(listenerName string, who Requester) (
 	if err != nil {
 		return types.NullListener, err
 	}
-	attachedRouteCount := ls.countRoutesOfRouteGroup(listener.RouteGroup)
-	if attachedRouteCount > 0 {
-		return types.NullListener, types.NewBadRequestError(
-			fmt.Errorf("Cannot delete listener '%s' with %d routes attached",
-				listener.Name, attachedRouteCount))
-	}
+	// Not be able to remove a second listener that points to routes
+	// does not make sense
+
+	// attachedRouteCount := ls.countRoutesOfRouteGroup(listener.RouteGroup)
+	// if attachedRouteCount > 0 {
+	// 	return types.NullListener, types.NewBadRequestError(
+	// 		fmt.Errorf("Cannot delete listener '%s' with %d routes attached",
+	// 			listener.Name, attachedRouteCount))
+	// }
 
 	err = ls.db.Listener.Delete(listenerName)
 	if err != nil {
@@ -169,18 +172,18 @@ func (ls *ListenerService) Delete(listenerName string, who Requester) (
 	return *listener, nil
 }
 
-// counts number of routes with a specific routegroup
-func (ls *ListenerService) countRoutesOfRouteGroup(routeGroup string) int {
+// // counts number of routes with a specific routegroup
+// func (ls *ListenerService) countRoutesOfRouteGroup(routeGroup string) int {
 
-	routes, err := ls.db.Route.GetAll()
-	if err != nil {
-		return 0
-	}
-	var count int
-	for _, route := range routes {
-		if route.RouteGroup == routeGroup {
-			count++
-		}
-	}
-	return count
-}
+// 	routes, err := ls.db.Route.GetAll()
+// 	if err != nil {
+// 		return 0
+// 	}
+// 	var count int
+// 	for _, route := range routes {
+// 		if route.RouteGroup == routeGroup {
+// 			count++
+// 		}
+// 	}
+// 	return count
+// }

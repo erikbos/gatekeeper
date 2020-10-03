@@ -55,7 +55,7 @@ func (s *server) buildEnvoyListenerRouteConfig(RouteGroup string,
 		VirtualHosts: []*route.VirtualHost{
 			{
 				Name:    RouteGroup,
-				Domains: s.getListenersOfRouteGroup(RouteGroup),
+				Domains: s.getVhostsInRouteGroup(RouteGroup),
 				Routes:  s.buildEnvoyRoutes(RouteGroup, routes),
 			},
 		},
@@ -116,16 +116,14 @@ func (s *server) buildEnvoyRoute(routeEntry types.Route) *route.Route {
 	}
 
 	// Stop in case we do not have any route action defined
-	// Envoyproxy does not accept routes without action
-	if envoyRoute.Action == nil {
+	// WARNING: We cannot compare against just "nil" as .Action is an interface
+	if envoyRoute.Action == (*route.Route_Route)(nil) {
+		log.Warnf("Route '%s' does not have a destination cluster", routeEntry.Name)
 		return nil
 	}
 
-	// In case route-level attributes exist we might additional upstream headers
-	upstreamHeaders := make(map[string]string)
-	buildUpstreamHeaders(routeEntry, upstreamHeaders)
-	buildBasicAuth(routeEntry, upstreamHeaders)
-	envoyRoute.RequestHeadersToAdd = buildHeadersList(upstreamHeaders)
+	envoyRoute.RequestHeadersToAdd = buildUpstreamHeadersToAdd(routeEntry)
+	envoyRoute.RequestHeadersToRemove = buildUpstreamHeadersToRemove(routeEntry)
 
 	return envoyRoute
 }
@@ -184,6 +182,11 @@ func buildRouteActionCluster(routeEntry types.Route) *route.Route_Route {
 
 	if _, err := routeEntry.Attributes.Get(types.AttributeWeightedClusters); err == nil {
 		action.Route.ClusterSpecifier = buildWeightedClusters(routeEntry)
+	}
+
+	// Stop in case we do not have any route cluster destination
+	if action.Route.ClusterSpecifier == nil {
+		return nil
 	}
 
 	action.Route.RateLimits = buildRateLimits(routeEntry)
@@ -427,20 +430,26 @@ func buildRouteActionRedirectResponse(routeEntry types.Route) *route.Route_Redir
 	return &response
 }
 
-func buildUpstreamHeaders(routeEntry types.Route, headersToAdd map[string]string) {
+// buildUpstreamHeadersToAdd consolidates all possible source for route upstream headers
+func buildUpstreamHeadersToAdd(routeEntry types.Route) []*core.HeaderValueOption {
 
-	headers, err := routeEntry.Attributes.Get(types.AttributeHeaders)
-	if err != nil {
-		return
+	// In case route-level attributes exist we have additional upstream headers
+	headersToAdd := make(map[string]string)
+
+	buildBasicAuth(routeEntry, headersToAdd)
+	buildOptionalUpstreamHeader(routeEntry, headersToAdd, types.AttributeHeaderToAdd1)
+	buildOptionalUpstreamHeader(routeEntry, headersToAdd, types.AttributeHeaderToAdd2)
+	buildOptionalUpstreamHeader(routeEntry, headersToAdd, types.AttributeHeaderToAdd3)
+	buildOptionalUpstreamHeader(routeEntry, headersToAdd, types.AttributeHeaderToAdd4)
+	buildOptionalUpstreamHeader(routeEntry, headersToAdd, types.AttributeHeaderToAdd5)
+
+	if len(headersToAdd) != 0 {
+		return buildHeadersList(headersToAdd)
 	}
-	// TODO we use ! as separator for multiple headers...
-	for _, header := range strings.Split(headers, "!") {
-		if headervalue := strings.Split(header, "="); len(headervalue) == 2 {
-			headersToAdd[headervalue[0]] = headervalue[1]
-		}
-	}
+	return nil
 }
 
+// buildBasicAuth sets Basic Authentication for upstream requests
 func buildBasicAuth(routeEntry types.Route, headersToAdd map[string]string) {
 
 	usernamePassword, err := routeEntry.Attributes.Get(types.AttributeBasicAuth)
@@ -451,7 +460,34 @@ func buildBasicAuth(routeEntry types.Route, headersToAdd map[string]string) {
 	}
 }
 
-// buildHeadersList creates map to hold additional upstream headers
+func buildOptionalUpstreamHeader(routeEntry types.Route,
+	headersToAdd map[string]string, attributeName string) {
+
+	if headerToSet, err := routeEntry.Attributes.Get(attributeName); err == nil {
+		if headerValue := strings.Split(headerToSet, "="); len(headerValue) == 2 {
+			headersToAdd[headerValue[0]] = headerValue[1]
+		}
+	}
+}
+
+// buildUpstreamHeadersToRemove compiles list of headers we need to remove
+func buildUpstreamHeadersToRemove(routeEntry types.Route) []string {
+
+	headersToRemove, err := routeEntry.Attributes.Get(types.AttributeHeadersToRemove)
+	if err != nil || headersToRemove == "" {
+		return nil
+	}
+	h := make([]string, 0, 10)
+	for _, value := range strings.Split(headersToRemove, ",") {
+		h = append(h, value)
+	}
+	if len(h) != 0 {
+		return h
+	}
+	return nil
+}
+
+// buildHeadersList creates map to hold headers to add or remove
 func buildHeadersList(headers map[string]string) []*core.HeaderValueOption {
 	if len(headers) == 0 {
 		return nil

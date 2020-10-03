@@ -77,8 +77,13 @@ Every route can have optional attributes which control what Envoy will do to mat
 | CORSExposeHeaders        | Specifies the content for the [Access-Control-Expose-Headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Expose-Headers) header    |                 |
 | CORSMaxAge               | Specifies the content for the [Access-Control-Max-Age](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Max-Age) header           |                 |
 | HostHeader               | HTTP host header to set when forwarding to upstream cluster           |                 |
-| Headers | Additional HTTP headers to set when forwarding to upstream cluster                     |                 |
-| BasicAuth                | HTTP Basic authentication header to set when contact upstream cluster | user:secret     |
+| HeaderToAdd1             | Additional header to set when forwarding to upstream cluster          |                 |
+| HeaderToAdd2             | Additional header to set when forwarding to upstream cluster          |                 |
+| HeaderToAdd3             | Additional header to set when forwarding to upstream cluster          |                 |
+| HeaderToAdd4             | Additional header to set when forwarding to upstream cluster          |                 |
+| HeaderToAdd5             | Additional  header to set when forwarding to upstream cluster         |                 |
+| HeadersToRemove          | Headers to remove before forwarding to upstream cluster               | accept,x-age    |
+| BasicAuth                | Basic authentication header to set when contact upstream cluster      | user:secret     |
 | RetryOn                  | Specifies the conditions under which retry takes place.               | [See envoy documentation](https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/router_filter#config-http-filters-router-x-envoy-retry-on)|
 | PerTryTimeout            | Specify upstream timeout per retry attempt                            | 150ms           |
 | NumRetries               | Specify the allowed number of retries                                 | 1               |
@@ -231,6 +236,37 @@ Forward `/people` to cluster `people` and configure up to `3` request retries in
         {
             "name": "RetryOnStatusCodes",
             "value": "503,504"
+        }
+    ]
+}
+```
+
+Forward `/people` to cluster `people` remove header `Content-Type` and set header `appid` to the value
+of Metadata key `app.id` (emitted by `envoyauth`)
+
+```json
+{
+    "name": "people",
+    "displayName": "Default people",
+    "routeGroup": "routes_443",
+    "path": "/people",
+    "pathType": "prefix",
+    "attributes": [
+        {
+            "name": "HostHeader",
+            "value": "www.example.com"
+        },
+        {
+            "name": "HeadersToAdd1",
+            "value": "appid=%DYNAMIC_METADATA([\"envoy.filters.http.ext_authz\", \"app.id\"])%"
+        },
+        {
+            "name": "HeadersToAdd2",
+            "value": "service=public"
+        },
+        {
+        "name": "HeadersToRemove",
+        "value": "Delete-This-Header,Content-Type"
         }
     ]
 }

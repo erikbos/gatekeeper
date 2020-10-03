@@ -29,8 +29,11 @@ func (s *server) getEnvoyClusterConfig() ([]cache.Resource, error) {
 		if err := cluster.ConfigCheck(); err != nil {
 			log.Warningf("Cluster '%s' %s", cluster.Name, err)
 		}
-
-		envoyClusters = append(envoyClusters, buildEnvoyClusterConfig(cluster))
+		if clusterToAdd := buildEnvoyClusterConfig(cluster); clusterToAdd != nil {
+			envoyClusters = append(envoyClusters, clusterToAdd)
+		} else {
+			log.Warningf("Cluster '%s' was not added", cluster.Name)
+		}
 	}
 
 	return envoyClusters, nil
@@ -47,15 +50,21 @@ func buildEnvoyClusterConfig(cluster types.Cluster) *envoyCluster.Cluster {
 		DnsResolvers:              clusterDNSResolvers(cluster),
 		DnsRefreshRate:            clusterDNSRefreshRate(cluster),
 		LbPolicy:                  clusterLbPolicy(cluster),
-		LoadAssignment:            clusterLoadAssignment(cluster),
 		HealthChecks:              clusterHealthChecks(cluster),
 		CommonHttpProtocolOptions: clusterCommonHTTPProtocolOptions(cluster),
 		CircuitBreakers:           clusterCircuitBreakers(cluster),
 		TrackClusterStats:         clusterTrackClusterStats(cluster),
 	}
 
+	loadAssignment := clusterLoadAssignment(cluster)
+	if loadAssignment == nil {
+		log.Warnf("Cluster '%s' could not set destination hostname and port", cluster.Name)
+		return nil
+	}
+	envoyCluster.LoadAssignment = loadAssignment
+
 	// Add TLS and HTTP/2 configuration options in case we want to
-	value, err := cluster.Attributes.Get(types.AttributeTLSEnable)
+	value, err := cluster.Attributes.Get(types.AttributeTLS)
 	if err == nil && value == types.AttributeValueTrue {
 		envoyCluster.TransportSocket = clusterTransportSocket(cluster)
 		envoyCluster.Http2ProtocolOptions = clusterHTTP2ProtocolOptions(cluster)
@@ -100,23 +109,27 @@ func clusterLbPolicy(cluster types.Cluster) envoyCluster.Cluster_LbPolicy {
 	return envoyCluster.Cluster_ROUND_ROBIN
 }
 
+// clusterLoadAssignment sets cluster loadbalance based upon hostname & port attributes
 func clusterLoadAssignment(cluster types.Cluster) *endpoint.ClusterLoadAssignment {
 
+	hostName, err := cluster.Attributes.Get(types.AttributeHost)
+	if err != nil {
+		return nil
+	}
+	port := cluster.Attributes.GetAsUInt32(types.AttributePort, 0)
+	if port == 0 {
+		return nil
+	}
 	return &endpoint.ClusterLoadAssignment{
 		ClusterName: cluster.Name,
-		Endpoints:   buildEndpoint(cluster.HostName, cluster.Port),
-	}
-}
-
-func buildEndpoint(hostname string, port int) []*endpoint.LocalityLbEndpoints {
-
-	return []*endpoint.LocalityLbEndpoints{
-		{
-			LbEndpoints: []*endpoint.LbEndpoint{
-				{
-					HostIdentifier: &endpoint.LbEndpoint_Endpoint{
-						Endpoint: &endpoint.Endpoint{
-							Address: buildAddress(hostname, port),
+		Endpoints: []*endpoint.LocalityLbEndpoints{
+			{
+				LbEndpoints: []*endpoint.LbEndpoint{
+					{
+						HostIdentifier: &endpoint.LbEndpoint_Endpoint{
+							Endpoint: &endpoint.Endpoint{
+								Address: buildAddress(hostName, port),
+							},
 						},
 					},
 				},
@@ -159,7 +172,9 @@ func clusterHealthChecks(cluster types.Cluster) []*core.HealthCheck {
 
 	if err == nil && healthCheckProtocol == types.AttributeValueHealthCheckProtocolHTTP && healthCheckPath != "" {
 
-		hostName := cluster.Attributes.GetAsString(types.AttributeHealthHostHeader, cluster.HostName)
+		hostName := cluster.Attributes.GetAsString(types.AttributeHost, "")
+
+		healthCheckHostName := cluster.Attributes.GetAsString(types.AttributeHealthHostHeader, hostName)
 
 		interval := cluster.Attributes.GetAsDuration(types.AttributeHealthCheckInterval,
 			types.DefaultHealthCheckInterval)
@@ -178,7 +193,7 @@ func clusterHealthChecks(cluster types.Cluster) []*core.HealthCheck {
 		healthCheck := &core.HealthCheck{
 			HealthChecker: &core.HealthCheck_HttpHealthCheck_{
 				HttpHealthCheck: &core.HealthCheck_HttpHealthCheck{
-					Host:            hostName,
+					Host:            healthCheckHostName,
 					Path:            healthCheckPath,
 					CodecClientType: clusterHealthCodec(cluster),
 				},
@@ -265,11 +280,17 @@ func clusterTransportSocket(cluster types.Cluster) *core.TransportSocket {
 // clusterSNIHostname sets SNI hostname used for upstream connections
 func clusterSNIHostname(cluster types.Cluster) string {
 
+	// Let's check SNI attribute first
 	value, err := cluster.Attributes.Get(types.AttributeSNIHostName)
 	if err == nil && value != "" {
 		return value
 	}
-	return cluster.HostName
+	// If not we will fallback to cluster hostname
+	value, err = cluster.Attributes.Get(types.AttributeHost)
+	if err == nil && value != "" {
+		return value
+	}
+	return ""
 }
 
 func clusterDNSLookupFamily(cluster types.Cluster) envoyCluster.Cluster_DnsLookupFamily {

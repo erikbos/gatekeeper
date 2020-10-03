@@ -38,7 +38,7 @@ content-type: application/json
     "port": 8000,
     "attributes": [
     {
-        "name": "TLSEnable",
+        "name": "TLS",
         "value": "true"
     },
     {
@@ -139,7 +139,7 @@ content-type: application/json
     "port": 8000,
     "attributes": [
     {
-        "name": "TLSEnable",
+        "name": "TLS",
         "value": "true"
     },
     {

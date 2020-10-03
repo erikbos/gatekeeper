@@ -88,7 +88,7 @@ Example cluster entity:
     "port": 4001,
     "attributes": [
         {
-            "name": "TLSEnable",
+            "name": "TLS",
             "value": "false"
         }
     ],

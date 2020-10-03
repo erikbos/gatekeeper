@@ -110,11 +110,9 @@ var createTablesCQL = [...]string{
     created_at bigint,
     created_by text,
     display_name text,
-    host_name text,
     lastmodified_at bigint,
     lastmodified_by text,
     name text,
-    port int,
     PRIMARY KEY (name)
 	)`,
 

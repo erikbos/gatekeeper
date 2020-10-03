@@ -192,8 +192,6 @@ const templateHTTPForwarding string = `
 <tr>
 <th>ClusterName</th>
 <th>DisplayName</th>
-<th>HostName</th>
-<th>Port</th>
 <th>Attributes</th>
 <th>Lastmodified</th>
 </tr>
@@ -202,8 +200,6 @@ const templateHTTPForwarding string = `
 <tr>
 <td><a href="/v1/clusters/{{$c.Name}}">{{$c.Name}}</a>
 <td>{{$c.DisplayName}}</td>
-<td>{{$c.HostName}}</td>
-<td>{{$c.Port}}</td>
 <td>
 <ul>
 {{range $attribute := $c.Attributes}}

@@ -53,7 +53,7 @@ HTTP listener on port `80` mapping incoming requests for http virtual host `www.
 | attribute name       | purpose                                              | possible values              |
 | -------------------- | ---------------------------------------------------- | ---------------------------- |
 | HTTPProtocol         | Highest HTTP protocol to support                     | HTTP/1.1, HTTP/2, HTTP/3     |
-| TLSEnable            | Whether to enable TLS or not, HTTP/2 always uses TLS | true, false                  |
+| TLS                  | Whether to enable TLS or not, HTTP/2 always uses TLS | true, false                  |
 | TLSCertificate       | Certificate to use for TLS                           |                              |
 | TLSCertificateKey    | Key of certificate                                   |                              |
 | TLSMinimumVersion    | Minimum version of TLS to use                        | TLS1.0,TLS1.1, TLS1.2 TLS1.3 |

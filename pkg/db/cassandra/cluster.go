@@ -16,8 +16,6 @@ const (
 	// List of cluster columns we use
 	clusterColumns = `name,
 display_name,
-host_name,
-port,
 attributes,
 created_at,
 created_by,
@@ -84,8 +82,6 @@ func (s *ClusterStore) runGetClusterQuery(query string, queryParameters ...inter
 		clusters = append(clusters, types.Cluster{
 			Name:           columnValueString(m, "name"),
 			DisplayName:    columnValueString(m, "display_name"),
-			HostName:       columnValueString(m, "host_name"),
-			Port:           columnValueInt(m, "port"),
 			Attributes:     types.Cluster{}.Attributes.Unmarshal(columnValueString(m, "attributes")),
 			CreatedAt:      columnValueInt64(m, "created_at"),
 			CreatedBy:      columnValueString(m, "created_by"),
@@ -105,12 +101,10 @@ func (s *ClusterStore) runGetClusterQuery(query string, queryParameters ...inter
 // Update UPSERTs an cluster in database
 func (s *ClusterStore) Update(c *types.Cluster) types.Error {
 
-	query := "INSERT INTO clusters (" + clusterColumns + ") VALUES(?,?,?,?,?,?,?,?,?)"
+	query := "INSERT INTO clusters (" + clusterColumns + ") VALUES(?,?,?,?,?,?,?)"
 	if err := s.db.CassandraSession.Query(query,
 		c.Name,
 		c.DisplayName,
-		c.HostName,
-		c.Port,
 		c.Attributes.Marshal(),
 		c.CreatedAt,
 		c.CreatedBy,

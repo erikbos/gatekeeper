@@ -6,7 +6,7 @@ require (
 	github.com/bmatcuk/doublestar v1.3.2
 	github.com/coocood/freecache v1.1.1
 	github.com/dchest/uniuri v0.0.0-20200228104902-7aecb25e1fe5
-	github.com/envoyproxy/go-control-plane v0.9.7-0.20200822152138-e25c9f156170
+	github.com/envoyproxy/go-control-plane v0.9.7
 	github.com/gin-gonic/gin v1.6.3
 	github.com/go-playground/validator/v10 v10.4.0 // indirect
 	github.com/gocql/gocql v0.0.0-20200815110948-5378c8f664e9

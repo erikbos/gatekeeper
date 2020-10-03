@@ -111,8 +111,23 @@ const (
 	// Host header to set when forwarding to upstream cluster
 	AttributeHostHeader = "HostHeader"
 
-	// Additional header(s) to set before forwarding upstream
-	AttributeHeaders = "Headers"
+	// Additional header 1 to set before forwarding upstream
+	AttributeHeaderToAdd1 = "HeaderToAdd1"
+
+	// Additional header 2 to set before forwarding upstream
+	AttributeHeaderToAdd2 = "HeaderToAdd2"
+
+	// Additional header 3 to set before forwarding upstream
+	AttributeHeaderToAdd3 = "HeaderToAdd3"
+
+	// Additional header 4 to set before forwarding upstream
+	AttributeHeaderToAdd4 = "HeaderToAdd4"
+
+	// Additional header 5 to set before forwarding upstream
+	AttributeHeaderToAdd5 = "HeaderToAdd5"
+
+	// Optional header(s) to remove before forwarding upstream
+	AttributeHeadersToRemove = "HeadersToRemove"
 
 	// Basic authentication header to set before forwarding upstream
 	AttributeBasicAuth = "BasicAuth"
@@ -184,7 +199,12 @@ var validRouteAttributes = map[string]bool{
 	AttributeCORSExposeHeaders:        true,
 	AttributeCORSMaxAge:               true,
 	AttributeHostHeader:               true,
-	AttributeHeaders:                  true,
+	AttributeHeaderToAdd1:             true,
+	AttributeHeaderToAdd2:             true,
+	AttributeHeaderToAdd3:             true,
+	AttributeHeaderToAdd4:             true,
+	AttributeHeaderToAdd5:             true,
+	AttributeHeadersToRemove:          true,
 	AttributeBasicAuth:                true,
 	AttributeRetryOn:                  true,
 	AttributePerTryTimeout:            true,

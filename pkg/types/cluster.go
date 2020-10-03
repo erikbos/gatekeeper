@@ -16,12 +16,6 @@ type Cluster struct {
 	// Friendly display name of cluster
 	DisplayName string `json:"displayName"`
 
-	// Hostname of cluster (must be fqdn or ip address)
-	HostName string `json:"hostName" binding:"required,fqdn|ip"`
-
-	// tcp port of cluster
-	Port int `json:"port" binding:"required,min=1,max=65535"`
-
 	// Attributes of this cluster
 	Attributes Attributes `json:"attributes"`
 
@@ -51,6 +45,12 @@ var (
 
 // Cluster specific attributes
 const (
+	// Hostname of cluster
+	AttributeHost = "Host"
+
+	// Port of cluster
+	AttributePort = "Port"
+
 	// Timeout for new network connections to cluster
 	AttributeConnectTimeout = "ConnectTimeout"
 
@@ -58,7 +58,7 @@ const (
 	AttributeIdleTimeout = "IdleTimeout"
 
 	// Determines whether to enable TLS or not, HTTP/2 always uses TLS
-	AttributeTLSEnable = "TLSEnable"
+	AttributeTLS = "TLS"
 
 	// Holds hostname to send during TLS handshake (if not set a cluster's hostname will be used)
 	AttributeSNIHostName = "SNIHostName"
@@ -167,12 +167,14 @@ func (c *Cluster) ConfigCheck() error {
 
 // validClusterAttributes contains all valid attribute names for a cluster
 var validClusterAttributes = map[string]bool{
+	AttributeHost:                          true,
+	AttributePort:                          true,
 	AttributeConnectTimeout:                true,
 	AttributeIdleTimeout:                   true,
 	AttributeDNSLookupFamiliy:              true,
 	AttributeDNSRefreshRate:                true,
 	AttributeDNSResolvers:                  true,
-	AttributeTLSEnable:                     true,
+	AttributeTLS:                           true,
 	AttributeTLSMinimumVersion:             true,
 	AttributeTLSMaximumVersion:             true,
 	AttributeTLSCipherSuites:               true,

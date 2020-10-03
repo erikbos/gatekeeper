@@ -15,7 +15,7 @@ import (
 )
 
 // buildAddress builds an Envoy address to connect to
-func buildAddress(hostname string, port int) *core.Address {
+func buildAddress(hostname string, port uint32) *core.Address {
 
 	return &core.Address{
 		Address: &core.Address_SocketAddress{
@@ -23,7 +23,7 @@ func buildAddress(hostname string, port int) *core.Address {
 				Address:  hostname,
 				Protocol: core.SocketAddress_TCP,
 				PortSpecifier: &core.SocketAddress_PortValue{
-					PortValue: uint32(port),
+					PortValue: port,
 				},
 			},
 		},

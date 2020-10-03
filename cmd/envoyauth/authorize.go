@@ -144,12 +144,9 @@ func allowRequest(headers, metadata map[string]string) (*authservice.CheckRespon
 		HttpResponse: &authservice.CheckResponse_OkResponse{
 			OkResponse: &authservice.OkHttpResponse{
 				Headers: buildHeadersList(headers),
-				// TODO this should be removed with go control plane 0.9.8
-				DynamicMetadata: buildDynamicMetadataList(metadata),
 			},
 		},
-		// TODO uncomment in case of go control plane 0.9.8
-		// DynamicMetadata: buildDynamicMetadataList(metadata),
+		DynamicMetadata: buildDynamicMetadataList(metadata),
 	}
 	log.Printf("allowRequest: %+v", response)
 
@@ -186,8 +183,7 @@ func rejectRequest(statusCode int, headers, metadata map[string]string,
 				Body:    buildJSONErrorMessage(&message),
 			},
 		},
-		// TODO uncomment in case of go control plane > 0.9.8
-		// DynamicMetadata: buildDynamicMetadataList(metadata),
+		DynamicMetadata: buildDynamicMetadataList(metadata),
 	}
 	log.Printf("rejectCall: %v", response)
 	return response, nil
