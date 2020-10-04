@@ -84,9 +84,15 @@ Example cluster entity:
 {
     "name": "oauth2",
     "displayName": "OAuth2 token API",
-    "hostName": "envoyauth",
-    "port": 4001,
     "attributes": [
+        {
+            "name": "Host",
+            "value": "envoyauth"
+        },
+        {
+            "name": "Port",
+            "value": "4001"
+        }
         {
             "name": "TLS",
             "value": "false"

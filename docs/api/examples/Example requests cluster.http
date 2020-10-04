@@ -12,8 +12,6 @@ content-type: application/json
 {
     "name": "people",
     "displayName": "People API",
-    "hostName": "127.0.0.1",
-    "port": 8000,
     "attributes": [
         {
             "name": "Host",
@@ -34,8 +32,6 @@ content-type: application/json
 {
     "name": "people",
     "displayName": "People API",
-    "hostName": "127.0.0.1",
-    "port": 8000,
     "attributes": [
     {
         "name": "Host",
@@ -115,88 +111,3 @@ DELETE http://{{hostname}}/v1/clusters/people/attributes/DNSRefreshRate
 
 ### Delete a cluster
 DELETE http://{{hostname}}/v1/clusters/people
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-###
-POST http://51.105.96.150/v1/clusters/people HTTP/1.1
-content-type: application/json
-
-{
-    "name": "people",
-    "displayName": "People API - TLS",
-    "hostName": "testbackend.gatekeeper",
-    "port": 8000,
-    "attributes": [
-    {
-        "name": "TLS",
-        "value": "true"
-    },
-    {
-        "name": "TLSMinimumVersion",
-        "value": "TLS1.2"
-    },
-    {
-        "name": "TLSCipherSuites2",
-        "value": "[ECDHE-ECDSA-AES128-GCM-SHA256|ECDHE-ECDSA-CHACHA20-POLY1305],ECDHE-ECDSA-AES256-GCM-SHA384"
-    },
-    {
-        "name": "HTTPProtocol",
-        "value": "HTTP/2"
-    },
-    {
-        "name": "SNIHostName",
-        "value": "www.people.nl"
-    },
-    {
-        "name": "HealthCheckProtocol",
-        "value": "HTTP"
-    },
-    {
-        "name": "MaxConnections",
-        "value": "700"
-    },
-    {
-        "name": "HealthCheckPath",
-        "value": "/people/1"
-    },
-    {
-        "name": "HealthCheckInterval",
-        "value": "2s"
-    },
-    {
-        "name": "HealthCheckTimeout",
-        "value": "1s"
-    },
-    {
-        "name": "HealthCheckLogFile",
-        "value": "/tmp/healthcheck.log"
-    },
-    {
-        "name": "DNSRefreshRate",
-        "value": "7s"
-    },
-    {
-        "name": "DNSResolvers",
-        "value": "194.109.6.66,194.109.9.99"
-    }
-    ]
-}

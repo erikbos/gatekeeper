@@ -27,8 +27,6 @@ Cluster `ticketshop` running on  host`ticketbackend.svc` port `80`:
 {
     "name": "ticketshop",
     "displayName": "Ticket API",
-    "hostName": "ticketbackend.svc",
-    "port": 80,
     "attributes": [
         {
             "name": "Host",
@@ -99,8 +97,6 @@ Cluster `ticketshop` running on `ticketbackend.svc` port `80`:
 {
     "name": "ticketshop",
     "displayName": "Ticket API",
-    "hostName": "ticketbackend.svc",
-    "port": 80,
     "attributes": [
         {
             "name": "Host",
@@ -120,8 +116,6 @@ Cluster `people` with elaborate TLS, health check and DNS resolving settings:
 {
     "name": "people",
     "displayName": "People API",
-    "hostName": "127.0.0.1",
-    "port": 8000,
     "attributes": [
         {
             "name": "Host",
