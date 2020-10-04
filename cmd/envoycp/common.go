@@ -2,16 +2,26 @@ package main
 
 import (
 	"strings"
+	"testing"
 	"time"
 
 	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	tls "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/tls/v3"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/wrappers"
+	"github.com/google/go-cmp/cmp"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/runtime/protoiface"
+	"google.golang.org/protobuf/testing/protocmp"
 
 	"github.com/erikbos/gatekeeper/pkg/types"
+)
+
+const (
+	// ALPN protocols
+	// https://www.envoyproxy.io/docs/envoy/latest/api-v3/extensions/transport_sockets/tls/v3/tls.proto.html?highlight=alpn
+	alpnProtocolHTTP11 = "http/1.1"
+	alpnProtocolHTTP2  = "h2"
 )
 
 // buildAddress builds an Envoy address to connect to
@@ -42,10 +52,10 @@ func buildGRPCService(clusterName string, timeout time.Duration) *core.GrpcServi
 	}
 }
 
-func buildConfigSource(cluster string, timeout time.Duration) *core.ConfigSource {
+func buildConfigSource(clusterName string, timeout time.Duration) *core.ConfigSource {
 
 	grpcService := []*core.GrpcService{
-		buildGRPCService(cluster, timeout),
+		buildGRPCService(clusterName, timeout),
 	}
 	return &core.ConfigSource{
 		ConfigSourceSpecifier: &core.ConfigSource_ApiConfigSource{
@@ -86,7 +96,7 @@ func buildCommonTLSContext(resourceName string, attributes types.Attributes) *tl
 func buildTLSCipherSuites(attributes types.Attributes) []string {
 
 	value, err := attributes.Get(types.AttributeTLSCipherSuites)
-	if err == nil {
+	if err == nil && value != "" {
 		var ciphers []string
 
 		for _, cipher := range strings.Split(value, ",") {
@@ -118,7 +128,7 @@ func buildTLSVersion(version string) tls.TlsParameters_TlsProtocol {
 	switch version {
 	case types.AttributeValueTLSVersion10:
 		return tls.TlsParameters_TLSv1_0
-	case types.AttributeAccessLogCluster:
+	case types.AttributeValueTLSVersion11:
 		return tls.TlsParameters_TLSv1_1
 	case types.AttributeValueTLSVersion12:
 		return tls.TlsParameters_TLSv1_2
@@ -129,23 +139,23 @@ func buildTLSVersion(version string) tls.TlsParameters_TlsProtocol {
 }
 
 // buildALPNOptions return supported ALPN protocols
-func buildALPNProtocols(resourceName string, attributes types.Attributes) []string {
+func buildALPNProtocols(entity string, attributes types.Attributes) []string {
 
 	value, err := attributes.Get(types.AttributeHTTPProtocol)
 	if err == nil {
 		switch value {
 		case types.AttributeValueHTTPProtocol11:
-			return []string{"http/1.1"}
+			return []string{alpnProtocolHTTP11}
 
 		case types.AttributeValueHTTPProtocol2:
-			return []string{"h2", "http/1.1"}
+			return []string{alpnProtocolHTTP2, alpnProtocolHTTP11}
 
 		default:
-			log.Warnf("Resource '%s' has attribute '%s' with unsupported value '%s'",
-				resourceName, types.AttributeHTTPProtocol, value)
+			log.Warnf("Entity '%s' has attribute '%s' with unsupported value '%s'",
+				entity, types.AttributeHTTPProtocol, value)
 		}
 	}
-	return []string{"http/1.1"}
+	return []string{alpnProtocolHTTP11}
 }
 
 func buildTLSCertificates(attributes types.Attributes) []*tls.TlsCertificate {
@@ -153,7 +163,7 @@ func buildTLSCertificates(attributes types.Attributes) []*tls.TlsCertificate {
 	certificate, certificateError := attributes.Get(types.AttributeTLSCertificate)
 	certificateKey, certificateKeyError := attributes.Get(types.AttributeTLSCertificateKey)
 
-	if certificateError != nil && certificateKeyError != nil {
+	if certificateError != nil || certificateKeyError != nil {
 		return nil
 	}
 
@@ -192,4 +202,15 @@ func protoUint32orNil(val uint32) *wrappers.UInt32Value {
 		return nil
 	}
 	return protoUint32(val)
+}
+
+// RequireEqual will test that want == got for protobufs, call t.fatal if it does not,
+// This mimics the behavior of the testify `require` functions.
+func RequireEqual(t *testing.T, want, got interface{}) {
+	t.Helper()
+
+	diff := cmp.Diff(want, got, protocmp.Transform())
+	if diff != "" {
+		t.Fatal(diff)
+	}
 }

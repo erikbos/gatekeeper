@@ -323,7 +323,7 @@ func clusterDNSRefreshRate(cluster types.Cluster) *duration.Duration {
 func clusterDNSResolvers(cluster types.Cluster) []*core.Address {
 
 	value, err := cluster.Attributes.Get(types.AttributeDNSResolvers)
-	if err == nil {
+	if err == nil && value != "" {
 		var resolvers []*core.Address
 
 		for _, resolver := range strings.Split(value, ",") {

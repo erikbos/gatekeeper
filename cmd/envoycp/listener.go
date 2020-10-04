@@ -15,7 +15,6 @@ import (
 	ratelimit "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/ratelimit/v3"
 	hcm "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 	tls "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/tls/v3"
-	envoymatcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
 	cache "github.com/envoyproxy/go-control-plane/pkg/cache/types"
 	"github.com/envoyproxy/go-control-plane/pkg/wellknown"
 	"github.com/golang/protobuf/ptypes"
@@ -71,31 +70,39 @@ func (s *server) getVhostsInRouteGroup(routeGroupName string) []string {
 
 func (s *server) buildEnvoyListenerConfig(port uint32) *listener.Listener {
 
-	newListener := &listener.Listener{
+	envoyListener := &listener.Listener{
 		Name:            fmt.Sprintf("port_%d", port),
 		Address:         buildAddress("0.0.0.0", port),
 		ListenerFilters: buildListenerFilterHTTP(),
 	}
 
 	// add all vhosts belonging to this listener's port
-	for _, listener := range s.dbentities.GetListeners() {
-		if listener.Port == int(port) {
-			newListener.FilterChains = append(newListener.FilterChains, s.buildFilterChainEntry(newListener, listener))
+	for _, configuredListener := range s.dbentities.GetListeners() {
+		if configuredListener.Port == int(port) {
+			envoyListener.FilterChains = append(envoyListener.FilterChains, s.buildFilterChainEntry(configuredListener, envoyListener))
 
-			TLSEnabled := listener.Attributes.GetAsString(types.AttributeTLS, "")
+			TLSEnabled := configuredListener.Attributes.GetAsString(types.AttributeTLS, "")
+			if TLSEnabled == types.AttributeValueTrue {
+				// Enable TLS protocol on listener
+				envoyListener.ListenerFilters = []*listener.ListenerFilter{
+					{
+						Name: wellknown.TlsInspector,
+					},
+				}
+			}
 			// In case of a second non TLS listener on the same port we stop as
 			// we can add only one entry in the filter chain match for non-TLS
 			//
 			// as a result the setting attributes of the second (or third) listener on same port
 			// will be ignored: all share the settings of the first configured listener
 			if TLSEnabled != types.AttributeValueTrue {
-				log.Warnf("Multiple non-TLS listeners on port '%d', ignoring attributes of '%s'", port, listener.Name)
+				log.Warnf("Multiple non-TLS listeners on port '%d', ignoring attributes of '%s'", port, configuredListener.Name)
 				break
 			}
 		}
 	}
 
-	return newListener
+	return envoyListener
 }
 
 func buildListenerFilterHTTP() []*listener.ListenerFilter {
@@ -107,11 +114,9 @@ func buildListenerFilterHTTP() []*listener.ListenerFilter {
 	}
 }
 
-func (s *server) buildFilterChainEntry(l *listener.Listener, v types.Listener) *listener.FilterChain {
+func (s *server) buildFilterChainEntry(v types.Listener, configuredListener *listener.Listener) *listener.FilterChain {
 
-	httpFilter := s.buildFilter()
-
-	manager := s.buildConnectionManager(httpFilter, v)
+	manager := s.buildConnectionManager(v)
 	managerProtoBuf, err := ptypes.MarshalAny(manager)
 	if err != nil {
 		log.Panic(err)
@@ -141,13 +146,6 @@ func (s *server) buildFilterChainEntry(l *listener.Listener, v types.Listener) *
 		return FilterChainEntry
 	}
 
-	// Enable TLS protocol on listener
-	l.ListenerFilters = []*listener.ListenerFilter{
-		{
-			Name: wellknown.TlsInspector,
-		},
-	}
-
 	// Configure listener to use SNI to match against vhost names
 	FilterChainEntry.FilterChainMatch =
 		&listener.FilterChainMatch{
@@ -163,19 +161,18 @@ func (s *server) buildFilterChainEntry(l *listener.Listener, v types.Listener) *
 	return FilterChainEntry
 }
 
-func (s *server) buildConnectionManager(httpFilters []*hcm.HttpFilter,
-	listener types.Listener) *hcm.HttpConnectionManager {
+func (s *server) buildConnectionManager(listener types.Listener) *hcm.HttpConnectionManager {
 
 	connectionManager := &hcm.HttpConnectionManager{
 		CodecType:                 hcm.HttpConnectionManager_AUTO,
 		StatPrefix:                "ingress_http",
 		UseRemoteAddress:          protoBool(true),
-		HttpFilters:               httpFilters,
+		HttpFilters:               s.buildFilter(listener),
 		RouteSpecifier:            s.buildRouteSpecifierRDS(listener.RouteGroup),
 		AccessLog:                 buildAccessLog(listener),
-		CommonHttpProtocolOptions: buildCommonHTTPProtocolOptions(listener),
+		CommonHttpProtocolOptions: listenerCommonHTTPProtocolOptions(listener),
 		Http2ProtocolOptions:      buildHTTP2ProtocolOptions(listener),
-		LocalReplyConfig:          buildLocalOverWrite(listener),
+		// LocalReplyConfig:          buildLocalOverWrite(listener),
 	}
 
 	// Override Server response header
@@ -187,7 +184,7 @@ func (s *server) buildConnectionManager(httpFilters []*hcm.HttpFilter,
 	return connectionManager
 }
 
-func (s *server) buildFilter() []*hcm.HttpFilter {
+func (s *server) buildFilter(listener types.Listener) []*hcm.HttpFilter {
 
 	httpFilter := make([]*hcm.HttpFilter, 0, 10)
 
@@ -222,8 +219,9 @@ func (s *server) buildFilter() []*hcm.HttpFilter {
 
 func (s *server) buildHTTPFilterExtAuthzConfig() *anypb.Any {
 
-	if !s.config.Envoyproxy.ExtAuthz.Enable ||
-		s.config.Envoyproxy.ExtAuthz.Cluster == "" {
+	if s.config != nil &&
+		(!s.config.Envoyproxy.ExtAuthz.Enable ||
+			s.config.Envoyproxy.ExtAuthz.Cluster == "") {
 		return nil
 	}
 
@@ -285,6 +283,10 @@ func (s *server) extAuthzWithRequestBody() *extauthz.BufferSettings {
 
 func (s *server) buildRouteSpecifierRDS(routeGroup string) *hcm.HttpConnectionManager_Rds {
 
+	if routeGroup == "" || s.config.XDS.Cluster == "" {
+		return nil
+	}
+
 	return &hcm.HttpConnectionManager_Rds{
 		Rds: &hcm.Rds{
 			RouteConfigName: routeGroup,
@@ -326,9 +328,12 @@ func buildFileAccessLog(path, fields string) *accesslog.AccessLog {
 	for _, fieldFormat := range strings.Split(fields, ",") {
 		fieldConfig := strings.Split(fieldFormat, "=")
 		if len(fieldConfig) == 2 {
-			jsonFormat.Fields[fieldConfig[0]] = &structpb.Value{
+			key := strings.TrimSpace(fieldConfig[0])
+			value := strings.TrimSpace(fieldConfig[1])
+
+			jsonFormat.Fields[key] = &structpb.Value{
 				Kind: &structpb.Value_StringValue{
-					StringValue: fieldConfig[1],
+					StringValue: value,
 				},
 			}
 		}
@@ -355,11 +360,11 @@ func buildFileAccessLog(path, fields string) *accesslog.AccessLog {
 	}
 }
 
-func buildGRPCAccessLog(clusterName, LogName string, timeout time.Duration, bufferSize uint32) *accesslog.AccessLog {
+func buildGRPCAccessLog(clusterName, logName string, timeout time.Duration, bufferSize uint32) *accesslog.AccessLog {
 
 	accessLogConf := &grpcaccesslog.HttpGrpcAccessLogConfig{
 		CommonConfig: &grpcaccesslog.CommonGrpcAccessLogConfig{
-			LogName:             LogName,
+			LogName:             logName,
 			GrpcService:         buildGRPCService(clusterName, timeout),
 			TransportApiVersion: core.ApiVersion_V3,
 			BufferSizeBytes:     protoUint32orNil(bufferSize),
@@ -378,7 +383,7 @@ func buildGRPCAccessLog(clusterName, LogName string, timeout time.Duration, buff
 	}
 }
 
-func buildCommonHTTPProtocolOptions(listener types.Listener) *core.HttpProtocolOptions {
+func listenerCommonHTTPProtocolOptions(listener types.Listener) *core.HttpProtocolOptions {
 
 	idleTimeout := listener.Attributes.GetAsDuration(
 		types.AttributeIdleTimeout, listenerIdleTimeout)
@@ -402,65 +407,65 @@ func buildHTTP2ProtocolOptions(listener types.Listener) *core.Http2ProtocolOptio
 }
 
 // buildLocalOverWrite generates all the local rewrites Envoyproxy should do
-func buildLocalOverWrite(vhost types.Listener) *hcm.LocalReplyConfig {
+// func buildLocalOverWrite(vhost types.Listener) *hcm.LocalReplyConfig {
 
-	return &hcm.LocalReplyConfig{
-		Mappers: []*hcm.ResponseMapper{
-			buildLocalOverWrite429to403(vhost),
-		},
-	}
-}
+// 	return &hcm.LocalReplyConfig{
+// 		Mappers: []*hcm.ResponseMapper{
+// 			buildLocalOverWrite429to403(vhost),
+// 		},
+// 	}
+// }
 
-func buildLocalOverWrite429to403(vhost types.Listener) *hcm.ResponseMapper {
+// func buildLocalOverWrite429to403(vhost types.Listener) *hcm.ResponseMapper {
 
-	// This matches on
-	// 1) response status code 429
-	// 2) metadata path "envoy.filters.http.ext_authz" (wellknown.HTTPExternalAuthorization)
-	// 3) checks for presence of key "rl429to403"
-	// 4) set respons status code to 403
-	return &hcm.ResponseMapper{
-		Filter: &accesslog.AccessLogFilter{
-			FilterSpecifier: &accesslog.AccessLogFilter_AndFilter{
-				AndFilter: &accesslog.AndFilter{
-					Filters: []*accesslog.AccessLogFilter{
-						{
-							FilterSpecifier: &accesslog.AccessLogFilter_StatusCodeFilter{
-								StatusCodeFilter: &accesslog.StatusCodeFilter{
-									Comparison: &accesslog.ComparisonFilter{
-										Op: accesslog.ComparisonFilter_EQ,
-										Value: &core.RuntimeUInt32{
-											DefaultValue: 429,
-											RuntimeKey:   "rl429to403",
-										},
-									},
-								},
-							},
-						},
-						{
-							FilterSpecifier: &accesslog.AccessLogFilter_MetadataFilter{
-								MetadataFilter: &accesslog.MetadataFilter{
-									Matcher: &envoymatcher.MetadataMatcher{
-										Filter: wellknown.HTTPExternalAuthorization,
-										Path: []*envoymatcher.MetadataMatcher_PathSegment{
-											{
-												Segment: &envoymatcher.MetadataMatcher_PathSegment_Key{
-													Key: "rl429to403",
-												},
-											},
-										},
-										Value: &envoymatcher.ValueMatcher{
-											MatchPattern: &envoymatcher.ValueMatcher_PresentMatch{
-												PresentMatch: true,
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-		StatusCode: protoUint32(403),
-	}
-}
+// 	// This matches on
+// 	// 1) response status code 429
+// 	// 2) metadata path "envoy.filters.http.ext_authz" (wellknown.HTTPExternalAuthorization)
+// 	// 3) checks for presence of key "rl429to403"
+// 	// 4) set respons status code to 403
+// 	return &hcm.ResponseMapper{
+// 		Filter: &accesslog.AccessLogFilter{
+// 			FilterSpecifier: &accesslog.AccessLogFilter_AndFilter{
+// 				AndFilter: &accesslog.AndFilter{
+// 					Filters: []*accesslog.AccessLogFilter{
+// 						{
+// 							FilterSpecifier: &accesslog.AccessLogFilter_StatusCodeFilter{
+// 								StatusCodeFilter: &accesslog.StatusCodeFilter{
+// 									Comparison: &accesslog.ComparisonFilter{
+// 										Op: accesslog.ComparisonFilter_EQ,
+// 										Value: &core.RuntimeUInt32{
+// 											DefaultValue: 429,
+// 											RuntimeKey:   "rl429to403",
+// 										},
+// 									},
+// 								},
+// 							},
+// 						},
+// 						{
+// 							FilterSpecifier: &accesslog.AccessLogFilter_MetadataFilter{
+// 								MetadataFilter: &accesslog.MetadataFilter{
+// 									Matcher: &envoymatcher.MetadataMatcher{
+// 										Filter: wellknown.HTTPExternalAuthorization,
+// 										Path: []*envoymatcher.MetadataMatcher_PathSegment{
+// 											{
+// 												Segment: &envoymatcher.MetadataMatcher_PathSegment_Key{
+// 													Key: "rl429to403",
+// 												},
+// 											},
+// 										},
+// 										Value: &envoymatcher.ValueMatcher{
+// 											MatchPattern: &envoymatcher.ValueMatcher_PresentMatch{
+// 												PresentMatch: true,
+// 											},
+// 										},
+// 									},
+// 								},
+// 							},
+// 						},
+// 					},
+// 				},
+// 			},
+// 		},
+// 		StatusCode: protoUint32(403),
+// 	}
+// }

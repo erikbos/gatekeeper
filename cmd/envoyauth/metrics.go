@@ -22,7 +22,7 @@ func (a *authorizationServer) registerMetrics() {
 		prometheus.CounterOpts{
 			Namespace: applicationName,
 			Name:      "config_table_loads_total",
-			Help:      "Total number of vhost/route table loads.",
+			Help:      "Total sum of listener/route/cluster table loads.",
 		}, []string{"resource"})
 
 	a.metrics.connectInfoFailures = prometheus.NewCounter(
