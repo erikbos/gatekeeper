@@ -5,7 +5,7 @@
 GET http://{{hostname}}/v1/clusters
 
 
-### Create a new cluster named `people`
+### Create a new cluster named `people` connecting
 POST http://{{hostname}}/v1/clusters HTTP/1.1
 content-type: application/json
 
@@ -16,13 +16,13 @@ content-type: application/json
     "port": 8000,
     "attributes": [
         {
-        "name": "ConnectTimeout",
-        "value": "7s"
-    },
-    {
-        "name": "IdleTimeout",
-        "value": "4s"
-    }
+            "name": "Host",
+            "value": "backend"
+        },
+        {
+            "name": "Port",
+            "value": "80"
+        }
     ]
 }
 
@@ -37,6 +37,14 @@ content-type: application/json
     "hostName": "127.0.0.1",
     "port": 8000,
     "attributes": [
+    {
+        "name": "Host",
+        "value": "backend"
+    },
+    {
+        "name": "Port",
+        "value": "443"
+    },
     {
         "name": "TLS",
         "value": "true"

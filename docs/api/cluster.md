@@ -21,7 +21,7 @@ _For POST content-type: application/json is required._
 
 ## Example cluster entity
 
-Cluster `ticketshop` running on `ticketbackend.svc` port `80`:
+Cluster `ticketshop` running on  host`ticketbackend.svc` port `80`:
 
 ```json
 {
@@ -31,13 +31,13 @@ Cluster `ticketshop` running on `ticketbackend.svc` port `80`:
     "port": 80,
     "attributes": [
         {
-        "name": "ConnectTimeout",
-        "value": "5s"
-    },
-    {
-        "name": "IdleTimeout",
-        "value": "15s"
-    }
+            "name": "Host",
+            "value": "ticketbackend.svc"
+        },
+        {
+            "name": "Port",
+            "value": "80"
+        }
     ]
 }
 ```
@@ -103,13 +103,13 @@ Cluster `ticketshop` running on `ticketbackend.svc` port `80`:
     "port": 80,
     "attributes": [
         {
-        "name": "ConnectTimeout",
-        "value": "5s"
-    },
-    {
-        "name": "IdleTimeout",
-        "value": "15s"
-    }
+            "name": "Host",
+            "value": "ticketbackend.svc"
+        },
+        {
+            "name": "Port",
+            "value": "80"
+        }
     ]
 }
 ```
@@ -123,57 +123,65 @@ Cluster `people` with elaborate TLS, health check and DNS resolving settings:
     "hostName": "127.0.0.1",
     "port": 8000,
     "attributes": [
-    {
-        "name": "TLS",
-        "value": "true"
-    },
-    {
-        "name": "TLSMinimumVersion",
-        "value": "TLS1.2"
-    },
-    {
-        "name": "TLSCipherSuites",
-        "value": "[ECDHE-ECDSA-AES128-GCM-SHA256|ECDHE-ECDSA-CHACHA20-POLY1305],ECDHE-ECDSA-AES256-GCM-SHA384"
-    },
-    {
-        "name": "HTTPProtocol",
-        "value": "HTTP/2"
-    },
-    {
-        "name": "SNIHostName",
-        "value": "www.example.com"
-    },
-    {
-        "name": "HealthCheckProtocol",
-        "value": "HTTP"
-    },
-    {
-        "name": "MaxConnections",
-        "value": "700"
-    },
-    {
-        "name": "HealthCheckPath",
-        "value": "/people/1"
-    },
-    {
-        "name": "HealthCheckInterval",
-        "value": "2s"
-    },
-    {
-        "name": "HealthCheckTimeout",
-        "value": "1s"
-    },
-    {
-        "name": "HealthCheckLogFile",
-        "value": "/tmp/healthcheck.log"
-    },
-    {
-        "name": "DNSRefreshRate",
-        "value": "5s"
-    },
-    {
-        "name": "DNSResolvers",
-        "value": "8.8.8.8,1.1.1.1"
-    }
+        {
+            "name": "Host",
+            "value": "ticketbackend.svc"
+        },
+        {
+            "name": "Port",
+            "value": "443"
+        }
+        {
+            "name": "TLS",
+            "value": "true"
+        },
+        {
+            "name": "TLSMinimumVersion",
+            "value": "TLS1.2"
+        },
+        {
+            "name": "TLSCipherSuites",
+            "value": "[ECDHE-ECDSA-AES128-GCM-SHA256|ECDHE-ECDSA-CHACHA20-POLY1305],ECDHE-ECDSA-AES256-GCM-SHA384"
+        },
+        {
+            "name": "HTTPProtocol",
+            "value": "HTTP/2"
+        },
+        {
+            "name": "SNIHostName",
+            "value": "www.example.com"
+        },
+        {
+            "name": "HealthCheckProtocol",
+            "value": "HTTP"
+        },
+        {
+            "name": "MaxConnections",
+            "value": "700"
+        },
+        {
+            "name": "HealthCheckPath",
+            "value": "/people/1"
+        },
+        {
+            "name": "HealthCheckInterval",
+            "value": "2s"
+        },
+        {
+            "name": "HealthCheckTimeout",
+            "value": "1s"
+        },
+        {
+            "name": "HealthCheckLogFile",
+            "value": "/tmp/healthcheck.log"
+        },
+        {
+            "name": "DNSRefreshRate",
+            "value": "5s"
+        },
+        {
+            "name": "DNSResolvers",
+            "value": "8.8.8.8,1.1.1.1"
+        }
     ]
 }
