@@ -32,28 +32,31 @@ Envoycp requires a starup configuration which needs to be provided as YAML file,
 
 The supported fields are:
 
-| yaml field                           | purpose                                                                             | example                       |
-| ------------------------------------ | ----------------------------------------------------------------------------------- | ----------------------------- |
-| webadmin.listen                      | Webadmin address and port                                                           | 0.0.0.0:2113                  |
-| webadmin.ipacl                       | Webadmin ip acl, without this no access                                             | 172.16.0.0/19                 |
-| webadmin.tls.certfile                | TLS certificate file                                                                |                               |
-| webadmin.tls.keyfile                 | TLS certificate key file                                                            |                               |
-| webadmin.logfile                     | Access log file                                                                     | /var/log/envoycp.log          |
-| database.hostname                    | Cassandra hostname to connect to                                                    | cassandra                     |
-| database.port                        | Cassandra port to connect on                                                        | 9042 / 10350                  |
-| database.tls                         | Enable TLS for database session                                                     | true / false                  |
-| database.username                    | Database username                                                                   | cassandra                     |
-| database.password                    | Database password                                                                   | cassandra                     |
-| database.keyspace                    | Database keyspace for Gatekeeper tables                                             | gatekeeper                    |
-| database.timeout                     | Timeout for session                                                                 | 0.5s                          |
-| database.connectattempts             | Number of attempts to establish connection                                          | 5                             |
-| database.queryretries                | Number of times to retry query                                                      | 2                             |
-| xds.grpclisten                       | listen address and port for XDS requests from Envoyproxy                            | 0.0.0.0:9901                  |
-| xds.configcompileinterval            | Minimum interval between XDS configuration snapshots                                | 1s                            |
-| xds.cluster                          | Name of cluster that runs XDS                                                       |                               |
-| xds.timeout                          | Maximum duration of XDS requests                                                    | 2s                            |
-| envoyproxy.extauthz.enable           | Enable or disable Envoyproxy-wide request authentication via envoyauth              | true / false                  |
-| envoyproxy.extauthz.cluster          | Name of cluster which runs envoyauth                                                |                               |
-| envoyproxy.extauthz.timeout          | Maximum allowed duration of authentication requests to envoyauth                    |                               |
-| envoyproxy.extauthz.failuremodeallow | In case envoyauth does not answer in time/fails should requests be forwarded or not | true / false                  |
-| envoyproxy.extauthz.requestbodysize  | Number of bytes of request body envoyproxy should forward to envoyauth              | 300                           |
+| yaml field                           | purpose                                                                             | example            |
+| ------------------------------------ | ----------------------------------------------------------------------------------- | ------------------ |
+| logging.level                        | application log level                                                               | info / debug       |
+| logging.filename                     | filename to write application log to                                                | /dev/stdout        |
+| webadmin.listen                      | Webadmin address and port                                                           | 0.0.0.0:2113       |
+| webadmin.ipacl                       | Webadmin ip acl, without this no access                                             | 172.16.0.0/19      |
+| webadmin.tls.certfile                | TLS certificate file                                                                |                    |
+| webadmin.tls.keyfile                 | TLS certificate key file                                                            |                    |
+| webadmin.logging.level               | logging level of webadmin                                                           | info / debug       |
+| webadmin.logging.filename            | filename to write web access log to                                                 | dbadmin-access.log |
+| database.hostname                    | Cassandra hostname to connect to                                                    | cassandra          |
+| database.port                        | Cassandra port to connect on                                                        | 9042 / 10350       |
+| database.tls                         | Enable TLS for database session                                                     | true / false       |
+| database.username                    | Database username                                                                   | cassandra          |
+| database.password                    | Database password                                                                   | cassandra          |
+| database.keyspace                    | Database keyspace for Gatekeeper tables                                             | gatekeeper         |
+| database.timeout                     | Timeout for session                                                                 | 0.5s               |
+| database.connectattempts             | Number of attempts to establish connection                                          | 5                  |
+| database.queryretries                | Number of times to retry query                                                      | 2                  |
+| xds.grpclisten                       | listen address and port for XDS requests from Envoyproxy                            | 0.0.0.0:9901       |
+| xds.configcompileinterval            | Minimum interval between XDS configuration snapshots                                | 1s                 |
+| xds.cluster                          | Name of cluster that runs XDS                                                       |                    |
+| xds.timeout                          | Maximum duration of XDS requests                                                    | 2s                 |
+| envoyproxy.extauthz.enable           | Enable or disable Envoyproxy-wide request authentication via envoyauth              | true / false       |
+| envoyproxy.extauthz.cluster          | Name of cluster which runs envoyauth                                                |                    |
+| envoyproxy.extauthz.timeout          | Maximum allowed duration of authentication requests to envoyauth                    |                    |
+| envoyproxy.extauthz.failuremodeallow | In case envoyauth does not answer in time/fails should requests be forwarded or not | true / false       |
+| envoyproxy.extauthz.requestbodysize  | Number of bytes of request body envoyproxy should forward to envoyauth              | 300                |

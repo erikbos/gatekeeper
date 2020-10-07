@@ -10,7 +10,6 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/wrappers"
 	"github.com/google/go-cmp/cmp"
-	log "github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/runtime/protoiface"
 	"google.golang.org/protobuf/testing/protocmp"
 
@@ -73,7 +72,6 @@ func buildTransportSocket(resourceName string, tlsContext protoiface.MessageV1) 
 
 	tlsContextProtoBuf, err := ptypes.MarshalAny(tlsContext)
 	if err != nil {
-		log.Warnf("Cannot encode resource '%s' as transportsocket", resourceName)
 		return nil
 	}
 	return &core.TransportSocket{
@@ -149,10 +147,6 @@ func buildALPNProtocols(entity string, attributes types.Attributes) []string {
 
 		case types.AttributeValueHTTPProtocol2:
 			return []string{alpnProtocolHTTP2, alpnProtocolHTTP11}
-
-		default:
-			log.Warnf("Entity '%s' has attribute '%s' with unsupported value '%s'",
-				entity, types.AttributeHTTPProtocol, value)
 		}
 	}
 	return []string{alpnProtocolHTTP11}

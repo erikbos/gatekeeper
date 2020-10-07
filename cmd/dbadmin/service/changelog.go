@@ -3,7 +3,7 @@ package service
 import (
 	"net/http"
 
-	log "github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 
 	"github.com/erikbos/gatekeeper/pkg/db"
 )
@@ -23,7 +23,8 @@ type (
 
 	// Changelog is a new changelogger
 	Changelog struct {
-		db *db.Database
+		db     *db.Database
+		logger *zap.Logger
 	}
 
 	// Requester stores the identity and connection details of an authenticated user
@@ -37,9 +38,12 @@ type (
 )
 
 // NewChangelogService returns a new Changelog instance
-func NewChangelogService(database *db.Database) *Changelog {
+func NewChangelogService(database *db.Database, logger *zap.Logger) *Changelog {
 
-	return &Changelog{db: database}
+	return &Changelog{
+		db:     database,
+		logger: logger,
+	}
 }
 
 const (
@@ -69,8 +73,13 @@ func (cl *Changelog) Delete(old interface{}, who Requester) {
 // log logs a changed entity
 func (cl *Changelog) log(eventType string, old, new interface{}, who Requester) {
 
-	log.Infof("who: %s", who)
-	log.Infof("eventType: %s", eventType)
-	log.Infof("OLD %+v\n", old)
-	log.Infof("NEW %+v\n", new)
+	cl.logger.Info("changelog",
+		zap.String("username", who.Username),
+		zap.String("ip", who.RemoteAddr),
+		zap.String("requestid", who.RequestID),
+		zap.String("requestid", who.RequestID),
+		zap.String("changetype", eventType),
+		zap.Reflect("headers", who.Header),
+		zap.Reflect("old", old),
+		zap.Reflect("new", new))
 }

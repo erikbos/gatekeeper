@@ -14,7 +14,7 @@ import (
 	routeservice "github.com/envoyproxy/go-control-plane/envoy/service/route/v3"
 	cache "github.com/envoyproxy/go-control-plane/pkg/cache/v3"
 	xds "github.com/envoyproxy/go-control-plane/pkg/server/v3"
-	log "github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 
 	"github.com/erikbos/gatekeeper/pkg/db"
@@ -50,7 +50,8 @@ func newXDS(s server, config xdsConfig, signal <-chan db.EntityChangeNotificatio
 // Start brings up XDS system
 func (x *XDS) Start() {
 
-	x.snapshotCache = cache.NewSnapshotCache(false, cache.IDHash{}, logger{})
+	x.snapshotCache = cache.NewSnapshotCache(false, cache.IDHash{},
+		newCacheLogger(x.server.logger))
 	streamCallbacks := newCallback(&x.server)
 	x.xds = xds.NewServer(context.Background(), x.snapshotCache, streamCallbacks)
 
@@ -59,10 +60,10 @@ func (x *XDS) Start() {
 	for {
 		select {
 		case n := <-x.notify:
-			log.Infof("Database change notify received for entity '%s'", n.Resource)
+			x.server.logger.Info("Database change notify received",
+				zap.String("entity", n.Resource))
 
-			x.server.metrics.xdsDeployments.WithLabelValues(n.Resource).Inc()
-
+			x.server.metrics.IncXDSSnapshotCreateCount(n.Resource)
 			x.CreateNewSnapshot(streamCallbacks)
 
 		case <-time.After(x.xdsConfig.ConfigCompileInterval):
@@ -74,10 +75,10 @@ func (x *XDS) Start() {
 // GRPCManagementServer starts grpc xds listener
 func (x *XDS) GRPCManagementServer() {
 
-	log.Info("GRPC XDS listening on ", x.xdsConfig.GRPCListen)
+	x.server.logger.Info("GRPC XDS listening on " + x.xdsConfig.GRPCListen)
 	lis, err := net.Listen("tcp", x.xdsConfig.GRPCListen)
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		x.server.logger.Fatal("failed to listen", zap.Error(err))
 	}
 
 	grpcServer := grpc.NewServer()
@@ -87,7 +88,7 @@ func (x *XDS) GRPCManagementServer() {
 	routeservice.RegisterRouteDiscoveryServiceServer(grpcServer, x.xds)
 	listenerservice.RegisterListenerDiscoveryServiceServer(grpcServer, x.xds)
 
-	log.Fatalf("failed to start GRPC server: %v", grpcServer.Serve(lis))
+	x.server.logger.Fatal("failed to start GRPC server", zap.Error(grpcServer.Serve(lis)))
 }
 
 // CreateNewSnapshot compiles configuration into snapshot
@@ -97,18 +98,22 @@ func (x *XDS) CreateNewSnapshot(streamCallbacks *callback) {
 	ts := time.Now().UTC().Format(time.RFC3339)
 	version := fmt.Sprintf(ts+"-V%d", x.snapshotCacheVersion)
 
-	log.Infof("Creating configuration snapshot version '%s'", version)
+	x.server.logger.Info("Creating configuration snapshot", zap.String("version", version))
 
 	EnvoyClusters, _ := x.server.getEnvoyClusterConfig()
 	EnvoyRoutes, _ := x.server.getEnvoyRouteConfig()
 	EnvoyListeners, _ := x.server.getEnvoyListenerConfig()
+
+	x.server.metrics.SetEntityCount(db.EntityTypeListener, x.server.dbentities.GetListenerCount())
+	x.server.metrics.SetEntityCount(db.EntityTypeRoute, x.server.dbentities.GetRouteCount())
+	x.server.metrics.SetEntityCount(db.EntityTypeCluster, x.server.dbentities.GetClusterCount())
 
 	x.snapshotLatest = cache.NewSnapshot(version, nil, EnvoyClusters, EnvoyRoutes, EnvoyListeners, nil, nil)
 
 	// Update snapshot cache for each connected Envoy we are aware of
 	for _, node := range streamCallbacks.connections {
 		if err := x.snapshotCache.SetSnapshot(node.Id, x.snapshotLatest); err != nil {
-			log.Warningf("Could not set snapshot for node '%s'", node.Id)
+			x.server.logger.Info("Cannot set snapshot for node", zap.String("id", node.Id))
 		}
 	}
 }
@@ -120,10 +125,7 @@ func (x *XDS) CompileSnapshotsForNewNodes(signal <-chan newNode) {
 	for {
 		newNode := <-signal
 
-		fields := log.Fields{
-			"id": newNode.nodeID,
-		}
-		log.WithFields(fields).Info("NewNodeDiscovery")
+		x.server.logger.Info("NewNodeDiscovery", zap.String("id", newNode.nodeID))
 
 		// In case our snapshot version is still zero it means we have not yet done
 		// our first configuration compilation: we skip. In this case XDSCreateNewSnapshot()
@@ -131,7 +133,7 @@ func (x *XDS) CompileSnapshotsForNewNodes(signal <-chan newNode) {
 		if x.snapshotCacheVersion != 0 {
 			// Update cache for this newly connect Envoy we have not seen before
 			if err := x.snapshotCache.SetSnapshot(newNode.nodeID, x.snapshotLatest); err != nil {
-				log.Warningf("Could not set snapshot for node '%s'", newNode.nodeID)
+				x.server.logger.Warn("Cannot set snapshot for node", zap.String("id", newNode.nodeID))
 			}
 		}
 	}

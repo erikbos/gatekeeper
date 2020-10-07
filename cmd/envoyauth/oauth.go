@@ -1,24 +1,27 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus"
-	log "github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 	"gopkg.in/oauth2.v3"
 	"gopkg.in/oauth2.v3/manage"
 	"gopkg.in/oauth2.v3/server"
 
 	"github.com/erikbos/gatekeeper/pkg/db"
 	"github.com/erikbos/gatekeeper/pkg/shared"
+	"github.com/erikbos/gatekeeper/pkg/webadmin"
 )
 
 // oauthServerConfig contains our configuration
 type oauthServerConfig struct {
-	Listen string `yaml:"listen"` // OAuth Address and port to listen
+	Logger shared.Logger `yaml:"logging"` // log configuration of webadmin accesslog
+	Listen string        `yaml:"listen"`  // OAuth Address and port to listen
 	TLS    struct {
 		certFile string `yaml:"certfile"` // TLS certifcate file
 		keyFile  string `yaml:"keyfile"`  // TLS certifcate key file
@@ -29,10 +32,11 @@ type oauthServerConfig struct {
 
 type oauthServer struct {
 	config             *oauthServerConfig
-	ginEngine          *gin.Engine
+	router             *gin.Engine
 	db                 *db.Database
 	cache              *Cache
 	server             *server.Server
+	logger             *zap.Logger
 	tokenIssueRequests *prometheus.CounterVec
 	tokenInfoRequests  *prometheus.CounterVec
 }
@@ -56,36 +60,45 @@ func newOAuthServer(config *oauthServerConfig, db *db.Database, cache *Cache) *o
 
 // Start starts OAuth2 public endpoints to request new access token
 // or get info about an access info
-func (oauth *oauthServer) Start() {
+func (oauth *oauthServer) Start() error {
 	// Do not start oauth system if we do not have a listenport
 	if oauth.config.Listen == "" {
-		return
+		return nil
 	}
 	if oauth.config.TokenIssuePath == "" {
-		log.Warn("OAuth TokenIssuePath needs to be configured")
-		return
+		return errors.New("OAuth TokenIssuePath needs to be configured")
 	}
+
+	oauth.logger = shared.NewLogger(&oauth.config.Logger, false)
 
 	oauth.registerMetrics()
 	oauth.prepareOAuthInstance()
 
 	gin.SetMode(gin.ReleaseMode)
-	oauth.ginEngine = gin.New()
-	oauth.ginEngine.Use(gin.LoggerWithFormatter(shared.LogHTTPRequest))
-	oauth.ginEngine.Use(shared.AddRequestID())
+	oauth.router = gin.New()
+	oauth.router.Use(webadmin.LogHTTPRequest(oauth.logger))
+	oauth.router.Use(webadmin.SetRequestID())
 
-	oauth.ginEngine.POST(oauth.config.TokenIssuePath, oauth.handleTokenIssueRequest)
+	oauth.router.POST(oauth.config.TokenIssuePath, oauth.handleTokenIssueRequest)
 	// TokenInfo is an optional endpoint
 	if oauth.config.TokenInfoPath != "" {
-		oauth.ginEngine.GET(oauth.config.TokenInfoPath, oauth.handleTokenInfo)
+		oauth.router.GET(oauth.config.TokenInfoPath, oauth.handleTokenInfo)
 	}
 
-	log.Info("OAuth2 listening on ", oauth.config.Listen)
-	if oauth.config.TLS.certFile != "" && oauth.config.TLS.keyFile != "" {
-		log.Fatal(oauth.ginEngine.RunTLS(oauth.config.Listen,
-			oauth.config.TLS.certFile, oauth.config.TLS.keyFile))
+	oauth.logger.Info("OAuth2 listening on " + oauth.config.Listen)
+	if oauth.config.TLS.certFile != "" &&
+		oauth.config.TLS.keyFile != "" {
+
+		oauth.logger.Fatal("error starting tls webadmin",
+			zap.Error(oauth.router.RunTLS(
+				oauth.config.Listen,
+				oauth.config.TLS.certFile,
+				oauth.config.TLS.keyFile)))
 	}
-	log.Panic(oauth.ginEngine.Run(oauth.config.Listen))
+
+	oauth.logger.Fatal("error starting webadmin",
+		zap.Error(oauth.router.Run(oauth.config.Listen)))
+	return nil
 }
 
 // prepareOAuthInstance build OAuth server instance with client and token storage backends
@@ -94,10 +107,10 @@ func (oauth *oauthServer) prepareOAuthInstance() {
 	manager := manage.NewDefaultManager()
 
 	// Set our token storage engine for access tokens
-	manager.MapTokenStorage(NewOAuthTokenStore(oauth.db, oauth.cache))
+	manager.MapTokenStorage(NewOAuthTokenStore(oauth.db, oauth.cache, oauth.logger))
 
 	// Set client id engine for client ids
-	manager.MapClientStorage(NewOAuthClientTokenStore(oauth.db, oauth.cache))
+	manager.MapClientStorage(NewOAuthClientTokenStore(oauth.db, oauth.cache, oauth.logger))
 
 	// Set default token ttl
 	manager.SetClientTokenCfg(&manage.Config{AccessTokenExp: 1 * time.Hour})

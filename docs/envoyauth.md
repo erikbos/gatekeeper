@@ -118,15 +118,20 @@ The supported fields are:
 
 | yaml field               | purpose                                                             | example                |
 | ------------------------ | ------------------------------------------------------------------- | ---------------------- |
+| logging.level            | application log level                                               | info / debug           |
+| logging.filename         | filename to write application log to                                | /dev/stdout            |
 | webadmin.listen          | webadmin address and port                                           | 0.0.0.0:2113           |
 | webadmin.ipacl           | webadmin ip acl, without this no access                             | 172.16.0.0/19          |
 | webadmin.tls.certfile    | TLS certificate file                                                |                        |
 | webadmin.tls.keyfile     | TLS certificate key file                                            |                        |
-| webadmin.logfile         | Access log file                                                     | /var/log/envoyauth.log |
+| webadmin.logging.level   | logging level of webadmin                                           | info / debug           |
+| webadmin.logging.filename| filename to write web access log to                                 | dbadmin-access.log     |
 | envoyauth.listen         | listen address and port for authentication requests from Envoyproxy | 0.0.0.0:4000           |
 | oauth.listen             | listen address and port for OAuth token requests                    | 0.0.0.0:4001           |
 | oauth.tls.certfile       | TLS certificate file                                                |                        |
 | oauth.tls.keyfile        | TLS certificate key file                                            |                        |
+| oauth.logging.level      | logging level of oauth endpoint                                     | info / debug           |
+| oauth.logging.filename   | filename to write oauth token access log to                         | dbadmin-access.log     |
 | oauth.tokenissuepath     | Path for OAuth2 token issue requests                                | /oauth2/token          |
 | oauth.tokeninfopath      | Path for OAuth2 token info requests                                 | /oauth2/info           |
 | database.hostname        | Cassandra hostname to connect to                                    | cassandra              |

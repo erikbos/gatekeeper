@@ -2,13 +2,16 @@ package main
 
 import (
 	"flag"
+	"fmt"
 
 	"github.com/gin-gonic/gin"
-	log "github.com/sirupsen/logrus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"go.uber.org/zap"
 
 	"github.com/erikbos/gatekeeper/pkg/db"
 	"github.com/erikbos/gatekeeper/pkg/db/cassandra"
 	"github.com/erikbos/gatekeeper/pkg/shared"
+	"github.com/erikbos/gatekeeper/pkg/webadmin"
 )
 
 var (
@@ -23,36 +26,49 @@ const (
 
 type server struct {
 	config     *EnvoyCPConfig
-	ginEngine  *gin.Engine
+	webadmin   *webadmin.Webadmin
 	db         *db.Database
 	dbentities *db.EntityCache
 	readiness  *shared.Readiness
-	metrics    metricsCollection
+	metrics    *metrics
+	logger     *zap.Logger
 }
 
+var log string
+
 func main() {
-	shared.StartLogging(applicationName, version, buildTime)
 
 	filename := flag.String("config", defaultConfigFileName, "Configuration filename")
 	flag.Parse()
 
-	s := server{
-		config: loadConfiguration(filename),
-	}
-
-	shared.SetLoggingConfiguration(s.config.LogLevel)
-
+	var s server
 	var err error
-	s.db, err = cassandra.New(s.config.Database, applicationName, false, 0)
-	if err != nil {
-		log.Fatalf("Database connect failed: %v", err)
+	if s.config, err = loadConfiguration(filename); err != nil {
+		fmt.Print(err)
+		panic(err)
 	}
 
-	s.readiness = shared.StartReadiness(applicationName)
+	logConfig := &shared.Logger{
+		Level:    s.config.Logger.Level,
+		Filename: s.config.Logger.Filename,
+	}
+	s.logger = shared.NewLogger(logConfig, true)
+	s.logger.Info("Starting",
+		zap.String("application", applicationName),
+		zap.String("version", version),
+		zap.String("buildtime", buildTime))
+
+	if s.db, err = cassandra.New(s.config.Database, applicationName, s.logger, false, 0); err != nil {
+		s.logger.Fatal("Database connect failed", zap.Error(err))
+	}
+
+	s.readiness = shared.StartReadiness(applicationName, s.logger)
 	go s.db.RunReadinessCheck(s.readiness.GetChannel())
 
-	s.registerMetrics()
-	go s.StartWebAdminServer()
+	s.metrics = newMetrics(&s)
+	s.metrics.Start()
+
+	go startWebAdmin(&s)
 
 	// Start continously loading of virtual host, routes & cluster data
 	entityCacheConf := db.EntityCacheConfig{
@@ -62,10 +78,27 @@ func main() {
 		Route:           true,
 		Cluster:         true,
 	}
-	s.dbentities = db.NewEntityCache(s.db, entityCacheConf)
+	s.dbentities = db.NewEntityCache(s.db, entityCacheConf, s.logger)
 	s.dbentities.Start()
 
 	// Start XDS control plane service
 	x := newXDS(s, s.config.XDS, entityCacheConf.Notify)
 	x.Start()
+}
+
+// startWebAdmin starts the admin web UI
+func startWebAdmin(s *server) {
+
+	logger := shared.NewLogger(&s.config.WebAdmin.Logger, false)
+
+	s.webadmin = webadmin.New(s.config.WebAdmin, applicationName, logger)
+
+	// Enable showing indexpage on / that shows all possible routes
+	s.webadmin.Router.GET("/", webadmin.ShowAllRoutes(s.webadmin.Router, applicationName))
+	s.webadmin.Router.GET(webadmin.LivenessCheckPath, webadmin.LivenessProbe)
+	s.webadmin.Router.GET(webadmin.ReadinessCheckPath, s.readiness.ReadinessProbe)
+	s.webadmin.Router.GET(webadmin.MetricsPath, gin.WrapH(promhttp.Handler()))
+	s.webadmin.Router.GET(webadmin.ConfigDumpPath, webadmin.ShowStartupConfiguration(s.config))
+
+	s.webadmin.Start()
 }

@@ -174,7 +174,7 @@ func (attributes *Attributes) Delete(name string) (valueOfDeletedAttribute strin
 	if attributeDeleted {
 		return valueOfDeletedAttribute, nil
 	}
-	return "", NewItemNotFoundError(fmt.Errorf("Could not delete attribute '%s'", name))
+	return "", NewItemNotFoundError(fmt.Errorf("Cannot delete attribute '%s'", name))
 }
 
 // Unmarshal unpacks JSON array of attributes

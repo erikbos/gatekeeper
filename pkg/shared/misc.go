@@ -2,8 +2,11 @@ package shared
 
 import (
 	"net"
+	"os"
 	"strings"
 	"time"
+
+	"gopkg.in/yaml.v2"
 )
 
 // GetCurrentTimeMilliseconds returns current epoch time in milliseconds
@@ -38,4 +41,21 @@ func CheckIPinAccessList(ip net.IP, ipAccessList string) bool {
 	}
 	// source ip did not match any of the ACL subnets, request rejected
 	return false
+}
+
+// LoadYAMLConfiguration loads a configuration file and parses it as YAML
+func LoadYAMLConfiguration(filename *string, config interface{}) (interface{}, error) {
+
+	file, err := os.Open(*filename)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	yamlDecoder := yaml.NewDecoder(file)
+	yamlDecoder.SetStrict(true)
+	if err := yamlDecoder.Decode(config); err != nil {
+		return nil, err
+	}
+	return config, nil
 }

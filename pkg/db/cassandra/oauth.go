@@ -3,9 +3,9 @@ package cassandra
 import (
 	"fmt"
 
-	"github.com/erikbos/gatekeeper/pkg/types"
 	"github.com/prometheus/client_golang/prometheus"
-	log "github.com/sirupsen/logrus"
+
+	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
 const (
@@ -91,7 +91,6 @@ func (s *OAuthStore) runGetOAuthAccessTokenQuery(query, queryParameter string) (
 		}
 	}
 	if err := iterable.Close(); err != nil {
-		log.Error(err)
 		s.db.metrics.QueryMiss(oauthMetricLabel)
 		return nil, err
 	}

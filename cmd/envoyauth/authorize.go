@@ -13,7 +13,7 @@ import (
 	envoytype "github.com/envoyproxy/go-control-plane/envoy/type/v3"
 	"github.com/gogo/googleapis/google/rpc"
 	"github.com/prometheus/client_golang/prometheus"
-	log "github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 	"google.golang.org/genproto/googleapis/rpc/status"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/structpb"
@@ -45,15 +45,15 @@ func (a *authorizationServer) StartAuthorizationServer() {
 
 	lis, err := net.Listen("tcp", a.config.EnvoyAuth.Listen)
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		a.logger.Fatal("failed to listen", zap.Error(err))
 	}
-	log.Printf("GRPC listening on %s", a.config.EnvoyAuth.Listen)
+	a.logger.Info("GRPC listening on " + a.config.EnvoyAuth.Listen)
 
 	grpcServer := grpc.NewServer()
 	authservice.RegisterAuthorizationServer(grpcServer, a)
 
 	if err := grpcServer.Serve(lis); err != nil {
-		log.Fatalf("Failed to start server: %v", err)
+		a.logger.Fatal("Failed to start server", zap.Error(err))
 	}
 }
 
@@ -67,7 +67,7 @@ func (a *authorizationServer) Check(ctx context.Context,
 	request, err := getRequestInfo(authRequest)
 	if err != nil {
 		a.metrics.connectInfoFailures.Inc()
-		return rejectRequest(http.StatusBadRequest, nil, nil, fmt.Sprintf("%s", err))
+		return a.rejectRequest(http.StatusBadRequest, nil, nil, fmt.Sprintf("%s", err))
 	}
 	a.logRequestDebug(request)
 
@@ -75,7 +75,7 @@ func (a *authorizationServer) Check(ctx context.Context,
 	request.vhost, err = a.vhosts.Lookup(request.httpRequest.Host, request.httpRequest.Headers["x-forwarded-proto"])
 	if err != nil {
 		a.increaseCounterRequestRejected(request)
-		return rejectRequest(http.StatusNotFound, nil, nil, "unknown vhost")
+		return a.rejectRequest(http.StatusNotFound, nil, nil, "unknown vhost")
 	}
 
 	vhostPolicyOutcome := &PolicyChainResponse{}
@@ -96,8 +96,8 @@ func (a *authorizationServer) Check(ctx context.Context,
 		}).Evaluate()
 	}
 
-	log.Debugf("vhostPolicyOutcome: %+v", vhostPolicyOutcome)
-	log.Debugf("APIProductPolicyOutcome: %+v", APIProductPolicyOutcome)
+	a.logger.Debug("vhostPolicyOutcome", zap.Reflect("debug", vhostPolicyOutcome))
+	a.logger.Debug("APIProductPolicyOutcome", zap.Reflect("debug", APIProductPolicyOutcome))
 
 	// We reject call in case both vhost & apiproduct policy did not authenticate call
 	if (vhostPolicyOutcome != nil && !vhostPolicyOutcome.authenticated) &&
@@ -105,7 +105,7 @@ func (a *authorizationServer) Check(ctx context.Context,
 
 		a.increaseCounterRequestRejected(request)
 
-		return rejectRequest(vhostPolicyOutcome.deniedStatusCode,
+		return a.rejectRequest(vhostPolicyOutcome.deniedStatusCode,
 			mergeMapsStringString(vhostPolicyOutcome.upstreamHeaders,
 				APIProductPolicyOutcome.upstreamHeaders),
 			mergeMapsStringString(vhostPolicyOutcome.upstreamDynamicMetadata,
@@ -115,7 +115,7 @@ func (a *authorizationServer) Check(ctx context.Context,
 
 	a.IncreaseCounterRequestAccept(request)
 
-	return allowRequest(
+	return a.allowRequest(
 		mergeMapsStringString(vhostPolicyOutcome.upstreamHeaders,
 			APIProductPolicyOutcome.upstreamHeaders),
 		mergeMapsStringString(vhostPolicyOutcome.upstreamDynamicMetadata,
@@ -135,7 +135,7 @@ func mergeMapsStringString(maps ...map[string]string) map[string]string {
 }
 
 // allowRequest answers Envoyproxy to authorizates request to go upstream
-func allowRequest(headers, metadata map[string]string) (*authservice.CheckResponse, error) {
+func (a *authorizationServer) allowRequest(headers, metadata map[string]string) (*authservice.CheckResponse, error) {
 
 	response := &authservice.CheckResponse{
 		Status: &status.Status{
@@ -148,13 +148,13 @@ func allowRequest(headers, metadata map[string]string) (*authservice.CheckRespon
 		},
 		DynamicMetadata: buildDynamicMetadataList(metadata),
 	}
-	log.Printf("allowRequest: %+v", response)
+	a.logger.Debug("allowRequest", zap.Reflect("response", response))
 
 	return response, nil
 }
 
 // rejectCall answers Envoyproxy to reject HTTP request
-func rejectRequest(statusCode int, headers, metadata map[string]string,
+func (a *authorizationServer) rejectRequest(statusCode int, headers, metadata map[string]string,
 	message string) (*authservice.CheckResponse, error) {
 
 	var envoyStatusCode envoytype.StatusCode
@@ -185,7 +185,7 @@ func rejectRequest(statusCode int, headers, metadata map[string]string,
 		},
 		DynamicMetadata: buildDynamicMetadataList(metadata),
 	}
-	log.Printf("rejectCall: %v", response)
+	a.logger.Debug("rejectRequest", zap.Reflect("response", response))
 	return response, nil
 }
 
@@ -245,21 +245,21 @@ func getRequestInfo(req *authservice.CheckRequest) (*requestInfo, error) {
 
 	var err error
 	if newConnection.URL, err = url.ParseRequestURI(newConnection.httpRequest.Path); err != nil {
-		return nil, errors.New("could not parse url")
+		return nil, errors.New("cannot parse url")
 	}
 
 	if newConnection.queryParameters, err = url.ParseQuery(newConnection.URL.RawQuery); err != nil {
-		return nil, errors.New("could not parse query parameters")
+		return nil, errors.New("cannot parse query parameters")
 	}
 
 	return &newConnection, nil
 }
 
 func (a *authorizationServer) logRequestDebug(request *requestInfo) {
-	log.Debugf("Check() rx path: %s", request.httpRequest.Path)
+	a.logger.Debug("Check() rx path", zap.String("path", request.httpRequest.Path))
 
 	for key, value := range request.httpRequest.Headers {
-		log.Debugf("Check() rx header [%s] = %s", key, value)
+		a.logger.Debug("Check() rx header", zap.String("key", key), zap.String("value", value))
 	}
 }
 

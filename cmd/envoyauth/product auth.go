@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"github.com/bmatcuk/doublestar"
-	log "github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 
 	"github.com/erikbos/gatekeeper/pkg/shared"
 	"github.com/erikbos/gatekeeper/pkg/types"
@@ -37,12 +37,12 @@ func (a *authorizationServer) getAPIKeyDevDevAppDetails(request *requestInfo) er
 		request.appCredential, err = a.db.Credential.GetByKey(&request.vhost.OrganizationName, request.apikey)
 		if err != nil {
 			// FIX ME increase unknown apikey counter (not an error state)
-			return errors.New("Could not find apikey")
+			return errors.New("Cannot find apikey")
 		}
 		// Store retrieved app credential in cache, in case of error we proceed as we can
 		// statisfy the request as we did retrieve succesful from database
 		if err = a.cache.StoreDeveloperAppKey(request.apikey, request.appCredential); err != nil {
-			log.Debugf("Could not store apikey '%s' in cache", *request.apikey)
+			a.logger.Debug("Cannot store apikey in cache", zap.String("key", *request.apikey))
 		}
 	}
 
@@ -53,13 +53,12 @@ func (a *authorizationServer) getAPIKeyDevDevAppDetails(request *requestInfo) er
 			request.appCredential.AppID)
 		if err != nil {
 			// FIX ME increase counter as every apikey should link to dev app (error state)
-			return errors.New("Could not find developer app of this apikey")
+			return errors.New("Cannot find developer app of this apikey")
 		}
 		// Store retrieved developer app in cache, in case of error we proceed as we can
 		// statisfy the request as we did retrieve succesful from database
 		if err = a.cache.StoreDeveloperApp(&request.developerApp.AppID, request.developerApp); err != nil {
-			log.Debugf("Could not store developer app id '%s' in cache",
-				request.developerApp.AppID)
+			a.logger.Debug("Cannot store developer app in cache", zap.String("appid", request.developerApp.AppID))
 		}
 	}
 
@@ -69,13 +68,12 @@ func (a *authorizationServer) getAPIKeyDevDevAppDetails(request *requestInfo) er
 		request.developer, err = a.db.Developer.GetByID(request.developerApp.DeveloperID)
 		if err != nil {
 			// FIX ME increase counter as every devapp should link to developer (error state)
-			return errors.New("Could not find developer of developer app")
+			return errors.New("Cannot find developer of developer app")
 		}
 		// Store retrieved developer in cache, in case of error we proceed as we can
 		// statisfy the request as we did retrieve succesful from database
 		if err = a.cache.StoreDeveloper(&request.developer.DeveloperID, request.developer); err != nil {
-			log.Debugf("Could not store developer id '%s' in cache",
-				request.developer.DeveloperID)
+			a.logger.Debug("Cannot store developer in cache", zap.String("devid", request.developer.DeveloperID))
 		}
 	}
 
@@ -134,9 +132,11 @@ func (a *authorizationServer) IsRequestPathAllowed(organization, requestPath str
 			} else {
 				// Iterate over all paths of apiproduct and try to match with path of request
 				for _, productPath := range apiproductDetails.Paths {
-					// log.Debugf("IsRequestPathAllowed() Matching product path %s to %s", productPath, requestPath)
+					a.logger.Debug("IsRequestPathAllowed",
+						zap.String("productpath", productPath),
+						zap.String("requestpath", requestPath))
+
 					if ok, _ := doublestar.Match(productPath, requestPath); ok {
-						// log.Debugf("IsRequestPathAllowed: match!")
 						return apiproductDetails, nil
 					}
 				}
@@ -159,7 +159,7 @@ func (a *authorizationServer) getAPIProduct(organization, apiproductname *string
 			// Store retrieved APIProduct in cache, in case of error we proceed as we can
 			// statisfy the request as we did retrieve succesful from database
 			if err2 := a.cache.StoreAPIProduct(organization, apiproductname, product); err2 != nil {
-				log.Debugf("Could not store api product '%s' in cache", *apiproductname)
+				a.logger.Debug("Cannot store api product in cache", zap.String("apiproduct", *apiproductname))
 			}
 		}
 	}

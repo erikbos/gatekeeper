@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/prometheus/client_golang/prometheus"
-	log "github.com/sirupsen/logrus"
 
 	"github.com/erikbos/gatekeeper/pkg/types"
 )
@@ -106,7 +105,6 @@ func (s *ListenerStore) runGetListenerQuery(query string,
 	}
 	// In case query failed we return query error
 	if err := iter.Close(); err != nil {
-		log.Error(err)
 		return types.Listeners{}, err
 	}
 	return listeners, nil

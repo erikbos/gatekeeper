@@ -1,11 +1,15 @@
 # Envoy control plane daemon settings
 
-loglevel: info
+logging:
+  level: info
+  filename: envoycp-admin.log
 
 webadmin:
   listen: 0.0.0.0:9902
   ipacl: 0.0.0.0/0
-  logfile: envoycp-admin.log
+  logging:
+    level: info
+    filename: envoycp-access.log
 
 # Cassandra settings
 database:

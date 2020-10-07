@@ -47,12 +47,14 @@ The supported fields are:
 
 | yaml field               | purpose                                    | example              |
 | ------------------------ | ------------------------------------------ | -------------------- |
-| loglevel                 | logging level of application               | info / debug         |
+| logging.level            | application log level                      | info / debug         |
+| logging.filename         | filename to write application log to       | /dev/stdout          |
 | webadmin.listen          | Webadmin address and port                  | 0.0.0.0:7777         |
 | webadmin.ipacl           | Webadmin ip acl, without this no access    | 172.16.0.0/19        |
 | webadmin.tls.certfile    | TLS certificate file                       |                      |
 | webadmin.tls.keyfile     | TLS certificate key file                   |                      |
-| webadmin.logfile         | Access log file                            | /var/log/dbadmin.log |
+| webadmin.logging.level   | logging level of webadmin                  | info / debug         |
+| webadmin.logging.filename| filename to write web access log to        | dbadmin-access.log   |
 | database.hostname        | Cassandra hostname to connect to           | cassandra            |
 | database.port            | Cassandra port to connect on               | 9042 / 10350         |
 | database.tls             | Enable TLS for database session            | true / false         |

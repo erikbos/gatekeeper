@@ -1,12 +1,11 @@
 package main
 
 import (
-	"os"
-
-	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 
 	"github.com/erikbos/gatekeeper/pkg/db/cassandra"
+	"github.com/erikbos/gatekeeper/pkg/shared"
+	"github.com/erikbos/gatekeeper/pkg/webadmin"
 )
 
 const (
@@ -17,34 +16,9 @@ const (
 
 // DBAdminConfig contains our startup configuration data
 type DBAdminConfig struct {
-	LogLevel string                   `yaml:"loglevel" json:"loglevel"` // Overall logging level of application
-	WebAdmin webAdminConfig           `yaml:"webadmin" json:"webadmin"` // Admin web interface configuration
+	Logger   shared.Logger            `yaml:"logging"`                  // log configuration of application
+	WebAdmin webadmin.Config          `yaml:"webadmin" json:"webadmin"` // Admin web interface configuration
 	Database cassandra.DatabaseConfig `yaml:"database" json:"database"` // Database configuration
-}
-
-func loadConfiguration(filename *string) *DBAdminConfig {
-	// default configuration
-	config := DBAdminConfig{
-		LogLevel: defaultLogLevel,
-		WebAdmin: webAdminConfig{
-			Listen:  defaultWebAdminListen,
-			LogFile: defaultWebAdminLogFileName,
-		},
-	}
-
-	file, err := os.Open(*filename)
-	if err != nil {
-		log.Fatalf("Cannot load configuration file: %v", err)
-	}
-	defer file.Close()
-
-	yamlDecoder := yaml.NewDecoder(file)
-	yamlDecoder.SetStrict(true)
-	if err := yamlDecoder.Decode(&config); err != nil {
-		log.Fatalf("Cannot decode configuration file: %v", err)
-	}
-
-	return &config
 }
 
 // String() return our startup configuration as YAML
@@ -59,4 +33,24 @@ func (config *DBAdminConfig) String() string {
 		return ""
 	}
 	return string(configAsYAML)
+}
+
+func loadConfiguration(filename *string) (*DBAdminConfig, error) {
+
+	defaultConfig := &DBAdminConfig{
+		Logger: shared.Logger{
+			Level:    defaultLogLevel,
+			Filename: "/dev/stdout",
+		},
+		WebAdmin: webadmin.Config{
+			Listen: defaultWebAdminListen,
+			Logger: shared.Logger{
+				Level:    defaultLogLevel,
+				Filename: defaultWebAdminLogFileName,
+			},
+		},
+	}
+
+	config, err := shared.LoadYAMLConfiguration(filename, defaultConfig)
+	return config.(*DBAdminConfig), err
 }

@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/gocql/gocql"
-	log "github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 )
 
 const (
@@ -12,34 +12,37 @@ const (
 )
 
 // createKeyspace creates keyspace if it does not yet exist
-func createKeyspace(s *gocql.Session, keyspace string, replicationCount int) error {
+func createKeyspace(s *gocql.Session, keyspace string, replicationCount int, logger *zap.Logger) error {
 
-	log.Infof("Creating keyspace '%s' with replication count '%d' if not existing", keyspace, replicationCount)
+	logger.Info("Creating keyspace if not existing",
+		zap.String("keyspace", keyspace),
+		zap.Int("replicationCount", replicationCount))
 	createKeyspaceQuery := fmt.Sprintf(createKeyspaceCQL, keyspace, replicationCount)
 	if err := s.Query(createKeyspaceQuery).Exec(); err != nil {
 		return err
 	}
 
 	if replicationCount < 3 {
-		log.Warnf("Replication factor was set %d, this database is not suitable for production", replicationCount)
+		logger.Error("This database is not suitable for production",
+			zap.Int("replicationCount", replicationCount))
 	}
 
 	return nil
 }
 
 // createTables adds required tables if they do not yet exist
-func createTables(s *gocql.Session) error {
+func createTables(s *gocql.Session, logger *zap.Logger) error {
 
-	log.Info("Creating all tables if not existing")
+	logger.Info("Creating all tables if not existing")
 	for _, query := range createTablesCQL {
-		log.Debugf("CQL Query: %s", query)
+		logger.Debug("init database", zap.String("cql", query))
 		if err := s.Query(query).Exec(); err != nil {
-			log.Warn(err)
+			logger.Warn("init database statement failed", zap.Error(err))
 			return err
 		}
 	}
 
-	log.Info("Tables and indices created if not existing")
+	logger.Info("Tables and indices created if not existing")
 	return nil
 }
 

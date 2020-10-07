@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/prometheus/client_golang/prometheus"
-	log "github.com/sirupsen/logrus"
 
 	"github.com/erikbos/gatekeeper/pkg/types"
 )
@@ -55,7 +54,7 @@ func (s *DeveloperStore) GetByOrganization(organizationName string) (types.Devel
 	if len(developers) == 0 {
 		s.db.metrics.QueryMiss(developerMetricLabel)
 		return developers, types.NewItemNotFoundError(
-			fmt.Errorf("Could not retrieve developers in organization '%s'", organizationName))
+			fmt.Errorf("Cannot retrieve developers in organization '%s'", organizationName))
 	}
 
 	s.db.metrics.QueryHit(developerMetricLabel)
@@ -148,7 +147,6 @@ func (s *DeveloperStore) runGetDeveloperQuery(query string, queryParameters ...i
 		m = map[string]interface{}{}
 	}
 	if err := iterable.Close(); err != nil {
-		log.Error(err)
 		return types.Developers{}, err
 	}
 	return developers, nil

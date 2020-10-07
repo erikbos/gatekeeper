@@ -1,10 +1,9 @@
-package main
+package handler
 
 import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 	"text/template"
@@ -25,43 +24,31 @@ const (
 	contentTypeHTML = "text/html; charset=utf-8"
 )
 
-// ShowWebAdminHomePage shows home page
-func (s *server) ShowWebAdminHomePage(c *gin.Context) {
-
-	shared.ShowIndexPage(c, s.router, applicationName)
-}
-
-// showConfiguration pretty prints the startup configuration
-func (s *server) showConfiguration(c *gin.Context) {
-
-	c.Header(contentType, contentTypeYAML)
-	c.String(http.StatusOK, fmt.Sprint(s.config))
-}
-
 // showHTTPForwardingPage pretty prints the current forwarding table from database
-func (s *server) showHTTPForwardingPage(c *gin.Context) {
+func (h *Handler) showHTTPForwardingPage(c *gin.Context) {
 
 	// Retrieve all configuration entities
-	listeners, err := s.db.Listener.GetAll()
+	listeners, err := h.service.Listener.GetAll()
 	if err != nil {
 		returnJSONMessage(c, http.StatusServiceUnavailable, err)
 		return
 	}
-	routes, err := s.db.Route.GetAll()
+	routes, err := h.service.Route.GetAll()
 	if err != nil {
 		returnJSONMessage(c, http.StatusServiceUnavailable, err)
 		return
 	}
-	clusters, err := s.db.Cluster.GetAll()
+	clusters, err := h.service.Cluster.GetAll()
 	if err != nil {
 		returnJSONMessage(c, http.StatusServiceUnavailable, err)
 		return
 	}
-	apiproducts, err := s.db.APIProduct.GetAll()
-	if err != nil {
-		returnJSONMessage(c, http.StatusServiceUnavailable, err)
-		return
-	}
+	apiproducts := types.NullAPIProducts
+	// apiproducts, err := h.service.APIProduct.GetAll()
+	// if err != nil {
+	// 	returnJSONMessage(c, http.StatusServiceUnavailable, err)
+	// 	return
+	// }
 	// Order all entries to make page more readable
 	listeners.Sort()
 	routes.Sort()
@@ -258,18 +245,16 @@ const templateHTTPForwarding string = `
 `
 
 // showUserRolesPath pretty prints user and roles from database
-func (s *server) showUserRolePage(c *gin.Context) {
+func (h *Handler) showUserRolePage(c *gin.Context) {
 
 	// Retrieve all user entities
-	users, err := s.db.User.GetAll()
+	users, err := h.service.User.GetAll()
 	if err != nil {
-		log.Print("q1")
 		returnJSONMessage(c, http.StatusServiceUnavailable, err)
 		return
 	}
-	roles, err := s.db.Role.GetAll()
+	roles, err := h.service.Role.GetAll()
 	if err != nil {
-		log.Print("q2")
 		returnJSONMessage(c, http.StatusServiceUnavailable, err)
 		return
 	}

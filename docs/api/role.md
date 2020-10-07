@@ -16,7 +16,7 @@ _For POST content-type: application/json is required._
 
 ## Example role entity
 
-Role `admin` that allows HTTP method GET, POST or DELETE for all paths under `/v1`, this allows all entities to read and updated:
+Role `admin` that allows HTTP method GET, POST or DELETE for all (`**`) paths under `/v1`, this allows all entities to read and updated:
 
 ```json
 {

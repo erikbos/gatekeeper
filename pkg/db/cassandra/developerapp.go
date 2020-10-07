@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/prometheus/client_golang/prometheus"
-	log "github.com/sirupsen/logrus"
 
 	"github.com/erikbos/gatekeeper/pkg/types"
 )
@@ -139,7 +138,6 @@ func (s *DeveloperAppStore) runGetDeveloperAppQuery(query string, queryParameter
 	}
 	// In case query failed we return query error
 	if err := iterable.Close(); err != nil {
-		log.Error(err)
 		return types.DeveloperApps{}, err
 	}
 	return developerapps, nil

@@ -100,7 +100,7 @@ const (
 	AttributeMaxRetries = "MaxRetries"
 
 	// IP network address family to use for contacting cluster
-	AttributeDNSLookupFamiliy = "DNSLookupFamily"
+	AttributeDNSLookupFamily = "DNSLookupFamily"
 
 	// dns resolving using v4 only
 	AttributeValueDNSIPV4Only = "V4_ONLY"
@@ -171,7 +171,7 @@ var validClusterAttributes = map[string]bool{
 	AttributePort:                          true,
 	AttributeConnectTimeout:                true,
 	AttributeIdleTimeout:                   true,
-	AttributeDNSLookupFamiliy:              true,
+	AttributeDNSLookupFamily:               true,
 	AttributeDNSRefreshRate:                true,
 	AttributeDNSResolvers:                  true,
 	AttributeTLS:                           true,

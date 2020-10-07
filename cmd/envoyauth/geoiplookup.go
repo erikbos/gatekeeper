@@ -1,11 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"net"
 
 	"github.com/oschwald/maxminddb-golang"
-	log "github.com/sirupsen/logrus"
 )
 
 // Geoip hold our configuration
@@ -45,15 +43,11 @@ func (g *Geoip) GetCountryAndState(ipaddress net.IP) (string, string) {
 func OpenGeoipDatabase(filename string) (*Geoip, error) {
 
 	var err error
-	g := Geoip{
-		Database: filename,
-	}
+	g := Geoip{Database: filename}
 
 	g.mdb, err = maxminddb.Open(filename)
 	if err != nil {
-		return nil, fmt.Errorf("Could not open %s", filename)
+		return nil, err
 	}
-
-	log.Printf("Geoip using database %s", filename)
 	return &g, nil
 }

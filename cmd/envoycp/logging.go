@@ -1,20 +1,36 @@
 package main
 
 import (
-	log "github.com/sirupsen/logrus"
+	"fmt"
+
+	"go.uber.org/zap"
 )
 
-type logger struct{}
+type cacheLogger struct {
+	logger *zap.Logger
+}
 
-func (logger logger) Infof(format string, args ...interface{}) {
-	log.Infof(format, args...)
+func newCacheLogger(logger *zap.Logger) cacheLogger {
+
+	return cacheLogger{logger: logger}
 }
-func (logger logger) Warnf(format string, args ...interface{}) {
-	log.Warnf(format, args...)
+
+func (cl cacheLogger) Infof(format string, args ...interface{}) {
+
+	cl.logger.Info(fmt.Sprintf(format, args...))
 }
-func (logger logger) Errorf(format string, args ...interface{}) {
-	log.Errorf(format, args...)
+
+func (cl cacheLogger) Warnf(format string, args ...interface{}) {
+
+	cl.logger.Warn(fmt.Sprintf(format, args...))
 }
-func (logger logger) Debugf(format string, args ...interface{}) {
-	log.Debugf(format, args...)
+
+func (cl cacheLogger) Errorf(format string, args ...interface{}) {
+
+	cl.logger.Error(fmt.Sprintf(format, args...))
+}
+
+func (cl cacheLogger) Debugf(format string, args ...interface{}) {
+
+	cl.logger.Debug(fmt.Sprintf(format, args...))
 }

@@ -16,7 +16,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
-	log "github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 	"google.golang.org/protobuf/types/known/anypb"
 
 	"github.com/erikbos/gatekeeper/pkg/types"
@@ -28,7 +28,7 @@ func (s *server) getEnvoyRouteConfig() ([]cache.Resource, error) {
 
 	RouteGroupNames := s.getRouteGroupNames(s.dbentities.GetRoutes())
 	for RouteGroupName := range RouteGroupNames {
-		log.Infof("XDS adding routegroup '%s'", RouteGroupName)
+		s.logger.Info("XDS compiling configuration", zap.String("routegroup", RouteGroupName))
 		envoyRoutes = append(envoyRoutes,
 			s.buildEnvoyListenerRouteConfig(RouteGroupName,
 				s.dbentities.GetRoutes()))
@@ -68,7 +68,7 @@ func (s *server) buildEnvoyRoutes(RouteGroup string, routes types.Routes) []*rou
 
 	for _, route := range routes {
 		if err := route.ConfigCheck(); err != nil {
-			log.Warningf("Route '%s' %s", route.Name, err)
+			s.logger.Warn("Unsupported configuration", zap.String("route", route.Name), zap.Error(err))
 		}
 
 		if route.RouteGroup == RouteGroup {
@@ -84,7 +84,7 @@ func (s *server) buildEnvoyRoutes(RouteGroup string, routes types.Routes) []*rou
 func (s *server) buildEnvoyRoute(routeEntry types.Route) *route.Route {
 	routeMatch := buildRouteMatch(routeEntry)
 	if routeMatch == nil {
-		log.Warnf("Cannot build route match config for route '%s'", routeEntry.Name)
+		s.logger.Warn("Cannot build route match config", zap.String("route", routeEntry.Name))
 		return nil
 	}
 
@@ -104,7 +104,7 @@ func (s *server) buildEnvoyRoute(routeEntry types.Route) *route.Route {
 
 	// Add redirect response if configured: in this case Envoy will generate HTTP redirect
 	if _, err := routeEntry.Attributes.Get(types.AttributeRedirectStatusCode); err == nil {
-		envoyRoute.Action = buildRouteActionRedirectResponse(routeEntry)
+		envoyRoute.Action = s.buildRouteActionRedirectResponse(routeEntry)
 		return envoyRoute
 	}
 
@@ -112,13 +112,13 @@ func (s *server) buildEnvoyRoute(routeEntry types.Route) *route.Route {
 	_, err1 := routeEntry.Attributes.Get(types.AttributeCluster)
 	_, err2 := routeEntry.Attributes.Get(types.AttributeWeightedClusters)
 	if err1 != nil || err2 != nil {
-		envoyRoute.Action = buildRouteActionCluster(routeEntry)
+		envoyRoute.Action = s.buildRouteActionCluster(routeEntry)
 	}
 
 	// Stop in case we do not have any route action defined
 	// WARNING: We cannot compare against just "nil" as .Action is an interface
 	if envoyRoute.Action == (*route.Route_Route)(nil) {
-		log.Warnf("Route '%s' does not have a destination cluster", routeEntry.Name)
+		s.logger.Warn("Route without destination cluster", zap.String("route", routeEntry.Name))
 		return nil
 	}
 
@@ -157,7 +157,7 @@ func buildRouteMatch(routeEntry types.Route) *route.RouteMatch {
 }
 
 // buildRouteActionCluster return route action in of forwarding to a cluster
-func buildRouteActionCluster(routeEntry types.Route) *route.Route_Route {
+func (s *server) buildRouteActionCluster(routeEntry types.Route) *route.Route_Route {
 
 	action := &route.Route_Route{
 		Route: &route.RouteAction{
@@ -181,7 +181,7 @@ func buildRouteActionCluster(routeEntry types.Route) *route.Route_Route {
 	}
 
 	if _, err := routeEntry.Attributes.Get(types.AttributeWeightedClusters); err == nil {
-		action.Route.ClusterSpecifier = buildWeightedClusters(routeEntry)
+		action.Route.ClusterSpecifier = s.buildWeightedClusters(routeEntry)
 	}
 
 	// Stop in case we do not have any route cluster destination
@@ -190,12 +190,12 @@ func buildRouteActionCluster(routeEntry types.Route) *route.Route_Route {
 	}
 
 	action.Route.RateLimits = buildRateLimits(routeEntry)
-	action.Route.RequestMirrorPolicies = buildRequestMirrorPolicies(routeEntry)
+	action.Route.RequestMirrorPolicies = s.buildRequestMirrorPolicies(routeEntry)
 
 	return action
 }
 
-func buildWeightedClusters(routeEntry types.Route) *route.RouteAction_WeightedClusters {
+func (s *server) buildWeightedClusters(routeEntry types.Route) *route.RouteAction_WeightedClusters {
 
 	weightedClusterSpec, err := routeEntry.Attributes.Get(types.AttributeWeightedClusters)
 	if err != nil || weightedClusterSpec == "" {
@@ -212,8 +212,8 @@ func buildWeightedClusters(routeEntry types.Route) *route.RouteAction_WeightedCl
 		if len(clusterConfig) == 2 {
 			clusterWeight, _ = strconv.Atoi(clusterConfig[1])
 		} else {
-			log.Warningf("Route '%s' weighted cluster '%s' does not have weight value",
-				routeEntry.Name, cluster)
+			s.logger.Warn("Weighted destination cluster does not have weight value",
+				zap.String("route", routeEntry.Name), zap.String("cluster", cluster))
 
 			clusterWeight = 1
 		}
@@ -234,7 +234,7 @@ func buildWeightedClusters(routeEntry types.Route) *route.RouteAction_WeightedCl
 	}
 }
 
-func buildRequestMirrorPolicies(routeEntry types.Route) []*route.RouteAction_RequestMirrorPolicy {
+func (s *server) buildRequestMirrorPolicies(routeEntry types.Route) []*route.RouteAction_RequestMirrorPolicy {
 
 	mirrorCluster := routeEntry.Attributes.GetAsString(types.AttributeRequestMirrorCluster, "")
 	mirrorPercentage := routeEntry.Attributes.GetAsString(types.AttributeRequestMirrorPercentage, "")
@@ -245,8 +245,9 @@ func buildRequestMirrorPolicies(routeEntry types.Route) []*route.RouteAction_Req
 
 	percentage, _ := strconv.Atoi(mirrorPercentage)
 	if percentage < 0 || percentage > 100 {
-		log.Warningf("Route '%s' mirror cluster '%s' incorrect request mirror percentage '%s'",
-			routeEntry.Name, mirrorCluster, mirrorPercentage)
+		s.logger.Warn("Route has incorrect request mirror ratio",
+			zap.String("route", routeEntry.Name), zap.String("cluster", mirrorCluster),
+			zap.String("percentage", mirrorPercentage))
 		return nil
 	}
 
@@ -365,7 +366,7 @@ func buildRouteActionDirectResponse(routeEntry types.Route) *route.Route_DirectR
 }
 
 // buildRouteActionRedirectResponse builds response to have Envoy redirect to different path
-func buildRouteActionRedirectResponse(routeEntry types.Route) *route.Route_Redirect {
+func (s *server) buildRouteActionRedirectResponse(routeEntry types.Route) *route.Route_Redirect {
 
 	redirectStatusCode := routeEntry.Attributes.GetAsString(types.AttributeRedirectStatusCode, "")
 	redirectScheme := routeEntry.Attributes.GetAsString(types.AttributeRedirectScheme, "")
@@ -397,8 +398,9 @@ func buildRouteActionRedirectResponse(routeEntry types.Route) *route.Route_Redir
 	case 308:
 		response.Redirect.ResponseCode = route.RedirectAction_PERMANENT_REDIRECT
 	default:
-		log.Warningf("Route '%s' attribute '%s' has unsupported status '%s'",
-			routeEntry.Name, types.AttributeRedirectStatusCode, redirectStatusCode)
+		s.logger.Warn("Unsupported redirect status code value",
+			zap.String("route", routeEntry.Name),
+			zap.String("attribute", types.AttributeRedirectStatusCode))
 		return nil
 	}
 	// Do we have to update scheme to http or https?

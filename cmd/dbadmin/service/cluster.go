@@ -2,7 +2,6 @@ package service
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/erikbos/gatekeeper/pkg/db"
 	"github.com/erikbos/gatekeeper/pkg/shared"
@@ -152,8 +151,6 @@ func (cs *ClusterService) updateCluster(updatedCluster *types.Cluster, who Reque
 // Delete deletes an cluster
 func (cs *ClusterService) Delete(clusterName string, who Requester) (
 	deletedCluster types.Cluster, e types.Error) {
-
-	log.Printf("!%s!", clusterName)
 
 	cluster, err := cs.db.Cluster.Get(clusterName)
 	if err != nil {

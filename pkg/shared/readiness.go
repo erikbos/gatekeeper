@@ -7,7 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus"
-	log "github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 )
 
 // Readiness contains the readiness state of our application
@@ -22,6 +22,8 @@ type Readiness struct {
 	lastStateChange time.Time
 	// counter for number of state changes
 	transitionCounter *prometheus.CounterVec
+	// central logger
+	logger *zap.Logger
 }
 
 // ReadinessMessage gets send by components to indicate whether they are up or not
@@ -35,9 +37,9 @@ type ReadinessMessage struct {
 }
 
 // StartReadiness starts the readiness subsystem which waits for incoming ReadinessMessages
-func StartReadiness(serviceName string) *Readiness {
+func StartReadiness(serviceName string, logger *zap.Logger) *Readiness {
 
-	r := &Readiness{}
+	r := &Readiness{logger: logger}
 
 	r.channel = make(chan ReadinessMessage)
 	r.transitionCounter = prometheus.NewCounterVec(
@@ -62,7 +64,9 @@ func (r *Readiness) GetChannel() chan ReadinessMessage {
 func (r *Readiness) readinessMainLoop() {
 
 	for msg := range r.channel {
-		log.Debugf("readiness msg '%+v'", msg)
+		r.logger.Debug("Received readiness update",
+			zap.Bool("state", msg.Up),
+			zap.String("message", msg.Message))
 
 		r.updateReadinessState(msg.Up, msg.Message)
 	}
@@ -84,7 +88,7 @@ func (r *Readiness) updateReadinessState(newState bool, message string) {
 		stateString := fmt.Sprintf("%t", r.status)
 		r.transitionCounter.WithLabelValues(stateString).Inc()
 
-		log.Infof("Setting readiness state to %s", stateString)
+		r.logger.Info("Changing readiness state", zap.String("state", stateString))
 	}
 }
 
