@@ -46,6 +46,10 @@ test:
 	mkdir -p tmp
 	go test -v -coverpkg=./... -covermode=atomic -coverprofile=tmp/coverage.txt ./...
 
+.PHONY: lint
+lint:
+	golangci-lint run
+
 .PHONY: clean
 clean:
 	rm -f $(BIN)/dbadmin $(BIN)/envoyauth $(BIN)/envoycp $(BIN)/testbackend

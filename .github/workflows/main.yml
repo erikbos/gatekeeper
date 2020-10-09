@@ -27,7 +27,7 @@ jobs:
       uses: actions-contrib/golangci-lint@v1
 
     - name: Run unit tests
-      run: make test
+      run: make testcoverage
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1
