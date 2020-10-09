@@ -1,0 +1,27 @@
+# codecov:
+#   require_ci_to_pass: true
+
+coverage:
+  status:
+    project:
+      default: off
+      dbadmin:
+        flags:
+          - dbadmin
+      envoyauth:
+        flags:
+          - envoyauth
+      envoycp:
+        flags:
+          - emvoycp
+
+flags:
+  dbadmin:
+    paths:
+      - cmd/dbadmin/
+  envoyauth:
+    paths:
+      - cmd/frontend/
+  envoycp:
+    paths:
+      - cmd/envoycp/

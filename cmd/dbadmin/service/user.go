@@ -114,7 +114,10 @@ func (us *UserService) Delete(userName string, who Requester) (deletedUser *type
 // cryptPassword returns a bcrypt()ed password
 func cryptPassword(password string) (string, error) {
 
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	cost := 7
+	// Cost of 7 results in 8ms latency for passwd validation
+	// https://labs.clio.com/bcrypt-cost-factor-4ca0a9b03966
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), cost)
 	return string(hash), err
 }
 
