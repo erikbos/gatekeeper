@@ -74,14 +74,41 @@ const (
 	// Server name to respond with
 	AttributeServerName = "ServerName"
 
-	//
+	// HTTP/2 max concurrent streams per connection
 	AttributeMaxConcurrentStreams = "MaxConcurrentStreams"
 
-	//
+	// HTTP/2 initial connection window size
 	AttributeInitialConnectionWindowSize = "InitialConnectionWindowSize"
 
-	//
+	// HTTP/2 initial window size
 	AttributeInitialStreamWindowSize = "InitialStreamWindowSize"
+
+	// Name of extzauth cluster
+	AttributeAuthenticationCluster = "AuthenticationCluster"
+
+	// Extauthz cluster request timeout
+	AttributeAuthenticationTimeout = "AuthenticationTimeout"
+
+	// Are requests allowed in case authentication times out
+	AttributeAuthenticationFailureModeAllow = "AuthenticationFailureModeAllow"
+
+	// Number of bytes of POST request to include in authentication request
+	AttributeAuthenticationRequestBodySize = "AuthenticationRequestBodySize"
+
+	// CORS enable
+	AttributeCORS = "CORS"
+
+	// Ratelimiting
+	AttributeRateLimitingCluster = "RateLimitingCluster"
+
+	//
+	AttributeRateLimitingTimeout = "RateLimitingTimeout"
+
+	//
+	AttributeRateLimitingDomain = "RateLimitingDomain"
+
+	//
+	AttributeRateLimitingFailureModeAllow = "RateLimitingFailureModeAllow"
 )
 
 // Attributes which are shared amongst listener, route and cluster

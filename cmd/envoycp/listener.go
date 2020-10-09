@@ -29,6 +29,12 @@ const (
 	// Default HttpProtocolOptions idle timeout, as the period in which there are no active requests
 	listenerIdleTimeout = 5 * time.Minute
 
+	// ExtAuthZ Authentication timeout
+	defaultAuthenticationTimeout = 10 * time.Millisecond
+
+	// Ratelimiting timeout
+	defaultRateLimitingTimeout = 10 * time.Millisecond
+
 	// Default buffer size for accesslogging via grpc
 	// (see https://www.envoyproxy.io/docs/envoy/latest/api-v3/extensions/access_loggers/grpc/v3/als.proto#extensions-access-loggers-grpc-v3-httpgrpcaccesslogconfig)
 	accessLogBufferSizeDefault = 16384
@@ -79,7 +85,8 @@ func (s *server) buildEnvoyListenerConfig(port uint32) *listener.Listener {
 	// add all vhosts belonging to this listener's port
 	for _, configuredListener := range s.dbentities.GetListeners() {
 		if configuredListener.Port == int(port) {
-			envoyListener.FilterChains = append(envoyListener.FilterChains, s.buildFilterChainEntry(configuredListener, envoyListener))
+			envoyListener.FilterChains = append(envoyListener.FilterChains,
+				s.buildFilterChainEntry(configuredListener, envoyListener))
 
 			TLSEnabled := configuredListener.Attributes.GetAsString(types.AttributeTLS, "")
 			if TLSEnabled == types.AttributeValueTrue {
@@ -178,8 +185,7 @@ func (s *server) buildConnectionManager(listener types.Listener) *hcm.HttpConnec
 	}
 
 	// Override Server response header
-	if serverName, error := listener.Attributes.Get(
-		types.AttributeServerName); error == nil {
+	if serverName, err := listener.Attributes.Get(types.AttributeServerName); err == nil {
 		connectionManager.ServerName = serverName
 	}
 
@@ -190,7 +196,7 @@ func (s *server) buildFilter(listener types.Listener) []*hcm.HttpFilter {
 
 	httpFilter := make([]*hcm.HttpFilter, 0, 10)
 
-	if extAuthz := s.buildHTTPFilterExtAuthzConfig(); extAuthz != nil {
+	if extAuthz := s.buildHTTPFilterExtAuthzConfig(listener); extAuthz != nil {
 		httpFilter = append(httpFilter, &hcm.HttpFilter{
 			Name: wellknown.HTTPExternalAuthorization,
 			ConfigType: &hcm.HttpFilter_TypedConfig{
@@ -199,11 +205,15 @@ func (s *server) buildFilter(listener types.Listener) []*hcm.HttpFilter {
 		})
 	}
 
-	httpFilter = append(httpFilter, &hcm.HttpFilter{
-		Name: wellknown.CORS,
-	})
+	if cors, err := listener.Attributes.Get(
+		types.AttributeCORS); err == nil && cors == types.AttributeValueTrue {
 
-	if ratelimiter := s.buildHTTPFilterRateLimiterConfig(); ratelimiter != nil {
+		httpFilter = append(httpFilter, &hcm.HttpFilter{
+			Name: wellknown.CORS,
+		})
+	}
+
+	if ratelimiter := s.buildHTTPFilterRateLimiterConfig(listener); ratelimiter != nil {
 		httpFilter = append(httpFilter, &hcm.HttpFilter{
 			Name: wellknown.HTTPRateLimit,
 			ConfigType: &hcm.HttpFilter_TypedConfig{
@@ -219,68 +229,89 @@ func (s *server) buildFilter(listener types.Listener) []*hcm.HttpFilter {
 	return httpFilter
 }
 
-func (s *server) buildHTTPFilterExtAuthzConfig() *anypb.Any {
+func (s *server) buildHTTPFilterExtAuthzConfig(listener types.Listener) *anypb.Any {
 
-	if s.config != nil &&
-		(!s.config.Envoyproxy.ExtAuthz.Enable ||
-			s.config.Envoyproxy.ExtAuthz.Cluster == "") {
+	// Is authentication enabled for this listener?
+	if value, err := listener.Attributes.Get(
+		types.AttributeAuthentication); err != nil || value != types.AttributeValueTrue {
 		return nil
 	}
 
+	cluster, err := listener.Attributes.Get(types.AttributeAuthenticationCluster)
+	if err != nil || cluster == "" {
+		return nil
+	}
+	timeout := listener.Attributes.GetAsDuration(types.AttributeAuthenticationTimeout,
+		defaultAuthenticationTimeout)
+
+	var failureModeAllow bool
+	val, err := listener.Attributes.Get(types.AttributeAuthenticationFailureModeAllow)
+	if err == nil && val == types.AttributeValueTrue {
+		failureModeAllow = true
+	}
+
 	extAuthz := &extauthz.ExtAuthz{
-		FailureModeAllow: s.config.Envoyproxy.ExtAuthz.FailureModeAllow,
+		FailureModeAllow: failureModeAllow,
 		Services: &extauthz.ExtAuthz_GrpcService{
-			GrpcService: buildGRPCService(s.config.Envoyproxy.ExtAuthz.Cluster,
-				s.config.Envoyproxy.ExtAuthz.Timeout),
+			GrpcService: buildGRPCService(cluster, timeout),
 		},
 		TransportApiVersion: core.ApiVersion_V3,
 	}
-	if s.config.Envoyproxy.ExtAuthz.RequestBodySize > 0 {
-		extAuthz.WithRequestBody = s.extAuthzWithRequestBody()
+
+	requestBodySize := listener.Attributes.GetAsUInt32(types.AttributeAuthenticationRequestBodySize, 0)
+	if requestBodySize > 0 {
+		extAuthz.WithRequestBody = &extauthz.BufferSettings{
+			MaxRequestBytes:     uint32(requestBodySize),
+			AllowPartialMessage: false,
+		}
 	}
 
-	extAuthzTypedConf, err := ptypes.MarshalAny(extAuthz)
-	if err != nil {
+	extAuthzTypedConf, e := ptypes.MarshalAny(extAuthz)
+	if e != nil {
 		s.logger.Panic("buildHTTPFilterExtAuthzConfig", zap.Error(err))
 	}
 	return extAuthzTypedConf
 }
 
-func (s *server) buildHTTPFilterRateLimiterConfig() *anypb.Any {
+func (s *server) buildHTTPFilterRateLimiterConfig(listener types.Listener) *anypb.Any {
 
-	if !s.config.Envoyproxy.RateLimiter.Enable ||
-		s.config.Envoyproxy.RateLimiter.Cluster == "" {
+	// Is authentication enabled for this listener?
+	if value, err := listener.Attributes.Get(
+		types.AttributeRateLimiting); err != nil || value != types.AttributeValueTrue {
 		return nil
 	}
 
+	cluster, err := listener.Attributes.Get(types.AttributeRateLimitingCluster)
+	if err != nil || cluster == "" {
+		return nil
+	}
+	timeout := listener.Attributes.GetAsDuration(types.AttributeRateLimitingTimeout,
+		defaultRateLimitingTimeout)
+
+	domain := listener.Attributes.GetAsString(types.AttributeRateLimitingDomain, "")
+
+	var failureModeAllow bool
+	val, err := listener.Attributes.Get(types.AttributeRateLimitingFailureModeAllow)
+	if err == nil && val == types.AttributeValueTrue {
+		failureModeAllow = true
+	}
+
 	ratelimit := &ratelimit.RateLimit{
-		Domain:          s.config.Envoyproxy.RateLimiter.Domain,
+		Domain:          domain,
 		Stage:           0,
-		FailureModeDeny: s.config.Envoyproxy.RateLimiter.FailureModeDeny,
-		Timeout:         ptypes.DurationProto(s.config.Envoyproxy.RateLimiter.Timeout),
+		FailureModeDeny: failureModeAllow,
+		Timeout:         ptypes.DurationProto(timeout),
 		RateLimitService: &ratelimitconf.RateLimitServiceConfig{
-			GrpcService: buildGRPCService(s.config.Envoyproxy.RateLimiter.Cluster,
-				s.config.Envoyproxy.RateLimiter.Timeout),
+			GrpcService:         buildGRPCService(cluster, timeout),
 			TransportApiVersion: core.ApiVersion_V3,
 		},
 	}
 
-	ratelimitTypedConf, err := ptypes.MarshalAny(ratelimit)
-	if err != nil {
+	ratelimitTypedConf, e := ptypes.MarshalAny(ratelimit)
+	if e != nil {
 		s.logger.Panic("buildHTTPFilterExtAuthzConfig", zap.Error(err))
 	}
 	return ratelimitTypedConf
-}
-
-func (s *server) extAuthzWithRequestBody() *extauthz.BufferSettings {
-
-	if s.config.Envoyproxy.ExtAuthz.RequestBodySize > 0 {
-		return &extauthz.BufferSettings{
-			MaxRequestBytes:     uint32(s.config.Envoyproxy.ExtAuthz.RequestBodySize),
-			AllowPartialMessage: false,
-		}
-	}
-	return nil
 }
 
 func (s *server) buildRouteSpecifierRDS(routeGroup string) *hcm.HttpConnectionManager_Rds {

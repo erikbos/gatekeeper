@@ -61,5 +61,8 @@ func loadConfiguration(filename *string) (*DBAdminConfig, error) {
 	}
 
 	config, err := shared.LoadYAMLConfiguration(filename, defaultConfig)
-	return config.(*DBAdminConfig), err
+	if err != nil {
+		return nil, err
+	}
+	return config.(*DBAdminConfig), nil
 }
