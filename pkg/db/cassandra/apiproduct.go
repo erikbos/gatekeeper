@@ -5,7 +5,6 @@ import (
 
 	"github.com/gocql/gocql"
 	"github.com/prometheus/client_golang/prometheus"
-	log "github.com/sirupsen/logrus"
 
 	"github.com/erikbos/gatekeeper/pkg/types"
 )
@@ -90,7 +89,7 @@ func (s *APIProductStore) Get(organizationName, apiproductName string) (*types.A
 	if len(apiproducts) == 0 {
 		s.db.metrics.QueryMiss(apiProductsMetricLabel)
 		return nil, types.NewItemNotFoundError(
-			fmt.Errorf("Could not find apiproduct '%s'", apiproductName))
+			fmt.Errorf("Cannot find apiproduct '%s'", apiproductName))
 	}
 
 	s.db.metrics.QueryHit(apiProductsMetricLabel)
@@ -135,7 +134,6 @@ func (s *APIProductStore) runGetAPIProductQuery(query string, queryParameters ..
 	}
 
 	if err := iter.Close(); err != nil {
-		log.Error(err)
 		return types.APIProducts{}, err
 	}
 

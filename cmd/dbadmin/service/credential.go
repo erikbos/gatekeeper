@@ -15,8 +15,8 @@ type CredentialService struct {
 	changelog *Changelog
 }
 
-// NewCredentialService returns a new credential instance
-func NewCredentialService(database *db.Database, c *Changelog) *CredentialService {
+// NewCredential returns a new credential instance
+func NewCredential(database *db.Database, c *Changelog) *CredentialService {
 
 	return &CredentialService{db: database, changelog: c}
 }

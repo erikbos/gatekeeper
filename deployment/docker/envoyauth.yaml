@@ -1,6 +1,16 @@
 # Envoyauth authentication daemon settings
 #
-loglevel: info
+logging:
+  level: info
+  filename: envoyauth-admin.log
+
+# The address to listen on for Admin UI
+webadmin:
+  listen: 0.0.0.0:2113
+  ipacl: 0.0.0.0/0
+  logging:
+    level: info
+    filename: envoyauth-access.log
 
 # The address to listen on for GRPC requests coming from Envoy
 envoyauth:
@@ -11,12 +21,9 @@ oauth:
   listen: 0.0.0.0:4001
   tokenissuepath: /oauth2/token
   tokeninfopath: /oauth2/info
-
-# The address to listen on for Admin UI
-webadmin:
-  listen: 0.0.0.0:2113
-  ipacl: 0.0.0.0/0
-  logfile: envoyauth-admin.log
+  logging:
+    level: info
+    filename: envoyauth-oauth.log
 
 database:
   hostname: cassandra

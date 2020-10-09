@@ -11,13 +11,13 @@ import (
 	cache "github.com/envoyproxy/go-control-plane/pkg/cache/types"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/duration"
-	log "github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 
 	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
 const (
-	unknownClusterAttributeWarning = "Cluster '%s' has attribute '%s' with unknown value '%s'"
+	unknownClusterAttributeValueWarning = "Unsupported attribute value"
 )
 
 // getClusterConfig returns array of all envoy clusters
@@ -27,12 +27,13 @@ func (s *server) getEnvoyClusterConfig() ([]cache.Resource, error) {
 
 	for _, cluster := range s.dbentities.GetClusters() {
 		if err := cluster.ConfigCheck(); err != nil {
-			log.Warningf("Cluster '%s' %s", cluster.Name, err)
+			s.logger.Warn("Cluster has unsupported configuration",
+				zap.String("cluster", cluster.Name), zap.Error(err))
 		}
-		if clusterToAdd := buildEnvoyClusterConfig(cluster); clusterToAdd != nil {
+		if clusterToAdd := s.buildEnvoyClusterConfig(cluster); clusterToAdd != nil {
 			envoyClusters = append(envoyClusters, clusterToAdd)
 		} else {
-			log.Warningf("Cluster '%s' was not added", cluster.Name)
+			s.logger.Warn("Cluster not added", zap.String("cluster", cluster.Name))
 		}
 	}
 
@@ -40,25 +41,25 @@ func (s *server) getEnvoyClusterConfig() ([]cache.Resource, error) {
 }
 
 // buildEnvoyClusterConfig builds one envoy cluster configuration
-func buildEnvoyClusterConfig(cluster types.Cluster) *envoyCluster.Cluster {
+func (s *server) buildEnvoyClusterConfig(cluster types.Cluster) *envoyCluster.Cluster {
 
 	envoyCluster := &envoyCluster.Cluster{
 		Name:                      cluster.Name,
-		ConnectTimeout:            clusterConnectTimeout(cluster),
+		ConnectTimeout:            s.clusterConnectTimeout(cluster),
 		ClusterDiscoveryType:      &envoyCluster.Cluster_Type{Type: envoyCluster.Cluster_LOGICAL_DNS},
-		DnsLookupFamily:           clusterDNSLookupFamily(cluster),
-		DnsResolvers:              clusterDNSResolvers(cluster),
-		DnsRefreshRate:            clusterDNSRefreshRate(cluster),
-		LbPolicy:                  clusterLbPolicy(cluster),
-		HealthChecks:              clusterHealthChecks(cluster),
-		CommonHttpProtocolOptions: clusterCommonHTTPProtocolOptions(cluster),
-		CircuitBreakers:           clusterCircuitBreakers(cluster),
-		TrackClusterStats:         clusterTrackClusterStats(cluster),
+		DnsLookupFamily:           s.clusterDNSLookupFamily(cluster),
+		DnsResolvers:              s.clusterDNSResolvers(cluster),
+		DnsRefreshRate:            s.clusterDNSRefreshRate(cluster),
+		LbPolicy:                  s.clusterLbPolicy(cluster),
+		HealthChecks:              s.clusterHealthChecks(cluster),
+		CommonHttpProtocolOptions: s.clusterCommonHTTPProtocolOptions(cluster),
+		CircuitBreakers:           s.clusterCircuitBreakers(cluster),
+		TrackClusterStats:         s.clusterTrackClusterStats(cluster),
 	}
 
-	loadAssignment := clusterLoadAssignment(cluster)
+	loadAssignment := s.clusterLoadAssignment(cluster)
 	if loadAssignment == nil {
-		log.Warnf("Cluster '%s' could not set destination hostname and port", cluster.Name)
+		s.logger.Warn("Cannot set destination host or port", zap.String("cluster", cluster.Name))
 		return nil
 	}
 	envoyCluster.LoadAssignment = loadAssignment
@@ -66,14 +67,14 @@ func buildEnvoyClusterConfig(cluster types.Cluster) *envoyCluster.Cluster {
 	// Add TLS and HTTP/2 configuration options in case we want to
 	value, err := cluster.Attributes.Get(types.AttributeTLS)
 	if err == nil && value == types.AttributeValueTrue {
-		envoyCluster.TransportSocket = clusterTransportSocket(cluster)
-		envoyCluster.Http2ProtocolOptions = clusterHTTP2ProtocolOptions(cluster)
+		envoyCluster.TransportSocket = s.clusterTransportSocket(cluster)
+		envoyCluster.Http2ProtocolOptions = s.clusterHTTP2ProtocolOptions(cluster)
 	}
 
 	return envoyCluster
 }
 
-func clusterConnectTimeout(cluster types.Cluster) *duration.Duration {
+func (s *server) clusterConnectTimeout(cluster types.Cluster) *duration.Duration {
 
 	connectTimeout := cluster.Attributes.GetAsDuration(
 		types.AttributeConnectTimeout, types.DefaultClusterConnectTimeout)
@@ -81,7 +82,7 @@ func clusterConnectTimeout(cluster types.Cluster) *duration.Duration {
 	return ptypes.DurationProto(connectTimeout)
 }
 
-func clusterLbPolicy(cluster types.Cluster) envoyCluster.Cluster_LbPolicy {
+func (s *server) clusterLbPolicy(cluster types.Cluster) envoyCluster.Cluster_LbPolicy {
 
 	value, err := cluster.Attributes.Get(types.AttributeLbPolicy)
 	if err == nil {
@@ -102,15 +103,16 @@ func clusterLbPolicy(cluster types.Cluster) envoyCluster.Cluster_LbPolicy {
 			return envoyCluster.Cluster_MAGLEV
 
 		default:
-			log.Warnf(unknownClusterAttributeWarning,
-				cluster.Name, types.AttributeLbPolicy, value)
+			s.logger.Warn(unknownClusterAttributeValueWarning,
+				zap.String("cluster", cluster.Name),
+				zap.String("attribute", types.AttributeLbPolicy))
 		}
 	}
 	return envoyCluster.Cluster_ROUND_ROBIN
 }
 
 // clusterLoadAssignment sets cluster loadbalance based upon hostname & port attributes
-func clusterLoadAssignment(cluster types.Cluster) *endpoint.ClusterLoadAssignment {
+func (s *server) clusterLoadAssignment(cluster types.Cluster) *endpoint.ClusterLoadAssignment {
 
 	hostName, err := cluster.Attributes.Get(types.AttributeHost)
 	if err != nil {
@@ -138,7 +140,7 @@ func clusterLoadAssignment(cluster types.Cluster) *endpoint.ClusterLoadAssignmen
 	}
 }
 
-func clusterCircuitBreakers(cluster types.Cluster) *envoyCluster.CircuitBreakers {
+func (s *server) clusterCircuitBreakers(cluster types.Cluster) *envoyCluster.CircuitBreakers {
 
 	maxConnections := cluster.Attributes.GetAsUInt32(types.AttributeMaxConnections, 0)
 	maxPendingRequests := cluster.Attributes.GetAsUInt32(types.AttributeMaxPendingRequests, 0)
@@ -156,7 +158,7 @@ func clusterCircuitBreakers(cluster types.Cluster) *envoyCluster.CircuitBreakers
 }
 
 // clusterTrackClusterStats build cluster statistics configuration
-func clusterTrackClusterStats(cluster types.Cluster) *envoyCluster.TrackClusterStats {
+func (s *server) clusterTrackClusterStats(cluster types.Cluster) *envoyCluster.TrackClusterStats {
 
 	return &envoyCluster.TrackClusterStats{
 		TimeoutBudgets:       true,
@@ -165,7 +167,7 @@ func clusterTrackClusterStats(cluster types.Cluster) *envoyCluster.TrackClusterS
 }
 
 // clusterHealthCheckConfig builds health configuration for a cluster
-func clusterHealthChecks(cluster types.Cluster) []*core.HealthCheck {
+func (s *server) clusterHealthChecks(cluster types.Cluster) []*core.HealthCheck {
 
 	healthCheckProtocol, err := cluster.Attributes.Get(types.AttributeHealthCheckProtocol)
 	healthCheckPath, _ := cluster.Attributes.Get(types.AttributeHealthCheckPath)
@@ -195,7 +197,7 @@ func clusterHealthChecks(cluster types.Cluster) []*core.HealthCheck {
 				HttpHealthCheck: &core.HealthCheck_HttpHealthCheck{
 					Host:            healthCheckHostName,
 					Path:            healthCheckPath,
-					CodecClientType: clusterHealthCodec(cluster),
+					CodecClientType: s.clusterHealthCodec(cluster),
 				},
 			},
 			Interval:           ptypes.DurationProto(interval),
@@ -212,7 +214,7 @@ func clusterHealthChecks(cluster types.Cluster) []*core.HealthCheck {
 	return nil
 }
 
-func clusterHealthCodec(cluster types.Cluster) envoyType.CodecClientType {
+func (s *server) clusterHealthCodec(cluster types.Cluster) envoyType.CodecClientType {
 
 	value, err := cluster.Attributes.Get(types.AttributeHTTPProtocol)
 	if err == nil {
@@ -227,15 +229,16 @@ func clusterHealthCodec(cluster types.Cluster) envoyType.CodecClientType {
 			return envoyType.CodecClientType_HTTP3
 
 		default:
-			log.Warnf(unknownClusterAttributeWarning,
-				cluster.Name, types.AttributeHTTPProtocol, value)
+			s.logger.Warn(unknownClusterAttributeValueWarning,
+				zap.String("cluster", cluster.Name),
+				zap.String("attribute", types.AttributeHTTPProtocol))
 		}
 	}
 	return envoyType.CodecClientType_HTTP1
 }
 
 // clusterCommonHTTPProtocolOptions sets HTTP options applicable to both HTTP/1 and /2
-func clusterCommonHTTPProtocolOptions(cluster types.Cluster) *core.HttpProtocolOptions {
+func (s *server) clusterCommonHTTPProtocolOptions(cluster types.Cluster) *core.HttpProtocolOptions {
 
 	idleTimeout := cluster.Attributes.GetAsDuration(
 		types.AttributeIdleTimeout, types.DefaultClusterIdleTimeout)
@@ -246,7 +249,7 @@ func clusterCommonHTTPProtocolOptions(cluster types.Cluster) *core.HttpProtocolO
 }
 
 // clusterHTTP2ProtocolOptions returns HTTP/2 parameters
-func clusterHTTP2ProtocolOptions(cluster types.Cluster) *core.Http2ProtocolOptions {
+func (s *server) clusterHTTP2ProtocolOptions(cluster types.Cluster) *core.Http2ProtocolOptions {
 
 	value, err := cluster.Attributes.Get(types.AttributeHTTPProtocol)
 	if err == nil {
@@ -257,8 +260,9 @@ func clusterHTTP2ProtocolOptions(cluster types.Cluster) *core.Http2ProtocolOptio
 			// according to spec we need to return at least empty struct to enable HTTP/2
 			return &core.Http2ProtocolOptions{}
 		default:
-			log.Warnf(unknownClusterAttributeWarning,
-				cluster.Name, types.AttributeHTTPProtocol, value)
+			s.logger.Warn(unknownClusterAttributeValueWarning,
+				zap.String("cluster", cluster.Name),
+				zap.String("attribute", types.AttributeHTTPProtocol))
 			return nil
 		}
 	}
@@ -267,18 +271,18 @@ func clusterHTTP2ProtocolOptions(cluster types.Cluster) *core.Http2ProtocolOptio
 }
 
 // clusterTransportSocket configures TLS settings
-func clusterTransportSocket(cluster types.Cluster) *core.TransportSocket {
+func (s *server) clusterTransportSocket(cluster types.Cluster) *core.TransportSocket {
 
 	// Set TLS configuration based upon cluster attributes
 	TLSContext := &tls.UpstreamTlsContext{
-		Sni:              clusterSNIHostname(cluster),
+		Sni:              s.clusterSNIHostname(cluster),
 		CommonTlsContext: buildCommonTLSContext(cluster.Name, cluster.Attributes),
 	}
 	return buildTransportSocket(cluster.Name, TLSContext)
 }
 
 // clusterSNIHostname sets SNI hostname used for upstream connections
-func clusterSNIHostname(cluster types.Cluster) string {
+func (s *server) clusterSNIHostname(cluster types.Cluster) string {
 
 	// Let's check SNI attribute first
 	value, err := cluster.Attributes.Get(types.AttributeSNIHostName)
@@ -293,9 +297,9 @@ func clusterSNIHostname(cluster types.Cluster) string {
 	return ""
 }
 
-func clusterDNSLookupFamily(cluster types.Cluster) envoyCluster.Cluster_DnsLookupFamily {
+func (s *server) clusterDNSLookupFamily(cluster types.Cluster) envoyCluster.Cluster_DnsLookupFamily {
 
-	value, err := cluster.Attributes.Get(types.AttributeDNSLookupFamiliy)
+	value, err := cluster.Attributes.Get(types.AttributeDNSLookupFamily)
 	if err == nil {
 		switch value {
 		case types.AttributeValueDNSIPV4Only:
@@ -305,14 +309,15 @@ func clusterDNSLookupFamily(cluster types.Cluster) envoyCluster.Cluster_DnsLooku
 		case types.AttributeValueDNSAUTO:
 			return envoyCluster.Cluster_AUTO
 		default:
-			log.Warnf(unknownClusterAttributeWarning,
-				cluster.Name, types.AttributeDNSLookupFamiliy, value)
+			s.logger.Warn(unknownClusterAttributeValueWarning,
+				zap.String("cluster", cluster.Name),
+				zap.String("attribute", types.AttributeDNSLookupFamily))
 		}
 	}
 	return envoyCluster.Cluster_AUTO
 }
 
-func clusterDNSRefreshRate(cluster types.Cluster) *duration.Duration {
+func (s *server) clusterDNSRefreshRate(cluster types.Cluster) *duration.Duration {
 
 	refreshInterval := cluster.Attributes.GetAsDuration(
 		types.AttributeDNSRefreshRate, types.DefaultDNSRefreshRate)
@@ -320,7 +325,7 @@ func clusterDNSRefreshRate(cluster types.Cluster) *duration.Duration {
 	return ptypes.DurationProto(refreshInterval)
 }
 
-func clusterDNSResolvers(cluster types.Cluster) []*core.Address {
+func (s *server) clusterDNSResolvers(cluster types.Cluster) []*core.Address {
 
 	value, err := cluster.Attributes.Get(types.AttributeDNSResolvers)
 	if err == nil && value != "" {

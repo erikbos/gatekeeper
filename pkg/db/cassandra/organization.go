@@ -5,7 +5,6 @@ import (
 
 	"github.com/gocql/gocql"
 	"github.com/prometheus/client_golang/prometheus"
-	log "github.com/sirupsen/logrus"
 
 	"github.com/erikbos/gatekeeper/pkg/types"
 )
@@ -99,7 +98,6 @@ func (s *OrganizationStore) runGetOrganizationQuery(query, queryParameter string
 		m = map[string]interface{}{}
 	}
 	if err := iter.Close(); err != nil {
-		log.Error(err)
 		return types.NullOrganizations, err
 	}
 	return organizations, nil

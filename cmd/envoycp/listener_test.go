@@ -42,7 +42,7 @@ func Test_buildConnectionManager(t *testing.T) {
 		UseRemoteAddress:          protoBool(true),
 		HttpFilters:               s.buildFilter(listener1),
 		RouteSpecifier:            s.buildRouteSpecifierRDS(listener1.RouteGroup),
-		AccessLog:                 buildAccessLog(listener1),
+		AccessLog:                 s.buildAccessLog(listener1),
 		CommonHttpProtocolOptions: listenerCommonHTTPProtocolOptions(listener1),
 		Http2ProtocolOptions:      buildHTTP2ProtocolOptions(listener1),
 		ServerName:                "QWERTY",
@@ -308,6 +308,8 @@ func Test_buildRouteSpecifierRDS(t *testing.T) {
 
 func Test_buildAccessLog(t *testing.T) {
 
+	s := server{}
+
 	tests := []struct {
 		name     string
 		listener types.Listener
@@ -328,7 +330,7 @@ func Test_buildAccessLog(t *testing.T) {
 				},
 			},
 			expected: []*accesslog.AccessLog{
-				buildFileAccessLog("/dev/log/myaccesslog3",
+				s.buildFileAccessLog("/dev/log/myaccesslog3",
 					"request_id=%REQ(REQUEST-ID)%,key2=value2, key3 =VALUE3"),
 			},
 		},
@@ -348,20 +350,22 @@ func Test_buildAccessLog(t *testing.T) {
 				},
 			},
 			expected: []*accesslog.AccessLog{
-				buildGRPCAccessLog("als_c", "www.example.com",
+				s.buildGRPCAccessLog("als_c", "www.example.com",
 					types.DefaultClusterConnectTimeout, 1024000),
 			},
 		},
 	}
 	for _, test := range tests {
-		// RequireEqual(t, test.expected,
-		// 	buildAccessLog(test.listener))
-		require.Equalf(t, test.expected,
-			buildAccessLog(test.listener), test.name)
+		RequireEqual(t, test.expected,
+			s.buildAccessLog(test.listener))
+		// require.Equalf(t, test.expected,
+		// 	buildAccessLog(test.listener), test.name)
 	}
 }
 
 func Test_buildFileAccessLog(t *testing.T) {
+
+	s := server{}
 
 	tests := []struct {
 		name     string
@@ -411,11 +415,13 @@ func Test_buildFileAccessLog(t *testing.T) {
 	}
 	for _, test := range tests {
 		require.Equalf(t, test.expected,
-			buildFileAccessLog(test.path, test.fields), test.name)
+			s.buildFileAccessLog(test.path, test.fields), test.name)
 	}
 }
 
 func Test_buildGRPCAccessLog(t *testing.T) {
+
+	s := server{}
 
 	tests := []struct {
 		name        string
@@ -449,7 +455,7 @@ func Test_buildGRPCAccessLog(t *testing.T) {
 	}
 	for _, test := range tests {
 		require.Equalf(t, test.expected,
-			buildGRPCAccessLog(test.clusterName, test.logName,
+			s.buildGRPCAccessLog(test.clusterName, test.logName,
 				test.timeout, test.bufferSize), test.name)
 	}
 }

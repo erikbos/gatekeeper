@@ -2,7 +2,6 @@ package service
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/erikbos/gatekeeper/pkg/db"
 	"github.com/erikbos/gatekeeper/pkg/shared"
@@ -15,8 +14,8 @@ type ClusterService struct {
 	changelog *Changelog
 }
 
-// NewClusterService returns a new cluster instance
-func NewClusterService(database *db.Database, c *Changelog) *ClusterService {
+// NewCluster returns a new cluster instance
+func NewCluster(database *db.Database, c *Changelog) *ClusterService {
 
 	return &ClusterService{db: database, changelog: c}
 }
@@ -64,7 +63,7 @@ func (cs *ClusterService) Create(newCluster types.Cluster, who Requester) (
 	}
 	// Automatically set default fields
 	newCluster.CreatedAt = shared.GetCurrentTimeMilliseconds()
-	newCluster.CreatedBy = who.Username
+	newCluster.CreatedBy = who.User
 
 	err = cs.updateCluster(&newCluster, who)
 	cs.changelog.Create(newCluster, who)
@@ -145,15 +144,13 @@ func (cs *ClusterService) updateCluster(updatedCluster *types.Cluster, who Reque
 
 	updatedCluster.Attributes.Tidy()
 	updatedCluster.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
-	updatedCluster.LastmodifiedBy = who.Username
+	updatedCluster.LastmodifiedBy = who.User
 	return cs.db.Cluster.Update(updatedCluster)
 }
 
 // Delete deletes an cluster
 func (cs *ClusterService) Delete(clusterName string, who Requester) (
 	deletedCluster types.Cluster, e types.Error) {
-
-	log.Printf("!%s!", clusterName)
 
 	cluster, err := cs.db.Cluster.Get(clusterName)
 	if err != nil {

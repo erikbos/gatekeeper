@@ -14,8 +14,8 @@ type APIProductService struct {
 	changelog *Changelog
 }
 
-// NewAPIProductService returns a new apiproduct instance
-func NewAPIProductService(database *db.Database, c *Changelog) *APIProductService {
+// NewAPIProduct returns a new apiproduct instance
+func NewAPIProduct(database *db.Database, c *Changelog) *APIProductService {
 
 	return &APIProductService{db: database, changelog: c}
 }
@@ -63,7 +63,7 @@ func (ds *APIProductService) Create(organizationName string, newAPIProduct types
 	}
 	// Automatically set default fields
 	newAPIProduct.CreatedAt = shared.GetCurrentTimeMilliseconds()
-	newAPIProduct.CreatedBy = who.Username
+	newAPIProduct.CreatedBy = who.User
 
 	// Automatically assign new APIProduct to organization
 	newAPIProduct.OrganizationName = organizationName
@@ -148,7 +148,7 @@ func (ds *APIProductService) updateAPIProduct(updatedAPIProduct *types.APIProduc
 
 	updatedAPIProduct.Attributes.Tidy()
 	updatedAPIProduct.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
-	updatedAPIProduct.LastmodifiedBy = who.Username
+	updatedAPIProduct.LastmodifiedBy = who.User
 	return ds.db.APIProduct.Update(updatedAPIProduct)
 }
 

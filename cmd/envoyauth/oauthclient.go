@@ -1,7 +1,7 @@
 package main
 
 import (
-	log "github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 	"gopkg.in/oauth2.v3"
 	"gopkg.in/oauth2.v3/models"
 
@@ -10,16 +10,19 @@ import (
 
 // ClientTokenStore holds our database config
 type ClientTokenStore struct {
-	db    *db.Database
-	cache *Cache
+	db     *db.Database
+	cache  *Cache
+	logger *zap.Logger
 }
 
 // NewOAuthClientTokenStore creates client token store instance
-func NewOAuthClientTokenStore(database *db.Database, cache *Cache) oauth2.ClientStore {
+func NewOAuthClientTokenStore(database *db.Database, cache *Cache,
+	logger *zap.Logger) oauth2.ClientStore {
 
 	return &ClientTokenStore{
-		db:    database,
-		cache: cache,
+		db:     database,
+		cache:  cache,
+		logger: logger.With(zap.String("system", "oauthclientstore")),
 	}
 }
 
@@ -29,7 +32,7 @@ func (clientstore *ClientTokenStore) GetByID(id string) (oauth2.ClientInfo, erro
 	if id == "" {
 		return nil, nil
 	}
-	log.Debugf("OAuthClientTokenStore: GetByID: %s", id)
+	clientstore.logger.Debug("GetByID", zap.String("id", id))
 
 	credential, err := clientstore.cache.GetDeveloperAppKey(&id)
 	// in case we do not have this apikey in cache let's try to retrieve it from database
@@ -42,7 +45,7 @@ func (clientstore *ClientTokenStore) GetByID(id string) (oauth2.ClientInfo, erro
 		// Store retrieved credential in cache, in case of error we proceed as we can
 		// statisfy the request as we did retrieve succesful from database
 		if err = clientstore.cache.StoreDeveloperAppKey(&id, credential); err != nil {
-			log.Debugf("Could not store OAuth2 credential '%s' in cache", id)
+			clientstore.logger.Debug("GetByID cannot store in cache", zap.String("id", id))
 		}
 	}
 

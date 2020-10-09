@@ -19,6 +19,8 @@ import (
 
 func Test_buildEnvoyClusterConfig(t *testing.T) {
 
+	s := server{}
+
 	tests := []struct {
 		name     string
 		cluster  types.Cluster
@@ -117,11 +119,13 @@ func Test_buildEnvoyClusterConfig(t *testing.T) {
 	}
 	for _, test := range tests {
 		require.Equalf(t, test.expected,
-			buildEnvoyClusterConfig(test.cluster), test.name)
+			s.buildEnvoyClusterConfig(test.cluster), test.name)
 	}
 }
 
 func Test_clusterConnectTimeout(t *testing.T) {
+
+	s := server{}
 
 	tests := []struct {
 		name     string
@@ -150,11 +154,13 @@ func Test_clusterConnectTimeout(t *testing.T) {
 	}
 	for _, test := range tests {
 		require.Equalf(t, test.expected,
-			clusterConnectTimeout(test.cluster), test.name)
+			s.clusterConnectTimeout(test.cluster), test.name)
 	}
 }
 
 func Test_clusterLbPolicy(t *testing.T) {
+
+	s := server{}
 
 	tests := []struct {
 		name     string
@@ -233,11 +239,13 @@ func Test_clusterLbPolicy(t *testing.T) {
 	}
 	for _, test := range tests {
 		require.Equalf(t, test.expected,
-			clusterLbPolicy(test.cluster), test.name)
+			s.clusterLbPolicy(test.cluster), test.name)
 	}
 }
 
 func Test_clusterLoadAssignment(t *testing.T) {
+
+	s := server{}
 
 	tests := []struct {
 		name     string
@@ -315,11 +323,13 @@ func Test_clusterLoadAssignment(t *testing.T) {
 
 	for _, test := range tests {
 		require.Equalf(t, test.expected,
-			clusterLoadAssignment(test.cluster), test.name)
+			s.clusterLoadAssignment(test.cluster), test.name)
 	}
 }
 
 func Test_clusterCircuitBreakers(t *testing.T) {
+
+	s := server{}
 
 	tests := []struct {
 		name     string
@@ -401,11 +411,13 @@ func Test_clusterCircuitBreakers(t *testing.T) {
 
 	for _, test := range tests {
 		require.Equalf(t, test.expected,
-			clusterCircuitBreakers(test.cluster), test.name)
+			s.clusterCircuitBreakers(test.cluster), test.name)
 	}
 }
 
 func Test_clusterHealthChecks(t *testing.T) {
+
+	s := server{}
 
 	tests := []struct {
 		name     string
@@ -479,11 +491,13 @@ func Test_clusterHealthChecks(t *testing.T) {
 
 	for _, test := range tests {
 		require.Equalf(t, test.expected,
-			clusterHealthChecks(test.cluster), test.name)
+			s.clusterHealthChecks(test.cluster), test.name)
 	}
 }
 
 func Test_clusterHealthCodec(t *testing.T) {
+
+	s := server{}
 
 	tests := []struct {
 		name     string
@@ -536,11 +550,13 @@ func Test_clusterHealthCodec(t *testing.T) {
 	}
 	for _, test := range tests {
 		require.Equalf(t, test.expected,
-			clusterHealthCodec(test.cluster), test.name)
+			s.clusterHealthCodec(test.cluster), test.name)
 	}
 }
 
 func Test_clusterCommonHTTPProtocolOptions(t *testing.T) {
+
+	s := server{}
 
 	tests := []struct {
 		name     string
@@ -573,11 +589,13 @@ func Test_clusterCommonHTTPProtocolOptions(t *testing.T) {
 	}
 	for _, test := range tests {
 		require.Equalf(t, test.expected,
-			clusterCommonHTTPProtocolOptions(test.cluster), test.name)
+			s.clusterCommonHTTPProtocolOptions(test.cluster), test.name)
 	}
 }
 
 func Test_clusterHTTP2ProtocolOptions(t *testing.T) {
+
+	s := server{}
 
 	tests := []struct {
 		name     string
@@ -623,11 +641,13 @@ func Test_clusterHTTP2ProtocolOptions(t *testing.T) {
 	}
 	for _, test := range tests {
 		require.Equalf(t, test.expected,
-			clusterHTTP2ProtocolOptions(test.cluster), test.name)
+			s.clusterHTTP2ProtocolOptions(test.cluster), test.name)
 	}
 }
 
 func Test_clusterTransportSocket(t *testing.T) {
+
+	s := server{}
 
 	tests := []struct {
 		name       string
@@ -672,11 +692,13 @@ func Test_clusterTransportSocket(t *testing.T) {
 	}
 	for _, test := range tests {
 		require.Equalf(t, test.expected,
-			clusterTransportSocket(test.cluster), test.name)
+			s.clusterTransportSocket(test.cluster), test.name)
 	}
 }
 
 func Test_clusterSNIHostname(t *testing.T) {
+
+	s := server{}
 
 	tests := []struct {
 		name     string
@@ -733,11 +755,13 @@ func Test_clusterSNIHostname(t *testing.T) {
 	}
 	for _, test := range tests {
 		require.Equalf(t, test.expected,
-			clusterSNIHostname(test.cluster), test.name)
+			s.clusterSNIHostname(test.cluster), test.name)
 	}
 }
 
 func Test_clusterDNSLookupFamily(t *testing.T) {
+
+	s := server{}
 
 	tests := []struct {
 		name     string
@@ -749,7 +773,7 @@ func Test_clusterDNSLookupFamily(t *testing.T) {
 			cluster: types.Cluster{
 				Attributes: types.Attributes{
 					{
-						Name:  types.AttributeDNSLookupFamiliy,
+						Name:  types.AttributeDNSLookupFamily,
 						Value: types.AttributeValueDNSIPV4Only,
 					},
 				},
@@ -761,7 +785,7 @@ func Test_clusterDNSLookupFamily(t *testing.T) {
 			cluster: types.Cluster{
 				Attributes: types.Attributes{
 					{
-						Name:  types.AttributeDNSLookupFamiliy,
+						Name:  types.AttributeDNSLookupFamily,
 						Value: types.AttributeValueDNSIPV6Only,
 					},
 				},
@@ -773,7 +797,7 @@ func Test_clusterDNSLookupFamily(t *testing.T) {
 			cluster: types.Cluster{
 				Attributes: types.Attributes{
 					{
-						Name:  types.AttributeDNSLookupFamiliy,
+						Name:  types.AttributeDNSLookupFamily,
 						Value: types.AttributeValueDNSAUTO,
 					},
 				},
@@ -783,11 +807,13 @@ func Test_clusterDNSLookupFamily(t *testing.T) {
 	}
 	for _, test := range tests {
 		require.Equalf(t, test.expected,
-			clusterDNSLookupFamily(test.cluster), test.name)
+			s.clusterDNSLookupFamily(test.cluster), test.name)
 	}
 }
 
 func Test_clusterDNSRefreshRate(t *testing.T) {
+
+	s := server{}
 
 	tests := []struct {
 		name     string
@@ -816,11 +842,13 @@ func Test_clusterDNSRefreshRate(t *testing.T) {
 	}
 	for _, test := range tests {
 		require.Equalf(t, test.expected,
-			clusterDNSRefreshRate(test.cluster), test.name)
+			s.clusterDNSRefreshRate(test.cluster), test.name)
 	}
 }
 
 func Test_clusterDNSResolvers(t *testing.T) {
+
+	s := server{}
 
 	tests := []struct {
 		name     string
@@ -898,6 +926,6 @@ func Test_clusterDNSResolvers(t *testing.T) {
 	}
 	for _, test := range tests {
 		require.Equalf(t, test.expected,
-			clusterDNSResolvers(test.cluster), test.name)
+			s.clusterDNSResolvers(test.cluster), test.name)
 	}
 }

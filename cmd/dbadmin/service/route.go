@@ -14,8 +14,8 @@ type RouteService struct {
 	changelog *Changelog
 }
 
-// NewRouteService returns a new route instance
-func NewRouteService(database *db.Database, c *Changelog) *RouteService {
+// NewRoute returns a new route instance
+func NewRoute(database *db.Database, c *Changelog) *RouteService {
 
 	return &RouteService{db: database, changelog: c}
 }
@@ -62,7 +62,7 @@ func (rs *RouteService) Create(newRoute types.Route, who Requester) (types.Route
 	}
 	// Automatically set default fields
 	newRoute.CreatedAt = shared.GetCurrentTimeMilliseconds()
-	newRoute.CreatedBy = who.Username
+	newRoute.CreatedBy = who.User
 
 	err = rs.updateRoute(&newRoute, who)
 	rs.changelog.Create(newRoute, who)
@@ -143,7 +143,7 @@ func (rs *RouteService) updateRoute(updatedRoute *types.Route, who Requester) ty
 
 	updatedRoute.Attributes.Tidy()
 	updatedRoute.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
-	updatedRoute.LastmodifiedBy = who.Username
+	updatedRoute.LastmodifiedBy = who.User
 	return rs.db.Route.Update(updatedRoute)
 }
 

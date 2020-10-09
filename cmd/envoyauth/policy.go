@@ -8,17 +8,20 @@ import (
 	"strings"
 
 	"github.com/bmatcuk/doublestar"
-	log "github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 
 	"github.com/erikbos/gatekeeper/pkg/shared"
 )
 
 // Policy holds input to be to evaluate one policy
 type Policy struct {
+
 	// Global state of our running application
 	authServer *authorizationServer
+
 	// Request information
 	request *requestInfo
+
 	// Current state of policy evaluation
 	*PolicyChainResponse
 }
@@ -93,11 +96,11 @@ func checkAPIKey(request *requestInfo, authServer *authorizationServer) *PolicyR
 	var err error
 	request.apikey, err = getAPIkeyFromQueryString(request.queryParameters)
 
-	// In case we could not find a query parameter we return immediately
+	// In case we cannot find a query parameter we return immediately
 	if err == nil && request.apikey == nil {
 		return nil
 	}
-	// In case we could not find a query parameter did not have a value we reject request
+	// In case we cannot find a query parameter did not have a value we reject request
 	if err != nil {
 		return &PolicyResponse{
 			denied:           true,
@@ -109,7 +112,9 @@ func checkAPIKey(request *requestInfo, authServer *authorizationServer) *PolicyR
 	// In case we have an apikey we check whether product is allowed to be accessed
 	err = authServer.CheckProductEntitlement(request.vhost.OrganizationName, request)
 	if err != nil {
-		log.Debugf("CheckProductEntitlement() not allowed '%s' (%s)", request.URL.Path, err.Error())
+		authServer.logger.Debug("CheckProductEntitlement() not allowed",
+			zap.String("path", request.URL.Path), zap.String("reason", err.Error()))
+
 		authServer.increaseCounterApikeyNotfound(request)
 
 		// apikey invalid or path not allowed
@@ -158,7 +163,7 @@ func checkOAuth2(request *requestInfo, authServer *authorizationServer) *PolicyR
 	if authorizationHeader != "" && strings.HasPrefix(authorizationHeader, prefix) {
 		accessToken = authorizationHeader[len(prefix):]
 	} else {
-		// Could not get bearer token from authorization header
+		// Cannot get bearer token from authorization header
 		// Not a problem: apparently this request was not meant to be authenticated using OAuth
 		return nil
 	}
@@ -180,7 +185,9 @@ func checkOAuth2(request *requestInfo, authServer *authorizationServer) *PolicyR
 
 	err = authServer.CheckProductEntitlement(request.vhost.OrganizationName, request)
 	if err != nil {
-		log.Debugf("CheckProductEntitlement() not allowed '%s' (%s)", request.URL.Path, err.Error())
+		authServer.logger.Debug("CheckProductEntitlement() not allowed",
+			zap.String("path", request.URL.Path), zap.String("reason", err.Error()))
+
 		authServer.increaseCounterApikeyNotfound(request)
 
 		return &PolicyResponse{

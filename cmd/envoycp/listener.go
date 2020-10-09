@@ -18,7 +18,7 @@ import (
 	cache "github.com/envoyproxy/go-control-plane/pkg/cache/types"
 	"github.com/envoyproxy/go-control-plane/pkg/wellknown"
 	"github.com/golang/protobuf/ptypes"
-	log "github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/structpb"
 
@@ -40,7 +40,7 @@ func (s *server) getEnvoyListenerConfig() ([]cache.Resource, error) {
 
 	uniquePorts := s.getListenerPorts()
 	for port := range uniquePorts {
-		log.Infof("XDS adding listener & vhosts on port %d", port)
+		s.logger.Info("Compiling configuration", zap.Uint32("port", port))
 		envoyListeners = append(envoyListeners, s.buildEnvoyListenerConfig(port))
 	}
 	return envoyListeners, nil
@@ -96,7 +96,9 @@ func (s *server) buildEnvoyListenerConfig(port uint32) *listener.Listener {
 			// as a result the setting attributes of the second (or third) listener on same port
 			// will be ignored: all share the settings of the first configured listener
 			if TLSEnabled != types.AttributeValueTrue {
-				log.Warnf("Multiple non-TLS listeners on port '%d', ignoring attributes of '%s'", port, configuredListener.Name)
+				s.logger.Error("Cannot add listener, already one active on port",
+					zap.Uint32("port", port),
+					zap.String("listener", configuredListener.Name))
 				break
 			}
 		}
@@ -119,7 +121,7 @@ func (s *server) buildFilterChainEntry(v types.Listener, configuredListener *lis
 	manager := s.buildConnectionManager(v)
 	managerProtoBuf, err := ptypes.MarshalAny(manager)
 	if err != nil {
-		log.Panic(err)
+		s.logger.Panic("buildFilterChainEntry", zap.Error(err))
 	}
 
 	FilterChainEntry := &listener.FilterChain{
@@ -169,7 +171,7 @@ func (s *server) buildConnectionManager(listener types.Listener) *hcm.HttpConnec
 		UseRemoteAddress:          protoBool(true),
 		HttpFilters:               s.buildFilter(listener),
 		RouteSpecifier:            s.buildRouteSpecifierRDS(listener.RouteGroup),
-		AccessLog:                 buildAccessLog(listener),
+		AccessLog:                 s.buildAccessLog(listener),
 		CommonHttpProtocolOptions: listenerCommonHTTPProtocolOptions(listener),
 		Http2ProtocolOptions:      buildHTTP2ProtocolOptions(listener),
 		// LocalReplyConfig:          buildLocalOverWrite(listener),
@@ -239,7 +241,7 @@ func (s *server) buildHTTPFilterExtAuthzConfig() *anypb.Any {
 
 	extAuthzTypedConf, err := ptypes.MarshalAny(extAuthz)
 	if err != nil {
-		log.Panic(err)
+		s.logger.Panic("buildHTTPFilterExtAuthzConfig", zap.Error(err))
 	}
 	return extAuthzTypedConf
 }
@@ -265,7 +267,7 @@ func (s *server) buildHTTPFilterRateLimiterConfig() *anypb.Any {
 
 	ratelimitTypedConf, err := ptypes.MarshalAny(ratelimit)
 	if err != nil {
-		log.Panic(err)
+		s.logger.Panic("buildHTTPFilterExtAuthzConfig", zap.Error(err))
 	}
 	return ratelimitTypedConf
 }
@@ -295,7 +297,7 @@ func (s *server) buildRouteSpecifierRDS(routeGroup string) *hcm.HttpConnectionMa
 	}
 }
 
-func buildAccessLog(listener types.Listener) []*accesslog.AccessLog {
+func (s *server) buildAccessLog(listener types.Listener) []*accesslog.AccessLog {
 
 	accessLog := make([]*accesslog.AccessLog, 0, 10)
 
@@ -304,7 +306,7 @@ func buildAccessLog(listener types.Listener) []*accesslog.AccessLog {
 	accessLogFileFields, error2 := listener.Attributes.Get(types.AttributeAccessLogFileFields)
 	if error == nil && accessLogFile != "" &&
 		error2 == nil && accessLogFileFields != "" {
-		accessLog = append(accessLog, buildFileAccessLog(accessLogFile, accessLogFileFields))
+		accessLog = append(accessLog, s.buildFileAccessLog(accessLogFile, accessLogFileFields))
 	}
 
 	// Set up access logging to cluster, in case we have a cluster name
@@ -314,13 +316,13 @@ func buildAccessLog(listener types.Listener) []*accesslog.AccessLog {
 		accessLogClusterBuffer := listener.Attributes.GetAsUInt32(
 			types.AttributeAccessLogClusterBufferSize, accessLogBufferSizeDefault)
 
-		accessLog = append(accessLog, buildGRPCAccessLog(accessLogCluster, listener.Name,
+		accessLog = append(accessLog, s.buildGRPCAccessLog(accessLogCluster, listener.Name,
 			types.DefaultClusterConnectTimeout, accessLogClusterBuffer))
 	}
 	return accessLog
 }
 
-func buildFileAccessLog(path, fields string) *accesslog.AccessLog {
+func (s *server) buildFileAccessLog(path, fields string) *accesslog.AccessLog {
 
 	jsonFormat := &structpb.Struct{
 		Fields: map[string]*structpb.Value{},
@@ -350,7 +352,7 @@ func buildFileAccessLog(path, fields string) *accesslog.AccessLog {
 	}
 	accessLogTypedConf, err := ptypes.MarshalAny(accessLogConf)
 	if err != nil {
-		log.Panic(err)
+		s.logger.Panic("buildFileAccessLog", zap.Error(err))
 	}
 	return &accesslog.AccessLog{
 		Name: wellknown.FileAccessLog,
@@ -360,7 +362,7 @@ func buildFileAccessLog(path, fields string) *accesslog.AccessLog {
 	}
 }
 
-func buildGRPCAccessLog(clusterName, logName string, timeout time.Duration, bufferSize uint32) *accesslog.AccessLog {
+func (s *server) buildGRPCAccessLog(clusterName, logName string, timeout time.Duration, bufferSize uint32) *accesslog.AccessLog {
 
 	accessLogConf := &grpcaccesslog.HttpGrpcAccessLogConfig{
 		CommonConfig: &grpcaccesslog.CommonGrpcAccessLogConfig{
@@ -373,7 +375,7 @@ func buildGRPCAccessLog(clusterName, logName string, timeout time.Duration, buff
 
 	accessLogTypedConf, err := ptypes.MarshalAny(accessLogConf)
 	if err != nil {
-		log.Panic(err)
+		s.logger.Panic("buildGRPCAccessLog", zap.Error(err))
 	}
 	return &accesslog.AccessLog{
 		Name: wellknown.HTTPGRPCAccessLog,

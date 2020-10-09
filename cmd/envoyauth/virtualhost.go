@@ -5,7 +5,7 @@ import (
 	"strings"
 	"sync"
 
-	log "github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 
 	"github.com/erikbos/gatekeeper/pkg/db"
 	"github.com/erikbos/gatekeeper/pkg/types"
@@ -14,6 +14,7 @@ import (
 type vhostMapping struct {
 	dbentities *db.EntityCache
 	listeners  map[vhostMapEntry]types.Listener
+	logger     *zap.Logger
 }
 
 type vhostMapEntry struct {
@@ -21,22 +22,25 @@ type vhostMapEntry struct {
 	port  int
 }
 
-func newVhostMapping(d *db.EntityCache) *vhostMapping {
+func newVhostMapping(d *db.EntityCache, logger *zap.Logger) *vhostMapping {
 
 	return &vhostMapping{
 		dbentities: d,
+		logger:     logger,
 	}
 }
 
 func (v *vhostMapping) WaitFor(entityNotifications chan db.EntityChangeNotification) {
 
 	for changedEntity := range entityNotifications {
-		log.Infof("Database change notify received for entity '%s'",
-			changedEntity.Resource)
+		v.logger.Info("Database change notify received",
+			zap.String("entity", changedEntity.Resource))
 
 		if changedEntity.Resource == db.EntityTypeListener ||
 			changedEntity.Resource == db.EntityTypeRoute {
-			log.Printf("%+v", v.buildVhostMap())
+
+			v.buildVhostMap()
+
 		}
 	}
 }
@@ -49,8 +53,11 @@ func (v *vhostMapping) buildVhostMap() map[vhostMapEntry]types.Listener {
 		listener.Attributes = types.NullAttributes
 
 		for _, host := range listener.VirtualHosts {
-			newListeners[vhostMapEntry{strings.ToLower(host),
-				listener.Port}] = listener
+			newListeners[vhostMapEntry{strings.ToLower(host), listener.Port}] = listener
+
+			v.logger.Info("vhostmap",
+				zap.String("host", host),
+				zap.Int("port", listener.Port))
 		}
 	}
 

@@ -3,9 +3,10 @@ package service
 import (
 	"net/http"
 
-	log "github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 
 	"github.com/erikbos/gatekeeper/pkg/db"
+	"github.com/erikbos/gatekeeper/pkg/shared"
 )
 
 type (
@@ -21,9 +22,15 @@ type (
 		Delete(old interface{}, who Requester)
 	}
 
+	// ChangelogConfig holds configuration of a changelog
+	ChangelogConfig struct {
+		Logger shared.Logger `yaml:"logging"` // changelog log configuration
+	}
+
 	// Changelog is a new changelogger
 	Changelog struct {
-		db *db.Database
+		db     *db.Database
+		logger *zap.Logger
 	}
 
 	// Requester stores the identity and connection details of an authenticated user
@@ -31,46 +38,62 @@ type (
 	Requester struct {
 		RemoteAddr string
 		Header     http.Header
-		Username   string
+		User       string
+		Role       string
 		RequestID  string
 	}
 )
 
-// NewChangelogService returns a new Changelog instance
-func NewChangelogService(database *db.Database) *Changelog {
+// NewChangelog returns a new Changelog instance
+func NewChangelog(database *db.Database, logger *zap.Logger) *Changelog {
 
-	return &Changelog{db: database}
+	return &Changelog{
+		db:     database,
+		logger: logger,
+	}
 }
 
 const (
-	createEvent = "CREATE"
-	updateEvent = "UPDATE"
-	deleteEvent = "DELETE"
+	createEvent = "create"
+	updateEvent = "update"
+	deleteEvent = "delete"
 )
 
 // Create logs a created entity
 func (cl *Changelog) Create(new interface{}, who Requester) {
 
-	cl.log(createEvent, nil, new, who)
+	cl.log(createEvent, db.Typeof(new), nil, new, who)
 }
 
 // Update logs an updated entity
 func (cl *Changelog) Update(old, new interface{}, who Requester) {
 
-	cl.log(updateEvent, old, new, who)
+	cl.log(updateEvent, db.Typeof(old), old, new, who)
 }
 
 // Delete logs a deleted entity
 func (cl *Changelog) Delete(old interface{}, who Requester) {
 
-	cl.log(deleteEvent, old, nil, who)
+	cl.log(deleteEvent, db.Typeof(old), old, nil, who)
 }
 
 // log logs a changed entity
-func (cl *Changelog) log(eventType string, old, new interface{}, who Requester) {
+func (cl *Changelog) log(eventType, entityType string, old, new interface{}, who Requester) {
 
-	log.Infof("who: %s", who)
-	log.Infof("eventType: %s", eventType)
-	log.Infof("OLD %+v\n", old)
-	log.Infof("NEW %+v\n", new)
+	cl.logger.Info("changelog",
+		zap.String("changetype", eventType),
+		zap.String("entity", entityType),
+		zap.Any("who", map[string]interface{}{
+			"ip":        who.RemoteAddr,
+			"user":      who.User,
+			"role":      who.Role,
+			"requestid": who.RequestID,
+			// "headers", who.Header,
+		}),
+		zap.Any("old", map[string]interface{}{
+			entityType: old,
+		}),
+		zap.Any("new", map[string]interface{}{
+			entityType: new,
+		}))
 }

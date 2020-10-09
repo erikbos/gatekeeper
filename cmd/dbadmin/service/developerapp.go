@@ -16,8 +16,8 @@ type DeveloperAppService struct {
 	changelog *Changelog
 }
 
-// NewDeveloperAppService returns a new developerApp instance
-func NewDeveloperAppService(database *db.Database, c *Changelog) *DeveloperAppService {
+// NewDeveloperApp returns a new developerApp instance
+func NewDeveloperApp(database *db.Database, c *Changelog) *DeveloperAppService {
 
 	return &DeveloperAppService{db: database, changelog: c}
 }
@@ -77,7 +77,7 @@ func (das *DeveloperAppService) Create(organizationName, developerEmail string,
 
 	// Automatically set default fields
 	newDeveloperApp.CreatedAt = shared.GetCurrentTimeMilliseconds()
-	newDeveloperApp.CreatedBy = who.Username
+	newDeveloperApp.CreatedBy = who.User
 
 	newDeveloperApp.AppID = generateAppID()
 	newDeveloperApp.DeveloperID = developer.DeveloperID
@@ -164,7 +164,7 @@ func (das *DeveloperAppService) updateDeveloperApp(updatedDeveloperApp *types.De
 
 	updatedDeveloperApp.Attributes.Tidy()
 	updatedDeveloperApp.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
-	updatedDeveloperApp.LastmodifiedBy = who.Username
+	updatedDeveloperApp.LastmodifiedBy = who.User
 	return das.db.DeveloperApp.Update(updatedDeveloperApp)
 }
 

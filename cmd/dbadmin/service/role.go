@@ -14,8 +14,8 @@ type RoleService struct {
 	Changelog *Changelog
 }
 
-// NewRoleService returns a new role instance
-func NewRoleService(database *db.Database, c *Changelog) *RoleService {
+// NewRole returns a new role instance
+func NewRole(database *db.Database, c *Changelog) *RoleService {
 
 	return &RoleService{db: database, Changelog: c}
 }
@@ -42,7 +42,7 @@ func (rs *RoleService) Create(newRole types.Role, who Requester) (*types.Role, t
 	}
 	// Automatically set default fields
 	newRole.CreatedAt = shared.GetCurrentTimeMilliseconds()
-	newRole.CreatedBy = who.Username
+	newRole.CreatedBy = who.User
 
 	if err = rs.updateRole(&newRole, who); err != nil {
 		return nil, err
@@ -74,7 +74,7 @@ func (rs *RoleService) Update(updatedRole types.Role, who Requester) (*types.Rol
 func (rs *RoleService) updateRole(updatedRole *types.Role, who Requester) types.Error {
 
 	updatedRole.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
-	updatedRole.LastmodifiedBy = who.Username
+	updatedRole.LastmodifiedBy = who.User
 	return rs.db.Role.Update(updatedRole)
 }
 

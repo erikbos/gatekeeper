@@ -112,21 +112,34 @@ OAuth2 background information:
 
 Envoyauth has a built in-memory cache for retrieved entities from Cassandra. This will prevent doing Cassandra queries for entities that has already been retrieved earlier to speed up authentication requests.
 
+### Logfiles
+
+Envoyauth writes multiple logfiles, one for each function of envoyauth. All are written as structured JSON, filename rotation schedule can be set via configuration file. The three logfiles are:
+
+1. `logging.filename` as log for application messages
+2. `webadmin.logging.filename` as access log for REST API calls
+3. `oauth2.logging.filename` as access log OAuth2 token calls
+
 ### Envoyauth configuration file
 
 The supported fields are:
 
 | yaml field               | purpose                                                             | example                |
 | ------------------------ | ------------------------------------------------------------------- | ---------------------- |
+| logging.level            | application log level                                               | info / debug           |
+| logging.filename         | filename to write application log to                                | /dev/stdout            |
 | webadmin.listen          | webadmin address and port                                           | 0.0.0.0:2113           |
 | webadmin.ipacl           | webadmin ip acl, without this no access                             | 172.16.0.0/19          |
 | webadmin.tls.certfile    | TLS certificate file                                                |                        |
 | webadmin.tls.keyfile     | TLS certificate key file                                            |                        |
-| webadmin.logfile         | Access log file                                                     | /var/log/envoyauth.log |
+| webadmin.logging.level   | logging level of webadmin                                           | info / debug           |
+| webadmin.logging.filename| filename to write web access log to                                 | dbadmin-access.log     |
 | envoyauth.listen         | listen address and port for authentication requests from Envoyproxy | 0.0.0.0:4000           |
 | oauth.listen             | listen address and port for OAuth token requests                    | 0.0.0.0:4001           |
 | oauth.tls.certfile       | TLS certificate file                                                |                        |
 | oauth.tls.keyfile        | TLS certificate key file                                            |                        |
+| oauth.logging.level      | logging level of oauth endpoint                                     | info / debug           |
+| oauth.logging.filename   | filename to write oauth token access log to                         | dbadmin-access.log     |
 | oauth.tokenissuepath     | Path for OAuth2 token issue requests                                | /oauth2/token          |
 | oauth.tokeninfopath      | Path for OAuth2 token info requests                                 | /oauth2/info           |
 | database.hostname        | Cassandra hostname to connect to                                    | cassandra              |

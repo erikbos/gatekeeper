@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	log "github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 
 	"github.com/erikbos/gatekeeper/pkg/shared"
 	"github.com/erikbos/gatekeeper/pkg/types"
@@ -26,6 +26,7 @@ type EntityCache struct {
 	usersLastUpdate     int64             // Timestamp of most recent load of users
 	rolesLastUpdate     int64             // Timestamp of most recent load of roles
 	mutex               sync.Mutex        // Mutex to use when updating
+	logger              *zap.Logger       // Logger
 }
 
 // EntityCacheConfig contains configuration on which entities we continously load
@@ -44,19 +45,13 @@ type EntityChangeNotification struct {
 	Resource string // Name of resource type that has been changed
 }
 
-// Entity types that we load and send via notification channel
-const (
-	EntityTypeListener = "listener"
-	EntityTypeRoute    = "route"
-	EntityTypeCluster  = "cluster"
-	EntityTypeUser     = "user"
-	EntityTypeRole     = "role"
-)
-
 // NewEntityCache returns a new entity loader
-func NewEntityCache(database *Database, config EntityCacheConfig) *EntityCache {
+func NewEntityCache(database *Database, config EntityCacheConfig, logger *zap.Logger) *EntityCache {
 
-	return &EntityCache{config: config, db: database}
+	return &EntityCache{config: config,
+		db:     database,
+		logger: logger.With(zap.String("system", "entitycache")),
+	}
 }
 
 // Start kicks off continously refreshing entities from database at interval
@@ -97,7 +92,7 @@ func (ec *EntityCache) checkForChangedListeners() {
 
 	loadedListeners, err := ec.db.Listener.GetAll()
 	if err != nil {
-		log.Errorf("Could not retrieve listeners from database (%s)", err)
+		ec.logger.Error("Cannot retrieve listeners from database", zap.Error(err))
 		return
 	}
 	// In case we have less routes one or more was deleted
@@ -118,7 +113,7 @@ func (ec *EntityCache) updateListeners(newListeners types.Listeners) {
 	ec.mutex.Unlock()
 	ec.listenersLastUpdate = shared.GetCurrentTimeMilliseconds()
 
-	log.Info("Listener entities reloaded")
+	ec.logger.Info("Listener entities reloaded")
 	if ec.config.Notify != nil {
 		ec.config.Notify <- EntityChangeNotification{Resource: EntityTypeListener}
 	}
@@ -130,7 +125,7 @@ func (ec *EntityCache) checkForChangedRoutes() {
 
 	loadedRoutes, err := ec.db.Route.GetAll()
 	if err != nil {
-		log.Errorf("Could not retrieve routes from database (%s)", err)
+		ec.logger.Error("Cannot retrieve routes from database", zap.Error(err))
 		return
 	}
 	// In case we have less routes one or more was deleted
@@ -151,7 +146,7 @@ func (ec *EntityCache) updateRoutes(newRoutes types.Routes) {
 	ec.mutex.Unlock()
 	ec.routesLastUpdate = shared.GetCurrentTimeMilliseconds()
 
-	log.Info("Route entities reloaded")
+	ec.logger.Info("Route entities reloaded")
 	if ec.config.Notify != nil {
 		ec.config.Notify <- EntityChangeNotification{Resource: EntityTypeRoute}
 	}
@@ -163,7 +158,7 @@ func (ec *EntityCache) checkForChangedClusters() {
 
 	loadedClusters, err := ec.db.Cluster.GetAll()
 	if err != nil {
-		log.Errorf("Could not retrieve clusters from database (%s)", err)
+		ec.logger.Error("Cannot retrieve clusters from database", zap.Error(err))
 		return
 	}
 	// In case we have less routes one or more was deleted
@@ -184,7 +179,7 @@ func (ec *EntityCache) updateClusters(newClusters types.Clusters) {
 	ec.mutex.Unlock()
 	ec.clustersLastUpdate = shared.GetCurrentTimeMilliseconds()
 
-	log.Info("Cluster entities reloaded")
+	ec.logger.Info("Cluster entities reloaded")
 	if ec.config.Notify != nil {
 		ec.config.Notify <- EntityChangeNotification{Resource: EntityTypeCluster}
 	}
@@ -196,7 +191,7 @@ func (ec *EntityCache) checkForChangedUsers() {
 
 	loadedUsers, err := ec.db.User.GetAll()
 	if err != nil {
-		log.Errorf("Could not retrieve users from database (%s)", err)
+		ec.logger.Error("Cannot retrieve users from database", zap.Error(err))
 		return
 	}
 	// In case we have less users one or more was deleted
@@ -217,7 +212,7 @@ func (ec *EntityCache) updateUsers(newUsers types.Users) {
 	ec.mutex.Unlock()
 	ec.usersLastUpdate = shared.GetCurrentTimeMilliseconds()
 
-	log.Info("User entities reloaded")
+	ec.logger.Info("User entities reloaded")
 	if ec.config.Notify != nil {
 		ec.config.Notify <- EntityChangeNotification{Resource: EntityTypeUser}
 	}
@@ -229,7 +224,7 @@ func (ec *EntityCache) checkForChangedRoles() {
 
 	loadedRoles, err := ec.db.Role.GetAll()
 	if err != nil {
-		log.Errorf("Could not retrieve roles from database (%s)", err)
+		ec.logger.Error("Cannot retrieve roles from database", zap.Error(err))
 		return
 	}
 	// In case we have less roles one or more was deleted
@@ -250,7 +245,7 @@ func (ec *EntityCache) updateRoles(newRoles types.Roles) {
 	ec.mutex.Unlock()
 	ec.rolesLastUpdate = shared.GetCurrentTimeMilliseconds()
 
-	log.Info("Role entities reloaded")
+	ec.logger.Info("Role entities reloaded")
 	if ec.config.Notify != nil {
 		ec.config.Notify <- EntityChangeNotification{Resource: EntityTypeRole}
 	}

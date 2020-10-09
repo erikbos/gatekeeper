@@ -4,15 +4,18 @@ import (
 	"net/http"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 )
 
 // PolicyChain holds the input to evaluating a series of policies
 type PolicyChain struct {
+
 	// metrics collection for policy counters
 	authServer *authorizationServer
+
 	// Request information
 	request *requestInfo
+
 	// "vhost" or "apiproduct"
 	scope string
 }
@@ -64,7 +67,9 @@ func (p PolicyChain) Evaluate() *PolicyChainResponse {
 		upstreamDynamicMetadata: make(map[string]string, 15),
 	}
 
-	log.Debugf("Evaluate policy chain: %s/%s", p.scope, policies)
+	p.authServer.logger.Debug("Evaluating policy chain",
+		zap.String("scope", p.scope),
+		zap.String("policies", policies))
 
 	for _, policyName := range strings.Split(policies, ",") {
 
@@ -75,7 +80,10 @@ func (p PolicyChain) Evaluate() *PolicyChainResponse {
 			PolicyChainResponse: &policyChainResult,
 		}).Evaluate(trimmedPolicyName, p.request)
 
-		log.Debugf("Evaluate policy: %s/%s => %+v", p.scope, trimmedPolicyName, policyResult)
+		p.authServer.logger.Debug("Evaluating policy",
+			zap.String("scope", p.scope),
+			zap.String("policy", trimmedPolicyName),
+			zap.Reflect("result", policyResult))
 
 		if policyResult != nil {
 			// Register this policy evaluation successed

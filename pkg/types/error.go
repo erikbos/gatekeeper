@@ -7,8 +7,8 @@ import (
 )
 
 var (
-	// errUpdateFailure indicates item could not be updated
-	errUpdateFailure = errors.New("Could not update item")
+	// errUpdateFailure indicates item cannot be updated
+	errUpdateFailure = errors.New("Cannot update item")
 
 	// errBadRequest indicates we do not understand the requested action (400)
 	errBadRequest = errors.New("Bad request")
@@ -19,8 +19,8 @@ var (
 	// errForbidden indicates the requested action was understood but forbidden (403)
 	errForbidden = errors.New("Forbidden action")
 
-	// errItemNotFound indicates the item could not be found (404)
-	errItemNotFound = errors.New("Entity could not be found")
+	// errItemNotFound indicates the item cannot be found (404)
+	errItemNotFound = errors.New("Entity cannot be found")
 
 	// errDatabaseIssue indicates a database error
 	errDatabaseIssue = errors.New("Database issue")

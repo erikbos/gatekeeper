@@ -4,64 +4,60 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-type metricsCollection struct {
-	xdsDeployments *prometheus.CounterVec
-	xdsMessages    *prometheus.CounterVec
+type metrics struct {
+	xdsEntities  *prometheus.GaugeVec
+	xdsSnapshots *prometheus.CounterVec
+	xdsMessages  *prometheus.CounterVec
 }
 
-// registerMetrics registers envoycp operational metrics
-func (s *server) registerMetrics() {
+func newMetrics(s *server) *metrics {
 
-	metricListenersCount := prometheus.NewGaugeFunc(
+	return &metrics{}
+}
+
+// Start registers envoycp operational metrics
+func (m *metrics) Start() {
+
+	m.xdsEntities = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
 			Namespace: applicationName,
-			Name:      "xds_listeners_total",
-			Help:      "Total number of clusters.",
-		}, func() float64 {
-			return float64(s.dbentities.GetListenerCount())
-		})
+			Name:      "xds_entities_total",
+			Help:      "Total number of entities.",
+		}, []string{"messagetype"})
 
-	metricRoutesCount := prometheus.NewGaugeFunc(
-		prometheus.GaugeOpts{
-			Namespace: applicationName,
-			Name:      "xds_routes_total",
-			Help:      "Total number of routes.",
-		}, func() float64 {
-			return float64(s.dbentities.GetRouteCount())
-		})
-
-	metricClustersCount := prometheus.NewGaugeFunc(
-		prometheus.GaugeOpts{
-			Namespace: applicationName,
-			Name:      "xds_clusters_total",
-			Help:      "Total number of clusters.",
-		}, func() float64 {
-			return float64(s.dbentities.GetClusterCount())
-		})
-
-	s.metrics.xdsDeployments = prometheus.NewCounterVec(
+	m.xdsSnapshots = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: applicationName,
-			Name:      "xds_deployments_total",
-			Help:      "Total number of xds configuration deployments.",
+			Name:      "xds_snapshots_total",
+			Help:      "Total number of xds snapshots created.",
 		}, []string{"resource"})
 
-	s.metrics.xdsMessages = prometheus.NewCounterVec(
+	m.xdsMessages = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: applicationName,
 			Name:      "xds_resource_requests_total",
 			Help:      "Total number of XDS messages.",
 		}, []string{"messagetype"})
 
-	prometheus.MustRegister(metricListenersCount)
-	prometheus.MustRegister(metricRoutesCount)
-	prometheus.MustRegister(metricClustersCount)
-	prometheus.MustRegister(s.metrics.xdsDeployments)
-	prometheus.MustRegister(s.metrics.xdsMessages)
+	prometheus.MustRegister(m.xdsEntities)
+	prometheus.MustRegister(m.xdsSnapshots)
+	prometheus.MustRegister(m.xdsMessages)
 }
 
-// increaseCounterXDSMessage increases counter per XDS messageType
-func (s *server) increaseCounterXDSMessage(messageType string) {
+// SetEntityCount sets number of listeners we know
+func (m *metrics) SetEntityCount(label string, count int) {
 
-	s.metrics.xdsMessages.WithLabelValues(messageType).Inc()
+	m.xdsEntities.WithLabelValues(label).Set(float64(count))
+}
+
+// IncXDSSnapshotCreateCount increases number of snapshots taken
+func (m *metrics) IncXDSSnapshotCreateCount(messageType string) {
+
+	m.xdsSnapshots.WithLabelValues(messageType).Inc()
+}
+
+// IncXDSMessageCount increases counter per XDS messageType
+func (m *metrics) IncXDSMessageCount(messageType string) {
+
+	m.xdsMessages.WithLabelValues(messageType).Inc()
 }

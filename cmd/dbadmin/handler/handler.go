@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 
 	"github.com/erikbos/gatekeeper/cmd/dbadmin/service"
 	"github.com/erikbos/gatekeeper/pkg/db"
@@ -17,7 +18,7 @@ type Handler struct {
 }
 
 // NewHandler sets up all API endpoint routes
-func NewHandler(g *gin.Engine, db *db.Database, s *service.Service, enableAPIAuthentication bool) *Handler {
+func NewHandler(g *gin.Engine, db *db.Database, s *service.Service, logger *zap.Logger, enableAPIAuthentication bool) *Handler {
 
 	// m := &Metrics{}
 	// m.register("Qqq")
@@ -27,14 +28,16 @@ func NewHandler(g *gin.Engine, db *db.Database, s *service.Service, enableAPIAut
 	// apiRoutes.Use(metricsMiddleware(m))
 
 	if enableAPIAuthentication {
-		auth := newAuth(&s.User, &s.Role)
-		auth.Start(db)
+		auth := newAuth(&s.User, &s.Role, logger)
+		auth.Start(db, logger)
 		apiRoutes.Use(auth.AuthenticateAndAuthorize)
 	}
 
 	handler := &Handler{
 		service: s,
 	}
+	g.GET(showHTTPForwardingPath, handler.showHTTPForwardingPage)
+	g.GET(showUserRolesPath, handler.showUserRolePage)
 
 	// Register all API endpoint routes
 	handler.registerListenerRoutes(apiRoutes)

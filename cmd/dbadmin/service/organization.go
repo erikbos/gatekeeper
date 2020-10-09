@@ -14,8 +14,8 @@ type OrganizationService struct {
 	changelog *Changelog
 }
 
-// NewOrganizationService returns a new organization instance
-func NewOrganizationService(database *db.Database, c *Changelog) *OrganizationService {
+// NewOrganization returns a new organization instance
+func NewOrganization(database *db.Database, c *Changelog) *OrganizationService {
 
 	return &OrganizationService{db: database, changelog: c}
 }
@@ -63,7 +63,7 @@ func (os *OrganizationService) Create(newOrganization types.Organization,
 	}
 	// Set default fields
 	newOrganization.CreatedAt = shared.GetCurrentTimeMilliseconds()
-	newOrganization.CreatedBy = who.Username
+	newOrganization.CreatedBy = who.User
 
 	err = os.updateOrganization(&newOrganization, who)
 	os.changelog.Create(newOrganization, who)
@@ -144,7 +144,7 @@ func (os *OrganizationService) updateOrganization(updatedOrganization *types.Org
 
 	updatedOrganization.Attributes.Tidy()
 	updatedOrganization.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
-	updatedOrganization.LastmodifiedBy = who.Username
+	updatedOrganization.LastmodifiedBy = who.User
 	return os.db.Organization.Update(updatedOrganization)
 }
 

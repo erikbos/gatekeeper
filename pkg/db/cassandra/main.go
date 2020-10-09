@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/gocql/gocql"
-	log "github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 
 	"github.com/erikbos/gatekeeper/pkg/db"
 )
@@ -34,21 +34,23 @@ type Database struct {
 }
 
 // New builds new connected database instance
-func New(config DatabaseConfig, serviceName string,
+func New(config DatabaseConfig, serviceName string, logger *zap.Logger,
 	createSchema bool, replicationCount int) (*db.Database, error) {
+
+	logger = logger.With(zap.String("system", "db"))
 
 	cassandraClusterConfig := buildClusterConfig(config)
 
 	if createSchema {
 		// Connect to system keyspace first as our keyspace does not exist yet
 		cassandraClusterConfig.Keyspace = "system"
-		db, err := connect(cassandraClusterConfig, config)
+		db, err := connect(cassandraClusterConfig, config, logger)
 		if err != nil {
 			return nil, err
 		}
 
 		// Create keyspace with specific replication count
-		if err := createKeyspace(db, config.Keyspace, replicationCount); err != nil {
+		if err := createKeyspace(db, config.Keyspace, replicationCount, logger); err != nil {
 			return nil, err
 		}
 		// Close session: we cannot use it any further,
@@ -58,13 +60,13 @@ func New(config DatabaseConfig, serviceName string,
 
 	// Connect to Cassandra on correct keyspace
 	cassandraClusterConfig.Keyspace = config.Keyspace
-	cassandraSession, err := connect(cassandraClusterConfig, config)
+	cassandraSession, err := connect(cassandraClusterConfig, config, logger)
 	if err != nil {
 		return nil, err
 	}
 	// Create tables within keyspace if requested
 	if createSchema {
-		if err := createTables(cassandraSession); err != nil {
+		if err := createTables(cassandraSession, logger); err != nil {
 			return nil, err
 		}
 	}
@@ -128,7 +130,8 @@ func buildClusterConfig(config DatabaseConfig) *gocql.ClusterConfig {
 }
 
 // connect setups up connectivity to Cassandra
-func connect(cluster *gocql.ClusterConfig, config DatabaseConfig) (*gocql.Session, error) {
+func connect(cluster *gocql.ClusterConfig, config DatabaseConfig,
+	logger *zap.Logger) (*gocql.Session, error) {
 
 	// In case no number of connect attempts is set we try at least once
 	if config.ConnectAttempts == 0 {
@@ -141,17 +144,19 @@ func connect(cluster *gocql.ClusterConfig, config DatabaseConfig) (*gocql.Sessio
 	attempt := 0
 	for attempt < config.ConnectAttempts {
 		attempt++
-		log.Debugf("Trying to connect to database, attempt %d of %d", attempt, config.ConnectAttempts)
+		logger.Debug(fmt.Sprintf("Attemping to connect to database, attempt %d of %d",
+			attempt, config.ConnectAttempts))
 
 		cassandraSession, err = cluster.CreateSession()
 		if cassandraSession != nil {
-			log.Infof("Database connected as '%s' to '%s'", config.Username, config.Hostname)
+			logger.Info(fmt.Sprintf("Connected to database as %s to %s",
+				config.Username, config.Hostname))
 
 			return cassandraSession, nil
 		}
 		time.Sleep(3 * time.Second)
 	}
-	return nil, fmt.Errorf("Could not connect to database (%s)", err)
+	return nil, err
 }
 
 // columnValueString returns key in map as string, if key exists

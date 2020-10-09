@@ -3,19 +3,18 @@ package handler
 import (
 	"encoding/base64"
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	log "github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 
 	"github.com/erikbos/gatekeeper/cmd/dbadmin/service"
 	"github.com/erikbos/gatekeeper/pkg/db"
-	"github.com/erikbos/gatekeeper/pkg/shared"
 	"github.com/erikbos/gatekeeper/pkg/types"
+	"github.com/erikbos/gatekeeper/pkg/webadmin"
 )
 
 var (
@@ -40,26 +39,28 @@ type AuthHandler struct {
 	user        *service.User
 	role        *service.Role
 	entityCache *db.EntityCache
+	logger      *zap.Logger
 }
 
 // newAuth setups new AuthHandler entity
-func newAuth(user *service.User, role *service.Role) *AuthHandler {
+func newAuth(user *service.User, role *service.Role, logger *zap.Logger) *AuthHandler {
 
 	return &AuthHandler{
-		user: user,
-		role: role,
+		user:   user,
+		role:   role,
+		logger: logger,
 	}
 }
 
 // Start auth background jobs such as entity cache loading
-func (a *AuthHandler) Start(database *db.Database) {
+func (a *AuthHandler) Start(database *db.Database, logger *zap.Logger) {
 
 	entityCacheConf := db.EntityCacheConfig{
 		RefreshInterval: entityRefreshInterval,
 		User:            true,
 		Role:            true,
 	}
-	a.entityCache = db.NewEntityCache(database, entityCacheConf)
+	a.entityCache = db.NewEntityCache(database, entityCacheConf, logger)
 	a.entityCache.Start()
 }
 
@@ -74,8 +75,8 @@ func (a *AuthHandler) AuthenticateAndAuthorize(c *gin.Context) {
 		abortAuthorizationRequired(c, err)
 		return
 	}
-	// Store provided username in the request context so we can use it later on while logging request
-	c.Set(gin.AuthUserKey, username)
+	// Store provided username in request context so we log this afterwards
+	webadmin.StoreUser(c, username)
 
 	user, err := a.ValidatePassword(username, password)
 	if err != nil {
@@ -83,10 +84,15 @@ func (a *AuthHandler) AuthenticateAndAuthorize(c *gin.Context) {
 		abortAuthorizationRequired(c, err)
 		return
 	}
-	if !a.IsPathAllowedByUser(user, c.Request.Method, c.Request.URL.Path) {
+
+	roleWhichAllowsAccess := a.IsPathAllowedByUser(user, c.Request.Method, c.Request.URL.Path)
+	if roleWhichAllowsAccess == "" {
 		// Path not allowed by none of the roles of the user, we return 401 and abort request.
 		abortAuthorizationRequired(c, errPathNotAllowed)
 	}
+
+	// Store user's role in the request context so we can use it later on while logging request
+	webadmin.StoreRole(c, roleWhichAllowsAccess)
 }
 
 // decodeBasicAuthorizationHeader decodes a HTTP Authorization header value
@@ -121,19 +127,22 @@ func (a *AuthHandler) ValidatePassword(username, password string) (user *types.U
 	return user, nil
 }
 
-// IsPathAllowedByUser checks whether user is allowed to access a path
-func (a *AuthHandler) IsPathAllowedByUser(user *types.User, method, path string) bool {
+// IsPathAllowedByUser checks whether user is allowed to access a path,
+// if yes returns the name of the allowing access
+func (a *AuthHandler) IsPathAllowedByUser(user *types.User, method, path string) string {
 
-	log.Debugf("IsPathAllowedByUser: %s, %s, %s", user.Name, method, path)
+	a.logger.Debug("IsPathAllowedByUser",
+		zap.String("user", user.Name), zap.String("method", method), zap.String("path", path))
+
 	for _, roleName := range user.Roles {
 		if role, err := a.entityCache.GetRole(roleName); err == nil {
 			if role.PathAllowed(method, path) {
-				return true
+				return role.Name
 			}
 		}
 	}
 	// in case nothing matched we do not allow access
-	return false
+	return ""
 }
 
 func abortAuthorizationRequired(c *gin.Context, errorDetails types.Error) {
@@ -146,18 +155,12 @@ func abortAuthorizationRequired(c *gin.Context, errorDetails types.Error) {
 // who returns name of authenticated user requesting this API call
 func (h *Handler) who(c *gin.Context) service.Requester {
 
-	// Get user from request context
-	var username string
-	value, exists := c.Get(gin.AuthUserKey)
-	if exists {
-		username = fmt.Sprint(value)
-	}
-
 	// Store more details, changelog will use these records
 	return service.Requester{
-		RemoteAddr: c.Request.RemoteAddr,
+		RemoteAddr: c.ClientIP(),
 		Header:     c.Request.Header,
-		Username:   username,
-		RequestID:  shared.GetRequestID(c),
+		User:       webadmin.GetUser(c),
+		Role:       webadmin.GetRole(c),
+		RequestID:  webadmin.GetRequestID(c),
 	}
 }
