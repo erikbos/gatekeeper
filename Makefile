@@ -7,7 +7,6 @@ BIN = bin
 
 all: dbadmin envoyauth envoycp testbackend
 
-
 dbadmin:
 	mkdir -p $(BIN)
 	go build -o $(BIN)/dbadmin $(LDFLAGS) cmd/dbadmin/*.go
@@ -42,5 +41,11 @@ docker-envoycp:
 docker-testbackend:
 	 docker build -f  build/Dockerfile.testbackend . -t gatekeeper/testbackend:$(VERSION) -t gatekeeper/testbackend:latest
 
+.PHONY: test
+test:
+	mkdir -p tmp
+	go test -v -coverpkg=./... -covermode=atomic -coverprofile=tmp/coverage.txt ./...
+
+.PHONY: clean
 clean:
 	rm -f $(BIN)/dbadmin $(BIN)/envoyauth $(BIN)/envoycp $(BIN)/testbackend

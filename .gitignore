@@ -1,8 +1,8 @@
 .gitignore
-*-config.yaml
 .vscode/*
-junk/* 
+tmp/*
+bin/*
+*~
 run*.sh
 GeoIP2-City.mmdb
 todo.txt
-bin/*

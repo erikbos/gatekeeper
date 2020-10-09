@@ -1,0 +1,36 @@
+name: test
+on:
+  push:
+    branches:
+    - master
+    paths-ignore:
+    - '.github/'
+    - "docs/**"
+    - 'README.md'
+  pull_request:
+    branches:
+    - master
+    paths-ignore:
+    - '.github/'
+    - "docs/**"
+    - 'README.md'
+
+jobs:
+  test:
+    name: Build containers
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v2
+
+    - name: Golang CI lint
+      uses: actions-contrib/golangci-lint@v1
+
+    - name: Run unit tests
+      run: make test
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: tmp/coverage.txt
