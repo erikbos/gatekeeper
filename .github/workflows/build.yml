@@ -3,6 +3,8 @@ name: Build pipeline
 on:
   push:
     branches: [ master ]
+  pull_request:
+    types: [closed]
 
 jobs:
   build:
