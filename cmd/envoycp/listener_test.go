@@ -6,9 +6,11 @@ import (
 
 	accesslog "github.com/envoyproxy/go-control-plane/envoy/config/accesslog/v3"
 	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
+	ratelimitconf "github.com/envoyproxy/go-control-plane/envoy/config/ratelimit/v3"
 	fileaccesslog "github.com/envoyproxy/go-control-plane/envoy/extensions/access_loggers/file/v3"
 	grpcaccesslog "github.com/envoyproxy/go-control-plane/envoy/extensions/access_loggers/grpc/v3"
 	extauthz "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/ext_authz/v3"
+	ratelimit "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/ratelimit/v3"
 	hcm "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 	"github.com/envoyproxy/go-control-plane/pkg/wellknown"
 	"github.com/golang/protobuf/ptypes"
@@ -21,13 +23,7 @@ import (
 
 func Test_buildConnectionManager(t *testing.T) {
 
-	s := server{
-		config: &EnvoyCPConfig{
-			Envoyproxy: envoyProxyConfig{
-				ExtAuthz: extAuthzConfig{},
-			},
-		},
-	}
+	s := server{}
 	listener1 := types.Listener{
 		Attributes: types.Attributes{
 			{
@@ -61,21 +57,32 @@ func Test_buildFilter(t *testing.T) {
 		expected []*hcm.HttpFilter
 	}{
 		{
-			name:     "BuildAuthz 1 (authz enabled)",
-			listener: types.Listener{},
-			s: server{
-				config: &EnvoyCPConfig{
-					Envoyproxy: envoyProxyConfig{
-						ExtAuthz: extAuthzConfig{
-							Enable:           true,
-							RequestBodySize:  3000,
-							FailureModeAllow: true,
-							Cluster:          "authz_cluster",
-							Timeout:          48 * time.Second,
-						},
+			name: "BuildAuthz 1 (authz enabled, no CORS)",
+			listener: types.Listener{
+				Attributes: types.Attributes{
+					{
+						Name:  types.AttributeAuthentication,
+						Value: types.AttributeValueTrue,
+					},
+					{
+						Name:  types.AttributeAuthenticationRequestBodySize,
+						Value: "3000",
+					},
+					{
+						Name:  types.AttributeAuthenticationFailureModeAllow,
+						Value: "true",
+					},
+					{
+						Name:  types.AttributeAuthenticationCluster,
+						Value: "authz_cluster2",
+					},
+					{
+						Name:  types.AttributeAuthenticationTimeout,
+						Value: "48s",
 					},
 				},
 			},
+			s: server{},
 			expected: []*hcm.HttpFilter{
 				{
 					Name: wellknown.HTTPExternalAuthorization,
@@ -83,7 +90,61 @@ func Test_buildFilter(t *testing.T) {
 						TypedConfig: mustMarshalAny(&extauthz.ExtAuthz{
 							FailureModeAllow: true,
 							Services: &extauthz.ExtAuthz_GrpcService{
-								GrpcService: buildGRPCService("authz_cluster",
+								GrpcService: buildGRPCService("authz_cluster2",
+									48*time.Second),
+							},
+							WithRequestBody: &extauthz.BufferSettings{
+								MaxRequestBytes:     uint32(3000),
+								AllowPartialMessage: false,
+							},
+							TransportApiVersion: core.ApiVersion_V3,
+						}),
+					},
+				},
+				{
+					Name: wellknown.Router,
+				},
+			},
+		},
+		{
+			name: "BuildAuthz 2 (authz & CORS enabled)",
+			listener: types.Listener{
+				Attributes: types.Attributes{
+					{
+						Name:  types.AttributeAuthentication,
+						Value: types.AttributeValueTrue,
+					},
+					{
+						Name:  types.AttributeAuthenticationRequestBodySize,
+						Value: "3000",
+					},
+					{
+						Name:  types.AttributeAuthenticationFailureModeAllow,
+						Value: "true",
+					},
+					{
+						Name:  types.AttributeAuthenticationCluster,
+						Value: "authz_cluster2",
+					},
+					{
+						Name:  types.AttributeAuthenticationTimeout,
+						Value: "48s",
+					},
+					{
+						Name:  types.AttributeCORS,
+						Value: types.AttributeValueTrue,
+					},
+				},
+			},
+			s: server{},
+			expected: []*hcm.HttpFilter{
+				{
+					Name: wellknown.HTTPExternalAuthorization,
+					ConfigType: &hcm.HttpFilter_TypedConfig{
+						TypedConfig: mustMarshalAny(&extauthz.ExtAuthz{
+							FailureModeAllow: true,
+							Services: &extauthz.ExtAuthz_GrpcService{
+								GrpcService: buildGRPCService("authz_cluster2",
 									48*time.Second),
 							},
 							WithRequestBody: &extauthz.BufferSettings{
@@ -103,22 +164,78 @@ func Test_buildFilter(t *testing.T) {
 			},
 		},
 		{
-			name:     "BuildAuthz 1 (authz disabled)",
-			listener: types.Listener{},
-			s: server{
-				config: &EnvoyCPConfig{
-					Envoyproxy: envoyProxyConfig{
-						ExtAuthz: extAuthzConfig{
-							Enable:  false,
-							Cluster: "authz_cluster",
-						},
+			name: "BuildAuthz 3 ( CORS enabled)",
+			listener: types.Listener{
+				Attributes: types.Attributes{
+					{
+						Name:  types.AttributeCORS,
+						Value: types.AttributeValueTrue,
 					},
 				},
 			},
+			s: server{},
 			expected: []*hcm.HttpFilter{
 				{
 					Name: wellknown.CORS,
 				},
+				{
+					Name: wellknown.Router,
+				},
+			},
+		},
+		{
+			name: "BuildAuthz 4 (ratelimiter enabled)",
+			listener: types.Listener{
+				Attributes: types.Attributes{
+					{
+						Name:  types.AttributeRateLimiting,
+						Value: types.AttributeValueTrue,
+					},
+					{
+						Name:  types.AttributeRateLimitingDomain,
+						Value: "ebnl",
+					},
+					{
+						Name:  types.AttributeRateLimitingFailureModeAllow,
+						Value: "true",
+					},
+					{
+						Name:  types.AttributeRateLimitingCluster,
+						Value: "ratelimiter_node",
+					},
+					{
+						Name:  types.AttributeRateLimitingTimeout,
+						Value: "64ms",
+					},
+				},
+			},
+			s: server{},
+			expected: []*hcm.HttpFilter{
+				{
+					Name: wellknown.HTTPRateLimit,
+					ConfigType: &hcm.HttpFilter_TypedConfig{
+						TypedConfig: mustMarshalAny(&ratelimit.RateLimit{
+							Domain:          "ebnl",
+							Stage:           0,
+							FailureModeDeny: true,
+							Timeout:         ptypes.DurationProto(64 * time.Millisecond),
+							RateLimitService: &ratelimitconf.RateLimitServiceConfig{
+								GrpcService:         buildGRPCService("ratelimiter_node", 64*time.Millisecond),
+								TransportApiVersion: core.ApiVersion_V3,
+							},
+						}),
+					},
+				},
+				{
+					Name: wellknown.Router,
+				},
+			},
+		},
+		{
+			name:     "BuildAuthz 9 (no specific filters)",
+			listener: types.Listener{},
+			s:        server{},
+			expected: []*hcm.HttpFilter{
 				{
 					Name: wellknown.Router,
 				},
@@ -136,20 +253,32 @@ func Test_buildHTTPFilterExtAuthzConfig(t *testing.T) {
 	tests := []struct {
 		name     string
 		s        server
+		listener types.Listener
 		expected *anypb.Any
 	}{
 		{
 			name: "BuildAuthz 1",
-			s: server{
-				config: &EnvoyCPConfig{
-					Envoyproxy: envoyProxyConfig{
-						ExtAuthz: extAuthzConfig{
-							Enable:           true,
-							RequestBodySize:  6000,
-							FailureModeAllow: true,
-							Cluster:          "authz_cluster",
-							Timeout:          24 * time.Second,
-						},
+			listener: types.Listener{
+				Attributes: types.Attributes{
+					{
+						Name:  types.AttributeAuthentication,
+						Value: types.AttributeValueTrue,
+					},
+					{
+						Name:  types.AttributeAuthenticationRequestBodySize,
+						Value: "6000",
+					},
+					{
+						Name:  types.AttributeAuthenticationFailureModeAllow,
+						Value: "true",
+					},
+					{
+						Name:  types.AttributeAuthenticationCluster,
+						Value: "authz_cluster",
+					},
+					{
+						Name:  types.AttributeAuthenticationTimeout,
+						Value: "24s",
 					},
 				},
 			},
@@ -168,15 +297,15 @@ func Test_buildHTTPFilterExtAuthzConfig(t *testing.T) {
 		},
 		{
 			name: "BuildAuthz 2 (not enabled)",
-			s: server{
-				config: &EnvoyCPConfig{
-					Envoyproxy: envoyProxyConfig{
-						ExtAuthz: extAuthzConfig{
-							RequestBodySize:  6000,
-							FailureModeAllow: true,
-							Cluster:          "authz_cluster",
-							Timeout:          24 * time.Second,
-						},
+			listener: types.Listener{
+				Attributes: types.Attributes{
+					{
+						Name:  types.AttributeAuthenticationCluster,
+						Value: "authz_cluster",
+					},
+					{
+						Name:  types.AttributeAuthenticationTimeout,
+						Value: "25s",
 					},
 				},
 			},
@@ -184,15 +313,15 @@ func Test_buildHTTPFilterExtAuthzConfig(t *testing.T) {
 		},
 		{
 			name: "BuildAuthz 3 (no cluster)",
-			s: server{
-				config: &EnvoyCPConfig{
-					Envoyproxy: envoyProxyConfig{
-						ExtAuthz: extAuthzConfig{
-							Enable:           true,
-							RequestBodySize:  6000,
-							FailureModeAllow: true,
-							Timeout:          24 * time.Second,
-						},
+			listener: types.Listener{
+				Attributes: types.Attributes{
+					{
+						Name:  types.AttributeAuthentication,
+						Value: types.AttributeValueTrue,
+					},
+					{
+						Name:  types.AttributeAuthenticationTimeout,
+						Value: "25s",
 					},
 				},
 			},
@@ -201,48 +330,7 @@ func Test_buildHTTPFilterExtAuthzConfig(t *testing.T) {
 	}
 	for _, test := range tests {
 		require.Equalf(t, test.expected,
-			test.s.buildHTTPFilterExtAuthzConfig(), test.name)
-	}
-}
-
-func Test_extAuthzWithRequestBody(t *testing.T) {
-
-	tests := []struct {
-		name     string
-		s        server
-		expected *extauthz.BufferSettings
-	}{
-		{
-			name: "Ext Authz POST buffer size 1",
-			s: server{
-				config: &EnvoyCPConfig{
-					Envoyproxy: envoyProxyConfig{
-						ExtAuthz: extAuthzConfig{
-							RequestBodySize: 4242,
-						},
-					},
-				},
-			},
-			expected: &extauthz.BufferSettings{
-				MaxRequestBytes:     uint32(4242),
-				AllowPartialMessage: false,
-			},
-		},
-		{
-			name: "Ext Authz POST buffer size 2",
-			s: server{
-				config: &EnvoyCPConfig{
-					Envoyproxy: envoyProxyConfig{
-						ExtAuthz: extAuthzConfig{},
-					},
-				},
-			},
-			expected: nil,
-		},
-	}
-	for _, test := range tests {
-		require.Equalf(t, test.expected,
-			test.s.extAuthzWithRequestBody(), test.name)
+			test.s.buildHTTPFilterExtAuthzConfig(test.listener), test.name)
 	}
 }
 
@@ -414,8 +502,8 @@ func Test_buildFileAccessLog(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		require.Equalf(t, test.expected,
-			s.buildFileAccessLog(test.path, test.fields), test.name)
+		RequireEqual(t, test.expected,
+			s.buildFileAccessLog(test.path, test.fields))
 	}
 }
 

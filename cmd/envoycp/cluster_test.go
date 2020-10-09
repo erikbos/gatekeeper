@@ -12,6 +12,8 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/duration"
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zaptest/observer"
 	"google.golang.org/protobuf/runtime/protoiface"
 
 	"github.com/erikbos/gatekeeper/pkg/types"
@@ -19,7 +21,7 @@ import (
 
 func Test_buildEnvoyClusterConfig(t *testing.T) {
 
-	s := server{}
+	s := newServerForTesting()
 
 	tests := []struct {
 		name     string
@@ -125,7 +127,7 @@ func Test_buildEnvoyClusterConfig(t *testing.T) {
 
 func Test_clusterConnectTimeout(t *testing.T) {
 
-	s := server{}
+	s := newServerForTesting()
 
 	tests := []struct {
 		name     string
@@ -160,7 +162,7 @@ func Test_clusterConnectTimeout(t *testing.T) {
 
 func Test_clusterLbPolicy(t *testing.T) {
 
-	s := server{}
+	s := newServerForTesting()
 
 	tests := []struct {
 		name     string
@@ -245,7 +247,7 @@ func Test_clusterLbPolicy(t *testing.T) {
 
 func Test_clusterLoadAssignment(t *testing.T) {
 
-	s := server{}
+	s := newServerForTesting()
 
 	tests := []struct {
 		name     string
@@ -329,7 +331,7 @@ func Test_clusterLoadAssignment(t *testing.T) {
 
 func Test_clusterCircuitBreakers(t *testing.T) {
 
-	s := server{}
+	s := newServerForTesting()
 
 	tests := []struct {
 		name     string
@@ -417,7 +419,7 @@ func Test_clusterCircuitBreakers(t *testing.T) {
 
 func Test_clusterHealthChecks(t *testing.T) {
 
-	s := server{}
+	s := newServerForTesting()
 
 	tests := []struct {
 		name     string
@@ -497,7 +499,7 @@ func Test_clusterHealthChecks(t *testing.T) {
 
 func Test_clusterHealthCodec(t *testing.T) {
 
-	s := server{}
+	s := newServerForTesting()
 
 	tests := []struct {
 		name     string
@@ -556,7 +558,7 @@ func Test_clusterHealthCodec(t *testing.T) {
 
 func Test_clusterCommonHTTPProtocolOptions(t *testing.T) {
 
-	s := server{}
+	s := newServerForTesting()
 
 	tests := []struct {
 		name     string
@@ -595,7 +597,7 @@ func Test_clusterCommonHTTPProtocolOptions(t *testing.T) {
 
 func Test_clusterHTTP2ProtocolOptions(t *testing.T) {
 
-	s := server{}
+	s := newServerForTesting()
 
 	tests := []struct {
 		name     string
@@ -647,7 +649,7 @@ func Test_clusterHTTP2ProtocolOptions(t *testing.T) {
 
 func Test_clusterTransportSocket(t *testing.T) {
 
-	s := server{}
+	s := newServerForTesting()
 
 	tests := []struct {
 		name       string
@@ -698,7 +700,7 @@ func Test_clusterTransportSocket(t *testing.T) {
 
 func Test_clusterSNIHostname(t *testing.T) {
 
-	s := server{}
+	s := newServerForTesting()
 
 	tests := []struct {
 		name     string
@@ -761,7 +763,7 @@ func Test_clusterSNIHostname(t *testing.T) {
 
 func Test_clusterDNSLookupFamily(t *testing.T) {
 
-	s := server{}
+	s := newServerForTesting()
 
 	tests := []struct {
 		name     string
@@ -813,7 +815,7 @@ func Test_clusterDNSLookupFamily(t *testing.T) {
 
 func Test_clusterDNSRefreshRate(t *testing.T) {
 
-	s := server{}
+	s := newServerForTesting()
 
 	tests := []struct {
 		name     string
@@ -848,7 +850,7 @@ func Test_clusterDNSRefreshRate(t *testing.T) {
 
 func Test_clusterDNSResolvers(t *testing.T) {
 
-	s := server{}
+	s := newServerForTesting()
 
 	tests := []struct {
 		name     string
@@ -927,5 +929,13 @@ func Test_clusterDNSResolvers(t *testing.T) {
 	for _, test := range tests {
 		require.Equalf(t, test.expected,
 			s.clusterDNSResolvers(test.cluster), test.name)
+	}
+}
+
+func newServerForTesting() server {
+
+	core, _ := observer.New(zap.InfoLevel)
+	return server{
+		logger: zap.New(core),
 	}
 }
