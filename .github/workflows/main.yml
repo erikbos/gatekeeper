@@ -1,4 +1,4 @@
-name: test
+name: Unit tests and coverage report
 on:
   push:
     branches:
@@ -33,4 +33,5 @@ jobs:
       uses: codecov/codecov-action@v1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
+        yml: .codecov.yml
         file: tmp/coverage.txt
