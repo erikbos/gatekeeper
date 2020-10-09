@@ -164,7 +164,7 @@ func Test_buildFilter(t *testing.T) {
 			},
 		},
 		{
-			name: "BuildAuthz 3 ( CORS enabled)",
+			name: "BuildAuthz 3 (only CORS enabled)",
 			listener: types.Listener{
 				Attributes: types.Attributes{
 					{
@@ -221,6 +221,50 @@ func Test_buildFilter(t *testing.T) {
 							Timeout:         ptypes.DurationProto(64 * time.Millisecond),
 							RateLimitService: &ratelimitconf.RateLimitServiceConfig{
 								GrpcService:         buildGRPCService("ratelimiter_node", 64*time.Millisecond),
+								TransportApiVersion: core.ApiVersion_V3,
+							},
+						}),
+					},
+				},
+				{
+					Name: wellknown.Router,
+				},
+			},
+		},
+		{
+			name: "BuildAuthz 5 (ratelimiter enabled, default timeout)",
+			listener: types.Listener{
+				Attributes: types.Attributes{
+					{
+						Name:  types.AttributeRateLimiting,
+						Value: types.AttributeValueTrue,
+					},
+					{
+						Name:  types.AttributeRateLimitingDomain,
+						Value: "ebnl",
+					},
+					{
+						Name:  types.AttributeRateLimitingFailureModeAllow,
+						Value: "true",
+					},
+					{
+						Name:  types.AttributeRateLimitingCluster,
+						Value: "ratelimiter_node",
+					},
+				},
+			},
+			s: server{},
+			expected: []*hcm.HttpFilter{
+				{
+					Name: wellknown.HTTPRateLimit,
+					ConfigType: &hcm.HttpFilter_TypedConfig{
+						TypedConfig: mustMarshalAny(&ratelimit.RateLimit{
+							Domain:          "ebnl",
+							Stage:           0,
+							FailureModeDeny: true,
+							Timeout:         ptypes.DurationProto(defaultRateLimitingTimeout),
+							RateLimitService: &ratelimitconf.RateLimitServiceConfig{
+								GrpcService:         buildGRPCService("ratelimiter_node", defaultRateLimitingTimeout),
 								TransportApiVersion: core.ApiVersion_V3,
 							},
 						}),
