@@ -22,7 +22,11 @@ type Readiness struct {
 	lastStateChange time.Time
 	// counter for number of state changes
 	transitionCounter *prometheus.CounterVec
-	// central logger
+
+	// application name
+	applicationName string
+
+	// application logger
 	logger *zap.Logger
 }
 
@@ -36,23 +40,28 @@ type ReadinessMessage struct {
 	Up bool
 }
 
-// StartReadiness starts the readiness subsystem which waits for incoming ReadinessMessages
-func StartReadiness(serviceName string, logger *zap.Logger) *Readiness {
+// NewReadiness starts the readiness subsystem which waits for incoming ReadinessMessages
+func NewReadiness(application string, logger *zap.Logger) *Readiness {
 
-	r := &Readiness{logger: logger}
+	return &Readiness{
+		applicationName: application,
+		logger:          logger,
+	}
+}
+
+// Start starts the readiness subsystem which waits for incoming ReadinessMessages
+func (r *Readiness) Start() {
 
 	r.channel = make(chan ReadinessMessage)
 	r.transitionCounter = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: serviceName + "_readiness_transitions_total",
+			Name: r.applicationName + "_readiness_transitions_total",
 			Help: "Total number of readiness transitions.",
 		}, []string{"state"})
 
 	prometheus.MustRegister(r.transitionCounter)
 
 	go r.readinessMainLoop()
-
-	return r
 }
 
 // GetChannel return readiness notification channel

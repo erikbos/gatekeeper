@@ -45,15 +45,6 @@ type EntityChangeNotification struct {
 	Resource string // Name of resource type that has been changed
 }
 
-// Entity types that we load and send via notification channel
-const (
-	EntityTypeListener = "listener"
-	EntityTypeRoute    = "route"
-	EntityTypeCluster  = "cluster"
-	EntityTypeUser     = "user"
-	EntityTypeRole     = "role"
-)
-
 // NewEntityCache returns a new entity loader
 func NewEntityCache(database *Database, config EntityCacheConfig, logger *zap.Logger) *EntityCache {
 

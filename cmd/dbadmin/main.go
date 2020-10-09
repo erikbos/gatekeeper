@@ -67,7 +67,11 @@ func main() {
 		s.logger.Fatal("Database connect failed", zap.Error(err))
 	}
 
-	s.readiness = shared.StartReadiness(applicationName, s.logger)
+	// Start readiness subsystem
+	s.readiness = shared.NewReadiness(applicationName, s.logger)
+	s.readiness.Start()
+
+	// Start db health check and notify readiness subsystem
 	go s.db.RunReadinessCheck(s.readiness.GetChannel())
 
 	startWebAdmin(&s, *enableAPIAuthentication)
@@ -76,9 +80,8 @@ func main() {
 // startWebAdmin starts the admin web UI
 func startWebAdmin(s *server, enableAPIAuthentication bool) {
 
-	logger := shared.NewLogger(&s.config.WebAdmin.Logger, false)
-
-	s.webadmin = webadmin.New(s.config.WebAdmin, applicationName, logger)
+	webAdminLogger := shared.NewLogger(&s.config.WebAdmin.Logger, false)
+	s.webadmin = webadmin.New(s.config.WebAdmin, applicationName, webAdminLogger)
 
 	// Enable showing indexpage on / that shows all possible routes
 	s.webadmin.Router.GET("/", webadmin.ShowAllRoutes(s.webadmin.Router, applicationName))
@@ -87,8 +90,10 @@ func startWebAdmin(s *server, enableAPIAuthentication bool) {
 	s.webadmin.Router.GET(webadmin.MetricsPath, gin.WrapH(promhttp.Handler()))
 	s.webadmin.Router.GET(webadmin.ConfigDumpPath, webadmin.ShowStartupConfiguration(s.config))
 
-	service := service.New(s.db, s.logger)
-	s.handler = handler.NewHandler(s.webadmin.Router, s.db, service, logger, enableAPIAuthentication)
+	changeLogLogger := shared.NewLogger(&s.config.Changelog.Logger, false)
+
+	service := service.New(s.db, changeLogLogger)
+	s.handler = handler.NewHandler(s.webadmin.Router, s.db, service, webAdminLogger, enableAPIAuthentication)
 
 	s.webadmin.Start()
 }

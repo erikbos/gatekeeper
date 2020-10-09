@@ -28,7 +28,7 @@ func (s *server) getEnvoyRouteConfig() ([]cache.Resource, error) {
 
 	RouteGroupNames := s.getRouteGroupNames(s.dbentities.GetRoutes())
 	for RouteGroupName := range RouteGroupNames {
-		s.logger.Info("XDS compiling configuration", zap.String("routegroup", RouteGroupName))
+		s.logger.Info("Compiling configuration", zap.String("routegroup", RouteGroupName))
 		envoyRoutes = append(envoyRoutes,
 			s.buildEnvoyListenerRouteConfig(RouteGroupName,
 				s.dbentities.GetRoutes()))

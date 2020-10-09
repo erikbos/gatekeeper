@@ -75,7 +75,11 @@ func main() {
 		}
 	}
 
-	a.readiness = shared.StartReadiness(applicationName, a.logger)
+	// Start readiness subsystem
+	a.readiness = shared.NewReadiness(applicationName, a.logger)
+	a.readiness.Start()
+
+	// Start db health check and notify readiness subsystem
 	go a.db.RunReadinessCheck(a.readiness.GetChannel())
 
 	a.registerMetrics()

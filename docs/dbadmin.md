@@ -41,26 +41,36 @@ Dbadmin supports the following start up command line arguments:
 | replicacount | Use to indicate replica count for keyspace when using `createschema` | 3 |
 | enableapiauthentication | Enable REST API authentication, [users](api/user.md) and [roles](api/route.md) will be used for access and authorization `/v1/` path |
 
+### Logfiles
+
+Dbadmin writes multiple logfiles, one for each function of dbadmin. All are written as structured JSON, filename rotation schedule can be set via configuration file. The three logfiles are:
+
+1. `logging.filename` as log for application messages
+2. `webadmin.logging.filename` as access log for all REST API calls
+3. `changelog.logging.filename` as entity changelog, all CRUD-operations, it logs full entity details so it might contain sensitive information!
+
 ### Dbadmin configuration file
 
 The supported fields are:
 
-| yaml field               | purpose                                    | example              |
-| ------------------------ | ------------------------------------------ | -------------------- |
-| logging.level            | application log level                      | info / debug         |
-| logging.filename         | filename to write application log to       | /dev/stdout          |
-| webadmin.listen          | Webadmin address and port                  | 0.0.0.0:7777         |
-| webadmin.ipacl           | Webadmin ip acl, without this no access    | 172.16.0.0/19        |
-| webadmin.tls.certfile    | TLS certificate file                       |                      |
-| webadmin.tls.keyfile     | TLS certificate key file                   |                      |
-| webadmin.logging.level   | logging level of webadmin                  | info / debug         |
-| webadmin.logging.filename| filename to write web access log to        | dbadmin-access.log   |
-| database.hostname        | Cassandra hostname to connect to           | cassandra            |
-| database.port            | Cassandra port to connect on               | 9042 / 10350         |
-| database.tls             | Enable TLS for database session            | true / false         |
-| database.username        | Database username                          | cassandra            |
-| database.password        | Database password                          | cassandra            |
-| database.keyspace        | Database keyspace for Gatekeeper tables    | gatekeeper           |
-| database.timeout         | Timeout for session                        | 0.5s                 |
-| database.connectattempts | Number of attempts to establish connection | 5                    |
-| database.queryretries    | Number of times to retry query             | 2                    |
+| yaml field                 | purpose                                    | example               |
+| -------------------------- | ------------------------------------------ | --------------------- |
+| logging.level              | application log level                      | info / debug          |
+| logging.filename           | filename to write application log to       | /dev/stdout           |
+| webadmin.listen            | Webadmin address and port                  | 0.0.0.0:7777          |
+| webadmin.ipacl             | Webadmin ip acl, without this no access    | 172.16.0.0/19         |
+| webadmin.tls.certfile      | TLS certificate file                       |                       |
+| webadmin.tls.keyfile       | TLS certificate key file                   |                       |
+| webadmin.logging.level     | logging level of webadmin                  | info / debug          |
+| webadmin.logging.filename  | filename to write web access log to        | dbadmin-access.log    |
+| changelog.logging.level    | logging level of changelog                 | info                  |
+| changelog.logging.filename | filename to write changed entities to      | dbadmin-changelog.log |
+| database.hostname          | Cassandra hostname to connect to           | cassandra             |
+| database.port              | Cassandra port to connect on               | 9042 / 10350          |
+| database.tls               | Enable TLS for database session            | true / false          |
+| database.username          | Database username                          | cassandra             |
+| database.password          | Database password                          | cassandra             |
+| database.keyspace          | Database keyspace for Gatekeeper tables    | gatekeeper            |
+| database.timeout           | Timeout for session                        | 0.5s                  |
+| database.connectattempts   | Number of attempts to establish connection | 5                     |
+| database.queryretries      | Number of times to retry query             | 2                     |

@@ -62,7 +62,11 @@ func main() {
 		s.logger.Fatal("Database connect failed", zap.Error(err))
 	}
 
-	s.readiness = shared.StartReadiness(applicationName, s.logger)
+	// Start readiness subsystem
+	s.readiness = shared.NewReadiness(applicationName, s.logger)
+	s.readiness.Start()
+
+	// Start db health check and notify readiness subsystem
 	go s.db.RunReadinessCheck(s.readiness.GetChannel())
 
 	s.metrics = newMetrics(&s)

@@ -58,8 +58,8 @@ const (
 	RequestIDHeader = "request-id"
 
 	contentTypeHeader = "content-type"
-
-	contentTypeYAML = "text/yaml; charset=utf-8"
+	contentTypeYAML   = "text/yaml; charset=utf-8"
+	contentTypeHTML   = "text/html; charset=utf-8"
 )
 
 // New returns a new webadmin
@@ -67,10 +67,10 @@ func New(config Config, applicationName string, logger *zap.Logger) *Webadmin {
 
 	gin.SetMode(gin.ReleaseMode)
 
-	router := gin.New()
-
 	// Enable strict field checking of POSTed JSON
 	gin.EnableJsonDecoderDisallowUnknownFields()
+
+	router := gin.New()
 
 	// Enable access logging
 	router.Use(LogHTTPRequest(logger))
@@ -129,14 +129,10 @@ func StoreUser(c *gin.Context, user string) {
 	c.Set(gin.AuthUserKey, user)
 }
 
-// GetUser returned name of requestor
+// GetUser returns name of requestor
 func GetUser(c *gin.Context) string {
 
-	var user string
-	if value, ok := c.Get(gin.AuthUserKey); ok {
-		user = fmt.Sprint(value)
-	}
-	return user
+	return c.GetString(gin.AuthUserKey)
 }
 
 // StoreRole stores provided role in request context
@@ -145,7 +141,7 @@ func StoreRole(c *gin.Context, role string) {
 	c.Set(RoleContextKey, role)
 }
 
-// GetRole returned role of requestor
+// GetRole returns role of requestor
 func GetRole(c *gin.Context) string {
 
 	return c.GetString(RoleContextKey)
@@ -181,7 +177,7 @@ func GetRequestID(c *gin.Context) string {
 	return c.GetString(RequestIDKey)
 }
 
-// ShowAllRoutes produces the index page based upon all registered routes
+// ShowAllRoutes shows HTML page based with all registered routes
 func ShowAllRoutes(e *gin.Engine, applicationName string) gin.HandlerFunc {
 
 	return func(c *gin.Context) {
@@ -199,7 +195,7 @@ func ShowAllRoutes(e *gin.Engine, applicationName string) gin.HandlerFunc {
 			e.Routes(),
 		}
 		c.Status(http.StatusOK)
-		c.Header(contentTypeHeader, "text/html; charset=utf-8")
+		c.Header(contentTypeHeader, contentTypeHTML)
 		_ = t.Execute(c.Writer, templateVariables)
 	}
 }
@@ -252,7 +248,6 @@ func LogHTTPRequest(logger *zap.Logger) gin.HandlerFunc {
 		// Get errors that might have occured during request handling
 		var error string
 		if len(c.Errors) > 0 {
-			// Append error field if this is an erroneous request.
 			for _, e := range c.Errors.Errors() {
 				error += strings.TrimSpace(e)
 			}

@@ -16,8 +16,8 @@ type UserService struct {
 	changelog *Changelog
 }
 
-// NewUserService returns a new user instance
-func NewUserService(database *db.Database, c *Changelog) *UserService {
+// NewUser returns a new user instance
+func NewUser(database *db.Database, c *Changelog) *UserService {
 
 	return &UserService{db: database, changelog: c}
 }
@@ -44,7 +44,7 @@ func (us *UserService) Create(newUser types.User, who Requester) (*types.User, t
 	}
 	// Automatically set default fields
 	newUser.CreatedAt = shared.GetCurrentTimeMilliseconds()
-	newUser.CreatedBy = who.Username
+	newUser.CreatedBy = who.User
 
 	// encrypt password
 	encryptedPassword, encryptError := cryptPassword(newUser.Password)
@@ -93,7 +93,7 @@ func (us *UserService) Update(updatedUser types.User,
 func (us *UserService) updateUser(updatedUser *types.User, who Requester) types.Error {
 
 	updatedUser.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
-	updatedUser.LastmodifiedBy = who.Username
+	updatedUser.LastmodifiedBy = who.User
 	return us.db.User.Update(updatedUser)
 }
 

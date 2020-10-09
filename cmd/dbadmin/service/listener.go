@@ -14,8 +14,8 @@ type ListenerService struct {
 	changelog *Changelog
 }
 
-// NewListenerService returns a new listener instance
-func NewListenerService(database *db.Database, c *Changelog) *ListenerService {
+// NewListener returns a new listener instance
+func NewListener(database *db.Database, c *Changelog) *ListenerService {
 
 	return &ListenerService{db: database, changelog: c}
 }
@@ -62,7 +62,7 @@ func (ls *ListenerService) Create(newListener types.Listener, who Requester) (ty
 	}
 	// Automatically set default fields
 	newListener.CreatedAt = shared.GetCurrentTimeMilliseconds()
-	newListener.CreatedBy = who.Username
+	newListener.CreatedBy = who.User
 
 	err = ls.updateListener(&newListener, who)
 	ls.changelog.Create(newListener, who)
@@ -142,7 +142,7 @@ func (ls *ListenerService) updateListener(updatedListener *types.Listener, who R
 
 	updatedListener.Attributes.Tidy()
 	updatedListener.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
-	updatedListener.LastmodifiedBy = who.Username
+	updatedListener.LastmodifiedBy = who.User
 	return ls.db.Listener.Update(updatedListener)
 }
 

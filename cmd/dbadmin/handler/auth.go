@@ -157,9 +157,10 @@ func (h *Handler) who(c *gin.Context) service.Requester {
 
 	// Store more details, changelog will use these records
 	return service.Requester{
-		RemoteAddr: c.Request.RemoteAddr,
+		RemoteAddr: c.ClientIP(),
 		Header:     c.Request.Header,
-		Username:   webadmin.GetUser(c),
+		User:       webadmin.GetUser(c),
+		Role:       webadmin.GetRole(c),
 		RequestID:  webadmin.GetRequestID(c),
 	}
 }

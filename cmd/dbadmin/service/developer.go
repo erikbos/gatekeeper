@@ -15,8 +15,8 @@ type DeveloperService struct {
 	changelog *Changelog
 }
 
-// NewDeveloperService returns a new developer instance
-func NewDeveloperService(database *db.Database, c *Changelog) *DeveloperService {
+// NewDeveloper returns a new developer instance
+func NewDeveloper(database *db.Database, c *Changelog) *DeveloperService {
 
 	return &DeveloperService{db: database, changelog: c}
 }
@@ -67,7 +67,7 @@ func (ds *DeveloperService) Create(organizationName string,
 	}
 	// Automatically set default fields
 	newDeveloper.CreatedAt = shared.GetCurrentTimeMilliseconds()
-	newDeveloper.CreatedBy = who.Username
+	newDeveloper.CreatedBy = who.User
 
 	err = ds.updateDeveloper(&newDeveloper, who)
 	ds.changelog.Create(newDeveloper, who)
@@ -149,7 +149,7 @@ func (ds *DeveloperService) updateDeveloper(updatedDeveloper *types.Developer, w
 
 	updatedDeveloper.Attributes.Tidy()
 	updatedDeveloper.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
-	updatedDeveloper.LastmodifiedBy = who.Username
+	updatedDeveloper.LastmodifiedBy = who.User
 	return ds.db.Developer.Update(updatedDeveloper)
 }
 

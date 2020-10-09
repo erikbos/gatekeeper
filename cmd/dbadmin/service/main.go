@@ -6,20 +6,20 @@ import (
 	"github.com/erikbos/gatekeeper/pkg/db"
 )
 
-// New sets up a new service for all entities
-func New(database *db.Database, logger *zap.Logger) *Service {
+// New sets up services for all entities
+func New(database *db.Database, changelogLogger *zap.Logger) *Service {
 
-	changelog := NewChangelogService(database, logger)
+	changelog := NewChangelog(database, changelogLogger)
 	return &Service{
-		Organization: NewOrganizationService(database, changelog),
-		Listener:     NewListenerService(database, changelog),
-		Route:        NewRouteService(database, changelog),
-		Cluster:      NewClusterService(database, changelog),
-		Developer:    NewDeveloperService(database, changelog),
-		DeveloperApp: NewDeveloperAppService(database, changelog),
-		Credential:   NewCredentialService(database, changelog),
-		APIProduct:   NewAPIProductService(database, changelog),
-		User:         NewUserService(database, changelog),
-		Role:         NewRoleService(database, changelog),
+		Organization: NewOrganization(database, changelog),
+		Listener:     NewListener(database, changelog),
+		Route:        NewRoute(database, changelog),
+		Cluster:      NewCluster(database, changelog),
+		Developer:    NewDeveloper(database, changelog),
+		DeveloperApp: NewDeveloperApp(database, changelog),
+		Credential:   NewCredential(database, changelog),
+		APIProduct:   NewAPIProduct(database, changelog),
+		User:         NewUser(database, changelog),
+		Role:         NewRole(database, changelog),
 	}
 }

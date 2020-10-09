@@ -112,6 +112,14 @@ OAuth2 background information:
 
 Envoyauth has a built in-memory cache for retrieved entities from Cassandra. This will prevent doing Cassandra queries for entities that has already been retrieved earlier to speed up authentication requests.
 
+### Logfiles
+
+Envoyauth writes multiple logfiles, one for each function of envoyauth. All are written as structured JSON, filename rotation schedule can be set via configuration file. The three logfiles are:
+
+1. `logging.filename` as log for application messages
+2. `webadmin.logging.filename` as access log for REST API calls
+3. `oauth2.logging.filename` as access log OAuth2 token calls
+
 ### Envoyauth configuration file
 
 The supported fields are:
