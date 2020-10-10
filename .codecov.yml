@@ -2,18 +2,22 @@
 #   require_ci_to_pass: true
 
 coverage:
+  precision: 0
   status:
     project:
       default: off
       dbadmin:
         flags:
           - dbadmin
+          - pkg
       envoyauth:
         flags:
           - envoyauth
+          - pkg
       envoycp:
         flags:
           - emvoycp
+          - pkg
 
 flags:
   dbadmin:
@@ -25,3 +29,6 @@ flags:
   envoycp:
     paths:
       - cmd/envoycp/
+  pkg:
+    paths:
+      - pkg/
