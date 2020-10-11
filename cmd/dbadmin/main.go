@@ -62,18 +62,15 @@ func main() {
 
 	// s.readiness.RegisterMetrics(applicationName)
 
+	// Connect to db
 	db, err := cassandra.New(s.config.Database, applicationName,
 		s.logger, *createSchema, *replicaCount)
 	if err != nil {
 		s.logger.Fatal("Database connect failed", zap.Error(err))
 	}
 
-	c := &cache.Config{
-		Size:        1024 * 1024 * 10,
-		TTL:         60,
-		NegativeTTL: 5,
-	}
-	s.db, err = cache.New(c, db, applicationName, s.logger)
+	// Wrap database access with cache layer
+	s.db, err = cache.New(&s.config.Cache, db, applicationName, s.logger)
 
 	// Start readiness subsystem
 	s.readiness = shared.NewReadiness(applicationName, s.logger)

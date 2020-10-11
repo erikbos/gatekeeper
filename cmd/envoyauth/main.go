@@ -10,6 +10,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/erikbos/gatekeeper/pkg/db"
+	"github.com/erikbos/gatekeeper/pkg/db/cache"
 	"github.com/erikbos/gatekeeper/pkg/db/cassandra"
 	"github.com/erikbos/gatekeeper/pkg/shared"
 	"github.com/erikbos/gatekeeper/pkg/webadmin"
@@ -27,18 +28,17 @@ const (
 )
 
 type authorizationServer struct {
-	config   *APIAuthConfig
-	webadmin *webadmin.Webadmin
-	// router     *gin.Engine
+	config     *APIAuthConfig
+	webadmin   *webadmin.Webadmin
 	db         *db.Database
 	dbentities *db.EntityCache
 	vhosts     *vhostMapping
-	cache      *Cache
-	oauth      *oauthServer
-	geoip      *Geoip
-	readiness  *shared.Readiness
-	metrics    metricsCollection
-	logger     *zap.Logger
+	// cache      *Cache
+	oauth     *OAuthServer
+	geoip     *Geoip
+	readiness *shared.Readiness
+	metrics   metricsCollection
+	logger    *zap.Logger
 }
 
 func main() {
@@ -62,11 +62,15 @@ func main() {
 		zap.String("version", version),
 		zap.String("buildtime", buildTime))
 
-	a.db, err = cassandra.New(a.config.Database, applicationName, a.logger, false, 0)
+	database, err := cassandra.New(a.config.Database, applicationName, a.logger, false, 0)
 	if err != nil {
 		a.logger.Fatal("Database connect failed", zap.Error(err))
 	}
-	a.cache = newCache(&a.config.Cache)
+
+	// Wrap database access with cache layer
+	a.db, err = cache.New(&a.config.Cache, database, applicationName, a.logger)
+
+	// a.cache = newCache(&a.config.Cache)
 
 	if a.config.Geoip.Database != "" {
 		a.geoip, err = OpenGeoipDatabase(a.config.Geoip.Database)
@@ -100,7 +104,7 @@ func main() {
 	go a.vhosts.WaitFor(entityCacheConf.Notify)
 
 	// // Start service for OAuth2 endpoints
-	a.oauth = newOAuthServer(&a.config.OAuth, a.db, a.cache)
+	a.oauth = newOAuthServer(&a.config.OAuth, a.db)
 	go a.oauth.Start()
 
 	a.StartAuthorizationServer()

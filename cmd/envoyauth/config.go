@@ -1,10 +1,9 @@
 package main
 
 import (
-	"os"
-
 	"gopkg.in/yaml.v2"
 
+	"github.com/erikbos/gatekeeper/pkg/db/cache"
 	"github.com/erikbos/gatekeeper/pkg/db/cassandra"
 	"github.com/erikbos/gatekeeper/pkg/shared"
 	"github.com/erikbos/gatekeeper/pkg/webadmin"
@@ -23,15 +22,15 @@ type APIAuthConfig struct {
 	Logger    shared.Logger            `yaml:"logging"`   // log configuration of application
 	WebAdmin  webadmin.Config          `yaml:"webadmin"`  // Admin web interface configuration
 	EnvoyAuth envoyAuthConfig          `yaml:"envoyauth"` // Envoyauth configuration
-	OAuth     oauthServerConfig        `yaml:"oauth"`     // OAuth configuration
+	OAuth     OAuthServerConfig        `yaml:"oauth"`     // OAuth configuration
 	Database  cassandra.DatabaseConfig `yaml:"database"`  // Database configuration
-	Cache     cacheConfig              `yaml:"cache"`     // In-memory cache configuration
+	Cache     cache.Config             `yaml:"cache"`     // Cache configuration
 	Geoip     Geoip                    `yaml:"geoip"`     // Geoip lookup configuration
 }
 
 func loadConfiguration(filename *string) (*APIAuthConfig, error) {
 	// default configuration
-	config := APIAuthConfig{
+	defaultConfig := APIAuthConfig{
 		Logger: shared.Logger{
 			Level:    defaultLogLevel,
 			Filename: "/dev/stdout",
@@ -46,23 +45,16 @@ func loadConfiguration(filename *string) (*APIAuthConfig, error) {
 		EnvoyAuth: envoyAuthConfig{
 			Listen: defaultAuthGRPCListen,
 		},
-		OAuth: oauthServerConfig{
+		OAuth: OAuthServerConfig{
 			Listen: defaultOAuthListen,
 		},
 	}
 
-	file, err := os.Open(*filename)
+	config, err := shared.LoadYAMLConfiguration(filename, defaultConfig)
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
-
-	yamlDecoder := yaml.NewDecoder(file)
-	yamlDecoder.SetStrict(true)
-	if err := yamlDecoder.Decode(&config); err != nil {
-		return nil, err
-	}
-	return &config, nil
+	return config.(*APIAuthConfig), nil
 }
 
 // String() return our startup configuration as YAML

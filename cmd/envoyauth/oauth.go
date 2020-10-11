@@ -18,8 +18,8 @@ import (
 	"github.com/erikbos/gatekeeper/pkg/webadmin"
 )
 
-// oauthServerConfig contains our configuration
-type oauthServerConfig struct {
+// OAuthServerConfig contains our configuration
+type OAuthServerConfig struct {
 	Logger shared.Logger `yaml:"logging"` // log configuration of webadmin accesslog
 	Listen string        `yaml:"listen"`  // OAuth Address and port to listen
 	TLS    struct {
@@ -30,11 +30,11 @@ type oauthServerConfig struct {
 	TokenInfoPath  string `yaml:"tokeninfopath"`  // Path to request info about token (e.g. "/oauth2/info")
 }
 
-type oauthServer struct {
-	config             *oauthServerConfig
+// OAuthServer is an oauth server instance
+type OAuthServer struct {
+	config             *OAuthServerConfig
 	router             *gin.Engine
 	db                 *db.Database
-	cache              *Cache
 	server             *server.Server
 	logger             *zap.Logger
 	tokenIssueRequests *prometheus.CounterVec
@@ -49,18 +49,22 @@ type tokenInfoAnswer struct {
 	Scope     string    `json:"scope"`
 }
 
-func newOAuthServer(config *oauthServerConfig, db *db.Database, cache *Cache) *oauthServer {
+func newOAuthServer(config *OAuthServerConfig, db *db.Database) *OAuthServer {
 
-	return &oauthServer{
+	return &OAuthServer{
 		config: config,
 		db:     db,
-		cache:  cache,
+		// cache: newCache(&cacheConfig{
+		// 	Size:        100 * 1024 * 1025,
+		// 	TTL:         15,
+		// 	NegativeTTL: 5,
+		// }),
 	}
 }
 
 // Start starts OAuth2 public endpoints to request new access token
 // or get info about an access info
-func (oauth *oauthServer) Start() error {
+func (oauth *OAuthServer) Start() error {
 	// Do not start oauth system if we do not have a listenport
 	if oauth.config.Listen == "" {
 		return nil
@@ -102,15 +106,15 @@ func (oauth *oauthServer) Start() error {
 }
 
 // prepareOAuthInstance build OAuth server instance with client and token storage backends
-func (oauth *oauthServer) prepareOAuthInstance() {
+func (oauth *OAuthServer) prepareOAuthInstance() {
 
 	manager := manage.NewDefaultManager()
 
 	// Set our token storage engine for access tokens
-	manager.MapTokenStorage(NewOAuthTokenStore(oauth.db, oauth.cache, oauth.logger))
+	manager.MapTokenStorage(NewOAuthTokenStore(oauth.db, oauth.logger))
 
 	// Set client id engine for client ids
-	manager.MapClientStorage(NewOAuthClientTokenStore(oauth.db, oauth.cache, oauth.logger))
+	manager.MapClientStorage(NewOAuthClientTokenStore(oauth.db, oauth.logger))
 
 	// Set default token ttl
 	manager.SetClientTokenCfg(&manage.Config{AccessTokenExp: 1 * time.Hour})
@@ -133,7 +137,7 @@ func (oauth *oauthServer) prepareOAuthInstance() {
 }
 
 // handleTokenIssueRequest handles a POST request for a new OAuth token
-func (oauth *oauthServer) handleTokenIssueRequest(c *gin.Context) {
+func (oauth *OAuthServer) handleTokenIssueRequest(c *gin.Context) {
 
 	if err := oauth.server.HandleTokenRequest(c.Writer, c.Request); err != nil {
 		oauth.tokenIssueRequests.WithLabelValues("400").Inc()
@@ -145,7 +149,7 @@ func (oauth *oauthServer) handleTokenIssueRequest(c *gin.Context) {
 }
 
 // handleTokenInfo shows information about temporary token
-func (oauth *oauthServer) handleTokenInfo(c *gin.Context) {
+func (oauth *OAuthServer) handleTokenInfo(c *gin.Context) {
 
 	tokenInfo, err := oauth.server.ValidationBearerToken(c.Request)
 	if err != nil {
@@ -167,7 +171,7 @@ func (oauth *oauthServer) handleTokenInfo(c *gin.Context) {
 	c.JSON(http.StatusOK, status)
 }
 
-func (oauth *oauthServer) registerMetrics() {
+func (oauth *OAuthServer) registerMetrics() {
 
 	oauth.tokenIssueRequests = prometheus.NewCounterVec(
 		prometheus.CounterOpts{

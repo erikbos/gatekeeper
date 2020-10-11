@@ -153,7 +153,7 @@ func (a *authorizationServer) allowRequest(headers, metadata map[string]string) 
 	return response, nil
 }
 
-// rejectCall answers Envoyproxy to reject HTTP request
+// rejectRequest answers Envoyproxy to reject HTTP request
 func (a *authorizationServer) rejectRequest(statusCode int, headers, metadata map[string]string,
 	message string) (*authservice.CheckResponse, error) {
 

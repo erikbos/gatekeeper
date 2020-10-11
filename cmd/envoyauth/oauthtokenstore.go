@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"time"
 
 	"go.uber.org/zap"
@@ -15,17 +16,14 @@ import (
 // TokenStore holds our database config
 type TokenStore struct {
 	db     *db.Database
-	cache  *Cache
 	logger *zap.Logger
 }
 
 // NewOAuthTokenStore creates token store instance
-func NewOAuthTokenStore(database *db.Database, cache *Cache,
-	logger *zap.Logger) oauth2.TokenStore {
+func NewOAuthTokenStore(database *db.Database, logger *zap.Logger) oauth2.TokenStore {
 
 	return &TokenStore{
 		db:     database,
-		cache:  cache,
 		logger: logger.With(zap.String("system", "oauthtokenstore")),
 	}
 }
@@ -58,23 +56,12 @@ func (tokenstore *TokenStore) GetByAccess(access string) (oauth2.TokenInfo, erro
 
 	tokenstore.logger.Debug("GetByAccess", zap.String("access", access))
 	if access == "" {
-		return nil, nil
+		return nil, errors.New("Empty token provided")
 	}
-
-	token, err := tokenstore.cache.GetAccessToken(&access)
-	// in case we do not have this token in cache let's try to retrieve it from database
+	token, err := tokenstore.db.OAuth.OAuthAccessTokenGetByAccess(access)
 	if err != nil {
-		token, err = tokenstore.db.OAuth.OAuthAccessTokenGetByAccess(access)
-		if err != nil {
-			// TODO increase unknown oauth access counter (not an error state)
-			return nil, err
-		}
-		// Store retrieved token in cache, in case of error we proceed as we can
-		// statisfy the request as we did retrieve succesful from database
-		if err = tokenstore.cache.StoreAccessToken(&access, token); err != nil {
-			tokenstore.logger.Debug("GetByAccess, failed to store token",
-				zap.String("access", access))
-		}
+		// TODO increase unknown oauth access counter (not an error state)
+		return nil, err
 	}
 	return toOAuthTokenStore(token)
 }
@@ -88,6 +75,7 @@ func (tokenstore *TokenStore) GetByCode(code string) (oauth2.TokenInfo, error) {
 	}
 	token, err := tokenstore.db.OAuth.OAuthAccessTokenGetByCode(code)
 	if err != nil {
+		// TODO increase unknown oauth code counter (not an error state)
 		return nil, err
 	}
 	return toOAuthTokenStore(token)
@@ -102,6 +90,7 @@ func (tokenstore *TokenStore) GetByRefresh(refresh string) (oauth2.TokenInfo, er
 	}
 	token, err := tokenstore.db.OAuth.OAuthAccessTokenGetByRefresh(refresh)
 	if err != nil {
+		// TODO increase unknown oauth refresh code counter (not an error state)
 		return nil, err
 	}
 	return toOAuthTokenStore(token)

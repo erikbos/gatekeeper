@@ -1,14 +1,8 @@
 package main
 
 import (
-	"bytes"
-	"encoding/gob"
-	"errors"
-
 	"github.com/coocood/freecache"
 	"github.com/prometheus/client_golang/prometheus"
-
-	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
 // cacheConfig contains our start configuration
@@ -28,7 +22,7 @@ type Cache struct {
 }
 
 // newCache initializes in memory cache and registers metrics
-func newCache(config *cacheConfig) *Cache {
+func newCache2(config *cacheConfig) *Cache {
 
 	c := &Cache{
 		freecache:   freecache.NewCache(config.Size),
@@ -38,212 +32,6 @@ func newCache(config *cacheConfig) *Cache {
 	registerCacheMetrics(c)
 
 	return c
-}
-
-func getDeveloperCacheKey(id *string) []byte {
-
-	return []byte("dev_" + *id)
-}
-
-// StoreDeveloper stores a Developer in cache
-func (c *Cache) StoreDeveloper(developerID *string, developer *types.Developer) error {
-
-	if c.freecache == nil {
-		return nil
-	}
-
-	var buf bytes.Buffer
-	if err := gob.NewEncoder(&buf).Encode(developer); err != nil {
-		return err
-	}
-	return c.freecache.Set(getDeveloperCacheKey(developerID), buf.Bytes(), c.cacheTTL)
-}
-
-// GetDeveloper gets a Developer from cache
-func (c *Cache) GetDeveloper(developerID *string) (*types.Developer, error) {
-
-	if c.freecache == nil {
-		return nil, nil
-	}
-
-	cached, err := c.freecache.Get(getDeveloperCacheKey(developerID))
-	if err == nil && cached != nil {
-		var developer types.Developer
-
-		err = gob.NewDecoder(bytes.NewBuffer(cached)).Decode(&developer)
-		if err == nil {
-			c.cacheHits.WithLabelValues("developer").Inc()
-			return &developer, nil
-		}
-	}
-	c.cacheMisses.WithLabelValues("developer").Inc()
-	return nil, errors.New("Not found")
-}
-
-///
-
-func getDeveloperAppCacheKey(id *string) []byte {
-
-	return []byte("app_" + *id)
-}
-
-// StoreDeveloperApp stores a Developer in cache
-func (c *Cache) StoreDeveloperApp(AppID *string, app *types.DeveloperApp) error {
-
-	if c.freecache == nil {
-		return nil
-	}
-
-	var buf bytes.Buffer
-	if err := gob.NewEncoder(&buf).Encode(app); err != nil {
-		return err
-	}
-	return c.freecache.Set(getDeveloperAppCacheKey(AppID), buf.Bytes(), c.cacheTTL)
-}
-
-// GetDeveloperApp gets an App from cache
-func (c *Cache) GetDeveloperApp(AppID *string) (*types.DeveloperApp, error) {
-
-	if c.freecache == nil {
-		return nil, nil
-	}
-
-	cached, err := c.freecache.Get(getDeveloperAppCacheKey(AppID))
-	if err == nil && cached != nil {
-		var app types.DeveloperApp
-
-		err = gob.NewDecoder(bytes.NewBuffer(cached)).Decode(&app)
-		if err == nil {
-			c.cacheHits.WithLabelValues("app").Inc()
-			return &app, nil
-		}
-	}
-	c.cacheMisses.WithLabelValues("app").Inc()
-	return nil, errors.New("Not found")
-}
-
-///
-
-func getDeveloperAppKeyCacheKey(id *string) []byte {
-
-	return []byte("key_" + *id)
-}
-
-// StoreDeveloperAppKey stores a DeveloperAppKey in cache
-func (c *Cache) StoreDeveloperAppKey(apikey *string, appkey *types.DeveloperAppKey) error {
-
-	if c.freecache == nil {
-		return nil
-	}
-
-	var buf bytes.Buffer
-	if err := gob.NewEncoder(&buf).Encode(appkey); err != nil {
-		return err
-	}
-	return c.freecache.Set(getDeveloperAppKeyCacheKey(apikey), buf.Bytes(), c.cacheTTL)
-}
-
-// GetDeveloperAppKey gets an apikey from cache
-func (c *Cache) GetDeveloperAppKey(apikey *string) (*types.DeveloperAppKey, error) {
-
-	if c.freecache == nil {
-		return nil, nil
-	}
-
-	cached, err := c.freecache.Get(getDeveloperAppKeyCacheKey(apikey))
-	if err == nil && cached != nil {
-		var apikey types.DeveloperAppKey
-
-		err = gob.NewDecoder(bytes.NewBuffer(cached)).Decode(&apikey)
-		if err == nil {
-			c.cacheHits.WithLabelValues("key").Inc()
-			return &apikey, nil
-		}
-	}
-	c.cacheMisses.WithLabelValues("key").Inc()
-	return nil, err
-}
-
-///
-
-func getAPIProductCacheKey(org, id *string) []byte {
-
-	return []byte("product_" + *org + "_" + *id)
-}
-
-// StoreAPIProduct stores an APIProduct in cache
-func (c *Cache) StoreAPIProduct(org, productname *string, apiproduct *types.APIProduct) error {
-
-	if c.freecache == nil {
-		return nil
-	}
-
-	var buf bytes.Buffer
-	if err := gob.NewEncoder(&buf).Encode(apiproduct); err != nil {
-		return err
-	}
-	return c.freecache.Set(getAPIProductCacheKey(org, productname), buf.Bytes(), c.cacheTTL)
-}
-
-// GetAPIProduct gets an APIProduct from cache
-func (c *Cache) GetAPIProduct(org, productname *string) (*types.APIProduct, error) {
-
-	if c.freecache == nil {
-		return nil, nil
-	}
-
-	cached, err := c.freecache.Get(getAPIProductCacheKey(org, productname))
-	if err == nil && cached != nil {
-		var apiproduct types.APIProduct
-
-		err = gob.NewDecoder(bytes.NewBuffer(cached)).Decode(&apiproduct)
-		if err == nil {
-			c.cacheHits.WithLabelValues("apiproduct").Inc()
-			return &apiproduct, nil
-		}
-	}
-	c.cacheMisses.WithLabelValues("apiproduct").Inc()
-	return nil, err
-}
-
-func getAccessTokenCacheKey(name *string) []byte {
-
-	return []byte("at_" + *name)
-}
-
-// StoreAccessToken stores an OAuthAccessToken in cache
-func (c *Cache) StoreAccessToken(name *string, accessToken *types.OAuthAccessToken) error {
-
-	if c.freecache == nil {
-		return nil
-	}
-
-	var buf bytes.Buffer
-	if err := gob.NewEncoder(&buf).Encode(accessToken); err != nil {
-		return err
-	}
-	return c.freecache.Set(getAccessTokenCacheKey(name), buf.Bytes(), c.cacheTTL)
-}
-
-// GetAccessToken gets an OAuthAccessToken from cache
-func (c *Cache) GetAccessToken(name *string) (*types.OAuthAccessToken, error) {
-
-	if c.freecache == nil {
-		return nil, nil
-	}
-
-	cached, err := c.freecache.Get(getAccessTokenCacheKey(name))
-	if err == nil && cached != nil {
-		var accessToken types.OAuthAccessToken
-
-		err = gob.NewDecoder(bytes.NewBuffer(cached)).Decode(&accessToken)
-		if err == nil {
-			c.cacheHits.WithLabelValues("accesstoken").Inc()
-			return &accessToken, nil
-		}
-	}
-	c.cacheMisses.WithLabelValues("accesstoken").Inc()
-	return nil, err
 }
 
 func registerCacheMetrics(c *Cache) {
