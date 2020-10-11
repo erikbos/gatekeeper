@@ -45,7 +45,7 @@ func NewReadiness(application string, logger *zap.Logger) *Readiness {
 
 	return &Readiness{
 		applicationName: application,
-		logger:          logger,
+		logger:          logger.With(zap.String("system", "readiness")),
 	}
 }
 

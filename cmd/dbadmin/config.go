@@ -4,6 +4,7 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/erikbos/gatekeeper/cmd/dbadmin/service"
+	"github.com/erikbos/gatekeeper/pkg/db/cache"
 	"github.com/erikbos/gatekeeper/pkg/db/cassandra"
 	"github.com/erikbos/gatekeeper/pkg/shared"
 	"github.com/erikbos/gatekeeper/pkg/webadmin"
@@ -11,9 +12,13 @@ import (
 
 const (
 	defaultLogLevel            = "info"
+	defaultLogFileName         = "/dev/stdout"
 	defaultWebAdminListen      = "0.0.0.0:7777"
 	defaultWebAdminLogFileName = "dbadmin-access.log"
 	defaultChangeLogFileName   = "dbadmin-changelog.log"
+	defaultCacheSize           = 100 * 1024 * 1024
+	defaultCacheTTL            = 30
+	defaultCacheNegativeTTL    = 5
 )
 
 // DBAdminConfig contains our startup configuration data
@@ -22,6 +27,7 @@ type DBAdminConfig struct {
 	WebAdmin  webadmin.Config          `yaml:"webadmin"`  // Admin web interface configuration
 	Changelog service.ChangelogConfig  `yaml:"changelog"` // Changelog configuration
 	Database  cassandra.DatabaseConfig `yaml:"database"`  // Database configuration
+	Cache     cache.Config             `yaml:"cache"`     // Cache configuration
 }
 
 // String() return our startup configuration as YAML
@@ -43,7 +49,7 @@ func loadConfiguration(filename *string) (*DBAdminConfig, error) {
 	defaultConfig := &DBAdminConfig{
 		Logger: shared.Logger{
 			Level:    defaultLogLevel,
-			Filename: "/dev/stdout",
+			Filename: defaultLogFileName,
 		},
 		WebAdmin: webadmin.Config{
 			Listen: defaultWebAdminListen,
@@ -57,6 +63,11 @@ func loadConfiguration(filename *string) (*DBAdminConfig, error) {
 				Level:    defaultLogLevel,
 				Filename: defaultChangeLogFileName,
 			},
+		},
+		Cache: cache.Config{
+			Size:        defaultCacheSize,
+			TTL:         defaultCacheTTL,
+			NegativeTTL: defaultCacheNegativeTTL,
 		},
 	}
 

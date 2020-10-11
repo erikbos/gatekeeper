@@ -1,7 +1,6 @@
 package db
 
 import (
-	"errors"
 	"sync"
 	"time"
 
@@ -18,8 +17,6 @@ type EntityCache struct {
 	listeners           types.Listeners   // All listeners loaded from database
 	routes              types.Routes      // All routes loaded from database
 	clusters            types.Clusters    // All clusters loaded from database
-	users               types.Users       // All users loaded from database
-	roles               types.Roles       // All roles loaded from database
 	listenersLastUpdate int64             // Timestamp of most recent load of listeners
 	routesLastUpdate    int64             // Timestamp of most recent load of routes
 	clustersLastUpdate  int64             // Timestamp of most recent load of clusters
@@ -75,12 +72,6 @@ func (ec *EntityCache) loadContinously() {
 		}
 		if ec.config.Cluster {
 			ec.checkForChangedClusters()
-		}
-		if ec.config.User {
-			ec.checkForChangedUsers()
-		}
-		if ec.config.Role {
-			ec.checkForChangedRoles()
 		}
 		time.Sleep(ec.config.RefreshInterval)
 	}
@@ -185,72 +176,6 @@ func (ec *EntityCache) updateClusters(newClusters types.Clusters) {
 	}
 }
 
-// checkForChangedUsers checks if the loaded list of users is shorter
-// or one entry has been updated
-func (ec *EntityCache) checkForChangedUsers() {
-
-	loadedUsers, err := ec.db.User.GetAll()
-	if err != nil {
-		ec.logger.Error("Cannot retrieve users from database", zap.Error(err))
-		return
-	}
-	// In case we have less users one or more was deleted
-	if len(loadedUsers) < len(ec.users) {
-		ec.updateUsers(loadedUsers)
-	}
-	for _, user := range loadedUsers {
-		if ec.usersLastUpdate == 0 || user.LastmodifiedAt > ec.usersLastUpdate {
-			ec.updateUsers(loadedUsers)
-		}
-	}
-}
-
-func (ec *EntityCache) updateUsers(newUsers types.Users) {
-
-	ec.mutex.Lock()
-	ec.users = newUsers
-	ec.mutex.Unlock()
-	ec.usersLastUpdate = shared.GetCurrentTimeMilliseconds()
-
-	ec.logger.Info("User entities reloaded")
-	if ec.config.Notify != nil {
-		ec.config.Notify <- EntityChangeNotification{Resource: EntityTypeUser}
-	}
-}
-
-// checkForChangedRoles checks if the loaded list of users is shorter
-// or one entry has been updated
-func (ec *EntityCache) checkForChangedRoles() {
-
-	loadedRoles, err := ec.db.Role.GetAll()
-	if err != nil {
-		ec.logger.Error("Cannot retrieve roles from database", zap.Error(err))
-		return
-	}
-	// In case we have less roles one or more was deleted
-	if len(loadedRoles) < len(ec.roles) {
-		ec.updateRoles(loadedRoles)
-	}
-	for _, role := range loadedRoles {
-		if ec.rolesLastUpdate == 0 || role.LastmodifiedAt > ec.rolesLastUpdate {
-			ec.updateRoles(loadedRoles)
-		}
-	}
-}
-
-func (ec *EntityCache) updateRoles(newRoles types.Roles) {
-
-	ec.mutex.Lock()
-	ec.roles = newRoles
-	ec.mutex.Unlock()
-	ec.rolesLastUpdate = shared.GetCurrentTimeMilliseconds()
-
-	ec.logger.Info("Role entities reloaded")
-	if ec.config.Notify != nil {
-		ec.config.Notify <- EntityChangeNotification{Resource: EntityTypeRole}
-	}
-}
-
 // GetListeners returns all listeners
 func (ec *EntityCache) GetListeners() types.Listeners {
 
@@ -269,40 +194,6 @@ func (ec *EntityCache) GetClusters() types.Clusters {
 	return ec.clusters
 }
 
-// GetUsers returns all users
-func (ec *EntityCache) GetUsers() types.Users {
-
-	return ec.users
-}
-
-// GetRoles returns all roles
-func (ec *EntityCache) GetRoles() types.Roles {
-
-	return ec.roles
-}
-
-// GetUser lookups one user
-func (ec *EntityCache) GetUser(username string) (*types.User, error) {
-
-	for _, user := range ec.users {
-		if user.Name == username {
-			return &user, nil
-		}
-	}
-	return nil, errors.New("User not found")
-}
-
-// GetRole lookups one role
-func (ec *EntityCache) GetRole(rolename string) (*types.Role, error) {
-
-	for _, role := range ec.roles {
-		if role.Name == rolename {
-			return &role, nil
-		}
-	}
-	return nil, errors.New("Role not found")
-}
-
 // GetListenerCount returns number of listeners
 func (ec *EntityCache) GetListenerCount() int {
 
@@ -319,16 +210,4 @@ func (ec *EntityCache) GetRouteCount() int {
 func (ec *EntityCache) GetClusterCount() int {
 
 	return len(ec.clusters)
-}
-
-// GetUserCount returns number of users
-func (ec *EntityCache) GetUserCount() int {
-
-	return len(ec.users)
-}
-
-// GetRoleCount returns number of roles
-func (ec *EntityCache) GetRoleCount() int {
-
-	return len(ec.roles)
 }

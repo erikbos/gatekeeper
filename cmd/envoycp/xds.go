@@ -50,8 +50,10 @@ func newXDS(s server, config xdsConfig, signal <-chan db.EntityChangeNotificatio
 // Start brings up XDS system
 func (x *XDS) Start() {
 
+	// snapshotCache will contain a configuration for each connected Envoy
 	x.snapshotCache = cache.NewSnapshotCache(false, cache.IDHash{},
 		newCacheLogger(x.server.logger))
+
 	streamCallbacks := newCallback(&x.server)
 	x.xds = xds.NewServer(context.Background(), x.snapshotCache, streamCallbacks)
 
@@ -63,8 +65,15 @@ func (x *XDS) Start() {
 			x.server.logger.Info("Database change notify received",
 				zap.String("entity", n.Resource))
 
-			x.server.metrics.IncXDSSnapshotCreateCount(n.Resource)
+			// Create snapshot given we got a notification a entity was updated
 			x.CreateNewSnapshot(streamCallbacks)
+
+			// Update our stats
+			m := x.server.metrics
+			m.SetEntityCount(db.EntityTypeListener, len(x.server.dbentities.GetListeners()))
+			m.SetEntityCount(db.EntityTypeRoute, len(x.server.dbentities.GetRoutes()))
+			m.SetEntityCount(db.EntityTypeCluster, len(x.server.dbentities.GetClusters()))
+			m.IncXDSSnapshotCreateCount(n.Resource)
 
 		case <-time.After(x.xdsConfig.ConfigCompileInterval):
 			// Nothing, just wait configcompileinterval seconds
@@ -103,10 +112,6 @@ func (x *XDS) CreateNewSnapshot(streamCallbacks *callback) {
 	EnvoyClusters, _ := x.server.getEnvoyClusterConfig()
 	EnvoyRoutes, _ := x.server.getEnvoyRouteConfig()
 	EnvoyListeners, _ := x.server.getEnvoyListenerConfig()
-
-	x.server.metrics.SetEntityCount(db.EntityTypeListener, x.server.dbentities.GetListenerCount())
-	x.server.metrics.SetEntityCount(db.EntityTypeRoute, x.server.dbentities.GetRouteCount())
-	x.server.metrics.SetEntityCount(db.EntityTypeCluster, x.server.dbentities.GetClusterCount())
 
 	x.snapshotLatest = cache.NewSnapshot(version, nil, EnvoyClusters, EnvoyRoutes, EnvoyListeners, nil, nil)
 
