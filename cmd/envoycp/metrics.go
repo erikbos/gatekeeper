@@ -10,13 +10,13 @@ type metrics struct {
 	xdsMessages  *prometheus.CounterVec
 }
 
-func newMetrics(s *server) *metrics {
+func newMetrics() *metrics {
 
 	return &metrics{}
 }
 
-// Start registers envoycp operational metrics
-func (m *metrics) Start() {
+// RegisterWithPrometheus registers envoycp operational metrics
+func (m *metrics) RegisterWithPrometheus() {
 
 	m.xdsEntities = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -24,6 +24,7 @@ func (m *metrics) Start() {
 			Name:      "xds_entities_total",
 			Help:      "Total number of entities.",
 		}, []string{"messagetype"})
+	prometheus.MustRegister(m.xdsEntities)
 
 	m.xdsSnapshots = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
@@ -31,6 +32,7 @@ func (m *metrics) Start() {
 			Name:      "xds_snapshots_total",
 			Help:      "Total number of xds snapshots created.",
 		}, []string{"resource"})
+	prometheus.MustRegister(m.xdsSnapshots)
 
 	m.xdsMessages = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
@@ -38,9 +40,6 @@ func (m *metrics) Start() {
 			Name:      "xds_resource_requests_total",
 			Help:      "Total number of XDS messages.",
 		}, []string{"messagetype"})
-
-	prometheus.MustRegister(m.xdsEntities)
-	prometheus.MustRegister(m.xdsSnapshots)
 	prometheus.MustRegister(m.xdsMessages)
 }
 

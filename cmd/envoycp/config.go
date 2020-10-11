@@ -12,6 +12,7 @@ import (
 
 const (
 	defaultLogLevel            = "info"
+	defaultLogFileName         = "/dev/stdout"
 	defaultWebAdminListen      = "0.0.0.0:9902"
 	defaultWebAdminLogFileName = "envoycp-admin.log"
 	defaultXDSGRPCListen       = "0.0.0.0:9901"
@@ -48,7 +49,7 @@ func loadConfiguration(filename *string) (*EnvoyCPConfig, error) {
 	defaultConfig := &EnvoyCPConfig{
 		Logger: shared.Logger{
 			Level:    defaultLogLevel,
-			Filename: "/dev/stdout",
+			Filename: defaultLogFileName,
 		},
 		WebAdmin: webadmin.Config{
 			Listen: defaultWebAdminListen,

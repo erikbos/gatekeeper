@@ -1,13 +1,11 @@
-package main
+package oauth
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
 	"gopkg.in/oauth2.v3"
 	"gopkg.in/oauth2.v3/manage"
@@ -18,8 +16,8 @@ import (
 	"github.com/erikbos/gatekeeper/pkg/webadmin"
 )
 
-// OAuthServerConfig contains our configuration
-type OAuthServerConfig struct {
+// Config contains our configuration
+type Config struct {
 	Logger shared.Logger `yaml:"logging"` // log configuration of webadmin accesslog
 	Listen string        `yaml:"listen"`  // OAuth Address and port to listen
 	TLS    struct {
@@ -30,41 +28,30 @@ type OAuthServerConfig struct {
 	TokenInfoPath  string `yaml:"tokeninfopath"`  // Path to request info about token (e.g. "/oauth2/info")
 }
 
-// OAuthServer is an oauth server instance
-type OAuthServer struct {
-	config             *OAuthServerConfig
-	router             *gin.Engine
-	db                 *db.Database
-	server             *server.Server
-	logger             *zap.Logger
-	tokenIssueRequests *prometheus.CounterVec
-	tokenInfoRequests  *prometheus.CounterVec
+// Server is an oauth server instance
+type Server struct {
+	config      Config
+	router      *gin.Engine
+	db          *db.Database
+	oauthserver *server.Server
+	logger      *zap.Logger
+	metrics     *metrics
 }
 
-// tokenInfoAnswer is returned by public OAuth Token Info endpoint
-type tokenInfoAnswer struct {
-	Valid     bool      `json:"valid"`
-	CreatedAt time.Time `json:"createdAt"`
-	ExpiresAt time.Time `json:"expiresAt"`
-	Scope     string    `json:"scope"`
-}
+// New returns a new oauth server instance
+func New(config Config, db *db.Database, logger *zap.Logger) *Server {
 
-func newOAuthServer(config *OAuthServerConfig, db *db.Database) *OAuthServer {
-
-	return &OAuthServer{
-		config: config,
-		db:     db,
-		// cache: newCache(&cacheConfig{
-		// 	Size:        100 * 1024 * 1025,
-		// 	TTL:         15,
-		// 	NegativeTTL: 5,
-		// }),
+	return &Server{
+		config:  config,
+		db:      db,
+		logger:  logger,
+		metrics: newMetrics(),
 	}
 }
 
 // Start starts OAuth2 public endpoints to request new access token
 // or get info about an access info
-func (oauth *OAuthServer) Start() error {
+func (oauth *Server) Start(applicationName string) error {
 	// Do not start oauth system if we do not have a listenport
 	if oauth.config.Listen == "" {
 		return nil
@@ -75,7 +62,7 @@ func (oauth *OAuthServer) Start() error {
 
 	oauth.logger = shared.NewLogger(&oauth.config.Logger, false)
 
-	oauth.registerMetrics()
+	oauth.metrics.RegisterWithPrometheus(applicationName)
 	oauth.prepareOAuthInstance()
 
 	gin.SetMode(gin.ReleaseMode)
@@ -106,7 +93,7 @@ func (oauth *OAuthServer) Start() error {
 }
 
 // prepareOAuthInstance build OAuth server instance with client and token storage backends
-func (oauth *OAuthServer) prepareOAuthInstance() {
+func (oauth *Server) prepareOAuthInstance() {
 
 	manager := manage.NewDefaultManager()
 
@@ -121,7 +108,7 @@ func (oauth *OAuthServer) prepareOAuthInstance() {
 
 	config := &server.Config{
 		TokenType: "Bearer",
-		// We do not allow token-by-GET requests
+		// We do not allow retrieving token using HTTP GET method
 		AllowGetAccessRequest: false,
 		AllowedResponseTypes: []oauth2.ResponseType{
 			oauth2.Token,
@@ -130,36 +117,51 @@ func (oauth *OAuthServer) prepareOAuthInstance() {
 			oauth2.ClientCredentials,
 		},
 	}
-	oauth.server = server.NewServer(config, manager)
+	oauth.oauthserver = server.NewServer(config, manager)
 
 	// Setup extracting POSTed clientId/Secret
-	oauth.server.SetClientInfoHandler(server.ClientFormHandler)
+	oauth.oauthserver.SetClientInfoHandler(server.ClientFormHandler)
+}
+
+// LoadAccessToken returns the details of token
+func (oauth *Server) LoadAccessToken(accessToken string) (oauth2.TokenInfo, error) {
+
+	return oauth.oauthserver.Manager.LoadAccessToken(accessToken)
 }
 
 // handleTokenIssueRequest handles a POST request for a new OAuth token
-func (oauth *OAuthServer) handleTokenIssueRequest(c *gin.Context) {
+func (oauth *Server) handleTokenIssueRequest(c *gin.Context) {
 
-	if err := oauth.server.HandleTokenRequest(c.Writer, c.Request); err != nil {
-		oauth.tokenIssueRequests.WithLabelValues("400").Inc()
-		_ = c.AbortWithError(http.StatusBadRequest, err)
+	if err := oauth.oauthserver.HandleTokenRequest(c.Writer, c.Request); err != nil {
+		responseStatusCode := http.StatusBadRequest
+		oauth.metrics.IncTokenIssueRequests(responseStatusCode)
+		_ = c.AbortWithError(responseStatusCode, err)
 		return
 	}
-	statusCode := fmt.Sprintf("%d", c.Writer.Status())
-	oauth.tokenIssueRequests.WithLabelValues(statusCode).Inc()
+	oauth.metrics.IncTokenIssueRequests(c.Writer.Status())
+}
+
+// tokenInfoAnswer is returned by public OAuth Token Info endpoint
+type tokenInfoAnswer struct {
+	Valid     bool      `json:"valid"`
+	CreatedAt time.Time `json:"createdAt"`
+	ExpiresAt time.Time `json:"expiresAt"`
+	Scope     string    `json:"scope"`
 }
 
 // handleTokenInfo shows information about temporary token
-func (oauth *OAuthServer) handleTokenInfo(c *gin.Context) {
+func (oauth *Server) handleTokenInfo(c *gin.Context) {
 
-	tokenInfo, err := oauth.server.ValidationBearerToken(c.Request)
+	tokenInfo, err := oauth.oauthserver.ValidationBearerToken(c.Request)
 	if err != nil {
-		oauth.tokenInfoRequests.WithLabelValues("401").Inc()
-		_ = c.AbortWithError(http.StatusUnauthorized, err)
+		responseStatusCode := http.StatusUnauthorized
+		oauth.metrics.IncTokenInfoRequests(responseStatusCode)
+		_ = c.AbortWithError(responseStatusCode, err)
 		return
 	}
 
-	// Copy over the information we want to show back:
-	// We want to prevent showing client_id / client_secret for example.
+	// Copy over the information we want to return back as "public info"
+	// We must not show client_id / client_secret as they are secret.
 	status := tokenInfoAnswer{
 		Valid:     true,
 		CreatedAt: tokenInfo.GetAccessCreateAt().UTC(),
@@ -167,25 +169,7 @@ func (oauth *OAuthServer) handleTokenInfo(c *gin.Context) {
 		Scope:     tokenInfo.GetScope(),
 	}
 
-	oauth.tokenInfoRequests.WithLabelValues("200").Inc()
-	c.JSON(http.StatusOK, status)
-}
-
-func (oauth *OAuthServer) registerMetrics() {
-
-	oauth.tokenIssueRequests = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Namespace: applicationName,
-			Name:      "token_issue_total",
-			Help:      "Number of OAuth token issue requests.",
-		}, []string{"status"})
-	prometheus.MustRegister(oauth.tokenIssueRequests)
-
-	oauth.tokenInfoRequests = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Namespace: applicationName,
-			Name:      "token_info_total",
-			Help:      "Number of OAuth token info requests.",
-		}, []string{"status"})
-	prometheus.MustRegister(oauth.tokenInfoRequests)
+	responseStatusCode := http.StatusOK
+	oauth.metrics.IncTokenInfoRequests(responseStatusCode)
+	c.JSON(responseStatusCode, status)
 }

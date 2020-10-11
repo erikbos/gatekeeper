@@ -169,7 +169,7 @@ func checkOAuth2(request *requestInfo, authServer *authorizationServer) *PolicyR
 	}
 
 	// Load OAuth token details from data store
-	tokenInfo, err := authServer.oauth.server.Manager.LoadAccessToken(accessToken)
+	tokenInfo, err := authServer.oauth.LoadAccessToken(accessToken)
 	if err != nil {
 		return &PolicyResponse{
 			denied:           true,

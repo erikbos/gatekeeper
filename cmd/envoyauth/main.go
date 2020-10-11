@@ -9,6 +9,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 
+	"github.com/erikbos/gatekeeper/cmd/envoyauth/oauth"
 	"github.com/erikbos/gatekeeper/pkg/db"
 	"github.com/erikbos/gatekeeper/pkg/db/cache"
 	"github.com/erikbos/gatekeeper/pkg/db/cassandra"
@@ -33,12 +34,11 @@ type authorizationServer struct {
 	db         *db.Database
 	dbentities *db.EntityCache
 	vhosts     *vhostMapping
-	// cache      *Cache
-	oauth     *OAuthServer
-	geoip     *Geoip
-	readiness *shared.Readiness
-	metrics   metricsCollection
-	logger    *zap.Logger
+	oauth      *oauth.Server
+	geoip      *Geoip
+	readiness  *shared.Readiness
+	metrics    metrics
+	logger     *zap.Logger
 }
 
 func main() {
@@ -104,8 +104,8 @@ func main() {
 	go a.vhosts.WaitFor(entityCacheConf.Notify)
 
 	// // Start service for OAuth2 endpoints
-	a.oauth = newOAuthServer(&a.config.OAuth, a.db)
-	go a.oauth.Start()
+	a.oauth = oauth.New(a.config.OAuth, a.db, a.logger)
+	go a.oauth.Start(applicationName)
 
 	a.StartAuthorizationServer()
 }

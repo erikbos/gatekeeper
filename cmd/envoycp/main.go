@@ -69,8 +69,8 @@ func main() {
 	// Start db health check and notify readiness subsystem
 	go s.db.RunReadinessCheck(s.readiness.GetChannel())
 
-	s.metrics = newMetrics(&s)
-	s.metrics.Start()
+	s.metrics = newMetrics()
+	s.metrics.RegisterWithPrometheus()
 
 	go startWebAdmin(&s)
 

@@ -21,7 +21,6 @@ func (a *authorizationServer) CheckProductEntitlement(organization string, reque
 	if err := checkDevAndKeyValidity(request); err != nil {
 		return err
 	}
-
 	var err error
 	request.APIProduct, err = a.IsRequestPathAllowed(organization, request.URL.Path, request.appCredential)
 	return err
