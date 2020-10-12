@@ -7,11 +7,11 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/erikbos/gatekeeper/pkg/db"
 	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
-func (c *Cache) fetchEntry(itemName string, entity interface{},
+// fetch items fetches
+func (c *Cache) fetchEntry(entityType, itemName string, entity interface{},
 	dataRetrieveFunction func() (interface{}, types.Error)) types.Error {
 
 	if c == nil || c.freecache == nil {
@@ -19,7 +19,7 @@ func (c *Cache) fetchEntry(itemName string, entity interface{},
 	}
 
 	// Get cachekey based upon object type & name of item we retrieve
-	cachekey, entityType := getCacheKeyAndType(itemName, entity)
+	cachekey := getCacheKeyAndType(entityType, itemName)
 	c.logger.Debug("fetchEntry", zap.String("cachekey", string(cachekey)))
 
 	if cached, err := c.freecache.Get(cachekey); err == nil && cached != nil {
@@ -31,7 +31,7 @@ func (c *Cache) fetchEntry(itemName string, entity interface{},
 		return nil
 	}
 
-	// Cache miss
+	// No entry in cache miss
 	c.metrics.EntityCacheMiss(entityType)
 
 	// Retrieve request data from database layer
@@ -55,10 +55,10 @@ func (c *Cache) fetchEntry(itemName string, entity interface{},
 	return nil
 }
 
-func (c *Cache) deleteEntry(itemName string, entity interface{}) {
+func (c *Cache) deleteEntry(entityType, itemName string) {
 
 	// Get cachekey based upon object type and item's name to delete
-	cachekey, _ := getCacheKeyAndType(itemName, entity)
+	cachekey := getCacheKeyAndType(entityType, itemName)
 
 	_ = c.freecache.Del(cachekey)
 }
@@ -77,42 +77,10 @@ func encode(data interface{}) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func getCacheKeyAndType(entityValue string, entity interface{}) (cacheKey []byte, typeName string) {
+func getCacheKeyAndType(entityType, itemName string) (cacheKey []byte) {
 
-	const (
-		allUsers = "all_users"
-		allRoles = "all_roles"
-	)
-
-	var prefix string
-	switch entity.(type) {
-	case types.User:
-		prefix = db.EntityTypeUser
-		typeName = db.EntityTypeUser
-	case *types.User:
-		prefix = db.EntityTypeUser
-		typeName = db.EntityTypeUser
-
-	case types.Users:
-		prefix = allUsers
-		typeName = db.EntityTypeUser + "s"
-	case *types.Users:
-		prefix = allUsers
-		typeName = db.EntityTypeUser + "s"
-
-	case types.Role:
-		prefix = db.EntityTypeRole
-		typeName = db.EntityTypeRole
-	case *types.Role:
-		prefix = db.EntityTypeRole
-		typeName = db.EntityTypeRole
-
-	case types.Roles:
-		prefix = allRoles
-		typeName = db.EntityTypeRole + "s"
-	case *types.Roles:
-		prefix = allRoles
-		typeName = db.EntityTypeRole + "s"
-	}
-	return []byte(prefix + "_" + entityValue), typeName
+	// We use the name of the type as prefix for the cachekey.
+	// This is done to prevent cache key collisions for similar
+	// named entities of different types.
+	return []byte(entityType + "%" + itemName)
 }

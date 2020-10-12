@@ -26,7 +26,7 @@ func (s *APIProductCache) GetAll() (types.APIProducts, types.Error) {
 		return s.apiproduct.GetAll()
 	}
 	var apiproducts types.APIProducts
-	if err := s.cache.fetchEntry("", &apiproducts, getAll); err != nil {
+	if err := s.cache.fetchEntry(db.EntityTypeAPIProduct, "", &apiproducts, getAll); err != nil {
 		return nil, err
 	}
 	return apiproducts, nil
@@ -39,7 +39,7 @@ func (s *APIProductCache) GetByOrganization(organizationName string) (types.APIP
 		return s.apiproduct.GetByOrganization(organizationName)
 	}
 	var apiproducts types.APIProducts
-	if err := s.cache.fetchEntry("", &apiproducts, getByOrg); err != nil {
+	if err := s.cache.fetchEntry(db.EntityTypeAPIProduct, "", &apiproducts, getByOrg); err != nil {
 		return nil, err
 	}
 	return apiproducts, nil
@@ -52,7 +52,7 @@ func (s *APIProductCache) Get(organizationName, apiproductName string) (*types.A
 		return s.apiproduct.Get(organizationName, apiproductName)
 	}
 	var apiproduct types.APIProduct
-	if err := s.cache.fetchEntry(apiproductName, &apiproduct, getAPIProduct); err != nil {
+	if err := s.cache.fetchEntry(db.EntityTypeAPIProduct, apiproductName, &apiproduct, getAPIProduct); err != nil {
 		return nil, err
 	}
 	return &apiproduct, nil
@@ -61,13 +61,13 @@ func (s *APIProductCache) Get(organizationName, apiproductName string) (*types.A
 // Update UPSERTs an apiproduct in database
 func (s *APIProductCache) Update(p *types.APIProduct) types.Error {
 
-	s.cache.deleteEntry(p.Name, p)
+	s.cache.deleteEntry(db.EntityTypeAPIProduct, p.Name)
 	return s.apiproduct.Update(p)
 }
 
 // Delete deletes an apiproduct
 func (s *APIProductCache) Delete(organizationName, apiProduct string) types.Error {
 
-	s.cache.deleteEntry(apiProduct, types.NullAPIProduct)
+	s.cache.deleteEntry(db.EntityTypeAPIProduct, apiProduct)
 	return s.apiproduct.Delete(organizationName, apiProduct)
 }

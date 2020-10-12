@@ -26,7 +26,7 @@ func (s *DeveloperAppCache) GetByOrganization(organizationName string) (types.De
 		return s.developerapp.GetByOrganization(organizationName)
 	}
 	var developerApps types.DeveloperApps
-	if err := s.cache.fetchEntry(organizationName, &developerApps, getDeveloperAppByOrganization); err != nil {
+	if err := s.cache.fetchEntry(db.EntityTypeDeveloperApp, organizationName, &developerApps, getDeveloperAppByOrganization); err != nil {
 		return nil, err
 	}
 	return developerApps, nil
@@ -39,7 +39,7 @@ func (s *DeveloperAppCache) GetByName(organization, developerAppName string) (*t
 		return s.developerapp.GetByID(organization, developerAppName)
 	}
 	var developerApp types.DeveloperApp
-	if err := s.cache.fetchEntry(developerAppName, &developerApp, getDeveloperAppByName); err != nil {
+	if err := s.cache.fetchEntry(db.EntityTypeDeveloperApp, developerAppName, &developerApp, getDeveloperAppByName); err != nil {
 		return nil, err
 	}
 	return &developerApp, nil
@@ -52,7 +52,7 @@ func (s *DeveloperAppCache) GetByID(organization, developerAppID string) (*types
 		return s.developerapp.GetByID(organization, developerAppID)
 	}
 	var developerApp types.DeveloperApp
-	if err := s.cache.fetchEntry(developerAppID, &developerApp, getDeveloperAppByID); err != nil {
+	if err := s.cache.fetchEntry(db.EntityTypeDeveloperApp, developerAppID, &developerApp, getDeveloperAppByID); err != nil {
 		return nil, err
 	}
 	return &developerApp, nil
@@ -67,13 +67,13 @@ func (s *DeveloperAppCache) GetCountByDeveloperID(developerID string) (int, type
 // Update UPSERTs a developer app
 func (s *DeveloperAppCache) Update(app *types.DeveloperApp) types.Error {
 
-	s.cache.deleteEntry(app.AppID, app)
+	s.cache.deleteEntry(db.EntityTypeDeveloperApp, app.AppID)
 	return s.developerapp.Update(app)
 }
 
 // DeleteByID deletes a developer app
 func (s *DeveloperAppCache) DeleteByID(organizationName, developerAppID string) types.Error {
 
-	s.cache.deleteEntry(developerAppID, types.NullDeveloperApp)
+	s.cache.deleteEntry(db.EntityTypeDeveloperApp, developerAppID)
 	return s.developerapp.DeleteByID(organizationName, developerAppID)
 }

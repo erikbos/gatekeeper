@@ -26,7 +26,7 @@ func (s *CredentialCache) GetByKey(organizationName, key *string) (*types.Develo
 		return s.credential.GetByKey(organizationName, key)
 	}
 	var credential types.DeveloperAppKey
-	if err := s.cache.fetchEntry(*key, &credential, getByKey); err != nil {
+	if err := s.cache.fetchEntry(db.EntityTypeCredential, *key, &credential, getByKey); err != nil {
 		return nil, err
 	}
 	return &credential, nil
@@ -39,7 +39,7 @@ func (s *CredentialCache) GetByDeveloperAppID(developerAppID string) (types.Deve
 		return s.credential.GetByDeveloperAppID(developerAppID)
 	}
 	var credentials types.DeveloperAppKeys
-	if err := s.cache.fetchEntry(developerAppID, &credentials, getByAppID); err != nil {
+	if err := s.cache.fetchEntry(db.EntityTypeCredential, developerAppID, &credentials, getByAppID); err != nil {
 		return nil, err
 	}
 	return credentials, nil
@@ -48,13 +48,13 @@ func (s *CredentialCache) GetByDeveloperAppID(developerAppID string) (types.Deve
 // UpdateByKey UPSERTs credentials in database
 func (s *CredentialCache) UpdateByKey(c *types.DeveloperAppKey) types.Error {
 
-	s.cache.deleteEntry(c.ConsumerKey, c)
+	s.cache.deleteEntry(db.EntityTypeCredential, c.ConsumerKey)
 	return s.credential.UpdateByKey(c)
 }
 
 // DeleteByKey deletes credentials
 func (s *CredentialCache) DeleteByKey(organizationName, consumerKey string) types.Error {
 
-	s.cache.deleteEntry(consumerKey, types.NullUser)
+	s.cache.deleteEntry(db.EntityTypeCredential, consumerKey)
 	return s.credential.DeleteByKey(organizationName, consumerKey)
 }
