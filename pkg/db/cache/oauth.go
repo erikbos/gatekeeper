@@ -30,7 +30,7 @@ func (s *OAuthCache) OAuthAccessTokenGetByAccess(accessToken string) (*types.OAu
 		return token, nil
 	}
 	var oauthToken types.OAuthAccessToken
-	if err := s.cache.fetchEntry(db.EntityTypeOAuth, accessToken, &oauthToken, getTokenByAccess); err != nil {
+	if err := s.cache.fetchEntity(db.EntityTypeOAuth, accessToken, &oauthToken, getTokenByAccess); err != nil {
 		return nil, err
 	}
 	return &oauthToken, nil
@@ -47,7 +47,7 @@ func (s *OAuthCache) OAuthAccessTokenGetByCode(code string) (*types.OAuthAccessT
 		return token, nil
 	}
 	var oauthToken types.OAuthAccessToken
-	if err := s.cache.fetchEntry(db.EntityTypeOAuth, code, &oauthToken, getTokenByCode); err != nil {
+	if err := s.cache.fetchEntity(db.EntityTypeOAuth, code, &oauthToken, getTokenByCode); err != nil {
 		return nil, err
 	}
 	return &oauthToken, nil
@@ -64,7 +64,7 @@ func (s *OAuthCache) OAuthAccessTokenGetByRefresh(refresh string) (*types.OAuthA
 		return token, nil
 	}
 	var oauthToken types.OAuthAccessToken
-	if err := s.cache.fetchEntry(db.EntityTypeOAuth, refresh, &oauthToken, getTokenByRefresh); err != nil {
+	if err := s.cache.fetchEntity(db.EntityTypeOAuth, refresh, &oauthToken, getTokenByRefresh); err != nil {
 		return nil, err
 	}
 	return &oauthToken, nil

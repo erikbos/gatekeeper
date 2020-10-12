@@ -3,15 +3,15 @@ package cache
 import (
 	"bytes"
 	"encoding/gob"
-	"log"
 
 	"go.uber.org/zap"
 
 	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
-// fetch items fetches
-func (c *Cache) fetchEntry(entityType, itemName string, entity interface{},
+// fetchEntity fetches an named entity from cache, or from the database
+// using the provided fuction.
+func (c *Cache) fetchEntity(entityType, itemName string, entity interface{},
 	dataRetrieveFunction func() (interface{}, types.Error)) types.Error {
 
 	if c == nil || c.freecache == nil {
@@ -22,7 +22,9 @@ func (c *Cache) fetchEntry(entityType, itemName string, entity interface{},
 	cachekey := getCacheKeyAndType(entityType, itemName)
 	c.logger.Debug("fetchEntry", zap.String("cachekey", string(cachekey)))
 
+	// Do we have a cache entry?
 	if cached, err := c.freecache.Get(cachekey); err == nil && cached != nil {
+		// If yes, let's try to decode it
 		if err = gob.NewDecoder(bytes.NewBuffer(cached)).Decode(entity); err != nil {
 			c.logger.Error("cache decode failed", zap.Error(err))
 			return types.NewDatabaseError(err)
@@ -33,11 +35,10 @@ func (c *Cache) fetchEntry(entityType, itemName string, entity interface{},
 
 	// No entry in cache miss
 	c.metrics.EntityCacheMiss(entityType)
-
-	// Retrieve request data from database layer
+	// Try to retrieve requested entity from database layer
 	data, err := dataRetrieveFunction()
 	if err != nil {
-		log.Print("DI: data base read failed!")
+		// We could not find entity in db, or error occured
 		return err
 	}
 	encodedData, e := encode(data)
@@ -55,6 +56,7 @@ func (c *Cache) fetchEntry(entityType, itemName string, entity interface{},
 	return nil
 }
 
+// deleteEntry removes an entry from cache
 func (c *Cache) deleteEntry(entityType, itemName string) {
 
 	// Get cachekey based upon object type and item's name to delete
@@ -63,11 +65,13 @@ func (c *Cache) deleteEntry(entityType, itemName string) {
 	_ = c.freecache.Del(cachekey)
 }
 
+// decode turns a cached entity back into a native object
 func decode(encodedData []byte, data interface{}) error {
 
 	return gob.NewDecoder(bytes.NewBuffer(encodedData)).Decode(data)
 }
 
+// decode encodes a native object into a byte stream so it can be stored in cache
 func encode(data interface{}) ([]byte, error) {
 
 	var buf bytes.Buffer
@@ -77,6 +81,8 @@ func encode(data interface{}) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
+// getCacheKeyAndType builds cachekey for an entity
+// the cachekey is used to uniquely identify an entity in the cache
 func getCacheKeyAndType(entityType, itemName string) (cacheKey []byte) {
 
 	// We use the name of the type as prefix for the cachekey.

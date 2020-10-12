@@ -26,7 +26,7 @@ func (s *CredentialCache) GetByKey(organizationName, key *string) (*types.Develo
 		return s.credential.GetByKey(organizationName, key)
 	}
 	var credential types.DeveloperAppKey
-	if err := s.cache.fetchEntry(db.EntityTypeCredential, *key, &credential, getByKey); err != nil {
+	if err := s.cache.fetchEntity(db.EntityTypeCredential, *key, &credential, getByKey); err != nil {
 		return nil, err
 	}
 	return &credential, nil
@@ -39,7 +39,7 @@ func (s *CredentialCache) GetByDeveloperAppID(developerAppID string) (types.Deve
 		return s.credential.GetByDeveloperAppID(developerAppID)
 	}
 	var credentials types.DeveloperAppKeys
-	if err := s.cache.fetchEntry(db.EntityTypeCredential, developerAppID, &credentials, getByAppID); err != nil {
+	if err := s.cache.fetchEntity(db.EntityTypeCredential, developerAppID, &credentials, getByAppID); err != nil {
 		return nil, err
 	}
 	return credentials, nil

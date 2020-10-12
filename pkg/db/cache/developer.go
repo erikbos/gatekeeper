@@ -26,7 +26,7 @@ func (s *DeveloperCache) GetByOrganization(organizationName string) (types.Devel
 		return s.developer.GetByOrganization(organizationName)
 	}
 	var developers types.Developers
-	if err := s.cache.fetchEntry(db.EntityTypeDeveloper, organizationName, &developers, getDeveloperByOrganization); err != nil {
+	if err := s.cache.fetchEntity(db.EntityTypeDeveloper, organizationName, &developers, getDeveloperByOrganization); err != nil {
 		return nil, err
 	}
 	return developers, nil
@@ -45,7 +45,7 @@ func (s *DeveloperCache) GetByEmail(developerOrganization, developerEmail string
 		return s.developer.GetByEmail(developerOrganization, developerEmail)
 	}
 	var developer types.Developer
-	if err := s.cache.fetchEntry(db.EntityTypeDeveloper, developerEmail, &developer, getDeveloperByEmail); err != nil {
+	if err := s.cache.fetchEntity(db.EntityTypeDeveloper, developerEmail, &developer, getDeveloperByEmail); err != nil {
 		return nil, err
 	}
 	return &developer, nil
@@ -58,7 +58,7 @@ func (s *DeveloperCache) GetByID(developerID string) (*types.Developer, types.Er
 		return s.developer.GetByID(developerID)
 	}
 	var developer types.Developer
-	if err := s.cache.fetchEntry(db.EntityTypeDeveloper, developerID, &developer, getDeveloperByID); err != nil {
+	if err := s.cache.fetchEntity(db.EntityTypeDeveloper, developerID, &developer, getDeveloperByID); err != nil {
 		return nil, err
 	}
 	return &developer, nil

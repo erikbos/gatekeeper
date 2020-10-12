@@ -26,7 +26,7 @@ func (s *UserCache) GetAll() (types.Users, types.Error) {
 		return s.user.GetAll()
 	}
 	var users types.Users
-	if err := s.cache.fetchEntry(db.EntityTypeUser, "", &users, getAll); err != nil {
+	if err := s.cache.fetchEntity(db.EntityTypeUser, "", &users, getAll); err != nil {
 		return nil, err
 	}
 	return users, nil
@@ -39,7 +39,7 @@ func (s *UserCache) Get(userName string) (*types.User, types.Error) {
 		return s.user.Get(userName)
 	}
 	var user types.User
-	if err := s.cache.fetchEntry(db.EntityTypeUser, userName, &user, getUser); err != nil {
+	if err := s.cache.fetchEntity(db.EntityTypeUser, userName, &user, getUser); err != nil {
 		return nil, err
 	}
 	return &user, nil

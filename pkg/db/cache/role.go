@@ -26,7 +26,7 @@ func (s *RoleCache) GetAll() (types.Roles, types.Error) {
 		return s.role.GetAll()
 	}
 	var roles types.Roles
-	if err := s.cache.fetchEntry(db.EntityTypeRole, "", &roles, getAll); err != nil {
+	if err := s.cache.fetchEntity(db.EntityTypeRole, "", &roles, getAll); err != nil {
 		return nil, err
 	}
 	return roles, nil
@@ -39,7 +39,7 @@ func (s *RoleCache) Get(roleName string) (*types.Role, types.Error) {
 		return s.role.Get(roleName)
 	}
 	var role types.Role
-	if err := s.cache.fetchEntry(db.EntityTypeRole, roleName, &role, getRole); err != nil {
+	if err := s.cache.fetchEntity(db.EntityTypeRole, roleName, &role, getRole); err != nil {
 		return nil, err
 	}
 	return &role, nil
