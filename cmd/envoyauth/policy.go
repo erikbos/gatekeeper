@@ -115,7 +115,7 @@ func checkAPIKey(request *requestInfo, authServer *authorizationServer) *PolicyR
 		authServer.logger.Debug("CheckProductEntitlement() not allowed",
 			zap.String("path", request.URL.Path), zap.String("reason", err.Error()))
 
-		authServer.increaseCounterApikeyNotfound(request)
+		authServer.metrics.increaseCounterApikeyNotfound(request)
 
 		// apikey invalid or path not allowed
 		return &PolicyResponse{
@@ -188,7 +188,7 @@ func checkOAuth2(request *requestInfo, authServer *authorizationServer) *PolicyR
 		authServer.logger.Debug("CheckProductEntitlement() not allowed",
 			zap.String("path", request.URL.Path), zap.String("reason", err.Error()))
 
-		authServer.increaseCounterApikeyNotfound(request)
+		authServer.metrics.increaseCounterApikeyNotfound(request)
 
 		return &PolicyResponse{
 			denied:           true,

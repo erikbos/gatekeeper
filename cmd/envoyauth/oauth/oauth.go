@@ -44,7 +44,7 @@ func New(config Config, db *db.Database, logger *zap.Logger) *Server {
 	return &Server{
 		config:  config,
 		db:      db,
-		logger:  logger,
+		logger:  logger.With(zap.String("system", "oauth")),
 		metrics: newMetrics(),
 	}
 }
@@ -98,10 +98,10 @@ func (oauth *Server) prepareOAuthInstance() {
 	manager := manage.NewDefaultManager()
 
 	// Set our token storage engine for access tokens
-	manager.MapTokenStorage(NewOAuthTokenStore(oauth.db, oauth.logger))
+	manager.MapTokenStorage(NewOAuthTokenStore(oauth.db, oauth.metrics, oauth.logger))
 
 	// Set client id engine for client ids
-	manager.MapClientStorage(NewOAuthClientTokenStore(oauth.db, oauth.logger))
+	manager.MapClientStorage(NewOAuthClientTokenStore(oauth.db, oauth.metrics, oauth.logger))
 
 	// Set default token ttl
 	manager.SetClientTokenCfg(&manage.Config{AccessTokenExp: 1 * time.Hour})
@@ -133,12 +133,9 @@ func (oauth *Server) LoadAccessToken(accessToken string) (oauth2.TokenInfo, erro
 func (oauth *Server) handleTokenIssueRequest(c *gin.Context) {
 
 	if err := oauth.oauthserver.HandleTokenRequest(c.Writer, c.Request); err != nil {
-		responseStatusCode := http.StatusBadRequest
-		oauth.metrics.IncTokenIssueRequests(responseStatusCode)
-		_ = c.AbortWithError(responseStatusCode, err)
+		_ = c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
-	oauth.metrics.IncTokenIssueRequests(c.Writer.Status())
 }
 
 // tokenInfoAnswer is returned by public OAuth Token Info endpoint
@@ -154,9 +151,7 @@ func (oauth *Server) handleTokenInfo(c *gin.Context) {
 
 	tokenInfo, err := oauth.oauthserver.ValidationBearerToken(c.Request)
 	if err != nil {
-		responseStatusCode := http.StatusUnauthorized
-		oauth.metrics.IncTokenInfoRequests(responseStatusCode)
-		_ = c.AbortWithError(responseStatusCode, err)
+		_ = c.AbortWithError(http.StatusUnauthorized, err)
 		return
 	}
 
@@ -168,8 +163,5 @@ func (oauth *Server) handleTokenInfo(c *gin.Context) {
 		ExpiresAt: tokenInfo.GetAccessCreateAt().Add(tokenInfo.GetAccessExpiresIn()).UTC(),
 		Scope:     tokenInfo.GetScope(),
 	}
-
-	responseStatusCode := http.StatusOK
-	oauth.metrics.IncTokenInfoRequests(responseStatusCode)
-	c.JSON(responseStatusCode, status)
+	c.JSON(http.StatusOK, status)
 }

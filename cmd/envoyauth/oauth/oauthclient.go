@@ -1,6 +1,8 @@
 package oauth
 
 import (
+	"errors"
+
 	"go.uber.org/zap"
 	"gopkg.in/oauth2.v3"
 	"gopkg.in/oauth2.v3/models"
@@ -8,40 +10,42 @@ import (
 	"github.com/erikbos/gatekeeper/pkg/db"
 )
 
+// ClientTokenStore is our interface to our credential database
+
 // ClientTokenStore holds our database config
 type ClientTokenStore struct {
-	db     *db.Database
-	logger *zap.Logger
+	db      *db.Database
+	metrics *metrics
+	logger  *zap.Logger
 }
 
 // NewOAuthClientTokenStore creates client token store instance
-func NewOAuthClientTokenStore(database *db.Database, logger *zap.Logger) oauth2.ClientStore {
+func NewOAuthClientTokenStore(database *db.Database, metrics *metrics,
+	logger *zap.Logger) oauth2.ClientStore {
 
 	return &ClientTokenStore{
-		db:     database,
-		logger: logger.With(zap.String("system", "oauthclientstore")),
+		db:      database,
+		metrics: metrics,
+		logger:  logger.With(zap.String("system", "oauthclientstore")),
 	}
 }
 
-// GetByID retrieves access token based upon tokenid
+// GetByID retrieves access token based upon tokenid (which is OAuth consumerkey)
 func (clientstore *ClientTokenStore) GetByID(id string) (oauth2.ClientInfo, error) {
 
-	if id == "" {
-		return nil, nil
+	if clientstore == nil || id == "" {
+		return nil, errors.New("Cannot handle request")
 	}
 	clientstore.logger.Debug("GetByID", zap.String("id", id))
 
 	credential, err := clientstore.db.Credential.GetByKey(nil, &id)
 	if err != nil {
-		// FIX ME increase unknown apikey counter (not an error state)
+		clientstore.metrics.IncClientStoreMisses()
 		return nil, err
 	}
-	// TODO increase fetch client id metric, label accepted (good!)
-
+	clientstore.metrics.IncClientStoreHits()
 	return &models.Client{
 		ID:     credential.ConsumerKey,
 		Secret: credential.ConsumerSecret,
-		// Domain: "www.example.com",
-		// UserID: "joe",
 	}, nil
 }

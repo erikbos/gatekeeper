@@ -77,22 +77,22 @@ func (s *OAuthCache) OAuthAccessTokenCreate(t *types.OAuthAccessToken) error {
 }
 
 // OAuthAccessTokenRemoveByAccess deletes an access token
-func (s *OAuthCache) OAuthAccessTokenRemoveByAccess(accessTokenToDelete *string) error {
+func (s *OAuthCache) OAuthAccessTokenRemoveByAccess(accessTokenToDelete string) error {
 
-	s.cache.deleteEntry(*accessTokenToDelete, types.OAuthAccessToken{})
+	s.cache.deleteEntry(accessTokenToDelete, types.OAuthAccessToken{})
 	return s.oauth.OAuthAccessTokenRemoveByAccess(accessTokenToDelete)
 }
 
 // OAuthAccessTokenRemoveByCode deletes an access token
-func (s *OAuthCache) OAuthAccessTokenRemoveByCode(codeToDelete *string) error {
+func (s *OAuthCache) OAuthAccessTokenRemoveByCode(codeToDelete string) error {
 
-	s.cache.deleteEntry(*codeToDelete, types.OAuthAccessToken{})
+	s.cache.deleteEntry(codeToDelete, types.OAuthAccessToken{})
 	return s.oauth.OAuthAccessTokenRemoveByAccess(codeToDelete)
 }
 
 // OAuthAccessTokenRemoveByRefresh deletes an access token
-func (s *OAuthCache) OAuthAccessTokenRemoveByRefresh(refreshToDelete *string) error {
+func (s *OAuthCache) OAuthAccessTokenRemoveByRefresh(refreshToDelete string) error {
 
-	s.cache.deleteEntry(*refreshToDelete, types.OAuthAccessToken{})
+	s.cache.deleteEntry(refreshToDelete, types.OAuthAccessToken{})
 	return s.oauth.OAuthAccessTokenRemoveByAccess(refreshToDelete)
 }

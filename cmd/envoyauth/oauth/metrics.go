@@ -1,14 +1,16 @@
 package oauth
 
 import (
-	"fmt"
-
 	"github.com/prometheus/client_golang/prometheus"
 )
 
 type metrics struct {
-	tokenIssueRequests *prometheus.CounterVec
-	tokenInfoRequests  *prometheus.CounterVec
+	clientStoreHits          prometheus.Counter
+	clientStoreMisses        prometheus.Counter
+	tokenStoreIssueSuccesses prometheus.Counter
+	tokenStoreIssueFailures  prometheus.Counter
+	tokenStoreLookupHits     *prometheus.CounterVec
+	tokenStoreLookupMisses   *prometheus.CounterVec
 }
 
 func newMetrics() *metrics {
@@ -18,29 +20,75 @@ func newMetrics() *metrics {
 
 // registerMetrics registers our operational metrics
 func (m *metrics) RegisterWithPrometheus(applicationName string) {
-	m.tokenIssueRequests = prometheus.NewCounterVec(
+	m.clientStoreHits = prometheus.NewCounter(
 		prometheus.CounterOpts{
 			Namespace: applicationName,
-			Name:      "token_issue_total",
-			Help:      "Number of OAuth token issue requests.",
-		}, []string{"status"})
-	prometheus.MustRegister(m.tokenIssueRequests)
+			Name:      "oauth_clientstore_hits_total",
+			Help:      "Number of OAuth client store hits.",
+		})
+	prometheus.MustRegister(m.clientStoreHits)
 
-	m.tokenInfoRequests = prometheus.NewCounterVec(
+	m.clientStoreMisses = prometheus.NewCounter(
 		prometheus.CounterOpts{
 			Namespace: applicationName,
-			Name:      "token_info_total",
-			Help:      "Number of OAuth token info requests.",
-		}, []string{"status"})
-	prometheus.MustRegister(m.tokenInfoRequests)
+			Name:      "oauth_clientstore_misses_total",
+			Help:      "Number of OAuth client store misses.",
+		})
+	prometheus.MustRegister(m.clientStoreMisses)
+
+	m.tokenStoreIssueSuccesses = prometheus.NewCounter(
+		prometheus.CounterOpts{
+			Namespace: applicationName,
+			Name:      "oauth_tokenstore_issue_successes_total",
+			Help:      "Number of OAuth succesful token store issue requests.",
+		})
+	prometheus.MustRegister(m.tokenStoreIssueSuccesses)
+
+	m.tokenStoreIssueFailures = prometheus.NewCounter(
+		prometheus.CounterOpts{
+			Namespace: applicationName,
+			Name:      "oauth_tokenstore_issue_failures_total",
+			Help:      "Number of OAuth token store issue failures.",
+		})
+	prometheus.MustRegister(m.tokenStoreIssueFailures)
+
+	m.tokenStoreLookupHits = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: applicationName,
+			Name:      "oauth_tokenstore_lookup_hits_total",
+			Help:      "Number of OAuth token store lookup hits.",
+		}, []string{"method"})
+	prometheus.MustRegister(m.tokenStoreLookupHits)
+
+	m.tokenStoreLookupMisses = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Namespace: applicationName,
+			Name:      "oauth_tokenstore_lookup_misses_total",
+			Help:      "Number of OAuth token store lookup misses.",
+		}, []string{"method"})
+	prometheus.MustRegister(m.tokenStoreLookupMisses)
 }
 
-func (m *metrics) IncTokenIssueRequests(statuscode int) {
-
-	m.tokenIssueRequests.WithLabelValues(fmt.Sprintf("%d", statuscode)).Inc()
+func (m *metrics) IncClientStoreHits() {
+	m.clientStoreHits.Inc()
 }
 
-func (m *metrics) IncTokenInfoRequests(statuscode int) {
+func (m *metrics) IncClientStoreMisses() {
+	m.clientStoreMisses.Inc()
+}
 
-	m.tokenInfoRequests.WithLabelValues(fmt.Sprintf("%d", statuscode)).Inc()
+func (m *metrics) IncTokenStoreIssueSuccesses() {
+	m.tokenStoreIssueSuccesses.Inc()
+}
+
+func (m *metrics) IncTokenStoreIssueFailures() {
+	m.tokenStoreIssueFailures.Inc()
+}
+
+func (m *metrics) IncTokenStoreLookupHits(method string) {
+	m.tokenStoreLookupHits.WithLabelValues(method).Inc()
+}
+
+func (m *metrics) IncTokenStoreLookupMisses(method string) {
+	m.tokenStoreLookupMisses.WithLabelValues(method).Inc()
 }

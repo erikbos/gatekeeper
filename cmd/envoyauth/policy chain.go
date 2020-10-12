@@ -87,7 +87,7 @@ func (p PolicyChain) Evaluate() *PolicyChainResponse {
 
 		if policyResult != nil {
 			// Register this policy evaluation successed
-			p.authServer.IncreaseMetricPolicy(p.scope, trimmedPolicyName)
+			p.authServer.metrics.IncreaseMetricPolicy(p.scope, trimmedPolicyName)
 
 			// Add policy generated headers to upstream
 			for key, value := range policyResult.headers {
@@ -111,7 +111,7 @@ func (p PolicyChain) Evaluate() *PolicyChainResponse {
 			}
 		} else {
 			// Register this policy evaluation failed
-			p.authServer.IncreaseMetricPolicyUnknown(p.scope, trimmedPolicyName)
+			p.authServer.metrics.IncreaseMetricPolicyUnknown(p.scope, trimmedPolicyName)
 		}
 	}
 	return &policyChainResult

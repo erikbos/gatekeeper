@@ -100,13 +100,14 @@ func (s *OAuthStore) runGetOAuthAccessTokenQuery(query, queryParameter string) (
 	return &accessToken, nil
 }
 
-// OAuthAccessTokenCreate UPSERTs an organization in database
+// OAuthAccessTokenCreate UPSERTs a token in database
 func (s *OAuthStore) OAuthAccessTokenCreate(t *types.OAuthAccessToken) error {
 
-	// Add TTL to each inserted token so it will be expired by database itself.
+	// "USING TTL %d" is used to give each inserted token row a time-to-live,
+	// this will force the database to expire the row.
 	//
-	// OAuth layer will check CreatedAt + ExpiresIn but does not actively delete,
-	// this way we keep our access token table clean.
+	// OAuth packages will check CreatedAt + ExpiresIn to check validity of a retrieved token,
+	/// but does not actively delete from database.
 	query := fmt.Sprintf("INSERT INTO oauth_access_token ("+oauthColumns+
 		") VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?) USING TTL %d", defaultOAuthtokenTTL)
 	if err := s.db.CassandraSession.Query(query,
@@ -130,7 +131,7 @@ func (s *OAuthStore) OAuthAccessTokenCreate(t *types.OAuthAccessToken) error {
 }
 
 // OAuthAccessTokenRemoveByAccess deletes an access token
-func (s *OAuthStore) OAuthAccessTokenRemoveByAccess(accessTokenToDelete *string) error {
+func (s *OAuthStore) OAuthAccessTokenRemoveByAccess(accessTokenToDelete string) error {
 
 	query := "DELETE FROM oauth_access_token WHERE access = ?"
 
@@ -138,7 +139,7 @@ func (s *OAuthStore) OAuthAccessTokenRemoveByAccess(accessTokenToDelete *string)
 }
 
 // OAuthAccessTokenRemoveByCode deletes an access token
-func (s *OAuthStore) OAuthAccessTokenRemoveByCode(codeToDelete *string) error {
+func (s *OAuthStore) OAuthAccessTokenRemoveByCode(codeToDelete string) error {
 
 	query := "DELETE FROM oauth_access_token WHERE code = ?"
 
@@ -146,7 +147,7 @@ func (s *OAuthStore) OAuthAccessTokenRemoveByCode(codeToDelete *string) error {
 }
 
 // OAuthAccessTokenRemoveByRefresh deletes an access token
-func (s *OAuthStore) OAuthAccessTokenRemoveByRefresh(refreshToDelete *string) error {
+func (s *OAuthStore) OAuthAccessTokenRemoveByRefresh(refreshToDelete string) error {
 
 	query := "DELETE FROM oauth_access_token WHERE refresh = ?"
 

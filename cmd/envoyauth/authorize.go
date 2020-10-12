@@ -74,7 +74,7 @@ func (a *authorizationServer) Check(ctx context.Context,
 	// FIXME not sure if x-forwarded-proto the way to determine original tcp port used
 	request.vhost, err = a.vhosts.Lookup(request.httpRequest.Host, request.httpRequest.Headers["x-forwarded-proto"])
 	if err != nil {
-		a.increaseCounterRequestRejected(request)
+		a.metrics.increaseCounterRequestRejected(request)
 		return a.rejectRequest(http.StatusNotFound, nil, nil, "unknown vhost")
 	}
 
@@ -103,7 +103,7 @@ func (a *authorizationServer) Check(ctx context.Context,
 	if (vhostPolicyOutcome != nil && !vhostPolicyOutcome.authenticated) &&
 		(APIProductPolicyOutcome != nil && !APIProductPolicyOutcome.authenticated) {
 
-		a.increaseCounterRequestRejected(request)
+		a.metrics.increaseCounterRequestRejected(request)
 
 		return a.rejectRequest(vhostPolicyOutcome.deniedStatusCode,
 			mergeMapsStringString(vhostPolicyOutcome.upstreamHeaders,
@@ -113,7 +113,7 @@ func (a *authorizationServer) Check(ctx context.Context,
 			vhostPolicyOutcome.deniedMessage)
 	}
 
-	a.IncreaseCounterRequestAccept(request)
+	a.metrics.IncreaseCounterRequestAccept(request)
 
 	return a.allowRequest(
 		mergeMapsStringString(vhostPolicyOutcome.upstreamHeaders,
