@@ -28,8 +28,7 @@ func NewHandler(g *gin.Engine, db *db.Database, s *service.Service, logger *zap.
 	// apiRoutes.Use(metricsMiddleware(m))
 
 	if enableAPIAuthentication {
-		auth := newAuth(&s.User, &s.Role, logger)
-		auth.Start(db, logger)
+		auth := newAuth(s.User, s.Role, logger)
 		apiRoutes.Use(auth.AuthenticateAndAuthorize)
 	}
 

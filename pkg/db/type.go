@@ -14,7 +14,9 @@ const (
 	EntityTypeOrganization = "organization"
 	EntityTypeDeveloper    = "developer"
 	EntityTypeDeveloperApp = "developerapp"
+	EntityTypeAPIProduct   = "apiproduct"
 	EntityTypeCredential   = "credential"
+	EntityTypeOAuth        = "oauth"
 	EntityTypeUser         = "user"
 	EntityTypeRole         = "role"
 )

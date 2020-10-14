@@ -172,13 +172,13 @@ type (
 		OAuthAccessTokenCreate(t *types.OAuthAccessToken) error
 
 		// OAuthAccessTokenRemoveByAccess deletes an access token
-		OAuthAccessTokenRemoveByAccess(accessTokenToDelete *string) error
+		OAuthAccessTokenRemoveByAccess(accessTokenToDelete string) error
 
 		// OAuthAccessTokenRemoveByCode deletes an access token
-		OAuthAccessTokenRemoveByCode(codeToDelete *string) error
+		OAuthAccessTokenRemoveByCode(codeToDelete string) error
 
 		// OAuthAccessTokenRemoveByRefresh deletes an access token
-		OAuthAccessTokenRemoveByRefresh(refreshToDelete *string) error
+		OAuthAccessTokenRemoveByRefresh(refreshToDelete string) error
 	}
 
 	// User the user information storage interface

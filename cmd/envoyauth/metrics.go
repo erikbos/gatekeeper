@@ -4,7 +4,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-type metricsCollection struct {
+type metrics struct {
 	configLoads            *prometheus.CounterVec
 	authLatencyHistogram   prometheus.Summary
 	connectInfoFailures    prometheus.Counter
@@ -16,51 +16,62 @@ type metricsCollection struct {
 	PolicyUnknown          *prometheus.CounterVec
 }
 
+func newMetrics() *metrics {
+
+	return &metrics{}
+}
+
 // registerMetrics registers our operational metrics
-func (a *authorizationServer) registerMetrics() {
-	a.metrics.configLoads = prometheus.NewCounterVec(
+func (m *metrics) RegisterWithPrometheus() {
+	m.configLoads = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: applicationName,
 			Name:      "config_table_loads_total",
 			Help:      "Total sum of listener/route/cluster table loads.",
 		}, []string{"resource"})
+	prometheus.MustRegister(m.configLoads)
 
-	a.metrics.connectInfoFailures = prometheus.NewCounter(
+	m.connectInfoFailures = prometheus.NewCounter(
 		prometheus.CounterOpts{
 			Namespace: applicationName,
 			Name:      "connection_info_failures_total",
 			Help:      "Total number of connection info failures.",
 		})
+	prometheus.MustRegister(m.connectInfoFailures)
 
-	a.metrics.requestsPerCountry = prometheus.NewCounterVec(
+	m.requestsPerCountry = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: applicationName,
 			Name:      "requests_percountry_total",
 			Help:      "Total number of requests per country.",
 		}, []string{"country"})
+	prometheus.MustRegister(m.requestsPerCountry)
 
-	a.metrics.requestsApikeyNotFound = prometheus.NewCounterVec(
+	m.requestsApikeyNotFound = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: applicationName,
 			Name:      "requests_apikey_notfound_total",
 			Help:      "Total number of requests with an unknown apikey.",
 		}, []string{"hostname", "protocol", "method"})
+	prometheus.MustRegister(m.requestsApikeyNotFound)
 
-	a.metrics.requestsAccepted = prometheus.NewCounterVec(
+	m.requestsAccepted = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: applicationName,
 			Name:      "requests_accepted_total",
 			Help:      "Total number of requests accepted.",
 		}, []string{"hostname", "protocol", "method", "apiproduct"})
+	prometheus.MustRegister(m.requestsAccepted)
 
-	a.metrics.requestsRejected = prometheus.NewCounterVec(
+	m.requestsRejected = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: applicationName,
 			Name:      "requests_rejected_total",
 			Help:      "Total number of requests rejected.",
 		}, []string{"hostname", "protocol", "method", "apiproduct"})
+	prometheus.MustRegister(m.requestsRejected)
 
-	a.metrics.authLatencyHistogram = prometheus.NewSummary(
+	m.authLatencyHistogram = prometheus.NewSummary(
 		prometheus.SummaryOpts{
 			Namespace: applicationName,
 			Name:      "request_latency",
@@ -69,43 +80,36 @@ func (a *authorizationServer) registerMetrics() {
 				0.5: 0.05, 0.9: 0.01, 0.99: 0.001, 0.999: 0.0001,
 			},
 		})
+	prometheus.MustRegister(m.authLatencyHistogram)
 
-	a.metrics.Policy = prometheus.NewCounterVec(
+	m.Policy = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: applicationName,
 			Name:      "policy_hits_total",
 			Help:      "Total number of policy hits.",
 		}, []string{"scope", "policy"})
+	prometheus.MustRegister(m.Policy)
 
-	a.metrics.PolicyUnknown = prometheus.NewCounterVec(
+	m.PolicyUnknown = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: applicationName,
 			Name:      "policy_unknown_total",
 			Help:      "Total number of unknown policy hits.",
 		}, []string{"scope", "policy"})
-
-	prometheus.MustRegister(a.metrics.configLoads)
-	prometheus.MustRegister(a.metrics.connectInfoFailures)
-	prometheus.MustRegister(a.metrics.requestsPerCountry)
-	prometheus.MustRegister(a.metrics.requestsApikeyNotFound)
-	prometheus.MustRegister(a.metrics.requestsAccepted)
-	prometheus.MustRegister(a.metrics.requestsRejected)
-	prometheus.MustRegister(a.metrics.authLatencyHistogram)
-	prometheus.MustRegister(a.metrics.Policy)
-	prometheus.MustRegister(a.metrics.PolicyUnknown)
+	prometheus.MustRegister(m.PolicyUnknown)
 }
 
 // increaseCounterApikeyNotfound requests with unknown apikey
-func (a *authorizationServer) increaseCounterApikeyNotfound(r *requestInfo) {
+func (m *metrics) increaseCounterApikeyNotfound(r *requestInfo) {
 
-	a.metrics.requestsApikeyNotFound.WithLabelValues(
+	m.requestsApikeyNotFound.WithLabelValues(
 		r.httpRequest.Host,
 		r.httpRequest.Protocol,
 		r.httpRequest.Method).Inc()
 }
 
 // increaseCounterRequestRejected counts requests that are rejected
-func (a *authorizationServer) increaseCounterRequestRejected(r *requestInfo) {
+func (m *metrics) increaseCounterRequestRejected(r *requestInfo) {
 
 	var product string
 
@@ -113,7 +117,7 @@ func (a *authorizationServer) increaseCounterRequestRejected(r *requestInfo) {
 		product = r.APIProduct.Name
 	}
 
-	a.metrics.requestsRejected.WithLabelValues(
+	m.requestsRejected.WithLabelValues(
 		r.httpRequest.Host,
 		r.httpRequest.Protocol,
 		r.httpRequest.Method,
@@ -121,9 +125,9 @@ func (a *authorizationServer) increaseCounterRequestRejected(r *requestInfo) {
 }
 
 // IncreaseCounterRequestAccept counts requests that are accepted
-func (a *authorizationServer) IncreaseCounterRequestAccept(r *requestInfo) {
+func (m *metrics) IncreaseCounterRequestAccept(r *requestInfo) {
 
-	a.metrics.requestsAccepted.WithLabelValues(
+	m.requestsAccepted.WithLabelValues(
 		r.httpRequest.Host,
 		r.httpRequest.Protocol,
 		r.httpRequest.Method,
@@ -131,17 +135,17 @@ func (a *authorizationServer) IncreaseCounterRequestAccept(r *requestInfo) {
 }
 
 // IncreaseCounterRequestAccept counts requests that are accepted
-func (a *authorizationServer) IncreaseMetricConfigLoad(what string) {
+func (m *metrics) IncreaseMetricConfigLoad(what string) {
 
-	a.metrics.configLoads.WithLabelValues(what).Inc()
+	m.configLoads.WithLabelValues(what).Inc()
 }
 
-func (a *authorizationServer) IncreaseMetricPolicy(scope, name string) {
+func (m *metrics) IncreaseMetricPolicy(scope, name string) {
 
-	a.metrics.Policy.WithLabelValues(scope, name).Inc()
+	m.Policy.WithLabelValues(scope, name).Inc()
 }
 
-func (a *authorizationServer) IncreaseMetricPolicyUnknown(scope, name string) {
+func (m *metrics) IncreaseMetricPolicyUnknown(scope, name string) {
 
-	a.metrics.PolicyUnknown.WithLabelValues(scope, name).Inc()
+	m.PolicyUnknown.WithLabelValues(scope, name).Inc()
 }

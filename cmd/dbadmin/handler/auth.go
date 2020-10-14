@@ -12,7 +12,6 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/erikbos/gatekeeper/cmd/dbadmin/service"
-	"github.com/erikbos/gatekeeper/pkg/db"
 	"github.com/erikbos/gatekeeper/pkg/types"
 	"github.com/erikbos/gatekeeper/pkg/webadmin"
 )
@@ -36,32 +35,19 @@ const (
 
 // AuthHandler provides authentication and authorization middleware
 type AuthHandler struct {
-	user        *service.User
-	role        *service.Role
-	entityCache *db.EntityCache
-	logger      *zap.Logger
+	user   service.User
+	role   service.Role
+	logger *zap.Logger
 }
 
 // newAuth setups new AuthHandler entity
-func newAuth(user *service.User, role *service.Role, logger *zap.Logger) *AuthHandler {
+func newAuth(user service.User, role service.Role, logger *zap.Logger) *AuthHandler {
 
 	return &AuthHandler{
 		user:   user,
 		role:   role,
 		logger: logger,
 	}
-}
-
-// Start auth background jobs such as entity cache loading
-func (a *AuthHandler) Start(database *db.Database, logger *zap.Logger) {
-
-	entityCacheConf := db.EntityCacheConfig{
-		RefreshInterval: entityRefreshInterval,
-		User:            true,
-		Role:            true,
-	}
-	a.entityCache = db.NewEntityCache(database, entityCacheConf, logger)
-	a.entityCache.Start()
 }
 
 // AuthenticateAndAuthorize validates username and password supplied via HTTP Basic authentication
@@ -117,7 +103,7 @@ func decodeBasicAuthorizationHeader(authorizationHeader string) (username,
 // ValidatePassword confirm if user supplied a valid password
 func (a *AuthHandler) ValidatePassword(username, password string) (user *types.User, e types.Error) {
 
-	user, err := a.entityCache.GetUser(username)
+	user, err := a.user.Get(username)
 	if err != nil {
 		return nil, types.NewUnauthorizedError(errUnknownUser)
 	}
@@ -135,7 +121,7 @@ func (a *AuthHandler) IsPathAllowedByUser(user *types.User, method, path string)
 		zap.String("user", user.Name), zap.String("method", method), zap.String("path", path))
 
 	for _, roleName := range user.Roles {
-		if role, err := a.entityCache.GetRole(roleName); err == nil {
+		if role, err := a.role.Get(roleName); err == nil {
 			if role.PathAllowed(method, path) {
 				return role.Name
 			}

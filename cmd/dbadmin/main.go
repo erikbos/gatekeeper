@@ -11,6 +11,7 @@ import (
 	"github.com/erikbos/gatekeeper/cmd/dbadmin/handler"
 	"github.com/erikbos/gatekeeper/cmd/dbadmin/service"
 	"github.com/erikbos/gatekeeper/pkg/db"
+	"github.com/erikbos/gatekeeper/pkg/db/cache"
 	"github.com/erikbos/gatekeeper/pkg/db/cassandra"
 	"github.com/erikbos/gatekeeper/pkg/shared"
 	"github.com/erikbos/gatekeeper/pkg/webadmin"
@@ -61,11 +62,15 @@ func main() {
 
 	// s.readiness.RegisterMetrics(applicationName)
 
-	s.db, err = cassandra.New(s.config.Database, applicationName,
+	// Connect to db
+	db, err := cassandra.New(s.config.Database, applicationName,
 		s.logger, *createSchema, *replicaCount)
 	if err != nil {
 		s.logger.Fatal("Database connect failed", zap.Error(err))
 	}
+
+	// Wrap database access with cache layer
+	s.db, err = cache.New(&s.config.Cache, db, applicationName, s.logger)
 
 	// Start readiness subsystem
 	s.readiness = shared.NewReadiness(applicationName, s.logger)

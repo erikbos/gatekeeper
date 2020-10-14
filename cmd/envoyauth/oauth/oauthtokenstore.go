@@ -1,6 +1,7 @@
-package main
+package oauth
 
 import (
+	"errors"
 	"time"
 
 	"go.uber.org/zap"
@@ -14,19 +15,19 @@ import (
 
 // TokenStore holds our database config
 type TokenStore struct {
-	db     *db.Database
-	cache  *Cache
-	logger *zap.Logger
+	db      *db.Database
+	metrics *metrics
+	logger  *zap.Logger
 }
 
 // NewOAuthTokenStore creates token store instance
-func NewOAuthTokenStore(database *db.Database, cache *Cache,
+func NewOAuthTokenStore(database *db.Database, metrics *metrics,
 	logger *zap.Logger) oauth2.TokenStore {
 
 	return &TokenStore{
-		db:     database,
-		cache:  cache,
-		logger: logger.With(zap.String("system", "oauthtokenstore")),
+		db:      database,
+		metrics: metrics,
+		logger:  logger.With(zap.String("system", "oauthtokenstore")),
 	}
 }
 
@@ -50,60 +51,68 @@ func (tokenstore *TokenStore) Create(info oauth2.TokenInfo) (err error) {
 		RefreshCreatedAt: shared.TimeMillisecondsToInt64(info.GetRefreshCreateAt()),
 		RefreshExpiresIn: int64(info.GetRefreshExpiresIn().Milliseconds()),
 	}
-	return tokenstore.db.OAuth.OAuthAccessTokenCreate(&token)
+	if err := tokenstore.db.OAuth.OAuthAccessTokenCreate(&token); err != nil {
+		tokenstore.metrics.IncTokenStoreIssueFailures()
+		return err
+	}
+	tokenstore.metrics.IncTokenStoreIssueSuccesses()
+	return nil
 }
 
 // GetByAccess gets token by access name
 func (tokenstore *TokenStore) GetByAccess(access string) (oauth2.TokenInfo, error) {
 
-	tokenstore.logger.Debug("GetByAccess", zap.String("access", access))
-	if access == "" {
-		return nil, nil
-	}
+	const method string = "access"
 
-	token, err := tokenstore.cache.GetAccessToken(&access)
-	// in case we do not have this token in cache let's try to retrieve it from database
-	if err != nil {
-		token, err = tokenstore.db.OAuth.OAuthAccessTokenGetByAccess(access)
-		if err != nil {
-			// TODO increase unknown oauth access counter (not an error state)
-			return nil, err
-		}
-		// Store retrieved token in cache, in case of error we proceed as we can
-		// statisfy the request as we did retrieve succesful from database
-		if err = tokenstore.cache.StoreAccessToken(&access, token); err != nil {
-			tokenstore.logger.Debug("GetByAccess, failed to store token",
-				zap.String("access", access))
-		}
+	tokenstore.logger.Debug("GetByAccess", zap.String(method, access))
+	if access == "" {
+		tokenstore.metrics.IncTokenStoreLookupMisses(method)
+		return nil, errors.New("Empty token provided")
 	}
+	token, err := tokenstore.db.OAuth.OAuthAccessTokenGetByAccess(access)
+	if err != nil {
+		tokenstore.metrics.IncTokenStoreLookupMisses(method)
+		return nil, err
+	}
+	tokenstore.metrics.IncTokenStoreLookupHits(method)
 	return toOAuthTokenStore(token)
 }
 
 // GetByCode gets token by code name
 func (tokenstore *TokenStore) GetByCode(code string) (oauth2.TokenInfo, error) {
 
-	tokenstore.logger.Debug("GetByCode", zap.String("code", code))
+	const method string = "code"
+
+	tokenstore.logger.Debug("GetByCode", zap.String(method, code))
 	if code == "" {
+		tokenstore.metrics.IncTokenStoreLookupMisses(method)
 		return nil, nil
 	}
 	token, err := tokenstore.db.OAuth.OAuthAccessTokenGetByCode(code)
 	if err != nil {
+		tokenstore.metrics.IncTokenStoreLookupMisses(method)
 		return nil, err
 	}
+	tokenstore.metrics.IncTokenStoreLookupHits(method)
 	return toOAuthTokenStore(token)
 }
 
 // GetByRefresh gets token by refresh name
 func (tokenstore *TokenStore) GetByRefresh(refresh string) (oauth2.TokenInfo, error) {
 
-	tokenstore.logger.Debug("GetByRefresh", zap.String("refresh", refresh))
+	const method string = "refresh"
+
+	tokenstore.logger.Debug("GetByRefresh", zap.String(method, refresh))
 	if refresh == "" {
+		tokenstore.metrics.IncTokenStoreLookupMisses(method)
 		return nil, nil
 	}
 	token, err := tokenstore.db.OAuth.OAuthAccessTokenGetByRefresh(refresh)
 	if err != nil {
+		tokenstore.metrics.IncTokenStoreLookupMisses(method)
 		return nil, err
 	}
+	tokenstore.metrics.IncTokenStoreLookupHits(method)
 	return toOAuthTokenStore(token)
 }
 
@@ -131,19 +140,19 @@ func toOAuthTokenStore(token *types.OAuthAccessToken) (oauth2.TokenInfo, error) 
 func (tokenstore *TokenStore) RemoveByAccess(access string) error {
 
 	tokenstore.logger.Debug("RemoveByAccess", zap.String("access", access))
-	return tokenstore.db.OAuth.OAuthAccessTokenRemoveByAccess(&access)
+	return tokenstore.db.OAuth.OAuthAccessTokenRemoveByAccess(access)
 }
 
 // RemoveByCode removes token from database
 func (tokenstore *TokenStore) RemoveByCode(code string) (err error) {
 
 	tokenstore.logger.Debug("RemoveByCode", zap.String("code", code))
-	return tokenstore.db.OAuth.OAuthAccessTokenRemoveByCode(&code)
+	return tokenstore.db.OAuth.OAuthAccessTokenRemoveByCode(code)
 }
 
 // RemoveByRefresh removes token from database
 func (tokenstore *TokenStore) RemoveByRefresh(refresh string) error {
 
 	tokenstore.logger.Debug("RemoveByRefresh", zap.String("refresh", refresh))
-	return tokenstore.db.OAuth.OAuthAccessTokenRemoveByRefresh(&refresh)
+	return tokenstore.db.OAuth.OAuthAccessTokenRemoveByRefresh(refresh)
 }
