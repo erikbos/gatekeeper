@@ -20,8 +20,6 @@ type EntityCache struct {
 	listenersLastUpdate int64             // Timestamp of most recent load of listeners
 	routesLastUpdate    int64             // Timestamp of most recent load of routes
 	clustersLastUpdate  int64             // Timestamp of most recent load of clusters
-	usersLastUpdate     int64             // Timestamp of most recent load of users
-	rolesLastUpdate     int64             // Timestamp of most recent load of roles
 	mutex               sync.Mutex        // Mutex to use when updating
 	logger              *zap.Logger       // Logger
 }
@@ -30,11 +28,6 @@ type EntityCache struct {
 type EntityCacheConfig struct {
 	RefreshInterval time.Duration                 // Interval between entity loads
 	Notify          chan EntityChangeNotification // Notification channel to emit change events
-	Listener        bool                          // If true, load listener continously
-	Route           bool                          // If true, load route continously
-	Cluster         bool                          // If true, load cluster continously
-	User            bool                          // If true, load user continously
-	Role            bool                          // If true, load role continously
 }
 
 // EntityChangeNotification is the msg send when we noticed a change in an entity
@@ -64,15 +57,9 @@ func (ec *EntityCache) Start() {
 func (ec *EntityCache) loadContinously() {
 
 	for {
-		if ec.config.Listener {
-			ec.checkForChangedListeners()
-		}
-		if ec.config.Route {
-			ec.checkForChangedRoutes()
-		}
-		if ec.config.Cluster {
-			ec.checkForChangedClusters()
-		}
+		ec.checkForChangedListeners()
+		ec.checkForChangedRoutes()
+		ec.checkForChangedClusters()
 		time.Sleep(ec.config.RefreshInterval)
 	}
 }

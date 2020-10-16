@@ -34,8 +34,6 @@ type server struct {
 	logger     *zap.Logger
 }
 
-var log string
-
 func main() {
 
 	filename := flag.String("config", defaultConfigFileName, "Configuration filename")
@@ -52,11 +50,14 @@ func main() {
 		Level:    s.config.Logger.Level,
 		Filename: s.config.Logger.Filename,
 	}
-	s.logger = shared.NewLogger(logConfig, true)
+	s.logger = shared.NewLogger(logConfig)
 	s.logger.Info("Starting",
 		zap.String("application", applicationName),
 		zap.String("version", version),
 		zap.String("buildtime", buildTime))
+
+	s.metrics = newMetrics()
+	s.metrics.RegisterWithPrometheus()
 
 	if s.db, err = cassandra.New(s.config.Database, applicationName, s.logger, false, 0); err != nil {
 		s.logger.Fatal("Database connect failed", zap.Error(err))
@@ -69,18 +70,12 @@ func main() {
 	// Start db health check and notify readiness subsystem
 	go s.db.RunReadinessCheck(s.readiness.GetChannel())
 
-	s.metrics = newMetrics()
-	s.metrics.RegisterWithPrometheus()
-
 	go startWebAdmin(&s)
 
 	// Start continously loading of virtual host, routes & cluster data
 	entityCacheConf := db.EntityCacheConfig{
 		RefreshInterval: s.config.XDS.ConfigCompileInterval,
 		Notify:          make(chan db.EntityChangeNotification),
-		Listener:        true,
-		Route:           true,
-		Cluster:         true,
 	}
 	s.dbentities = db.NewEntityCache(s.db, entityCacheConf, s.logger)
 	s.dbentities.Start()
@@ -93,7 +88,7 @@ func main() {
 // startWebAdmin starts the admin web UI
 func startWebAdmin(s *server) {
 
-	logger := shared.NewLogger(&s.config.WebAdmin.Logger, false)
+	logger := shared.NewLogger(&s.config.WebAdmin.Logger)
 
 	s.webadmin = webadmin.New(s.config.WebAdmin, applicationName, logger)
 

@@ -124,34 +124,43 @@ Envoyauth writes multiple logfiles, one for each function of envoyauth. All are 
 
 The supported fields are:
 
-| yaml field               | purpose                                                             | example                |
-| ------------------------ | ------------------------------------------------------------------- | ---------------------- |
-| logging.level            | application log level                                               | info / debug           |
-| logging.filename         | filename to write application log to                                | /dev/stdout            |
-| webadmin.listen          | webadmin address and port                                           | 0.0.0.0:2113           |
-| webadmin.ipacl           | webadmin ip acl, without this no access                             | 172.16.0.0/19          |
-| webadmin.tls.certfile    | TLS certificate file                                                |                        |
-| webadmin.tls.keyfile     | TLS certificate key file                                            |                        |
-| webadmin.logging.level   | logging level of webadmin                                           | info / debug           |
-| webadmin.logging.filename| filename to write web access log to                                 | dbadmin-access.log     |
-| envoyauth.listen         | listen address and port for authentication requests from Envoyproxy | 0.0.0.0:4000           |
-| oauth.listen             | listen address and port for OAuth token requests                    | 0.0.0.0:4001           |
-| oauth.tls.certfile       | TLS certificate file                                                |                        |
-| oauth.tls.keyfile        | TLS certificate key file                                            |                        |
-| oauth.logging.level      | logging level of oauth endpoint                                     | info / debug           |
-| oauth.logging.filename   | filename to write oauth token access log to                         | dbadmin-access.log     |
-| oauth.tokenissuepath     | Path for OAuth2 token issue requests                                | /oauth2/token          |
-| oauth.tokeninfopath      | Path for OAuth2 token info requests                                 | /oauth2/info           |
-| database.hostname        | Cassandra hostname to connect to                                    | cassandra              |
-| database.port            | Cassandra port to connect on                                        | 9042 / 10350           |
-| database.tls             | Enable TLS for database session                                     | true / false           |
-| database.username        | Database username                                                   | cassandra              |
-| database.password        | Database password                                                   | cassandra              |
-| database.keyspace        | Database keyspace for Gatekeeper tables                             | gatekeeper             |
-| database.timeout         | Timeout for session                                                 | 0.5s                   |
-| database.connectattempts | Number of attempts to establish connection                          | 5                      |
-| database.queryretries    | Number of times to retry query                                      | 2                      |
-| cache.size               | in-memory cache size in bytes                                       | 1048576                |
-| cache.ttl                | time-to-live for cached objects in seconds                          | 15                     |
-| cache.negativettl        | time-to-live for non-existing objects in seconds                    | 15                     |
-| maxmind.database         | geoip database file                                                 |                        |
+| yaml field                  | purpose                                          | example            |
+| --------------------------- | ------------------------------------------------ | ------------------ |
+| logging.level               | Application log level                            | info / debug       |
+| logging.filename            | Filename to write application log to             | /dev/stdout        |
+| logging.maxsize             | Maximum size in megabytes before rotate          | 100                |
+| logging.maxage              | Max days to retain old log files                 | 7                  |
+| logging.maxbackups          | Maximum number of old log files to retain        | 14                 |
+| envoyauth.listen            | Address and port for authentication requests     | 0.0.0.0:4000       |
+| webadmin.listen             | Webadmin address and port                        | 0.0.0.0:2113       |
+| webadmin.ipacl              | Webadmin ip acl, without this no access          | 172.16.0.0/19      |
+| webadmin.tls.certfile       | TLS certificate file                             |                    |
+| webadmin.tls.keyfile        | TLS certificate key file                         |                    |
+| webadmin.logging.level      | Logging level of webadmin                        | info / debug       |
+| webadmin.logging.filename   | Filename to write web access log to              | dbadmin-access.log |
+| webadmin.logging.maxsize    | Maximum size in megabytes before rotate          | 100                |
+| webadmin.logging.maxage     | Max days to retain old log files                 | 7                  |
+| webadmin.logging.maxbackups | Maximum number of old log files to retain        | 14                 |
+| oauth.listen                | Listen address and port for OAuth token requests | 0.0.0.0:4001       |
+| oauth.tls.certfile          | TLS certificate file                             |                    |
+| oauth.tls.keyfile           | TLS certificate key file                         |                    |
+| oauth.logging.level         | Logging level of oauth endpoint                  | info / debug       |
+| oauth.logging.filename      | Filename to write oauth token access log to      | dbadmin-access.log |
+| oauth.logging.maxsize       | Maximum size in megabytes before rotate          | 100                |
+| oauth.logging.maxage        | Max days to retain old log files                 | 7                  |
+| oauth.logging.maxbackups    | Maximum number of old log files to retain        | 14                 |
+| oauth.tokenissuepath        | Path for OAuth2 token issue requests             | /oauth2/token      |
+| oauth.tokeninfopath         | Path for OAuth2 token info requests              | /oauth2/info       |
+| database.hostname           | Cassandra hostname to connect to                 | cassandra          |
+| database.port               | Cassandra port to connect on                     | 9042 / 10350       |
+| database.tls                | Enable TLS for database session                  | true / false       |
+| database.username           | Database username                                | cassandra          |
+| database.password           | Database password                                | cassandra          |
+| database.keyspace           | Database keyspace for Gatekeeper tables          | gatekeeper         |
+| database.timeout            | Timeout for session                              | 0.5s               |
+| database.connectattempts    | Number of attempts to establish connection       | 5                  |
+| database.queryretries       | Number of times to retry query                   | 2                  |
+| cache.size                  | In-memory cache size in bytes                    | 1048576            |
+| cache.ttl                   | Time-to-live for cached objects in seconds       | 15                 |
+| cache.negativettl           | Time-to-live for non-existing objects in seconds | 15                 |
+| maxmind.database            | Geoip database file                              |                    |

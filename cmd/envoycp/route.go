@@ -13,7 +13,6 @@ import (
 	envoytype "github.com/envoyproxy/go-control-plane/envoy/type/v3"
 	cache "github.com/envoyproxy/go-control-plane/pkg/cache/types"
 	"github.com/envoyproxy/go-control-plane/pkg/wellknown"
-	"github.com/golang/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
 	"go.uber.org/zap"
@@ -480,8 +479,9 @@ func buildUpstreamHeadersToRemove(routeEntry types.Route) []string {
 		return nil
 	}
 	h := make([]string, 0, 10)
+	h = append(h, strings.Split(headersToRemove, ",")...)
 	for _, value := range strings.Split(headersToRemove, ",") {
-		h = append(h, value)
+		h = append(h, strings.TrimSpace(value))
 	}
 	if len(h) != 0 {
 		return h
@@ -622,20 +622,14 @@ func perRouteAuthzFilterConfig(routeEntry types.Route) *anypb.Any {
 
 	// Our default HTTP forwarding behaviour is to not authenticate,
 	// hence we need to disable this filter per route
-	perFilterExtAuthzConfig := envoyauth.ExtAuthzPerRoute{
+	perFilterExtAuthzConfig := &envoyauth.ExtAuthzPerRoute{
 		Override: &envoyauth.ExtAuthzPerRoute_Disabled{
 			Disabled: true,
 		},
 	}
-
-	b := proto.NewBuffer(nil)
-	b.SetDeterministic(true)
-	_ = b.Marshal(&perFilterExtAuthzConfig)
-
-	filter := &any.Any{
-		TypeUrl: "type.googleapis.com/" + proto.MessageName(&perFilterExtAuthzConfig),
-		Value:   b.Bytes(),
+	ratelimitTypedConf, e := ptypes.MarshalAny(perFilterExtAuthzConfig)
+	if e != nil {
+		return nil
 	}
-
-	return filter
+	return ratelimitTypedConf
 }

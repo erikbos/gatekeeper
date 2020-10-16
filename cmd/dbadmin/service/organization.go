@@ -97,7 +97,9 @@ func (os *OrganizationService) UpdateAttributes(org string,
 		return err
 	}
 	updatedOrganization := currentOrganization
-	updatedOrganization.Attributes.SetMultiple(receivedAttributes)
+	if err = updatedOrganization.Attributes.SetMultiple(receivedAttributes); err != nil {
+		return err
+	}
 
 	err = os.updateOrganization(updatedOrganization, who)
 	os.changelog.Update(currentOrganization, updatedOrganization, who)

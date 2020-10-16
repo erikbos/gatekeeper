@@ -54,7 +54,7 @@ func main() {
 		Level:    s.config.Logger.Level,
 		Filename: s.config.Logger.Filename,
 	}
-	s.logger = shared.NewLogger(logConfig, true)
+	s.logger = shared.NewLogger(logConfig)
 	s.logger.Info("Starting",
 		zap.String("application", applicationName),
 		zap.String("version", version),
@@ -71,6 +71,9 @@ func main() {
 
 	// Wrap database access with cache layer
 	s.db, err = cache.New(&s.config.Cache, db, applicationName, s.logger)
+	if err != nil {
+		s.logger.Fatal("Database cache setup failed", zap.Error(err))
+	}
 
 	// Start readiness subsystem
 	s.readiness = shared.NewReadiness(applicationName, s.logger)
@@ -85,7 +88,7 @@ func main() {
 // startWebAdmin starts the admin web UI
 func startWebAdmin(s *server, enableAPIAuthentication bool) {
 
-	webAdminLogger := shared.NewLogger(&s.config.WebAdmin.Logger, false)
+	webAdminLogger := shared.NewLogger(&s.config.WebAdmin.Logger)
 	s.webadmin = webadmin.New(s.config.WebAdmin, applicationName, webAdminLogger)
 
 	// Enable showing indexpage on / that shows all possible routes
@@ -95,7 +98,7 @@ func startWebAdmin(s *server, enableAPIAuthentication bool) {
 	s.webadmin.Router.GET(webadmin.MetricsPath, gin.WrapH(promhttp.Handler()))
 	s.webadmin.Router.GET(webadmin.ConfigDumpPath, webadmin.ShowStartupConfiguration(s.config))
 
-	changeLogLogger := shared.NewLogger(&s.config.Changelog.Logger, false)
+	changeLogLogger := shared.NewLogger(&s.config.Changelog.Logger)
 
 	service := service.New(s.db, changeLogLogger)
 	s.handler = handler.NewHandler(s.webadmin.Router, s.db, service, webAdminLogger, enableAPIAuthentication)
