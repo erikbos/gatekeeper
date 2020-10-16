@@ -59,7 +59,7 @@ func loadConfiguration(filename *string) (*EnvoyCPConfig, error) {
 			},
 		},
 		XDS: xdsConfig{
-			GRPCListen:            defaultXDSGRPCListen,
+			Listen:                defaultXDSGRPCListen,
 			ConfigCompileInterval: defaultConfigCompileInterval,
 		},
 	}

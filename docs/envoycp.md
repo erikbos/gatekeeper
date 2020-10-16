@@ -39,32 +39,32 @@ Envoycp writes multiple logfiles, one for each function of envoycp. All are writ
 
 The supported fields are:
 
-| yaml field                  | purpose                                                  | example            |
-| --------------------------- | -------------------------------------------------------- | ------------------ |
-| logging.level               | application log level                                    | info / debug       |
-| logging.filename            | filename to write application log to                     | /dev/stdout        |
-| logging.maxsize             | Maximum size in megabytes before rotate                  | 100                |
-| logging.maxage              | Max days to retain old log files                         | 7                  |
-| logging.maxbackups          | Maximum number of old log files to retain                | 14                 |
-| webadmin.listen             | Webadmin address and port                                | 0.0.0.0:2113       |
-| webadmin.ipacl              | Webadmin ip acl, without this no access                  | 172.16.0.0/19      |
-| webadmin.tls.certfile       | TLS certificate file                                     |                    |
-| webadmin.tls.keyfile        | TLS certificate key file                                 |                    |
-| webadmin.logging.level      | logging level of webadmin                                | info / debug       |
-| webadmin.logging.filename   | filename to write web access log to                      | dbadmin-access.log |
-| webadmin.logging.maxsize    | Maximum size in megabytes before rotate                  | 100                |
-| webadmin.logging.maxage     | Max days to retain old log files                         | 7                  |
-| webadmin.logging.maxbackups | Maximum number of old log files to retain                | 14                 |
-| database.hostname           | Cassandra hostname to connect to                         | cassandra          |
-| database.port               | Cassandra port to connect on                             | 9042 / 10350       |
-| database.tls                | Enable TLS for database session                          | true / false       |
-| database.username           | Database username                                        | cassandra          |
-| database.password           | Database password                                        | cassandra          |
-| database.keyspace           | Database keyspace for Gatekeeper tables                  | gatekeeper         |
-| database.timeout            | Timeout for session                                      | 0.5s               |
-| database.connectattempts    | Number of attempts to establish connection               | 5                  |
-| database.queryretries       | Number of times to retry query                           | 2                  |
-| xds.grpclisten              | listen address and port for XDS requests from Envoyproxy | 0.0.0.0:9901       |
-| xds.configcompileinterval   | Minimum interval between XDS configuration snapshots     | 1s                 |
-| xds.cluster                 | Name of cluster that runs XDS                            |                    |
-| xds.timeout                 | Maximum duration of XDS requests                         | 2s                 |
+| yaml field                  | purpose                                              | example            |
+| --------------------------- | ---------------------------------------------------- | ------------------ |
+| logging.level               | application log level                                | info / debug       |
+| logging.filename            | filename to write application log to                 | /dev/stdout        |
+| logging.maxsize             | Maximum size in megabytes before rotate              | 100                |
+| logging.maxage              | Max days to retain old log files                     | 7                  |
+| logging.maxbackups          | Maximum number of old log files to retain            | 14                 |
+| webadmin.listen             | Webadmin address and port                            | 0.0.0.0:2113       |
+| webadmin.ipacl              | Webadmin ip acl, without this no access              | 172.16.0.0/19      |
+| webadmin.tls.certfile       | TLS certificate file                                 |                    |
+| webadmin.tls.keyfile        | TLS certificate key file                             |                    |
+| webadmin.logging.level      | logging level of webadmin                            | info / debug       |
+| webadmin.logging.filename   | filename to write web access log to                  | dbadmin-access.log |
+| webadmin.logging.maxsize    | Maximum size in megabytes before rotate              | 100                |
+| webadmin.logging.maxage     | Max days to retain old log files                     | 7                  |
+| webadmin.logging.maxbackups | Maximum number of old log files to retain            | 14                 |
+| database.hostname           | Cassandra hostname to connect to                     | cassandra          |
+| database.port               | Cassandra port to connect on                         | 9042 / 10350       |
+| database.tls                | Enable TLS for database session                      | true / false       |
+| database.username           | Database username                                    | cassandra          |
+| database.password           | Database password                                    | cassandra          |
+| database.keyspace           | Database keyspace for Gatekeeper tables              | gatekeeper         |
+| database.timeout            | Timeout for session                                  | 0.5s               |
+| database.connectattempts    | Number of attempts to establish connection           | 5                  |
+| database.queryretries       | Number of times to retry query                       | 2                  |
+| xds.listen                  | Listen address and port for XDS requests from Envoy  | 0.0.0.0:9901       |
+| xds.configcompileinterval   | Minimum interval between XDS configuration snapshots | 1s                 |
+| xds.cluster                 | Name of cluster that runs XDS                        |                    |
+| xds.timeout                 | Maximum duration of XDS requests                     | 2s                 |
