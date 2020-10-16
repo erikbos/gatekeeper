@@ -438,11 +438,11 @@ func buildUpstreamHeadersToAdd(routeEntry types.Route) []*core.HeaderValueOption
 	headersToAdd := make(map[string]string)
 
 	buildBasicAuth(routeEntry, headersToAdd)
-	buildOptionalUpstreamHeader(routeEntry, headersToAdd, types.AttributeHeaderToAdd1)
-	buildOptionalUpstreamHeader(routeEntry, headersToAdd, types.AttributeHeaderToAdd2)
-	buildOptionalUpstreamHeader(routeEntry, headersToAdd, types.AttributeHeaderToAdd3)
-	buildOptionalUpstreamHeader(routeEntry, headersToAdd, types.AttributeHeaderToAdd4)
-	buildOptionalUpstreamHeader(routeEntry, headersToAdd, types.AttributeHeaderToAdd5)
+	buildOptionalUpstreamHeader(routeEntry, headersToAdd, types.AttributeRequestHeaderToAdd1)
+	buildOptionalUpstreamHeader(routeEntry, headersToAdd, types.AttributeRequestHeaderToAdd2)
+	buildOptionalUpstreamHeader(routeEntry, headersToAdd, types.AttributeRequestHeaderToAdd3)
+	buildOptionalUpstreamHeader(routeEntry, headersToAdd, types.AttributeRequestHeaderToAdd4)
+	buildOptionalUpstreamHeader(routeEntry, headersToAdd, types.AttributeRequestHeaderToAdd5)
 
 	if len(headersToAdd) != 0 {
 		return buildHeadersList(headersToAdd)
@@ -474,12 +474,11 @@ func buildOptionalUpstreamHeader(routeEntry types.Route,
 // buildUpstreamHeadersToRemove compiles list of headers we need to remove
 func buildUpstreamHeadersToRemove(routeEntry types.Route) []string {
 
-	headersToRemove, err := routeEntry.Attributes.Get(types.AttributeHeadersToRemove)
+	headersToRemove, err := routeEntry.Attributes.Get(types.AttributeRequestHeadersToRemove)
 	if err != nil || headersToRemove == "" {
 		return nil
 	}
 	h := make([]string, 0, 10)
-	h = append(h, strings.Split(headersToRemove, ",")...)
 	for _, value := range strings.Split(headersToRemove, ",") {
 		h = append(h, strings.TrimSpace(value))
 	}
