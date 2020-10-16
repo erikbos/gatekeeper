@@ -11,7 +11,7 @@ require (
 	github.com/go-playground/validator/v10 v10.4.0 // indirect
 	github.com/gocql/gocql v0.0.0-20200815110948-5378c8f664e9
 	github.com/gogo/googleapis v1.4.0
-	github.com/golang/protobuf v1.4.2
+	github.com/golang/protobuf v1.4.3
 	github.com/golang/snappy v0.0.2 // indirect
 	github.com/google/go-cmp v0.5.2
 	github.com/google/uuid v1.1.2
