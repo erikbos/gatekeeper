@@ -118,7 +118,9 @@ func (das *DeveloperAppService) UpdateAttributes(organizationName string, develo
 		return err
 	}
 	updatedDeveloperApp := currentDeveloperApp
-	updatedDeveloperApp.Attributes.SetMultiple(receivedAttributes)
+	if err = updatedDeveloperApp.Attributes.SetMultiple(receivedAttributes); err != nil {
+		return err
+	}
 
 	err = das.updateDeveloperApp(updatedDeveloperApp, who)
 	das.changelog.Update(currentDeveloperApp, updatedDeveloperApp, who)

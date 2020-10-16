@@ -146,7 +146,7 @@ func handleNameMismatch() handlerResponse {
 func showErrorMessageAndAbort(c *gin.Context, statusCode int, e types.Error) {
 
 	// Save internal error details in request context so we can write it in access log later
-	c.Error(errors.New(e.ErrorDetails()))
+	_ = c.Error(errors.New(e.ErrorDetails()))
 
 	// Show (public) error message
 	c.IndentedJSON(statusCode, StringMap{"error": e.ErrorDetails()})

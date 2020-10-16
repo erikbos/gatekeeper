@@ -97,7 +97,9 @@ func (cs *ClusterService) UpdateAttributes(clusterName string,
 		return types.NewItemNotFoundError(err)
 	}
 	updatedCluster := currentCluster
-	updatedCluster.Attributes.SetMultiple(receivedAttributes)
+	if err = updatedCluster.Attributes.SetMultiple(receivedAttributes); err != nil {
+		return err
+	}
 
 	err = cs.updateCluster(updatedCluster, who)
 	cs.changelog.Update(currentCluster, updatedCluster, who)

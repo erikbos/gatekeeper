@@ -19,13 +19,13 @@ func (c *Cache) fetchEntity(entityType, itemName string, entity interface{},
 	}
 
 	// Get cachekey based upon object type & name of item we retrieve
-	cachekey := getCacheKeyAndType(entityType, itemName)
-	c.logger.Debug("fetchEntry", zap.String("cachekey", string(cachekey)))
+	cacheKey := getCacheKeyAndType(entityType, itemName)
+	c.logger.Debug("fetchEntry", zap.String("cachekey", string(cacheKey)))
 
 	// Do we have a cache entry?
-	if cached, err := c.freecache.Get(cachekey); err == nil && cached != nil {
+	if cachedData, err := c.freecache.Get(cacheKey); err == nil && cachedData != nil {
 		// If yes, let's try to decode it
-		if err = gob.NewDecoder(bytes.NewBuffer(cached)).Decode(entity); err != nil {
+		if err = decode(cachedData, entity); err != nil {
 			c.logger.Error("cache decode failed", zap.Error(err))
 			return types.NewDatabaseError(err)
 		}
@@ -47,12 +47,12 @@ func (c *Cache) fetchEntity(entityType, itemName string, entity interface{},
 		return types.NewDatabaseError(e)
 	}
 	// Store in cache
-	if err := c.freecache.Set(cachekey, encodedData, c.config.TTL); err != nil {
+	if err := c.freecache.Set(cacheKey, encodedData, c.config.TTL); err != nil {
 		c.logger.Error("cache store failed", zap.Error(err))
 	}
 	// We decode the encoded data back into native type(!)
 	// We do this do provide the retrieve database back to the calling function
-	_ = gob.NewDecoder(bytes.NewBuffer(encodedData)).Decode(entity)
+	_ = decode(encodedData, entity)
 	return nil
 }
 

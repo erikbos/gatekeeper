@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -37,7 +38,7 @@ type authorizationServer struct {
 	oauth      *oauth.Server
 	geoip      *Geoip
 	readiness  *shared.Readiness
-	metrics    metrics
+	metrics    *metrics
 	logger     *zap.Logger
 }
 
@@ -56,11 +57,14 @@ func main() {
 		Level:    a.config.Logger.Level,
 		Filename: a.config.Logger.Filename,
 	}
-	a.logger = shared.NewLogger(logConfig, true)
+	a.logger = shared.NewLogger(logConfig)
 	a.logger.Info("Starting",
 		zap.String("application", applicationName),
 		zap.String("version", version),
 		zap.String("buildtime", buildTime))
+
+	a.metrics = newMetrics()
+	a.metrics.RegisterWithPrometheus()
 
 	database, err := cassandra.New(a.config.Database, applicationName, a.logger, false, 0)
 	if err != nil {
@@ -69,8 +73,9 @@ func main() {
 
 	// Wrap database access with cache layer
 	a.db, err = cache.New(&a.config.Cache, database, applicationName, a.logger)
-
-	// a.cache = newCache(&a.config.Cache)
+	if err != nil {
+		a.logger.Fatal("Database cache setup failed", zap.Error(err))
+	}
 
 	if a.config.Geoip.Database != "" {
 		a.geoip, err = OpenGeoipDatabase(a.config.Geoip.Database)
@@ -93,9 +98,6 @@ func main() {
 	entityCacheConf := db.EntityCacheConfig{
 		RefreshInterval: entityRefreshInterval,
 		Notify:          make(chan db.EntityChangeNotification),
-		Listener:        true,
-		Route:           true,
-		Cluster:         true,
 	}
 	a.dbentities = db.NewEntityCache(a.db, entityCacheConf, a.logger)
 	a.dbentities.Start()
@@ -105,7 +107,9 @@ func main() {
 
 	// // Start service for OAuth2 endpoints
 	a.oauth = oauth.New(a.config.OAuth, a.db, a.logger)
-	go a.oauth.Start(applicationName)
+	go func() {
+		log.Fatal(a.oauth.Start(applicationName))
+	}()
 
 	a.StartAuthorizationServer()
 }
@@ -113,7 +117,7 @@ func main() {
 // startWebAdmin starts the admin web UI
 func startWebAdmin(s *authorizationServer) {
 
-	logger := shared.NewLogger(&s.config.WebAdmin.Logger, false)
+	logger := shared.NewLogger(&s.config.WebAdmin.Logger)
 
 	s.webadmin = webadmin.New(s.config.WebAdmin, applicationName, logger)
 

@@ -102,7 +102,9 @@ func (ds *DeveloperService) UpdateAttributes(organizationName string, developerN
 		return err
 	}
 	updatedDeveloper := currentDeveloper
-	updatedDeveloper.Attributes.SetMultiple(receivedAttributes)
+	if err = updatedDeveloper.Attributes.SetMultiple(receivedAttributes); err != nil {
+		return err
+	}
 
 	err = ds.updateDeveloper(updatedDeveloper, who)
 	ds.changelog.Update(currentDeveloper, updatedDeveloper, who)

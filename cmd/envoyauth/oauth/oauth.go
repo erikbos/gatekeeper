@@ -60,7 +60,7 @@ func (oauth *Server) Start(applicationName string) error {
 		return errors.New("OAuth TokenIssuePath needs to be configured")
 	}
 
-	oauth.logger = shared.NewLogger(&oauth.config.Logger, false)
+	oauth.logger = shared.NewLogger(&oauth.config.Logger)
 
 	oauth.metrics.RegisterWithPrometheus(applicationName)
 	oauth.prepareOAuthInstance()

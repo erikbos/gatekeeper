@@ -20,7 +20,6 @@ const (
 	showUserRolesPath      = "show/user_role"
 
 	contentType     = "content-type"
-	contentTypeYAML = "text/yaml; charset=utf-8"
 	contentTypeHTML = "text/html; charset=utf-8"
 )
 

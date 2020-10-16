@@ -95,7 +95,9 @@ func (ls *ListenerService) UpdateAttributes(listenerName string,
 		return types.NewItemNotFoundError(err)
 	}
 	updatedListener := currentListener
-	updatedListener.Attributes.SetMultiple(receivedAttributes)
+	if err = updatedListener.Attributes.SetMultiple(receivedAttributes); err != nil {
+		return err
+	}
 
 	err = ls.updateListener(updatedListener, who)
 	ls.changelog.Update(currentListener, updatedListener, who)

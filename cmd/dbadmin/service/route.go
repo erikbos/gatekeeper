@@ -96,7 +96,9 @@ func (rs *RouteService) UpdateAttributes(routeName string,
 		return types.NewItemNotFoundError(err)
 	}
 	updatedRoute := currentRoute
-	updatedRoute.Attributes.SetMultiple(receivedAttributes)
+	if err = updatedRoute.Attributes.SetMultiple(receivedAttributes); err != nil {
+		return err
+	}
 
 	err = rs.updateRoute(updatedRoute, who)
 	rs.changelog.Update(currentRoute, updatedRoute, who)

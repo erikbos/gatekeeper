@@ -101,7 +101,9 @@ func (ds *APIProductService) UpdateAttributes(organizationName string, apiproduc
 		return err
 	}
 	updatedAPIProduct := currentAPIProduct
-	updatedAPIProduct.Attributes.SetMultiple(receivedAttributes)
+	if err = updatedAPIProduct.Attributes.SetMultiple(receivedAttributes); err != nil {
+		return err
+	}
 
 	err = ds.updateAPIProduct(updatedAPIProduct, who)
 	ds.changelog.Update(currentAPIProduct, updatedAPIProduct, who)

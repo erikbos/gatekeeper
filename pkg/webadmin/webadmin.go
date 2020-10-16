@@ -217,11 +217,11 @@ func JSONMessageAndAbort(c *gin.Context, statusCode int, msg error) {
 }
 
 // setLastModified adds Last-Modified timestamp to response
-func setLastModified(c *gin.Context, timestamp int64) {
+// func setLastModified(c *gin.Context, timestamp int64) {
 
-	c.Header("Last-Modified",
-		time.Unix(0, timestamp*int64(time.Millisecond)).Format(time.RFC822))
-}
+// 	c.Header("Last-Modified",
+// 		time.Unix(0, timestamp*int64(time.Millisecond)).Format(time.RFC822))
+// }
 
 // LivenessProbe answer with OK
 func LivenessProbe(c *gin.Context) {
@@ -243,7 +243,7 @@ func LogHTTPRequest(logger *zap.Logger) gin.HandlerFunc {
 
 		start := time.Now()
 		c.Next()
-		servicetime := time.Now().Sub(start)
+		servicetime := time.Since(start)
 
 		// Get errors that might have occured during request handling
 		var error string

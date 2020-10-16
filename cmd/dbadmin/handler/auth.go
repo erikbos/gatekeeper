@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -25,12 +24,8 @@ var (
 
 //
 const (
-
 	// key in request context holding name & connection details of requestor
 	RequestorKey = "Requestor"
-
-	// interval between entities refresh loads
-	entityRefreshInterval = 3 * time.Second
 )
 
 // AuthHandler provides authentication and authorization middleware
