@@ -77,12 +77,12 @@ Every route can have optional attributes which control what Envoy will do to mat
 | CORSExposeHeaders        | Specifies the content for the [Access-Control-Expose-Headers](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Expose-Headers) header    |                 |
 | CORSMaxAge               | Specifies the content for the [Access-Control-Max-Age](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Max-Age) header           |                 |
 | HostHeader               | HTTP host header to set when forwarding to upstream cluster           |                 |
-| HeaderToAdd1             | Additional header to set when forwarding to upstream cluster          |                 |
-| HeaderToAdd2             | Additional header to set when forwarding to upstream cluster          |                 |
-| HeaderToAdd3             | Additional header to set when forwarding to upstream cluster          |                 |
-| HeaderToAdd4             | Additional header to set when forwarding to upstream cluster          |                 |
-| HeaderToAdd5             | Additional  header to set when forwarding to upstream cluster         |                 |
-| HeadersToRemove          | Headers to remove before forwarding to upstream cluster               | accept,x-age    |
+| RequestHeaderToAdd1      | Additional header to set when forwarding to upstream cluster          |                 |
+| RequestHeaderToAdd2      | Additional header to set when forwarding to upstream cluster          |                 |
+| RequestHeaderToAdd3      | Additional header to set when forwarding to upstream cluster          |                 |
+| RequestHeaderToAdd4      | Additional header to set when forwarding to upstream cluster          |                 |
+| RequestHeaderToAdd5      | Additional  header to set when forwarding to upstream cluster         |                 |
+| RequestHeadersToRemove   | Headers to remove before forwarding to upstream cluster               | accept,x-age    |
 | BasicAuth                | Basic authentication header to set when contact upstream cluster      | user:secret     |
 | RetryOn                  | Specifies the conditions under which retry takes place.               | [See envoy documentation](https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/router_filter#config-http-filters-router-x-envoy-retry-on)|
 | PerTryTimeout            | Specify upstream timeout per retry attempt                            | 150ms           |
@@ -257,15 +257,15 @@ of Metadata key `app.id` (emitted by `envoyauth`)
             "value": "www.example.com"
         },
         {
-            "name": "HeadersToAdd1",
+            "name": "RequestHeadersToAdd1",
             "value": "appid=%DYNAMIC_METADATA([\"envoy.filters.http.ext_authz\", \"app.id\"])%"
         },
         {
-            "name": "HeadersToAdd2",
+            "name": "RequestHeadersToAdd2",
             "value": "service=public"
         },
         {
-        "name": "HeadersToRemove",
+        "name": "RequestHeadersToRemove",
         "value": "Delete-This-Header,Content-Type"
         }
     ]

@@ -32,7 +32,7 @@ type XDS struct {
 }
 
 type xdsConfig struct {
-	GRPCListen            string        `yaml:"grpclisten"`            // GRPC listen port
+	Listen                string        `yaml:"listen"`                // Extauthz listen port grpc
 	ConfigCompileInterval time.Duration `yaml:"configcompileinterval"` // Interval between configuration compilations
 	Cluster               string        `yaml:"cluster"`               // Name of cluster providing XDS service
 	Timeout               time.Duration `yaml:"timeout"`               // Max duration of request to XDS cluster
@@ -84,8 +84,8 @@ func (x *XDS) Start() {
 // GRPCManagementServer starts grpc xds listener
 func (x *XDS) GRPCManagementServer() {
 
-	x.server.logger.Info("GRPC XDS listening on " + x.xdsConfig.GRPCListen)
-	lis, err := net.Listen("tcp", x.xdsConfig.GRPCListen)
+	x.server.logger.Info("GRPC XDS listening on " + x.xdsConfig.Listen)
+	lis, err := net.Listen("tcp", x.xdsConfig.Listen)
 	if err != nil {
 		x.server.logger.Fatal("failed to listen", zap.Error(err))
 	}

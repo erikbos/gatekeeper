@@ -102,15 +102,15 @@ Authorization: basic admin passwd
         "value": "www.example.com"
     },
     {
-        "name": "HeadersToAdd1",
+        "name": "RequestHeadersToAdd1",
         "value": "appid=%DYNAMIC_METADATA([\"envoy.filters.http.ext_authz\", \"app.id\"])%"
     },
     {
-        "name": "HeadersToAdd2",
+        "name": "RequestHeadersToAdd2",
         "value": "service=public"
     },
     {
-      "name": "HeadersToRemove",
+      "name": "RequestHeadersToRemove",
       "value": "Delete-This-Header,Content-Type"
     },
     {

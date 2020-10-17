@@ -112,22 +112,22 @@ const (
 	AttributeHostHeader = "HostHeader"
 
 	// Additional header 1 to set before forwarding upstream
-	AttributeHeaderToAdd1 = "HeaderToAdd1"
+	AttributeRequestHeaderToAdd1 = "RequestHeaderToAdd1"
 
 	// Additional header 2 to set before forwarding upstream
-	AttributeHeaderToAdd2 = "HeaderToAdd2"
+	AttributeRequestHeaderToAdd2 = "RequestHeaderToAdd2"
 
 	// Additional header 3 to set before forwarding upstream
-	AttributeHeaderToAdd3 = "HeaderToAdd3"
+	AttributeRequestHeaderToAdd3 = "RequestHeaderToAdd3"
 
 	// Additional header 4 to set before forwarding upstream
-	AttributeHeaderToAdd4 = "HeaderToAdd4"
+	AttributeRequestHeaderToAdd4 = "RequestHeaderToAdd4"
 
 	// Additional header 5 to set before forwarding upstream
-	AttributeHeaderToAdd5 = "HeaderToAdd5"
+	AttributeRequestHeaderToAdd5 = "RequestHeaderToAdd5"
 
 	// Optional header(s) to remove before forwarding upstream
-	AttributeHeadersToRemove = "HeadersToRemove"
+	AttributeRequestHeadersToRemove = "RequestHeadersToRemove"
 
 	// Basic authentication header to set before forwarding upstream
 	AttributeBasicAuth = "BasicAuth"
@@ -199,12 +199,12 @@ var validRouteAttributes = map[string]bool{
 	AttributeCORSExposeHeaders:        true,
 	AttributeCORSMaxAge:               true,
 	AttributeHostHeader:               true,
-	AttributeHeaderToAdd1:             true,
-	AttributeHeaderToAdd2:             true,
-	AttributeHeaderToAdd3:             true,
-	AttributeHeaderToAdd4:             true,
-	AttributeHeaderToAdd5:             true,
-	AttributeHeadersToRemove:          true,
+	AttributeRequestHeaderToAdd1:      true,
+	AttributeRequestHeaderToAdd2:      true,
+	AttributeRequestHeaderToAdd3:      true,
+	AttributeRequestHeaderToAdd4:      true,
+	AttributeRequestHeaderToAdd5:      true,
+	AttributeRequestHeadersToRemove:   true,
 	AttributeBasicAuth:                true,
 	AttributeRetryOn:                  true,
 	AttributePerTryTimeout:            true,
