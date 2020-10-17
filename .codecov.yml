@@ -4,6 +4,7 @@
 coverage:
   precision: 0
   status:
+    patch: off
     project:
       default: off
       dbadmin:
