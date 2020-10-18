@@ -238,7 +238,7 @@ func LogHTTPRequest(logger *zap.Logger) gin.HandlerFunc {
 
 		// Do not log k8s health probes
 		if requesturi == LivenessCheckPath || requesturi == ReadinessCheckPath {
-			c.Next()
+			return
 		}
 
 		start := time.Now()
@@ -246,10 +246,10 @@ func LogHTTPRequest(logger *zap.Logger) gin.HandlerFunc {
 		servicetime := time.Since(start)
 
 		// Get errors that might have occured during request handling
-		var error string
+		var allErrors string
 		if len(c.Errors) > 0 {
 			for _, e := range c.Errors.Errors() {
-				error += strings.TrimSpace(e)
+				allErrors += strings.TrimSpace(e)
 			}
 		}
 		logger.Info("",
@@ -264,7 +264,7 @@ func LogHTTPRequest(logger *zap.Logger) gin.HandlerFunc {
 			zap.String("user-agent", c.Request.UserAgent()),
 			zap.Duration("servicetime", servicetime),
 			zap.String("requestid", GetRequestID(c)),
-			zap.String("error", error))
+			zap.String("error", allErrors))
 	}
 }
 
