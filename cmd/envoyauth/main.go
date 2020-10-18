@@ -91,7 +91,6 @@ func main() {
 	// Start db health check and notify readiness subsystem
 	go a.db.RunReadinessCheck(a.readiness.GetChannel())
 
-	a.metrics.RegisterWithPrometheus()
 	go startWebAdmin(&a)
 
 	// Start continously loading of virtual host, routes & cluster data
