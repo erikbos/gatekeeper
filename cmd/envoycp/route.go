@@ -474,18 +474,25 @@ func buildOptionalUpstreamHeader(routeEntry types.Route,
 // buildUpstreamHeadersToRemove compiles list of headers we need to remove
 func buildUpstreamHeadersToRemove(routeEntry types.Route) []string {
 
+	h := make([]string, 0, 10)
+
+	// In case attribute AuthzAuthentication=true is set for this route we assume
+	// extauthz will authenticate each request by evaluation the Authorization header.
+	// Given this we should not send the original Authorization upstream as it very unlikely
+	/// upstream will do authentication
+	if value, err := routeEntry.Attributes.Get(types.AttributeAuthentication); err == nil &&
+		value == types.AttributeValueTrue {
+		h = append(h, "Authorization")
+	}
+
 	headersToRemove, err := routeEntry.Attributes.Get(types.AttributeRequestHeadersToRemove)
 	if err != nil || headersToRemove == "" {
-		return nil
+		return h
 	}
-	h := make([]string, 0, 10)
 	for _, value := range strings.Split(headersToRemove, ",") {
 		h = append(h, strings.TrimSpace(value))
 	}
-	if len(h) != 0 {
-		return h
-	}
-	return nil
+	return h
 }
 
 // buildHeadersList creates map to hold headers to add or remove
