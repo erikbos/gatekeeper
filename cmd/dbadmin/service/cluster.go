@@ -56,18 +56,19 @@ func (cs *ClusterService) GetAttribute(clusterName, attributeName string) (value
 func (cs *ClusterService) Create(newCluster types.Cluster, who Requester) (
 	types.Cluster, types.Error) {
 
-	existingCluster, err := cs.db.Cluster.Get(newCluster.Name)
-	if err == nil {
+	if _, err := cs.db.Cluster.Get(newCluster.Name); err == nil {
 		return types.NullCluster, types.NewBadRequestError(
-			fmt.Errorf("Cluster '%s' already exists", existingCluster.Name))
+			fmt.Errorf("Cluster '%s' already exists", newCluster.Name))
 	}
 	// Automatically set default fields
 	newCluster.CreatedAt = shared.GetCurrentTimeMilliseconds()
 	newCluster.CreatedBy = who.User
 
-	err = cs.updateCluster(&newCluster, who)
+	if err := cs.updateCluster(&newCluster, who); err != nil {
+		return types.NullCluster, err
+	}
 	cs.changelog.Create(newCluster, who)
-	return newCluster, err
+	return newCluster, nil
 }
 
 // Update updates an existing cluster
@@ -76,16 +77,18 @@ func (cs *ClusterService) Update(updatedCluster types.Cluster,
 
 	currentCluster, err := cs.db.Cluster.Get(updatedCluster.Name)
 	if err != nil {
-		return types.NullCluster, types.NewItemNotFoundError(err)
+		return types.NullCluster, err
 	}
 	// Copy over fields we do not allow to be updated
 	updatedCluster.Name = currentCluster.Name
 	updatedCluster.CreatedAt = currentCluster.CreatedAt
 	updatedCluster.CreatedBy = currentCluster.CreatedBy
 
-	err = cs.updateCluster(&updatedCluster, who)
+	if err = cs.updateCluster(&updatedCluster, who); err != nil {
+		return types.NullCluster, err
+	}
 	cs.changelog.Update(currentCluster, updatedCluster, who)
-	return updatedCluster, err
+	return updatedCluster, nil
 }
 
 // UpdateAttributes updates attributes of an cluster
@@ -94,16 +97,18 @@ func (cs *ClusterService) UpdateAttributes(clusterName string,
 
 	currentCluster, err := cs.db.Cluster.Get(clusterName)
 	if err != nil {
-		return types.NewItemNotFoundError(err)
+		return err
 	}
 	updatedCluster := currentCluster
 	if err = updatedCluster.Attributes.SetMultiple(receivedAttributes); err != nil {
 		return err
 	}
 
-	err = cs.updateCluster(updatedCluster, who)
+	if err = cs.updateCluster(updatedCluster, who); err != nil {
+		return err
+	}
 	cs.changelog.Update(currentCluster, updatedCluster, who)
-	return err
+	return nil
 }
 
 // UpdateAttribute update an attribute of developer
@@ -117,9 +122,11 @@ func (cs *ClusterService) UpdateAttribute(clusterName string,
 	updatedCluster := currentCluster
 	updatedCluster.Attributes.Set(attributeValue)
 
-	err = cs.updateCluster(updatedCluster, who)
+	if err := cs.updateCluster(updatedCluster, who); err != nil {
+		return err
+	}
 	cs.changelog.Update(currentCluster, updatedCluster, who)
-	return err
+	return nil
 }
 
 // DeleteAttribute removes an attribute of an cluster and return its former value
@@ -136,9 +143,11 @@ func (cs *ClusterService) DeleteAttribute(clusterName, attributeToDelete string,
 		return "", err
 	}
 
-	err = cs.updateCluster(updatedCluster, who)
+	if err := cs.updateCluster(updatedCluster, who); err != nil {
+		return "", err
+	}
 	cs.changelog.Update(currentCluster, updatedCluster, who)
-	return oldValue, err
+	return oldValue, nil
 }
 
 // updateCluster updates last-modified field(s) and updates cluster in database
@@ -158,8 +167,7 @@ func (cs *ClusterService) Delete(clusterName string, who Requester) (
 	if err != nil {
 		return types.NullCluster, err
 	}
-	err = cs.db.Cluster.Delete(clusterName)
-	if err != nil {
+	if err := cs.db.Cluster.Delete(clusterName); err != nil {
 		return types.NullCluster, err
 	}
 	cs.changelog.Delete(cluster, who)

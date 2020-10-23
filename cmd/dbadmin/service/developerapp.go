@@ -85,28 +85,34 @@ func (das *DeveloperAppService) Create(organizationName, developerEmail string,
 	// New developer starts actived
 	newDeveloperApp.Status = "active"
 
-	err = das.updateDeveloperApp(&newDeveloperApp, who)
+	if err = das.updateDeveloperApp(&newDeveloperApp, who); err != nil {
+		return types.NullDeveloperApp, err
+	}
 	das.changelog.Create(newDeveloperApp, who)
-	return newDeveloperApp, err
+	return newDeveloperApp, nil
 }
 
 // Update updates an existing developerApp
 func (das *DeveloperAppService) Update(organizationName string, updatedDeveloperApp types.DeveloperApp,
 	who Requester) (types.DeveloperApp, types.Error) {
 
-	currentDeveloperApp, err := das.db.DeveloperApp.GetByID(organizationName, updatedDeveloperApp.AppID)
+	currentDeveloperApp, err := das.db.DeveloperApp.GetByName(organizationName, updatedDeveloperApp.Name)
 	if err != nil {
-		return types.NullDeveloperApp, types.NewItemNotFoundError(err)
+		return types.NullDeveloperApp, err
 	}
 
-	// Copy over the fields we allow to be updated
+	// Copy over the fields we do not allow to be updated
 	updatedDeveloperApp.Name = currentDeveloperApp.Name
+	updatedDeveloperApp.DeveloperID = currentDeveloperApp.DeveloperID
+	updatedDeveloperApp.AppID = currentDeveloperApp.AppID
 	updatedDeveloperApp.CreatedAt = currentDeveloperApp.CreatedAt
 	updatedDeveloperApp.CreatedBy = currentDeveloperApp.CreatedBy
 
-	err = das.updateDeveloperApp(&updatedDeveloperApp, who)
+	if err = das.updateDeveloperApp(&updatedDeveloperApp, who); err != nil {
+		return types.NullDeveloperApp, err
+	}
 	das.changelog.Update(currentDeveloperApp, updatedDeveloperApp, who)
-	return updatedDeveloperApp, err
+	return updatedDeveloperApp, nil
 }
 
 // UpdateAttributes updates attributes of an developerApp
@@ -122,7 +128,9 @@ func (das *DeveloperAppService) UpdateAttributes(organizationName string, develo
 		return err
 	}
 
-	err = das.updateDeveloperApp(updatedDeveloperApp, who)
+	if err = das.updateDeveloperApp(updatedDeveloperApp, who); err != nil {
+		return err
+	}
 	das.changelog.Update(currentDeveloperApp, updatedDeveloperApp, who)
 	return err
 }
@@ -138,7 +146,9 @@ func (das *DeveloperAppService) UpdateAttribute(organizationName string, develop
 	updatedDeveloperApp := currentDeveloperApp
 	updatedDeveloperApp.Attributes.Set(attributeValue)
 
-	err = das.updateDeveloperApp(updatedDeveloperApp, who)
+	if err = das.updateDeveloperApp(updatedDeveloperApp, who); err != nil {
+		return err
+	}
 	das.changelog.Update(currentDeveloperApp, updatedDeveloperApp, who)
 	return err
 }
@@ -156,7 +166,9 @@ func (das *DeveloperAppService) DeleteAttribute(organizationName, developerAppNa
 	if err != nil {
 		return "", err
 	}
-	err = das.updateDeveloperApp(updatedDeveloperApp, who)
+	if err = das.updateDeveloperApp(updatedDeveloperApp, who); err != nil {
+		return "", err
+	}
 	das.changelog.Update(currentDeveloperApp, updatedDeveloperApp, who)
 	return oldValue, err
 }

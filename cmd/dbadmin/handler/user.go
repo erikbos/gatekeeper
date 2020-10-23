@@ -19,9 +19,6 @@ func (h *Handler) registerUserRoutes(r *gin.RouterGroup) {
 const (
 	// Name of user parameter in the route definition
 	userParameter = "user"
-
-	// name of array in JSON response
-	userArray = "user"
 )
 
 // getAllUsers returns all users
@@ -32,7 +29,7 @@ func (h *Handler) getAllUsers(c *gin.Context) handlerResponse {
 		return handleError(err)
 	}
 	removePasswords(users)
-	return handleOK(StringMap{userArray: users})
+	return handleOK(StringMap{"user": users})
 }
 
 // removePasswords set passwords of all users in slice to empty string

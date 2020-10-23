@@ -2,7 +2,7 @@
 
 
 ### Get all users
-GET http://{{hostname}}/v1/users/admin
+GET http://{{hostname}}/v1/users
 Authorization: Basic admin passwd
 
 
@@ -20,6 +20,12 @@ Authorization: Basic admin passwd
         "admin"
     ]
 }
+
+
+### Get user 'admin'
+GET http://{{hostname}}/v1/users/admin
+Authorization: Basic admin passwd
+
 
 ### Update an existing user called `admin`
 POST http://{{hostname}}/v1/users/admin HTTP/1.1

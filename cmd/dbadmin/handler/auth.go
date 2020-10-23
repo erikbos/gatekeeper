@@ -66,10 +66,10 @@ func (a *AuthHandler) AuthenticateAndAuthorize(c *gin.Context) {
 		return
 	}
 
-	roleWhichAllowsAccess := a.IsPathAllowedByUser(user, c.Request.Method, c.Request.URL.Path)
-	if roleWhichAllowsAccess == "" {
+	roleWhichAllowsAccess, err := a.IsPathAllowedByUser(user, c.Request.Method, c.Request.URL.Path)
+	if err != nil {
 		// Path not allowed by none of the roles of the user, we return 401 and abort request.
-		abortAuthorizationRequired(c, errPathNotAllowed)
+		abortAuthorizationRequired(c, err)
 	}
 
 	// Store user's role in the request context so we can use it later on while logging request
@@ -109,8 +109,9 @@ func (a *AuthHandler) ValidatePassword(username, password string) (user *types.U
 }
 
 // IsPathAllowedByUser checks whether user is allowed to access a path,
-// if yes returns the name of the allowing access
-func (a *AuthHandler) IsPathAllowedByUser(user *types.User, method, path string) string {
+// if allowed return name of allowing role
+func (a *AuthHandler) IsPathAllowedByUser(user *types.User, method, path string) (
+	roleName string, e types.Error) {
 
 	a.logger.Debug("IsPathAllowedByUser",
 		zap.String("user", user.Name), zap.String("method", method), zap.String("path", path))
@@ -118,12 +119,12 @@ func (a *AuthHandler) IsPathAllowedByUser(user *types.User, method, path string)
 	for _, roleName := range user.Roles {
 		if role, err := a.role.Get(roleName); err == nil {
 			if role.PathAllowed(method, path) {
-				return role.Name
+				return role.Name, nil
 			}
 		}
 	}
 	// in case nothing matched we do not allow access
-	return ""
+	return "", errPathNotAllowed
 }
 
 func abortAuthorizationRequired(c *gin.Context, errorDetails types.Error) {
@@ -136,7 +137,7 @@ func abortAuthorizationRequired(c *gin.Context, errorDetails types.Error) {
 // who returns name of authenticated user requesting this API call
 func (h *Handler) who(c *gin.Context) service.Requester {
 
-	// Store more details, changelog will use these records
+	// Store details, changelog will use these records
 	return service.Requester{
 		RemoteAddr: c.ClientIP(),
 		Header:     c.Request.Header,

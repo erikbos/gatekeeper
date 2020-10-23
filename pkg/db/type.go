@@ -1,8 +1,6 @@
 package db
 
 import (
-	"log"
-
 	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
@@ -23,8 +21,6 @@ const (
 
 // Typeof returns the type of an object
 func Typeof(entity interface{}) string {
-
-	log.Printf("%T", entity)
 
 	switch entity.(type) {
 	case types.Listener:

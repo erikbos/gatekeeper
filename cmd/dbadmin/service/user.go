@@ -37,10 +37,9 @@ func (us *UserService) Get(userName string) (user *types.User, err types.Error) 
 // Create creates an user
 func (us *UserService) Create(newUser types.User, who Requester) (*types.User, types.Error) {
 
-	existingUser, err := us.db.User.Get(newUser.Name)
-	if err == nil {
+	if _, err := us.db.User.Get(newUser.Name); err == nil {
 		return nil, types.NewBadRequestError(
-			fmt.Errorf("User '%s' already exists", existingUser.Name))
+			fmt.Errorf("User '%s' already exists", newUser.Name))
 	}
 	// Automatically set default fields
 	newUser.CreatedAt = shared.GetCurrentTimeMilliseconds()
@@ -53,7 +52,7 @@ func (us *UserService) Create(newUser types.User, who Requester) (*types.User, t
 	}
 	newUser.Password = encryptedPassword
 
-	if err = us.updateUser(&newUser, who); err != nil {
+	if err := us.updateUser(&newUser, who); err != nil {
 		return nil, err
 	}
 	us.changelog.Create(newUser, who)
@@ -66,7 +65,7 @@ func (us *UserService) Update(updatedUser types.User,
 
 	currentUser, err := us.db.User.Get(updatedUser.Name)
 	if err != nil {
-		return nil, types.NewItemNotFoundError(err)
+		return nil, err
 	}
 	// Populate fields which are not updateable
 	updatedUser.Name = currentUser.Name

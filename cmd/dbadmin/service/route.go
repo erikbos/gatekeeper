@@ -55,18 +55,19 @@ func (rs *RouteService) GetAttribute(routeName, attributeName string) (value str
 // Create creates an route
 func (rs *RouteService) Create(newRoute types.Route, who Requester) (types.Route, types.Error) {
 
-	existingRoute, err := rs.db.Route.Get(newRoute.Name)
-	if err == nil {
+	if _, err := rs.db.Route.Get(newRoute.Name); err == nil {
 		return types.NullRoute, types.NewBadRequestError(
-			fmt.Errorf("Route '%s' already exists", existingRoute.Name))
+			fmt.Errorf("Route '%s' already exists", newRoute.Name))
 	}
 	// Automatically set default fields
 	newRoute.CreatedAt = shared.GetCurrentTimeMilliseconds()
 	newRoute.CreatedBy = who.User
 
-	err = rs.updateRoute(&newRoute, who)
+	if err := rs.updateRoute(&newRoute, who); err != nil {
+		return types.NullRoute, err
+	}
 	rs.changelog.Create(newRoute, who)
-	return newRoute, err
+	return newRoute, nil
 }
 
 // Update updates an existing route
@@ -75,16 +76,18 @@ func (rs *RouteService) Update(updatedRoute types.Route,
 
 	currentRoute, err := rs.db.Route.Get(updatedRoute.Name)
 	if err != nil {
-		return types.NullRoute, types.NewItemNotFoundError(err)
+		return types.NullRoute, err
 	}
 	// Copy over fields we do not allow to be updated
 	updatedRoute.Name = currentRoute.Name
 	updatedRoute.CreatedAt = currentRoute.CreatedAt
 	updatedRoute.CreatedBy = currentRoute.CreatedBy
 
-	err = rs.updateRoute(&updatedRoute, who)
+	if err = rs.updateRoute(&updatedRoute, who); err != nil {
+		return types.NullRoute, err
+	}
 	rs.changelog.Update(currentRoute, updatedRoute, who)
-	return updatedRoute, err
+	return updatedRoute, nil
 }
 
 // UpdateAttributes updates attributes of an route
@@ -100,9 +103,11 @@ func (rs *RouteService) UpdateAttributes(routeName string,
 		return err
 	}
 
-	err = rs.updateRoute(updatedRoute, who)
+	if err = rs.updateRoute(updatedRoute, who); err != nil {
+		return err
+	}
 	rs.changelog.Update(currentRoute, updatedRoute, who)
-	return err
+	return nil
 }
 
 // UpdateAttribute update an attribute of developer
@@ -116,9 +121,11 @@ func (rs *RouteService) UpdateAttribute(routeName string,
 	updatedRoute := currentRoute
 	updatedRoute.Attributes.Set(attributeValue)
 
-	err = rs.updateRoute(updatedRoute, who)
+	if err = rs.updateRoute(updatedRoute, who); err != nil {
+		return err
+	}
 	rs.changelog.Update(currentRoute, updatedRoute, who)
-	return err
+	return nil
 }
 
 // DeleteAttribute removes an attribute of an route
@@ -135,9 +142,11 @@ func (rs *RouteService) DeleteAttribute(routeName, attributeToDelete string,
 		return "", err
 	}
 
-	err = rs.updateRoute(updatedRoute, who)
+	if err = rs.updateRoute(updatedRoute, who); err != nil {
+		return "", err
+	}
 	rs.changelog.Update(currentRoute, updatedRoute, who)
-	return oldValue, err
+	return oldValue, nil
 }
 
 // updateRoute updates last-modified field(s) and updates route in database

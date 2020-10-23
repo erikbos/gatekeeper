@@ -10,12 +10,12 @@ import (
 
 func (h *Handler) registerDeveloperAppRoutes(r *gin.RouterGroup) {
 	r.GET("/organizations/:organization/apps", h.handler(h.getAllDevelopersApps))
-	r.GET("/organizations/:organization/apps/:application", h.handler(h.getByName))
+	r.GET("/organizations/:organization/apps/:application", h.handler(h.getDeveloperAppByName))
 
 	r.GET("/organizations/:organization/developers/:developer/apps", h.handler(h.getDeveloperAppsByDeveloperEmail))
 	r.POST("/organizations/:organization/developers/:developer/apps", h.handler(h.createDeveloperApp))
 
-	r.GET("/organizations/:organization/developers/:developer/apps/:application", h.handler(h.getByName))
+	r.GET("/organizations/:organization/developers/:developer/apps/:application", h.handler(h.getDeveloperAppByName))
 	r.POST("/organizations/:organization/developers/:developer/apps/:application", h.handler(h.updateDeveloperApp))
 	r.DELETE("/organizations/:organization/developers/:developer/apps/:application", h.handler(h.deleteDeveloperAppByName))
 
@@ -43,7 +43,7 @@ func (h *Handler) getAllDevelopersApps(c *gin.Context) handlerResponse {
 
 	// Should we return an array with names or full details?
 	if c.Query("expand") == "true" {
-		return handleOK(gin.H{"apps": developerapps})
+		return handleOK(StringMap{"apps": developerapps})
 	}
 
 	var developerAppNames []string
@@ -63,8 +63,8 @@ func (h *Handler) getDeveloperAppsByDeveloperEmail(c *gin.Context) handlerRespon
 	return handleOK(developer.Apps)
 }
 
-// getByName returns one named app of a developer
-func (h *Handler) getByName(c *gin.Context) handlerResponse {
+// getDeveloperAppByName returns one named app of a developer
+func (h *Handler) getDeveloperAppByName(c *gin.Context) handlerResponse {
 
 	developerApp, err := h.service.DeveloperApp.GetByName(c.Param(organizationParameter), c.Param(developerAppParameter))
 	if err != nil {
@@ -108,10 +108,10 @@ func (h *Handler) createDeveloperApp(c *gin.Context) handlerResponse {
 	if err != nil {
 		return handleError(err)
 	}
-	existingDeveloperApp, err := h.service.DeveloperApp.GetByName(organizationParameter, newDeveloperApp.Name)
-	if err == nil {
+	if _, err := h.service.DeveloperApp.GetByName(organizationParameter,
+		newDeveloperApp.Name); err == nil {
 		return handleError(types.NewBadRequestError(
-			fmt.Errorf("Developer app '%s' already exists", existingDeveloperApp.Name)))
+			fmt.Errorf("Developer app '%s' already exists", newDeveloperApp.Name)))
 	}
 	storedDeveloperApp, err := h.service.DeveloperApp.Create(c.Param(organizationParameter),
 		developer.Email, newDeveloperApp, h.who(c))
@@ -212,7 +212,7 @@ func (h *Handler) deleteDeveloperAppByName(c *gin.Context) handlerResponse {
 		return handleError(err)
 	}
 	developerApp, err := h.service.DeveloperApp.Delete(c.Param(organizationParameter),
-		developer.DeveloperID, c.Param(developerParameter), h.who(c))
+		developer.DeveloperID, c.Param(developerAppParameter), h.who(c))
 	if err != nil {
 		return handleError(err)
 	}

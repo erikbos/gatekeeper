@@ -6,6 +6,7 @@ import (
 	"github.com/dchest/uniuri"
 
 	"github.com/erikbos/gatekeeper/pkg/db"
+	"github.com/erikbos/gatekeeper/pkg/shared"
 	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
@@ -34,28 +35,42 @@ func (cs *CredentialService) GetByDeveloperAppID(developerAppID string) (cluster
 }
 
 // Create creates a credential
-func (cs *CredentialService) Create(newCredential types.DeveloperAppKey,
+func (cs *CredentialService) Create(newCredential types.DeveloperAppKey, developerApp *types.DeveloperApp,
 	who Requester) (types.DeveloperAppKey, types.Error) {
 
-	credentialToUpdate, err := cs.db.Credential.GetByKey(&newCredential.OrganizationName, &newCredential.ConsumerKey)
-	if err != nil {
+	if _, err := cs.db.Credential.GetByKey(&newCredential.OrganizationName,
+		&newCredential.ConsumerKey); err == nil {
 		return types.NullDeveloperAppKey, types.NewBadRequestError(
 			fmt.Errorf("consumerKey '%s' already exists", newCredential.ConsumerKey))
 	}
 
-	// Generate adopt user supplied consumerkey if present
+	// Generate consumerkey if not provided
 	if newCredential.ConsumerKey == "" {
 		newCredential.ConsumerKey = generateCredentialConsumerKey()
 	}
-
-	// adopt user supplied consumersecret if present
+	// Generate consumersecret if not provided
 	if newCredential.ConsumerSecret == "" {
 		newCredential.ConsumerSecret = generateCredentialConsumerSecret()
 	}
+	// Generate issuedate if not provided
+	if newCredential.IssuedAt == 0 {
+		newCredential.IssuedAt = shared.GetCurrentTimeMilliseconds()
+	}
+	// Set expiry if not provided
+	if newCredential.ExpiresAt == 0 {
+		newCredential.ExpiresAt = -1
+	}
+	newCredential.Status = "approved"
 
-	err = cs.db.Credential.UpdateByKey(&newCredential)
+	// Populate fields we do not allow to be updated
+	newCredential.AppID = developerApp.AppID
+	newCredential.OrganizationName = developerApp.OrganizationName
+
+	if err := cs.db.Credential.UpdateByKey(&newCredential); err != nil {
+		return types.NullDeveloperAppKey, err
+	}
 	cs.changelog.Create(newCredential, who)
-	return *credentialToUpdate, err
+	return newCredential, nil
 }
 
 // Update updates an existing credential
@@ -64,7 +79,7 @@ func (cs *CredentialService) Update(updatedCredential types.DeveloperAppKey,
 
 	currentCredential, err := cs.db.Credential.GetByKey(&updatedCredential.OrganizationName, &updatedCredential.ConsumerKey)
 	if err != nil {
-		return types.NullDeveloperAppKey, types.NewItemNotFoundError(err)
+		return types.NullDeveloperAppKey, err
 	}
 	// Copy over fields we do not allow to be updated
 	updatedCredential.IssuedAt = currentCredential.IssuedAt
@@ -73,9 +88,11 @@ func (cs *CredentialService) Update(updatedCredential types.DeveloperAppKey,
 	updatedCredential.AppID = currentCredential.AppID
 	updatedCredential.OrganizationName = currentCredential.OrganizationName
 
-	err = cs.db.Credential.UpdateByKey(&updatedCredential)
+	if err = cs.db.Credential.UpdateByKey(&updatedCredential); err != nil {
+		return types.NullDeveloperAppKey, err
+	}
 	cs.changelog.Update(currentCredential, updatedCredential, who)
-	return updatedCredential, err
+	return updatedCredential, nil
 }
 
 // Delete deletes an credential
@@ -86,8 +103,7 @@ func (cs *CredentialService) Delete(organizationName, consumerKey string,
 	if err != nil {
 		return types.NullDeveloperAppKey, err
 	}
-	err = cs.db.Credential.DeleteByKey(organizationName, consumerKey)
-	if err != nil {
+	if err = cs.db.Credential.DeleteByKey(organizationName, consumerKey); err != nil {
 		return types.NullDeveloperAppKey, err
 	}
 	cs.changelog.Delete(credential, who)

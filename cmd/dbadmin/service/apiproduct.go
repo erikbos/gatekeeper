@@ -56,10 +56,9 @@ func (ds *APIProductService) GetAttribute(organizationName, apiproductName, attr
 func (ds *APIProductService) Create(organizationName string, newAPIProduct types.APIProduct,
 	who Requester) (types.APIProduct, types.Error) {
 
-	existingAPIProduct, err := ds.Get(organizationName, newAPIProduct.Name)
-	if err == nil {
+	if _, err := ds.Get(organizationName, newAPIProduct.Name); err == nil {
 		return types.NullAPIProduct, types.NewBadRequestError(
-			fmt.Errorf("APIProduct '%s' already exists", existingAPIProduct.Name))
+			fmt.Errorf("APIProduct '%s' already exists", newAPIProduct.Name))
 	}
 	// Automatically set default fields
 	newAPIProduct.CreatedAt = shared.GetCurrentTimeMilliseconds()
@@ -68,9 +67,11 @@ func (ds *APIProductService) Create(organizationName string, newAPIProduct types
 	// Automatically assign new APIProduct to organization
 	newAPIProduct.OrganizationName = organizationName
 
-	err = ds.updateAPIProduct(&newAPIProduct, who)
+	if err := ds.updateAPIProduct(&newAPIProduct, who); err != nil {
+		return types.NullAPIProduct, err
+	}
 	ds.changelog.Create(newAPIProduct, who)
-	return newAPIProduct, err
+	return newAPIProduct, nil
 }
 
 // Update updates an existing apiproduct
@@ -79,7 +80,7 @@ func (ds *APIProductService) Update(organizationName string, updatedAPIProduct t
 
 	currentAPIProduct, err := ds.db.APIProduct.Get(organizationName, updatedAPIProduct.Name)
 	if err != nil {
-		return types.NullAPIProduct, types.NewItemNotFoundError(err)
+		return types.NullAPIProduct, err
 	}
 
 	// Copy over fields we do not allow to be updated
@@ -87,9 +88,11 @@ func (ds *APIProductService) Update(organizationName string, updatedAPIProduct t
 	updatedAPIProduct.CreatedAt = currentAPIProduct.CreatedAt
 	updatedAPIProduct.CreatedBy = currentAPIProduct.CreatedBy
 
-	err = ds.updateAPIProduct(&updatedAPIProduct, who)
+	if err = ds.updateAPIProduct(&updatedAPIProduct, who); err != nil {
+		return types.NullAPIProduct, err
+	}
 	ds.changelog.Update(currentAPIProduct, updatedAPIProduct, who)
-	return updatedAPIProduct, err
+	return updatedAPIProduct, nil
 }
 
 // UpdateAttributes updates attributes of an apiproduct
@@ -105,9 +108,11 @@ func (ds *APIProductService) UpdateAttributes(organizationName string, apiproduc
 		return err
 	}
 
-	err = ds.updateAPIProduct(updatedAPIProduct, who)
+	if err = ds.updateAPIProduct(updatedAPIProduct, who); err != nil {
+		return err
+	}
 	ds.changelog.Update(currentAPIProduct, updatedAPIProduct, who)
-	return err
+	return nil
 }
 
 // UpdateAttribute update an attribute of apiproduct
@@ -121,9 +126,11 @@ func (ds *APIProductService) UpdateAttribute(organizationName string,
 	updatedAPIProduct := currentAPIProduct
 	updatedAPIProduct.Attributes.Set(attributeValue)
 
-	err = ds.updateAPIProduct(updatedAPIProduct, who)
+	if err := ds.updateAPIProduct(updatedAPIProduct, who); err != nil {
+		return err
+	}
 	ds.changelog.Update(currentAPIProduct, updatedAPIProduct, who)
-	return err
+	return nil
 }
 
 // DeleteAttribute removes an attribute of an apiproduct
@@ -140,9 +147,11 @@ func (ds *APIProductService) DeleteAttribute(organizationName, apiproductName,
 		return "", err
 	}
 
-	err = ds.updateAPIProduct(updatedAPIProduct, who)
+	if err = ds.updateAPIProduct(updatedAPIProduct, who); err != nil {
+		return "", err
+	}
 	ds.changelog.Update(currentAPIProduct, updatedAPIProduct, who)
-	return oldValue, err
+	return oldValue, nil
 }
 
 // updateAPIProduct updates last-modified field(s) and updates apiproduct in database

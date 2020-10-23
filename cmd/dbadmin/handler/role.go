@@ -19,9 +19,6 @@ func (h *Handler) registerRoleRoutes(r *gin.RouterGroup) {
 const (
 	// Name of role parameter in the route definition
 	roleParameter = "role"
-
-	// name of array in JSON response
-	roleArray = "role"
 )
 
 // getAllRoles returns all roles
@@ -31,7 +28,7 @@ func (h *Handler) getAllRoles(c *gin.Context) handlerResponse {
 	if err != nil {
 		return handleError(err)
 	}
-	return handleOK(StringMap{roleArray: roles})
+	return handleOK(StringMap{"role": roles})
 }
 
 // getRole returns details of an role

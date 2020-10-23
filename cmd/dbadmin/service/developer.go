@@ -60,18 +60,19 @@ func (ds *DeveloperService) GetAttribute(organizationName, developerName, attrib
 func (ds *DeveloperService) Create(organizationName string,
 	newDeveloper types.Developer, who Requester) (types.Developer, types.Error) {
 
-	existingDeveloper, err := ds.Get(organizationName, newDeveloper.Email)
-	if err == nil {
+	if _, err := ds.Get(organizationName, newDeveloper.Email); err == nil {
 		return types.NullDeveloper, types.NewBadRequestError(
-			fmt.Errorf("Developer '%s' already exists", existingDeveloper.Email))
+			fmt.Errorf("Developer '%s' already exists", newDeveloper.Email))
 	}
 	// Automatically set default fields
 	newDeveloper.CreatedAt = shared.GetCurrentTimeMilliseconds()
 	newDeveloper.CreatedBy = who.User
 
-	err = ds.updateDeveloper(&newDeveloper, who)
+	if err := ds.updateDeveloper(&newDeveloper, who); err != nil {
+		return types.NullDeveloper, err
+	}
 	ds.changelog.Create(newDeveloper, who)
-	return newDeveloper, err
+	return newDeveloper, nil
 }
 
 // Update updates an existing developer
@@ -79,18 +80,23 @@ func (ds *DeveloperService) Update(organizationName string,
 	updatedDeveloper types.Developer, who Requester) (
 	types.Developer, types.Error) {
 
-	currentDeveloper, err := ds.db.Developer.GetByID(updatedDeveloper.DeveloperID)
+	currentDeveloper, err := ds.db.Developer.GetByEmail(organizationName, updatedDeveloper.Email)
 	if err != nil {
-		return types.NullDeveloper, types.NewItemNotFoundError(err)
+		return types.NullDeveloper, err
 	}
+
 	// Copy over fields we do not allow to be updated
+	updatedDeveloper.OrganizationName = currentDeveloper.OrganizationName
+	updatedDeveloper.Apps = currentDeveloper.Apps
 	updatedDeveloper.DeveloperID = currentDeveloper.DeveloperID
 	updatedDeveloper.CreatedAt = currentDeveloper.CreatedAt
 	updatedDeveloper.CreatedBy = currentDeveloper.CreatedBy
 
-	err = ds.updateDeveloper(&updatedDeveloper, who)
+	if err = ds.updateDeveloper(&updatedDeveloper, who); err != nil {
+		return types.NullDeveloper, err
+	}
 	ds.changelog.Update(currentDeveloper, updatedDeveloper, who)
-	return updatedDeveloper, err
+	return updatedDeveloper, nil
 }
 
 // UpdateAttributes updates attributes of an developer
@@ -106,9 +112,11 @@ func (ds *DeveloperService) UpdateAttributes(organizationName string, developerN
 		return err
 	}
 
-	err = ds.updateDeveloper(updatedDeveloper, who)
+	if err = ds.updateDeveloper(updatedDeveloper, who); err != nil {
+		return err
+	}
 	ds.changelog.Update(currentDeveloper, updatedDeveloper, who)
-	return err
+	return nil
 }
 
 // UpdateAttribute update an attribute of developer
@@ -122,7 +130,9 @@ func (ds *DeveloperService) UpdateAttribute(organizationName string,
 	updatedDeveloper := currentDeveloper
 	updatedDeveloper.Attributes.Set(attributeValue)
 
-	err = ds.updateDeveloper(updatedDeveloper, who)
+	if err = ds.updateDeveloper(updatedDeveloper, who); err != nil {
+		return err
+	}
 	ds.changelog.Update(currentDeveloper, updatedDeveloper, who)
 	return err
 }
@@ -141,9 +151,11 @@ func (ds *DeveloperService) DeleteAttribute(organizationName, developerName,
 		return "", err
 	}
 
-	err = ds.updateDeveloper(updatedDeveloper, who)
+	if err = ds.updateDeveloper(updatedDeveloper, who); err != nil {
+		return "", err
+	}
 	ds.changelog.Update(currentDeveloper, updatedDeveloper, who)
-	return oldValue, err
+	return oldValue, nil
 }
 
 // updateDeveloper updates last-modified field(s) and updates developer in database
