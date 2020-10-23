@@ -42,7 +42,7 @@ func main() {
 	var s server
 	var err error
 	if s.config, err = loadConfiguration(filename); err != nil {
-		fmt.Print(err)
+		fmt.Print("Cannot parse configuration file:\n")
 		panic(err)
 	}
 
