@@ -46,6 +46,16 @@ func createTables(s *gocql.Session, logger *zap.Logger) error {
 	return nil
 }
 
+// ShowCreateTableStatements show CQL statements to create all tables
+func ShowCreateTableStatements() {
+
+	fmt.Printf(createKeyspaceCQL+"\n\n", "keyspace", 3)
+
+	for _, query := range createTablesCQL {
+		fmt.Printf("%s\n\n", query)
+	}
+}
+
 var createTablesCQL = [...]string{
 
 	`CREATE TABLE IF NOT EXISTS users (
@@ -62,7 +72,7 @@ var createTablesCQL = [...]string{
         )`,
 
 	// Default database user 'admin', password 'passwd', role 'admin'
-	`INSERT INTO users (name,password,status,roles,created_by,created_at,lastmodified_at) values('admin','passwd','active','["admin"]','initdb',toUnixTimestamp(now()),toUnixTimestamp(now())) IF NOT EXISTS`,
+	`INSERT INTO users (name,password,status,roles,created_by,created_at,lastmodified_at) VALUES('admin','passwd','active','["admin"]','initdb',toUnixTimestamp(now()),toUnixTimestamp(now())) IF NOT EXISTS`,
 
 	`CREATE TABLE IF NOT EXISTS roles (
         name text,
@@ -76,7 +86,7 @@ var createTablesCQL = [...]string{
         )`,
 
 	// Default database role 'admin', allowing GET, POST, DELETE on /v1/* path
-	`INSERT INTO roles (name,allows,created_by,created_at,lastmodified_at) values('admin','[{"methods":["GET","POST","DELETE"],"paths":["/v1/**"]}]','initdb',toUnixTimestamp(now()),toUnixTimestamp(now())) IF NOT EXISTS`,
+	`INSERT INTO roles (name,allows,created_by,created_at,lastmodified_at) VALUES('admin','[{"methods":["GET","POST","DELETE"],"paths":["/v1/**"]}]','initdb',toUnixTimestamp(now()),toUnixTimestamp(now())) IF NOT EXISTS`,
 
 	`CREATE TABLE IF NOT EXISTS listeners (
     attributes text,

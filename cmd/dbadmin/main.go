@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -38,15 +39,21 @@ type server struct {
 
 func main() {
 	filename := flag.String("config", defaultConfigFileName, "Configuration filename")
-	createSchema := flag.Bool("createschema", false, "Create database schema if it does not exist")
-	replicaCount := flag.Int("replicacount", 3, "Replica count to set for database schema")
 	enableAPIAuthentication := flag.Bool("enableapiauthentication", false, "Enable REST API authentication")
+	createSchema := flag.Bool("createschema", false, "Create database schema if it does not exist")
+	replicaCount := flag.Int("replicacount", 3, "Replica count to set for database keyspace")
+	showCreateTable := flag.Bool("showcreatetables", false, "Show CQL statements to create database tables")
 	flag.Parse()
+
+	if *showCreateTable == true {
+		cassandra.ShowCreateTableStatements()
+		os.Exit(0)
+	}
 
 	var s server
 	var err error
 	if s.config, err = loadConfiguration(filename); err != nil {
-		fmt.Print(err)
+		fmt.Print("Cannot parse configuration file:")
 		panic(err)
 	}
 
@@ -101,7 +108,8 @@ func startWebAdmin(s *server, enableAPIAuthentication bool) {
 	changeLogLogger := shared.NewLogger(&s.config.Changelog.Logger)
 
 	service := service.New(s.db, changeLogLogger)
-	s.handler = handler.NewHandler(s.webadmin.Router, s.db, service, webAdminLogger, enableAPIAuthentication)
+	s.handler = handler.NewHandler(s.webadmin.Router, s.db, service,
+		webAdminLogger, applicationName, enableAPIAuthentication)
 
 	s.webadmin.Start()
 }
