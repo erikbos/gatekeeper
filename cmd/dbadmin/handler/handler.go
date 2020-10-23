@@ -3,6 +3,7 @@ package handler
 import (
 	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -10,18 +11,23 @@ import (
 	"github.com/erikbos/gatekeeper/cmd/dbadmin/service"
 	"github.com/erikbos/gatekeeper/pkg/db"
 	"github.com/erikbos/gatekeeper/pkg/types"
+	"github.com/erikbos/gatekeeper/pkg/webadmin"
 )
 
 // Handler contains our runtime parameters
 type Handler struct {
 	service *service.Service
+	metrics *metrics
 }
 
 // NewHandler sets up all API endpoint routes
-func NewHandler(g *gin.Engine, db *db.Database, s *service.Service, logger *zap.Logger, enableAPIAuthentication bool) *Handler {
+func NewHandler(g *gin.Engine, db *db.Database, s *service.Service, logger *zap.Logger,
+	applicationName string, enableAPIAuthentication bool) *Handler {
 
-	// m := &Metrics{}
-	// m.register("Qqq")
+	// Instal prometheus metrics
+	m := newMetrics()
+	m.RegisterWithPrometheus(applicationName)
+	g.Use(metricsMiddleware(m))
 
 	// Insert authentication middleware for every /v1 prefix'ed API endpoint
 	apiRoutes := g.Group("/v1")
@@ -34,7 +40,9 @@ func NewHandler(g *gin.Engine, db *db.Database, s *service.Service, logger *zap.
 
 	handler := &Handler{
 		service: s,
+		metrics: m,
 	}
+
 	g.GET(showHTTPForwardingPath, handler.showHTTPForwardingPage)
 	g.GET(showUserRolesPath, handler.showUserRolePage)
 
@@ -153,13 +161,16 @@ func showErrorMessageAndAbort(c *gin.Context, statusCode int, e types.Error) {
 	c.Abort()
 }
 
-// func metricsMiddleware(m *Metrics) gin.HandlerFunc {
+// metricsMiddleware is gin middleware to maintain prometheus metrics on user, paths and status codes
+func metricsMiddleware(m *metrics) gin.HandlerFunc {
 
-// 	return func(c *gin.Context) {
+	return func(c *gin.Context) {
 
-// 		c.Next()
+		c.Next()
 
-// 		status := strconv.Itoa(c.Writer.Status())
-// 		m.QueryHit(c.Request.Method, c.FullPath(), status)
-// 	}
-// }
+		m.IncRequestPathHit(webadmin.GetUser(c),
+			c.Request.Method,
+			c.FullPath(),
+			strconv.Itoa(c.Writer.Status()))
+	}
+}
