@@ -36,7 +36,7 @@ func (s *DeveloperAppCache) GetByOrganization(organizationName string) (types.De
 func (s *DeveloperAppCache) GetByName(organization, developerAppName string) (*types.DeveloperApp, types.Error) {
 
 	getDeveloperAppByName := func() (interface{}, types.Error) {
-		return s.developerapp.GetByID(organization, developerAppName)
+		return s.developerapp.GetByName(organization, developerAppName)
 	}
 	var developerApp types.DeveloperApp
 	if err := s.cache.fetchEntity(db.EntityTypeDeveloperApp, developerAppName, &developerApp, getDeveloperAppByName); err != nil {

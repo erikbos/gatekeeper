@@ -55,18 +55,19 @@ func (ls *ListenerService) GetAttribute(listenerName, attributeName string) (val
 // Create creates an listener
 func (ls *ListenerService) Create(newListener types.Listener, who Requester) (types.Listener, types.Error) {
 
-	existingListener, err := ls.db.Listener.Get(newListener.Name)
-	if err == nil {
+	if _, err := ls.db.Listener.Get(newListener.Name); err == nil {
 		return types.NullListener, types.NewBadRequestError(
-			fmt.Errorf("Listener '%s' already exists", existingListener.Name))
+			fmt.Errorf("Listener '%s' already exists", newListener.Name))
 	}
 	// Automatically set default fields
 	newListener.CreatedAt = shared.GetCurrentTimeMilliseconds()
 	newListener.CreatedBy = who.User
 
-	err = ls.updateListener(&newListener, who)
+	if err := ls.updateListener(&newListener, who); err != nil {
+		return types.NullListener, err
+	}
 	ls.changelog.Create(newListener, who)
-	return newListener, err
+	return newListener, nil
 }
 
 // Update updates an existing listener
@@ -74,16 +75,18 @@ func (ls *ListenerService) Update(updatedListener types.Listener, who Requester)
 
 	currentListener, err := ls.db.Listener.Get(updatedListener.Name)
 	if err != nil {
-		return types.NullListener, types.NewItemNotFoundError(err)
+		return types.NullListener, err
 	}
 	// Copy over fields we do not allow to be updated
 	updatedListener.Name = currentListener.Name
 	updatedListener.CreatedAt = currentListener.CreatedAt
 	updatedListener.CreatedBy = currentListener.CreatedBy
 
-	err = ls.updateListener(&updatedListener, who)
+	if err = ls.updateListener(&updatedListener, who); err != nil {
+		return types.NullListener, err
+	}
 	ls.changelog.Update(currentListener, updatedListener, who)
-	return updatedListener, err
+	return updatedListener, nil
 }
 
 // UpdateAttributes updates attributes of an listener
@@ -92,16 +95,18 @@ func (ls *ListenerService) UpdateAttributes(listenerName string,
 
 	currentListener, err := ls.db.Listener.Get(listenerName)
 	if err != nil {
-		return types.NewItemNotFoundError(err)
+		return err
 	}
 	updatedListener := currentListener
 	if err = updatedListener.Attributes.SetMultiple(receivedAttributes); err != nil {
 		return err
 	}
 
-	err = ls.updateListener(updatedListener, who)
+	if err = ls.updateListener(updatedListener, who); err != nil {
+		return err
+	}
 	ls.changelog.Update(currentListener, updatedListener, who)
-	return err
+	return nil
 }
 
 // UpdateAttribute update an attribute of developer
@@ -110,14 +115,16 @@ func (ls *ListenerService) UpdateAttribute(listenerName string,
 
 	currentListener, err := ls.db.Listener.Get(listenerName)
 	if err != nil {
-		return types.NewItemNotFoundError(err)
+		return err
 	}
 	updatedListener := currentListener
 	updatedListener.Attributes.Set(attributeValue)
 
-	err = ls.updateListener(updatedListener, who)
+	if err = ls.updateListener(updatedListener, who); err != nil {
+		return err
+	}
 	ls.changelog.Update(currentListener, updatedListener, who)
-	return err
+	return nil
 }
 
 // DeleteAttribute removes an attribute of an listener
@@ -134,9 +141,11 @@ func (ls *ListenerService) DeleteAttribute(listenerName, attributeToDelete strin
 		return "", err
 	}
 
-	err = ls.updateListener(updatedListener, who)
+	if err = ls.updateListener(updatedListener, who); err != nil {
+		return "", err
+	}
 	ls.changelog.Update(currentListener, updatedListener, who)
-	return oldValue, err
+	return oldValue, nil
 }
 
 // updateListener updates last-modified field(s) and updates cluster in database
@@ -156,36 +165,9 @@ func (ls *ListenerService) Delete(listenerName string, who Requester) (
 	if err != nil {
 		return types.NullListener, err
 	}
-	// Not be able to remove a second listener that points to routes
-	// does not make sense
-
-	// attachedRouteCount := ls.countRoutesOfRouteGroup(listener.RouteGroup)
-	// if attachedRouteCount > 0 {
-	// 	return types.NullListener, types.NewBadRequestError(
-	// 		fmt.Errorf("Cannot delete listener '%s' with %d routes attached",
-	// 			listener.Name, attachedRouteCount))
-	// }
-
-	err = ls.db.Listener.Delete(listenerName)
-	if err != nil {
+	if err = ls.db.Listener.Delete(listenerName); err != nil {
 		return types.NullListener, err
 	}
 	ls.changelog.Delete(listener, who)
 	return *listener, nil
 }
-
-// // counts number of routes with a specific routegroup
-// func (ls *ListenerService) countRoutesOfRouteGroup(routeGroup string) int {
-
-// 	routes, err := ls.db.Route.GetAll()
-// 	if err != nil {
-// 		return 0
-// 	}
-// 	var count int
-// 	for _, route := range routes {
-// 		if route.RouteGroup == routeGroup {
-// 			count++
-// 		}
-// 	}
-// 	return count
-// }

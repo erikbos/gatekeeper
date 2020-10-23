@@ -15,7 +15,7 @@ POST http://{{hostname}}/v1/organizations/petstore/developers/john@example.com/a
 content-type: application/json
 
 {
-    "consumerKey": "s3cr3t"
+    "consumerKey": "4DrmtHuaA9ywu4rGTr2C0CFcgr1iLPbu"
 }
 
 
@@ -29,17 +29,17 @@ content-type: application/json
 
 {
     "consumerKey": "4DrmtHuaA9ywu4rGTr2C0CFcgr1iLPbu",
+    "consumerSecret": "4SOMItkaLErzH4n2",
     "apiProducts" : [
         {
             "apiproduct" : "people",
             "status" : "approved"
         }, {
-            "apiproduct" : "prem1iumfish",
+            "apiproduct" : "premiumfish",
             "status" : "approved"
         }
     ],
     "attributes": [],
-    "consumerSecret": "4SOMItkaLErzH4n2",
     "status": "approved"
 }
 

@@ -458,7 +458,7 @@ func certDetails(certificate []byte) string {
 func returnJSONMessage(c *gin.Context, statusCode int, errorMessage error) {
 
 	c.IndentedJSON(statusCode,
-		gin.H{
+		StringMap{
 			"message": fmt.Sprintf("%s", errorMessage),
 		})
 }

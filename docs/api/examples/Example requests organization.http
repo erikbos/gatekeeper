@@ -37,5 +37,13 @@ content-type: application/json
     ]
 }
 
+
+### Update one attribute of organization
+POST http://{{hostname}}/v1/organizations/petstore/attributes/Country
+content-type: application/json
+
+{"value":"United States"}
+
+
 ### Deletes an organization
 DELETE http://{{hostname}}/v1/organizations/petstore

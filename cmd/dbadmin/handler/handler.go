@@ -94,9 +94,9 @@ func POSTwithoutContentTypeJSON(c *gin.Context) bool {
 // handlerResponse is used as return type for an HTTP endpoint to indicate
 // whether request successed or not, and to indicate the type of error.
 type handlerResponse struct {
-	error        types.Error
-	created      bool
-	responseBody interface{}
+	error        types.Error // If set error occured while processing request
+	created      bool        // If set requested entity was newly created
+	responseBody interface{} // Contains entity that was created, retrieved or deleted
 }
 
 // StringMap is a shortcut for map[string]interface{}

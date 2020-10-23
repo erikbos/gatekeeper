@@ -200,7 +200,6 @@ var createTablesCQL = [...]string{
     attributes text,
     consumer_key text,
     consumer_secret text,
-    created_at bigint,
     app_id text,
     expires_at bigint,
     issued_at bigint,

@@ -35,16 +35,15 @@ func (rs *RoleService) Get(roleName string) (role *types.Role, err types.Error) 
 // Create creates an role
 func (rs *RoleService) Create(newRole types.Role, who Requester) (*types.Role, types.Error) {
 
-	existingRole, err := rs.db.Role.Get(newRole.Name)
-	if err == nil {
+	if _, err := rs.db.Role.Get(newRole.Name); err == nil {
 		return nil, types.NewBadRequestError(
-			fmt.Errorf("Role '%s' already exists", existingRole.Name))
+			fmt.Errorf("Role '%s' already exists", newRole.Name))
 	}
 	// Automatically set default fields
 	newRole.CreatedAt = shared.GetCurrentTimeMilliseconds()
 	newRole.CreatedBy = who.User
 
-	if err = rs.updateRole(&newRole, who); err != nil {
+	if err := rs.updateRole(&newRole, who); err != nil {
 		return nil, err
 	}
 	rs.Changelog.Create(newRole, who)
@@ -56,7 +55,7 @@ func (rs *RoleService) Update(updatedRole types.Role, who Requester) (*types.Rol
 
 	currentRole, err := rs.db.Role.Get(updatedRole.Name)
 	if err != nil {
-		return nil, types.NewItemNotFoundError(err)
+		return nil, err
 	}
 	// Populate fields which are not updateable
 	updatedRole.Name = currentRole.Name

@@ -165,7 +165,7 @@ type (
 
 		GetByDeveloperAppID(developerAppID string) (clusters types.DeveloperAppKeys, err types.Error)
 
-		Create(newCredential types.DeveloperAppKey, who Requester) (types.DeveloperAppKey, types.Error)
+		Create(newCredential types.DeveloperAppKey, developerApp *types.DeveloperApp, who Requester) (types.DeveloperAppKey, types.Error)
 
 		Update(updatedCredential types.DeveloperAppKey, who Requester) (types.DeveloperAppKey, types.Error)
 

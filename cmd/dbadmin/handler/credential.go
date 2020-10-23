@@ -3,7 +3,6 @@ package handler
 import (
 	"github.com/gin-gonic/gin"
 
-	"github.com/erikbos/gatekeeper/pkg/shared"
 	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
@@ -61,59 +60,32 @@ func (h *Handler) getDeveloperAppKeyByKey(c *gin.Context) handlerResponse {
 func (h *Handler) createDeveloperAppKey(c *gin.Context) handlerResponse {
 
 	var receivedCredential types.DeveloperAppKey
-	errJSON := c.ShouldBindJSON(&receivedCredential)
+	// We ignore error as it is not required to provided any data
+	_ = c.ShouldBindJSON(&receivedCredential)
 
 	developerApp, err := h.service.DeveloperApp.GetByName(c.Param(organizationParameter), c.Param("application"))
 	if err != nil {
 		return handleBadRequest(err)
 	}
-	newAppCredential := types.DeveloperAppKey{
-		ExpiresAt:        -1,
-		IssuedAt:         shared.GetCurrentTimeMilliseconds(),
-		AppID:            developerApp.AppID,
-		OrganizationName: developerApp.OrganizationName,
-		Status:           "approved",
-	}
-	if errJSON == nil && receivedCredential.ConsumerKey != "" {
-		newAppCredential.ConsumerKey = receivedCredential.ConsumerKey
-		newAppCredential.ConsumerSecret = receivedCredential.ConsumerSecret
-	}
-
-	storedAppCredential, err := h.service.Credential.Update(newAppCredential, h.who(c))
+	storedAppCredential, err := h.service.Credential.Create(receivedCredential, developerApp, h.who(c))
 	if err != nil {
 		return handleError(err)
 	}
 	return handleOK(storedAppCredential)
 }
 
-// updateDeveloperAppKeyByKey creates key for developerapp
+// updateDeveloperAppKeyByKey updates existing key for developerapp
 func (h *Handler) updateDeveloperAppKeyByKey(c *gin.Context) handlerResponse {
 
 	var receivedAppCredential types.DeveloperAppKey
 	if err := c.ShouldBindJSON(&receivedAppCredential); err != nil {
 		return handleBadRequest(err)
 	}
-
-	key := c.Param(keyParameter)
-
 	// apikey in path must match consumer key in posted body
-	if receivedAppCredential.ConsumerKey != key {
+	if receivedAppCredential.ConsumerKey != c.Param(keyParameter) {
 		return handleNameMismatch()
 	}
-
-	organization := c.Param(organizationParameter)
-	AppCredential, err := h.service.Credential.Get(organization, key)
-	if err != nil {
-		return handleError(err)
-	}
-
-	AppCredential.ConsumerSecret = receivedAppCredential.ConsumerSecret
-	AppCredential.APIProducts = receivedAppCredential.APIProducts
-	AppCredential.Attributes = receivedAppCredential.Attributes
-	AppCredential.ExpiresAt = receivedAppCredential.ExpiresAt
-	AppCredential.Status = receivedAppCredential.Status
-
-	storedAppCredential, err := h.service.Credential.Update(*AppCredential, h.who(c))
+	storedAppCredential, err := h.service.Credential.Update(receivedAppCredential, h.who(c))
 	if err != nil {
 		return handleError(err)
 	}

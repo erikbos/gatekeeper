@@ -56,18 +56,20 @@ func (os *OrganizationService) GetAttribute(OrganizationName, attributeName stri
 func (os *OrganizationService) Create(newOrganization types.Organization,
 	who Requester) (types.Organization, types.Error) {
 
-	existingOrganization, err := os.db.Organization.Get(newOrganization.Name)
-	if err == nil {
+	if _, err := os.db.Organization.Get(newOrganization.Name); err == nil {
 		return types.NullOrganization, types.NewBadRequestError(
-			fmt.Errorf("Organization '%s' already exists", existingOrganization.Name))
+			fmt.Errorf("Organization '%s' already exists", newOrganization.Name))
 	}
 	// Set default fields
 	newOrganization.CreatedAt = shared.GetCurrentTimeMilliseconds()
 	newOrganization.CreatedBy = who.User
 
-	err = os.updateOrganization(&newOrganization, who)
+	err := os.updateOrganization(&newOrganization, who)
+	if err != nil {
+		return types.NullOrganization, err
+	}
 	os.changelog.Create(newOrganization, who)
-	return newOrganization, err
+	return newOrganization, nil
 }
 
 // Update updates an existing organization
@@ -76,7 +78,7 @@ func (os *OrganizationService) Update(updatedOrganization types.Organization,
 
 	currentOrganization, err := os.db.Organization.Get(updatedOrganization.Name)
 	if err != nil {
-		return types.NullOrganization, types.NewItemNotFoundError(err)
+		return types.NullOrganization, err
 	}
 	// Copy over fields we do not allow to be updated
 	updatedOrganization.Name = currentOrganization.Name
@@ -84,8 +86,11 @@ func (os *OrganizationService) Update(updatedOrganization types.Organization,
 	updatedOrganization.CreatedBy = currentOrganization.CreatedBy
 
 	err = os.updateOrganization(&updatedOrganization, who)
+	if err != nil {
+		return types.NullOrganization, err
+	}
 	os.changelog.Update(currentOrganization, updatedOrganization, who)
-	return updatedOrganization, err
+	return updatedOrganization, nil
 }
 
 // UpdateAttributes updates attributes of an organization
@@ -101,9 +106,11 @@ func (os *OrganizationService) UpdateAttributes(org string,
 		return err
 	}
 
-	err = os.updateOrganization(updatedOrganization, who)
+	if err = os.updateOrganization(updatedOrganization, who); err != nil {
+		return err
+	}
 	os.changelog.Update(currentOrganization, updatedOrganization, who)
-	return err
+	return nil
 }
 
 // UpdateAttribute update an attribute of organization
@@ -117,9 +124,11 @@ func (os *OrganizationService) UpdateAttribute(org string,
 	updatedOrganization := currentOrganization
 	updatedOrganization.Attributes.Set(attributeValue)
 
-	err = os.updateOrganization(updatedOrganization, who)
+	if err = os.updateOrganization(updatedOrganization, who); err != nil {
+		return err
+	}
 	os.changelog.Update(currentOrganization, updatedOrganization, who)
-	return err
+	return nil
 }
 
 // DeleteAttribute removes an attribute of an organization
@@ -135,10 +144,11 @@ func (os *OrganizationService) DeleteAttribute(organizationName,
 	if err != nil {
 		return "", err
 	}
-
-	err = os.updateOrganization(updatedOrganization, who)
+	if err = os.updateOrganization(updatedOrganization, who); err != nil {
+		return "", err
+	}
 	os.changelog.Update(currentOrganization, updatedOrganization, who)
-	return oldValue, err
+	return oldValue, nil
 }
 
 // updateOrganization updates last-modified field(s) and updates organization in database
