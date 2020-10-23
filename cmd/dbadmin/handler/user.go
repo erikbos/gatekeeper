@@ -29,7 +29,7 @@ func (h *Handler) getAllUsers(c *gin.Context) handlerResponse {
 		return handleError(err)
 	}
 	removePasswords(users)
-	return handleOK(StringMap{"user": users})
+	return handleOK(StringMap{"users": users})
 }
 
 // removePasswords set passwords of all users in slice to empty string
