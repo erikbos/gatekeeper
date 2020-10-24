@@ -39,13 +39,13 @@ type server struct {
 
 func main() {
 	filename := flag.String("config", defaultConfigFileName, "Configuration filename")
-	enableAPIAuthentication := flag.Bool("enableapiauthentication", false, "Enable REST API authentication")
+	disableAPIAuthentication := flag.Bool("disableapiauthentication", false, "Disable REST API authentication")
 	createSchema := flag.Bool("createschema", false, "Create database schema if it does not exist")
 	replicaCount := flag.Int("replicacount", 3, "Replica count to set for database keyspace")
 	showCreateTable := flag.Bool("showcreatetables", false, "Show CQL statements to create database tables")
 	flag.Parse()
 
-	if *showCreateTable == true {
+	if *showCreateTable {
 		cassandra.ShowCreateTableStatements()
 		os.Exit(0)
 	}
@@ -89,7 +89,7 @@ func main() {
 	// Start db health check and notify readiness subsystem
 	go s.db.RunReadinessCheck(s.readiness.GetChannel())
 
-	startWebAdmin(&s, *enableAPIAuthentication)
+	startWebAdmin(&s, *disableAPIAuthentication)
 }
 
 // startWebAdmin starts the admin web UI

@@ -22,7 +22,7 @@ type Handler struct {
 
 // NewHandler sets up all API endpoint routes
 func NewHandler(g *gin.Engine, db *db.Database, s *service.Service, logger *zap.Logger,
-	applicationName string, enableAPIAuthentication bool) *Handler {
+	applicationName string, disableAPIAuthentication bool) *Handler {
 
 	// Instal prometheus metrics
 	m := newMetrics()
@@ -33,7 +33,7 @@ func NewHandler(g *gin.Engine, db *db.Database, s *service.Service, logger *zap.
 	apiRoutes := g.Group("/v1")
 	// apiRoutes.Use(metricsMiddleware(m))
 
-	if enableAPIAuthentication {
+	if !disableAPIAuthentication {
 		auth := newAuth(s.User, s.Role, logger)
 		apiRoutes.Use(auth.AuthenticateAndAuthorize)
 	}
@@ -50,6 +50,7 @@ func NewHandler(g *gin.Engine, db *db.Database, s *service.Service, logger *zap.
 	handler.registerListenerRoutes(apiRoutes)
 	handler.registerRouteRoutes(apiRoutes)
 	handler.registerClusterRoutes(apiRoutes)
+
 	handler.registerOrganizationRoutes(apiRoutes)
 	handler.registerDeveloperRoutes(apiRoutes)
 	handler.registerDeveloperAppRoutes(apiRoutes)
