@@ -42,12 +42,11 @@ func (h *Handler) showHTTPForwardingPage(c *gin.Context) {
 		returnJSONMessage(c, http.StatusServiceUnavailable, err)
 		return
 	}
-	apiproducts := types.NullAPIProducts
-	// apiproducts, err := h.service.APIProduct.GetAll()
-	// if err != nil {
-	// 	returnJSONMessage(c, http.StatusServiceUnavailable, err)
-	// 	return
-	// }
+	apiproducts, err := h.service.APIProduct.GetAll()
+	if err != nil {
+		returnJSONMessage(c, http.StatusServiceUnavailable, err)
+		return
+	}
 	// Order all entries to make page more readable
 	listeners.Sort()
 	routes.Sort()

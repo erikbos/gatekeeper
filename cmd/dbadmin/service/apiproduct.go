@@ -20,7 +20,13 @@ func NewAPIProduct(database *db.Database, c *Changelog) *APIProductService {
 	return &APIProductService{db: database, changelog: c}
 }
 
-// GetByOrganization returns all apiproducts
+// GetAll returns all apiproducts
+func (ds *APIProductService) GetAll() (apiproducts types.APIProducts, err types.Error) {
+
+	return ds.db.APIProduct.GetAll()
+}
+
+// GetByOrganization returns all apiproducts of an organization
 func (ds *APIProductService) GetByOrganization(organizationName string) (apiproducts types.APIProducts, err types.Error) {
 
 	return ds.db.APIProduct.GetByOrganization(organizationName)
