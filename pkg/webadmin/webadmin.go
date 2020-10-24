@@ -210,9 +210,12 @@ func JSONMessage(c *gin.Context, statusCode int, msg error) {
 }
 
 // JSONMessageAndAbort returns an error message, and aborts request
-func JSONMessageAndAbort(c *gin.Context, statusCode int, msg error) {
+func JSONMessageAndAbort(c *gin.Context, statusCode int, errorMessage error) {
 
-	JSONMessage(c, statusCode, msg)
+	if errorMessage != nil {
+		c.Error(errorMessage)
+	}
+	JSONMessage(c, statusCode, errorMessage)
 	c.Abort()
 }
 
