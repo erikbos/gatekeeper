@@ -18,7 +18,7 @@ func (a *server) CheckProductEntitlement(request *requestDetails) error {
 	if err := a.getAPIKeyDevDevAppDetails(request); err != nil {
 		return err
 	}
-	if err := checkDevAndKeyValidity(request); err != nil {
+	if err := a.checkDevAndKeyValidity(request); err != nil {
 		return err
 	}
 	var err error
@@ -52,7 +52,7 @@ func (a *server) getAPIKeyDevDevAppDetails(r *requestDetails) error {
 }
 
 // checkDevAndKeyValidity checks devapp approval and expiry status
-func checkDevAndKeyValidity(request *requestDetails) error {
+func (a *server) checkDevAndKeyValidity(request *requestDetails) error {
 
 	now := shared.GetCurrentTimeMilliseconds()
 
@@ -62,7 +62,7 @@ func checkDevAndKeyValidity(request *requestDetails) error {
 		return errors.New("Developer suspended")
 	}
 
-	if request.appCredential.Status != "approved" {
+	if !request.appCredential.IsApproved() {
 		// FIXME increase unapproved dev app counter (not an error state)
 		return errors.New("Unapproved apikey")
 	}
@@ -76,13 +76,8 @@ func checkDevAndKeyValidity(request *requestDetails) error {
 	return nil
 }
 
-// IsRequestPathAllowed
-// - iterate over products in apikey
-// - 	iterate over path(s) of each product:
-// - 		if requestor path matches paths(s)
-// -			- return 200
-// - if not 403
-
+// IsRequestPathAllowed checks whether paths is allowed by apikey
+// this means the apikey needs to contain a product that matchs the path
 func (a *server) IsRequestPathAllowed(requestPath string,
 	credential *types.DeveloperAppKey) (*types.APIProduct, error) {
 
@@ -93,8 +88,7 @@ func (a *server) IsRequestPathAllowed(requestPath string,
 
 	// Iterate over this key's apiproducts
 	for _, apiproduct := range credential.APIProducts {
-		if apiproduct.Status == "approved" {
-
+		if apiproduct.IsApproved() {
 			apiproductDetails, err := a.db.APIProduct.Get(apiproduct.Apiproduct)
 			if err != nil {
 				// apikey has product in it which we cannot find:

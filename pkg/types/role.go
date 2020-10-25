@@ -64,12 +64,12 @@ var (
 	NullAllows = Allows{}
 )
 
-// PathAllowed checks whether a role allows to access a path
-func (role *Role) PathAllowed(requestMethod, requestPath string) bool {
+// IsPathAllowed checks whether role is allowed to access a path
+func (role *Role) IsPathAllowed(requestMethod, requestPath string) bool {
 
 	for _, allow := range role.Allows {
-		if isMethodAllowed(allow.Methods, requestMethod) &&
-			isPathAllowed(allow.Paths, requestPath) {
+		if methodMatch(allow.Methods, requestMethod) &&
+			pathMatch(allow.Paths, requestPath) {
 			return true
 		}
 	}
@@ -77,8 +77,8 @@ func (role *Role) PathAllowed(requestMethod, requestPath string) bool {
 	return false
 }
 
-// isMethodAllowed checks if methods exists in a slice of methods
-func isMethodAllowed(methods []string, requestMethod string) bool {
+// methodMatch checks if methods exists in a slice of methods
+func methodMatch(methods []string, requestMethod string) bool {
 
 	for _, method := range methods {
 		if requestMethod == strings.ToUpper(method) {
@@ -88,10 +88,9 @@ func isMethodAllowed(methods []string, requestMethod string) bool {
 	return false
 }
 
-// isMethodAllowed checks if path matches one of the paths
-func isPathAllowed(paths []string, requestPath string) bool {
+// pathMatch checks if path matches one of the paths
+func pathMatch(paths []string, requestPath string) bool {
 
-	// log.Printf("checkIsPathAllowed: %+v, %s", paths, requestPath)
 	for _, path := range paths {
 		matched, err := doublestar.Match(path, requestPath)
 		if err == nil && matched {

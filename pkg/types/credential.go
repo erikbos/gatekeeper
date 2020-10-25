@@ -44,8 +44,11 @@ var (
 
 // APIProductStatus contains whether an apikey's assigned apiproduct has been approved
 type APIProductStatus struct {
-	Status     string `json:"status"`     // Status (should be "approved" to allow access)
-	Apiproduct string `json:"apiProduct"` // Name of apiproduct
+	// Name of apiproduct
+	Apiproduct string `json:"apiProduct"`
+
+	// Status (should be "approved" to allow access)
+	Status string `json:"status"`
 }
 
 // APIProductStatuses contains list of apiproducts
@@ -66,6 +69,34 @@ type OAuthAccessToken struct {
 	Refresh          string `json:"refresh"`
 	RefreshCreatedAt int64  `json:"refresh_created_at"`
 	RefreshExpiresIn int64  `json:"refresh_expires_in"`
+}
+
+const (
+	approvedValue = "approved"
+)
+
+// SetApproved marks a credential as approved
+func (k *DeveloperAppKey) SetApproved() {
+
+	k.Status = approvedValue
+}
+
+// IsApproved returns true in case credential's status is approved
+func (k *DeveloperAppKey) IsApproved() bool {
+
+	return k.Status == approvedValue
+}
+
+// SetApproved marks a credential's apiproduct as approved
+func (p *APIProductStatus) SetApproved() {
+
+	p.Status = approvedValue
+}
+
+// IsApproved returns true in case credential's apiproduct status is approved
+func (p *APIProductStatus) IsApproved() bool {
+
+	return p.Status == approvedValue
 }
 
 // Unmarshal unpacks JSON array of attribute bags
