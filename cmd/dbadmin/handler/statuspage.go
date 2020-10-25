@@ -10,14 +10,17 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 
 	"github.com/erikbos/gatekeeper/pkg/shared"
 	"github.com/erikbos/gatekeeper/pkg/types"
+	"github.com/erikbos/gatekeeper/pkg/webadmin"
 )
 
 const (
 	showHTTPForwardingPath = "show/http_forwarding"
 	showUserRolesPath      = "show/user_role"
+	showDevelopersPath     = "show/developer"
 
 	contentType     = "content-type"
 	contentTypeHTML = "text/html; charset=utf-8"
@@ -29,22 +32,22 @@ func (h *Handler) showHTTPForwardingPage(c *gin.Context) {
 	// Retrieve all configuration entities
 	listeners, err := h.service.Listener.GetAll()
 	if err != nil {
-		returnJSONMessage(c, http.StatusServiceUnavailable, err)
+		webadmin.JSONMessage(c, http.StatusServiceUnavailable, err)
 		return
 	}
 	routes, err := h.service.Route.GetAll()
 	if err != nil {
-		returnJSONMessage(c, http.StatusServiceUnavailable, err)
+		webadmin.JSONMessage(c, http.StatusServiceUnavailable, err)
 		return
 	}
 	clusters, err := h.service.Cluster.GetAll()
 	if err != nil {
-		returnJSONMessage(c, http.StatusServiceUnavailable, err)
+		webadmin.JSONMessage(c, http.StatusServiceUnavailable, err)
 		return
 	}
 	apiproducts, err := h.service.APIProduct.GetAll()
 	if err != nil {
-		returnJSONMessage(c, http.StatusServiceUnavailable, err)
+		webadmin.JSONMessage(c, http.StatusServiceUnavailable, err)
 		return
 	}
 	// Order all entries to make page more readable
@@ -56,7 +59,7 @@ func (h *Handler) showHTTPForwardingPage(c *gin.Context) {
 	templateEngine, templateError := template.New("page").
 		Funcs(embeddedTemplateFunctions()).Parse(wholePageTemplate)
 	if templateError != nil {
-		returnJSONMessage(c, http.StatusServiceUnavailable, err)
+		webadmin.JSONMessage(c, http.StatusServiceUnavailable, templateError)
 		return
 	}
 	templateVariables := struct {
@@ -65,11 +68,16 @@ func (h *Handler) showHTTPForwardingPage(c *gin.Context) {
 		Clusters    types.Clusters
 		APIProducts types.APIProducts
 	}{
-		listeners, routes, clusters, apiproducts,
+		Listeners:   listeners,
+		Routes:      routes,
+		Clusters:    clusters,
+		APIProducts: apiproducts,
 	}
 	c.Header(contentType, contentTypeHTML)
 	c.Status(http.StatusOK)
-	_ = templateEngine.Execute(c.Writer, templateVariables)
+	if err := templateEngine.Execute(c.Writer, templateVariables); err != nil {
+		c.Error(err)
+	}
 }
 
 const templateHTTPForwarding string = `
@@ -239,7 +247,74 @@ const templateHTTPForwarding string = `
 </tr>
 {{end}}
 </table>
-</bod>
+</body>
+`
+
+// showDevelopersPage pretty prints all developers and developer apps
+func (h *Handler) showDevelopersPage(c *gin.Context) {
+
+	organizations, err := h.service.Organization.GetAll()
+	if err != nil {
+		webadmin.JSONMessage(c, http.StatusServiceUnavailable, err)
+		return
+	}
+
+	h.logger.Info("bla", zap.Any("orgs", organizations))
+
+	allDevelopers := make(types.Developers, 0, 10)
+	for _, org := range organizations {
+		// Retrieve all configuration entities
+		developers, err := h.service.Developer.GetByOrganization(org.Name)
+		if err != nil {
+			webadmin.JSONMessage(c, http.StatusServiceUnavailable, err)
+			return
+		}
+		h.logger.Info("bla", zap.Any("devs", developers))
+		allDevelopers = append(allDevelopers, developers...)
+	}
+	h.logger.Info("bla", zap.Any("alldevs", allDevelopers))
+
+	wholePageTemplate := pageHeading("Developer overview") + templateDeveloper
+	templateEngine, templateError := template.New("page").
+		Funcs(embeddedTemplateFunctions()).Parse(wholePageTemplate)
+	if templateError != nil {
+		webadmin.JSONMessage(c, http.StatusServiceUnavailable, templateError)
+		return
+	}
+	templateVariables := struct {
+		Developers types.Developers
+	}{
+		Developers: allDevelopers,
+	}
+	c.Header(contentType, contentTypeHTML)
+	c.Status(http.StatusOK)
+	if err := templateEngine.Execute(c.Writer, templateVariables); err != nil {
+		c.Error(err)
+	}
+}
+
+const templateDeveloper string = `
+<body>
+
+{{/* We put these in vars to be able to do nested ranges */}}
+{{$developers := .Developers}}
+
+<h1>Developers</h1>
+<table border=1>
+<tr>
+<th>Email</th>
+<th>Lastmodified</th>
+</tr>
+
+{{range $developer := $developers}}
+<tr>
+<td>{{$developer.Email}}</td>
+<td>{{$developer.LastmodifiedAt | ISO8601}} <br> {{$developer.LastmodifiedBy}}</td>
+</tr>
+{{end}}
+
+</table>
+</body>
 `
 
 // showUserRolesPath pretty prints user and roles from database
@@ -248,12 +323,12 @@ func (h *Handler) showUserRolePage(c *gin.Context) {
 	// Retrieve all user entities
 	users, err := h.service.User.GetAll()
 	if err != nil {
-		returnJSONMessage(c, http.StatusServiceUnavailable, err)
+		webadmin.JSONMessage(c, http.StatusServiceUnavailable, err)
 		return
 	}
 	roles, err := h.service.Role.GetAll()
 	if err != nil {
-		returnJSONMessage(c, http.StatusServiceUnavailable, err)
+		webadmin.JSONMessage(c, http.StatusServiceUnavailable, err)
 		return
 	}
 	// Order all entries to make page more readable
@@ -264,18 +339,21 @@ func (h *Handler) showUserRolePage(c *gin.Context) {
 	templateEngine, templateError := template.New("page").
 		Funcs(embeddedTemplateFunctions()).Parse(wholePageTemplate)
 	if templateError != nil {
-		returnJSONMessage(c, http.StatusServiceUnavailable, err)
+		webadmin.JSONMessage(c, http.StatusServiceUnavailable, templateError)
 		return
 	}
 	templateVariables := struct {
 		Users types.Users
 		Roles types.Roles
 	}{
-		users, roles,
+		Users: users,
+		Roles: roles,
 	}
 	c.Header(contentType, contentTypeHTML)
 	c.Status(http.StatusOK)
-	_ = templateEngine.Execute(c.Writer, templateVariables)
+	if err := templateEngine.Execute(c.Writer, templateVariables); err != nil {
+		c.Error(err)
+	}
 }
 
 const pageTemplateUsersAndRoles string = `
@@ -451,13 +529,4 @@ func certDetails(certificate []byte) string {
 	return fmt.Sprintf("[Serial=%s, CN=%s, DNS=%s, NotAfter=%s]",
 		cert.SerialNumber.Text(16), cert.Subject.CommonName,
 		cert.DNSNames, cert.NotAfter.UTC().Format(time.RFC3339))
-}
-
-// returnJSONMessage returns an public error message, it should not leak any internal details
-func returnJSONMessage(c *gin.Context, statusCode int, errorMessage error) {
-
-	c.IndentedJSON(statusCode,
-		StringMap{
-			"message": fmt.Sprintf("%s", errorMessage),
-		})
 }

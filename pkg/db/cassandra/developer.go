@@ -51,12 +51,6 @@ func (s *DeveloperStore) GetByOrganization(organizationName string) (types.Devel
 		return types.NullDevelopers, types.NewDatabaseError(err)
 	}
 
-	if len(developers) == 0 {
-		s.db.metrics.QueryMiss(developerMetricLabel)
-		return developers, types.NewItemNotFoundError(
-			fmt.Errorf("Cannot retrieve developers in organization '%s'", organizationName))
-	}
-
 	s.db.metrics.QueryHit(developerMetricLabel)
 	return developers, nil
 }

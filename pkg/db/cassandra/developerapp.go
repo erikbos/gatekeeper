@@ -48,12 +48,6 @@ func (s *DeveloperAppStore) GetByOrganization(organizationName string) (types.De
 		return types.NullDeveloperApps, types.NewDatabaseError(err)
 	}
 
-	if len(developerapps) == 0 {
-		s.db.metrics.QueryMiss(developerAppsMetricLabel)
-		return types.NullDeveloperApps, types.NewItemNotFoundError(
-			fmt.Errorf("Can not find developer apps in organization '%s'", organizationName))
-	}
-
 	s.db.metrics.QueryHit(developerAppsMetricLabel)
 	return developerapps, nil
 }

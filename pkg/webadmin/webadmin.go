@@ -196,25 +196,29 @@ func ShowAllRoutes(e *gin.Engine, applicationName string) gin.HandlerFunc {
 		}
 		c.Status(http.StatusOK)
 		c.Header(contentTypeHeader, contentTypeHTML)
-		_ = t.Execute(c.Writer, templateVariables)
+		if err := t.Execute(c.Writer, templateVariables); err != nil {
+			c.Error(err)
+		}
 	}
 }
 
 // JSONMessage returns an error message
-func JSONMessage(c *gin.Context, statusCode int, msg error) {
+func JSONMessage(c *gin.Context, statusCode int, errorMessage error) {
+
+	// Store error in request context so it ends up in access log
+	if errorMessage != nil {
+		c.Error(errorMessage)
+	}
 
 	c.IndentedJSON(statusCode,
 		gin.H{
-			"message": fmt.Sprint(msg),
+			"message": fmt.Sprint(errorMessage),
 		})
 }
 
 // JSONMessageAndAbort returns an error message, and aborts request
 func JSONMessageAndAbort(c *gin.Context, statusCode int, errorMessage error) {
 
-	if errorMessage != nil {
-		c.Error(errorMessage)
-	}
 	JSONMessage(c, statusCode, errorMessage)
 	c.Abort()
 }

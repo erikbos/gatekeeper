@@ -18,6 +18,7 @@ import (
 type Handler struct {
 	service *service.Service
 	metrics *metrics
+	logger  *zap.Logger
 }
 
 // NewHandler sets up all API endpoint routes
@@ -29,6 +30,12 @@ func NewHandler(g *gin.Engine, db *db.Database, s *service.Service, logger *zap.
 	m.RegisterWithPrometheus(applicationName)
 	g.Use(metricsMiddleware(m))
 
+	handler := &Handler{
+		service: s,
+		metrics: m,
+		logger:  logger,
+	}
+
 	// Insert authentication middleware for every /v1 prefix'ed API endpoint
 	apiRoutes := g.Group("/v1")
 	// apiRoutes.Use(metricsMiddleware(m))
@@ -38,15 +45,13 @@ func NewHandler(g *gin.Engine, db *db.Database, s *service.Service, logger *zap.
 		apiRoutes.Use(auth.AuthenticateAndAuthorize)
 	}
 
-	handler := &Handler{
-		service: s,
-		metrics: m,
-	}
-
 	g.GET(showHTTPForwardingPath, handler.showHTTPForwardingPage)
+	g.GET(showDevelopersPath, handler.showDevelopersPage)
 	g.GET(showUserRolesPath, handler.showUserRolePage)
 
 	// Register all API endpoint routes
+	handler.registerUserRoutes(apiRoutes)
+	handler.registerRoleRoutes(apiRoutes)
 	handler.registerListenerRoutes(apiRoutes)
 	handler.registerRouteRoutes(apiRoutes)
 	handler.registerClusterRoutes(apiRoutes)
@@ -56,8 +61,6 @@ func NewHandler(g *gin.Engine, db *db.Database, s *service.Service, logger *zap.
 	handler.registerDeveloperAppRoutes(apiRoutes)
 	handler.registerCredentialRoutes(apiRoutes)
 	handler.registerAPIProductRoutes(apiRoutes)
-	handler.registerUserRoutes(apiRoutes)
-	handler.registerRoleRoutes(apiRoutes)
 	return handler
 }
 
