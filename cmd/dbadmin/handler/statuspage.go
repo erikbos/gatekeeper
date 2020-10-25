@@ -220,7 +220,7 @@ const templateHTTPForwarding string = `
 
 {{range $a := $apiproducts}}
 <tr>
-<td><a href="/v1/organizations/{{$a.OrganizationName}}/apiproducts/{{$a.Name}}">{{$a.Name}}</a>
+<td><a href="/v1/apiproducts/{{$a.Name}}">{{$a.Name}}</a>
 <td>{{$a.DisplayName}}</td>
 <td>{{$a.Description}}</td>
 <td>{{$a.RouteGroup}}</td>

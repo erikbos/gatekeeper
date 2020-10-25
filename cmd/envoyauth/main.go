@@ -23,13 +23,7 @@ var (
 	buildTime string // Build time, set by Makefile
 )
 
-const (
-	applicationName       = "envoyauth"             // Name of application, used in Prometheus metrics
-	defaultConfigFileName = "envoyauth-config.yaml" // Default configuration file
-	entityRefreshInterval = 3 * time.Second         // interval between database entities refresh loads
-)
-
-type authorizationServer struct {
+type server struct {
 	config     *APIAuthConfig
 	webadmin   *webadmin.Webadmin
 	db         *db.Database
@@ -43,10 +37,12 @@ type authorizationServer struct {
 }
 
 func main() {
-	filename := flag.String("config", defaultConfigFileName, "Configuration filename")
+	const applicationName = "envoyauth"
+
+	filename := flag.String("config", "envoyauth-config.yaml", "Configuration filename")
 	flag.Parse()
 
-	var a authorizationServer
+	var a server
 	var err error
 	if a.config, err = loadConfiguration(filename); err != nil {
 		fmt.Print("Cannot parse configuration file:")
@@ -64,7 +60,7 @@ func main() {
 		zap.String("buildtime", buildTime))
 
 	a.metrics = newMetrics()
-	a.metrics.RegisterWithPrometheus()
+	a.metrics.RegisterWithPrometheus(applicationName)
 
 	database, err := cassandra.New(a.config.Database, applicationName, a.logger, false, 0)
 	if err != nil {
@@ -91,11 +87,11 @@ func main() {
 	// Start db health check and notify readiness subsystem
 	go a.db.RunReadinessCheck(a.readiness.GetChannel())
 
-	go startWebAdmin(&a)
+	go startWebAdmin(&a, applicationName)
 
 	// Start continously loading of virtual host, routes & cluster data
 	entityCacheConf := db.EntityCacheConfig{
-		RefreshInterval: entityRefreshInterval,
+		RefreshInterval: 3 * time.Second,
 		Notify:          make(chan db.EntityChangeNotification),
 	}
 	a.dbentities = db.NewEntityCache(a.db, entityCacheConf, a.logger)
@@ -114,7 +110,7 @@ func main() {
 }
 
 // startWebAdmin starts the admin web UI
-func startWebAdmin(s *authorizationServer) {
+func startWebAdmin(s *server, applicationName string) {
 
 	logger := shared.NewLogger(&s.config.WebAdmin.Logger)
 

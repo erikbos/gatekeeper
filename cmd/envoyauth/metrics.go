@@ -22,10 +22,10 @@ func newMetrics() *metrics {
 }
 
 // registerMetrics registers our operational metrics
-func (m *metrics) RegisterWithPrometheus() {
+func (m *metrics) RegisterWithPrometheus(metricNamespace string) {
 	m.configLoads = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Namespace: applicationName,
+			Namespace: metricNamespace,
 			Name:      "config_table_loads_total",
 			Help:      "Total sum of listener/route/cluster table loads.",
 		}, []string{"resource"})
@@ -33,7 +33,7 @@ func (m *metrics) RegisterWithPrometheus() {
 
 	m.connectInfoFailures = prometheus.NewCounter(
 		prometheus.CounterOpts{
-			Namespace: applicationName,
+			Namespace: metricNamespace,
 			Name:      "connection_info_failures_total",
 			Help:      "Total number of connection info failures.",
 		})
@@ -41,7 +41,7 @@ func (m *metrics) RegisterWithPrometheus() {
 
 	m.requestsPerCountry = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Namespace: applicationName,
+			Namespace: metricNamespace,
 			Name:      "requests_percountry_total",
 			Help:      "Total number of requests per country.",
 		}, []string{"country"})
@@ -49,7 +49,7 @@ func (m *metrics) RegisterWithPrometheus() {
 
 	m.requestsApikeyNotFound = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Namespace: applicationName,
+			Namespace: metricNamespace,
 			Name:      "requests_apikey_notfound_total",
 			Help:      "Total number of requests with an unknown apikey.",
 		}, []string{"hostname", "protocol", "method"})
@@ -57,7 +57,7 @@ func (m *metrics) RegisterWithPrometheus() {
 
 	m.requestsAccepted = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Namespace: applicationName,
+			Namespace: metricNamespace,
 			Name:      "requests_accepted_total",
 			Help:      "Total number of requests accepted.",
 		}, []string{"hostname", "protocol", "method", "apiproduct"})
@@ -65,7 +65,7 @@ func (m *metrics) RegisterWithPrometheus() {
 
 	m.requestsRejected = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Namespace: applicationName,
+			Namespace: metricNamespace,
 			Name:      "requests_rejected_total",
 			Help:      "Total number of requests rejected.",
 		}, []string{"hostname", "protocol", "method", "apiproduct"})
@@ -73,7 +73,7 @@ func (m *metrics) RegisterWithPrometheus() {
 
 	m.authLatencyHistogram = prometheus.NewSummary(
 		prometheus.SummaryOpts{
-			Namespace: applicationName,
+			Namespace: metricNamespace,
 			Name:      "request_latency",
 			Help:      "Authentication latency in seconds.",
 			Objectives: map[float64]float64{
@@ -84,7 +84,7 @@ func (m *metrics) RegisterWithPrometheus() {
 
 	m.Policy = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Namespace: applicationName,
+			Namespace: metricNamespace,
 			Name:      "policy_hits_total",
 			Help:      "Total number of policy hits.",
 		}, []string{"scope", "policy"})
@@ -92,15 +92,21 @@ func (m *metrics) RegisterWithPrometheus() {
 
 	m.PolicyUnknown = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Namespace: applicationName,
+			Namespace: metricNamespace,
 			Name:      "policy_unknown_total",
 			Help:      "Total number of unknown policy hits.",
 		}, []string{"scope", "policy"})
 	prometheus.MustRegister(m.PolicyUnknown)
 }
 
+// increaseConnectionInfoFailure increases connection info failures
+func (m *metrics) increaseConnectionInfoFailure() {
+
+	m.connectInfoFailures.Inc()
+}
+
 // increaseCounterApikeyNotfound requests with unknown apikey
-func (m *metrics) increaseCounterApikeyNotfound(r *requestInfo) {
+func (m *metrics) increaseCounterApikeyNotfound(r *requestDetails) {
 
 	m.requestsApikeyNotFound.WithLabelValues(
 		r.httpRequest.Host,
@@ -109,7 +115,7 @@ func (m *metrics) increaseCounterApikeyNotfound(r *requestInfo) {
 }
 
 // increaseCounterRequestRejected counts requests that are rejected
-func (m *metrics) increaseCounterRequestRejected(r *requestInfo) {
+func (m *metrics) increaseCounterRequestRejected(r *requestDetails) {
 
 	var product string
 
@@ -125,7 +131,7 @@ func (m *metrics) increaseCounterRequestRejected(r *requestInfo) {
 }
 
 // IncreaseCounterRequestAccept counts requests that are accepted
-func (m *metrics) IncreaseCounterRequestAccept(r *requestInfo) {
+func (m *metrics) IncreaseCounterRequestAccept(r *requestDetails) {
 
 	m.requestsAccepted.WithLabelValues(
 		r.httpRequest.Host,

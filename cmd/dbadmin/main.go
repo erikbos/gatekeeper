@@ -23,11 +23,6 @@ var (
 	buildTime string // Build time, set by Makefile
 )
 
-const (
-	applicationName       = "dbadmin"             // Name of application, used in Prometheus metrics
-	defaultConfigFileName = "dbadmin-config.yaml" // Default configuration file
-)
-
 type server struct {
 	config    *DBAdminConfig
 	webadmin  *webadmin.Webadmin
@@ -38,7 +33,9 @@ type server struct {
 }
 
 func main() {
-	filename := flag.String("config", defaultConfigFileName, "Configuration filename")
+	const applicationName = "dbadmin"
+
+	filename := flag.String("config", "dbadmin-config.yaml", "Configuration filename")
 	disableAPIAuthentication := flag.Bool("disableapiauthentication", false, "Disable REST API authentication")
 	organization := flag.String("organization", "", "Include organization in API path")
 	createSchema := flag.Bool("createschema", false, "Create database schema if it does not exist")
@@ -90,11 +87,11 @@ func main() {
 	// Start db health check and notify readiness subsystem
 	go s.db.RunReadinessCheck(s.readiness.GetChannel())
 
-	startWebAdmin(&s, *organization, *disableAPIAuthentication)
+	startWebAdmin(&s, applicationName, *organization, *disableAPIAuthentication)
 }
 
 // startWebAdmin starts the admin web UI
-func startWebAdmin(s *server, organization string, enableAPIAuthentication bool) {
+func startWebAdmin(s *server, applicationName, organization string, enableAPIAuthentication bool) {
 
 	webAdminLogger := shared.NewLogger(&s.config.WebAdmin.Logger)
 	s.webadmin = webadmin.New(s.config.WebAdmin, applicationName, webAdminLogger)

@@ -13,7 +13,7 @@ import (
 // CheckProductEntitlement loads developer, dev app, apiproduct details,
 // as input request.apikey must be set
 //
-func (a *authorizationServer) CheckProductEntitlement(request *requestInfo) error {
+func (a *server) CheckProductEntitlement(request *requestDetails) error {
 
 	if err := a.getAPIKeyDevDevAppDetails(request); err != nil {
 		return err
@@ -27,22 +27,22 @@ func (a *authorizationServer) CheckProductEntitlement(request *requestInfo) erro
 }
 
 // getAPIKeyDevDevAppDetails populates apikey, developer and developerapp details
-func (a *authorizationServer) getAPIKeyDevDevAppDetails(request *requestInfo) error {
+func (a *server) getAPIKeyDevDevAppDetails(r *requestDetails) error {
 	var err error
 
-	request.appCredential, err = a.db.Credential.GetByKey(request.apikey)
+	r.appCredential, err = a.db.Credential.GetByKey(r.consumerKey)
 	if err != nil {
 		// FIX ME increase unknown apikey counter (not an error state)
 		return errors.New("Cannot find apikey")
 	}
 
-	request.developerApp, err = a.db.DeveloperApp.GetByID(request.appCredential.AppID)
+	r.developerApp, err = a.db.DeveloperApp.GetByID(r.appCredential.AppID)
 	if err != nil {
 		// FIX ME increase counter as every apikey should link to dev app (error state)
 		return errors.New("Cannot find developer app of this apikey")
 	}
 
-	request.developer, err = a.db.Developer.GetByID(request.developerApp.DeveloperID)
+	r.developer, err = a.db.Developer.GetByID(r.developerApp.DeveloperID)
 	if err != nil {
 		// FIX ME increase counter as every devapp should link to developer (error state)
 		return errors.New("Cannot find developer of developer app")
@@ -52,7 +52,7 @@ func (a *authorizationServer) getAPIKeyDevDevAppDetails(request *requestInfo) er
 }
 
 // checkDevAndKeyValidity checks devapp approval and expiry status
-func checkDevAndKeyValidity(request *requestInfo) error {
+func checkDevAndKeyValidity(request *requestDetails) error {
 
 	now := shared.GetCurrentTimeMilliseconds()
 
@@ -83,7 +83,7 @@ func checkDevAndKeyValidity(request *requestInfo) error {
 // -			- return 200
 // - if not 403
 
-func (a *authorizationServer) IsRequestPathAllowed(requestPath string,
+func (a *server) IsRequestPathAllowed(requestPath string,
 	credential *types.DeveloperAppKey) (*types.APIProduct, error) {
 
 	// Does this apikey have any products assigned?

@@ -11,10 +11,10 @@ import (
 type PolicyChain struct {
 
 	// metrics collection for policy counters
-	authServer *authorizationServer
+	authServer *server
 
 	// Request information
-	request *requestInfo
+	request *requestDetails
 
 	// "vhost" or "apiproduct"
 	scope string
@@ -48,7 +48,7 @@ type PolicyChainResponse struct {
 func (p PolicyChain) Evaluate() *PolicyChainResponse {
 
 	// Take policies from vhost configuration
-	policies := p.request.vhost.Policies
+	policies := p.request.listener.Policies
 	// Or apiproduct policies in case requested
 	if p.scope == policyScopeAPIProduct {
 		policies = p.request.APIProduct.Policies
