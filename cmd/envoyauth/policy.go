@@ -299,7 +299,7 @@ func policyQPS1(request *requestInfo) *PolicyResponse {
 			metadata: map[string]string{
 				"rl.requests_per_unit": value,
 				"rl.unit":              "SECOND",
-				"rl.scope":             "app",
+				"rl.descriptor":        "app",
 				// "QPS-Quota-Key":        quotaKey,
 			},
 		}
@@ -310,7 +310,7 @@ func policyQPS1(request *requestInfo) *PolicyResponse {
 			metadata: map[string]string{
 				"rl.requests_per_unit": value,
 				"rl.unit":              "SECOND",
-				"rl.scope":             "apiproduct",
+				"rl.descriptor":        "apiproduct",
 				// "QPS-Quota-Key":        quotaKey,
 			},
 		}

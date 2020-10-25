@@ -517,28 +517,26 @@ func buildHeadersList(headers map[string]string) []*core.HeaderValueOption {
 func buildRateLimits(routeEntry types.Route) []*route.RateLimit {
 
 	// In case attribute RateLimiting does not exist or is not set to true
-	// no ratelimiting enabled
+	// no ratelimiting will be configured
 	value, err := routeEntry.Attributes.Get(types.AttributeRateLimiting)
 	if err != nil || value != types.AttributeValueTrue {
 		return nil
 	}
 
-	// Enable ratelimiting
-	// TOD (fix configuration)
 	return []*route.RateLimit{{
 		Actions: []*route.RateLimit_Action{{
 			ActionSpecifier: &route.RateLimit_Action_DynamicMetadata{
 				DynamicMetadata: &route.RateLimit_Action_DynamicMetaData{
-					DescriptorKey: "1",
+					DescriptorKey: "key",
+					DefaultValue:  "default_descriptor",
 					MetadataKey: &envoytypemetadata.MetadataKey{
 						Key: wellknown.HTTPExternalAuthorization,
 						Path: []*envoytypemetadata.MetadataKey_PathSegment{{
 							Segment: &envoytypemetadata.MetadataKey_PathSegment_Key{
-								Key: "42",
+								Key: "rl.descriptor",
 							},
 						}},
 					},
-					DefaultValue: "5",
 				},
 			},
 		}},
@@ -550,7 +548,7 @@ func buildRateLimits(routeEntry types.Route) []*route.RateLimit {
 						Key: wellknown.HTTPExternalAuthorization,
 						Path: []*envoytypemetadata.MetadataKey_PathSegment{{
 							Segment: &envoytypemetadata.MetadataKey_PathSegment_Key{
-								Key: "rl",
+								Key: "rl.override",
 							},
 						}},
 					},
