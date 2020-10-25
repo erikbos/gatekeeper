@@ -3,6 +3,7 @@ package handler
 import (
 	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -10,45 +11,56 @@ import (
 	"github.com/erikbos/gatekeeper/cmd/dbadmin/service"
 	"github.com/erikbos/gatekeeper/pkg/db"
 	"github.com/erikbos/gatekeeper/pkg/types"
+	"github.com/erikbos/gatekeeper/pkg/webadmin"
 )
 
 // Handler contains our runtime parameters
 type Handler struct {
 	service *service.Service
+	metrics *metrics
+	logger  *zap.Logger
 }
 
 // NewHandler sets up all API endpoint routes
-func NewHandler(g *gin.Engine, db *db.Database, s *service.Service, logger *zap.Logger, enableAPIAuthentication bool) *Handler {
+func NewHandler(g *gin.Engine, db *db.Database, s *service.Service, logger *zap.Logger,
+	applicationName string, disableAPIAuthentication bool) *Handler {
 
-	// m := &Metrics{}
-	// m.register("Qqq")
+	// Instal prometheus metrics
+	m := newMetrics()
+	m.RegisterWithPrometheus(applicationName)
+	g.Use(metricsMiddleware(m))
+
+	handler := &Handler{
+		service: s,
+		metrics: m,
+		logger:  logger,
+	}
 
 	// Insert authentication middleware for every /v1 prefix'ed API endpoint
 	apiRoutes := g.Group("/v1")
 	// apiRoutes.Use(metricsMiddleware(m))
 
-	if enableAPIAuthentication {
+	if !disableAPIAuthentication {
 		auth := newAuth(s.User, s.Role, logger)
 		apiRoutes.Use(auth.AuthenticateAndAuthorize)
 	}
 
-	handler := &Handler{
-		service: s,
-	}
 	g.GET(showHTTPForwardingPath, handler.showHTTPForwardingPage)
+	g.GET(showDevelopersPath, handler.showDevelopersPage)
 	g.GET(showUserRolesPath, handler.showUserRolePage)
 
 	// Register all API endpoint routes
+	handler.registerUserRoutes(apiRoutes)
+	handler.registerRoleRoutes(apiRoutes)
 	handler.registerListenerRoutes(apiRoutes)
 	handler.registerRouteRoutes(apiRoutes)
 	handler.registerClusterRoutes(apiRoutes)
+
 	handler.registerOrganizationRoutes(apiRoutes)
 	handler.registerDeveloperRoutes(apiRoutes)
 	handler.registerDeveloperAppRoutes(apiRoutes)
 	handler.registerCredentialRoutes(apiRoutes)
 	handler.registerAPIProductRoutes(apiRoutes)
-	handler.registerUserRoutes(apiRoutes)
-	handler.registerRoleRoutes(apiRoutes)
 	return handler
 }
 
@@ -153,13 +165,16 @@ func showErrorMessageAndAbort(c *gin.Context, statusCode int, e types.Error) {
 	c.Abort()
 }
 
-// func metricsMiddleware(m *Metrics) gin.HandlerFunc {
+// metricsMiddleware is gin middleware to maintain prometheus metrics on user, paths and status codes
+func metricsMiddleware(m *metrics) gin.HandlerFunc {
 
-// 	return func(c *gin.Context) {
+	return func(c *gin.Context) {
 
-// 		c.Next()
+		c.Next()
 
-// 		status := strconv.Itoa(c.Writer.Status())
-// 		m.QueryHit(c.Request.Method, c.FullPath(), status)
-// 	}
-// }
+		m.IncRequestPathHit(webadmin.GetUser(c),
+			c.Request.Method,
+			c.FullPath(),
+			strconv.Itoa(c.Writer.Status()))
+	}
+}

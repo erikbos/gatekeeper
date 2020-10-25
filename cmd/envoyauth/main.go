@@ -49,7 +49,7 @@ func main() {
 	var a authorizationServer
 	var err error
 	if a.config, err = loadConfiguration(filename); err != nil {
-		fmt.Print(err)
+		fmt.Print("Cannot parse configuration file:")
 		panic(err)
 	}
 

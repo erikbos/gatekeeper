@@ -174,6 +174,8 @@ type (
 
 	// APIProduct is the service interface to manipulate APIProduct entities
 	APIProduct interface {
+		GetAll() (apiproducts types.APIProducts, err types.Error)
+
 		GetByOrganization(organizationName string) (apiproducts types.APIProducts, err types.Error)
 
 		Get(organizationName, apiproductName string) (apiproduct *types.APIProduct, err types.Error)

@@ -196,23 +196,30 @@ func ShowAllRoutes(e *gin.Engine, applicationName string) gin.HandlerFunc {
 		}
 		c.Status(http.StatusOK)
 		c.Header(contentTypeHeader, contentTypeHTML)
-		_ = t.Execute(c.Writer, templateVariables)
+		if err := t.Execute(c.Writer, templateVariables); err != nil {
+			_ = c.Error(err)
+		}
 	}
 }
 
 // JSONMessage returns an error message
-func JSONMessage(c *gin.Context, statusCode int, msg error) {
+func JSONMessage(c *gin.Context, statusCode int, errorMessage error) {
+
+	// Store error in request context so it ends up in access log
+	if errorMessage != nil {
+		_ = c.Error(errorMessage)
+	}
 
 	c.IndentedJSON(statusCode,
 		gin.H{
-			"message": fmt.Sprint(msg),
+			"message": fmt.Sprint(errorMessage),
 		})
 }
 
 // JSONMessageAndAbort returns an error message, and aborts request
-func JSONMessageAndAbort(c *gin.Context, statusCode int, msg error) {
+func JSONMessageAndAbort(c *gin.Context, statusCode int, errorMessage error) {
 
-	JSONMessage(c, statusCode, msg)
+	JSONMessage(c, statusCode, errorMessage)
 	c.Abort()
 }
 
@@ -252,7 +259,7 @@ func LogHTTPRequest(logger *zap.Logger) gin.HandlerFunc {
 				allErrors += strings.TrimSpace(e)
 			}
 		}
-		logger.Info("",
+		logger.Info("http",
 			zap.String("ip", c.ClientIP()),
 			zap.String("xff", c.Request.Header.Get("x-forwarded-for")),
 			zap.String("method", c.Request.Method),

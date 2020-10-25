@@ -28,7 +28,7 @@ func (h *Handler) getAllRoles(c *gin.Context) handlerResponse {
 	if err != nil {
 		return handleError(err)
 	}
-	return handleOK(StringMap{"role": roles})
+	return handleOK(StringMap{"roles": roles})
 }
 
 // getRole returns details of an role
