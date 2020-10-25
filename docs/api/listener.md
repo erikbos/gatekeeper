@@ -31,7 +31,6 @@ HTTP listener on port `80` mapping incoming requests for http virtual host `www.
          "www.petstore.com"
     ],
     "port": 80,
-    "organizationName": "petstore",
     "routeGroup": "routes_80"
 }
 ```
@@ -44,7 +43,6 @@ HTTP listener on port `80` mapping incoming requests for http virtual host `www.
 | displayName      | optional  | Friendly name                                     |
 | virtualHosts     | mandatory | Array of virtal hostnames                         |
 | port             | mandatory | Port Envoy needs to listen on                     |
-| organizationName | mandatory | Organization name                                 |
 | routeGroup       | mandatory | Indicate which http routing table will be applied |
 | attributes       | optional  | Specific configuration to apply                   |
 
@@ -100,7 +98,6 @@ HTTP listener on port `80` mapping incoming requests for http virtual host `www.
          "www.petstore.com"
     ],
     "port": 80,
-    "organizationName": "petstore",
     "routeGroup": "routes_80"
 }
 ```
@@ -118,7 +115,6 @@ One listener with two virtual hosts sharing a TLS certificate:
     "port": 443,
     "routeGroup": "routes_443",
     "policies": "lookupGeoIP,checkAPIKey",
-    "organizationName": "petstore",
     "attributes": [
         {
             "name": "HTTPProtocol",

@@ -25,9 +25,6 @@ type APIProduct struct {
 	// Comma separated list of policynames, to apply to requests
 	Policies string `json:"policies"`
 
-	// Organization this api product belongs to (not used)
-	OrganizationName string `json:"organizationName"`
-
 	// Created at timestamp in epoch milliseconds
 	CreatedAt int64 `json:"createdAt"`
 

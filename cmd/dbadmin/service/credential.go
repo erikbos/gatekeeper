@@ -19,13 +19,16 @@ type CredentialService struct {
 // NewCredential returns a new credential instance
 func NewCredential(database *db.Database, c *Changelog) *CredentialService {
 
-	return &CredentialService{db: database, changelog: c}
+	return &CredentialService{
+		db:        database,
+		changelog: c,
+	}
 }
 
 // Get returns details of an credential
-func (cs *CredentialService) Get(organizationName, key string) (credential *types.DeveloperAppKey, err types.Error) {
+func (cs *CredentialService) Get(key string) (credential *types.DeveloperAppKey, err types.Error) {
 
-	return cs.db.Credential.GetByKey(&organizationName, &key)
+	return cs.db.Credential.GetByKey(&key)
 }
 
 // GetByDeveloperAppID returns all credentials of a developer app
@@ -38,10 +41,9 @@ func (cs *CredentialService) GetByDeveloperAppID(developerAppID string) (cluster
 func (cs *CredentialService) Create(newCredential types.DeveloperAppKey, developerApp *types.DeveloperApp,
 	who Requester) (types.DeveloperAppKey, types.Error) {
 
-	if _, err := cs.db.Credential.GetByKey(&newCredential.OrganizationName,
-		&newCredential.ConsumerKey); err == nil {
+	if _, err := cs.db.Credential.GetByKey(&newCredential.ConsumerKey); err == nil {
 		return types.NullDeveloperAppKey, types.NewBadRequestError(
-			fmt.Errorf("consumerKey '%s' already exists", newCredential.ConsumerKey))
+			fmt.Errorf("ConsumerKey '%s' already exists", newCredential.ConsumerKey))
 	}
 
 	// Generate consumerkey if not provided
@@ -64,7 +66,6 @@ func (cs *CredentialService) Create(newCredential types.DeveloperAppKey, develop
 
 	// Populate fields we do not allow to be updated
 	newCredential.AppID = developerApp.AppID
-	newCredential.OrganizationName = developerApp.OrganizationName
 
 	if err := cs.db.Credential.UpdateByKey(&newCredential); err != nil {
 		return types.NullDeveloperAppKey, err
@@ -77,7 +78,7 @@ func (cs *CredentialService) Create(newCredential types.DeveloperAppKey, develop
 func (cs *CredentialService) Update(updatedCredential types.DeveloperAppKey,
 	who Requester) (types.DeveloperAppKey, types.Error) {
 
-	currentCredential, err := cs.db.Credential.GetByKey(&updatedCredential.OrganizationName, &updatedCredential.ConsumerKey)
+	currentCredential, err := cs.db.Credential.GetByKey(&updatedCredential.ConsumerKey)
 	if err != nil {
 		return types.NullDeveloperAppKey, err
 	}
@@ -86,7 +87,6 @@ func (cs *CredentialService) Update(updatedCredential types.DeveloperAppKey,
 	updatedCredential.ConsumerKey = currentCredential.ConsumerKey
 	updatedCredential.ConsumerSecret = currentCredential.ConsumerSecret
 	updatedCredential.AppID = currentCredential.AppID
-	updatedCredential.OrganizationName = currentCredential.OrganizationName
 
 	if err = cs.db.Credential.UpdateByKey(&updatedCredential); err != nil {
 		return types.NullDeveloperAppKey, err
@@ -96,14 +96,14 @@ func (cs *CredentialService) Update(updatedCredential types.DeveloperAppKey,
 }
 
 // Delete deletes an credential
-func (cs *CredentialService) Delete(organizationName, consumerKey string,
+func (cs *CredentialService) Delete(consumerKey string,
 	who Requester) (deletedCredential types.DeveloperAppKey, e types.Error) {
 
-	credential, err := cs.db.Credential.GetByKey(&organizationName, &consumerKey)
+	credential, err := cs.db.Credential.GetByKey(&consumerKey)
 	if err != nil {
 		return types.NullDeveloperAppKey, err
 	}
-	if err = cs.db.Credential.DeleteByKey(organizationName, consumerKey); err != nil {
+	if err = cs.db.Credential.DeleteByKey(consumerKey); err != nil {
 		return types.NullDeveloperAppKey, err
 	}
 	cs.changelog.Delete(credential, who)

@@ -26,7 +26,7 @@ func (s *UserCache) GetAll() (types.Users, types.Error) {
 		return s.user.GetAll()
 	}
 	var users types.Users
-	if err := s.cache.fetchEntity(db.EntityTypeUser, "", &users, getAll); err != nil {
+	if err := s.cache.fetchEntity(types.TypeUserName, "", &users, getAll); err != nil {
 		return nil, err
 	}
 	return users, nil
@@ -39,7 +39,7 @@ func (s *UserCache) Get(userName string) (*types.User, types.Error) {
 		return s.user.Get(userName)
 	}
 	var user types.User
-	if err := s.cache.fetchEntity(db.EntityTypeUser, userName, &user, getUser); err != nil {
+	if err := s.cache.fetchEntity(types.TypeUserName, userName, &user, getUser); err != nil {
 		return nil, err
 	}
 	return &user, nil
@@ -48,13 +48,13 @@ func (s *UserCache) Get(userName string) (*types.User, types.Error) {
 // Update UPSERTs an user in database
 func (s *UserCache) Update(c *types.User) types.Error {
 
-	s.cache.deleteEntry(db.EntityTypeUser, c.Name)
+	s.cache.deleteEntry(types.TypeUserName, c.Name)
 	return s.user.Update(c)
 }
 
 // Delete deletes a user
 func (s *UserCache) Delete(userToDelete string) types.Error {
 
-	s.cache.deleteEntry(db.EntityTypeUser, userToDelete)
+	s.cache.deleteEntry(types.TypeUserName, userToDelete)
 	return s.user.Delete(userToDelete)
 }

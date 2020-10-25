@@ -17,7 +17,10 @@ type RouteService struct {
 // NewRoute returns a new route instance
 func NewRoute(database *db.Database, c *Changelog) *RouteService {
 
-	return &RouteService{db: database, changelog: c}
+	return &RouteService{
+		db:        database,
+		changelog: c,
+	}
 }
 
 // GetAll returns all routes

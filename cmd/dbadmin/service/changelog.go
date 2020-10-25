@@ -7,6 +7,7 @@ import (
 
 	"github.com/erikbos/gatekeeper/pkg/db"
 	"github.com/erikbos/gatekeeper/pkg/shared"
+	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
 type (
@@ -62,19 +63,19 @@ const (
 // Create logs a created entity
 func (cl *Changelog) Create(new interface{}, who Requester) {
 
-	cl.log(createEvent, db.Typeof(new), nil, new, who)
+	cl.log(createEvent, types.NameOf(new), nil, new, who)
 }
 
 // Update logs an updated entity
 func (cl *Changelog) Update(old, new interface{}, who Requester) {
 
-	cl.log(updateEvent, db.Typeof(old), old, new, who)
+	cl.log(updateEvent, types.NameOf(old), old, new, who)
 }
 
 // Delete logs a deleted entity
 func (cl *Changelog) Delete(old interface{}, who Requester) {
 
-	cl.log(deleteEvent, db.Typeof(old), old, nil, who)
+	cl.log(deleteEvent, types.NameOf(old), old, nil, who)
 }
 
 // log logs a changed entity

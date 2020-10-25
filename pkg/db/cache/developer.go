@@ -19,33 +19,28 @@ func NewDeveloperCache(cache *Cache, developer db.Developer) *DeveloperCache {
 	}
 }
 
-// GetByOrganization retrieves all developer belonging to an organization
-func (s *DeveloperCache) GetByOrganization(organizationName string) (types.Developers, types.Error) {
+// GetAll retrieves all developer
+func (s *DeveloperCache) GetAll() (types.Developers, types.Error) {
 
-	getDeveloperByOrganization := func() (interface{}, types.Error) {
-		return s.developer.GetByOrganization(organizationName)
+	getDevelopers := func() (interface{}, types.Error) {
+		return s.developer.GetAll()
 	}
 	var developers types.Developers
-	if err := s.cache.fetchEntity(db.EntityTypeDeveloper, organizationName, &developers, getDeveloperByOrganization); err != nil {
+	// TODO/FIXME
+	if err := s.cache.fetchEntity(types.TypeDeveloperName, "--all-developers--", &developers, getDevelopers); err != nil {
 		return nil, err
 	}
 	return developers, nil
 }
 
-// GetCountByOrganization retrieves number of developer belonging to an organization
-func (s *DeveloperCache) GetCountByOrganization(organizationName string) (int, types.Error) {
-
-	return s.developer.GetCountByOrganization(organizationName)
-}
-
 // GetByEmail retrieves a developer from database
-func (s *DeveloperCache) GetByEmail(developerOrganization, developerEmail string) (*types.Developer, types.Error) {
+func (s *DeveloperCache) GetByEmail(developerEmail string) (*types.Developer, types.Error) {
 
 	getDeveloperByEmail := func() (interface{}, types.Error) {
-		return s.developer.GetByEmail(developerOrganization, developerEmail)
+		return s.developer.GetByEmail(developerEmail)
 	}
 	var developer types.Developer
-	if err := s.cache.fetchEntity(db.EntityTypeDeveloper, developerEmail, &developer, getDeveloperByEmail); err != nil {
+	if err := s.cache.fetchEntity(types.TypeDeveloperName, developerEmail, &developer, getDeveloperByEmail); err != nil {
 		return nil, err
 	}
 	return &developer, nil
@@ -58,7 +53,7 @@ func (s *DeveloperCache) GetByID(developerID string) (*types.Developer, types.Er
 		return s.developer.GetByID(developerID)
 	}
 	var developer types.Developer
-	if err := s.cache.fetchEntity(db.EntityTypeDeveloper, developerID, &developer, getDeveloperByID); err != nil {
+	if err := s.cache.fetchEntity(types.TypeDeveloperName, developerID, &developer, getDeveloperByID); err != nil {
 		return nil, err
 	}
 	return &developer, nil
@@ -67,14 +62,14 @@ func (s *DeveloperCache) GetByID(developerID string) (*types.Developer, types.Er
 // Update UPSERTs a developer in database
 func (s *DeveloperCache) Update(d *types.Developer) types.Error {
 
-	s.cache.deleteEntry(db.EntityTypeDeveloper, d.DeveloperID)
-	s.cache.deleteEntry(db.EntityTypeDeveloper, d.Email)
+	s.cache.deleteEntry(types.TypeDeveloperName, d.DeveloperID)
+	s.cache.deleteEntry(types.TypeDeveloperName, d.Email)
 	return s.developer.Update(d)
 }
 
 // DeleteByID deletes a developer
-func (s *DeveloperCache) DeleteByID(organizationName, developerID string) types.Error {
+func (s *DeveloperCache) DeleteByID(developerID string) types.Error {
 
-	s.cache.deleteEntry(db.EntityTypeDeveloper, developerID)
-	return s.developer.DeleteByID(organizationName, developerID)
+	s.cache.deleteEntry(types.TypeDeveloperName, developerID)
+	return s.developer.DeleteByID(developerID)
 }

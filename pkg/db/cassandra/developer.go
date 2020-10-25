@@ -16,7 +16,6 @@ const (
 	developerColumns = `developer_id,
 apps,
 attributes,
-organization_name,
 status,
 user_name,
 email,
@@ -41,11 +40,11 @@ func NewDeveloperStore(database *Database) *DeveloperStore {
 	}
 }
 
-// GetByOrganization retrieves all developer belonging to an organization
-func (s *DeveloperStore) GetByOrganization(organizationName string) (types.Developers, types.Error) {
+// GetAll retrieves all developer
+func (s *DeveloperStore) GetAll() (types.Developers, types.Error) {
 
-	query := "SELECT " + developerColumns + " FROM developers WHERE organization_name = ? ALLOW FILTERING"
-	developers, err := s.runGetDeveloperQuery(query, organizationName)
+	query := "SELECT " + developerColumns + " FROM developers"
+	developers, err := s.runGetDeveloperQuery(query)
 	if err != nil {
 		s.db.metrics.QueryMiss(developerMetricLabel)
 		return types.NullDevelopers, types.NewDatabaseError(err)
@@ -55,26 +54,11 @@ func (s *DeveloperStore) GetByOrganization(organizationName string) (types.Devel
 	return developers, nil
 }
 
-// GetCountByOrganization retrieves number of developer belonging to an organization
-func (s *DeveloperStore) GetCountByOrganization(organizationName string) (int, types.Error) {
-
-	var developerCount int
-
-	query := "SELECT count(*) FROM developers WHERE organization_name = ? ALLOW FILTERING"
-	if err := s.db.CassandraSession.Query(query, organizationName).Scan(&developerCount); err != nil {
-		s.db.metrics.QueryFailed(developerMetricLabel)
-		return -1, types.NewDatabaseError(err)
-	}
-
-	s.db.metrics.QueryHit(developerMetricLabel)
-	return developerCount, nil
-}
-
 // GetByEmail retrieves a developer from database
-func (s *DeveloperStore) GetByEmail(developerOrganization, developerEmail string) (*types.Developer, types.Error) {
+func (s *DeveloperStore) GetByEmail(developerEmail string) (*types.Developer, types.Error) {
 
-	query := "SELECT " + developerColumns + " FROM developers WHERE organization_name = ? AND email = ? LIMIT 1 ALLOW FILTERING"
-	developers, err := s.runGetDeveloperQuery(query, developerOrganization, developerEmail)
+	query := "SELECT " + developerColumns + " FROM developers WHERE email = ? LIMIT 1 ALLOW FILTERING"
+	developers, err := s.runGetDeveloperQuery(query, developerEmail)
 	if err != nil {
 		s.db.metrics.QueryFailed(developerMetricLabel)
 		return &types.NullDeveloper, types.NewDatabaseError(err)
@@ -123,20 +107,19 @@ func (s *DeveloperStore) runGetDeveloperQuery(query string, queryParameters ...i
 	m := make(map[string]interface{})
 	for iterable.MapScan(m) {
 		developers = append(developers, types.Developer{
-			DeveloperID:      columnValueString(m, "developer_id"),
-			Apps:             types.Developer{}.Apps.Unmarshal(columnValueString(m, "apps")),
-			Attributes:       types.Developer{}.Attributes.Unmarshal(columnValueString(m, "attributes")),
-			OrganizationName: columnValueString(m, "organization_name"),
-			Status:           columnValueString(m, "status"),
-			UserName:         columnValueString(m, "user_name"),
-			Email:            columnValueString(m, "email"),
-			FirstName:        columnValueString(m, "first_name"),
-			LastName:         columnValueString(m, "last_name"),
-			SuspendedTill:    columnValueInt64(m, "suspended_till"),
-			CreatedAt:        columnValueInt64(m, "created_at"),
-			CreatedBy:        columnValueString(m, "created_by"),
-			LastmodifiedAt:   columnValueInt64(m, "lastmodified_at"),
-			LastmodifiedBy:   columnValueString(m, "lastmodified_by"),
+			DeveloperID:    columnValueString(m, "developer_id"),
+			Apps:           types.Developer{}.Apps.Unmarshal(columnValueString(m, "apps")),
+			Attributes:     types.Developer{}.Attributes.Unmarshal(columnValueString(m, "attributes")),
+			Status:         columnValueString(m, "status"),
+			UserName:       columnValueString(m, "user_name"),
+			Email:          columnValueString(m, "email"),
+			FirstName:      columnValueString(m, "first_name"),
+			LastName:       columnValueString(m, "last_name"),
+			SuspendedTill:  columnValueInt64(m, "suspended_till"),
+			CreatedAt:      columnValueInt64(m, "created_at"),
+			CreatedBy:      columnValueString(m, "created_by"),
+			LastmodifiedAt: columnValueInt64(m, "lastmodified_at"),
+			LastmodifiedBy: columnValueString(m, "lastmodified_by"),
 		})
 		m = map[string]interface{}{}
 	}
@@ -149,12 +132,11 @@ func (s *DeveloperStore) runGetDeveloperQuery(query string, queryParameters ...i
 // Update UPSERTs a developer in database
 func (s *DeveloperStore) Update(d *types.Developer) types.Error {
 
-	query := "INSERT INTO developers (" + developerColumns + ") VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+	query := "INSERT INTO developers (" + developerColumns + ") VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)"
 	if err := s.db.CassandraSession.Query(query,
 		d.DeveloperID,
 		d.Apps.Marshal(),
 		d.Attributes.Marshal(),
-		d.OrganizationName,
 		d.Status,
 		d.UserName,
 		d.Email,
@@ -174,7 +156,7 @@ func (s *DeveloperStore) Update(d *types.Developer) types.Error {
 }
 
 // DeleteByID deletes a developer
-func (s *DeveloperStore) DeleteByID(organizationName, developerID string) types.Error {
+func (s *DeveloperStore) DeleteByID(developerID string) types.Error {
 
 	query := "DELETE FROM developers WHERE developer_id = ?"
 	if err := s.db.CassandraSession.Query(query, developerID).Exec(); err != nil {

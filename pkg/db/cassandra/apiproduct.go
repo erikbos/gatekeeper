@@ -24,8 +24,7 @@ policies,
 created_at,
 created_by,
 lastmodified_at,
-lastmodified_by,
-organization_name`
+lastmodified_by`
 )
 
 // APIProductStore holds our database config
@@ -55,32 +54,12 @@ func (s *APIProductStore) GetAll() (types.APIProducts, types.Error) {
 	return apiproducts, nil
 }
 
-// GetByOrganization retrieves all api products belonging to an organization
-func (s *APIProductStore) GetByOrganization(organizationName string) (types.APIProducts, types.Error) {
-	query := "SELECT " + apiProductsColumns + " FROM api_products WHERE organization_name = ? ALLOW FILTERING"
-
-	apiproducts, err := s.runGetAPIProductQuery(query, organizationName)
-	if err != nil {
-		s.db.metrics.QueryFailed(apiProductsMetricLabel)
-		return types.APIProducts{}, types.NewDatabaseError(err)
-	}
-
-	if len(apiproducts) == 0 {
-		s.db.metrics.QueryMiss(apiProductsMetricLabel)
-		return apiproducts, types.NewItemNotFoundError(
-			fmt.Errorf("Can not find apiproducts in organization '%s'", organizationName))
-	}
-
-	s.db.metrics.QueryHit(apiProductsMetricLabel)
-	return apiproducts, nil
-}
-
 // Get returns an apiproduct
-func (s *APIProductStore) Get(organizationName, apiproductName string) (*types.APIProduct, types.Error) {
+func (s *APIProductStore) Get(apiproductName string) (*types.APIProduct, types.Error) {
 
-	query := "SELECT " + apiProductsColumns + " FROM api_products WHERE organization_name = ? AND name = ? LIMIT 1"
+	query := "SELECT " + apiProductsColumns + " FROM api_products WHERE name = ? LIMIT 1"
 
-	apiproducts, err := s.runGetAPIProductQuery(query, organizationName, apiproductName)
+	apiproducts, err := s.runGetAPIProductQuery(query, apiproductName)
 	if err != nil {
 		s.db.metrics.QueryFailed(apiProductsMetricLabel)
 		return nil, types.NewDatabaseError(err)
@@ -117,18 +96,17 @@ func (s *APIProductStore) runGetAPIProductQuery(query string, queryParameters ..
 	m := make(map[string]interface{})
 	for iter.MapScan(m) {
 		apiproducts = append(apiproducts, types.APIProduct{
-			Name:             columnValueString(m, "name"),
-			DisplayName:      columnValueString(m, "display_name"),
-			Description:      m["description"].(string),
-			Attributes:       types.APIProduct{}.Attributes.Unmarshal(columnValueString(m, "attributes")),
-			RouteGroup:       m["route_group"].(string),
-			Paths:            types.APIProduct{}.Paths.Unmarshal(columnValueString(m, "paths")),
-			Policies:         m["policies"].(string),
-			CreatedAt:        columnValueInt64(m, "created_at"),
-			CreatedBy:        columnValueString(m, "created_by"),
-			LastmodifiedAt:   columnValueInt64(m, "lastmodified_at"),
-			LastmodifiedBy:   columnValueString(m, "lastmodified_by"),
-			OrganizationName: m["organization_name"].(string),
+			Name:           columnValueString(m, "name"),
+			DisplayName:    columnValueString(m, "display_name"),
+			Description:    m["description"].(string),
+			Attributes:     types.APIProduct{}.Attributes.Unmarshal(columnValueString(m, "attributes")),
+			RouteGroup:     m["route_group"].(string),
+			Paths:          types.APIProduct{}.Paths.Unmarshal(columnValueString(m, "paths")),
+			Policies:       m["policies"].(string),
+			CreatedAt:      columnValueInt64(m, "created_at"),
+			CreatedBy:      columnValueString(m, "created_by"),
+			LastmodifiedAt: columnValueInt64(m, "lastmodified_at"),
+			LastmodifiedBy: columnValueString(m, "lastmodified_by"),
 		})
 		m = map[string]interface{}{}
 	}
@@ -143,7 +121,7 @@ func (s *APIProductStore) runGetAPIProductQuery(query string, queryParameters ..
 // Update UPSERTs an apiproduct in database
 func (s *APIProductStore) Update(p *types.APIProduct) types.Error {
 
-	query := "INSERT INTO api_products (" + apiProductsColumns + ") VALUES(?,?,?,?,?,?,?,?,?,?,?,?)"
+	query := "INSERT INTO api_products (" + apiProductsColumns + ") VALUES(?,?,?,?,?,?,?,?,?,?,?)"
 	if err := s.db.CassandraSession.Query(query,
 		p.Name,
 		p.DisplayName,
@@ -155,8 +133,7 @@ func (s *APIProductStore) Update(p *types.APIProduct) types.Error {
 		p.CreatedAt,
 		p.CreatedBy,
 		p.LastmodifiedAt,
-		p.LastmodifiedBy,
-		p.OrganizationName).Exec(); err != nil {
+		p.LastmodifiedBy).Exec(); err != nil {
 
 		s.db.metrics.QueryFailed(apiProductsMetricLabel)
 		return types.NewDatabaseError(
@@ -166,9 +143,9 @@ func (s *APIProductStore) Update(p *types.APIProduct) types.Error {
 }
 
 // Delete deletes an apiproduct
-func (s *APIProductStore) Delete(organizationName, apiProduct string) types.Error {
+func (s *APIProductStore) Delete(apiProduct string) types.Error {
 
-	apiproduct, err := s.Get(organizationName, apiProduct)
+	apiproduct, err := s.Get(apiProduct)
 	if err != nil {
 		s.db.metrics.QueryFailed(apiProductsMetricLabel)
 		return err

@@ -18,28 +18,31 @@ type DeveloperService struct {
 // NewDeveloper returns a new developer instance
 func NewDeveloper(database *db.Database, c *Changelog) *DeveloperService {
 
-	return &DeveloperService{db: database, changelog: c}
+	return &DeveloperService{
+		db:        database,
+		changelog: c,
+	}
 }
 
-// GetByOrganization returns all developers
-func (ds *DeveloperService) GetByOrganization(organizationName string) (developers types.Developers, err types.Error) {
+// GetAll returns all developers
+func (ds *DeveloperService) GetAll() (developers types.Developers, err types.Error) {
 
-	return ds.db.Developer.GetByOrganization(organizationName)
+	return ds.db.Developer.GetAll()
 }
 
 // Get returns details of an developer
-func (ds *DeveloperService) Get(organizationName, developerName string) (developer *types.Developer, err types.Error) {
+func (ds *DeveloperService) Get(developerName string) (developer *types.Developer, err types.Error) {
 
 	if strings.Contains(developerName, "@") {
-		return ds.db.Developer.GetByEmail(organizationName, developerName)
+		return ds.db.Developer.GetByEmail(developerName)
 	}
 	return ds.db.Developer.GetByID(developerName)
 }
 
 // GetAttributes returns attributes of an developer
-func (ds *DeveloperService) GetAttributes(organizationName, developerName string) (attributes *types.Attributes, err types.Error) {
+func (ds *DeveloperService) GetAttributes(developerName string) (attributes *types.Attributes, err types.Error) {
 
-	developer, err := ds.Get(organizationName, developerName)
+	developer, err := ds.Get(developerName)
 	if err != nil {
 		return nil, err
 	}
@@ -47,9 +50,9 @@ func (ds *DeveloperService) GetAttributes(organizationName, developerName string
 }
 
 // GetAttribute returns one particular attribute of an developer
-func (ds *DeveloperService) GetAttribute(organizationName, developerName, attributeName string) (value string, err types.Error) {
+func (ds *DeveloperService) GetAttribute(developerName, attributeName string) (value string, err types.Error) {
 
-	developer, err := ds.Get(organizationName, developerName)
+	developer, err := ds.Get(developerName)
 	if err != nil {
 		return "", err
 	}
@@ -57,10 +60,10 @@ func (ds *DeveloperService) GetAttribute(organizationName, developerName, attrib
 }
 
 // Create creates a new developer
-func (ds *DeveloperService) Create(organizationName string,
-	newDeveloper types.Developer, who Requester) (types.Developer, types.Error) {
+func (ds *DeveloperService) Create(newDeveloper types.Developer,
+	who Requester) (types.Developer, types.Error) {
 
-	if _, err := ds.Get(organizationName, newDeveloper.Email); err == nil {
+	if _, err := ds.Get(newDeveloper.Email); err == nil {
 		return types.NullDeveloper, types.NewBadRequestError(
 			fmt.Errorf("Developer '%s' already exists", newDeveloper.Email))
 	}
@@ -76,17 +79,15 @@ func (ds *DeveloperService) Create(organizationName string,
 }
 
 // Update updates an existing developer
-func (ds *DeveloperService) Update(organizationName string,
-	updatedDeveloper types.Developer, who Requester) (
+func (ds *DeveloperService) Update(updatedDeveloper types.Developer, who Requester) (
 	types.Developer, types.Error) {
 
-	currentDeveloper, err := ds.db.Developer.GetByEmail(organizationName, updatedDeveloper.Email)
+	currentDeveloper, err := ds.db.Developer.GetByEmail(updatedDeveloper.Email)
 	if err != nil {
 		return types.NullDeveloper, err
 	}
 
 	// Copy over fields we do not allow to be updated
-	updatedDeveloper.OrganizationName = currentDeveloper.OrganizationName
 	updatedDeveloper.Apps = currentDeveloper.Apps
 	updatedDeveloper.DeveloperID = currentDeveloper.DeveloperID
 	updatedDeveloper.CreatedAt = currentDeveloper.CreatedAt
@@ -100,10 +101,10 @@ func (ds *DeveloperService) Update(organizationName string,
 }
 
 // UpdateAttributes updates attributes of an developer
-func (ds *DeveloperService) UpdateAttributes(organizationName string, developerName string,
+func (ds *DeveloperService) UpdateAttributes(developerName string,
 	receivedAttributes types.Attributes, who Requester) types.Error {
 
-	currentDeveloper, err := ds.Get(organizationName, developerName)
+	currentDeveloper, err := ds.Get(developerName)
 	if err != nil {
 		return err
 	}
@@ -120,10 +121,10 @@ func (ds *DeveloperService) UpdateAttributes(organizationName string, developerN
 }
 
 // UpdateAttribute update an attribute of developer
-func (ds *DeveloperService) UpdateAttribute(organizationName string,
-	developerName string, attributeValue types.Attribute, who Requester) types.Error {
+func (ds *DeveloperService) UpdateAttribute(developerName string,
+	attributeValue types.Attribute, who Requester) types.Error {
 
-	currentDeveloper, err := ds.Get(organizationName, developerName)
+	currentDeveloper, err := ds.Get(developerName)
 	if err != nil {
 		return err
 	}
@@ -138,10 +139,10 @@ func (ds *DeveloperService) UpdateAttribute(organizationName string,
 }
 
 // DeleteAttribute removes an attribute of an developer
-func (ds *DeveloperService) DeleteAttribute(organizationName, developerName,
+func (ds *DeveloperService) DeleteAttribute(developerName,
 	attributeToDelete string, who Requester) (string, types.Error) {
 
-	currentDeveloper, err := ds.Get(organizationName, developerName)
+	currentDeveloper, err := ds.Get(developerName)
 	if err != nil {
 		return "", err
 	}
@@ -168,10 +169,10 @@ func (ds *DeveloperService) updateDeveloper(updatedDeveloper *types.Developer, w
 }
 
 // Delete deletes an developer
-func (ds *DeveloperService) Delete(organizationName, developerName string,
+func (ds *DeveloperService) Delete(developerName string,
 	who Requester) (deletedDeveloper types.Developer, e types.Error) {
 
-	developer, err := ds.Get(organizationName, developerName)
+	developer, err := ds.Get(developerName)
 	if err != nil {
 		return types.NullDeveloper, err
 	}
@@ -184,7 +185,7 @@ func (ds *DeveloperService) Delete(organizationName, developerName string,
 			fmt.Errorf("Cannot delete developer '%s' with %d active developer apps",
 				developer.Email, appCountOfDeveloper))
 	}
-	if err := ds.db.Developer.DeleteByID(developer.OrganizationName, developer.DeveloperID); err != nil {
+	if err := ds.db.Developer.DeleteByID(developer.DeveloperID); err != nil {
 		return types.NullDeveloper, err
 	}
 	ds.changelog.Delete(developer, who)

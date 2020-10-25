@@ -10,10 +10,9 @@ For requesting forwarding the following entities need to be configured:
 
 For authentication of requests:
 
-1. [Organizations](organization.md)
-2. [Developers](developer.md)
-3. [Developer apps](developerapp.md)
-4. [Key](key.md)
-5. [Aproduct](apiproduct.md)
+1. [Developers](developer.md)
+2. [Developer apps](developerapp.md)
+3. [Key](key.md)
+4. [APIroduct](apiproduct.md)
 
 Example API calls can be found in [examples](examples)

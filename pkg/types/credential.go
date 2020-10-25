@@ -27,9 +27,6 @@ type DeveloperAppKey struct {
 	// Developer app id
 	AppID string `json:"AppId"`
 
-	// Organization this credential belongs to
-	OrganizationName string `json:"organizationName"`
-
 	// Status (should be "approved" to allow access)
 	Status string `json:"status"`
 }

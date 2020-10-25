@@ -2,15 +2,15 @@
 
 
 ### Retrieve all developer apps of a developer
-GET http://{{hostname}}/v1/organizations/petstore/developers/john@example.com/apps
+GET http://{{hostname}}/v1/developers/john@example.com/apps
 
 
 ### Retrieve one developer app
-GET http://{{hostname}}/v1/organizations/petstore/developers/john@example.com/apps/teleporter
+GET http://{{hostname}}/v1/developers/john@example.com/apps/teleporter
 
 
 ### Create developer app
-POST http://{{hostname}}/v1/organizations/petstore/developers/john@example.com/apps
+POST http://{{hostname}}/v1/developers/john@example.com/apps
 content-type: application/json
 
 {
@@ -20,13 +20,12 @@ content-type: application/json
 
 
 ### Update developer app with full details
-POST http://{{hostname}}/v1/organizations/petstore/developers/john@example.com/apps/teleporter
+POST http://{{hostname}}/v1/developers/john@example.com/apps/teleporter
 content-type: application/json
 
 {
   "displayName": "Teleportrrrrr",
   "name": "teleporter",
-  "organizationName": "petstore",
   "status": "active",
   "attributes": [
     {
@@ -46,8 +45,8 @@ content-type: application/json
 
 
 ### Retrieve attributes of developer apps
-GET http://{{hostname}}/v1/organizations/petstore/developers/john@example.com/apps/teleporter/attributes
+GET http://{{hostname}}/v1/developers/john@example.com/apps/teleporter/attributes
 
 
 ### Delete a developer application
-DELETE http://{{hostname}}/v1/organizations/petstore/developers/john@example.com/apps/teleporter
+DELETE http://{{hostname}}/v1/developers/john@example.com/apps/teleporter

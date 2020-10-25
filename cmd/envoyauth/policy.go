@@ -110,7 +110,7 @@ func checkAPIKey(request *requestInfo, authServer *authorizationServer) *PolicyR
 	}
 
 	// In case we have an apikey we check whether product is allowed to be accessed
-	err = authServer.CheckProductEntitlement(request.vhost.OrganizationName, request)
+	err = authServer.CheckProductEntitlement(request)
 	if err != nil {
 		authServer.logger.Debug("CheckProductEntitlement() not allowed",
 			zap.String("path", request.URL.Path), zap.String("reason", err.Error()))
@@ -183,7 +183,7 @@ func checkOAuth2(request *requestInfo, authServer *authorizationServer) *PolicyR
 	clientID := tokenInfo.GetClientID()
 	request.apikey = &clientID
 
-	err = authServer.CheckProductEntitlement(request.vhost.OrganizationName, request)
+	err = authServer.CheckProductEntitlement(request)
 	if err != nil {
 		authServer.logger.Debug("CheckProductEntitlement() not allowed",
 			zap.String("path", request.URL.Path), zap.String("reason", err.Error()))

@@ -17,7 +17,10 @@ type RoleService struct {
 // NewRole returns a new role instance
 func NewRole(database *db.Database, c *Changelog) *RoleService {
 
-	return &RoleService{db: database, Changelog: c}
+	return &RoleService{
+		db:        database,
+		Changelog: c,
+	}
 }
 
 // GetAll returns all roles

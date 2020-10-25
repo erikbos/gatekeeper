@@ -6,16 +6,16 @@ An apiproduct defines a set paths which are allowed to be accessed. Policies can
 
 | Method | Path                                                               | What                                  |
 | ------ | ------------------------------------------------------------------ | ------------------------------------- |
-| GET    | /v1/organization/_org_/apiproducts                                 | retrieve all apiproducts              |
-| POST   | /v1/organization/_org_/apiproducts                                 | creates a new apiproduct              |
-| GET    | /v1/organization/_org_/apiproducts/_productname_                   | retrieve an apiproduct                |
-| POST   | /v1/organization/_org_/apiproducts/_productname_                   | updates an existing apiproduct        |
-| DELETE | /v1/organization/_org_/apiproducts/_productname_                   | deletes an apiproduct                 |
-| GET    | /v1/organization/_org_/apiproducts/_productname_/attributes        | retrieve all attributes of apiproduct |
-| POST   | /v1/organization/_org_/apiproducts/_productname_/attributes        | update all attribute of apiproduct    |
-| GET    | /v1/organization/_org_/apiproducts/_productname_/attributes/_name_ | retrieve one attribute of apiproduct  |
-| POST   | /v1/organization/_org_/apiproducts/_productname_/attributes/_name_ | update one attribute of apiproduct    |
-| DELETE | /v1/organization/_org_/apiproducts/_productname_/attributes/_name_ | deletes attribute of apiproduct       |
+| GET    | /v1/apiproducts                                 | retrieve all apiproducts              |
+| POST   | /v1/apiproducts                                 | creates a new apiproduct              |
+| GET    | /v1/apiproducts/_productname_                   | retrieve an apiproduct                |
+| POST   | /v1/apiproducts/_productname_                   | updates an existing apiproduct        |
+| DELETE | /v1/apiproducts/_productname_                   | deletes an apiproduct                 |
+| GET    | /v1/apiproducts/_productname_/attributes        | retrieve all attributes of apiproduct |
+| POST   | /v1/apiproducts/_productname_/attributes        | update all attribute of apiproduct    |
+| GET    | /v1/apiproducts/_productname_/attributes/_name_ | retrieve one attribute of apiproduct  |
+| POST   | /v1/apiproducts/_productname_/attributes/_name_ | update one attribute of apiproduct    |
+| DELETE | /v1/apiproducts/_productname_/attributes/_name_ | deletes attribute of apiproduct       |
 
 * For POST content-type: application/json is required.
 

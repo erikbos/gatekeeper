@@ -7,11 +7,12 @@ For each entity a detailed API description is available:
 1. [listeners](docs/api/listener.md)
 2. [routes](docs/api/route.md)
 3. [clusters](docs/api/cluster.md)
-4. [organizations](docs/api/organization.md)
-5. [developers](docs/api/developer.md)
-6. [developer apps](docs/api/developerapp.md)
-7. [key](docs/api/key.md)
-8. [apiproduct](docs/api/apiproduct.md)
+4. [developers](docs/api/developer.md)
+5. [developer apps](docs/api/developerapp.md)
+6. [key](docs/api/key.md)
+7. [apiproduct](docs/api/apiproduct.md)
+8. [user](docs/api/user.md)
+9. [role](docs/api/role.md)
 
 ## dbadmin endpoints
 
@@ -34,12 +35,13 @@ Scope:
 
 Dbadmin supports the following start up command line arguments:
 
-| argument | purpose                                                 | example                                            |
-| -------- | ------------------------------------------------------- | -------------------------------------------------- |
-| config   | startup configuration file, see below supported fields. | [dbadmin.yaml](../deployment/docker/dbadmin.yaml)  |
-| createschema | Create database schema and tables at startup, if these do not exist | |
-| replicacount | Use to indicate replica count for keyspace when using `createschema` | 3 |
-| enableapiauthentication | Enable REST API authentication, [users](api/user.md) and [roles](api/route.md) will be used for access and authorization `/v1/` path |
+| argument                 | purpose                                                  | example                                           |
+| ------------------------ | -------------------------------------------------------- | ------------------------------------------------- |
+| config                   | startup configuration file, see below supported fields.  | [dbadmin.yaml](../deployment/docker/dbadmin.yaml) |
+| disableapiauthentication | Disable REST API authentication on /v1 path              |                                                   |
+| showcreateschema         | Show CQL statements to create database                   |                                                   |
+| createschema             | Create database schema and tables, if these do not exist |                                                   |
+| replicacount             | Replica count for keyspace when using `createschema`     | 3                                                 |
 
 ### Logfiles
 

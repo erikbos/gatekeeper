@@ -24,6 +24,8 @@ func (h *Handler) registerListenerRoutes(r *gin.RouterGroup) {
 }
 
 const (
+	// attributeParameter = "attribute"
+
 	// Name of listener parameter in the route definition
 	listenerParameter = "listener"
 )

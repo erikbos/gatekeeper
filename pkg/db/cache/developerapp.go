@@ -19,40 +19,41 @@ func NewDeveloperAppCache(cache *Cache, developerapp db.DeveloperApp) *Developer
 	}
 }
 
-// GetByOrganization retrieves all developer apps belonging to an organization
-func (s *DeveloperAppCache) GetByOrganization(organizationName string) (types.DeveloperApps, types.Error) {
+// GetAll retrieves all developer apps
+func (s *DeveloperAppCache) GetAll() (types.DeveloperApps, types.Error) {
 
-	getDeveloperAppByOrganization := func() (interface{}, types.Error) {
-		return s.developerapp.GetByOrganization(organizationName)
+	getDeveloperApps := func() (interface{}, types.Error) {
+		return s.developerapp.GetAll()
 	}
 	var developerApps types.DeveloperApps
-	if err := s.cache.fetchEntity(db.EntityTypeDeveloperApp, organizationName, &developerApps, getDeveloperAppByOrganization); err != nil {
+	// TODO/FIXME
+	if err := s.cache.fetchEntity(types.TypeDeveloperAppName, "--all-apps--", &developerApps, getDeveloperApps); err != nil {
 		return nil, err
 	}
 	return developerApps, nil
 }
 
 // GetByName returns a developer app
-func (s *DeveloperAppCache) GetByName(organization, developerAppName string) (*types.DeveloperApp, types.Error) {
+func (s *DeveloperAppCache) GetByName(developerAppName string) (*types.DeveloperApp, types.Error) {
 
 	getDeveloperAppByName := func() (interface{}, types.Error) {
-		return s.developerapp.GetByName(organization, developerAppName)
+		return s.developerapp.GetByName(developerAppName)
 	}
 	var developerApp types.DeveloperApp
-	if err := s.cache.fetchEntity(db.EntityTypeDeveloperApp, developerAppName, &developerApp, getDeveloperAppByName); err != nil {
+	if err := s.cache.fetchEntity(types.TypeDeveloperAppName, developerAppName, &developerApp, getDeveloperAppByName); err != nil {
 		return nil, err
 	}
 	return &developerApp, nil
 }
 
 // GetByID returns a developer app
-func (s *DeveloperAppCache) GetByID(organization, developerAppID string) (*types.DeveloperApp, types.Error) {
+func (s *DeveloperAppCache) GetByID(developerAppID string) (*types.DeveloperApp, types.Error) {
 
 	getDeveloperAppByID := func() (interface{}, types.Error) {
-		return s.developerapp.GetByID(organization, developerAppID)
+		return s.developerapp.GetByID(developerAppID)
 	}
 	var developerApp types.DeveloperApp
-	if err := s.cache.fetchEntity(db.EntityTypeDeveloperApp, developerAppID, &developerApp, getDeveloperAppByID); err != nil {
+	if err := s.cache.fetchEntity(types.TypeDeveloperAppName, developerAppID, &developerApp, getDeveloperAppByID); err != nil {
 		return nil, err
 	}
 	return &developerApp, nil
@@ -67,13 +68,13 @@ func (s *DeveloperAppCache) GetCountByDeveloperID(developerID string) (int, type
 // Update UPSERTs a developer app
 func (s *DeveloperAppCache) Update(app *types.DeveloperApp) types.Error {
 
-	s.cache.deleteEntry(db.EntityTypeDeveloperApp, app.AppID)
+	s.cache.deleteEntry(types.TypeDeveloperAppName, app.AppID)
 	return s.developerapp.Update(app)
 }
 
 // DeleteByID deletes a developer app
-func (s *DeveloperAppCache) DeleteByID(organizationName, developerAppID string) types.Error {
+func (s *DeveloperAppCache) DeleteByID(developerAppID string) types.Error {
 
-	s.cache.deleteEntry(db.EntityTypeDeveloperApp, developerAppID)
-	return s.developerapp.DeleteByID(organizationName, developerAppID)
+	s.cache.deleteEntry(types.TypeDeveloperAppName, developerAppID)
+	return s.developerapp.DeleteByID(developerAppID)
 }

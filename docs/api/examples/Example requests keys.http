@@ -2,16 +2,16 @@
 
 
 ### Get all keys of developer app
-GET http://{{hostname}}/v1/organizations/petstore/developers/john@example.com/apps/teleporter/keys
+GET http://{{hostname}}/v1/developers/john@example.com/apps/teleporter/keys
 
 
 ### Create new apikey for developer app
-POST http://{{hostname}}/v1/organizations/petstore/developers/john@example.com/apps/teleporter/keys
+POST http://{{hostname}}/v1/developers/john@example.com/apps/teleporter/keys
 content-type: application/json
 
 
 ### Create a new apikey for developer app with specific consumer key
-POST http://{{hostname}}/v1/organizations/petstore/developers/john@example.com/apps/teleporter/keys
+POST http://{{hostname}}/v1/developers/john@example.com/apps/teleporter/keys
 content-type: application/json
 
 {
@@ -20,11 +20,11 @@ content-type: application/json
 
 
 ### Retrieve details of an apikey
-GET http://{{hostname}}/v1/organizations/petstore/developers/john@example.com/apps/teleporter/keys/4DrmtHuaA9ywu4rGTr2C0CFcgr1iLPbu
+GET http://{{hostname}}/v1/developers/john@example.com/apps/teleporter/keys/4DrmtHuaA9ywu4rGTr2C0CFcgr1iLPbu
 
 
 ### Update an apikey
-POST http://{{hostname}}/v1/organizations/petstore/developers/john@example.com/apps/teleporter/keys/4DrmtHuaA9ywu4rGTr2C0CFcgr1iLPbu
+POST http://{{hostname}}/v1/developers/john@example.com/apps/teleporter/keys/4DrmtHuaA9ywu4rGTr2C0CFcgr1iLPbu
 content-type: application/json
 
 {
@@ -45,4 +45,4 @@ content-type: application/json
 
 
 ### Delete an apikey
-DELETE http://{{hostname}}/v1/organizations/petstore/developers/john@example.com/apps/teleporter/keys/4DrmtHuaA9ywu4rGTr2C0CFcgr1iLPbu
+DELETE http://{{hostname}}/v1/developers/john@example.com/apps/teleporter/keys/4DrmtHuaA9ywu4rGTr2C0CFcgr1iLPbu

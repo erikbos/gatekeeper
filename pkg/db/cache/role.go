@@ -26,7 +26,7 @@ func (s *RoleCache) GetAll() (types.Roles, types.Error) {
 		return s.role.GetAll()
 	}
 	var roles types.Roles
-	if err := s.cache.fetchEntity(db.EntityTypeRole, "", &roles, getAll); err != nil {
+	if err := s.cache.fetchEntity(types.TypeRoleName, "", &roles, getAll); err != nil {
 		return nil, err
 	}
 	return roles, nil
@@ -39,7 +39,7 @@ func (s *RoleCache) Get(roleName string) (*types.Role, types.Error) {
 		return s.role.Get(roleName)
 	}
 	var role types.Role
-	if err := s.cache.fetchEntity(db.EntityTypeRole, roleName, &role, getRole); err != nil {
+	if err := s.cache.fetchEntity(types.TypeRoleName, roleName, &role, getRole); err != nil {
 		return nil, err
 	}
 	return &role, nil
@@ -48,13 +48,13 @@ func (s *RoleCache) Get(roleName string) (*types.Role, types.Error) {
 // Update UPSERTs an role in database
 func (s *RoleCache) Update(c *types.Role) types.Error {
 
-	s.cache.deleteEntry(db.EntityTypeRole, c.Name)
+	s.cache.deleteEntry(types.TypeRoleName, c.Name)
 	return s.role.Update(c)
 }
 
 // Delete deletes a role
 func (s *RoleCache) Delete(roleToDelete string) types.Error {
 
-	s.cache.deleteEntry(db.EntityTypeRole, roleToDelete)
+	s.cache.deleteEntry(types.TypeRoleName, roleToDelete)
 	return s.role.Delete(roleToDelete)
 }

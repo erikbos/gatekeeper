@@ -30,9 +30,6 @@ type Listener struct {
 	// Attributes of this listener
 	Attributes Attributes `json:"attributes"`
 
-	// Organization this listener belongs to (not used)
-	OrganizationName string `json:"organizationName"`
-
 	// Created at timestamp in epoch milliseconds
 	CreatedAt int64 `json:"createdAt"`
 	// Name of user who created this listener

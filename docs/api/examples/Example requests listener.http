@@ -16,7 +16,6 @@ content-type: application/json
          "www.example.com"
     ],
     "port": 80,
-    "organizationName": "petstore",
     "routeGroup": "routes_80"
 }
 
@@ -37,7 +36,6 @@ content-type: application/json
     "port": 80,
     "routeGroup": "routes_80",
     "policies": "lookupGeoIP",
-    "organizationName": "petstore",
     "attributes": [
         {
             "name": "HTTPProtocol",
@@ -74,7 +72,6 @@ content-type: application/json
     "port": 443,
     "routeGroup": "routes_443",
     "policies": "lookupGeoIP,checkAPIKey",
-    "organizationName": "petstore",
     "attributes": [
         {
             "name": "HTTPProtocol",
@@ -165,7 +162,6 @@ content-type: application/json
   "port": 443,
   "routeGroup": "routes_443",
   "policies": "lookupGeoIP,checkAPIKey",
-  "organizationName": "petstore",
   "attributes": [
     {
         "name": "HTTPProtocol",
