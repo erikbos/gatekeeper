@@ -197,7 +197,7 @@ func ShowAllRoutes(e *gin.Engine, applicationName string) gin.HandlerFunc {
 		c.Status(http.StatusOK)
 		c.Header(contentTypeHeader, contentTypeHTML)
 		if err := t.Execute(c.Writer, templateVariables); err != nil {
-			c.Error(err)
+			_ = c.Error(err)
 		}
 	}
 }
@@ -207,7 +207,7 @@ func JSONMessage(c *gin.Context, statusCode int, errorMessage error) {
 
 	// Store error in request context so it ends up in access log
 	if errorMessage != nil {
-		c.Error(errorMessage)
+		_ = c.Error(errorMessage)
 	}
 
 	c.IndentedJSON(statusCode,
@@ -259,7 +259,7 @@ func LogHTTPRequest(logger *zap.Logger) gin.HandlerFunc {
 				allErrors += strings.TrimSpace(e)
 			}
 		}
-		logger.Info("",
+		logger.Info("http",
 			zap.String("ip", c.ClientIP()),
 			zap.String("xff", c.Request.Header.Get("x-forwarded-for")),
 			zap.String("method", c.Request.Method),

@@ -76,7 +76,7 @@ func (h *Handler) showHTTPForwardingPage(c *gin.Context) {
 	c.Header(contentType, contentTypeHTML)
 	c.Status(http.StatusOK)
 	if err := templateEngine.Execute(c.Writer, templateVariables); err != nil {
-		c.Error(err)
+		_ = c.Error(err)
 	}
 }
 
@@ -289,7 +289,7 @@ func (h *Handler) showDevelopersPage(c *gin.Context) {
 	c.Header(contentType, contentTypeHTML)
 	c.Status(http.StatusOK)
 	if err := templateEngine.Execute(c.Writer, templateVariables); err != nil {
-		c.Error(err)
+		_ = c.Error(err)
 	}
 }
 
@@ -352,7 +352,7 @@ func (h *Handler) showUserRolePage(c *gin.Context) {
 	c.Header(contentType, contentTypeHTML)
 	c.Status(http.StatusOK)
 	if err := templateEngine.Execute(c.Writer, templateVariables); err != nil {
-		c.Error(err)
+		_ = c.Error(err)
 	}
 }
 
