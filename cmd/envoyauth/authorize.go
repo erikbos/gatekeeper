@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strconv"
 
 	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	authservice "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
@@ -137,6 +138,8 @@ func mergeMapsStringString(maps ...map[string]string) map[string]string {
 // allowRequest answers Envoyproxy to authorizates request to go upstream
 func (a *authorizationServer) allowRequest(headers, metadata map[string]string) (*authservice.CheckResponse, error) {
 
+	dynamicMetadata := buildDynamicMetadataList(metadata)
+
 	response := &authservice.CheckResponse{
 		Status: &status.Status{
 			Code: int32(rpc.OK),
@@ -144,9 +147,12 @@ func (a *authorizationServer) allowRequest(headers, metadata map[string]string) 
 		HttpResponse: &authservice.CheckResponse_OkResponse{
 			OkResponse: &authservice.OkHttpResponse{
 				Headers: buildHeadersList(headers),
+				// Required for < Envoy 0.17
+				DynamicMetadata: dynamicMetadata,
 			},
 		},
-		DynamicMetadata: buildDynamicMetadataList(metadata),
+		// Required for > Envoy 0.16
+		// DynamicMetadata: dynamicMetadata,
 	}
 	a.logger.Debug("allowRequest", zap.Reflect("response", response))
 
@@ -219,18 +225,56 @@ func buildDynamicMetadataList(metadata map[string]string) *structpb.Struct {
 	if len(metadata) == 0 {
 		return nil
 	}
-
 	metadataStruct := structpb.Struct{
 		Fields: map[string]*structpb.Value{},
 	}
 	for key, value := range metadata {
 		metadataStruct.Fields[key] = &structpb.Value{
-			Kind: &structpb.Value_StringValue{
-				StringValue: value,
-			},
+			Kind: &structpb.Value_StringValue{StringValue: value},
 		}
 	}
+	// Convert rate limiter values into ratelimiter configuration
+	// a route's ratelimiteraction will check for this metadata key
+	if rateLimitOverride := buildRateLimiterOveride(metadata); rateLimitOverride != nil {
+		metadataStruct.Fields["rl.override"] = rateLimitOverride
+	}
 	return &metadataStruct
+}
+
+// buildRateLimiterOveride builds route RateLimiterOverride configuration based upon
+// metadata keys "rl.requests_per_unit" & "rl.unit"
+func buildRateLimiterOveride(metadata map[string]string) *structpb.Value {
+
+	var requestsPerUnit float64
+	if value, found := metadata["rl.requests_per_unit"]; found {
+		var err error
+		if requestsPerUnit, err = strconv.ParseFloat(value, 64); err != nil {
+			return nil
+		}
+	}
+	var unit string
+	unit, found := metadata["rl.unit"]
+	if !found {
+		return nil
+	}
+	return &structpb.Value{
+		Kind: &structpb.Value_StructValue{
+			StructValue: &structpb.Struct{
+				Fields: map[string]*structpb.Value{
+					"requests_per_unit": {
+						Kind: &structpb.Value_NumberValue{
+							NumberValue: requestsPerUnit,
+						},
+					},
+					"unit": {
+						Kind: &structpb.Value_StringValue{
+							StringValue: unit,
+						},
+					},
+				},
+			},
+		},
+	}
 }
 
 // getRequestInfo returns HTTP data of a request
