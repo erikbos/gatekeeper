@@ -10,9 +10,6 @@ type Developer struct {
 	// Status of developer (should be "approved" to allow access)
 	Status string `json:"status"`
 
-	// Organization this developer belongs to
-	OrganizationName string `json:"organizationName"`
-
 	// Name of developer applications of this developer
 	Apps StringSlice `json:"apps"`
 
@@ -43,7 +40,7 @@ type Developer struct {
 	// Last modified at timestamp in epoch milliseconds
 	LastmodifiedAt int64 `json:"lastmodifiedAt"`
 
-	// Name of user who last updated this organization
+	// Name of user who last updated this developer
 	LastmodifiedBy string `json:"lastmodifiedBy"`
 }
 

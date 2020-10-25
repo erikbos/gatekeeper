@@ -20,14 +20,13 @@ port,
 route_group,
 policies,
 attributes,
-organization_name,
 created_at,
 created_by,
 lastmodified_at,
 lastmodified_by`
 )
 
-// ListenerStore holds our OrganizationStore config
+// ListenerStore holds our ListenerStore config
 type ListenerStore struct {
 	db *Database
 }
@@ -88,18 +87,17 @@ func (s *ListenerStore) runGetListenerQuery(query string,
 	m := make(map[string]interface{})
 	for iter.MapScan(m) {
 		listeners = append(listeners, types.Listener{
-			Name:             columnValueString(m, "name"),
-			DisplayName:      columnValueString(m, "display_name"),
-			VirtualHosts:     types.Listener{}.VirtualHosts.Unmarshal(columnValueString(m, "virtual_hosts")),
-			Port:             columnValueInt(m, "port"),
-			RouteGroup:       columnValueString(m, "route_group"),
-			Policies:         columnValueString(m, "policies"),
-			Attributes:       types.Listener{}.Attributes.Unmarshal(columnValueString(m, "attributes")),
-			OrganizationName: columnValueString(m, "organization_name"),
-			CreatedAt:        columnValueInt64(m, "created_at"),
-			CreatedBy:        columnValueString(m, "created_by"),
-			LastmodifiedAt:   columnValueInt64(m, "lastmodified_at"),
-			LastmodifiedBy:   columnValueString(m, "lastmodified_by"),
+			Name:           columnValueString(m, "name"),
+			DisplayName:    columnValueString(m, "display_name"),
+			VirtualHosts:   types.Listener{}.VirtualHosts.Unmarshal(columnValueString(m, "virtual_hosts")),
+			Port:           columnValueInt(m, "port"),
+			RouteGroup:     columnValueString(m, "route_group"),
+			Policies:       columnValueString(m, "policies"),
+			Attributes:     types.Listener{}.Attributes.Unmarshal(columnValueString(m, "attributes")),
+			CreatedAt:      columnValueInt64(m, "created_at"),
+			CreatedBy:      columnValueString(m, "created_by"),
+			LastmodifiedAt: columnValueInt64(m, "lastmodified_at"),
+			LastmodifiedBy: columnValueString(m, "lastmodified_by"),
 		})
 		m = map[string]interface{}{}
 	}
@@ -113,7 +111,7 @@ func (s *ListenerStore) runGetListenerQuery(query string,
 // Update updates a listener
 func (s *ListenerStore) Update(l *types.Listener) types.Error {
 
-	query := "INSERT INTO listeners (" + listenerColumns + ") VALUES(?,?,?,?,?,?,?,?,?,?,?,?)"
+	query := "INSERT INTO listeners (" + listenerColumns + ") VALUES(?,?,?,?,?,?,?,?,?,?,?)"
 	if err := s.db.CassandraSession.Query(query,
 		l.Name,
 		l.DisplayName,
@@ -122,7 +120,6 @@ func (s *ListenerStore) Update(l *types.Listener) types.Error {
 		l.RouteGroup,
 		l.Policies,
 		l.Attributes.Marshal(),
-		l.OrganizationName,
 		l.CreatedAt,
 		l.CreatedBy,
 		l.LastmodifiedAt,

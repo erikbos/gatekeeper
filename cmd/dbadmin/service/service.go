@@ -6,7 +6,6 @@ import (
 
 // Service can manipulate all our entities
 type Service struct {
-	Organization
 	Listener
 	Route
 	Cluster
@@ -20,32 +19,10 @@ type Service struct {
 
 // All interface of service layer
 type (
-	// Organization is the service interface to manipulate organization entities
-	Organization interface {
-		GetAll() (organizations types.Organizations, err types.Error)
-
-		Get(name string) (organization *types.Organization, err types.Error)
-
-		GetAttributes(OrganizatioName string) (attributes *types.Attributes, err types.Error)
-
-		GetAttribute(OrganizationName, attributeName string) (value string, err types.Error)
-
-		Create(newOrganization types.Organization, who Requester) (types.Organization, types.Error)
-
-		Update(updatedOrganization types.Organization, who Requester) (types.Organization, types.Error)
-
-		UpdateAttributes(org string, receivedAttributes types.Attributes, who Requester) types.Error
-
-		UpdateAttribute(org string, attributeValue types.Attribute, who Requester) types.Error
-
-		DeleteAttribute(organizationName, attributeToDelete string, who Requester) (string, types.Error)
-
-		Delete(organizationName string, who Requester) (deletedOrganization types.Organization, e types.Error)
-	}
-
 	// Listener is the service interface to manipulate Listener entities
 	Listener interface {
 		GetAll() (listeners types.Listeners, err types.Error)
+
 		Get(listenerName string) (listener *types.Listener, err types.Error)
 
 		GetAttributes(listenerName string) (attributes *types.Attributes, err types.Error)
@@ -113,55 +90,55 @@ type (
 
 	// Developer is the service interface to manipulate Developer entities
 	Developer interface {
-		GetByOrganization(organizationName string) (developers types.Developers, err types.Error)
+		GetAll() (developers types.Developers, err types.Error)
 
-		Get(organizationName, developerName string) (developer *types.Developer, err types.Error)
+		Get(developerName string) (developer *types.Developer, err types.Error)
 
-		GetAttributes(organizationName, developerName string) (attributes *types.Attributes, err types.Error)
+		GetAttributes(developerName string) (attributes *types.Attributes, err types.Error)
 
-		GetAttribute(organizationName, developerName, attributeName string) (value string, err types.Error)
+		GetAttribute(developerName, attributeName string) (value string, err types.Error)
 
-		Create(organizationName string, newDeveloper types.Developer, who Requester) (types.Developer, types.Error)
+		Create(newDeveloper types.Developer, who Requester) (types.Developer, types.Error)
 
-		Update(organizationName string, updatedDeveloper types.Developer, who Requester) (types.Developer, types.Error)
+		Update(updatedDeveloper types.Developer, who Requester) (types.Developer, types.Error)
 
-		UpdateAttributes(organizationName string, developerName string, receivedAttributes types.Attributes, who Requester) types.Error
+		UpdateAttributes(developerName string, receivedAttributes types.Attributes, who Requester) types.Error
 
-		UpdateAttribute(organizationName string, developerName string, attributeValue types.Attribute, who Requester) types.Error
+		UpdateAttribute(developerName string, attributeValue types.Attribute, who Requester) types.Error
 
-		DeleteAttribute(organizationName, developerName, attributeToDelete string, who Requester) (string, types.Error)
+		DeleteAttribute(developerName, attributeToDelete string, who Requester) (string, types.Error)
 
-		Delete(organizationName, developerName string, who Requester) (deletedDeveloper types.Developer, e types.Error)
+		Delete(developerName string, who Requester) (deletedDeveloper types.Developer, e types.Error)
 	}
 
 	// DeveloperApp is the service interface to manipulate DeveloperApp entities
 	DeveloperApp interface {
-		GetByOrganization(organizationName string) (developerApps types.DeveloperApps, err types.Error)
+		GetAll() (developerApps types.DeveloperApps, err types.Error)
 
-		GetByName(organizationName, developerAppName string) (developerApp *types.DeveloperApp, err types.Error)
+		GetByName(developerAppName string) (developerApp *types.DeveloperApp, err types.Error)
 
-		GetByID(organizationName, developerAppName string) (developerApp *types.DeveloperApp, err types.Error)
+		GetByID(developerAppName string) (developerApp *types.DeveloperApp, err types.Error)
 
-		GetAttributes(organizationName, developerAppName string) (attributes *types.Attributes, err types.Error)
+		GetAttributes(developerAppName string) (attributes *types.Attributes, err types.Error)
 
-		GetAttribute(organizationName, developerAppName, attributeName string) (value string, err types.Error)
+		GetAttribute(developerAppName, attributeName string) (value string, err types.Error)
 
-		Create(organizationName, developerName string, newDeveloperApp types.DeveloperApp, who Requester) (types.DeveloperApp, types.Error)
+		Create(developerName string, newDeveloperApp types.DeveloperApp, who Requester) (types.DeveloperApp, types.Error)
 
-		Update(organizationName string, updatedDeveloperApp types.DeveloperApp, who Requester) (types.DeveloperApp, types.Error)
+		Update(updatedDeveloperApp types.DeveloperApp, who Requester) (types.DeveloperApp, types.Error)
 
-		UpdateAttributes(organizationName string, developerAppName string, receivedAttributes types.Attributes, who Requester) types.Error
+		UpdateAttributes(developerAppName string, receivedAttributes types.Attributes, who Requester) types.Error
 
-		UpdateAttribute(organizationName string, developerAppName string, attributeValue types.Attribute, who Requester) types.Error
+		UpdateAttribute(developerAppName string, attributeValue types.Attribute, who Requester) types.Error
 
-		DeleteAttribute(organizationName, developerAppName, attributeToDelete string, who Requester) (string, types.Error)
+		DeleteAttribute(developerAppName, attributeToDelete string, who Requester) (string, types.Error)
 
-		Delete(organizationName, developerID, developerAppName string, who Requester) (deletedDeveloperApp types.DeveloperApp, e types.Error)
+		Delete(developerID, developerAppName string, who Requester) (deletedDeveloperApp types.DeveloperApp, e types.Error)
 	}
 
 	// Credential is the service interface to manipulate Credential entities
 	Credential interface {
-		Get(organizationName, key string) (credential *types.DeveloperAppKey, err types.Error)
+		Get(consumerKey string) (credential *types.DeveloperAppKey, err types.Error)
 
 		GetByDeveloperAppID(developerAppID string) (clusters types.DeveloperAppKeys, err types.Error)
 
@@ -169,32 +146,30 @@ type (
 
 		Update(updatedCredential types.DeveloperAppKey, who Requester) (types.DeveloperAppKey, types.Error)
 
-		Delete(organizationName, consumerKey string, who Requester) (deletedCredential types.DeveloperAppKey, e types.Error)
+		Delete(consumerKey string, who Requester) (deletedCredential types.DeveloperAppKey, e types.Error)
 	}
 
 	// APIProduct is the service interface to manipulate APIProduct entities
 	APIProduct interface {
 		GetAll() (apiproducts types.APIProducts, err types.Error)
 
-		GetByOrganization(organizationName string) (apiproducts types.APIProducts, err types.Error)
+		Get(apiproductName string) (apiproduct *types.APIProduct, err types.Error)
 
-		Get(organizationName, apiproductName string) (apiproduct *types.APIProduct, err types.Error)
+		GetAttributes(apiproductName string) (attributes *types.Attributes, err types.Error)
 
-		GetAttributes(organizationName, apiproductName string) (attributes *types.Attributes, err types.Error)
+		GetAttribute(apiproductName, attributeName string) (value string, err types.Error)
 
-		GetAttribute(organizationName, apiproductName, attributeName string) (value string, err types.Error)
+		Create(newAPIProduct types.APIProduct, who Requester) (types.APIProduct, types.Error)
 
-		Create(organizationName string, newAPIProduct types.APIProduct, who Requester) (types.APIProduct, types.Error)
+		Update(updatedAPIProduct types.APIProduct, who Requester) (types.APIProduct, types.Error)
 
-		Update(organizationName string, updatedAPIProduct types.APIProduct, who Requester) (types.APIProduct, types.Error)
+		UpdateAttributes(apiproductName string, receivedAttributes types.Attributes, who Requester) types.Error
 
-		UpdateAttributes(organizationName string, apiproductName string, receivedAttributes types.Attributes, who Requester) types.Error
+		UpdateAttribute(apiproductName string, attributeValue types.Attribute, who Requester) types.Error
 
-		UpdateAttribute(organizationName string, apiproductName string, attributeValue types.Attribute, who Requester) types.Error
+		DeleteAttribute(apiproductName, attributeToDelete string, who Requester) (string, types.Error)
 
-		DeleteAttribute(organizationName, apiproductName, attributeToDelete string, who Requester) (string, types.Error)
-
-		Delete(organizationName, apiproductName string, who Requester) (deletedAPIProduct types.APIProduct, e types.Error)
+		Delete(apiproductName string, who Requester) (deletedAPIProduct types.APIProduct, e types.Error)
 	}
 
 	// User is the service interface to manipulate User entities
@@ -204,7 +179,6 @@ type (
 		Create(newUser types.User, who Requester) (*types.User, types.Error)
 		Update(updatedUser types.User, who Requester) (*types.User, types.Error)
 		Delete(userName string, who Requester) (deletedUser *types.User, e types.Error)
-		// Validate(userName, password string) (user *types.User, e types.Error)
 	}
 
 	// Role is the service interface to manipulate Role entities

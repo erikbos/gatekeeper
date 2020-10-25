@@ -44,7 +44,6 @@ func New(config *Config, d *db.Database, applicationName string, logger *zap.Log
 		Listener:     d.Listener,
 		Route:        d.Route,
 		Cluster:      d.Cluster,
-		Organization: d.Organization,
 		Developer:    NewDeveloperCache(c, d.Developer),
 		DeveloperApp: NewDeveloperAppCache(c, d.DeveloperApp),
 		APIProduct:   NewAPIProductCache(c, d.APIProduct),

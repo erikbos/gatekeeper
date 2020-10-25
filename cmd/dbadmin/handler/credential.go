@@ -7,27 +7,27 @@ import (
 )
 
 func (h *Handler) registerCredentialRoutes(r *gin.RouterGroup) {
-	r.GET("/organizations/:organization/developers/:developer/apps/:application/keys", h.handler(h.getDeveloperAppKeys))
-	r.POST("/organizations/:organization/developers/:developer/apps/:application/keys", h.handler(h.createDeveloperAppKey))
+	r.GET("/developers/:developer/apps/:application/keys", h.handler(h.getDeveloperAppKeys))
+	r.POST("/developers/:developer/apps/:application/keys", h.handler(h.createDeveloperAppKey))
 
-	r.GET("/organizations/:organization/developers/:developer/apps/:application/keys/:key", h.handler(h.getDeveloperAppKeyByKey))
-	r.POST("/organizations/:organization/developers/:developer/apps/:application/keys/:key", h.handler(h.updateDeveloperAppKeyByKey))
-	r.DELETE("/organizations/:organization/developers/:developer/apps/:application/keys/:key", h.handler(h.deleteDeveloperAppKeyByKey))
+	r.GET("/developers/:developer/apps/:application/keys/:key", h.handler(h.getDeveloperAppKeyByKey))
+	r.POST("/developers/:developer/apps/:application/keys/:key", h.handler(h.updateDeveloperAppKeyByKey))
+	r.DELETE("/developers/:developer/apps/:application/keys/:key", h.handler(h.deleteDeveloperAppKeyByKey))
 }
 
 const (
-	// Name of organization parameter in the route definition
+	// Name of key parameter in the route definition
 	keyParameter = "key"
 )
 
 // getDeveloperAppKeys returns all keys of one particular developer application
 func (h *Handler) getDeveloperAppKeys(c *gin.Context) handlerResponse {
 
-	_, err := h.service.Developer.Get(c.Param(organizationParameter), c.Param(developerParameter))
+	_, err := h.service.Developer.Get(c.Param(developerParameter))
 	if err != nil {
 		return handleError(err)
 	}
-	developerApp, err := h.service.DeveloperApp.GetByName(c.Param(organizationParameter), c.Param(developerAppParameter))
+	developerApp, err := h.service.DeveloperApp.GetByName(c.Param(developerAppParameter))
 	if err != nil {
 		return handleError(err)
 	}
@@ -41,15 +41,15 @@ func (h *Handler) getDeveloperAppKeys(c *gin.Context) handlerResponse {
 // getDeveloperAppKeyByKey returns one key of one particular developer application
 func (h *Handler) getDeveloperAppKeyByKey(c *gin.Context) handlerResponse {
 
-	_, err := h.service.Developer.Get(c.Param(organizationParameter), c.Param(developerParameter))
+	_, err := h.service.Developer.Get(c.Param(developerParameter))
 	if err != nil {
 		return handleError(err)
 	}
-	_, err = h.service.DeveloperApp.GetByName(c.Param(organizationParameter), c.Param(developerAppParameter))
+	_, err = h.service.DeveloperApp.GetByName(c.Param(developerAppParameter))
 	if err != nil {
 		return handleError(err)
 	}
-	AppCredentials, err := h.service.Credential.Get(c.Param(organizationParameter), c.Param(keyParameter))
+	AppCredentials, err := h.service.Credential.Get(c.Param(keyParameter))
 	if err != nil {
 		return handleError(err)
 	}
@@ -63,7 +63,7 @@ func (h *Handler) createDeveloperAppKey(c *gin.Context) handlerResponse {
 	// We ignore error as it is not required to provided any data
 	_ = c.ShouldBindJSON(&receivedCredential)
 
-	developerApp, err := h.service.DeveloperApp.GetByName(c.Param(organizationParameter), c.Param("application"))
+	developerApp, err := h.service.DeveloperApp.GetByName(c.Param("application"))
 	if err != nil {
 		return handleBadRequest(err)
 	}
@@ -95,8 +95,7 @@ func (h *Handler) updateDeveloperAppKeyByKey(c *gin.Context) handlerResponse {
 // deleteDeveloperAppKeyByKey deletes apikey of developer app
 func (h *Handler) deleteDeveloperAppKeyByKey(c *gin.Context) handlerResponse {
 
-	deletedAppCredential, err := h.service.Credential.Delete(c.Param(organizationParameter),
-		c.Param(keyParameter), h.who(c))
+	deletedAppCredential, err := h.service.Credential.Delete(c.Param(keyParameter), h.who(c))
 	if err != nil {
 		return handleError(err)
 	}

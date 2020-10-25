@@ -10,9 +10,6 @@ type DeveloperApp struct {
 	// Id of developer (not changable)
 	DeveloperID string `json:"developerId"`
 
-	// Organization this developer app belongs to (not used)
-	OrganizationName string `json:"organizationName"`
-
 	// Activation status of developer application
 	Status string `json:"status"`
 
@@ -28,13 +25,13 @@ type DeveloperApp struct {
 	// Created at timestamp in epoch milliseconds
 	CreatedAt int64 `json:"createdAt"`
 
-	// Name of user who created this organization
+	// Name of user who created this app
 	CreatedBy string `json:"createdBy"`
 
 	// Last modified at timestamp in epoch milliseconds
 	LastmodifiedAt int64 `json:"lastmodifiedAt"`
 
-	// Name of user who last updated this organization
+	// Name of user who last updated this app
 	LastmodifiedBy string `json:"lastmodifiedBy"`
 }
 

@@ -2,15 +2,15 @@
 
 
 ### Get all apiproducts
-GET http://{{hostname}}/v1/organizations/petstore/apiproducts
+GET http://{{hostname}}/v1/apiproducts
 
 
 ### Get one apiproduct
-GET http://{{hostname}}/v1/organizations/petstore/apiproducts/people
+GET http://{{hostname}}/v1/apiproducts/people
 
 
 ### Create a new api product
-POST http://{{hostname}}/v1/organizations/petstore/apiproducts
+POST http://{{hostname}}/v1/apiproducts
 content-type: application/json
 
 {
@@ -24,7 +24,7 @@ content-type: application/json
 
 
 ### Update an apiproduct
-POST http://{{hostname}}/v1/organizations/petstore/apiproducts/people
+POST http://{{hostname}}/v1/apiproducts/people
 content-type: application/json
 
 {
@@ -51,4 +51,4 @@ content-type: application/json
 
 
 ###
-DELETE http://{{hostname}}/v1/organizations/petstore/apiproducts/people
+DELETE http://{{hostname}}/v1/apiproducts/people

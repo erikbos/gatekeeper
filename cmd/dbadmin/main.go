@@ -40,13 +40,14 @@ type server struct {
 func main() {
 	filename := flag.String("config", defaultConfigFileName, "Configuration filename")
 	disableAPIAuthentication := flag.Bool("disableapiauthentication", false, "Disable REST API authentication")
+	organization := flag.String("organization", "", "Include organization in API path")
 	createSchema := flag.Bool("createschema", false, "Create database schema if it does not exist")
 	replicaCount := flag.Int("replicacount", 3, "Replica count to set for database keyspace")
-	showCreateTable := flag.Bool("showcreatetables", false, "Show CQL statements to create database tables")
+	showCreateSchema := flag.Bool("showcreateschema", false, "Show CQL statements to create database")
 	flag.Parse()
 
-	if *showCreateTable {
-		cassandra.ShowCreateTableStatements()
+	if *showCreateSchema {
+		cassandra.ShowCreateSchemaStatements()
 		os.Exit(0)
 	}
 
@@ -89,11 +90,11 @@ func main() {
 	// Start db health check and notify readiness subsystem
 	go s.db.RunReadinessCheck(s.readiness.GetChannel())
 
-	startWebAdmin(&s, *disableAPIAuthentication)
+	startWebAdmin(&s, *organization, *disableAPIAuthentication)
 }
 
 // startWebAdmin starts the admin web UI
-func startWebAdmin(s *server, enableAPIAuthentication bool) {
+func startWebAdmin(s *server, organization string, enableAPIAuthentication bool) {
 
 	webAdminLogger := shared.NewLogger(&s.config.WebAdmin.Logger)
 	s.webadmin = webadmin.New(s.config.WebAdmin, applicationName, webAdminLogger)
@@ -109,7 +110,7 @@ func startWebAdmin(s *server, enableAPIAuthentication bool) {
 
 	service := service.New(s.db, changeLogLogger)
 	s.handler = handler.NewHandler(s.webadmin.Router, s.db, service,
-		webAdminLogger, applicationName, enableAPIAuthentication)
+		applicationName, organization, enableAPIAuthentication, webAdminLogger)
 
 	s.webadmin.Start()
 }

@@ -38,7 +38,7 @@ func (clientstore *ClientTokenStore) GetByID(id string) (oauth2.ClientInfo, erro
 	}
 	clientstore.logger.Debug("GetByID", zap.String("id", id))
 
-	credential, err := clientstore.db.Credential.GetByKey(nil, &id)
+	credential, err := clientstore.db.Credential.GetByKey(&id)
 	if err != nil {
 		clientstore.metrics.IncClientStoreMisses()
 		return nil, err

@@ -19,7 +19,10 @@ type UserService struct {
 // NewUser returns a new user instance
 func NewUser(database *db.Database, c *Changelog) *UserService {
 
-	return &UserService{db: database, changelog: c}
+	return &UserService{
+		db:        database,
+		changelog: c,
+	}
 }
 
 // GetAll returns all users

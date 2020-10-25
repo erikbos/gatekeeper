@@ -18,6 +18,7 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/erikbos/gatekeeper/pkg/db"
+	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
 // XDS holds configuration of XDS server
@@ -70,9 +71,9 @@ func (x *XDS) Start() {
 
 			// Update our stats
 			m := x.server.metrics
-			m.SetEntityCount(db.EntityTypeListener, len(x.server.dbentities.GetListeners()))
-			m.SetEntityCount(db.EntityTypeRoute, len(x.server.dbentities.GetRoutes()))
-			m.SetEntityCount(db.EntityTypeCluster, len(x.server.dbentities.GetClusters()))
+			m.SetEntityCount(types.TypeListenerName, len(x.server.dbentities.GetListeners()))
+			m.SetEntityCount(types.TypeRouteName, len(x.server.dbentities.GetRoutes()))
+			m.SetEntityCount(types.TypeClusterName, len(x.server.dbentities.GetClusters()))
 			m.IncXDSSnapshotCreateCount(n.Resource)
 
 		case <-time.After(x.xdsConfig.ConfigCompileInterval):

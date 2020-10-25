@@ -6,16 +6,16 @@ A developer application holds the attribut.
 
 | Method | Path                                                                           | What                                     |
 | ------ | ------------------------------------------------------------------------------ | ---------------------------------------- |
-| GET    | /v1/organization/_org_/developers/_developer_/apps                             | retrieve all apps of developer           |
-| POST   | /v1/organization/_org_/developers/_developer_/apps                             | creates a new developer app              |
-| GET    | /v1/organization/_org_/developers/_developer_/apps/_appname_                   | retrieve one developer app               |
-| POST   | /v1/organization/_org_/developers/_developer_/apps/_appname_                   | updates an existing developer app        |
-| DELETE | /v1/organization/_org_/developers/_developer_/apps/_appname_                   | deletes a developer app                  |
-| GET    | /v1/organization/_org_/developers/_developer_/apps/_appname_/attributes        | retrieve all attributes of developer app |
-| POST   | /v1/organization/_org_/developers/_developer_/apps/_appname_/attributes        | update all attribute of developer app    |
-| GET    | /v1/organization/_org_/developers/_developer_/apps/_appname_/attributes/_name_ | retrieve attribute of developer app      |
-| POST   | /v1/organization/_org_/developers/_developer_/apps/_appname_/attributes/_name_ | update attribute of developer app        |
-| DELETE | /v1/organization/_org_/developers/_developer_/apps/_appname_/attributes/_name_ | deletes attribute of developer app       |
+| GET    | /v1/developers/_developer_/apps                             | retrieve all apps of developer           |
+| POST   | /v1/developers/_developer_/apps                             | creates a new developer app              |
+| GET    | /v1/developers/_developer_/apps/_appname_                   | retrieve one developer app               |
+| POST   | /v1/developers/_developer_/apps/_appname_                   | updates an existing developer app        |
+| DELETE | /v1/developers/_developer_/apps/_appname_                   | deletes a developer app                  |
+| GET    | /v1/developers/_developer_/apps/_appname_/attributes        | retrieve all attributes of developer app |
+| POST   | /v1/developers/_developer_/apps/_appname_/attributes        | update all attribute of developer app    |
+| GET    | /v1/developers/_developer_/apps/_appname_/attributes/_name_ | retrieve attribute of developer app      |
+| POST   | /v1/developers/_developer_/apps/_appname_/attributes/_name_ | update attribute of developer app        |
+| DELETE | /v1/developers/_developer_/apps/_appname_/attributes/_name_ | deletes attribute of developer app       |
 
 * For POST content-type: application/json is required.
 
@@ -25,7 +25,6 @@ A developer application holds the attribut.
 {
   "name": "teleporter",
   "displayName": "Teleportrrrrr",
-  "organizationName": "petstore",
   "status": "active",
   "attributes": [
     {
@@ -50,7 +49,6 @@ A developer application holds the attribut.
 | ---------------- | --------- | --------------------------------------------------------- |
 | name             | mandatory | name (cannot be updated afterwards)                       |
 | displayName      | optional  | friendly name                                             |
-| organizationName | mandatory | last name                                                 |
 | status           | mandatory | status, call will be rejected in case not set to "active" |
 | attributes       | optional  | specific attributes                                       |
 

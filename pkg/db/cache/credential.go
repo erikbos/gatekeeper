@@ -20,13 +20,13 @@ func NewCredentialCache(cache *Cache, credential db.Credential) *CredentialCache
 }
 
 // GetByKey returns details of a single apikey
-func (s *CredentialCache) GetByKey(organizationName, key *string) (*types.DeveloperAppKey, types.Error) {
+func (s *CredentialCache) GetByKey(key *string) (*types.DeveloperAppKey, types.Error) {
 
 	getByKey := func() (interface{}, types.Error) {
-		return s.credential.GetByKey(organizationName, key)
+		return s.credential.GetByKey(key)
 	}
 	var credential types.DeveloperAppKey
-	if err := s.cache.fetchEntity(db.EntityTypeCredential, *key, &credential, getByKey); err != nil {
+	if err := s.cache.fetchEntity(types.TypeCredentialName, *key, &credential, getByKey); err != nil {
 		return nil, err
 	}
 	return &credential, nil
@@ -39,7 +39,7 @@ func (s *CredentialCache) GetByDeveloperAppID(developerAppID string) (types.Deve
 		return s.credential.GetByDeveloperAppID(developerAppID)
 	}
 	var credentials types.DeveloperAppKeys
-	if err := s.cache.fetchEntity(db.EntityTypeCredential, developerAppID, &credentials, getByAppID); err != nil {
+	if err := s.cache.fetchEntity(types.TypeCredentialName, developerAppID, &credentials, getByAppID); err != nil {
 		return nil, err
 	}
 	return credentials, nil
@@ -48,13 +48,13 @@ func (s *CredentialCache) GetByDeveloperAppID(developerAppID string) (types.Deve
 // UpdateByKey UPSERTs credentials in database
 func (s *CredentialCache) UpdateByKey(c *types.DeveloperAppKey) types.Error {
 
-	s.cache.deleteEntry(db.EntityTypeCredential, c.ConsumerKey)
+	s.cache.deleteEntry(types.TypeCredentialName, c.ConsumerKey)
 	return s.credential.UpdateByKey(c)
 }
 
 // DeleteByKey deletes credentials
-func (s *CredentialCache) DeleteByKey(organizationName, consumerKey string) types.Error {
+func (s *CredentialCache) DeleteByKey(consumerKey string) types.Error {
 
-	s.cache.deleteEntry(db.EntityTypeCredential, consumerKey)
-	return s.credential.DeleteByKey(organizationName, consumerKey)
+	s.cache.deleteEntry(types.TypeCredentialName, consumerKey)
+	return s.credential.DeleteByKey(consumerKey)
 }

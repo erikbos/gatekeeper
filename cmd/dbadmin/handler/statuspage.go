@@ -92,7 +92,6 @@ const templateHTTPForwarding string = `
 <h1>Listeners</h1>
 <table border=1>
 <tr>
-<th>Organization</th>
 <th>Name</th>
 <th>DisplayName</th>
 <th>Port</th>
@@ -105,7 +104,6 @@ const templateHTTPForwarding string = `
 
 {{range $listener := $listeners}}
 <tr>
-<td><a href="/v1/organizations/{{$listener.OrganizationName}}">{{$listener.OrganizationName}}</a>
 <td><a href="/v1/listeners/{{$listener.Name}}">{{$listener.Name}}</a>
 <td>{{$listener.DisplayName}}</td>
 <td>{{$listener.Port}}</td>
@@ -210,7 +208,6 @@ const templateHTTPForwarding string = `
 <h1>API Products</h1>
 <table border=1>
 <tr>
-<th>Organization</th>
 <th>ProductName</th>
 <th>DisplayName</th>
 <th>Description</th>
@@ -223,7 +220,6 @@ const templateHTTPForwarding string = `
 
 {{range $a := $apiproducts}}
 <tr>
-<td>{{$a.OrganizationName}}</td>
 <td><a href="/v1/organizations/{{$a.OrganizationName}}/apiproducts/{{$a.Name}}">{{$a.Name}}</a>
 <td>{{$a.DisplayName}}</td>
 <td>{{$a.Description}}</td>
@@ -253,26 +249,12 @@ const templateHTTPForwarding string = `
 // showDevelopersPage pretty prints all developers and developer apps
 func (h *Handler) showDevelopersPage(c *gin.Context) {
 
-	organizations, err := h.service.Organization.GetAll()
+	developers, err := h.service.Developer.GetAll()
 	if err != nil {
 		webadmin.JSONMessage(c, http.StatusServiceUnavailable, err)
 		return
 	}
-
-	h.logger.Info("bla", zap.Any("orgs", organizations))
-
-	allDevelopers := make(types.Developers, 0, 10)
-	for _, org := range organizations {
-		// Retrieve all configuration entities
-		developers, err := h.service.Developer.GetByOrganization(org.Name)
-		if err != nil {
-			webadmin.JSONMessage(c, http.StatusServiceUnavailable, err)
-			return
-		}
-		h.logger.Info("bla", zap.Any("devs", developers))
-		allDevelopers = append(allDevelopers, developers...)
-	}
-	h.logger.Info("bla", zap.Any("alldevs", allDevelopers))
+	h.logger.Info("bla", zap.Any("devs", developers))
 
 	wholePageTemplate := pageHeading("Developer overview") + templateDeveloper
 	templateEngine, templateError := template.New("page").
@@ -284,7 +266,7 @@ func (h *Handler) showDevelopersPage(c *gin.Context) {
 	templateVariables := struct {
 		Developers types.Developers
 	}{
-		Developers: allDevelopers,
+		Developers: developers,
 	}
 	c.Header(contentType, contentTypeHTML)
 	c.Status(http.StatusOK)

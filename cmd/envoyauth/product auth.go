@@ -13,7 +13,7 @@ import (
 // CheckProductEntitlement loads developer, dev app, apiproduct details,
 // as input request.apikey must be set
 //
-func (a *authorizationServer) CheckProductEntitlement(organization string, request *requestInfo) error {
+func (a *authorizationServer) CheckProductEntitlement(request *requestInfo) error {
 
 	if err := a.getAPIKeyDevDevAppDetails(request); err != nil {
 		return err
@@ -22,7 +22,7 @@ func (a *authorizationServer) CheckProductEntitlement(organization string, reque
 		return err
 	}
 	var err error
-	request.APIProduct, err = a.IsRequestPathAllowed(organization, request.URL.Path, request.appCredential)
+	request.APIProduct, err = a.IsRequestPathAllowed(request.URL.Path, request.appCredential)
 	return err
 }
 
@@ -30,14 +30,13 @@ func (a *authorizationServer) CheckProductEntitlement(organization string, reque
 func (a *authorizationServer) getAPIKeyDevDevAppDetails(request *requestInfo) error {
 	var err error
 
-	request.appCredential, err = a.db.Credential.GetByKey(&request.vhost.OrganizationName, request.apikey)
+	request.appCredential, err = a.db.Credential.GetByKey(request.apikey)
 	if err != nil {
 		// FIX ME increase unknown apikey counter (not an error state)
 		return errors.New("Cannot find apikey")
 	}
 
-	request.developerApp, err = a.db.DeveloperApp.GetByID(request.vhost.OrganizationName,
-		request.appCredential.AppID)
+	request.developerApp, err = a.db.DeveloperApp.GetByID(request.appCredential.AppID)
 	if err != nil {
 		// FIX ME increase counter as every apikey should link to dev app (error state)
 		return errors.New("Cannot find developer app of this apikey")
@@ -84,7 +83,7 @@ func checkDevAndKeyValidity(request *requestInfo) error {
 // -			- return 200
 // - if not 403
 
-func (a *authorizationServer) IsRequestPathAllowed(organization, requestPath string,
+func (a *authorizationServer) IsRequestPathAllowed(requestPath string,
 	credential *types.DeveloperAppKey) (*types.APIProduct, error) {
 
 	// Does this apikey have any products assigned?
@@ -96,8 +95,7 @@ func (a *authorizationServer) IsRequestPathAllowed(organization, requestPath str
 	for _, apiproduct := range credential.APIProducts {
 		if apiproduct.Status == "approved" {
 
-			apiproductDetails, err := a.db.APIProduct.Get(organization, apiproduct.Apiproduct)
-			// apiproductDetails, err := a.getAPIProduct(&organization, &apiproduct.Apiproduct)
+			apiproductDetails, err := a.db.APIProduct.Get(apiproduct.Apiproduct)
 			if err != nil {
 				// apikey has product in it which we cannot find:
 				// FIXME increase "unknown product in apikey" counter (not an error state)

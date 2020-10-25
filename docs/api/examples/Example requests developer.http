@@ -2,15 +2,15 @@
 
 
 ### Get all developers
-GET http://{{hostname}}/v1/organizations/petstore/developers
+GET http://{{hostname}}/v1/developers
 
 
 ### Get developer
-GET http://{{hostname}}/v1/organizations/petstore/developers/john@example.com
+GET http://{{hostname}}/v1/developers/john@example.com
 
 
 ### Create a new developer
-POST http://{{hostname}}/v1/organizations/petstore/developers
+POST http://{{hostname}}/v1/developers
 content-type: application/json
 
 {
@@ -21,7 +21,7 @@ content-type: application/json
 }
 
 ### Update an existing developer
-POST http://{{hostname}}/v1/organizations/petstore/developers/john@example.com
+POST http://{{hostname}}/v1/developers/john@example.com
 content-type: application/json
 
 {
@@ -42,7 +42,7 @@ content-type: application/json
 }
 
 ### Update attributes of developer
-POST http://{{hostname}}/v1/organizations/petstore/developers/john@example.com/attributes
+POST http://{{hostname}}/v1/developers/john@example.com/attributes
 content-type: application/json
 
 {
@@ -60,20 +60,20 @@ content-type: application/json
 
 
 ### Retrieve attributes of developer
-GET http://{{hostname}}/v1/organizations/petstore/developers/john@example.com/attributes
+GET http://{{hostname}}/v1/developers/john@example.com/attributes
 
 
 
 ### Retrieve one named attribute of developer
-GET http://{{hostname}}/v1/organizations/petstore/developers/john@example.com/attributes/Shoesize
+GET http://{{hostname}}/v1/developers/john@example.com/attributes/Shoesize
 
 
 ### Update one attribute of developer
-POST http://{{hostname}}/v1/organizations/petstore/developers/john@example.com/attributes/Shoesize
+POST http://{{hostname}}/v1/developers/john@example.com/attributes/Shoesize
 content-type: application/json
 
 {"value":"43"}
 
 
 ### Delete developer
-DELETE http://{{hostname}}/v1/organizations/petstore/developers/john@example.com
+DELETE http://{{hostname}}/v1/developers/john@example.com

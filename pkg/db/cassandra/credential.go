@@ -19,7 +19,6 @@ consumer_secret,
 api_products,
 attributes,
 app_id,
-organization_name,
 status,
 issued_at,
 expires_at`
@@ -38,18 +37,13 @@ func NewCredentialStore(database *Database) *CredentialStore {
 }
 
 // GetByKey returns details of a single apikey
-func (s *CredentialStore) GetByKey(organizationName, key *string) (*types.DeveloperAppKey, types.Error) {
+func (s *CredentialStore) GetByKey(key *string) (*types.DeveloperAppKey, types.Error) {
 
 	var appcredentials types.DeveloperAppKeys
 	var err error
 
-	if organizationName == nil {
-		query := "SELECT " + appCredentialsColumn + " FROM credentials WHERE consumer_key = ? LIMIT 1"
-		appcredentials, err = s.runGetAppCredentialQuery(query, key)
-	} else {
-		query := "SELECT " + appCredentialsColumn + " FROM credentials WHERE consumer_key = ? AND organization_name = ? LIMIT 1 ALLOW FILTERING"
-		appcredentials, err = s.runGetAppCredentialQuery(query, key, organizationName)
-	}
+	query := "SELECT " + appCredentialsColumn + " FROM credentials WHERE consumer_key = ? LIMIT 1"
+	appcredentials, err = s.runGetAppCredentialQuery(query, key)
 	if err != nil {
 		s.db.metrics.QueryFailed(appCredentialsMetricLabel)
 		return nil, types.NewDatabaseError(err)
@@ -98,15 +92,14 @@ func (s *CredentialStore) runGetAppCredentialQuery(query string, queryParameters
 	m := make(map[string]interface{})
 	for iterable.MapScan(m) {
 		appcredentials = append(appcredentials, types.DeveloperAppKey{
-			ConsumerKey:      columnValueString(m, "consumer_key"),
-			ConsumerSecret:   columnValueString(m, "consumer_secret"),
-			APIProducts:      types.DeveloperAppKey{}.APIProducts.Unmarshal(m["api_products"].(string)),
-			Attributes:       types.DeveloperAppKey{}.Attributes.Unmarshal(m["attributes"].(string)),
-			AppID:            columnValueString(m, "app_id"),
-			OrganizationName: columnValueString(m, "organization_name"),
-			Status:           columnValueString(m, "status"),
-			IssuedAt:         columnValueInt64(m, "issued_at"),
-			ExpiresAt:        columnValueInt64(m, "expires_at"),
+			ConsumerKey:    columnValueString(m, "consumer_key"),
+			ConsumerSecret: columnValueString(m, "consumer_secret"),
+			APIProducts:    types.DeveloperAppKey{}.APIProducts.Unmarshal(m["api_products"].(string)),
+			Attributes:     types.DeveloperAppKey{}.Attributes.Unmarshal(m["attributes"].(string)),
+			AppID:          columnValueString(m, "app_id"),
+			Status:         columnValueString(m, "status"),
+			IssuedAt:       columnValueInt64(m, "issued_at"),
+			ExpiresAt:      columnValueInt64(m, "expires_at"),
 		})
 		m = map[string]interface{}{}
 	}
@@ -120,14 +113,13 @@ func (s *CredentialStore) runGetAppCredentialQuery(query string, queryParameters
 // UpdateByKey UPSERTs credentials in database
 func (s *CredentialStore) UpdateByKey(c *types.DeveloperAppKey) types.Error {
 
-	query := "INSERT INTO credentials (" + appCredentialsColumn + ") VALUES(?,?,?,?,?,?,?,?,?)"
+	query := "INSERT INTO credentials (" + appCredentialsColumn + ") VALUES(?,?,?,?,?,?,?,?)"
 	if err := s.db.CassandraSession.Query(query,
 		c.ConsumerKey,
 		c.ConsumerSecret,
 		c.APIProducts.Marshal(),
 		c.Attributes.Marshal(),
 		c.AppID,
-		c.OrganizationName,
 		c.Status,
 		c.IssuedAt,
 		c.ExpiresAt).Exec(); err != nil {
@@ -140,7 +132,7 @@ func (s *CredentialStore) UpdateByKey(c *types.DeveloperAppKey) types.Error {
 }
 
 // DeleteByKey deletes credentials
-func (s *CredentialStore) DeleteByKey(organizationName, consumerKey string) types.Error {
+func (s *CredentialStore) DeleteByKey(consumerKey string) types.Error {
 
 	query := "DELETE FROM credentials WHERE consumer_key = ?"
 	if err := s.db.CassandraSession.Query(query, consumerKey).Exec(); err != nil {

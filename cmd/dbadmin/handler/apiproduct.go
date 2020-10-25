@@ -8,19 +8,19 @@ import (
 
 // registerAPIProductRoutes registers all routes we handle
 func (h *Handler) registerAPIProductRoutes(r *gin.RouterGroup) {
-	r.GET("/organizations/:organization/apiproducts", h.handler(h.getAllAPIProducts))
-	r.POST("/organizations/:organization/apiproducts", h.handler(h.createAPIProduct))
+	r.GET("/apiproducts", h.handler(h.getAllAPIProducts))
+	r.POST("/apiproducts", h.handler(h.createAPIProduct))
 
-	r.GET("/organizations/:organization/apiproducts/:apiproduct", h.handler(h.getAPIProduct))
-	r.POST("/organizations/:organization/apiproducts/:apiproduct", h.handler(h.updateAPIProduct))
-	r.DELETE("/organizations/:organization/apiproducts/:apiproduct", h.handler(h.deleteAPIProduct))
+	r.GET("/apiproducts/:apiproduct", h.handler(h.getAPIProduct))
+	r.POST("/apiproducts/:apiproduct", h.handler(h.updateAPIProduct))
+	r.DELETE("/apiproducts/:apiproduct", h.handler(h.deleteAPIProduct))
 
-	r.GET("/organizations/:organization/apiproducts/:apiproduct/attributes", h.handler(h.getAPIProductAttributes))
-	r.POST("/organizations/:organization/apiproducts/:apiproduct/attributes", h.handler(h.updateAPIProductAttributes))
+	r.GET("/apiproducts/:apiproduct/attributes", h.handler(h.getAPIProductAttributes))
+	r.POST("/apiproducts/:apiproduct/attributes", h.handler(h.updateAPIProductAttributes))
 
-	r.GET("/organizations/:organization/apiproducts/:apiproduct/attributes/:attribute", h.handler(h.getAPIProductAttributeByName))
-	r.POST("/organizations/:organization/apiproducts/:apiproduct/attributes/:attribute", h.handler(h.updateAPIProductAttributeByName))
-	r.DELETE("/organizations/:organization/apiproducts/:apiproduct/attributes/:attribute", h.handler(h.deleteAPIProductAttributeByName))
+	r.GET("/apiproducts/:apiproduct/attributes/:attribute", h.handler(h.getAPIProductAttributeByName))
+	r.POST("/apiproducts/:apiproduct/attributes/:attribute", h.handler(h.updateAPIProductAttributeByName))
+	r.DELETE("/apiproducts/:apiproduct/attributes/:attribute", h.handler(h.deleteAPIProductAttributeByName))
 }
 
 const (
@@ -28,10 +28,10 @@ const (
 	apiproductParameter = "apiproduct"
 )
 
-// getAllAPIProducts returns all apiproducts in organization
+// getAllAPIProducts returns all apiproducts
 func (h *Handler) getAllAPIProducts(c *gin.Context) handlerResponse {
 
-	apiproducts, err := h.service.APIProduct.GetByOrganization(c.Param(organizationParameter))
+	apiproducts, err := h.service.APIProduct.GetAll()
 	if err != nil {
 		return handleError(err)
 	}
@@ -41,7 +41,7 @@ func (h *Handler) getAllAPIProducts(c *gin.Context) handlerResponse {
 // getAPIProduct returns full details of one apiproduct
 func (h *Handler) getAPIProduct(c *gin.Context) handlerResponse {
 
-	apiproduct, err := h.service.APIProduct.Get(c.Param(organizationParameter), c.Param(apiproductParameter))
+	apiproduct, err := h.service.APIProduct.Get(c.Param(apiproductParameter))
 	if err != nil {
 		return handleError(err)
 	}
@@ -51,7 +51,7 @@ func (h *Handler) getAPIProduct(c *gin.Context) handlerResponse {
 // getAPIProductAttributes returns attributes of a apiproduct
 func (h *Handler) getAPIProductAttributes(c *gin.Context) handlerResponse {
 
-	apiproduct, err := h.service.APIProduct.Get(c.Param(organizationParameter), c.Param(apiproductParameter))
+	apiproduct, err := h.service.APIProduct.Get(c.Param(apiproductParameter))
 	if err != nil {
 		return handleError(err)
 	}
@@ -61,7 +61,7 @@ func (h *Handler) getAPIProductAttributes(c *gin.Context) handlerResponse {
 // getAPIProductAttributeByName returns one particular attribute of a apiproduct
 func (h *Handler) getAPIProductAttributeByName(c *gin.Context) handlerResponse {
 
-	apiproduct, err := h.service.APIProduct.Get(c.Param(organizationParameter), c.Param(apiproductParameter))
+	apiproduct, err := h.service.APIProduct.Get(c.Param(apiproductParameter))
 	if err != nil {
 		return handleError(err)
 	}
@@ -79,7 +79,7 @@ func (h *Handler) createAPIProduct(c *gin.Context) handlerResponse {
 	if err := c.ShouldBindJSON(&newAPIProduct); err != nil {
 		return handleBadRequest(err)
 	}
-	storedAPIProduct, err := h.service.APIProduct.Create(c.Param(organizationParameter), newAPIProduct, h.who(c))
+	storedAPIProduct, err := h.service.APIProduct.Create(newAPIProduct, h.who(c))
 	if err != nil {
 		return handleError(err)
 	}
@@ -93,7 +93,7 @@ func (h *Handler) updateAPIProduct(c *gin.Context) handlerResponse {
 	if err := c.ShouldBindJSON(&updatedAPIProduct); err != nil {
 		return handleBadRequest(err)
 	}
-	storedAPIProduct, err := h.service.APIProduct.Update(c.Param(organizationParameter), updatedAPIProduct, h.who(c))
+	storedAPIProduct, err := h.service.APIProduct.Update(updatedAPIProduct, h.who(c))
 	if err != nil {
 		return handleError(err)
 	}
@@ -110,8 +110,8 @@ func (h *Handler) updateAPIProductAttributes(c *gin.Context) handlerResponse {
 		return handleBadRequest(err)
 	}
 
-	if err := h.service.APIProduct.UpdateAttributes(c.Param(organizationParameter),
-		c.Param(apiproductParameter), receivedAttributes.Attributes, h.who(c)); err != nil {
+	if err := h.service.APIProduct.UpdateAttributes(c.Param(apiproductParameter),
+		receivedAttributes.Attributes, h.who(c)); err != nil {
 		return handleError(err)
 	}
 	return handleOKAttributes(receivedAttributes.Attributes)
@@ -130,8 +130,8 @@ func (h *Handler) updateAPIProductAttributeByName(c *gin.Context) handlerRespons
 		Value: receivedValue.Value,
 	}
 
-	if err := h.service.APIProduct.UpdateAttribute(c.Param(organizationParameter),
-		c.Param(apiproductParameter), newAttribute, h.who(c)); err != nil {
+	if err := h.service.APIProduct.UpdateAttribute(c.Param(apiproductParameter),
+		newAttribute, h.who(c)); err != nil {
 		return handleError(err)
 	}
 	return handleOKAttribute(newAttribute)
@@ -141,8 +141,7 @@ func (h *Handler) updateAPIProductAttributeByName(c *gin.Context) handlerRespons
 func (h *Handler) deleteAPIProductAttributeByName(c *gin.Context) handlerResponse {
 
 	attributeToDelete := c.Param(attributeParameter)
-	oldValue, err := h.service.APIProduct.DeleteAttribute(c.Param(organizationParameter),
-		c.Param(apiproductParameter), attributeToDelete, h.who(c))
+	oldValue, err := h.service.APIProduct.DeleteAttribute(c.Param(apiproductParameter), attributeToDelete, h.who(c))
 	if err != nil {
 		return handleBadRequest(err)
 	}
@@ -155,8 +154,7 @@ func (h *Handler) deleteAPIProductAttributeByName(c *gin.Context) handlerRespons
 // deleteAPIProduct deletes of one apiproduct
 func (h *Handler) deleteAPIProduct(c *gin.Context) handlerResponse {
 
-	deletedAPIproduct, err := h.service.APIProduct.Delete(c.Param(organizationParameter),
-		c.Param(apiproductParameter), h.who(c))
+	deletedAPIproduct, err := h.service.APIProduct.Delete(c.Param(apiproductParameter), h.who(c))
 	if err != nil {
 		return handleError(err)
 	}

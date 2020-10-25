@@ -30,7 +30,7 @@ func (s *OAuthCache) OAuthAccessTokenGetByAccess(accessToken string) (*types.OAu
 		return token, nil
 	}
 	var oauthToken types.OAuthAccessToken
-	if err := s.cache.fetchEntity(db.EntityTypeOAuth, accessToken, &oauthToken, getTokenByAccess); err != nil {
+	if err := s.cache.fetchEntity(types.TypeOAuthName, accessToken, &oauthToken, getTokenByAccess); err != nil {
 		return nil, err
 	}
 	return &oauthToken, nil
@@ -47,7 +47,7 @@ func (s *OAuthCache) OAuthAccessTokenGetByCode(code string) (*types.OAuthAccessT
 		return token, nil
 	}
 	var oauthToken types.OAuthAccessToken
-	if err := s.cache.fetchEntity(db.EntityTypeOAuth, code, &oauthToken, getTokenByCode); err != nil {
+	if err := s.cache.fetchEntity(types.TypeOAuthName, code, &oauthToken, getTokenByCode); err != nil {
 		return nil, err
 	}
 	return &oauthToken, nil
@@ -64,13 +64,13 @@ func (s *OAuthCache) OAuthAccessTokenGetByRefresh(refresh string) (*types.OAuthA
 		return token, nil
 	}
 	var oauthToken types.OAuthAccessToken
-	if err := s.cache.fetchEntity(db.EntityTypeOAuth, refresh, &oauthToken, getTokenByRefresh); err != nil {
+	if err := s.cache.fetchEntity(types.TypeOAuthName, refresh, &oauthToken, getTokenByRefresh); err != nil {
 		return nil, err
 	}
 	return &oauthToken, nil
 }
 
-// OAuthAccessTokenCreate UPSERTs an organization in database
+// OAuthAccessTokenCreate UPSERTs a token in database
 func (s *OAuthCache) OAuthAccessTokenCreate(t *types.OAuthAccessToken) error {
 
 	return s.oauth.OAuthAccessTokenCreate(t)
@@ -79,20 +79,20 @@ func (s *OAuthCache) OAuthAccessTokenCreate(t *types.OAuthAccessToken) error {
 // OAuthAccessTokenRemoveByAccess deletes an access token
 func (s *OAuthCache) OAuthAccessTokenRemoveByAccess(accessTokenToDelete string) error {
 
-	s.cache.deleteEntry(db.EntityTypeOAuth, accessTokenToDelete)
+	s.cache.deleteEntry(types.TypeOAuthName, accessTokenToDelete)
 	return s.oauth.OAuthAccessTokenRemoveByAccess(accessTokenToDelete)
 }
 
 // OAuthAccessTokenRemoveByCode deletes an access token
 func (s *OAuthCache) OAuthAccessTokenRemoveByCode(codeToDelete string) error {
 
-	s.cache.deleteEntry(db.EntityTypeOAuth, codeToDelete)
+	s.cache.deleteEntry(types.TypeOAuthName, codeToDelete)
 	return s.oauth.OAuthAccessTokenRemoveByAccess(codeToDelete)
 }
 
 // OAuthAccessTokenRemoveByRefresh deletes an access token
 func (s *OAuthCache) OAuthAccessTokenRemoveByRefresh(refreshToDelete string) error {
 
-	s.cache.deleteEntry(db.EntityTypeOAuth, refreshToDelete)
+	s.cache.deleteEntry(types.TypeOAuthName, refreshToDelete)
 	return s.oauth.OAuthAccessTokenRemoveByAccess(refreshToDelete)
 }

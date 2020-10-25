@@ -11,7 +11,6 @@ type (
 		Listener
 		Route
 		Cluster
-		Organization
 		Developer
 		DeveloperApp
 		APIProduct
@@ -67,31 +66,13 @@ type (
 		Delete(clusterToDelete string) types.Error
 	}
 
-	// Organization the organization information storage interface
-	Organization interface {
-		// GetAll retrieves all organizations
-		GetAll() (types.Organizations, types.Error)
-
-		// Get retrieves an organization
-		Get(organizationName string) (*types.Organization, types.Error)
-
-		// Update UPSERTs an organization
-		Update(o *types.Organization) types.Error
-
-		// Delete deletes an organization
-		Delete(organizationToDelete string) types.Error
-	}
-
 	// Developer the developer information storage interface
 	Developer interface {
-		// GetByOrganization retrieves all developer belonging to an organization
-		GetByOrganization(organizationName string) (types.Developers, types.Error)
-
-		// GetCountByOrganization retrieves number of developer belonging to an organization
-		GetCountByOrganization(organizationName string) (int, types.Error)
+		// GetAll retrieves all developer
+		GetAll() (types.Developers, types.Error)
 
 		// GetByEmail retrieves a developer
-		GetByEmail(developerOrganization, developerEmail string) (*types.Developer, types.Error)
+		GetByEmail(developerEmail string) (*types.Developer, types.Error)
 
 		// GetByID retrieves a developer
 		GetByID(developerID string) (*types.Developer, types.Error)
@@ -100,19 +81,19 @@ type (
 		Update(dev *types.Developer) types.Error
 
 		// DeleteByID deletes a developer
-		DeleteByID(organizationName, developerID string) types.Error
+		DeleteByID(developerID string) types.Error
 	}
 
 	// DeveloperApp the developer app information storage interface
 	DeveloperApp interface {
-		// GetByOrganization retrieves all developer apps belonging to an organization
-		GetByOrganization(organizationName string) (types.DeveloperApps, types.Error)
+		// GetAll retrieves all developer apps
+		GetAll() (types.DeveloperApps, types.Error)
 
 		// GetByName returns a developer app
-		GetByName(organization, developerAppName string) (*types.DeveloperApp, types.Error)
+		GetByName(developerAppName string) (*types.DeveloperApp, types.Error)
 
 		// GetByID returns a developer app
-		GetByID(organization, developerAppID string) (*types.DeveloperApp, types.Error)
+		GetByID(developerAppID string) (*types.DeveloperApp, types.Error)
 
 		// GetCountByDeveloperID retrieves number of apps belonging to a developer
 		GetCountByDeveloperID(developerID string) (int, types.Error)
@@ -121,7 +102,7 @@ type (
 		Update(app *types.DeveloperApp) types.Error
 
 		// DeleteByID deletes a developer app
-		DeleteByID(organizationName, developerAppID string) types.Error
+		DeleteByID(developerAppID string) types.Error
 	}
 
 	// APIProduct the apiproduct information storage interface
@@ -129,23 +110,20 @@ type (
 		// GetAll retrieves all api products
 		GetAll() (types.APIProducts, types.Error)
 
-		// GetByOrganization retrieves all api products belonging to an organization
-		GetByOrganization(organizationName string) (types.APIProducts, types.Error)
-
 		// Get returns an apiproduct
-		Get(organizationName, apiproductName string) (*types.APIProduct, types.Error)
+		Get(apiproductName string) (*types.APIProduct, types.Error)
 
 		// Update UPSERTs an apiproduct in database
 		Update(p *types.APIProduct) types.Error
 
 		// Delete deletes an apiproduct
-		Delete(organizationName, apiProduct string) types.Error
+		Delete(apiProduct string) types.Error
 	}
 
 	// Credential the cluster information storage interface
 	Credential interface {
 		// GetByKey returns details of a single apikey
-		GetByKey(organizationName, key *string) (*types.DeveloperAppKey, types.Error)
+		GetByKey(key *string) (*types.DeveloperAppKey, types.Error)
 
 		// GetByDeveloperAppID returns an array with apikey details of a developer app
 		GetByDeveloperAppID(developerAppID string) (types.DeveloperAppKeys, types.Error)
@@ -154,7 +132,7 @@ type (
 		UpdateByKey(c *types.DeveloperAppKey) types.Error
 
 		// DeleteByKey deletes credentials
-		DeleteByKey(organizationName, consumerKey string) types.Error
+		DeleteByKey(consumerKey string) types.Error
 	}
 
 	// OAuth the oauth information storage interface

@@ -17,7 +17,10 @@ type ListenerService struct {
 // NewListener returns a new listener instance
 func NewListener(database *db.Database, c *Changelog) *ListenerService {
 
-	return &ListenerService{db: database, changelog: c}
+	return &ListenerService{
+		db:        database,
+		changelog: c,
+	}
 }
 
 // GetAll returns all listeners

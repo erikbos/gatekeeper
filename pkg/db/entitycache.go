@@ -93,7 +93,7 @@ func (ec *EntityCache) updateListeners(newListeners types.Listeners) {
 
 	ec.logger.Info("Listener entities reloaded")
 	if ec.config.Notify != nil {
-		ec.config.Notify <- EntityChangeNotification{Resource: EntityTypeListener}
+		ec.config.Notify <- EntityChangeNotification{Resource: types.TypeListenerName}
 	}
 }
 
@@ -126,7 +126,7 @@ func (ec *EntityCache) updateRoutes(newRoutes types.Routes) {
 
 	ec.logger.Info("Route entities reloaded")
 	if ec.config.Notify != nil {
-		ec.config.Notify <- EntityChangeNotification{Resource: EntityTypeRoute}
+		ec.config.Notify <- EntityChangeNotification{Resource: types.TypeRouteName}
 	}
 }
 
@@ -159,7 +159,7 @@ func (ec *EntityCache) updateClusters(newClusters types.Clusters) {
 
 	ec.logger.Info("Cluster entities reloaded")
 	if ec.config.Notify != nil {
-		ec.config.Notify <- EntityChangeNotification{Resource: EntityTypeCluster}
+		ec.config.Notify <- EntityChangeNotification{Resource: types.TypeClusterName}
 	}
 }
 

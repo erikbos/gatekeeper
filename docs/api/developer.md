@@ -6,16 +6,16 @@ A developer is an API user and has defined.
 
 | Method | Path                                                                | What                                 |
 | ------ | ------------------------------------------------------------------- | ------------------------------------ |
-| GET    | /v1/organization/_org_/developers                                   | retrieve all developers              |
-| POST   | /v1/organization/_org_/developers                                   | creates a new developer              |
-| GET    | /v1/organization/_org_/developers/_developername_                   | retrieve a developer                 |
-| POST   | /v1/organization/_org_/developers/_developername_                   | updates an existing developer        |
-| DELETE | /v1/organization/_org_/developers/_developername_                   | deletes a developer                  |
-| GET    | /v1/organization/_org_/developers/_developername_/attributes        | retrieve all attributes of developer |
-| POST   | /v1/organization/_org_/developers/_developername_/attributes        | update all attribute of developer    |
-| GET    | /v1/organization/_org_/developers/_developername_/attributes/_name_ | retrieve one attribute of developer  |
-| POST   | /v1/organization/_org_/developers/_developername_/attributes/_name_ | update an attribute of developer     |
-| DELETE | /v1/organization/_org_/developers/_developername_/attributes/_name_ | deletes attribute of developer       |
+| GET    | /v1/developers                                   | retrieve all developers              |
+| POST   | /v1/developers                                   | creates a new developer              |
+| GET    | /v1/developers/_developername_                   | retrieve a developer                 |
+| POST   | /v1/developers/_developername_                   | updates an existing developer        |
+| DELETE | /v1/developers/_developername_                   | deletes a developer                  |
+| GET    | /v1/developers/_developername_/attributes        | retrieve all attributes of developer |
+| POST   | /v1/developers/_developername_/attributes        | update all attribute of developer    |
+| GET    | /v1/developers/_developername_/attributes/_name_ | retrieve one attribute of developer  |
+| POST   | /v1/developers/_developername_/attributes/_name_ | update an attribute of developer     |
+| DELETE | /v1/developers/_developername_/attributes/_name_ | deletes attribute of developer       |
 
 * For POST content-type: application/json is required.
 

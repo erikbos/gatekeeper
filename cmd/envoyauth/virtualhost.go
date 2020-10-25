@@ -36,8 +36,8 @@ func (v *vhostMapping) WaitFor(entityNotifications chan db.EntityChangeNotificat
 		v.logger.Info("Database change notify received",
 			zap.String("entity", changedEntity.Resource))
 
-		if changedEntity.Resource == db.EntityTypeListener ||
-			changedEntity.Resource == db.EntityTypeRoute {
+		if changedEntity.Resource == types.TypeListenerName ||
+			changedEntity.Resource == types.TypeRouteName {
 
 			v.buildVhostMap()
 

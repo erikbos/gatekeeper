@@ -6,11 +6,11 @@ Keys are attached to a [developer application](developerapp.md) and are used to 
 
 | Method | Path                                                                    | What                               |
 | ------ | ----------------------------------------------------------------------- | ---------------------------------- |
-| GET    | /v1/organization/_org_/developers/_developer_/apps/_appname_/keys       | retrieve all keys of developer app |
-| POST   | /v1/organization/_org_/developers/_developer_/apps/_appname_/keys       | creates new key for developer app  |
-| GET    | /v1/organization/_org_/developers/_developer_/apps/_appname_/keys/_key_ | retrieve key of developer app      |
-| POST   | /v1/organization/_org_/developers/_developer_/apps/_appname_/keys/_key_ | updates key of developer app       |
-| DELETE | /v1/organization/_org_/developers/_developer_/apps/_appname_/keys/_key_ | deletes key of developer app       |
+| GET    | /v1/developers/_developer_/apps/_appname_/keys       | retrieve all keys of developer app |
+| POST   | /v1/developers/_developer_/apps/_appname_/keys       | creates new key for developer app  |
+| GET    | /v1/developers/_developer_/apps/_appname_/keys/_key_ | retrieve key of developer app      |
+| POST   | /v1/developers/_developer_/apps/_appname_/keys/_key_ | updates key of developer app       |
+| DELETE | /v1/developers/_developer_/apps/_appname_/keys/_key_ | deletes key of developer app       |
 
 For POST:
 
