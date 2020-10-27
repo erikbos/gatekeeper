@@ -13,37 +13,20 @@ import (
 	authservice "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
 	envoytype "github.com/envoyproxy/go-control-plane/envoy/type/v3"
 	"github.com/gogo/googleapis/google/rpc"
-	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
 	"google.golang.org/genproto/googleapis/rpc/status"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/structpb"
 
+	"github.com/erikbos/gatekeeper/cmd/envoyauth/policy"
+	"github.com/erikbos/gatekeeper/cmd/envoyauth/request"
 	"github.com/erikbos/gatekeeper/pkg/shared"
-	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
 type envoyAuthConfig struct {
 
 	// GRPC Address and port to listen for control plane
 	Listen string `yaml:"listen"`
-}
-
-// requestDetails holds all information of a request
-type requestDetails struct {
-	// Timestamp contains current time
-	timestamp       int64
-	httpRequest     *authservice.AttributeContext_HttpRequest
-	IP              net.IP
-	URL             *url.URL
-	queryParameters url.Values
-	consumerKey     *string
-	oauthToken      *string
-	listener        *types.Listener
-	developer       *types.Developer
-	developerApp    *types.DeveloperApp
-	developerAppKey *types.DeveloperAppKey
-	APIProduct      *types.APIProduct
 }
 
 // startGRPCAuthorizationServer starts extauthz grpc listener
@@ -67,69 +50,67 @@ func (s *server) StartAuthorizationServer() {
 func (s *server) Check(ctx context.Context,
 	extauthzRequest *authservice.CheckRequest) (*authservice.CheckResponse, error) {
 
-	timer := prometheus.NewTimer(s.metrics.authLatency)
+	timer := s.metrics.NewTimerAuthLatency()
 	defer timer.ObserveDuration()
 
-	request, err := getRequestDetails(extauthzRequest)
+	request, err := getrequestDetails(extauthzRequest)
 	if err != nil {
 		s.metrics.IncConnectionInfoFailure()
 		return s.rejectRequest(http.StatusBadRequest, nil, nil, fmt.Sprintf("%s", err))
 	}
-	request.timestamp = shared.GetCurrentTimeMilliseconds()
+	request.Timestamp = shared.GetCurrentTimeMilliseconds()
 
 	s.logger.Debug("extauthz",
-		zap.String("path", request.httpRequest.Path),
-		zap.Any("headers", request.httpRequest.Headers))
+		zap.String("path", request.HTTPRequest.Path),
+		zap.Any("headers", request.HTTPRequest.Headers))
 
 	// FIXME not sure if x-forwarded-proto the way to determine original tcp port used
-	request.listener, err = s.vhosts.Lookup(request.httpRequest.Host, request.httpRequest.Headers["x-forwarded-proto"])
+	request.Listener, err = s.vhosts.Lookup(request.HTTPRequest.Host,
+		request.HTTPRequest.Headers["x-forwarded-proto"])
 	if err != nil {
 		s.metrics.IncAuthenticationRejected(request)
 		return s.rejectRequest(http.StatusNotFound, nil, nil, "U1nknown vhost")
 	}
 
-	vhostPolicyOutcome := &PolicyChainResponse{}
-	if request.listener != nil && request.listener.Policies != "" {
-		vhostPolicyOutcome = (&PolicyChain{
-			authServer: s,
-			request:    request,
-			scope:      policyScopeVhost,
-		}).Evaluate()
+	policyConfig := policy.NewChainConfig(s.db, s.oauth, s.geoip, s.metrics, s.logger)
+
+	var vhostPolicyOut *policy.ChainOutcome
+	if request.Listener != nil && request.Listener.Policies != "" {
+		vhostPolicyOut = policy.NewChain(request,
+			policy.PolicyScopeVhost, policyConfig).Evaluate()
+
+		s.logger.Debug("vhostPolicyOutcome", zap.Reflect("debug", vhostPolicyOut))
 	}
 
-	APIProductPolicyOutcome := &PolicyChainResponse{}
+	var APIProductPolicyOut *policy.ChainOutcome
 	if request.APIProduct != nil && request.APIProduct.Policies != "" {
-		APIProductPolicyOutcome = (&PolicyChain{
-			authServer: s,
-			request:    request,
-			scope:      policyScopeAPIProduct,
-		}).Evaluate()
-	}
+		APIProductPolicyOut = policy.NewChain(request,
+			policy.PolicyScopeAPIProduct, policyConfig).Evaluate()
 
-	s.logger.Debug("vhostPolicyOutcome", zap.Reflect("debug", vhostPolicyOutcome))
-	s.logger.Debug("APIProductPolicyOutcome", zap.Reflect("debug", APIProductPolicyOutcome))
+		s.logger.Debug("APIProductPolicyOutcome", zap.Reflect("debug", APIProductPolicyOut))
+	}
 
 	// We reject call in case both vhost & apiproduct policy did not authenticate call
-	if (vhostPolicyOutcome != nil && !vhostPolicyOutcome.authenticated) &&
-		(APIProductPolicyOutcome != nil && !APIProductPolicyOutcome.authenticated) {
+	if (vhostPolicyOut != nil && !vhostPolicyOut.Authenticated) &&
+		(APIProductPolicyOut != nil && !APIProductPolicyOut.Authenticated) {
 
 		s.metrics.IncAuthenticationRejected(request)
 
-		return s.rejectRequest(vhostPolicyOutcome.deniedStatusCode,
-			mergeMapsStringString(vhostPolicyOutcome.upstreamHeaders,
-				APIProductPolicyOutcome.upstreamHeaders),
-			mergeMapsStringString(vhostPolicyOutcome.upstreamDynamicMetadata,
-				APIProductPolicyOutcome.upstreamDynamicMetadata),
-			vhostPolicyOutcome.deniedMessage)
+		return s.rejectRequest(vhostPolicyOut.DeniedStatusCode,
+			mergeMapsStringString(vhostPolicyOut.UpstreamHeaders,
+				APIProductPolicyOut.UpstreamHeaders),
+			mergeMapsStringString(vhostPolicyOut.UpstreamDynamicMetadata,
+				APIProductPolicyOut.UpstreamDynamicMetadata),
+			vhostPolicyOut.DeniedMessage)
 	}
 
 	s.metrics.IncAuthenticationAccepted(request)
 
 	return s.allowRequest(
-		mergeMapsStringString(vhostPolicyOutcome.upstreamHeaders,
-			APIProductPolicyOutcome.upstreamHeaders),
-		mergeMapsStringString(vhostPolicyOutcome.upstreamDynamicMetadata,
-			APIProductPolicyOutcome.upstreamDynamicMetadata))
+		mergeMapsStringString(vhostPolicyOut.UpstreamHeaders,
+			APIProductPolicyOut.UpstreamHeaders),
+		mergeMapsStringString(vhostPolicyOut.UpstreamDynamicMetadata,
+			APIProductPolicyOut.UpstreamDynamicMetadata))
 }
 
 // allowRequest answers Envoyproxy to authorizates request to go upstream
@@ -278,26 +259,26 @@ func buildRateLimiterOveride(metadata map[string]string) *structpb.Value {
 	}
 }
 
-// getRequestDetails returns HTTP data of a request
-func getRequestDetails(req *authservice.CheckRequest) (*requestDetails, error) {
+// getrequestDetails returns details of an incoming request
+func getrequestDetails(req *authservice.CheckRequest) (*request.State, error) {
 
-	r := requestDetails{
-		httpRequest: req.Attributes.Request.Http,
+	r := &request.State{
+		HTTPRequest: req.Attributes.Request.Http,
 	}
-	if ipaddress, ok := r.httpRequest.Headers["x-forwarded-for"]; ok {
+	if ipaddress, ok := r.HTTPRequest.Headers["x-forwarded-for"]; ok {
 		r.IP = net.ParseIP(ipaddress)
 	}
 
 	var err error
-	if r.URL, err = url.ParseRequestURI(r.httpRequest.Path); err != nil {
+	if r.URL, err = url.ParseRequestURI(r.HTTPRequest.Path); err != nil {
 		return nil, errors.New("Cannot parse url")
 	}
 
-	if r.queryParameters, err = url.ParseQuery(r.URL.RawQuery); err != nil {
+	if r.QueryParameters, err = url.ParseQuery(r.URL.RawQuery); err != nil {
 		return nil, errors.New("Cannot parse query parameters")
 	}
 
-	return &r, nil
+	return r, nil
 }
 
 // returns a well structured JSON-formatted message

@@ -11,6 +11,7 @@ import (
 	"gopkg.in/oauth2.v3/manage"
 	"gopkg.in/oauth2.v3/server"
 
+	"github.com/erikbos/gatekeeper/cmd/envoyauth/metrics"
 	"github.com/erikbos/gatekeeper/pkg/db"
 	"github.com/erikbos/gatekeeper/pkg/shared"
 	"github.com/erikbos/gatekeeper/pkg/webadmin"
@@ -35,17 +36,18 @@ type Server struct {
 	db          *db.Database
 	oauthserver *server.Server
 	logger      *zap.Logger
-	metrics     *metrics
+	metrics     *metrics.Metrics
 }
 
 // New returns a new oauth server instance
-func New(config Config, db *db.Database, logger *zap.Logger) *Server {
+func New(config Config, db *db.Database, metrics *metrics.Metrics,
+	logger *zap.Logger) *Server {
 
 	return &Server{
 		config:  config,
 		db:      db,
+		metrics: metrics,
 		logger:  logger.With(zap.String("system", "oauth")),
-		metrics: newMetrics(),
 	}
 }
 
@@ -62,7 +64,6 @@ func (oauth *Server) Start(applicationName string) error {
 
 	oauth.logger = shared.NewLogger(&oauth.config.Logger)
 
-	oauth.metrics.RegisterWithPrometheus(applicationName)
 	oauth.prepareOAuthInstance()
 
 	gin.SetMode(gin.ReleaseMode)

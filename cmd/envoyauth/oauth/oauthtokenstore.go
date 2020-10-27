@@ -8,6 +8,7 @@ import (
 	"gopkg.in/oauth2.v3"
 	"gopkg.in/oauth2.v3/models"
 
+	"github.com/erikbos/gatekeeper/cmd/envoyauth/metrics"
 	"github.com/erikbos/gatekeeper/pkg/db"
 	"github.com/erikbos/gatekeeper/pkg/shared"
 	"github.com/erikbos/gatekeeper/pkg/types"
@@ -16,12 +17,12 @@ import (
 // TokenStore holds our database config
 type TokenStore struct {
 	db      *db.Database
-	metrics *metrics
+	metrics *metrics.Metrics
 	logger  *zap.Logger
 }
 
 // NewTokenStore creates token store instance
-func NewTokenStore(database *db.Database, metrics *metrics,
+func NewTokenStore(database *db.Database, metrics *metrics.Metrics,
 	logger *zap.Logger) oauth2.TokenStore {
 
 	return &TokenStore{
@@ -52,10 +53,10 @@ func (tokenstore *TokenStore) Create(info oauth2.TokenInfo) (err error) {
 		RefreshExpiresIn: int64(info.GetRefreshExpiresIn().Milliseconds()),
 	}
 	if err := tokenstore.db.OAuth.OAuthAccessTokenCreate(&token); err != nil {
-		tokenstore.metrics.IncTokenStoreIssueFailures()
+		tokenstore.metrics.IncOAuthTokenStoreIssueFailures()
 		return err
 	}
-	tokenstore.metrics.IncTokenStoreIssueSuccesses()
+	tokenstore.metrics.IncOAuthTokenStoreIssueSuccesses()
 	return nil
 }
 
@@ -66,15 +67,15 @@ func (tokenstore *TokenStore) GetByAccess(access string) (oauth2.TokenInfo, erro
 
 	tokenstore.logger.Debug("GetByAccess", zap.String(method, access))
 	if access == "" {
-		tokenstore.metrics.IncTokenStoreLookupMisses(method)
+		tokenstore.metrics.IncOAuthTokenStoreLookupMisses(method)
 		return nil, errors.New("Empty token provided")
 	}
 	token, err := tokenstore.db.OAuth.OAuthAccessTokenGetByAccess(access)
 	if err != nil {
-		tokenstore.metrics.IncTokenStoreLookupMisses(method)
+		tokenstore.metrics.IncOAuthTokenStoreLookupMisses(method)
 		return nil, err
 	}
-	tokenstore.metrics.IncTokenStoreLookupHits(method)
+	tokenstore.metrics.IncOAuthTokenStoreLookupHits(method)
 	return toOAuthTokenStore(token)
 }
 
@@ -85,15 +86,15 @@ func (tokenstore *TokenStore) GetByCode(code string) (oauth2.TokenInfo, error) {
 
 	tokenstore.logger.Debug("GetByCode", zap.String(method, code))
 	if code == "" {
-		tokenstore.metrics.IncTokenStoreLookupMisses(method)
+		tokenstore.metrics.IncOAuthTokenStoreLookupMisses(method)
 		return nil, nil
 	}
 	token, err := tokenstore.db.OAuth.OAuthAccessTokenGetByCode(code)
 	if err != nil {
-		tokenstore.metrics.IncTokenStoreLookupMisses(method)
+		tokenstore.metrics.IncOAuthTokenStoreLookupMisses(method)
 		return nil, err
 	}
-	tokenstore.metrics.IncTokenStoreLookupHits(method)
+	tokenstore.metrics.IncOAuthTokenStoreLookupHits(method)
 	return toOAuthTokenStore(token)
 }
 
@@ -104,15 +105,15 @@ func (tokenstore *TokenStore) GetByRefresh(refresh string) (oauth2.TokenInfo, er
 
 	tokenstore.logger.Debug("GetByRefresh", zap.String(method, refresh))
 	if refresh == "" {
-		tokenstore.metrics.IncTokenStoreLookupMisses(method)
+		tokenstore.metrics.IncOAuthTokenStoreLookupMisses(method)
 		return nil, nil
 	}
 	token, err := tokenstore.db.OAuth.OAuthAccessTokenGetByRefresh(refresh)
 	if err != nil {
-		tokenstore.metrics.IncTokenStoreLookupMisses(method)
+		tokenstore.metrics.IncOAuthTokenStoreLookupMisses(method)
 		return nil, err
 	}
-	tokenstore.metrics.IncTokenStoreLookupHits(method)
+	tokenstore.metrics.IncOAuthTokenStoreLookupHits(method)
 	return toOAuthTokenStore(token)
 }
 

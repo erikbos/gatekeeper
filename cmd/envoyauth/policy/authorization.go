@@ -1,4 +1,4 @@
-package main
+package policy
 
 import (
 	"errors"
@@ -6,13 +6,14 @@ import (
 	"github.com/bmatcuk/doublestar"
 	"go.uber.org/zap"
 
+	"github.com/erikbos/gatekeeper/cmd/envoyauth/request"
 	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
 // CheckProductEntitlement loads developer, dev app, apiproduct details,
 // as input request.apikey must be set
 //
-func (p *Policy) CheckProductEntitlement(request *requestDetails) error {
+func (p *Policy) CheckProductEntitlement(request *request.State) error {
 
 	if err := p.getAPIKeyDevDevAppDetails(request); err != nil {
 		return err
@@ -21,59 +22,59 @@ func (p *Policy) CheckProductEntitlement(request *requestDetails) error {
 		return err
 	}
 	var err error
-	request.APIProduct, err = p.IsPathAllowed(request.URL.Path, request.developerAppKey)
+	request.APIProduct, err = p.IsPathAllowed(request.URL.Path, request.DeveloperAppKey)
 	return err
 }
 
 // getAPIKeyDevDevAppDetails populates apikey, developer and developerapp details
-func (p *Policy) getAPIKeyDevDevAppDetails(request *requestDetails) error {
+func (p *Policy) getAPIKeyDevDevAppDetails(request *request.State) error {
 
 	if request == nil {
 		return errors.New("No request details available")
 	}
 
 	var err error
-	request.developerAppKey, err = p.db.Credential.GetByKey(request.consumerKey)
+	request.DeveloperAppKey, err = p.config.db.Credential.GetByKey(request.ConsumerKey)
 	if err != nil {
-		p.metrics.IncUnknownAPIKey(request)
+		p.config.metrics.IncUnknownAPIKey(request)
 		return errors.New("Cannot find apikey")
 	}
 
-	request.developerApp, err = p.db.DeveloperApp.GetByID(request.developerAppKey.AppID)
+	request.DeveloperApp, err = p.config.db.DeveloperApp.GetByID(request.DeveloperAppKey.AppID)
 	if err != nil {
-		p.metrics.IncDatabaseFetchFailure(request)
+		p.config.metrics.IncDatabaseFetchFailure(request)
 		return errors.New("Cannot find developer app of this apikey")
 	}
 
-	request.developer, err = p.db.Developer.GetByID(request.developerApp.DeveloperID)
+	request.Developer, err = p.config.db.Developer.GetByID(request.DeveloperApp.DeveloperID)
 	if err != nil {
-		p.metrics.IncDatabaseFetchFailure(request)
+		p.config.metrics.IncDatabaseFetchFailure(request)
 		return errors.New("Cannot find developer of developer app")
 	}
 	return nil
 }
 
 // checkDevAndKeyValidity checks devapp approval and expiry status
-func (p *Policy) checkDevAndKeyValidity(request *requestDetails) error {
+func (p *Policy) checkDevAndKeyValidity(request *request.State) error {
 
 	if request == nil {
 		return errors.New("No request details available")
 	}
 
-	if !request.developer.IsActive() {
+	if !request.Developer.IsActive() {
 		return errors.New("Developer not active")
 	}
 
-	if request.developer.IsSuspended(request.timestamp) {
+	if request.Developer.IsSuspended(request.Timestamp) {
 		return errors.New("Developer suspended")
 	}
 
-	if !request.developerAppKey.IsApproved() {
+	if !request.DeveloperAppKey.IsApproved() {
 		// FIXME increase unapproved dev app counter (not an error state)
 		return errors.New("Unapproved apikey")
 	}
 
-	if request.developerAppKey.IsExpired(request.timestamp) {
+	if request.DeveloperAppKey.IsExpired(request.Timestamp) {
 		// FIXME increase expired dev app credentials counter (not an error state))
 		return errors.New("Expired apikey")
 	}
@@ -93,14 +94,14 @@ func (p *Policy) IsPathAllowed(requestPath string,
 	// Iterate over this key's apiproducts
 	for _, apiproduct := range credential.APIProducts {
 		if apiproduct.IsApproved() {
-			apiproductDetails, err := p.db.APIProduct.Get(apiproduct.Apiproduct)
+			apiproductDetails, err := p.config.db.APIProduct.Get(apiproduct.Apiproduct)
 			if err != nil {
 				// apikey has product in it which we cannot find:
 				// FIXME increase "unknown product in apikey" counter (not an error state)
 			} else {
 				// Iterate over all paths of apiproduct and try to match with path of request
 				for _, productPath := range apiproductDetails.Paths {
-					p.logger.Debug("IsRequestPathAllowed",
+					p.config.logger.Debug("IsRequestPathAllowed",
 						zap.String("productpath", productPath),
 						zap.String("requestpath", requestPath))
 

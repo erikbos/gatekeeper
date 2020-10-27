@@ -4,6 +4,7 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/erikbos/gatekeeper/cmd/envoyauth/oauth"
+	"github.com/erikbos/gatekeeper/cmd/envoyauth/policy"
 	"github.com/erikbos/gatekeeper/pkg/db/cache"
 	"github.com/erikbos/gatekeeper/pkg/db/cassandra"
 	"github.com/erikbos/gatekeeper/pkg/shared"
@@ -15,7 +16,7 @@ const (
 	defaultLogFileName         = "/dev/stdout"
 	defaultWebAdminListen      = "0.0.0.0:7777"
 	defaultWebAdminLogFileName = "envoyauth-admin.log"
-	defaultAuthGRPCListen      = "0.0.0.0:4000"
+	defaultExtAuthzListen      = "0.0.0.0:4000"
 	defaultOAuthListen         = "0.0.0.0:4001"
 )
 
@@ -27,7 +28,7 @@ type APIAuthConfig struct {
 	OAuth     oauth.Config             `yaml:"oauth"`     // OAuth configuration
 	Database  cassandra.DatabaseConfig `yaml:"database"`  // Database configuration
 	Cache     cache.Config             `yaml:"cache"`     // Cache configuration
-	Geoip     Geoip                    `yaml:"geoip"`     // Geoip lookup configuration
+	Geoip     policy.Geoip             `yaml:"geoip"`     // Geoip lookup configuration
 }
 
 func loadConfiguration(filename *string) (*APIAuthConfig, error) {
@@ -45,7 +46,7 @@ func loadConfiguration(filename *string) (*APIAuthConfig, error) {
 			},
 		},
 		EnvoyAuth: envoyAuthConfig{
-			Listen: defaultAuthGRPCListen,
+			Listen: defaultExtAuthzListen,
 		},
 		OAuth: oauth.Config{
 			Listen: defaultOAuthListen,

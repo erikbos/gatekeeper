@@ -3,14 +3,15 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 
+	"github.com/erikbos/gatekeeper/cmd/envoyauth/metrics"
 	"github.com/erikbos/gatekeeper/cmd/envoyauth/oauth"
+	"github.com/erikbos/gatekeeper/cmd/envoyauth/policy"
 	"github.com/erikbos/gatekeeper/pkg/db"
 	"github.com/erikbos/gatekeeper/pkg/db/cache"
 	"github.com/erikbos/gatekeeper/pkg/db/cassandra"
@@ -30,9 +31,9 @@ type server struct {
 	dbentities *db.EntityCache
 	vhosts     *vhostMapping
 	oauth      *oauth.Server
-	geoip      *Geoip
+	geoip      *policy.Geoip
 	readiness  *shared.Readiness
-	metrics    *metrics
+	metrics    *metrics.Metrics
 	logger     *zap.Logger
 }
 
@@ -59,7 +60,7 @@ func main() {
 		zap.String("version", version),
 		zap.String("buildtime", buildTime))
 
-	a.metrics = newMetrics()
+	a.metrics = metrics.NewMetrics()
 	a.metrics.RegisterWithPrometheus(applicationName)
 
 	database, err := cassandra.New(a.config.Database, applicationName, a.logger, false, 0)
@@ -74,7 +75,7 @@ func main() {
 	}
 
 	if a.config.Geoip.Database != "" {
-		a.geoip, err = OpenGeoipDatabase(a.config.Geoip.Database)
+		a.geoip, err = policy.OpenGeoipDatabase(a.config.Geoip.Database)
 		if err != nil {
 			a.logger.Fatal("Geoip db load failed", zap.Error(err))
 		}
@@ -101,9 +102,10 @@ func main() {
 	go a.vhosts.WaitFor(entityCacheConf.Notify)
 
 	// // Start service for OAuth2 endpoints
-	a.oauth = oauth.New(a.config.OAuth, a.db, a.logger)
+	a.oauth = oauth.New(a.config.OAuth, a.db, a.metrics, a.logger)
 	go func() {
-		log.Fatal(a.oauth.Start(applicationName))
+		a.logger.Fatal("OAuth server failed",
+			zap.Error(a.oauth.Start(applicationName)))
 	}()
 
 	a.StartAuthorizationServer()

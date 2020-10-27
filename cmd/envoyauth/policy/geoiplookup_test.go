@@ -1,4 +1,4 @@
-package main
+package policy
 
 // Camnot run test without geoip db
 
