@@ -18,6 +18,9 @@ const (
 	defaultWebAdminLogFileName = "envoyauth-admin.log"
 	defaultExtAuthzListen      = "0.0.0.0:4000"
 	defaultOAuthListen         = "0.0.0.0:4001"
+	defaultCacheSize           = 100 * 1024 * 1024
+	defaultCacheTTL            = 180
+	defaultCacheNegativeTTL    = 5
 )
 
 // APIAuthConfig contains our startup configuration data
@@ -50,6 +53,11 @@ func loadConfiguration(filename *string) (*APIAuthConfig, error) {
 		},
 		OAuth: oauth.Config{
 			Listen: defaultOAuthListen,
+		},
+		Cache: cache.Config{
+			Size:        defaultCacheSize,
+			TTL:         defaultCacheTTL,
+			NegativeTTL: defaultCacheNegativeTTL,
 		},
 	}
 
