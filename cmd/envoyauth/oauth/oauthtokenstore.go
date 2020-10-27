@@ -20,8 +20,8 @@ type TokenStore struct {
 	logger  *zap.Logger
 }
 
-// NewOAuthTokenStore creates token store instance
-func NewOAuthTokenStore(database *db.Database, metrics *metrics,
+// NewTokenStore creates token store instance
+func NewTokenStore(database *db.Database, metrics *metrics,
 	logger *zap.Logger) oauth2.TokenStore {
 
 	return &TokenStore{

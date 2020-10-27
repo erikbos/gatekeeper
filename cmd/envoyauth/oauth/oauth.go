@@ -98,10 +98,10 @@ func (oauth *Server) prepareOAuthInstance() {
 	manager := manage.NewDefaultManager()
 
 	// Set our token storage engine for access tokens
-	manager.MapTokenStorage(NewOAuthTokenStore(oauth.db, oauth.metrics, oauth.logger))
+	manager.MapTokenStorage(NewTokenStore(oauth.db, oauth.metrics, oauth.logger))
 
 	// Set client id engine for client ids
-	manager.MapClientStorage(NewOAuthClientTokenStore(oauth.db, oauth.metrics, oauth.logger))
+	manager.MapClientStorage(NewClientTokenStore(oauth.db, oauth.metrics, oauth.logger))
 
 	// Set default token ttl
 	manager.SetClientTokenCfg(&manage.Config{AccessTokenExp: 1 * time.Hour})

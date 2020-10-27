@@ -19,15 +19,20 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/structpb"
 
+	"github.com/erikbos/gatekeeper/pkg/shared"
 	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
 type envoyAuthConfig struct {
-	Listen string `yaml:"listen"` // GRPC Address and port to listen for control plane
+
+	// GRPC Address and port to listen for control plane
+	Listen string `yaml:"listen"`
 }
 
 // requestDetails holds all information of a request
 type requestDetails struct {
+	// Timestamp contains current time
+	timestamp       int64
 	httpRequest     *authservice.AttributeContext_HttpRequest
 	IP              net.IP
 	URL             *url.URL
@@ -37,7 +42,7 @@ type requestDetails struct {
 	listener        *types.Listener
 	developer       *types.Developer
 	developerApp    *types.DeveloperApp
-	appCredential   *types.DeveloperAppKey
+	developerAppKey *types.DeveloperAppKey
 	APIProduct      *types.APIProduct
 }
 
@@ -62,14 +67,16 @@ func (s *server) StartAuthorizationServer() {
 func (s *server) Check(ctx context.Context,
 	extauthzRequest *authservice.CheckRequest) (*authservice.CheckResponse, error) {
 
-	timer := prometheus.NewTimer(s.metrics.authLatencyHistogram)
+	timer := prometheus.NewTimer(s.metrics.authLatency)
 	defer timer.ObserveDuration()
 
 	request, err := getRequestDetails(extauthzRequest)
 	if err != nil {
-		s.metrics.increaseConnectionInfoFailure()
+		s.metrics.IncConnectionInfoFailure()
 		return s.rejectRequest(http.StatusBadRequest, nil, nil, fmt.Sprintf("%s", err))
 	}
+	request.timestamp = shared.GetCurrentTimeMilliseconds()
+
 	s.logger.Debug("extauthz",
 		zap.String("path", request.httpRequest.Path),
 		zap.Any("headers", request.httpRequest.Headers))
@@ -77,7 +84,7 @@ func (s *server) Check(ctx context.Context,
 	// FIXME not sure if x-forwarded-proto the way to determine original tcp port used
 	request.listener, err = s.vhosts.Lookup(request.httpRequest.Host, request.httpRequest.Headers["x-forwarded-proto"])
 	if err != nil {
-		s.metrics.increaseCounterRequestRejected(request)
+		s.metrics.IncAuthenticationRejected(request)
 		return s.rejectRequest(http.StatusNotFound, nil, nil, "U1nknown vhost")
 	}
 
@@ -106,7 +113,7 @@ func (s *server) Check(ctx context.Context,
 	if (vhostPolicyOutcome != nil && !vhostPolicyOutcome.authenticated) &&
 		(APIProductPolicyOutcome != nil && !APIProductPolicyOutcome.authenticated) {
 
-		s.metrics.increaseCounterRequestRejected(request)
+		s.metrics.IncAuthenticationRejected(request)
 
 		return s.rejectRequest(vhostPolicyOutcome.deniedStatusCode,
 			mergeMapsStringString(vhostPolicyOutcome.upstreamHeaders,
@@ -116,25 +123,13 @@ func (s *server) Check(ctx context.Context,
 			vhostPolicyOutcome.deniedMessage)
 	}
 
-	s.metrics.IncreaseCounterRequestAccept(request)
+	s.metrics.IncAuthenticationAccepted(request)
 
 	return s.allowRequest(
 		mergeMapsStringString(vhostPolicyOutcome.upstreamHeaders,
 			APIProductPolicyOutcome.upstreamHeaders),
 		mergeMapsStringString(vhostPolicyOutcome.upstreamDynamicMetadata,
 			APIProductPolicyOutcome.upstreamDynamicMetadata))
-}
-
-// mergeMapsStringString merges multiple map[string]string into one
-// be aware: it does overwriting duplicate keys
-func mergeMapsStringString(maps ...map[string]string) map[string]string {
-	result := make(map[string]string)
-	for _, m := range maps {
-		for k, v := range m {
-			result[k] = v
-		}
-	}
-	return result
 }
 
 // allowRequest answers Envoyproxy to authorizates request to go upstream
@@ -157,8 +152,8 @@ func (s *server) allowRequest(headers, metadata map[string]string) (
 		// Required for > Envoy 0.16
 		// DynamicMetadata: dynamicMetadata,
 	}
-	s.logger.Debug("allowRequest", zap.Reflect("response", response))
 
+	s.logger.Debug("allowRequest", zap.Reflect("response", response))
 	return response, nil
 }
 
@@ -194,6 +189,7 @@ func (s *server) rejectRequest(statusCode int, headers,
 		},
 		DynamicMetadata: buildDynamicMetadataList(metadata),
 	}
+
 	s.logger.Debug("rejectRequest", zap.Reflect("response", response))
 	return response, nil
 }
@@ -313,4 +309,16 @@ func buildJSONErrorMessage(message *string) string {
    `
 
 	return fmt.Sprintf(JSONErrorMessage, *message)
+}
+
+// mergeMapsStringString merges multiple map[string]string into one
+// be aware: it does overwriting duplicate keys
+func mergeMapsStringString(maps ...map[string]string) map[string]string {
+	result := make(map[string]string)
+	for _, m := range maps {
+		for k, v := range m {
+			result[k] = v
+		}
+	}
+	return result
 }

@@ -19,8 +19,8 @@ type ClientTokenStore struct {
 	logger  *zap.Logger
 }
 
-// NewOAuthClientTokenStore creates client token store instance
-func NewOAuthClientTokenStore(database *db.Database, metrics *metrics,
+// NewClientTokenStore creates client token store instance
+func NewClientTokenStore(database *db.Database, metrics *metrics,
 	logger *zap.Logger) oauth2.ClientStore {
 
 	return &ClientTokenStore{

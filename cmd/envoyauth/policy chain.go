@@ -76,7 +76,7 @@ func (p PolicyChain) Evaluate() *PolicyChainResponse {
 		trimmedPolicyName := strings.TrimSpace(policyName)
 		policyResult := (&Policy{
 			request:             p.request,
-			authServer:          p.authServer,
+			server:              p.authServer,
 			PolicyChainResponse: &policyChainResult,
 		}).Evaluate(trimmedPolicyName, p.request)
 
@@ -87,7 +87,7 @@ func (p PolicyChain) Evaluate() *PolicyChainResponse {
 
 		if policyResult != nil {
 			// Register this policy evaluation successed
-			p.authServer.metrics.IncreaseMetricPolicy(p.scope, trimmedPolicyName)
+			p.authServer.metrics.IncPolicyUsage(p.scope, trimmedPolicyName)
 
 			// Add policy generated headers to upstream
 			for key, value := range policyResult.headers {
@@ -111,7 +111,7 @@ func (p PolicyChain) Evaluate() *PolicyChainResponse {
 			}
 		} else {
 			// Register this policy evaluation failed
-			p.authServer.metrics.IncreaseMetricPolicyUnknown(p.scope, trimmedPolicyName)
+			p.authServer.metrics.IncPolicyUnknown(p.scope, trimmedPolicyName)
 		}
 	}
 	return &policyChainResult

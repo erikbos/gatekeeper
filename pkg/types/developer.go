@@ -54,3 +54,33 @@ var (
 	// NullDevelopers is an empty developer slice
 	NullDevelopers = Developers{}
 )
+
+// Activate marks a developer as approved
+func (d *Developer) Activate() {
+
+	d.Status = "active"
+}
+
+// Deactivate marks a developer as inactive
+func (d *Developer) Deactivate() {
+
+	d.Status = "inactive"
+}
+
+// IsActive returns true in case developer's status is active
+func (d *Developer) IsActive() bool {
+
+	return d.Status == "active"
+}
+
+// IsSuspended returns true in case developer is suspended
+func (d *Developer) IsSuspended(now int64) bool {
+
+	if d.SuspendedTill == 0 || d.SuspendedTill == -1 {
+		return false
+	}
+	if now < d.SuspendedTill {
+		return true
+	}
+	return false
+}

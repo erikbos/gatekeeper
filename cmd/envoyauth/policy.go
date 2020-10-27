@@ -17,7 +17,7 @@ import (
 type Policy struct {
 
 	// Global state of our running application
-	authServer *server
+	server *server
 
 	// Request information
 	request *requestDetails
@@ -42,7 +42,7 @@ type PolicyResponse struct {
 	metadata map[string]string
 }
 
-// These are dynamic metadata keys set by various policies
+// Dynamic metadata keys which can be set by various policies
 const (
 	metadataAuthMethod            = "auth.method"
 	metadataAuthMethodValueAPIKey = "apikey"
@@ -63,13 +63,13 @@ func (p *Policy) Evaluate(policy string, request *requestDetails) *PolicyRespons
 
 	switch policy {
 	case "checkAPIKey":
-		return checkAPIKey(request, p.authServer)
+		return checkAPIKey(request, p.server)
 	case "checkOAuth2":
-		return checkOAuth2(request, p.authServer)
+		return checkOAuth2(request, p.server)
 	case "removeAPIKeyFromQP":
 		return p.removeAPIKeyFromQP()
 	case "lookupGeoIP":
-		return lookupGeoIP(request, p.authServer)
+		return lookupGeoIP(request, p.server)
 	case "qps":
 		return policyQPS1(request)
 	case "sendAPIKey":
@@ -115,7 +115,7 @@ func checkAPIKey(request *requestDetails, authServer *server) *PolicyResponse {
 		authServer.logger.Debug("CheckProductEntitlement() not allowed",
 			zap.String("path", request.URL.Path), zap.String("reason", err.Error()))
 
-		authServer.metrics.increaseCounterApikeyNotfound(request)
+		authServer.metrics.IncUnknownAPIKey(request)
 
 		// apikey invalid or path not allowed
 		return &PolicyResponse{
@@ -188,7 +188,7 @@ func checkOAuth2(request *requestDetails, authServer *server) *PolicyResponse {
 		authServer.logger.Debug("CheckProductEntitlement() not allowed",
 			zap.String("path", request.URL.Path), zap.String("reason", err.Error()))
 
-		authServer.metrics.increaseCounterApikeyNotfound(request)
+		authServer.metrics.IncUnknownAPIKey(request)
 
 		return &PolicyResponse{
 			denied:           true,
@@ -270,7 +270,7 @@ func lookupGeoIP(request *requestDetails, authServer *server) *PolicyResponse {
 		return nil
 	}
 
-	authServer.metrics.requestsPerCountry.WithLabelValues(country).Inc()
+	authServer.metrics.IncCountryHits(country)
 
 	return &PolicyResponse{
 		metadata: map[string]string{
