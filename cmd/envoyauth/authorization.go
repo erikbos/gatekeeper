@@ -12,49 +12,49 @@ import (
 // CheckProductEntitlement loads developer, dev app, apiproduct details,
 // as input request.apikey must be set
 //
-func (s *server) CheckProductEntitlement(request *requestDetails) error {
+func (p *Policy) CheckProductEntitlement(request *requestDetails) error {
 
-	if err := s.getAPIKeyDevDevAppDetails(request); err != nil {
+	if err := p.getAPIKeyDevDevAppDetails(request); err != nil {
 		return err
 	}
-	if err := s.checkDevAndKeyValidity(request); err != nil {
+	if err := p.checkDevAndKeyValidity(request); err != nil {
 		return err
 	}
 	var err error
-	request.APIProduct, err = s.IsPathAllowed(request.URL.Path, request.developerAppKey)
+	request.APIProduct, err = p.IsPathAllowed(request.URL.Path, request.developerAppKey)
 	return err
 }
 
 // getAPIKeyDevDevAppDetails populates apikey, developer and developerapp details
-func (s *server) getAPIKeyDevDevAppDetails(request *requestDetails) error {
+func (p *Policy) getAPIKeyDevDevAppDetails(request *requestDetails) error {
 
 	if request == nil {
 		return errors.New("No request details available")
 	}
 
 	var err error
-	request.developerAppKey, err = s.db.Credential.GetByKey(request.consumerKey)
+	request.developerAppKey, err = p.db.Credential.GetByKey(request.consumerKey)
 	if err != nil {
-		s.metrics.IncUnknownAPIKey(request)
+		p.metrics.IncUnknownAPIKey(request)
 		return errors.New("Cannot find apikey")
 	}
 
-	request.developerApp, err = s.db.DeveloperApp.GetByID(request.developerAppKey.AppID)
+	request.developerApp, err = p.db.DeveloperApp.GetByID(request.developerAppKey.AppID)
 	if err != nil {
-		s.metrics.IncDatabaseFetchFailure(request)
+		p.metrics.IncDatabaseFetchFailure(request)
 		return errors.New("Cannot find developer app of this apikey")
 	}
 
-	request.developer, err = s.db.Developer.GetByID(request.developerApp.DeveloperID)
+	request.developer, err = p.db.Developer.GetByID(request.developerApp.DeveloperID)
 	if err != nil {
-		s.metrics.IncDatabaseFetchFailure(request)
+		p.metrics.IncDatabaseFetchFailure(request)
 		return errors.New("Cannot find developer of developer app")
 	}
 	return nil
 }
 
 // checkDevAndKeyValidity checks devapp approval and expiry status
-func (s *server) checkDevAndKeyValidity(request *requestDetails) error {
+func (p *Policy) checkDevAndKeyValidity(request *requestDetails) error {
 
 	if request == nil {
 		return errors.New("No request details available")
@@ -82,7 +82,7 @@ func (s *server) checkDevAndKeyValidity(request *requestDetails) error {
 
 // IsPathAllowed checks whether paths is allowed by apikey,
 // this means the apikey needs to contain a product that matchs the request path
-func (s *server) IsPathAllowed(requestPath string,
+func (p *Policy) IsPathAllowed(requestPath string,
 	credential *types.DeveloperAppKey) (*types.APIProduct, error) {
 
 	// Does this apikey have any products assigned?
@@ -93,14 +93,14 @@ func (s *server) IsPathAllowed(requestPath string,
 	// Iterate over this key's apiproducts
 	for _, apiproduct := range credential.APIProducts {
 		if apiproduct.IsApproved() {
-			apiproductDetails, err := s.db.APIProduct.Get(apiproduct.Apiproduct)
+			apiproductDetails, err := p.db.APIProduct.Get(apiproduct.Apiproduct)
 			if err != nil {
 				// apikey has product in it which we cannot find:
 				// FIXME increase "unknown product in apikey" counter (not an error state)
 			} else {
 				// Iterate over all paths of apiproduct and try to match with path of request
 				for _, productPath := range apiproductDetails.Paths {
-					s.logger.Debug("IsRequestPathAllowed",
+					p.logger.Debug("IsRequestPathAllowed",
 						zap.String("productpath", productPath),
 						zap.String("requestpath", requestPath))
 
