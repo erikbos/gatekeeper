@@ -124,7 +124,7 @@ func (p Chain) Evaluate() *ChainOutcome {
 
 		if policyResult != nil {
 			// Register this policy evaluation successed
-			p.config.metrics.IncPolicyUsage(p.scope, trimmedPolicyName)
+			p.config.metrics.IncPolicyHits(p.scope, trimmedPolicyName)
 
 			// Add policy generated headers to upstream
 			for key, value := range policyResult.Headers {
@@ -148,7 +148,7 @@ func (p Chain) Evaluate() *ChainOutcome {
 			}
 		} else {
 			// Register this policy evaluation failed
-			p.config.metrics.IncPolicyUnknown(p.scope, trimmedPolicyName)
+			p.config.metrics.IncPolicyMisses(p.scope, trimmedPolicyName)
 		}
 	}
 	return &policyChainResult

@@ -14,8 +14,8 @@ type Metrics struct {
 	configLoads                   *prometheus.CounterVec
 	connectInfoFailures           prometheus.Counter
 	UnknownAPIkey                 *prometheus.CounterVec
-	PolicyUsage                   *prometheus.CounterVec
-	PolicyUnknown                 *prometheus.CounterVec
+	PolicyHits                    *prometheus.CounterVec
+	PolicyMisses                  *prometheus.CounterVec
 	CountryHits                   *prometheus.CounterVec
 	OAuthClientStoreHits          prometheus.Counter
 	OAuthClientStoreMisses        prometheus.Counter
@@ -85,21 +85,21 @@ func (m *Metrics) RegisterWithPrometheus(metricNamespace string) {
 		}, []string{"hostname", "protocol", "method"})
 	prometheus.MustRegister(m.UnknownAPIkey)
 
-	m.PolicyUsage = prometheus.NewCounterVec(
+	m.PolicyHits = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: metricNamespace,
 			Name:      "policy_hits_total",
 			Help:      "Total number of policy hits.",
 		}, []string{"scope", "policy"})
-	prometheus.MustRegister(m.PolicyUsage)
+	prometheus.MustRegister(m.PolicyHits)
 
-	m.PolicyUnknown = prometheus.NewCounterVec(
+	m.PolicyMisses = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: metricNamespace,
 			Name:      "policy_unknown_total",
 			Help:      "Total number of unknown policy hits.",
 		}, []string{"scope", "policy"})
-	prometheus.MustRegister(m.PolicyUnknown)
+	prometheus.MustRegister(m.PolicyMisses)
 
 	m.CountryHits = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
@@ -161,11 +161,17 @@ func (m *Metrics) RegisterWithPrometheus(metricNamespace string) {
 // IncAuthenticationAccepted counts requests that are accepted
 func (m *Metrics) IncAuthenticationAccepted(r *request.State) {
 
+	var product string
+
+	if r.APIProduct != nil {
+		product = r.APIProduct.Name
+	}
+
 	m.authAccepted.WithLabelValues(
 		r.HTTPRequest.Host,
 		r.HTTPRequest.Protocol,
 		r.HTTPRequest.Method,
-		r.APIProduct.Name).Inc()
+		product).Inc()
 }
 
 // IncAuthenticationRejected counts requests that are rejected
@@ -220,14 +226,16 @@ func (m *Metrics) IncDatabaseFetchFailure(r *request.State) {
 		r.HTTPRequest.Method).Inc()
 }
 
-func (m *Metrics) IncPolicyUsage(scope, name string) {
+// IncPolicyHits increases policy hit metric
+func (m *Metrics) IncPolicyHits(scope, name string) {
 
-	m.PolicyUsage.WithLabelValues(scope, name).Inc()
+	m.PolicyHits.WithLabelValues(scope, name).Inc()
 }
 
-func (m *Metrics) IncPolicyUnknown(scope, name string) {
+// IncPolicyMisses increases policy miss metric
+func (m *Metrics) IncPolicyMisses(scope, name string) {
 
-	m.PolicyUnknown.WithLabelValues(scope, name).Inc()
+	m.PolicyMisses.WithLabelValues(scope, name).Inc()
 }
 
 func (m *Metrics) IncCountryHits(country string) {
