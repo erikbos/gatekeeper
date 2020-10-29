@@ -74,7 +74,7 @@ func (s *server) Check(ctx context.Context,
 
 	policyConfig := policy.NewChainConfig(s.db, s.oauth, s.geoip, s.metrics, s.logger)
 
-	var vhostPolicyOut *policy.ChainOutcome
+	vhostPolicyOut := &policy.ChainOutcome{}
 	if request.Listener != nil && request.Listener.Policies != "" {
 		vhostPolicyOut = policy.NewChain(request,
 			policy.PolicyScopeVhost, policyConfig).Evaluate()
@@ -82,7 +82,7 @@ func (s *server) Check(ctx context.Context,
 		s.logger.Debug("vhostPolicyOutcome", zap.Reflect("debug", vhostPolicyOut))
 	}
 
-	var APIProductPolicyOut *policy.ChainOutcome
+	APIProductPolicyOut := &policy.ChainOutcome{}
 	if request.APIProduct != nil && request.APIProduct.Policies != "" {
 		APIProductPolicyOut = policy.NewChain(request,
 			policy.PolicyScopeAPIProduct, policyConfig).Evaluate()
@@ -284,10 +284,7 @@ func getrequestDetails(req *authservice.CheckRequest) (*request.State, error) {
 // returns a well structured JSON-formatted message
 func buildJSONErrorMessage(message *string) string {
 
-	const JSONErrorMessage = `{
-	"message": "%s"
-   }
-   `
+	const JSONErrorMessage = `{	"message": "%s" }`
 
 	return fmt.Sprintf(JSONErrorMessage, *message)
 }
