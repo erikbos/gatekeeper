@@ -140,14 +140,16 @@ func (oauth *Server) handleTokenIssueRequest(c *gin.Context) {
 }
 
 // tokenInfoAnswer is returned by public OAuth Token Info endpoint
+// fields according to https://tools.ietf.org/html/rfc7662
+// OAuth 2.0 Token Introspection
 type tokenInfoAnswer struct {
-	Valid     bool      `json:"valid"`
-	CreatedAt time.Time `json:"createdAt"`
-	ExpiresAt time.Time `json:"expiresAt"`
-	Scope     string    `json:"scope"`
+	Active    bool   `json:"active"`
+	IssuedAt  int64  `json:"iat"`
+	ExpiresAt int64  `json:"exp"`
+	Scope     string `json:"scope"`
 }
 
-// handleTokenInfo shows information about temporary token
+// handleTokenInfo shows information about temporary token (RFC7662)
 func (oauth *Server) handleTokenInfo(c *gin.Context) {
 
 	tokenInfo, err := oauth.oauthserver.ValidationBearerToken(c.Request)
@@ -158,11 +160,15 @@ func (oauth *Server) handleTokenInfo(c *gin.Context) {
 
 	// Copy over the information we want to return back as "public info"
 	// We must not show client_id / client_secret as they are secret.
+	//
+	// Fields named according to https://tools.ietf.org/html/rfc7662
+	//
 	status := tokenInfoAnswer{
-		Valid:     true,
-		CreatedAt: tokenInfo.GetAccessCreateAt().UTC(),
-		ExpiresAt: tokenInfo.GetAccessCreateAt().Add(tokenInfo.GetAccessExpiresIn()).UTC(),
-		Scope:     tokenInfo.GetScope(),
+		Active:   true,
+		IssuedAt: tokenInfo.GetAccessCreateAt().UTC().Unix(),
+		ExpiresAt: tokenInfo.GetAccessCreateAt().
+			Add(tokenInfo.GetAccessExpiresIn()).UTC().Unix(),
+		Scope: tokenInfo.GetScope(),
 	}
 	c.JSON(http.StatusOK, status)
 }
