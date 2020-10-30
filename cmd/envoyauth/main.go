@@ -3,14 +3,15 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 
+	"github.com/erikbos/gatekeeper/cmd/envoyauth/metrics"
 	"github.com/erikbos/gatekeeper/cmd/envoyauth/oauth"
+	"github.com/erikbos/gatekeeper/cmd/envoyauth/policy"
 	"github.com/erikbos/gatekeeper/pkg/db"
 	"github.com/erikbos/gatekeeper/pkg/db/cache"
 	"github.com/erikbos/gatekeeper/pkg/db/cassandra"
@@ -23,30 +24,26 @@ var (
 	buildTime string // Build time, set by Makefile
 )
 
-const (
-	applicationName       = "envoyauth"             // Name of application, used in Prometheus metrics
-	defaultConfigFileName = "envoyauth-config.yaml" // Default configuration file
-	entityRefreshInterval = 3 * time.Second         // interval between database entities refresh loads
-)
-
-type authorizationServer struct {
+type server struct {
 	config     *APIAuthConfig
 	webadmin   *webadmin.Webadmin
 	db         *db.Database
 	dbentities *db.EntityCache
 	vhosts     *vhostMapping
 	oauth      *oauth.Server
-	geoip      *Geoip
+	geoip      *policy.Geoip
 	readiness  *shared.Readiness
-	metrics    *metrics
+	metrics    *metrics.Metrics
 	logger     *zap.Logger
 }
 
 func main() {
-	filename := flag.String("config", defaultConfigFileName, "Configuration filename")
+	const applicationName = "envoyauth"
+
+	filename := flag.String("config", "envoyauth-config.yaml", "Configuration filename")
 	flag.Parse()
 
-	var a authorizationServer
+	var a server
 	var err error
 	if a.config, err = loadConfiguration(filename); err != nil {
 		fmt.Print("Cannot parse configuration file:")
@@ -63,8 +60,8 @@ func main() {
 		zap.String("version", version),
 		zap.String("buildtime", buildTime))
 
-	a.metrics = newMetrics()
-	a.metrics.RegisterWithPrometheus()
+	a.metrics = metrics.NewMetrics()
+	a.metrics.RegisterWithPrometheus(applicationName)
 
 	database, err := cassandra.New(a.config.Database, applicationName, a.logger, false, 0)
 	if err != nil {
@@ -78,7 +75,7 @@ func main() {
 	}
 
 	if a.config.Geoip.Database != "" {
-		a.geoip, err = OpenGeoipDatabase(a.config.Geoip.Database)
+		a.geoip, err = policy.OpenGeoipDatabase(a.config.Geoip.Database)
 		if err != nil {
 			a.logger.Fatal("Geoip db load failed", zap.Error(err))
 		}
@@ -91,11 +88,11 @@ func main() {
 	// Start db health check and notify readiness subsystem
 	go a.db.RunReadinessCheck(a.readiness.GetChannel())
 
-	go startWebAdmin(&a)
+	go startWebAdmin(&a, applicationName)
 
 	// Start continously loading of virtual host, routes & cluster data
 	entityCacheConf := db.EntityCacheConfig{
-		RefreshInterval: entityRefreshInterval,
+		RefreshInterval: 3 * time.Second,
 		Notify:          make(chan db.EntityChangeNotification),
 	}
 	a.dbentities = db.NewEntityCache(a.db, entityCacheConf, a.logger)
@@ -105,16 +102,17 @@ func main() {
 	go a.vhosts.WaitFor(entityCacheConf.Notify)
 
 	// // Start service for OAuth2 endpoints
-	a.oauth = oauth.New(a.config.OAuth, a.db, a.logger)
+	a.oauth = oauth.New(a.config.OAuth, a.db, a.metrics, a.logger)
 	go func() {
-		log.Fatal(a.oauth.Start(applicationName))
+		a.logger.Fatal("OAuth server failed",
+			zap.Error(a.oauth.Start(applicationName)))
 	}()
 
 	a.StartAuthorizationServer()
 }
 
 // startWebAdmin starts the admin web UI
-func startWebAdmin(s *authorizationServer) {
+func startWebAdmin(s *server, applicationName string) {
 
 	logger := shared.NewLogger(&s.config.WebAdmin.Logger)
 

@@ -118,7 +118,7 @@ func (a *AuthHandler) IsPathAllowedByUser(user *types.User, method, path string)
 
 	for _, roleName := range user.Roles {
 		if role, err := a.role.Get(roleName); err == nil {
-			if role.PathAllowed(method, path) {
+			if role.IsPathAllowed(method, path) {
 				return role.Name, nil
 			}
 		}

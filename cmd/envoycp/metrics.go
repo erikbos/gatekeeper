@@ -16,11 +16,11 @@ func newMetrics() *metrics {
 }
 
 // RegisterWithPrometheus registers envoycp operational metrics
-func (m *metrics) RegisterWithPrometheus() {
+func (m *metrics) RegisterWithPrometheus(metricNamespace string) {
 
 	m.xdsEntities = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
-			Namespace: applicationName,
+			Namespace: metricNamespace,
 			Name:      "xds_entities_total",
 			Help:      "Total number of entities.",
 		}, []string{"messagetype"})
@@ -28,7 +28,7 @@ func (m *metrics) RegisterWithPrometheus() {
 
 	m.xdsSnapshots = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Namespace: applicationName,
+			Namespace: metricNamespace,
 			Name:      "xds_snapshots_total",
 			Help:      "Total number of xds snapshots created.",
 		}, []string{"resource"})
@@ -36,7 +36,7 @@ func (m *metrics) RegisterWithPrometheus() {
 
 	m.xdsMessages = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Namespace: applicationName,
+			Namespace: metricNamespace,
 			Name:      "xds_resource_requests_total",
 			Help:      "Total number of XDS messages.",
 		}, []string{"messagetype"})

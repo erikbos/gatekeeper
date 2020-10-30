@@ -1,4 +1,4 @@
-package main
+package policy
 
 import (
 	"errors"
@@ -10,45 +10,45 @@ import (
 	"github.com/bmatcuk/doublestar"
 	"go.uber.org/zap"
 
+	"github.com/erikbos/gatekeeper/cmd/envoyauth/request"
 	"github.com/erikbos/gatekeeper/pkg/shared"
 )
 
 // Policy holds input to be to evaluate one policy
 type Policy struct {
-
 	// Global state of our running application
-	authServer *authorizationServer
+	config *ChainConfig
 
 	// Request information
-	request *requestInfo
+	Request *request.State
 
 	// Current state of policy evaluation
-	*PolicyChainResponse
+	*ChainOutcome
 }
 
-// PolicyResponse holds output of policy evaluation
-type PolicyResponse struct {
-	// If true the request was authenticated, subsequent policies should be evaluated
-	authenticated bool
-	// If true the request should be denied, no further policy evaluations required
-	denied bool
+// Response holds output of policy evaluation
+type Response struct {
+	// If true the request was Authenticated, subsequent policies should be evaluated
+	Authenticated bool
+	// If true the request should be Denied, no further policy evaluations required
+	Denied bool
 	// Statuscode to use when denying a request
-	deniedStatusCode int
+	DeniedStatusCode int
 	// Message to return when denying a request
-	deniedMessage string
-	// Additional HTTP headers to set when forwarding to upstream
-	headers map[string]string
-	// Dynamic metadata to set when forwarding to subsequent envoyproxy filter
-	metadata map[string]string
+	DeniedMessage string
+	// Additional HTTP Headers to set when forwarding to upstream
+	Headers map[string]string
+	// Dynamic Metadata to set when forwarding to subsequent envoyproxy filter
+	Metadata map[string]string
 }
 
-// These are dynamic metadata keys set by various policies
+// Dynamic metadata keys which can be set by various policies
 const (
 	metadataAuthMethod            = "auth.method"
 	metadataAuthMethodValueAPIKey = "apikey"
-	metadataAuthMethodValueOAuth2 = "oauth2"
+	metadataAuthMethodValueOAuth  = "oauth"
 	metadataAuthAPIKey            = "auth.apikey"
-	metadataAuthOAuth2Token       = "auth.oauth2token"
+	metadataAuthOAuthToken        = "auth.oauthtoken"
 	metadataDeveloperEmail        = "developer.email"
 	metadataDeveloperID           = "developer.id"
 	metadataAppName               = "app.name"
@@ -58,18 +58,26 @@ const (
 	metadataGeoIPState            = "geoip.state"
 )
 
+// NewPolicy returns a new Policy instance
+func NewPolicy(config *ChainConfig) *Policy {
+
+	return &Policy{
+		config: config,
+	}
+}
+
 // Evaluate executes single policy statement
-func (p *Policy) Evaluate(policy string, request *requestInfo) *PolicyResponse {
+func (p *Policy) Evaluate(policy string, request *request.State) *Response {
 
 	switch policy {
 	case "checkAPIKey":
-		return checkAPIKey(request, p.authServer)
+		return p.checkAPIKey(request)
 	case "checkOAuth2":
-		return checkOAuth2(request, p.authServer)
+		return p.checkOAuth2(request)
 	case "removeAPIKeyFromQP":
 		return p.removeAPIKeyFromQP()
 	case "lookupGeoIP":
-		return lookupGeoIP(request, p.authServer)
+		return p.lookupGeoIP(request)
 	case "qps":
 		return policyQPS1(request)
 	case "sendAPIKey":
@@ -91,44 +99,44 @@ func (p *Policy) Evaluate(policy string, request *requestInfo) *PolicyResponse {
 }
 
 // checkAPIKey tries to find key in querystring, loads dev app, dev details, and check whether path is allowed
-func checkAPIKey(request *requestInfo, authServer *authorizationServer) *PolicyResponse {
+func (p *Policy) checkAPIKey(request *request.State) *Response {
 
 	var err error
-	request.apikey, err = getAPIkeyFromQueryString(request.queryParameters)
+	request.ConsumerKey, err = getAPIkeyFromQueryString(request.QueryParameters)
 
 	// In case we cannot find a query parameter we return immediately
-	if err == nil && request.apikey == nil {
+	if err == nil && request.ConsumerKey == nil {
 		return nil
 	}
 	// In case we cannot find a query parameter did not have a value we reject request
 	if err != nil {
-		return &PolicyResponse{
-			denied:           true,
-			deniedStatusCode: http.StatusBadRequest,
-			deniedMessage:    fmt.Sprint(err),
+		return &Response{
+			Denied:           true,
+			DeniedStatusCode: http.StatusBadRequest,
+			DeniedMessage:    fmt.Sprint(err),
 		}
 	}
 
 	// In case we have an apikey we check whether product is allowed to be accessed
-	err = authServer.CheckProductEntitlement(request)
+	err = p.CheckProductEntitlement(request)
 	if err != nil {
-		authServer.logger.Debug("CheckProductEntitlement() not allowed",
+		p.config.logger.Debug("CheckProductEntitlement() not allowed",
 			zap.String("path", request.URL.Path), zap.String("reason", err.Error()))
 
-		authServer.metrics.increaseCounterApikeyNotfound(request)
+		p.config.metrics.IncUnknownAPIKey(request)
 
 		// apikey invalid or path not allowed
-		return &PolicyResponse{
-			denied:           true,
-			deniedStatusCode: http.StatusBadRequest,
-			deniedMessage:    fmt.Sprint(err),
+		return &Response{
+			Denied:           true,
+			DeniedStatusCode: http.StatusBadRequest,
+			DeniedMessage:    fmt.Sprint(err),
 		}
 	}
 
 	// apikey invalid or path not allowed
-	return &PolicyResponse{
-		authenticated: true,
-		metadata:      buildMetadata(request),
+	return &Response{
+		Authenticated: true,
+		Metadata:      buildMetadata(request),
 	}
 }
 
@@ -151,9 +159,9 @@ func getAPIkeyFromQueryString(queryParameters url.Values) (*string, error) {
 }
 
 // checkOAuth2 tries OAuth authentication, loads dev app, dev details, and check whether path is allowed
-func checkOAuth2(request *requestInfo, authServer *authorizationServer) *PolicyResponse {
+func (p *Policy) checkOAuth2(request *request.State) *Response {
 
-	authorizationHeader := request.httpRequest.Headers["authorization"]
+	authorizationHeader := request.HTTPRequest.Headers["authorization"]
 	if authorizationHeader == "" {
 		return nil
 	}
@@ -169,111 +177,111 @@ func checkOAuth2(request *requestInfo, authServer *authorizationServer) *PolicyR
 	}
 
 	// Load OAuth token details from data store
-	tokenInfo, err := authServer.oauth.LoadAccessToken(accessToken)
+	tokenInfo, err := p.config.oauth.LoadAccessToken(accessToken)
 	if err != nil {
-		return &PolicyResponse{
-			denied:           true,
-			deniedStatusCode: http.StatusInternalServerError,
-			deniedMessage:    fmt.Sprint(err),
+		return &Response{
+			Denied:           true,
+			DeniedStatusCode: http.StatusInternalServerError,
+			DeniedMessage:    fmt.Sprint(err),
 		}
 	}
-	request.oauth2token = &accessToken
+	request.OauthToken = &accessToken
 
 	// The temporary access token contains the apikey (Also Known As clientId)
 	clientID := tokenInfo.GetClientID()
-	request.apikey = &clientID
+	request.ConsumerKey = &clientID
 
-	err = authServer.CheckProductEntitlement(request)
+	err = p.CheckProductEntitlement(request)
 	if err != nil {
-		authServer.logger.Debug("CheckProductEntitlement() not allowed",
+		p.config.logger.Debug("CheckProductEntitlement() not allowed",
 			zap.String("path", request.URL.Path), zap.String("reason", err.Error()))
 
-		authServer.metrics.increaseCounterApikeyNotfound(request)
+		p.config.metrics.IncUnknownAPIKey(request)
 
-		return &PolicyResponse{
-			denied:           true,
-			deniedStatusCode: http.StatusForbidden,
-			deniedMessage:    fmt.Sprint(err),
+		return &Response{
+			Denied:           true,
+			DeniedStatusCode: http.StatusForbidden,
+			DeniedMessage:    fmt.Sprint(err),
 		}
 	}
 
 	// Signal that we have authenticated this request
-	return &PolicyResponse{
-		authenticated: true,
-		metadata:      buildMetadata(request),
+	return &Response{
+		Authenticated: true,
+		Metadata:      buildMetadata(request),
 	}
 }
 
 // buildMetadata returns all authentication & apim metadata to be returned by envoyauth
-func buildMetadata(request *requestInfo) map[string]string {
+func buildMetadata(request *request.State) map[string]string {
 
 	m := make(map[string]string, 10)
 
-	if request.developer != nil {
-		if request.developer.Email != "" {
-			m[metadataDeveloperEmail] = request.developer.Email
+	if request.Developer != nil {
+		if request.Developer.Email != "" {
+			m[metadataDeveloperEmail] = request.Developer.Email
 		}
-		if request.developer.DeveloperID != "" {
-			m[metadataDeveloperID] = request.developer.DeveloperID
+		if request.Developer.DeveloperID != "" {
+			m[metadataDeveloperID] = request.Developer.DeveloperID
 		}
 	}
-	if request.developerApp != nil {
-		if request.developerApp.AppID != "" {
-			m[metadataAppID] = request.developerApp.AppID
+	if request.DeveloperApp != nil {
+		if request.DeveloperApp.AppID != "" {
+			m[metadataAppID] = request.DeveloperApp.AppID
 		}
-		if request.developerApp.Name != "" {
-			m[metadataAppName] = request.developerApp.Name
+		if request.DeveloperApp.Name != "" {
+			m[metadataAppName] = request.DeveloperApp.Name
 		}
 	}
 	if request.APIProduct != nil && request.APIProduct.Name != "" {
 		m[metadataAPIProductName] = request.APIProduct.Name
 	}
-	if request.apikey != nil {
+	if request.ConsumerKey != nil {
 		m[metadataAuthMethod] = metadataAuthMethodValueAPIKey
-		m[metadataAuthAPIKey] = *request.apikey
+		m[metadataAuthAPIKey] = *request.ConsumerKey
 	}
-	if request.oauth2token != nil {
-		m[metadataAuthMethod] = metadataAuthMethodValueOAuth2
-		m[metadataAuthOAuth2Token] = *request.oauth2token
+	if request.OauthToken != nil {
+		m[metadataAuthMethod] = metadataAuthMethodValueOAuth
+		m[metadataAuthOAuthToken] = *request.OauthToken
 	}
 
 	return m
 }
 
 // removeAPIKeyFromQP sets path to requested path without any query parameters
-func (p *Policy) removeAPIKeyFromQP() *PolicyResponse {
+func (p *Policy) removeAPIKeyFromQP() *Response {
 
-	// We only update :path in case we know request goes upstream
-	if !p.PolicyChainResponse.authenticated {
+	// We only update :path in case we know request was authenticated and hence goes upstream
+	if p == nil || !p.ChainOutcome.Authenticated {
 		return nil
 	}
 
-	p.request.queryParameters.Del("apikey")
+	p.Request.QueryParameters.Del("apikey")
 
 	// We remove query parameters by having envoyauth overwrite the path
-	return &PolicyResponse{
-		headers: map[string]string{
-			":path": p.request.URL.Path + "?" + p.request.queryParameters.Encode(),
+	return &Response{
+		Headers: map[string]string{
+			":path": p.Request.URL.Path + "?" + p.Request.QueryParameters.Encode(),
 		},
 	}
 }
 
 // lookupGeoIP lookup requestor's ip address in geoip database
-func lookupGeoIP(request *requestInfo, authServer *authorizationServer) *PolicyResponse {
+func (p *Policy) lookupGeoIP(request *request.State) *Response {
 
-	if authServer.geoip == nil {
+	if p.config == nil || p.config.geo == nil {
 		return nil
 	}
 
-	country, state := authServer.geoip.GetCountryAndState(request.IP)
+	country, state := p.config.geo.GetCountryAndState(request.IP)
 	if country == "" {
 		return nil
 	}
 
-	authServer.metrics.requestsPerCountry.WithLabelValues(country).Inc()
+	p.config.metrics.IncCountryHits(country)
 
-	return &PolicyResponse{
-		metadata: map[string]string{
+	return &Response{
+		Metadata: map[string]string{
 			metadataGeoIPCountry: country,
 			metadataGeoIPState:   state,
 		},
@@ -283,9 +291,9 @@ func lookupGeoIP(request *requestInfo, authServer *authorizationServer) *PolicyR
 // policyQPS1 returns QPS quotakey to be used by Lyft ratelimiter
 // QPS set as developer app attribute has priority over quota set as product attribute
 //
-func policyQPS1(request *requestInfo) *PolicyResponse {
+func policyQPS1(request *request.State) *Response {
 
-	if request == nil || request.APIProduct == nil || request.developerApp == nil {
+	if request == nil || request.APIProduct == nil || request.DeveloperApp == nil {
 		return nil
 	}
 
@@ -293,10 +301,10 @@ func policyQPS1(request *requestInfo) *PolicyResponse {
 	// quotaKey := *request.apikey + "_a_" + quotaAttributeName
 
 	quotaAttributeName := request.APIProduct.Name + "_quotaPerSecond"
-	value, err := request.developerApp.Attributes.Get(quotaAttributeName)
+	value, err := request.DeveloperApp.Attributes.Get(quotaAttributeName)
 	if err == nil && value != "" {
-		return &PolicyResponse{
-			metadata: map[string]string{
+		return &Response{
+			Metadata: map[string]string{
 				"rl.requests_per_unit": value,
 				"rl.unit":              "SECOND",
 				"rl.descriptor":        "app",
@@ -306,8 +314,8 @@ func policyQPS1(request *requestInfo) *PolicyResponse {
 	}
 	value, err = request.APIProduct.Attributes.Get(quotaAttributeName)
 	if err == nil && value != "" {
-		return &PolicyResponse{
-			metadata: map[string]string{
+		return &Response{
+			Metadata: map[string]string{
 				"rl.requests_per_unit": value,
 				"rl.unit":              "SECOND",
 				"rl.descriptor":        "apiproduct",
@@ -320,12 +328,12 @@ func policyQPS1(request *requestInfo) *PolicyResponse {
 }
 
 // policySendAPIKey adds apikey as an upstream header
-func policySendAPIKey(request *requestInfo) *PolicyResponse {
+func policySendAPIKey(request *request.State) *Response {
 
-	if request != nil && request.apikey != nil {
-		return &PolicyResponse{
-			headers: map[string]string{
-				"x-apikey": *request.apikey,
+	if request != nil && request.ConsumerKey != nil {
+		return &Response{
+			Headers: map[string]string{
+				"x-apikey": *request.ConsumerKey,
 			},
 		}
 	}
@@ -333,12 +341,12 @@ func policySendAPIKey(request *requestInfo) *PolicyResponse {
 }
 
 // policySendAPIKey adds developer's email address as an upstream header
-func policySendDeveloperEmail(request *requestInfo) *PolicyResponse {
+func policySendDeveloperEmail(request *request.State) *Response {
 
-	if request != nil && request.developer != nil {
-		return &PolicyResponse{
-			headers: map[string]string{
-				"x-developer-email": request.developer.Email,
+	if request != nil && request.Developer != nil {
+		return &Response{
+			Headers: map[string]string{
+				"x-developer-email": request.Developer.Email,
 			},
 		}
 	}
@@ -346,12 +354,12 @@ func policySendDeveloperEmail(request *requestInfo) *PolicyResponse {
 }
 
 // policySendAPIKey adds developerid as an upstream header
-func policySendDeveloperID(request *requestInfo) *PolicyResponse {
+func policySendDeveloperID(request *request.State) *Response {
 
-	if request != nil && request.developer != nil {
-		return &PolicyResponse{
-			headers: map[string]string{
-				"x-developer-id": request.developer.DeveloperID,
+	if request != nil && request.Developer != nil {
+		return &Response{
+			Headers: map[string]string{
+				"x-developer-id": request.Developer.DeveloperID,
 			},
 		}
 	}
@@ -359,12 +367,12 @@ func policySendDeveloperID(request *requestInfo) *PolicyResponse {
 }
 
 // policySendDeveloperAppName adds developer app name as an upstream header
-func policySendDeveloperAppName(request *requestInfo) *PolicyResponse {
+func policySendDeveloperAppName(request *request.State) *Response {
 
-	if request != nil && request.developerApp != nil {
-		return &PolicyResponse{
-			headers: map[string]string{
-				"x-developer-app-name": request.developerApp.Name,
+	if request != nil && request.DeveloperApp != nil {
+		return &Response{
+			Headers: map[string]string{
+				"x-developer-app-name": request.DeveloperApp.Name,
 			},
 		}
 	}
@@ -373,12 +381,12 @@ func policySendDeveloperAppName(request *requestInfo) *PolicyResponse {
 }
 
 // policySendDeveloperAppID adds developer app id as an upstream header
-func policySendDeveloperAppID(request *requestInfo) *PolicyResponse {
+func policySendDeveloperAppID(request *request.State) *Response {
 
-	if request != nil && request.developerApp != nil {
-		return &PolicyResponse{
-			headers: map[string]string{
-				"x-developer-app-id": request.developerApp.AppID,
+	if request != nil && request.DeveloperApp != nil {
+		return &Response{
+			Headers: map[string]string{
+				"x-developer-app-id": request.DeveloperApp.AppID,
 			},
 		}
 	}
@@ -386,18 +394,18 @@ func policySendDeveloperAppID(request *requestInfo) *PolicyResponse {
 }
 
 // policyCheckIPAccessList checks requestor ip against IP ACL defined in developer app
-func policyCheckIPAccessList(request *requestInfo) *PolicyResponse {
+func policyCheckIPAccessList(request *request.State) *Response {
 
-	ipAccessList, err := request.developerApp.Attributes.Get("IPAccessList")
+	ipAccessList, err := request.DeveloperApp.Attributes.Get("IPAccessList")
 	if err == nil && ipAccessList != "" {
 		if shared.CheckIPinAccessList(request.IP, ipAccessList) {
 			// OK, we have a match
 			return nil
 		}
-		return &PolicyResponse{
-			denied:           true,
-			deniedStatusCode: http.StatusForbidden,
-			deniedMessage:    "Blocked by IP ACL",
+		return &Response{
+			Denied:           true,
+			DeniedStatusCode: http.StatusForbidden,
+			DeniedMessage:    "Blocked by IP ACL",
 		}
 	}
 	// No IPACL attribute or it's value was empty: we allow request
@@ -405,17 +413,17 @@ func policyCheckIPAccessList(request *requestInfo) *PolicyResponse {
 }
 
 // policycheckReferer checks request's Host header against host ACL defined in developer app
-func policycheckReferer(request *requestInfo) *PolicyResponse {
+func policycheckReferer(request *request.State) *Response {
 
-	hostAccessList, err := request.developerApp.Attributes.Get("Referer")
+	hostAccessList, err := request.DeveloperApp.Attributes.Get("Referer")
 	if err == nil && hostAccessList != "" {
-		if checkHostinAccessList(request.httpRequest.Headers[":authority"], hostAccessList) {
+		if checkHostinAccessList(request.HTTPRequest.Headers[":authority"], hostAccessList) {
 			return nil
 		}
-		return &PolicyResponse{
-			denied:           true,
-			deniedStatusCode: http.StatusForbidden,
-			deniedMessage:    "Blocked by referer ACL",
+		return &Response{
+			Denied:           true,
+			DeniedStatusCode: http.StatusForbidden,
+			DeniedMessage:    "Blocked by referer ACL",
 		}
 	}
 	// No Host ACL attribute or it's value was empty: we allow request

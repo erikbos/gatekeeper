@@ -9,10 +9,10 @@ type DeveloperAppKey struct {
 	// apikey of this credential
 	ConsumerKey string `json:"consumerKey"`
 
-	// secretid of crendetial, to be used in OAuth2 token rq
+	// secretid of credential, used in OAuth2 flow
 	ConsumerSecret string `json:"consumerSecret"`
 
-	// List of apiproduct which can be accessed
+	// List of apiproduct which can be accessed using this key
 	APIProducts APIProductStatuses `json:"apiProducts"`
 
 	// Attributes of credential
@@ -44,28 +44,50 @@ var (
 
 // APIProductStatus contains whether an apikey's assigned apiproduct has been approved
 type APIProductStatus struct {
-	Status     string `json:"status"`     // Status (should be "approved" to allow access)
-	Apiproduct string `json:"apiProduct"` // Name of apiproduct
+	// Name of apiproduct
+	Apiproduct string `json:"apiProduct"`
+
+	// Status (should be "approved" to allow access)
+	Status string `json:"status"`
 }
 
 // APIProductStatuses contains list of apiproducts
 type APIProductStatuses []APIProductStatus
 
-// OAuthAccessToken holds details of an issued OAuth token
-type OAuthAccessToken struct {
-	ClientID         string `json:"client_id"`
-	UserID           string `json:"user_id"`
-	RedirectURI      string `json:"redirect_uri"`
-	Scope            string `json:"scope"`
-	Code             string `json:"code"`
-	CodeCreatedAt    int64  `json:"code_created_at"`
-	CodeExpiresIn    int64  `json:"code_expires_in"`
-	Access           string `json:"access"`
-	AccessCreatedAt  int64  `json:"access_created_at"`
-	AccessExpiresIn  int64  `json:"access_expires_in"`
-	Refresh          string `json:"refresh"`
-	RefreshCreatedAt int64  `json:"refresh_created_at"`
-	RefreshExpiresIn int64  `json:"refresh_expires_in"`
+// SetApproved marks a credential as approved
+func (k *DeveloperAppKey) SetApproved() {
+
+	k.Status = "approved"
+}
+
+// IsApproved returns true in case credential's status is approved
+func (k *DeveloperAppKey) IsApproved() bool {
+
+	return k.Status == "approved"
+}
+
+// IsExpired returns true in case credential is expired
+func (k *DeveloperAppKey) IsExpired(now int64) bool {
+
+	if k.ExpiresAt == 0 || k.ExpiresAt == -1 {
+		return false
+	}
+	if now < k.ExpiresAt {
+		return false
+	}
+	return true
+}
+
+// SetApproved marks a credential's apiproduct as approved
+func (p *APIProductStatus) SetApproved() {
+
+	p.Status = "approved"
+}
+
+// IsApproved returns true in case credential's apiproduct status is approved
+func (p *APIProductStatus) IsApproved() bool {
+
+	return p.Status == "approved"
 }
 
 // Unmarshal unpacks JSON array of attribute bags

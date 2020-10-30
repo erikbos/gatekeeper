@@ -62,7 +62,7 @@ func (cs *CredentialService) Create(newCredential types.DeveloperAppKey, develop
 	if newCredential.ExpiresAt == 0 {
 		newCredential.ExpiresAt = -1
 	}
-	newCredential.Status = "approved"
+	newCredential.SetApproved()
 
 	// Populate fields we do not allow to be updated
 	newCredential.AppID = developerApp.AppID

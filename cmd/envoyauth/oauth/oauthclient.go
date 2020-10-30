@@ -7,6 +7,7 @@ import (
 	"gopkg.in/oauth2.v3"
 	"gopkg.in/oauth2.v3/models"
 
+	"github.com/erikbos/gatekeeper/cmd/envoyauth/metrics"
 	"github.com/erikbos/gatekeeper/pkg/db"
 )
 
@@ -15,12 +16,12 @@ import (
 // ClientTokenStore holds our database config
 type ClientTokenStore struct {
 	db      *db.Database
-	metrics *metrics
+	metrics *metrics.Metrics
 	logger  *zap.Logger
 }
 
-// NewOAuthClientTokenStore creates client token store instance
-func NewOAuthClientTokenStore(database *db.Database, metrics *metrics,
+// NewClientTokenStore creates client token store instance
+func NewClientTokenStore(database *db.Database, metrics *metrics.Metrics,
 	logger *zap.Logger) oauth2.ClientStore {
 
 	return &ClientTokenStore{
@@ -40,10 +41,10 @@ func (clientstore *ClientTokenStore) GetByID(id string) (oauth2.ClientInfo, erro
 
 	credential, err := clientstore.db.Credential.GetByKey(&id)
 	if err != nil {
-		clientstore.metrics.IncClientStoreMisses()
+		clientstore.metrics.IncOAuthClientStoreMisses()
 		return nil, err
 	}
-	clientstore.metrics.IncClientStoreHits()
+	clientstore.metrics.IncOAuthClientStoreHits()
 	return &models.Client{
 		ID:     credential.ConsumerKey,
 		Secret: credential.ConsumerSecret,

@@ -40,7 +40,6 @@ func (v *vhostMapping) WaitFor(entityNotifications chan db.EntityChangeNotificat
 			changedEntity.Resource == types.TypeRouteName {
 
 			v.buildVhostMap()
-
 		}
 	}
 }

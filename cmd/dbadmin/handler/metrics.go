@@ -14,10 +14,10 @@ func newMetrics() *metrics {
 }
 
 // registerMetrics registers our operational metrics
-func (m *metrics) RegisterWithPrometheus(applicationName string) {
+func (m *metrics) RegisterWithPrometheus(metricNamespace string) {
 	m.requestPerPathHits = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Namespace: applicationName,
+			Namespace: metricNamespace,
 			Name:      "api_requests_hits_total",
 			Help:      "Number of hits per request path.",
 		}, []string{"user", "method", "path", "status"})

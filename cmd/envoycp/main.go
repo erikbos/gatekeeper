@@ -19,11 +19,6 @@ var (
 	buildTime string // Build time, set by Makefile
 )
 
-const (
-	applicationName       = "envoycp"             // Name of application, used in Prometheus metrics
-	defaultConfigFileName = "envoycp-config.yaml" // Default configuration file
-)
-
 type server struct {
 	config     *EnvoyCPConfig
 	webadmin   *webadmin.Webadmin
@@ -35,8 +30,9 @@ type server struct {
 }
 
 func main() {
+	const applicationName = "envoycp"
 
-	filename := flag.String("config", defaultConfigFileName, "Configuration filename")
+	filename := flag.String("config", "envoycp-config.yaml", "Configuration filename")
 	flag.Parse()
 
 	var s server
@@ -57,7 +53,7 @@ func main() {
 		zap.String("buildtime", buildTime))
 
 	s.metrics = newMetrics()
-	s.metrics.RegisterWithPrometheus()
+	s.metrics.RegisterWithPrometheus(applicationName)
 
 	if s.db, err = cassandra.New(s.config.Database, applicationName, s.logger, false, 0); err != nil {
 		s.logger.Fatal("Database connect failed", zap.Error(err))
@@ -70,7 +66,7 @@ func main() {
 	// Start db health check and notify readiness subsystem
 	go s.db.RunReadinessCheck(s.readiness.GetChannel())
 
-	go startWebAdmin(&s)
+	go startWebAdmin(&s, applicationName)
 
 	// Start continously loading of virtual host, routes & cluster data
 	entityCacheConf := db.EntityCacheConfig{
@@ -86,7 +82,7 @@ func main() {
 }
 
 // startWebAdmin starts the admin web UI
-func startWebAdmin(s *server) {
+func startWebAdmin(s *server, applicationName string) {
 
 	logger := shared.NewLogger(&s.config.WebAdmin.Logger)
 

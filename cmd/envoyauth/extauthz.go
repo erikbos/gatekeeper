@@ -13,130 +13,109 @@ import (
 	authservice "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
 	envoytype "github.com/envoyproxy/go-control-plane/envoy/type/v3"
 	"github.com/gogo/googleapis/google/rpc"
-	"github.com/prometheus/client_golang/prometheus"
 	"go.uber.org/zap"
 	"google.golang.org/genproto/googleapis/rpc/status"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/structpb"
 
-	"github.com/erikbos/gatekeeper/pkg/types"
+	"github.com/erikbos/gatekeeper/cmd/envoyauth/policy"
+	"github.com/erikbos/gatekeeper/cmd/envoyauth/request"
+	"github.com/erikbos/gatekeeper/pkg/shared"
 )
 
 type envoyAuthConfig struct {
-	Listen string `yaml:"listen"` // GRPC Address and port to listen for control plane
-}
 
-// requestInfo holds all information of a request
-type requestInfo struct {
-	IP              net.IP
-	httpRequest     *authservice.AttributeContext_HttpRequest
-	URL             *url.URL
-	queryParameters url.Values
-	apikey          *string
-	oauth2token     *string
-	vhost           *types.Listener
-	developer       *types.Developer
-	developerApp    *types.DeveloperApp
-	appCredential   *types.DeveloperAppKey
-	APIProduct      *types.APIProduct
+	// GRPC Address and port to listen for control plane
+	Listen string `yaml:"listen"`
 }
 
 // startGRPCAuthorizationServer starts extauthz grpc listener
-func (a *authorizationServer) StartAuthorizationServer() {
+func (s *server) StartAuthorizationServer() {
 
-	lis, err := net.Listen("tcp", a.config.EnvoyAuth.Listen)
+	lis, err := net.Listen("tcp", s.config.EnvoyAuth.Listen)
 	if err != nil {
-		a.logger.Fatal("failed to listen", zap.Error(err))
+		s.logger.Fatal("failed to listen", zap.Error(err))
 	}
-	a.logger.Info("GRPC listening on " + a.config.EnvoyAuth.Listen)
+	s.logger.Info("GRPC listening on " + s.config.EnvoyAuth.Listen)
 
 	grpcServer := grpc.NewServer()
-	authservice.RegisterAuthorizationServer(grpcServer, a)
+	authservice.RegisterAuthorizationServer(grpcServer, s)
 
 	if err := grpcServer.Serve(lis); err != nil {
-		a.logger.Fatal("Failed to start server", zap.Error(err))
+		s.logger.Fatal("Failed to start server", zap.Error(err))
 	}
 }
 
 // Check (called by Envoy) to authenticate & authorize a HTTP request
-func (a *authorizationServer) Check(ctx context.Context,
-	authRequest *authservice.CheckRequest) (*authservice.CheckResponse, error) {
+func (s *server) Check(ctx context.Context,
+	extauthzRequest *authservice.CheckRequest) (*authservice.CheckResponse, error) {
 
-	timer := prometheus.NewTimer(a.metrics.authLatencyHistogram)
+	timer := s.metrics.NewTimerAuthLatency()
 	defer timer.ObserveDuration()
 
-	request, err := getRequestInfo(authRequest)
+	request, err := getrequestDetails(extauthzRequest)
 	if err != nil {
-		a.metrics.connectInfoFailures.Inc()
-		return a.rejectRequest(http.StatusBadRequest, nil, nil, fmt.Sprintf("%s", err))
+		s.metrics.IncConnectionInfoFailure()
+		return s.rejectRequest(http.StatusBadRequest, nil, nil, fmt.Sprintf("%s", err))
 	}
-	a.logRequestDebug(request)
+	request.Timestamp = shared.GetCurrentTimeMilliseconds()
+
+	s.logger.Debug("extauthz",
+		zap.String("path", request.HTTPRequest.Path),
+		zap.Any("headers", request.HTTPRequest.Headers))
 
 	// FIXME not sure if x-forwarded-proto the way to determine original tcp port used
-	request.vhost, err = a.vhosts.Lookup(request.httpRequest.Host, request.httpRequest.Headers["x-forwarded-proto"])
+	request.Listener, err = s.vhosts.Lookup(request.HTTPRequest.Host,
+		request.HTTPRequest.Headers["x-forwarded-proto"])
 	if err != nil {
-		a.metrics.increaseCounterRequestRejected(request)
-		return a.rejectRequest(http.StatusNotFound, nil, nil, "unknown vhost")
+		s.metrics.IncAuthenticationRejected(request)
+		return s.rejectRequest(http.StatusNotFound, nil, nil, "U1nknown vhost")
 	}
 
-	vhostPolicyOutcome := &PolicyChainResponse{}
-	if request.vhost != nil && request.vhost.Policies != "" {
-		vhostPolicyOutcome = (&PolicyChain{
-			authServer: a,
-			request:    request,
-			scope:      policyScopeVhost,
-		}).Evaluate()
+	policyConfig := policy.NewChainConfig(s.db, s.oauth, s.geoip, s.metrics, s.logger)
+
+	vhostPolicyOut := &policy.ChainOutcome{}
+	if request.Listener != nil && request.Listener.Policies != "" {
+		vhostPolicyOut = policy.NewChain(request,
+			policy.PolicyScopeVhost, policyConfig).Evaluate()
+
+		s.logger.Debug("vhostPolicyOutcome", zap.Reflect("debug", vhostPolicyOut))
 	}
 
-	APIProductPolicyOutcome := &PolicyChainResponse{}
+	APIProductPolicyOut := &policy.ChainOutcome{}
 	if request.APIProduct != nil && request.APIProduct.Policies != "" {
-		APIProductPolicyOutcome = (&PolicyChain{
-			authServer: a,
-			request:    request,
-			scope:      policyScopeAPIProduct,
-		}).Evaluate()
-	}
+		APIProductPolicyOut = policy.NewChain(request,
+			policy.PolicyScopeAPIProduct, policyConfig).Evaluate()
 
-	a.logger.Debug("vhostPolicyOutcome", zap.Reflect("debug", vhostPolicyOutcome))
-	a.logger.Debug("APIProductPolicyOutcome", zap.Reflect("debug", APIProductPolicyOutcome))
+		s.logger.Debug("APIProductPolicyOutcome", zap.Reflect("debug", APIProductPolicyOut))
+	}
 
 	// We reject call in case both vhost & apiproduct policy did not authenticate call
-	if (vhostPolicyOutcome != nil && !vhostPolicyOutcome.authenticated) &&
-		(APIProductPolicyOutcome != nil && !APIProductPolicyOutcome.authenticated) {
+	if (vhostPolicyOut != nil && !vhostPolicyOut.Authenticated) &&
+		(APIProductPolicyOut != nil && !APIProductPolicyOut.Authenticated) {
 
-		a.metrics.increaseCounterRequestRejected(request)
+		s.metrics.IncAuthenticationRejected(request)
 
-		return a.rejectRequest(vhostPolicyOutcome.deniedStatusCode,
-			mergeMapsStringString(vhostPolicyOutcome.upstreamHeaders,
-				APIProductPolicyOutcome.upstreamHeaders),
-			mergeMapsStringString(vhostPolicyOutcome.upstreamDynamicMetadata,
-				APIProductPolicyOutcome.upstreamDynamicMetadata),
-			vhostPolicyOutcome.deniedMessage)
+		return s.rejectRequest(vhostPolicyOut.DeniedStatusCode,
+			mergeMapsStringString(vhostPolicyOut.UpstreamHeaders,
+				APIProductPolicyOut.UpstreamHeaders),
+			mergeMapsStringString(vhostPolicyOut.UpstreamDynamicMetadata,
+				APIProductPolicyOut.UpstreamDynamicMetadata),
+			vhostPolicyOut.DeniedMessage)
 	}
 
-	a.metrics.IncreaseCounterRequestAccept(request)
+	s.metrics.IncAuthenticationAccepted(request)
 
-	return a.allowRequest(
-		mergeMapsStringString(vhostPolicyOutcome.upstreamHeaders,
-			APIProductPolicyOutcome.upstreamHeaders),
-		mergeMapsStringString(vhostPolicyOutcome.upstreamDynamicMetadata,
-			APIProductPolicyOutcome.upstreamDynamicMetadata))
-}
-
-// mergeMapsStringString returns merged map[string]string
-// it overwriting duplicate keys, you should handle that if there is a need
-func mergeMapsStringString(maps ...map[string]string) map[string]string {
-	result := make(map[string]string)
-	for _, m := range maps {
-		for k, v := range m {
-			result[k] = v
-		}
-	}
-	return result
+	return s.allowRequest(
+		mergeMapsStringString(vhostPolicyOut.UpstreamHeaders,
+			APIProductPolicyOut.UpstreamHeaders),
+		mergeMapsStringString(vhostPolicyOut.UpstreamDynamicMetadata,
+			APIProductPolicyOut.UpstreamDynamicMetadata))
 }
 
 // allowRequest answers Envoyproxy to authorizates request to go upstream
-func (a *authorizationServer) allowRequest(headers, metadata map[string]string) (*authservice.CheckResponse, error) {
+func (s *server) allowRequest(headers, metadata map[string]string) (
+	*authservice.CheckResponse, error) {
 
 	dynamicMetadata := buildDynamicMetadataList(metadata)
 
@@ -154,14 +133,14 @@ func (a *authorizationServer) allowRequest(headers, metadata map[string]string) 
 		// Required for > Envoy 0.16
 		// DynamicMetadata: dynamicMetadata,
 	}
-	a.logger.Debug("allowRequest", zap.Reflect("response", response))
 
+	s.logger.Debug("allowRequest", zap.Reflect("response", response))
 	return response, nil
 }
 
 // rejectRequest answers Envoyproxy to reject HTTP request
-func (a *authorizationServer) rejectRequest(statusCode int, headers, metadata map[string]string,
-	message string) (*authservice.CheckResponse, error) {
+func (s *server) rejectRequest(statusCode int, headers,
+	metadata map[string]string, message string) (*authservice.CheckResponse, error) {
 
 	var envoyStatusCode envoytype.StatusCode
 
@@ -191,7 +170,8 @@ func (a *authorizationServer) rejectRequest(statusCode int, headers, metadata ma
 		},
 		DynamicMetadata: buildDynamicMetadataList(metadata),
 	}
-	a.logger.Debug("rejectRequest", zap.Reflect("response", response))
+
+	s.logger.Debug("rejectRequest", zap.Reflect("response", response))
 	return response, nil
 }
 
@@ -230,7 +210,9 @@ func buildDynamicMetadataList(metadata map[string]string) *structpb.Struct {
 	}
 	for key, value := range metadata {
 		metadataStruct.Fields[key] = &structpb.Value{
-			Kind: &structpb.Value_StringValue{StringValue: value},
+			Kind: &structpb.Value_StringValue{
+				StringValue: value,
+			},
 		}
 	}
 	// Convert rate limiter values into ratelimiter configuration
@@ -277,44 +259,44 @@ func buildRateLimiterOveride(metadata map[string]string) *structpb.Value {
 	}
 }
 
-// getRequestInfo returns HTTP data of a request
-func getRequestInfo(req *authservice.CheckRequest) (*requestInfo, error) {
+// getrequestDetails returns details of an incoming request
+func getrequestDetails(req *authservice.CheckRequest) (*request.State, error) {
 
-	newConnection := requestInfo{
-		httpRequest: req.Attributes.Request.Http,
+	r := &request.State{
+		HTTPRequest: req.Attributes.Request.Http,
 	}
-	if ipaddress, ok := newConnection.httpRequest.Headers["x-forwarded-for"]; ok {
-		newConnection.IP = net.ParseIP(ipaddress)
+	if ipaddress, ok := r.HTTPRequest.Headers["x-forwarded-for"]; ok {
+		r.IP = net.ParseIP(ipaddress)
 	}
 
 	var err error
-	if newConnection.URL, err = url.ParseRequestURI(newConnection.httpRequest.Path); err != nil {
-		return nil, errors.New("cannot parse url")
+	if r.URL, err = url.ParseRequestURI(r.HTTPRequest.Path); err != nil {
+		return nil, errors.New("Cannot parse url")
 	}
 
-	if newConnection.queryParameters, err = url.ParseQuery(newConnection.URL.RawQuery); err != nil {
-		return nil, errors.New("cannot parse query parameters")
+	if r.QueryParameters, err = url.ParseQuery(r.URL.RawQuery); err != nil {
+		return nil, errors.New("Cannot parse query parameters")
 	}
 
-	return &newConnection, nil
+	return r, nil
 }
-
-func (a *authorizationServer) logRequestDebug(request *requestInfo) {
-	a.logger.Debug("Check() rx path", zap.String("path", request.httpRequest.Path))
-
-	for key, value := range request.httpRequest.Headers {
-		a.logger.Debug("Check() rx header", zap.String("key", key), zap.String("value", value))
-	}
-}
-
-// JSONErrorMessage is the format for our error messages
-const JSONErrorMessage = `{
- "message": "%s"
-}
-`
 
 // returns a well structured JSON-formatted message
 func buildJSONErrorMessage(message *string) string {
 
+	const JSONErrorMessage = `{	"message": "%s" }`
+
 	return fmt.Sprintf(JSONErrorMessage, *message)
+}
+
+// mergeMapsStringString merges multiple map[string]string into one
+// be aware: it does overwriting duplicate keys
+func mergeMapsStringString(maps ...map[string]string) map[string]string {
+	result := make(map[string]string)
+	for _, m := range maps {
+		for k, v := range m {
+			result[k] = v
+		}
+	}
+	return result
 }

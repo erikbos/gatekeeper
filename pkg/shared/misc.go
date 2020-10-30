@@ -19,8 +19,11 @@ func TimeMillisecondsToString(timestamp int64) string {
 	return time.Unix(0, timestamp*int64(time.Millisecond)).UTC().Format(time.RFC3339)
 }
 
-// TimeMillisecondsToInt64 returns time.Time as int64
+// TimeMillisecondsToInt64 returns time.Time as int64, if not set -1 will be returned
 func TimeMillisecondsToInt64(timestamp time.Time) int64 {
+	if timestamp.IsZero() {
+		return -1
+	}
 	return timestamp.UTC().UnixNano() / int64(time.Millisecond)
 }
 

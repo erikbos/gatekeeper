@@ -101,7 +101,7 @@ func (attributes *Attributes) Set(attributeValue Attribute) (oldValue string, ol
 			updatedAttributes = append(updatedAttributes, oldAttribute)
 		}
 	}
-	// In case it is an new attribute append it
+	// In case it is a new attribute append it
 	if !oldValuePresent {
 		updatedAttributes = append(updatedAttributes, attributeValue)
 	}
