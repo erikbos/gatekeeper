@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 
 	"github.com/erikbos/gatekeeper/pkg/shared"
 	"github.com/erikbos/gatekeeper/pkg/types"
@@ -254,7 +253,35 @@ func (h *Handler) showDevelopersPage(c *gin.Context) {
 		webadmin.JSONMessage(c, http.StatusServiceUnavailable, err)
 		return
 	}
-	h.logger.Info("bla", zap.Any("devs", developers))
+
+	type AppEntry struct {
+		App  types.DeveloperApp
+		Keys types.DeveloperAppKeys
+	}
+	type AllApps map[string][]AppEntry
+	apps := make(AllApps)
+
+	for _, developer := range developers {
+		appDetails := make([]AppEntry, 0, 10)
+
+		for _, appName := range developer.Apps {
+			app, err := h.service.DeveloperApp.GetByName(appName)
+			if err != nil {
+				webadmin.JSONMessage(c, http.StatusServiceUnavailable, err)
+				return
+			}
+			keys, err := h.service.Credential.GetByDeveloperAppID(app.AppID)
+			if err != nil {
+				webadmin.JSONMessage(c, http.StatusServiceUnavailable, err)
+				return
+			}
+			appDetails = append(appDetails, AppEntry{
+				App:  *app,
+				Keys: keys,
+			})
+		}
+		apps[developer.Email] = appDetails
+	}
 
 	wholePageTemplate := pageHeading("Developer overview") + templateDeveloper
 	templateEngine, templateError := template.New("page").
@@ -265,8 +292,10 @@ func (h *Handler) showDevelopersPage(c *gin.Context) {
 	}
 	templateVariables := struct {
 		Developers types.Developers
+		Apps       AllApps
 	}{
 		Developers: developers,
+		Apps:       apps,
 	}
 	c.Header(contentType, contentTypeHTML)
 	c.Status(http.StatusOK)
@@ -280,17 +309,64 @@ const templateDeveloper string = `
 
 {{/* We put these in vars to be able to do nested ranges */}}
 {{$developers := .Developers}}
+{{$apps := .Apps}}
 
 <h1>Developers</h1>
 <table border=1>
 <tr>
-<th>Email</th>
+<th>Developer</th>
+<th>Application</th>
+<th>Keys</th>
 <th>Lastmodified</th>
 </tr>
 
 {{range $developer := $developers}}
 <tr>
-<td>{{$developer.Email}}</td>
+<td><a href="/v1/developers/{{$developer.Email}}">{{$developer.Email}}</a>
+
+<ul>
+{{range $attribute := $developer.Attributes}}
+<li>{{$attribute.Name}} = {{$attribute.Value}}</li>
+{{end}}
+</ul>
+
+</td>
+{{range $app := index $apps $developer.Email}}
+<td>
+<a href="/v1/developers/{{$developer.Email}}/apps/{{$app.App.Name}}">{{$app.App.Name}}</a>
+
+<ul>
+{{range $attribute := $app.App.Attributes}}
+<li>{{$attribute.Name}} = {{$attribute.Value}}</li>
+{{end}}
+</ul>
+</td>
+
+<td>
+<table>
+<tr>
+<th>consumer key</th>
+<th>consumer secret</th>
+<th>products</th>
+</tr>
+{{range $key := index $app.Keys}}
+<tr>
+<td><a href="/v1/developers/{{$developer.Email}}/apps/{{$app.App.Name}}/keys/{{$key.ConsumerKey}}">{{$key.ConsumerKey}}</a>
+<td>{{$key.ConsumerSecret}}</td>
+<td>
+<ul>
+{{range $product := $key.APIProducts}}
+<li><a href="/v1/apiproducts/{{$product.Apiproduct}}">{{$product.Apiproduct}}</a> ({{$product.Status}})
+{{end}}
+</ul>
+</td>
+</tr>
+{{end}}
+</table>
+
+</td>
+{{end}}
+
 <td>{{$developer.LastmodifiedAt | ISO8601}} <br> {{$developer.LastmodifiedBy}}</td>
 </tr>
 {{end}}
@@ -364,7 +440,7 @@ const pageTemplateUsersAndRoles string = `
 <td><a href="/v1/users/{{$user.Name}}">{{$user.Name}}</a>
 <td>{{$user.DisplayName}}</td>
 <td>{{$user.Status}}</td>
-<td><ul>{{range $role := $user.Roles}}<li>{{$role}}</li>{{end}}</ul></td>
+<td><ul>{{range $role := $user.Roles}}<li><a href="/v1/roles/{{$role}}">{{$role}}</li>{{end}}</ul></td>
 <td>{{$user.CreatedBy}}</td>
 <td>{{$user.CreatedAt | ISO8601}}</td>
 <td>{{$user.LastmodifiedBy}}</td>

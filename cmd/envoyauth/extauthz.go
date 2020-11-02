@@ -284,7 +284,7 @@ func getrequestDetails(req *authservice.CheckRequest) (*request.State, error) {
 // returns a well structured JSON-formatted message
 func buildJSONErrorMessage(message *string) string {
 
-	const JSONErrorMessage = `{	"message": "%s" }`
+	const JSONErrorMessage = `{ "message": "%s" }`
 
 	return fmt.Sprintf(JSONErrorMessage, *message)
 }
