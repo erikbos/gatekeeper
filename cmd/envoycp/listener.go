@@ -12,6 +12,7 @@ import (
 	fileaccesslog "github.com/envoyproxy/go-control-plane/envoy/extensions/access_loggers/file/v3"
 	grpcaccesslog "github.com/envoyproxy/go-control-plane/envoy/extensions/access_loggers/grpc/v3"
 	extauthz "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/ext_authz/v3"
+	envoylua "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/lua/v3"
 	ratelimit "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/ratelimit/v3"
 	hcm "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 	tls "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/tls/v3"
@@ -213,6 +214,13 @@ func (s *server) buildFilter(listener types.Listener) []*hcm.HttpFilter {
 		})
 	}
 
+	httpFilter = append(httpFilter, &hcm.HttpFilter{
+		Name: wellknown.Lua,
+		ConfigType: &hcm.HttpFilter_TypedConfig{
+			TypedConfig: s.buildHTTPFilterLuaConfig(listener),
+		},
+	})
+
 	if ratelimiter := s.buildHTTPFilterRateLimiterConfig(listener); ratelimiter != nil {
 		httpFilter = append(httpFilter, &hcm.HttpFilter{
 			Name: wellknown.HTTPRateLimit,
@@ -268,9 +276,22 @@ func (s *server) buildHTTPFilterExtAuthzConfig(listener types.Listener) *anypb.A
 
 	extAuthzTypedConf, e := ptypes.MarshalAny(extAuthz)
 	if e != nil {
-		s.logger.Panic("buildHTTPFilterExtAuthzConfig", zap.Error(err))
+		s.logger.Panic("buildHTTPFilterExtAuthzConfig", zap.Error(e))
 	}
 	return extAuthzTypedConf
+}
+
+func (s *server) buildHTTPFilterLuaConfig(listener types.Listener) *anypb.Any {
+
+	lua := &envoylua.Lua{
+		InlineCode: "  ",
+		// SourceCodes: map[string],
+	}
+	luaTypedConf, e := ptypes.MarshalAny(lua)
+	if e != nil {
+		s.logger.Panic("buildHTTPFilterLuaConfig", zap.Error(e))
+	}
+	return luaTypedConf
 }
 
 func (s *server) buildHTTPFilterRateLimiterConfig(listener types.Listener) *anypb.Any {
@@ -309,7 +330,7 @@ func (s *server) buildHTTPFilterRateLimiterConfig(listener types.Listener) *anyp
 
 	ratelimitTypedConf, e := ptypes.MarshalAny(ratelimit)
 	if e != nil {
-		s.logger.Panic("buildHTTPFilterExtAuthzConfig", zap.Error(err))
+		s.logger.Panic("buildHTTPFilterExtAuthzConfig", zap.Error(e))
 	}
 	return ratelimitTypedConf
 }

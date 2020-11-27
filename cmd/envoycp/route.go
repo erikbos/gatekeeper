@@ -8,6 +8,7 @@ import (
 	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	route "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
 	envoyauth "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/ext_authz/v3"
+	envoylua "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/lua/v3"
 	envoymatcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
 	envoytypemetadata "github.com/envoyproxy/go-control-plane/envoy/type/metadata/v3"
 	envoytype "github.com/envoyproxy/go-control-plane/envoy/type/v3"
@@ -605,6 +606,10 @@ func buildPerRouteFilterConfig(routeEntry types.Route) map[string]*any.Any {
 		perRouteFilterConfigMap[wellknown.HTTPExternalAuthorization] = authzFilterConfig
 	}
 
+	if luaFilterConfig := perRouteLuaFilterConfig(routeEntry); luaFilterConfig != nil {
+		perRouteFilterConfigMap[wellknown.Lua] = luaFilterConfig
+	}
+
 	if len(perRouteFilterConfigMap) != 0 {
 		return perRouteFilterConfigMap
 	}
@@ -626,14 +631,47 @@ func perRouteAuthzFilterConfig(routeEntry types.Route) *anypb.Any {
 
 	// Our default HTTP forwarding behaviour is to not authenticate,
 	// hence we need to disable this filter per route
-	perFilterExtAuthzConfig := &envoyauth.ExtAuthzPerRoute{
+	perRouteExtAuthzConfig := &envoyauth.ExtAuthzPerRoute{
 		Override: &envoyauth.ExtAuthzPerRoute_Disabled{
 			Disabled: true,
 		},
 	}
-	ratelimitTypedConf, e := ptypes.MarshalAny(perFilterExtAuthzConfig)
+	ratelimitTypedConf, e := ptypes.MarshalAny(perRouteExtAuthzConfig)
 	if e != nil {
 		return nil
 	}
 	return ratelimitTypedConf
+}
+
+// perRouteLuaFilterConfig sets all the lua specific filter options of a route
+func perRouteLuaFilterConfig(routeEntry types.Route) *anypb.Any {
+
+	var perRouteLuaConfig *envoylua.LuaPerRoute
+
+	if value, err := routeEntry.Attributes.Get(
+		types.AttributeLuaScript); err == nil || value != "" {
+
+		perRouteLuaConfig = &envoylua.LuaPerRoute{
+			Override: &envoylua.LuaPerRoute_SourceCode{
+				SourceCode: &core.DataSource{
+					Specifier: &core.DataSource_InlineString{
+						InlineString: value,
+					},
+				},
+			},
+		}
+	} else {
+		// No script provided, explicitly disable lua filter on this route
+		perRouteLuaConfig = &envoylua.LuaPerRoute{
+			Override: &envoylua.LuaPerRoute_Disabled{
+				Disabled: true,
+			},
+		}
+	}
+
+	luaTypedConf, err := ptypes.MarshalAny(perRouteLuaConfig)
+	if err != nil {
+		return nil
+	}
+	return luaTypedConf
 }

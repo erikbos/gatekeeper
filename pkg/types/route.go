@@ -132,6 +132,9 @@ const (
 	// Basic authentication header to set before forwarding upstream
 	AttributeBasicAuth = "BasicAuth"
 
+	// Embedded lua scripting to include on route
+	AttributeLuaScript = "LuaScript"
+
 	// Conditions under which retry takes place
 	AttributeRetryOn = "RetryOn"
 
@@ -199,6 +202,7 @@ var validRouteAttributes = map[string]bool{
 	AttributeCORSExposeHeaders:        true,
 	AttributeCORSMaxAge:               true,
 	AttributeHostHeader:               true,
+	AttributeLuaScript:                true,
 	AttributeRequestHeaderToAdd1:      true,
 	AttributeRequestHeaderToAdd2:      true,
 	AttributeRequestHeaderToAdd3:      true,
