@@ -30,7 +30,8 @@ jobs:
         password: ${{ secrets.acr_password }}
 
     - name: put git version in env
-      run: echo ::set-env name=VERSION::$(git describe --tags --always --dirty)
+      run: |
+       echo "VERSION=`git describe --tags --always --dirty`" >> $GITHUB_ENV
 
     - name: Docker tag & push
       run: |
