@@ -26,5 +26,5 @@ require (
 	google.golang.org/protobuf v1.25.0
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	gopkg.in/oauth2.v3 v3.12.0
-	gopkg.in/yaml.v2 v2.3.0
+	gopkg.in/yaml.v2 v2.4.0
 )
