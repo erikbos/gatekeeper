@@ -15,7 +15,6 @@ import (
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
-	"google.golang.org/protobuf/types/known/wrapperspb"
 
 	"github.com/erikbos/gatekeeper/cmd/envoyals/metrics"
 	"github.com/erikbos/gatekeeper/pkg/shared"
@@ -96,43 +95,33 @@ func (a *AccessLogServer) LogHTTPRequest(logName, nodeID, nodeCluster string, e 
 	// See https://www.envoyproxy.io/docs/envoy/latest/api-v3/data/accesslog/v3/accesslog.proto#envoy-v3-api-msg-data-accesslog-v3-accesslogcommon
 	// for field details
 
-	timeNowUTC := time.Now().UTC()
-
 	if e != nil {
 		c := e.CommonProperties
 		if c == nil {
-			c = &alf.AccessLogCommon{
-				DownstreamDirectRemoteAddress: nullAddress(),
-				DownstreamLocalAddress:        nullAddress(),
-				UpstreamRemoteAddress:         nullAddress(),
-				UpstreamLocalAddress:          nullAddress(),
-			}
+			c = &alf.AccessLogCommon{}
 		}
-		tlsProperties := e.CommonProperties.TlsProperties
-		if tlsProperties == nil {
-			tlsProperties = &alf.TLSProperties{
-				TlsCipherSuite: &wrapperspb.UInt32Value{Value: 0},
-			}
-		}
-		req := e.Request
-		if req == nil {
-			req = &alf.HTTPRequestProperties{}
-		}
-		resp := e.Response
-		if resp == nil {
-			resp = &alf.HTTPResponseProperties{}
-		}
-
 		if c.ResponseFlags == nil {
 			c.ResponseFlags = &alf.ResponseFlags{}
 		}
+		requestTLSProperties := e.CommonProperties.TlsProperties
+		if requestTLSProperties == nil {
+			requestTLSProperties = &alf.TLSProperties{}
+		}
+		request := e.Request
+		if request == nil {
+			request = &alf.HTTPRequestProperties{}
+		}
+		response := e.Response
+		if response == nil {
+			response = &alf.HTTPResponseProperties{}
+		}
 
 		// Record latency of this entry
+		timeNowUTC := time.Now().UTC()
 		a.metrics.ObserveAccesLogLatency(timeNowUTC.Sub(a.pbTimestamp(e.CommonProperties.StartTime)))
 
 		a.metrics.IncAccessLogNodeHits(nodeID, nodeCluster)
-
-		a.metrics.IncAccessLogVHostHits(req.Authority)
+		a.metrics.IncAccessLogVHostHits(request.Authority)
 
 		a.logger.Info("http",
 			zap.Any("envoy", map[string]string{
@@ -157,20 +146,20 @@ func (a *AccessLogServer) LogHTTPRequest(logName, nodeID, nodeCluster string, e 
 				"remoteport":    formatPort(c.DownstreamRemoteAddress),
 				"localaddress":  formatAddress(c.DownstreamLocalAddress),
 				"localport":     formatPort(c.DownstreamLocalAddress),
-				"tlsversion":    tlsProperties.GetTlsVersion().String(),
-				"tlscipher":     tls.CipherSuiteName(uint16(tlsProperties.GetTlsCipherSuite().GetValue())),
+				"tlsversion":    requestTLSProperties.GetTlsVersion().String(),
+				"tlscipher":     tls.CipherSuiteName(uint16(requestTLSProperties.GetTlsCipherSuite().GetValue())),
 				"proto":         e.ProtocolVersion.String(),
-				"forwardedfor":  req.ForwardedFor,
-				"scheme":        req.Scheme,
-				"authority":     req.Authority,
-				"verb":          req.RequestMethod.String(),
-				"path":          req.Path,
-				"requestid":     req.RequestId,
-				"headersize":    req.RequestHeadersBytes,
-				"bodysize":      req.RequestBodyBytes,
+				"forwardedfor":  request.ForwardedFor,
+				"scheme":        request.Scheme,
+				"authority":     request.Authority,
+				"verb":          request.RequestMethod.String(),
+				"path":          request.Path,
+				"requestid":     request.RequestId,
+				"headersize":    request.RequestHeadersBytes,
+				"bodysize":      request.RequestBodyBytes,
 			}),
 
-			zap.Any("requestheaders", req.GetRequestHeaders()),
+			zap.Any("requestheaders", request.GetRequestHeaders()),
 
 			zap.String("responseflags", formatResponseFlags(c.ResponseFlags)),
 
@@ -185,50 +174,43 @@ func (a *AccessLogServer) LogHTTPRequest(logName, nodeID, nodeCluster string, e 
 			}),
 
 			zap.Any("response", map[string]uint64{
-				"code":       uint64(resp.ResponseCode.GetValue()),
-				"headersize": resp.ResponseHeadersBytes,
-				"bodysize":   resp.ResponseBodyBytes,
+				"code":       uint64(response.ResponseCode.GetValue()),
+				"headersize": response.ResponseHeadersBytes,
+				"bodysize":   response.ResponseBodyBytes,
 			}),
 
-			zap.Any("responseheaders", resp.GetResponseHeaders()),
+			zap.Any("responseheaders", response.GetResponseHeaders()),
 
-			// zap.Any("metadata", map[string]interface{}{
-			// 	"auth.method": c.Metadata.GetFilterMetadata(),
-			// }
-			// metadataAuthMethod            = "auth.method"
-			// metadataAuthMethodValueAPIKey = "apikey"
-			// metadataAuthMethodValueOAuth  = "oauth"
-			// metadataAuthAPIKey            = "auth.apikey"
-			// metadataAuthOAuthToken        = "auth.oauthtoken"
-			// metadataDeveloperEmail        = "developer.email"
-			// metadataDeveloperID           = "developer.id"
-			// metadataAppName               = "app.name"
-			// metadataAppID                 = "app.id"
-			// metadataAPIProductName        = "apiproduct.name"
-
+			zap.Any("metadata", formatMetadata(e.CommonProperties.Metadata)),
 		)
 	}
 }
 
 func formatAddress(address *core.Address) string {
-	switch t := address.GetAddress().(type) {
-	case *core.Address_SocketAddress:
-		return t.SocketAddress.GetAddress()
-	default:
-		return ""
+	if address != nil {
+		switch t := address.GetAddress().(type) {
+		case *core.Address_SocketAddress:
+			return t.SocketAddress.GetAddress()
+		}
 	}
+	return ""
 }
 
 func formatPort(address *core.Address) string {
-	switch t := address.GetAddress().(type) {
-	case *core.Address_SocketAddress:
-		return strconv.FormatUint(uint64(t.SocketAddress.GetPortValue()), 10)
-	default:
-		return ""
+	if address != nil {
+		switch t := address.GetAddress().(type) {
+		case *core.Address_SocketAddress:
+			return strconv.FormatUint(uint64(t.SocketAddress.GetPortValue()), 10)
+		}
 	}
+	return ""
 }
 
 func formatResponseFlags(flags *alf.ResponseFlags) string {
+
+	if flags == nil {
+		return ""
+	}
 
 	const (
 		ResponseFlagDownstreamConnectionTermination = "DC"
@@ -313,6 +295,13 @@ func formatResponseFlags(flags *alf.ResponseFlags) string {
 	return strings.Join(values, ",")
 }
 
+func formatMetadata(m *core.Metadata) interface{} {
+	if m != nil {
+		return m.FilterMetadata
+	}
+	return ""
+}
+
 // pbTimestamp converts a protobuf time to time.Time.
 func (a *AccessLogServer) pbTimestamp(ts *timestamp.Timestamp) time.Time {
 	t, err := ptypes.Timestamp(ts)
@@ -344,15 +333,4 @@ func (a *AccessLogServer) pbTimestampAddDurationUnix(ts *timestamp.Timestamp, d 
 		du = 0
 	}
 	return t.Add(du).UnixNano() / 1000000
-}
-
-// nullAddress returns 0.0.0.0 as address
-func nullAddress() *core.Address {
-	return &core.Address{
-		Address: &core.Address_SocketAddress{
-			SocketAddress: &core.SocketAddress{
-				Address: "0.0.0.0",
-			},
-		},
-	}
 }
