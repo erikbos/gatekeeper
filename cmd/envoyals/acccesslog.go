@@ -66,7 +66,6 @@ func (a *AccessLogServer) Start(listen string) {
 func (a *AccessLogServer) StreamAccessLogs(
 	stream accesslog.AccessLogService_StreamAccessLogsServer) error {
 
-	node := &core.Node{}
 	var logName string
 	for {
 		msg, err := stream.Recv()
@@ -74,13 +73,12 @@ func (a *AccessLogServer) StreamAccessLogs(
 			return nil
 		}
 		if msg.Identifier != nil {
-			node = msg.Identifier.Node
 			logName = msg.Identifier.LogName
 		}
 		switch entries := msg.LogEntries.(type) {
 		case *accesslog.StreamAccessLogsMessage_HttpLogs:
 			for _, entry := range entries.HttpLogs.LogEntry {
-				a.LogHTTPRequest(logName, node.Id, node.Cluster, entry)
+				a.LogHTTPRequest(msg.Identifier, entry)
 			}
 
 		case *accesslog.StreamAccessLogsMessage_TcpLogs:
@@ -90,12 +88,24 @@ func (a *AccessLogServer) StreamAccessLogs(
 }
 
 // LogHTTPRequest logs details of a single HTTP request.
-func (a *AccessLogServer) LogHTTPRequest(logName, nodeID, nodeCluster string, e *alf.HTTPAccessLogEntry) {
+func (a *AccessLogServer) LogHTTPRequest(
+	i *accesslog.StreamAccessLogsMessage_Identifier,
+	e *alf.HTTPAccessLogEntry) {
 
 	// See https://www.envoyproxy.io/docs/envoy/latest/api-v3/data/accesslog/v3/accesslog.proto#envoy-v3-api-msg-data-accesslog-v3-accesslogcommon
 	// for field details
 
 	if e != nil {
+		// If nil, populate so we can safely log fields
+		if i == nil {
+			i = &accesslog.StreamAccessLogsMessage_Identifier{}
+		}
+		if i.Node == nil {
+			i.Node = &core.Node{}
+		}
+		if i.Node.Locality == nil {
+			i.Node.Locality = &core.Locality{}
+		}
 		c := e.CommonProperties
 		if c == nil {
 			c = &alf.AccessLogCommon{}
@@ -120,14 +130,16 @@ func (a *AccessLogServer) LogHTTPRequest(logName, nodeID, nodeCluster string, e 
 		timeNowUTC := time.Now().UTC()
 		a.metrics.ObserveAccesLogLatency(timeNowUTC.Sub(a.pbTimestamp(e.CommonProperties.StartTime)))
 
-		a.metrics.IncAccessLogNodeHits(nodeID, nodeCluster)
+		a.metrics.IncAccessLogNodeHits(i.Node.Id, i.Node.Cluster)
 		a.metrics.IncAccessLogVHostHits(request.Authority)
 
 		a.logger.Info("http",
 			zap.Any("envoy", map[string]string{
-				"logname": logName,
-				"id":      nodeID,
-				"cluster": nodeCluster,
+				"logname": i.LogName,
+				"id":      i.Node.Id,
+				"cluster": i.Node.Cluster,
+				"region":  i.Node.Locality.Region,
+				"zone":    i.Node.Locality.Zone,
 			}),
 
 			zap.Any("ts", map[string]int64{
