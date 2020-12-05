@@ -16,6 +16,10 @@ coverage:
         flags:
           - emvoycp
           - pkg
+      envoyals:
+        flags:
+          - emvoycp
+          - pkg
 
 flags:
   dbadmin:
@@ -27,6 +31,9 @@ flags:
   envoycp:
     paths:
       - cmd/envoycp/
+  envoyals:
+    paths:
+      - cmd/envoyals/
   pkg:
     paths:
       - pkg/
