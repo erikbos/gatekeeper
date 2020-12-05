@@ -34,7 +34,7 @@ type AccessLogServer struct {
 type AccessLogServerConfig struct {
 	Listen            string        `yaml:"listen"`            // Access log server listen port grpc
 	Logger            shared.Logger `yaml:"logging"`           // changelog log configuration
-	maxStreamDuration time.Duration `yaml:"maxstreamduration"` // Max duration of access log session
+	MaxStreamDuration time.Duration `yaml:"maxstreamduration"` // Max duration of access log session
 }
 
 // NewAccessLogServer returns a new AccessLogServer instance

@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -55,7 +54,8 @@ func main() {
 
 	accessLogLogger := shared.NewLogger(&s.config.AccessLogger.Logger)
 
-	accessLogServer := NewAccessLogServer(10*time.Minute, s.metrics, accessLogLogger)
+	accessLogServer := NewAccessLogServer(s.config.AccessLogger.MaxStreamDuration,
+		s.metrics, accessLogLogger)
 	accessLogServer.Start(s.config.AccessLogger.Listen)
 }
 

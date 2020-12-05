@@ -1,6 +1,8 @@
 package main
 
 import (
+	"time"
+
 	"gopkg.in/yaml.v2"
 
 	"github.com/erikbos/gatekeeper/pkg/shared"
@@ -8,12 +10,13 @@ import (
 )
 
 const (
-	defaultLogLevel            = "info"
-	defaultLogFileName         = "/dev/stdout"
-	defaultWebAdminListen      = "0.0.0.0:8888"
-	defaultWebAdminLogFileName = "envoyals-admin.log"
-	defaultALSListen           = "0.0.0.0:8001"
-	defaultALSLogFileName      = "envoyproxy.log"
+	defaultLogLevel             = "info"
+	defaultLogFileName          = "/dev/stdout"
+	defaultWebAdminListen       = "0.0.0.0:8888"
+	defaultWebAdminLogFileName  = "envoyals-admin.log"
+	defaultALSListen            = "0.0.0.0:8001"
+	defaultALSLogFileName       = "envoyproxy.log"
+	defaultALSMaxStreamDuration = 1 * time.Hour
 )
 
 // EnvoyALSConfig contains our startup configuration data
@@ -48,7 +51,8 @@ func loadConfiguration(filename *string) (*EnvoyALSConfig, error) {
 			},
 		},
 		AccessLogger: AccessLogServerConfig{
-			Listen: defaultALSListen,
+			Listen:            defaultALSListen,
+			MaxStreamDuration: defaultALSMaxStreamDuration,
 			Logger: shared.Logger{
 				Level:    defaultLogLevel,
 				Filename: defaultALSLogFileName,
