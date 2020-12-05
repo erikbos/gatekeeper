@@ -68,6 +68,9 @@ func (a *AccessLogServer) Start(listen string) {
 func (a *AccessLogServer) StreamAccessLogs(
 	stream accesslog.AccessLogService_StreamAccessLogsServer) error {
 
+	// Set the time at which we will end stream session
+	endTime := time.Now().Add(a.maxStreamDuration)
+
 	var logName string
 	for {
 		msg, err := stream.Recv()
@@ -87,6 +90,14 @@ func (a *AccessLogServer) StreamAccessLogs(
 			a.logger.Error("tcp logging not supported",
 				zap.String("logname", logName))
 		}
+
+		// close the client stream once the timeout reaches
+		// we do this to force envoyproxy to reconnect and
+		// rebalance access log clusters targets
+		if endTime.Before(time.Now()) {
+			return stream.SendAndClose(nil)
+		}
+
 	}
 }
 
