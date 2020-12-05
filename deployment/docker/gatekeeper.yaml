@@ -43,6 +43,17 @@ services:
       - 9901-9903:9901-9903
     restart: unless-stopped
 
+  envoyals:
+    image: gatekeeper/envoyals:latest
+    container_name: envoyals
+    entrypoint: ["/app/envoyals", "--config", "/config/envoyals.yaml"]
+    secrets:
+      - source: envoyals-config
+        target: /config/envoyals.yaml
+    ports:
+      - 6001-6002:6001-6002
+    restart: unless-stopped
+
   envoyproxy:
     image: envoyproxy/envoy-alpine-dev:latest
     container_name: envoyproxy
@@ -63,5 +74,7 @@ secrets:
     file: envoyauth.yaml
   envoycp-config:
     file: envoycp.yaml
+  envoyals-config:
+    file: envoyals.yaml
   envoyproxy-config:
     file: envoyproxy.yaml

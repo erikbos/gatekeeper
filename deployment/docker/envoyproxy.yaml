@@ -88,3 +88,25 @@ static_resources:
               socket_address:
                 address: envoyauth
                 port_value: 4000
+
+  - name: envoyals
+    type: STRICT_DNS
+    connect_timeout: 1s
+    http2_protocol_options: {}
+    common_http_protocol_options:
+      idle_timeout:
+        seconds: 15
+    upstream_connection_options:
+      tcp_keepalive:
+        keepalive_probes: 3
+        keepalive_time: 10
+        keepalive_interval: 10
+    load_assignment:
+      cluster_name: envoyals
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: envoyauth
+                port_value: 6001
