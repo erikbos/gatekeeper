@@ -25,9 +25,9 @@ import (
 
 // AccessLogServer receives access logs from the remote Envoy nodes.
 type AccessLogServer struct {
-	metrics           *metrics.Metrics
-	maxStreamDuration time.Duration // Maximum duration for a access log stream log to live
-	logger            *zap.Logger
+	metrics           *metrics.Metrics // Metrics store
+	maxStreamDuration time.Duration    // Maximum duration for a access log stream log to live
+	logger            *zap.Logger      // Logger for writing access log entries
 }
 
 // AccessLogServerConfig holds our configuration
@@ -59,7 +59,9 @@ func (a *AccessLogServer) Start(listen string) {
 
 	grpcServer := grpc.NewServer()
 	accesslog.RegisterAccessLogServiceServer(grpcServer, a)
-	a.logger.Fatal("failed to start GRPC server", zap.Error(grpcServer.Serve(lis)))
+	if err := grpcServer.Serve(lis); err != nil {
+		a.logger.Fatal("failed to start GRPC server", zap.Error(err))
+	}
 }
 
 // StreamAccessLogs implements the access log service.
@@ -82,7 +84,8 @@ func (a *AccessLogServer) StreamAccessLogs(
 			}
 
 		case *accesslog.StreamAccessLogsMessage_TcpLogs:
-			a.logger.Error("tcp logging not supported", zap.String("logname", logName))
+			a.logger.Error("tcp logging not supported",
+				zap.String("logname", logName))
 		}
 	}
 }
@@ -198,6 +201,7 @@ func (a *AccessLogServer) LogHTTPRequest(
 	}
 }
 
+// Returns ip address part of core.Address type as string
 func formatAddress(address *core.Address) string {
 	if address != nil {
 		switch t := address.GetAddress().(type) {
@@ -208,6 +212,7 @@ func formatAddress(address *core.Address) string {
 	return ""
 }
 
+// Returns ip port part of core.Address type as string
 func formatPort(address *core.Address) string {
 	if address != nil {
 		switch t := address.GetAddress().(type) {
