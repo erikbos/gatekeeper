@@ -47,7 +47,7 @@ func New(config *Config, d *db.Database, applicationName string, logger *zap.Log
 		Developer:    NewDeveloperCache(c, d.Developer),
 		DeveloperApp: NewDeveloperAppCache(c, d.DeveloperApp),
 		APIProduct:   NewAPIProductCache(c, d.APIProduct),
-		Credential:   NewCredentialCache(c, d.Credential),
+		Key:          NewKeyCache(c, d.Key),
 		OAuth:        NewOAuthCache(c, d.OAuth),
 		User:         NewUserCache(c, d.User),
 		Role:         NewRoleCache(c, d.Role),

@@ -25,7 +25,7 @@ var (
 )
 
 type server struct {
-	config     *APIAuthConfig
+	config     *EnvoyAuthConfig
 	webadmin   *webadmin.Webadmin
 	db         *db.Database
 	dbentities *db.EntityCache
@@ -60,7 +60,7 @@ func main() {
 		zap.String("version", version),
 		zap.String("buildtime", buildTime))
 
-	a.metrics = metrics.NewMetrics()
+	a.metrics = metrics.New()
 	a.metrics.RegisterWithPrometheus(applicationName)
 
 	database, err := cassandra.New(a.config.Database, applicationName, a.logger, false, 0)
@@ -104,8 +104,9 @@ func main() {
 	// // Start service for OAuth2 endpoints
 	a.oauth = oauth.New(a.config.OAuth, a.db, a.metrics, a.logger)
 	go func() {
-		a.logger.Fatal("OAuth server failed",
-			zap.Error(a.oauth.Start(applicationName)))
+		if err := a.oauth.Start(applicationName); err != nil {
+			a.logger.Fatal("OAuth server failed", zap.Error(err))
+		}
 	}()
 
 	a.StartAuthorizationServer()

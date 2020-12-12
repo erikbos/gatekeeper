@@ -39,7 +39,6 @@ content-type: application/json
             "status" : "approved"
         }
     ],
-    "attributes": [],
     "status": "approved"
 }
 

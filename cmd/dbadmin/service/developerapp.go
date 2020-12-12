@@ -37,9 +37,9 @@ func (das *DeveloperAppService) GetByName(developerAppName string) (developerApp
 }
 
 // GetByID returns details of an developerApp
-func (das *DeveloperAppService) GetByID(developerAppName string) (developerApp *types.DeveloperApp, err types.Error) {
+func (das *DeveloperAppService) GetByID(developerAppID string) (developerApp *types.DeveloperApp, err types.Error) {
 
-	return das.db.DeveloperApp.GetByID(developerAppName)
+	return das.db.DeveloperApp.GetByID(developerAppID)
 }
 
 // GetAttributes returns attributes of an developerApp
@@ -196,7 +196,7 @@ func (das *DeveloperAppService) Delete(developerID, developerAppName string,
 	if err != nil {
 		return types.NullDeveloperApp, err
 	}
-	developerAppKeys, err := das.db.Credential.GetByDeveloperAppID(developerApp.AppID)
+	developerAppKeys, err := das.db.Key.GetByDeveloperAppID(developerApp.AppID)
 	if err != nil {
 		return types.NullDeveloperApp, err
 	}

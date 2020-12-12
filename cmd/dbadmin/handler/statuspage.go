@@ -256,7 +256,7 @@ func (h *Handler) showDevelopersPage(c *gin.Context) {
 
 	type AppEntry struct {
 		App  types.DeveloperApp
-		Keys types.DeveloperAppKeys
+		Keys types.Keys
 	}
 	type AllApps map[string][]AppEntry
 	apps := make(AllApps)
@@ -270,7 +270,7 @@ func (h *Handler) showDevelopersPage(c *gin.Context) {
 				webadmin.JSONMessage(c, http.StatusServiceUnavailable, err)
 				return
 			}
-			keys, err := h.service.Credential.GetByDeveloperAppID(app.AppID)
+			keys, err := h.service.Key.GetByDeveloperAppID(app.AppID)
 			if err != nil {
 				webadmin.JSONMessage(c, http.StatusServiceUnavailable, err)
 				return

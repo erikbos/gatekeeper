@@ -2,21 +2,18 @@ package types
 
 import "encoding/json"
 
-// DeveloperAppKey contains an apikey entitlement
+// Key contains an apikey entitlement
 //
 // Field validation (binding) is done using https://godoc.org/github.com/go-playground/validator
-type DeveloperAppKey struct {
-	// apikey of this credential
+type Key struct {
+	// ConsumerKey is the key required for authentication
 	ConsumerKey string `json:"consumerKey"`
 
-	// secretid of credential, used in OAuth2 flow
+	// ConsumerSecret is secretid of this key, needed to request OAuth2 access token
 	ConsumerSecret string `json:"consumerSecret"`
 
-	// List of apiproduct which can be accessed using this key
+	// List of apiproducts which can be accessed using this key
 	APIProducts APIProductStatuses `json:"apiProducts"`
-
-	// Attributes of credential
-	Attributes Attributes `json:"attributes"`
 
 	// Expiry date in epoch milliseconds
 	ExpiresAt int64 `json:"expiresAt"`
@@ -24,22 +21,22 @@ type DeveloperAppKey struct {
 	// Issue date in epoch milliseconds
 	IssuedAt int64 `json:"issuesAt"`
 
-	// Developer app id
+	// Developer app id this key belongs to
 	AppID string `json:"AppId"`
 
 	// Status (should be "approved" to allow access)
 	Status string `json:"status"`
 }
 
-// DeveloperAppKeys holds one or more apikeys
-type DeveloperAppKeys []DeveloperAppKey
+// Keys holds one or more apikeys
+type Keys []Key
 
 var (
 	// NullDeveloperAppKey is an empty key type
-	NullDeveloperAppKey = DeveloperAppKey{}
+	NullDeveloperAppKey = Key{}
 
 	// NullDeveloperAppKeys is an empty key slice
-	NullDeveloperAppKeys = DeveloperAppKeys{}
+	NullDeveloperAppKeys = Keys{}
 )
 
 // APIProductStatus contains whether an apikey's assigned apiproduct has been approved
@@ -54,20 +51,20 @@ type APIProductStatus struct {
 // APIProductStatuses contains list of apiproducts
 type APIProductStatuses []APIProductStatus
 
-// SetApproved marks a credential as approved
-func (k *DeveloperAppKey) SetApproved() {
+// SetApproved marks this key as approved
+func (k *Key) SetApproved() {
 
 	k.Status = "approved"
 }
 
-// IsApproved returns true in case credential's status is approved
-func (k *DeveloperAppKey) IsApproved() bool {
+// IsApproved returns true in case key's status is approved
+func (k *Key) IsApproved() bool {
 
 	return k.Status == "approved"
 }
 
-// IsExpired returns true in case credential is expired
-func (k *DeveloperAppKey) IsExpired(now int64) bool {
+// IsExpired returns true in case key is expired
+func (k *Key) IsExpired(now int64) bool {
 
 	if k.ExpiresAt == 0 || k.ExpiresAt == -1 {
 		return false
@@ -78,13 +75,13 @@ func (k *DeveloperAppKey) IsExpired(now int64) bool {
 	return true
 }
 
-// SetApproved marks a credential's apiproduct as approved
+// SetApproved marks a key's apiproduct as approved
 func (p *APIProductStatus) SetApproved() {
 
 	p.Status = "approved"
 }
 
-// IsApproved returns true in case credential's apiproduct status is approved
+// IsApproved returns true in case key's apiproduct status is approved
 func (p *APIProductStatus) IsApproved() bool {
 
 	return p.Status == "approved"

@@ -104,7 +104,7 @@ func (s *DeveloperAppStore) GetCountByDeveloperID(developerID string) (int, type
 	return developerAppCount, nil
 }
 
-// runGetDeveloperAppQuery executes CQL query and returns resulset
+// runGetDeveloperAppQuery executes CQL query and returns resultset
 func (s *DeveloperAppStore) runGetDeveloperAppQuery(query string, queryParameters ...interface{}) (types.DeveloperApps, error) {
 	var developerapps types.DeveloperApps
 

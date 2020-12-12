@@ -11,9 +11,7 @@ import (
 	"github.com/erikbos/gatekeeper/pkg/db"
 )
 
-// ClientTokenStore is our interface to our credential database
-
-// ClientTokenStore holds our database config
+// ClientTokenStore is our interface to our OAuth token database.
 type ClientTokenStore struct {
 	db      *db.Database
 	metrics *metrics.Metrics
@@ -35,18 +33,18 @@ func NewClientTokenStore(database *db.Database, metrics *metrics.Metrics,
 func (clientstore *ClientTokenStore) GetByID(id string) (oauth2.ClientInfo, error) {
 
 	if clientstore == nil || id == "" {
-		return nil, errors.New("Cannot handle request")
+		return nil, errors.New("Cannot handle nil GetByID request")
 	}
 	clientstore.logger.Debug("GetByID", zap.String("id", id))
 
-	credential, err := clientstore.db.Credential.GetByKey(&id)
+	key, err := clientstore.db.Key.GetByKey(&id)
 	if err != nil {
 		clientstore.metrics.IncOAuthClientStoreMisses()
 		return nil, err
 	}
 	clientstore.metrics.IncOAuthClientStoreHits()
 	return &models.Client{
-		ID:     credential.ConsumerKey,
-		Secret: credential.ConsumerSecret,
+		ID:     key.ConsumerKey,
+		Secret: key.ConsumerSecret,
 	}, nil
 }

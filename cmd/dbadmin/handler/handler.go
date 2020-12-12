@@ -62,7 +62,7 @@ func NewHandler(g *gin.Engine, db *db.Database, s *service.Service, applicationN
 	}
 	handler.registerDeveloperRoutes(apiRoutes)
 	handler.registerDeveloperAppRoutes(apiRoutes)
-	handler.registerCredentialRoutes(apiRoutes)
+	handler.registerKeyRoutes(apiRoutes)
 	handler.registerAPIProductRoutes(apiRoutes)
 	return handler
 }

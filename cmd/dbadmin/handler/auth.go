@@ -61,7 +61,7 @@ func (a *AuthHandler) AuthenticateAndAuthorize(c *gin.Context) {
 
 	user, err := a.ValidatePassword(username, password)
 	if err != nil {
-		// Credentials doesn't match, we return 401 and abort request.
+		// Unknown user or pw mismatch, we return 401 and abort request.
 		abortAuthorizationRequired(c, err)
 		return
 	}

@@ -23,8 +23,8 @@ const (
 	defaultCacheNegativeTTL    = 5
 )
 
-// APIAuthConfig contains our startup configuration data
-type APIAuthConfig struct {
+// EnvoyAuthConfig contains our startup configuration data
+type EnvoyAuthConfig struct {
 	Logger    shared.Logger            `yaml:"logging"`   // log configuration of application
 	WebAdmin  webadmin.Config          `yaml:"webadmin"`  // Admin web interface configuration
 	EnvoyAuth envoyAuthConfig          `yaml:"envoyauth"` // Envoyauth configuration
@@ -34,9 +34,9 @@ type APIAuthConfig struct {
 	Geoip     policy.Geoip             `yaml:"geoip"`     // Geoip lookup configuration
 }
 
-func loadConfiguration(filename *string) (*APIAuthConfig, error) {
+func loadConfiguration(filename *string) (*EnvoyAuthConfig, error) {
 
-	defaultConfig := &APIAuthConfig{
+	defaultConfig := &EnvoyAuthConfig{
 		Logger: shared.Logger{
 			Level:    defaultLogLevel,
 			Filename: defaultLogFileName,
@@ -65,11 +65,11 @@ func loadConfiguration(filename *string) (*APIAuthConfig, error) {
 	if err != nil {
 		return nil, err
 	}
-	return config.(*APIAuthConfig), nil
+	return config.(*EnvoyAuthConfig), nil
 }
 
 // String() return our startup configuration as YAML
-func (config *APIAuthConfig) String() string {
+func (config *EnvoyAuthConfig) String() string {
 
 	// We must remove db password from configuration struct before showing
 	redactedConfig := config

@@ -95,14 +95,15 @@ func (w *Webadmin) Start() {
 	if w.config.TLS.CertFile != "" &&
 		w.config.TLS.KeyFile != "" {
 
-		w.logger.Fatal("error starting webadmin",
-			zap.Error(w.Router.RunTLS(
-				w.config.Listen,
-				w.config.TLS.CertFile,
-				w.config.TLS.KeyFile)))
+		if err := w.Router.RunTLS(w.config.Listen,
+			w.config.TLS.CertFile, w.config.TLS.KeyFile); err != nil {
+			w.logger.Fatal("error starting webadmin",
+				zap.Error(err))
+		}
 	}
-	w.logger.Fatal("error starting webadmin",
-		zap.Error(w.Router.Run(w.config.Listen)))
+	if err := w.Router.Run(w.config.Listen); err != nil {
+		w.logger.Fatal("error starting webadmin", zap.Error(err))
+	}
 }
 
 // CheckIPACL checks if requestor's ip address matches ACL

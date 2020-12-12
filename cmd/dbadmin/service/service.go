@@ -11,7 +11,7 @@ type Service struct {
 	Cluster
 	Developer
 	DeveloperApp
-	Credential
+	Key
 	APIProduct
 	User
 	Role
@@ -136,17 +136,19 @@ type (
 		Delete(developerID, developerAppName string, who Requester) (deletedDeveloperApp types.DeveloperApp, e types.Error)
 	}
 
-	// Credential is the service interface to manipulate Credential entities
-	Credential interface {
-		Get(consumerKey string) (credential *types.DeveloperAppKey, err types.Error)
+	// Key is the service interface to manipulate Key entities
+	Key interface {
+		GetAll() (keys types.Keys, err types.Error)
 
-		GetByDeveloperAppID(developerAppID string) (clusters types.DeveloperAppKeys, err types.Error)
+		Get(consumerKey string) (key *types.Key, err types.Error)
 
-		Create(newCredential types.DeveloperAppKey, developerApp *types.DeveloperApp, who Requester) (types.DeveloperAppKey, types.Error)
+		GetByDeveloperAppID(developerAppID string) (keys types.Keys, err types.Error)
 
-		Update(updatedCredential types.DeveloperAppKey, who Requester) (types.DeveloperAppKey, types.Error)
+		Create(newKey types.Key, developerApp *types.DeveloperApp, who Requester) (types.Key, types.Error)
 
-		Delete(consumerKey string, who Requester) (deletedCredential types.DeveloperAppKey, e types.Error)
+		Update(updateKey types.Key, who Requester) (types.Key, types.Error)
+
+		Delete(consumerKey string, who Requester) (deletedKey types.Key, e types.Error)
 	}
 
 	// APIProduct is the service interface to manipulate APIProduct entities
@@ -175,9 +177,13 @@ type (
 	// User is the service interface to manipulate User entities
 	User interface {
 		GetAll() (users types.Users, err types.Error)
+
 		Get(userName string) (user *types.User, err types.Error)
+
 		Create(newUser types.User, who Requester) (*types.User, types.Error)
+
 		Update(updatedUser types.User, who Requester) (*types.User, types.Error)
+
 		Delete(userName string, who Requester) (deletedUser *types.User, e types.Error)
 	}
 

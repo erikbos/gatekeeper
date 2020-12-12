@@ -14,7 +14,7 @@ type (
 		Developer
 		DeveloperApp
 		APIProduct
-		Credential
+		Key
 		OAuth
 		User
 		Role
@@ -120,18 +120,21 @@ type (
 		Delete(apiProduct string) types.Error
 	}
 
-	// Credential the cluster information storage interface
-	Credential interface {
+	// Key the cluster information storage interface
+	Key interface {
+		// GetAll retrieves all listeners
+		GetAll() (types.Keys, types.Error)
+
 		// GetByKey returns details of a single apikey
-		GetByKey(key *string) (*types.DeveloperAppKey, types.Error)
+		GetByKey(key *string) (*types.Key, types.Error)
 
 		// GetByDeveloperAppID returns an array with apikey details of a developer app
-		GetByDeveloperAppID(developerAppID string) (types.DeveloperAppKeys, types.Error)
+		GetByDeveloperAppID(developerAppID string) (types.Keys, types.Error)
 
-		// UpdateByKey UPSERTs credentials
-		UpdateByKey(c *types.DeveloperAppKey) types.Error
+		// UpdateByKey UPSERTs key
+		UpdateByKey(c *types.Key) types.Error
 
-		// DeleteByKey deletes credentials
+		// DeleteByKey deletes key
 		DeleteByKey(consumerKey string) types.Error
 	}
 

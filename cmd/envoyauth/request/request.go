@@ -22,6 +22,6 @@ type State struct {
 	Listener        *types.Listener
 	Developer       *types.Developer
 	DeveloperApp    *types.DeveloperApp
-	DeveloperAppKey *types.DeveloperAppKey
+	Key             *types.Key
 	APIProduct      *types.APIProduct
 }
