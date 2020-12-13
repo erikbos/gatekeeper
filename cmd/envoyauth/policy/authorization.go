@@ -22,7 +22,7 @@ func (p *Policy) CheckProductEntitlement(request *request.State) error {
 		return err
 	}
 	var err error
-	request.APIProduct, err = p.IsPathAllowed(request.URL.Path, request.DeveloperAppKey)
+	request.APIProduct, err = p.IsPathAllowed(request.URL.Path, request.Key)
 	return err
 }
 
@@ -34,13 +34,13 @@ func (p *Policy) getAPIKeyDevDevAppDetails(request *request.State) error {
 	}
 
 	var err error
-	request.DeveloperAppKey, err = p.config.db.Credential.GetByKey(request.ConsumerKey)
+	request.Key, err = p.config.db.Key.GetByKey(request.ConsumerKey)
 	if err != nil {
 		p.config.metrics.IncUnknownAPIKey(request)
 		return errors.New("Cannot find apikey")
 	}
 
-	request.DeveloperApp, err = p.config.db.DeveloperApp.GetByID(request.DeveloperAppKey.AppID)
+	request.DeveloperApp, err = p.config.db.DeveloperApp.GetByID(request.Key.AppID)
 	if err != nil {
 		p.config.metrics.IncDatabaseFetchFailure(request)
 		return errors.New("Cannot find developer app of this apikey")
@@ -69,13 +69,13 @@ func (p *Policy) checkDevAndKeyValidity(request *request.State) error {
 		return errors.New("Developer suspended")
 	}
 
-	if !request.DeveloperAppKey.IsApproved() {
+	if !request.Key.IsApproved() {
 		// FIXME increase unapproved dev app counter (not an error state)
 		return errors.New("Unapproved apikey")
 	}
 
-	if request.DeveloperAppKey.IsExpired(request.Timestamp) {
-		// FIXME increase expired dev app credentials counter (not an error state))
+	if request.Key.IsExpired(request.Timestamp) {
+		// FIXME increase expired key counter (not an error state))
 		return errors.New("Expired apikey")
 	}
 	return nil
@@ -84,15 +84,15 @@ func (p *Policy) checkDevAndKeyValidity(request *request.State) error {
 // IsPathAllowed checks whether paths is allowed by apikey,
 // this means the apikey needs to contain a product that matchs the request path
 func (p *Policy) IsPathAllowed(requestPath string,
-	credential *types.DeveloperAppKey) (*types.APIProduct, error) {
+	key *types.Key) (*types.APIProduct, error) {
 
 	// Does this apikey have any products assigned?
-	if len(credential.APIProducts) == 0 {
+	if len(key.APIProducts) == 0 {
 		return nil, errors.New("No active products for apikey")
 	}
 
 	// Iterate over this key's apiproducts
-	for _, apiproduct := range credential.APIProducts {
+	for _, apiproduct := range key.APIProducts {
 		if apiproduct.IsApproved() {
 			apiproductDetails, err := p.config.db.APIProduct.Get(apiproduct.Apiproduct)
 			if err != nil {

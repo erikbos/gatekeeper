@@ -6,7 +6,7 @@ import (
 	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
-func (h *Handler) registerCredentialRoutes(r *gin.RouterGroup) {
+func (h *Handler) registerKeyRoutes(r *gin.RouterGroup) {
 	r.GET("/developers/:developer/apps/:application/keys", h.handler(h.getDeveloperAppKeys))
 	r.POST("/developers/:developer/apps/:application/keys", h.handler(h.createDeveloperAppKey))
 
@@ -31,11 +31,11 @@ func (h *Handler) getDeveloperAppKeys(c *gin.Context) handlerResponse {
 	if err != nil {
 		return handleError(err)
 	}
-	AppCredentials, err := h.service.Credential.GetByDeveloperAppID(developerApp.AppID)
+	keys, err := h.service.Key.GetByDeveloperAppID(developerApp.AppID)
 	if err != nil {
 		return handleError(err)
 	}
-	return handleOK(StringMap{"credentials": AppCredentials})
+	return handleOK(StringMap{"keys": keys})
 }
 
 // getDeveloperAppKeyByKey returns one key of one particular developer application
@@ -49,55 +49,55 @@ func (h *Handler) getDeveloperAppKeyByKey(c *gin.Context) handlerResponse {
 	if err != nil {
 		return handleError(err)
 	}
-	AppCredentials, err := h.service.Credential.Get(c.Param(keyParameter))
+	key, err := h.service.Key.Get(c.Param(keyParameter))
 	if err != nil {
 		return handleError(err)
 	}
-	return handleOK(AppCredentials)
+	return handleOK(key)
 }
 
 // createDeveloperAppKey creates key for developerapp
 func (h *Handler) createDeveloperAppKey(c *gin.Context) handlerResponse {
 
-	var receivedCredential types.DeveloperAppKey
+	var receivedKey types.Key
 	// We ignore error as it is not required to provided any data
-	_ = c.ShouldBindJSON(&receivedCredential)
+	_ = c.ShouldBindJSON(&receivedKey)
 
 	developerApp, err := h.service.DeveloperApp.GetByName(c.Param("application"))
 	if err != nil {
 		return handleBadRequest(err)
 	}
-	storedAppCredential, err := h.service.Credential.Create(receivedCredential, developerApp, h.who(c))
+	storedKey, err := h.service.Key.Create(receivedKey, developerApp, h.who(c))
 	if err != nil {
 		return handleError(err)
 	}
-	return handleOK(storedAppCredential)
+	return handleOK(storedKey)
 }
 
 // updateDeveloperAppKeyByKey updates existing key for developerapp
 func (h *Handler) updateDeveloperAppKeyByKey(c *gin.Context) handlerResponse {
 
-	var receivedAppCredential types.DeveloperAppKey
-	if err := c.ShouldBindJSON(&receivedAppCredential); err != nil {
+	var receivedKey types.Key
+	if err := c.ShouldBindJSON(&receivedKey); err != nil {
 		return handleBadRequest(err)
 	}
 	// apikey in path must match consumer key in posted body
-	if receivedAppCredential.ConsumerKey != c.Param(keyParameter) {
+	if receivedKey.ConsumerKey != c.Param(keyParameter) {
 		return handleNameMismatch()
 	}
-	storedAppCredential, err := h.service.Credential.Update(receivedAppCredential, h.who(c))
+	storedKey, err := h.service.Key.Update(receivedKey, h.who(c))
 	if err != nil {
 		return handleError(err)
 	}
-	return handleOK(storedAppCredential)
+	return handleOK(storedKey)
 }
 
 // deleteDeveloperAppKeyByKey deletes apikey of developer app
 func (h *Handler) deleteDeveloperAppKeyByKey(c *gin.Context) handlerResponse {
 
-	deletedAppCredential, err := h.service.Credential.Delete(c.Param(keyParameter), h.who(c))
+	deletedKey, err := h.service.Key.Delete(c.Param(keyParameter), h.who(c))
 	if err != nil {
 		return handleError(err)
 	}
-	return handleOK(deletedAppCredential)
+	return handleOK(deletedKey)
 }

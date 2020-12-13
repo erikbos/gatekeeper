@@ -81,16 +81,18 @@ func (oauth *Server) Start(applicationName string) error {
 	if oauth.config.TLS.certFile != "" &&
 		oauth.config.TLS.keyFile != "" {
 
-		oauth.logger.Fatal("error starting tls webadmin",
-			zap.Error(oauth.router.RunTLS(
-				oauth.config.Listen,
-				oauth.config.TLS.certFile,
-				oauth.config.TLS.keyFile)))
+		err := oauth.router.RunTLS(oauth.config.Listen,
+			oauth.config.TLS.certFile, oauth.config.TLS.keyFile)
+		if err != nil {
+			oauth.logger.Fatal("error starting tls webadmin", zap.Error(err))
+		}
 	}
 
-	oauth.logger.Fatal("error starting webadmin",
-		zap.Error(oauth.router.Run(oauth.config.Listen)))
-	return nil
+	err := oauth.router.Run(oauth.config.Listen)
+	if err != nil {
+		oauth.logger.Fatal("error starting webadmin", zap.Error(err))
+	}
+	return err
 }
 
 // prepareOAuthInstance build OAuth server instance with client and token storage backends

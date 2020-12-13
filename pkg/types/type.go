@@ -8,7 +8,7 @@ const (
 	TypeDeveloperName    = "developer"
 	TypeDeveloperAppName = "developerapp"
 	TypeAPIProductName   = "apiproduct"
-	TypeCredentialName   = "credential"
+	TypeKeyName          = "key"
 	TypeOAuthName        = "oauth"
 	TypeUserName         = "user"
 	TypeRoleName         = "role"
@@ -43,10 +43,10 @@ func NameOf(entity interface{}) string {
 	case *DeveloperApp:
 		return TypeDeveloperAppName
 
-	case DeveloperAppKey:
-		return TypeCredentialName
-	case *DeveloperAppKey:
-		return TypeCredentialName
+	case Key:
+		return TypeKeyName
+	case *Key:
+		return TypeKeyName
 
 	case APIProduct:
 		return TypeAPIProductName

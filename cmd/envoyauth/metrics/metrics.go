@@ -25,8 +25,8 @@ type Metrics struct {
 	OAuthTokenStoreLookupMisses   *prometheus.CounterVec
 }
 
-// NewMetrics returns a new Metrics instance
-func NewMetrics() *Metrics {
+// New returns a new Metrics instance
+func New() *Metrics {
 
 	return &Metrics{}
 }
@@ -238,36 +238,43 @@ func (m *Metrics) IncPolicyMisses(scope, name string) {
 	m.PolicyMisses.WithLabelValues(scope, name).Inc()
 }
 
+// IncCountryHits increases country hit metric
 func (m *Metrics) IncCountryHits(country string) {
 
 	m.CountryHits.WithLabelValues(country).Inc()
 }
 
+// IncOAuthClientStoreHits increases oauth client store hit metric
 func (m *Metrics) IncOAuthClientStoreHits() {
 
 	m.OAuthClientStoreHits.Inc()
 }
 
+// IncOAuthClientStoreMisses increases oauth client store miss metric
 func (m *Metrics) IncOAuthClientStoreMisses() {
 
 	m.OAuthClientStoreMisses.Inc()
 }
 
+// IncOAuthTokenStoreIssueSuccesses increases oauth token store success hit metric
 func (m *Metrics) IncOAuthTokenStoreIssueSuccesses() {
 
 	m.OAuthTokenStoreIssueSuccesses.Inc()
 }
 
+// IncOAuthTokenStoreIssueFailures increases oauth token store failure metric
 func (m *Metrics) IncOAuthTokenStoreIssueFailures() {
 
 	m.OAuthTokenStoreIssueFailures.Inc()
 }
 
+// IncOAuthTokenStoreLookupHits increases oauth token store lookup hit metric
 func (m *Metrics) IncOAuthTokenStoreLookupHits(method string) {
 
 	m.OAuthTokenStoreLookupHits.WithLabelValues(method).Inc()
 }
 
+// IncOAuthTokenStoreLookupMisses increases oauth token store lookup miss metric
 func (m *Metrics) IncOAuthTokenStoreLookupMisses(method string) {
 
 	m.OAuthTokenStoreLookupMisses.WithLabelValues(method).Inc()

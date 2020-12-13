@@ -57,13 +57,13 @@ func (m *Metrics) RegisterWithPrometheus(metricNamespace string) {
 	prometheus.MustRegister(m.accessLogLatency)
 }
 
-// IncAccessLogNodeHits
+// IncAccessLogNodeHits counts access log entries that are received per envoy node
 func (m *Metrics) IncAccessLogNodeHits(nodeID, nodeCluster string) {
 
 	m.accessLogNodeHits.WithLabelValues(nodeID, nodeCluster).Inc()
 }
 
-// IncAccessLogVHostHits counts access log entries that are received
+// IncAccessLogVHostHits counts access log entries that are received per requested vhost
 func (m *Metrics) IncAccessLogVHostHits(hostname string) {
 
 	m.accessLogVHostHits.WithLabelValues(hostname).Inc()

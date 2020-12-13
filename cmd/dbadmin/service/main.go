@@ -16,7 +16,7 @@ func New(database *db.Database, changelogLogger *zap.Logger) *Service {
 		Cluster:      NewCluster(database, changelog),
 		Developer:    NewDeveloper(database, changelog),
 		DeveloperApp: NewDeveloperApp(database, changelog),
-		Credential:   NewCredential(database, changelog),
+		Key:          NewKey(database, changelog),
 		APIProduct:   NewAPIProduct(database, changelog),
 		User:         NewUser(database, changelog),
 		Role:         NewRole(database, changelog),

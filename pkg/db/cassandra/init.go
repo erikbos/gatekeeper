@@ -170,9 +170,8 @@ var createTablesCQL = [...]string{
 	`CREATE INDEX IF NOT EXISTS ON developer_apps (developer_id)`,
 	`CREATE INDEX IF NOT EXISTS ON developer_apps (status)`,
 
-	`CREATE TABLE IF NOT EXISTS credentials (
+	`CREATE TABLE IF NOT EXISTS keys (
     api_products text,
-    attributes text,
     consumer_key text,
     consumer_secret text,
     app_id text,
@@ -182,9 +181,9 @@ var createTablesCQL = [...]string{
     PRIMARY KEY (consumer_key)
 	)`,
 
-	`CREATE INDEX IF NOT EXISTS ON credentials (consumer_secret)`,
-	`CREATE INDEX IF NOT EXISTS ON credentials (app_id)`,
-	`CREATE INDEX IF NOT EXISTS ON credentials (status)`,
+	`CREATE INDEX IF NOT EXISTS ON keys (consumer_secret)`,
+	`CREATE INDEX IF NOT EXISTS ON keys (app_id)`,
+	`CREATE INDEX IF NOT EXISTS ON keys (status)`,
 
 	`CREATE TABLE IF NOT EXISTS oauth_access_token (
         access text,

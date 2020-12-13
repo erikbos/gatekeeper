@@ -98,7 +98,9 @@ func (x *XDS) GRPCManagementServer() {
 	routeservice.RegisterRouteDiscoveryServiceServer(grpcServer, x.xds)
 	listenerservice.RegisterListenerDiscoveryServiceServer(grpcServer, x.xds)
 
-	x.server.logger.Fatal("failed to start GRPC server", zap.Error(grpcServer.Serve(lis)))
+	if err := grpcServer.Serve(lis); err != nil {
+		x.server.logger.Fatal("failed to start GRPC server", zap.Error(err))
+	}
 }
 
 // CreateNewSnapshot compiles configuration into snapshot
