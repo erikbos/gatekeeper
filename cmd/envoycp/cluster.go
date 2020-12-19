@@ -68,6 +68,9 @@ func (s *server) buildEnvoyClusterConfig(cluster types.Cluster) *envoyCluster.Cl
 	value, err := cluster.Attributes.Get(types.AttributeTLS)
 	if err == nil && value == types.AttributeValueTrue {
 		envoyCluster.TransportSocket = s.clusterTransportSocket(cluster)
+		//TODO
+		//lint:ignore SA1019 we should adopt https://www.envoyproxy.io/docs/envoy/latest/api-v3/extensions/upstreams/http/v3/http_protocol_options.proto instead of setting Http2ProtocolOptions
+		//nolint
 		envoyCluster.Http2ProtocolOptions = s.clusterHTTP2ProtocolOptions(cluster)
 	}
 
