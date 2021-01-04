@@ -14,7 +14,7 @@ require (
 	github.com/golang/protobuf v1.4.3
 	github.com/golang/snappy v0.0.2 // indirect
 	github.com/google/go-cmp v0.5.4
-	github.com/google/uuid v1.1.2
+	github.com/google/uuid v1.1.3
 	github.com/oschwald/maxminddb-golang v1.8.0
 	github.com/prometheus/client_golang v1.9.0
 	github.com/stretchr/testify v1.6.1
