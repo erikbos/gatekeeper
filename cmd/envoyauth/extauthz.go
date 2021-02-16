@@ -117,8 +117,6 @@ func (s *server) Check(ctx context.Context,
 func (s *server) allowRequest(headers, metadata map[string]string) (
 	*authservice.CheckResponse, error) {
 
-	dynamicMetadata := buildDynamicMetadataList(metadata)
-
 	response := &authservice.CheckResponse{
 		Status: &status.Status{
 			Code: int32(rpc.OK),
@@ -126,12 +124,9 @@ func (s *server) allowRequest(headers, metadata map[string]string) (
 		HttpResponse: &authservice.CheckResponse_OkResponse{
 			OkResponse: &authservice.OkHttpResponse{
 				Headers: buildHeadersList(headers),
-				// Required for < Envoy 0.17
-				DynamicMetadata: dynamicMetadata,
 			},
 		},
-		// Required for > Envoy 0.16
-		// DynamicMetadata: dynamicMetadata,
+		DynamicMetadata: buildDynamicMetadataList(metadata),
 	}
 
 	s.logger.Debug("allowRequest", zap.Reflect("response", response))
