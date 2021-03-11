@@ -22,7 +22,7 @@ func (m *metrics) RegisterWithPrometheus(metricNamespace string) {
 		prometheus.GaugeOpts{
 			Namespace: metricNamespace,
 			Name:      "xds_entities_total",
-			Help:      "Total number of entities.",
+			Help:      "Total number of xds entities.",
 		}, []string{"messagetype"})
 	prometheus.MustRegister(m.xdsEntities)
 
@@ -38,7 +38,7 @@ func (m *metrics) RegisterWithPrometheus(metricNamespace string) {
 		prometheus.CounterOpts{
 			Namespace: metricNamespace,
 			Name:      "xds_resource_requests_total",
-			Help:      "Total number of XDS messages.",
+			Help:      "Total number of xds messages.",
 		}, []string{"messagetype"})
 	prometheus.MustRegister(m.xdsMessages)
 }
