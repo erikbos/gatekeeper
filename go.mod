@@ -22,7 +22,7 @@ require (
 	golang.org/x/crypto v0.0.0-20201001193750-eb9a90e9f9cb
 	golang.org/x/net v0.0.0-20200930145003-4acb6c075d10 // indirect
 	google.golang.org/genproto v0.0.0-20201001141541-efaab9d3c4f7
-	google.golang.org/grpc v1.35.0
+	google.golang.org/grpc v1.36.0
 	google.golang.org/protobuf v1.25.0
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	gopkg.in/oauth2.v3 v3.12.0
