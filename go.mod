@@ -11,7 +11,7 @@ require (
 	github.com/go-playground/validator/v10 v10.4.0 // indirect
 	github.com/gocql/gocql v0.0.0-20200815110948-5378c8f664e9
 	github.com/gogo/googleapis v1.4.0
-	github.com/golang/protobuf v1.4.3
+	github.com/golang/protobuf v1.5.0
 	github.com/golang/snappy v0.0.2 // indirect
 	github.com/google/go-cmp v0.5.5
 	github.com/google/uuid v1.2.0
@@ -23,7 +23,7 @@ require (
 	golang.org/x/net v0.0.0-20200930145003-4acb6c075d10 // indirect
 	google.golang.org/genproto v0.0.0-20201001141541-efaab9d3c4f7
 	google.golang.org/grpc v1.36.0
-	google.golang.org/protobuf v1.25.0
+	google.golang.org/protobuf v1.26.0
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	gopkg.in/oauth2.v3 v3.12.0
 	gopkg.in/yaml.v2 v2.4.0
