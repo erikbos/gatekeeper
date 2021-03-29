@@ -13,10 +13,10 @@ import (
 	envoytype "github.com/envoyproxy/go-control-plane/envoy/type/v3"
 	cache "github.com/envoyproxy/go-control-plane/pkg/cache/types"
 	"github.com/envoyproxy/go-control-plane/pkg/wellknown"
-	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/types/known/anypb"
+	"google.golang.org/protobuf/types/known/durationpb"
 
 	"github.com/erikbos/gatekeeper/pkg/types"
 )
@@ -163,8 +163,8 @@ func (s *server) buildRouteActionCluster(routeEntry types.Route) *route.Route_Ro
 			Cors:                 buildCorsPolicy(routeEntry),
 			HostRewriteSpecifier: buildHostRewriteSpecifier(routeEntry),
 			RetryPolicy:          buildRetryPolicy(routeEntry),
-			Timeout: ptypes.DurationProto(routeEntry.Attributes.GetAsDuration(types.AttributeTimeout,
-				types.DefaultRouteTimeout)),
+			Timeout: durationpb.New(routeEntry.Attributes.GetAsDuration(
+				types.AttributeTimeout, types.DefaultRouteTimeout)),
 		},
 	}
 
@@ -574,7 +574,7 @@ func buildRetryPolicy(routeEntry types.Route) *route.RetryPolicy {
 	return &route.RetryPolicy{
 		RetryOn:              RetryOn,
 		NumRetries:           protoUint32(numRetries),
-		PerTryTimeout:        ptypes.DurationProto(perTryTimeout),
+		PerTryTimeout:        durationpb.New(perTryTimeout),
 		RetriableStatusCodes: RetriableStatusCodes,
 		RetryHostPredicate: []*route.RetryPolicy_RetryHostPredicate{
 			{Name: "envoy.retry_host_predicates.previous_hosts"},
@@ -631,7 +631,7 @@ func perRouteAuthzFilterConfig(routeEntry types.Route) *anypb.Any {
 			Disabled: true,
 		},
 	}
-	ratelimitTypedConf, e := ptypes.MarshalAny(perFilterExtAuthzConfig)
+	ratelimitTypedConf, e := anypb.New(perFilterExtAuthzConfig)
 	if e != nil {
 		return nil
 	}

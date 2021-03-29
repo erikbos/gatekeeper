@@ -6,11 +6,14 @@ import (
 
 	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	tls "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/tls/v3"
-	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/golang/protobuf/ptypes/wrappers"
+	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/protobuf/runtime/protoiface"
+	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/testing/protocmp"
+	"google.golang.org/protobuf/types/known/anypb"
+	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 
 	"github.com/erikbos/gatekeeper/pkg/types"
@@ -60,7 +63,7 @@ func Test_buildGRPCService(t *testing.T) {
 			clusterName: "testCluster",
 			timeout:     82 * time.Second,
 			expected: &core.GrpcService{
-				Timeout: ptypes.DurationProto(82 * time.Second),
+				Timeout: durationpb.New(82 * time.Second),
 				TargetSpecifier: &core.GrpcService_EnvoyGrpc_{
 					EnvoyGrpc: &core.GrpcService_EnvoyGrpc{
 						ClusterName: "testCluster",
@@ -93,7 +96,7 @@ func Test_buildConfigSource(t *testing.T) {
 						ApiType: core.ApiConfigSource_GRPC,
 						GrpcServices: []*core.GrpcService{
 							{
-								Timeout: ptypes.DurationProto(82 * time.Second),
+								Timeout: durationpb.New(82 * time.Second),
 								TargetSpecifier: &core.GrpcService_EnvoyGrpc_{
 									EnvoyGrpc: &core.GrpcService_EnvoyGrpc{
 										ClusterName: "testbackend5",
@@ -119,7 +122,7 @@ func Test_buildTransportSocket(t *testing.T) {
 	tests := []struct {
 		name         string
 		resourceName string
-		tlsContext   protoiface.MessageV1
+		tlsContext   protoreflect.ProtoMessage
 		expected     *core.TransportSocket
 	}{
 		{
@@ -459,11 +462,22 @@ func Test_protoUint32orNil(t *testing.T) {
 		protoUint32orNil(0))
 }
 
-func mustMarshalAny(pb protoiface.MessageV1) *any.Any {
+func mustMarshalAny(src protoreflect.ProtoMessage) *any.Any {
 
-	a, err := ptypes.MarshalAny(pb)
+	a, err := anypb.New(src)
 	if err != nil {
 		panic(err.Error())
 	}
 	return a
+}
+
+// RequireEqual will test that want == got for protobufs, call t.fatal if it does not,
+// This mimics the behavior of the testify `require` functions.
+func RequireEqual(t *testing.T, want, got interface{}) {
+	t.Helper()
+
+	diff := cmp.Diff(want, got, protocmp.Transform())
+	if diff != "" {
+		t.Fatal(diff)
+	}
 }

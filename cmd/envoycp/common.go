@@ -2,16 +2,14 @@ package main
 
 import (
 	"strings"
-	"testing"
 	"time"
 
 	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	tls "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/tls/v3"
-	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/wrappers"
-	"github.com/google/go-cmp/cmp"
-	"google.golang.org/protobuf/runtime/protoiface"
-	"google.golang.org/protobuf/testing/protocmp"
+	"google.golang.org/protobuf/reflect/protoreflect"
+	"google.golang.org/protobuf/types/known/anypb"
+	"google.golang.org/protobuf/types/known/durationpb"
 
 	"github.com/erikbos/gatekeeper/pkg/types"
 )
@@ -42,7 +40,7 @@ func buildAddress(hostname string, port uint32) *core.Address {
 func buildGRPCService(clusterName string, timeout time.Duration) *core.GrpcService {
 
 	return &core.GrpcService{
-		Timeout: ptypes.DurationProto(timeout),
+		Timeout: durationpb.New(timeout),
 		TargetSpecifier: &core.GrpcService_EnvoyGrpc_{
 			EnvoyGrpc: &core.GrpcService_EnvoyGrpc{
 				ClusterName: clusterName,
@@ -68,9 +66,9 @@ func buildConfigSource(clusterName string, timeout time.Duration) *core.ConfigSo
 	}
 }
 
-func buildTransportSocket(resourceName string, tlsContext protoiface.MessageV1) *core.TransportSocket {
+func buildTransportSocket(resourceName string, tlsContext protoreflect.ProtoMessage) *core.TransportSocket {
 
-	tlsContextProtoBuf, err := ptypes.MarshalAny(tlsContext)
+	tlsContextProtoBuf, err := anypb.New(tlsContext)
 	if err != nil {
 		return nil
 	}
@@ -196,15 +194,4 @@ func protoUint32orNil(val uint32) *wrappers.UInt32Value {
 		return nil
 	}
 	return protoUint32(val)
-}
-
-// RequireEqual will test that want == got for protobufs, call t.fatal if it does not,
-// This mimics the behavior of the testify `require` functions.
-func RequireEqual(t *testing.T, want, got interface{}) {
-	t.Helper()
-
-	diff := cmp.Diff(want, got, protocmp.Transform())
-	if diff != "" {
-		t.Fatal(diff)
-	}
 }
