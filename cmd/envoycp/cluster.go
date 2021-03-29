@@ -9,9 +9,9 @@ import (
 	tls "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/tls/v3"
 	envoyType "github.com/envoyproxy/go-control-plane/envoy/type/v3"
 	cache "github.com/envoyproxy/go-control-plane/pkg/cache/types"
-	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/duration"
 	"go.uber.org/zap"
+	"google.golang.org/protobuf/types/known/durationpb"
 
 	"github.com/erikbos/gatekeeper/pkg/types"
 )
@@ -82,7 +82,7 @@ func (s *server) clusterConnectTimeout(cluster types.Cluster) *duration.Duration
 	connectTimeout := cluster.Attributes.GetAsDuration(
 		types.AttributeConnectTimeout, types.DefaultClusterConnectTimeout)
 
-	return ptypes.DurationProto(connectTimeout)
+	return durationpb.New(connectTimeout)
 }
 
 func (s *server) clusterLbPolicy(cluster types.Cluster) envoyCluster.Cluster_LbPolicy {
@@ -203,8 +203,8 @@ func (s *server) clusterHealthChecks(cluster types.Cluster) []*core.HealthCheck 
 					CodecClientType: s.clusterHealthCodec(cluster),
 				},
 			},
-			Interval:           ptypes.DurationProto(interval),
-			Timeout:            ptypes.DurationProto(timeout),
+			Interval:           durationpb.New(interval),
+			Timeout:            durationpb.New(timeout),
 			UnhealthyThreshold: protoUint32orNil(unhealthyThreshold),
 			HealthyThreshold:   protoUint32orNil(healthyThreshold),
 		}
@@ -247,7 +247,7 @@ func (s *server) clusterCommonHTTPProtocolOptions(cluster types.Cluster) *core.H
 		types.AttributeIdleTimeout, types.DefaultClusterIdleTimeout)
 
 	return &core.HttpProtocolOptions{
-		IdleTimeout: ptypes.DurationProto(idleTimeout),
+		IdleTimeout: durationpb.New(idleTimeout),
 	}
 }
 
@@ -325,7 +325,7 @@ func (s *server) clusterDNSRefreshRate(cluster types.Cluster) *duration.Duration
 	refreshInterval := cluster.Attributes.GetAsDuration(
 		types.AttributeDNSRefreshRate, types.DefaultDNSRefreshRate)
 
-	return ptypes.DurationProto(refreshInterval)
+	return durationpb.New(refreshInterval)
 }
 
 func (s *server) clusterDNSResolvers(cluster types.Cluster) []*core.Address {

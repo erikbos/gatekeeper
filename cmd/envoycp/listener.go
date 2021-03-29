@@ -17,9 +17,9 @@ import (
 	tls "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/tls/v3"
 	cache "github.com/envoyproxy/go-control-plane/pkg/cache/types"
 	"github.com/envoyproxy/go-control-plane/pkg/wellknown"
-	"github.com/golang/protobuf/ptypes"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/types/known/anypb"
+	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/structpb"
 
 	"github.com/erikbos/gatekeeper/pkg/types"
@@ -126,7 +126,7 @@ func buildListenerFilterHTTP() []*listener.ListenerFilter {
 func (s *server) buildFilterChainEntry(v types.Listener, configuredListener *listener.Listener) *listener.FilterChain {
 
 	manager := s.buildConnectionManager(v)
-	managerProtoBuf, err := ptypes.MarshalAny(manager)
+	managerProtoBuf, err := anypb.New(manager)
 	if err != nil {
 		s.logger.Panic("buildFilterChainEntry", zap.Error(err))
 	}
@@ -266,7 +266,7 @@ func (s *server) buildHTTPFilterExtAuthzConfig(listener types.Listener) *anypb.A
 		}
 	}
 
-	extAuthzTypedConf, e := ptypes.MarshalAny(extAuthz)
+	extAuthzTypedConf, e := anypb.New(extAuthz)
 	if e != nil {
 		s.logger.Panic("buildHTTPFilterExtAuthzConfig", zap.Error(err))
 	}
@@ -300,14 +300,14 @@ func (s *server) buildHTTPFilterRateLimiterConfig(listener types.Listener) *anyp
 		Domain:          domain,
 		Stage:           0,
 		FailureModeDeny: failureModeAllow,
-		Timeout:         ptypes.DurationProto(timeout),
+		Timeout:         durationpb.New(timeout),
 		RateLimitService: &ratelimitconf.RateLimitServiceConfig{
 			GrpcService:         buildGRPCService(cluster, timeout),
 			TransportApiVersion: core.ApiVersion_V3,
 		},
 	}
 
-	ratelimitTypedConf, e := ptypes.MarshalAny(ratelimit)
+	ratelimitTypedConf, e := anypb.New(ratelimit)
 	if e != nil {
 		s.logger.Panic("buildHTTPFilterExtAuthzConfig", zap.Error(err))
 	}
@@ -381,7 +381,7 @@ func (s *server) buildFileAccessLog(path, fields string) *accesslog.AccessLog {
 			},
 		},
 	}
-	accessLogTypedConf, err := ptypes.MarshalAny(accessLogConf)
+	accessLogTypedConf, err := anypb.New(accessLogConf)
 	if err != nil {
 		s.logger.Panic("buildFileAccessLog", zap.Error(err))
 	}
@@ -404,7 +404,7 @@ func (s *server) buildGRPCAccessLog(clusterName, logName string, timeout time.Du
 		},
 	}
 
-	accessLogTypedConf, err := ptypes.MarshalAny(accessLogConf)
+	accessLogTypedConf, err := anypb.New(accessLogConf)
 	if err != nil {
 		s.logger.Panic("buildGRPCAccessLog", zap.Error(err))
 	}
@@ -422,7 +422,7 @@ func listenerCommonHTTPProtocolOptions(listener types.Listener) *core.HttpProtoc
 		types.AttributeIdleTimeout, listenerIdleTimeout)
 
 	return &core.HttpProtocolOptions{
-		IdleTimeout: ptypes.DurationProto(idleTimeout),
+		IdleTimeout: durationpb.New(idleTimeout),
 	}
 }
 

@@ -9,12 +9,12 @@ import (
 	endpoint "github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3"
 	tls "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/tls/v3"
 	envoyType "github.com/envoyproxy/go-control-plane/envoy/type/v3"
-	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/duration"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest/observer"
 	"google.golang.org/protobuf/runtime/protoiface"
+	"google.golang.org/protobuf/types/known/durationpb"
 
 	"github.com/erikbos/gatekeeper/pkg/types"
 )
@@ -46,7 +46,7 @@ func Test_buildEnvoyClusterConfig(t *testing.T) {
 			expected: &envoyCluster.Cluster{
 				Name: "Example Backend",
 
-				ConnectTimeout: ptypes.DurationProto(types.DefaultClusterConnectTimeout),
+				ConnectTimeout: durationpb.New(types.DefaultClusterConnectTimeout),
 
 				ClusterDiscoveryType: &envoyCluster.Cluster_Type{
 					Type: envoyCluster.Cluster_LOGICAL_DNS,
@@ -54,7 +54,7 @@ func Test_buildEnvoyClusterConfig(t *testing.T) {
 
 				DnsLookupFamily: envoyCluster.Cluster_AUTO,
 
-				DnsRefreshRate: ptypes.DurationProto(types.DefaultDNSRefreshRate),
+				DnsRefreshRate: durationpb.New(types.DefaultDNSRefreshRate),
 
 				LbPolicy: envoyCluster.Cluster_ROUND_ROBIN,
 
@@ -70,7 +70,7 @@ func Test_buildEnvoyClusterConfig(t *testing.T) {
 				HealthChecks: nil,
 
 				CommonHttpProtocolOptions: &core.HttpProtocolOptions{
-					IdleTimeout: ptypes.DurationProto(types.DefaultClusterIdleTimeout),
+					IdleTimeout: durationpb.New(types.DefaultClusterIdleTimeout),
 				},
 
 				TrackClusterStats: &envoyCluster.TrackClusterStats{
@@ -144,14 +144,14 @@ func Test_clusterConnectTimeout(t *testing.T) {
 					},
 				},
 			},
-			expected: ptypes.DurationProto(131 * time.Second),
+			expected: durationpb.New(131 * time.Second),
 		},
 		{
 			name: "cluster timeout no ttl specified",
 			cluster: types.Cluster{
 				Attributes: types.Attributes{},
 			},
-			expected: ptypes.DurationProto(types.DefaultClusterConnectTimeout),
+			expected: durationpb.New(types.DefaultClusterConnectTimeout),
 		},
 	}
 	for _, test := range tests {
@@ -481,8 +481,8 @@ func Test_clusterHealthChecks(t *testing.T) {
 							CodecClientType: envoyType.CodecClientType_HTTP2,
 						},
 					},
-					Interval:           ptypes.DurationProto(33 * time.Second),
-					Timeout:            ptypes.DurationProto(160 * time.Millisecond),
+					Interval:           durationpb.New(33 * time.Second),
+					Timeout:            durationpb.New(160 * time.Millisecond),
 					UnhealthyThreshold: protoUint32orNil(7),
 					HealthyThreshold:   protoUint32orNil(2),
 					EventLogPath:       "/tmp/logfile_for_web",
@@ -576,7 +576,7 @@ func Test_clusterCommonHTTPProtocolOptions(t *testing.T) {
 				},
 			},
 			expected: &core.HttpProtocolOptions{
-				IdleTimeout: ptypes.DurationProto(42 * time.Millisecond),
+				IdleTimeout: durationpb.New(42 * time.Millisecond),
 			},
 		},
 		{
@@ -585,7 +585,7 @@ func Test_clusterCommonHTTPProtocolOptions(t *testing.T) {
 				Attributes: types.Attributes{},
 			},
 			expected: &core.HttpProtocolOptions{
-				IdleTimeout: ptypes.DurationProto(types.DefaultClusterIdleTimeout),
+				IdleTimeout: durationpb.New(types.DefaultClusterIdleTimeout),
 			},
 		},
 	}
@@ -832,14 +832,14 @@ func Test_clusterDNSRefreshRate(t *testing.T) {
 					},
 				},
 			},
-			expected: ptypes.DurationProto(31 * time.Second),
+			expected: durationpb.New(31 * time.Second),
 		},
 		{
 			name: "no ttl specified",
 			cluster: types.Cluster{
 				Attributes: types.Attributes{},
 			},
-			expected: ptypes.DurationProto(types.DefaultDNSRefreshRate),
+			expected: durationpb.New(types.DefaultDNSRefreshRate),
 		},
 	}
 	for _, test := range tests {

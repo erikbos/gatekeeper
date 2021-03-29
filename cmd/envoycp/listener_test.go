@@ -13,9 +13,9 @@ import (
 	ratelimit "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/ratelimit/v3"
 	hcm "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 	"github.com/envoyproxy/go-control-plane/pkg/wellknown"
-	"github.com/golang/protobuf/ptypes"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/anypb"
+	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/structpb"
 
 	"github.com/erikbos/gatekeeper/pkg/types"
@@ -218,7 +218,7 @@ func Test_buildFilter(t *testing.T) {
 							Domain:          "ebnl",
 							Stage:           0,
 							FailureModeDeny: true,
-							Timeout:         ptypes.DurationProto(64 * time.Millisecond),
+							Timeout:         durationpb.New(64 * time.Millisecond),
 							RateLimitService: &ratelimitconf.RateLimitServiceConfig{
 								GrpcService:         buildGRPCService("ratelimiter_node", 64*time.Millisecond),
 								TransportApiVersion: core.ApiVersion_V3,
@@ -262,7 +262,7 @@ func Test_buildFilter(t *testing.T) {
 							Domain:          "ebnl",
 							Stage:           0,
 							FailureModeDeny: true,
-							Timeout:         ptypes.DurationProto(defaultRateLimitingTimeout),
+							Timeout:         durationpb.New(defaultRateLimitingTimeout),
 							RateLimitService: &ratelimitconf.RateLimitServiceConfig{
 								GrpcService:         buildGRPCService("ratelimiter_node", defaultRateLimitingTimeout),
 								TransportApiVersion: core.ApiVersion_V3,
@@ -610,7 +610,7 @@ func Test_buildCommonHTTPProtocolOptions(t *testing.T) {
 				},
 			},
 			expected: &core.HttpProtocolOptions{
-				IdleTimeout: ptypes.DurationProto(266 * time.Millisecond),
+				IdleTimeout: durationpb.New(266 * time.Millisecond),
 			},
 		},
 		{
@@ -619,7 +619,7 @@ func Test_buildCommonHTTPProtocolOptions(t *testing.T) {
 				Attributes: types.Attributes{},
 			},
 			expected: &core.HttpProtocolOptions{
-				IdleTimeout: ptypes.DurationProto(listenerIdleTimeout),
+				IdleTimeout: durationpb.New(listenerIdleTimeout),
 			},
 		},
 	}

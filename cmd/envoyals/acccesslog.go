@@ -10,7 +10,6 @@ import (
 	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	alf "github.com/envoyproxy/go-control-plane/envoy/data/accesslog/v3"
 	accesslog "github.com/envoyproxy/go-control-plane/envoy/service/accesslog/v3"
-	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/duration"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"go.uber.org/zap"
@@ -142,7 +141,7 @@ func (a *AccessLogServer) LogHTTPRequest(
 
 		// Record latency of this entry
 		timeNowUTC := time.Now().UTC()
-		a.metrics.ObserveAccesLogLatency(timeNowUTC.Sub(a.pbTimestamp(e.CommonProperties.StartTime)))
+		a.metrics.ObserveAccesLogLatency(timeNowUTC.Sub(e.CommonProperties.StartTime.AsTime()))
 
 		a.metrics.IncAccessLogNodeHits(i.Node.Id, i.Node.Cluster)
 		a.metrics.IncAccessLogVHostHits(request.Authority)
@@ -157,14 +156,14 @@ func (a *AccessLogServer) LogHTTPRequest(
 			}),
 
 			zap.Any("ts", map[string]int64{
-				"downstreamstart":       a.pbTimestampToUnix(c.StartTime),
-				"downstreamend":         a.pbTimestampAddDurationUnix(c.StartTime, c.TimeToLastRxByte),
-				"upstreamstart":         a.pbTimestampAddDurationUnix(c.StartTime, c.TimeToFirstUpstreamTxByte),
-				"upstreamend":           a.pbTimestampAddDurationUnix(c.StartTime, c.TimeToLastUpstreamTxByte),
-				"upstreamreceivedstart": a.pbTimestampAddDurationUnix(c.StartTime, c.TimeToFirstUpstreamRxByte),
-				"upstreamreceivedend":   a.pbTimestampAddDurationUnix(c.StartTime, c.TimeToLastUpstreamRxByte),
-				"downstreamsentstart":   a.pbTimestampAddDurationUnix(c.StartTime, c.TimeToFirstDownstreamTxByte),
-				"downstreamsentend":     a.pbTimestampAddDurationUnix(c.StartTime, c.TimeToLastDownstreamTxByte),
+				"downstreamstart":       timestampToUnix(c.StartTime),
+				"downstreamend":         timestampAddDurationUnix(c.StartTime, c.TimeToLastRxByte),
+				"upstreamstart":         timestampAddDurationUnix(c.StartTime, c.TimeToFirstUpstreamTxByte),
+				"upstreamend":           timestampAddDurationUnix(c.StartTime, c.TimeToLastUpstreamTxByte),
+				"upstreamreceivedstart": timestampAddDurationUnix(c.StartTime, c.TimeToFirstUpstreamRxByte),
+				"upstreamreceivedend":   timestampAddDurationUnix(c.StartTime, c.TimeToLastUpstreamRxByte),
+				"downstreamsentstart":   timestampAddDurationUnix(c.StartTime, c.TimeToFirstDownstreamTxByte),
+				"downstreamsentend":     timestampAddDurationUnix(c.StartTime, c.TimeToLastDownstreamTxByte),
 			}),
 
 			zap.Any("request", map[string]interface{}{
@@ -330,35 +329,24 @@ func formatMetadata(m *core.Metadata) interface{} {
 	return ""
 }
 
-// pbTimestamp converts a protobuf time to time.Time.
-func (a *AccessLogServer) pbTimestamp(ts *timestamp.Timestamp) time.Time {
-	t, err := ptypes.Timestamp(ts)
-	if err != nil {
-		a.logger.Error("invalid timestamp", zap.Error(err))
-		return time.Time{}
-	}
-	return t
+// timestampToUnix converts a protobuf time to a UNIX timestamp in milliseconds.
+func timestampToUnix(ts *timestamp.Timestamp) int64 {
+	return ts.AsTime().UnixNano() / 1000000
 }
 
-// pbTimestampToUnix converts a protobuf time to a UNIX timestamp in milliseconds.
-func (a *AccessLogServer) pbTimestampToUnix(ts *timestamp.Timestamp) int64 {
-	t, err := ptypes.Timestamp(ts)
-	if err != nil {
-		a.logger.Error("invalid timestamp", zap.Error(err))
-		return 0
-	}
-	return t.UnixNano() / 1000000
-}
+func timestampAddDurationUnix(ts *timestamp.Timestamp, d *duration.Duration) int64 {
+	return (ts.AsTime().UnixNano() + d.AsDuration().Nanoseconds()) / 1000000
 
-func (a *AccessLogServer) pbTimestampAddDurationUnix(ts *timestamp.Timestamp, d *duration.Duration) int64 {
-	t, err := ptypes.Timestamp(ts)
-	if err != nil {
-		a.logger.Error("invalid timestamp", zap.Error(err))
-		return 0
-	}
-	du, err := ptypes.Duration(d)
-	if err != nil {
-		du = 0
-	}
-	return t.Add(du).UnixNano() / 1000000
+	// d1 := d.GetNanos()
+
+	// t, err := ptypes.Timestamp(ts)
+	// if err != nil {
+	// 	a.logger.Error("invalid timestamp", zap.Error(err))
+	// 	return 0
+	// }
+	// du, err := ptypes.Duration(d)
+	// if err != nil {
+	// 	du = 0
+	// }
+	// return t.Add(du).UnixNano() / 1000000
 }
