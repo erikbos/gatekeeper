@@ -9,7 +9,6 @@ import (
 	route "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
 	envoyauth "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/ext_authz/v3"
 	envoymatcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
-	envoytypemetadata "github.com/envoyproxy/go-control-plane/envoy/type/metadata/v3"
 	envoytype "github.com/envoyproxy/go-control-plane/envoy/type/v3"
 	cache "github.com/envoyproxy/go-control-plane/pkg/cache/types"
 	"github.com/envoyproxy/go-control-plane/pkg/wellknown"
@@ -523,39 +522,43 @@ func buildRateLimits(routeEntry types.Route) []*route.RateLimit {
 		return nil
 	}
 
-	return []*route.RateLimit{{
-		Actions: []*route.RateLimit_Action{{
-			ActionSpecifier: &route.RateLimit_Action_DynamicMetadata{
-				DynamicMetadata: &route.RateLimit_Action_DynamicMetaData{
-					DescriptorKey: "key",
-					DefaultValue:  "default_descriptor",
-					MetadataKey: &envoytypemetadata.MetadataKey{
-						Key: wellknown.HTTPExternalAuthorization,
-						Path: []*envoytypemetadata.MetadataKey_PathSegment{{
-							Segment: &envoytypemetadata.MetadataKey_PathSegment_Key{
-								Key: "rl.descriptor",
-							},
-						}},
-					},
-				},
-			},
-		}},
-		Stage: protoUint32(0),
-		Limit: &route.RateLimit_Override{
-			OverrideSpecifier: &route.RateLimit_Override_DynamicMetadata_{
-				DynamicMetadata: &route.RateLimit_Override_DynamicMetadata{
-					MetadataKey: &envoytypemetadata.MetadataKey{
-						Key: wellknown.HTTPExternalAuthorization,
-						Path: []*envoytypemetadata.MetadataKey_PathSegment{{
-							Segment: &envoytypemetadata.MetadataKey_PathSegment_Key{
-								Key: "rl.override",
-							},
-						}},
-					},
-				},
-			},
-		},
-	}}
+	return nil
+
+	// TODO
+
+	// return []*route.RateLimit{{
+	// 	Actions: []*route.RateLimit_Action{{
+	// 		ActionSpecifier: &route.RateLimit_Action_DynamicMetadata{
+	// 			DynamicMetadata: &route.RateLimit_Action_DynamicMetaData{
+	// 				DescriptorKey: "key",
+	// 				DefaultValue:  "default_descriptor",
+	// 				MetadataKey: &envoytypemetadata.MetadataKey{
+	// 					Key: wellknown.HTTPExternalAuthorization,
+	// 					Path: []*envoytypemetadata.MetadataKey_PathSegment{{
+	// 						Segment: &envoytypemetadata.MetadataKey_PathSegment_Key{
+	// 							Key: "rl.descriptor",
+	// 						},
+	// 					}},
+	// 				},
+	// 			},
+	// 		},
+	// 	}},
+	// 	Stage: protoUint32(0),
+	// 	Limit: &route.RateLimit_Override{
+	// 		OverrideSpecifier: &route.RateLimit_Override_DynamicMetadata_{
+	// 			DynamicMetadata: &route.RateLimit_Override_DynamicMetadata{
+	// 				MetadataKey: &envoytypemetadata.MetadataKey{
+	// 					Key: wellknown.HTTPExternalAuthorization,
+	// 					Path: []*envoytypemetadata.MetadataKey_PathSegment{{
+	// 						Segment: &envoytypemetadata.MetadataKey_PathSegment_Key{
+	// 							Key: "rl.override",
+	// 						},
+	// 					}},
+	// 				},
+	// 			},
+	// 		},
+	// 	},
+	// }}
 }
 
 func buildRetryPolicy(routeEntry types.Route) *route.RetryPolicy {
