@@ -39,7 +39,7 @@ jobs:
        echo $VERSION
 
        docker tag gatekeeper/dbadmin:$VERSION ${{ secrets.acr_hostname }}/dbadmin
-       docker tag gatekeeper/envoyauth:$VERSION ${{ secrets.acr_hostname }}/envoyals
+       docker tag gatekeeper/envoyals:$VERSION ${{ secrets.acr_hostname }}/envoyals
        docker tag gatekeeper/envoyauth:$VERSION ${{ secrets.acr_hostname }}/envoyauth
        docker tag gatekeeper/envoycp:$VERSION ${{ secrets.acr_hostname }}/envoycp
        docker tag gatekeeper/testbackend:$VERSION ${{ secrets.acr_hostname }}/testbackend
