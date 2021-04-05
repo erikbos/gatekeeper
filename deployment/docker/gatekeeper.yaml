@@ -20,6 +20,17 @@ services:
       - 7777:7777
     restart: unless-stopped
 
+  envoyals:
+    image: gatekeeper/envoyals:latest
+    container_name: envoyals
+    entrypoint: ["/app/envoyals", "--config", "/config/envoyals.yaml"]
+    secrets:
+      - source: envoyals-config
+        target: /config/envoyals.yaml
+    ports:
+      - 6001-6002:6001-6002
+    restart: unless-stopped
+
   envoyauth:
     image: gatekeeper/envoyauth:latest
     container_name: envoyauth
@@ -43,19 +54,8 @@ services:
       - 9901-9903:9901-9903
     restart: unless-stopped
 
-  envoyals:
-    image: gatekeeper/envoyals:latest
-    container_name: envoyals
-    entrypoint: ["/app/envoyals", "--config", "/config/envoyals.yaml"]
-    secrets:
-      - source: envoyals-config
-        target: /config/envoyals.yaml
-    ports:
-      - 6001-6002:6001-6002
-    restart: unless-stopped
-
   envoyproxy:
-    image: envoyproxy/envoy-alpine-dev:latest
+    image: envoyproxy/envoy-alpine:v1.17-latest
     container_name: envoyproxy
     entrypoint: ["/usr/local/bin/envoy", "-c", "/config/envoyproxy.yaml"]
     secrets:
@@ -72,9 +72,9 @@ secrets:
     file: dbadmin.yaml
   envoyauth-config:
     file: envoyauth.yaml
-  envoycp-config:
-    file: envoycp.yaml
   envoyals-config:
     file: envoyals.yaml
+  envoycp-config:
+    file: envoycp.yaml
   envoyproxy-config:
     file: envoyproxy.yaml
