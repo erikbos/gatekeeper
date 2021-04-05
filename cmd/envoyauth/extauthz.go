@@ -14,8 +14,11 @@ import (
 	envoytype "github.com/envoyproxy/go-control-plane/envoy/type/v3"
 	"github.com/gogo/googleapis/google/rpc"
 	"go.uber.org/zap"
-	"google.golang.org/genproto/googleapis/rpc/status"
+	rpcstatus "google.golang.org/genproto/googleapis/rpc/status"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/health/grpc_health_v1"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/structpb"
 
 	"github.com/erikbos/gatekeeper/cmd/envoyauth/policy"
@@ -40,10 +43,26 @@ func (s *server) StartAuthorizationServer() {
 
 	grpcServer := grpc.NewServer()
 	authservice.RegisterAuthorizationServer(grpcServer, s)
+	grpc_health_v1.RegisterHealthServer(grpcServer, &healthServer{})
 
 	if err := grpcServer.Serve(lis); err != nil {
 		s.logger.Fatal("Failed to start server", zap.Error(err))
 	}
+}
+
+type healthServer struct {
+}
+
+func (h *healthServer) Check(ctx context.Context, in *grpc_health_v1.HealthCheckRequest) (
+	*grpc_health_v1.HealthCheckResponse, error) {
+
+	return &grpc_health_v1.HealthCheckResponse{Status: grpc_health_v1.HealthCheckResponse_SERVING}, nil
+}
+
+func (h *healthServer) Watch(in *grpc_health_v1.HealthCheckRequest,
+	srv grpc_health_v1.Health_WatchServer) error {
+
+	return status.Error(codes.Unimplemented, "Watch is not implemented")
 }
 
 // Check (called by Envoy) to authenticate & authorize a HTTP request
@@ -118,7 +137,7 @@ func (s *server) allowRequest(headers, metadata map[string]string) (
 	*authservice.CheckResponse, error) {
 
 	response := &authservice.CheckResponse{
-		Status: &status.Status{
+		Status: &rpcstatus.Status{
 			Code: int32(rpc.OK),
 		},
 		HttpResponse: &authservice.CheckResponse_OkResponse{
@@ -151,7 +170,7 @@ func (s *server) rejectRequest(statusCode int, headers,
 	}
 
 	response := &authservice.CheckResponse{
-		Status: &status.Status{
+		Status: &rpcstatus.Status{
 			Code: int32(rpc.UNAUTHENTICATED),
 		},
 		HttpResponse: &authservice.CheckResponse_DeniedResponse{
@@ -266,11 +285,11 @@ func getrequestDetails(req *authservice.CheckRequest) (*request.State, error) {
 
 	var err error
 	if r.URL, err = url.ParseRequestURI(r.HTTPRequest.Path); err != nil {
-		return nil, errors.New("Cannot parse url")
+		return nil, errors.New("cannot parse url")
 	}
 
 	if r.QueryParameters, err = url.ParseQuery(r.URL.RawQuery); err != nil {
-		return nil, errors.New("Cannot parse query parameters")
+		return nil, errors.New("cannot parse query parameters")
 	}
 
 	return r, nil
