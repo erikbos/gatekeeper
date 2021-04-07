@@ -31,11 +31,11 @@ Envoyauth requires a startup configuration which needs to be provided as YAML fi
 
 ### Enabling authentication of requests
 
-To insert authentication into the request path the following [listener attributes](api/listener.md#Attribute) needs to be set:
+To add authentication into a listener's request path the following [listener attributes](api/listener.md#Attribute) needs to be set:
 
 - `Filters` must include `envoy.filters.http.ext_authz` as one of the filters. E.g.: "envoy.filters.http.ext_authz,envoy.filters.http.cors"
 
-The following [listener attributes](api/listener.md#Attribute) configure the authentication cluster ("extauthz") go:
+The following [listener attributes](api/listener.md#Attribute) configure the ("extauthz") authentication cluster details:
 
 - `ExtAuthzCluster`, *required*, name of cluster which runs envoyauth
 - `ExtAuthzTimeout` optional, maximum allowed duration of authentication requests to envoyauth
