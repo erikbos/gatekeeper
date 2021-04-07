@@ -2,14 +2,14 @@ name: Unit tests and coverage report
 on:
   push:
     branches:
-    - master
+    - main
     paths-ignore:
     - '.github/'
     - "docs/**"
     - 'README.md'
   pull_request:
     branches:
-    - master
+    - main
     paths-ignore:
     - '.github/'
     - "docs/**"
