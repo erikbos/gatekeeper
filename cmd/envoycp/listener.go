@@ -196,32 +196,38 @@ func (s *server) buildFilter(listener types.Listener) []*hcm.HttpFilter {
 
 	httpFilter := make([]*hcm.HttpFilter, 0, 10)
 
-	if extAuthz := s.buildHTTPFilterExtAuthzConfig(listener); extAuthz != nil {
-		httpFilter = append(httpFilter, &hcm.HttpFilter{
-			Name: wellknown.HTTPExternalAuthorization,
-			ConfigType: &hcm.HttpFilter_TypedConfig{
-				TypedConfig: extAuthz,
-			},
-		})
+	if filters, err := listener.Attributes.Get(types.AttributeListenerFilters); err == nil {
+		for _, filter := range strings.Split(filters, ",") {
+			switch filter {
+			case wellknown.HTTPExternalAuthorization:
+				if extAuthz := s.buildHTTPFilterExtAuthzConfig(listener); extAuthz != nil {
+					httpFilter = append(httpFilter, &hcm.HttpFilter{
+						Name: wellknown.HTTPExternalAuthorization,
+						ConfigType: &hcm.HttpFilter_TypedConfig{
+							TypedConfig: extAuthz,
+						},
+					})
+				}
+
+			case wellknown.CORS:
+				httpFilter = append(httpFilter, &hcm.HttpFilter{
+					Name: wellknown.CORS,
+				})
+
+			case wellknown.HTTPRateLimit:
+				if ratelimiter := s.buildHTTPFilterRateLimiterConfig(listener); ratelimiter != nil {
+					httpFilter = append(httpFilter, &hcm.HttpFilter{
+						Name: wellknown.HTTPRateLimit,
+						ConfigType: &hcm.HttpFilter_TypedConfig{
+							TypedConfig: ratelimiter,
+						},
+					})
+				}
+			}
+		}
 	}
 
-	if cors, err := listener.Attributes.Get(
-		types.AttributeCORS); err == nil && cors == types.AttributeValueTrue {
-
-		httpFilter = append(httpFilter, &hcm.HttpFilter{
-			Name: wellknown.CORS,
-		})
-	}
-
-	if ratelimiter := s.buildHTTPFilterRateLimiterConfig(listener); ratelimiter != nil {
-		httpFilter = append(httpFilter, &hcm.HttpFilter{
-			Name: wellknown.HTTPRateLimit,
-			ConfigType: &hcm.HttpFilter_TypedConfig{
-				TypedConfig: ratelimiter,
-			},
-		})
-	}
-
+	// Always add http router filter as last, as we want to forward traffic
 	httpFilter = append(httpFilter, &hcm.HttpFilter{
 		Name: wellknown.Router,
 	})
@@ -231,21 +237,15 @@ func (s *server) buildFilter(listener types.Listener) []*hcm.HttpFilter {
 
 func (s *server) buildHTTPFilterExtAuthzConfig(listener types.Listener) *anypb.Any {
 
-	// Is authentication enabled for this listener?
-	if value, err := listener.Attributes.Get(
-		types.AttributeAuthentication); err != nil || value != types.AttributeValueTrue {
-		return nil
-	}
-
-	cluster, err := listener.Attributes.Get(types.AttributeAuthenticationCluster)
+	cluster, err := listener.Attributes.Get(types.AttributeExtAuthzCluster)
 	if err != nil || cluster == "" {
 		return nil
 	}
-	timeout := listener.Attributes.GetAsDuration(types.AttributeAuthenticationTimeout,
+	timeout := listener.Attributes.GetAsDuration(types.AttributeExtAuthzTimeout,
 		defaultAuthenticationTimeout)
 
 	var failureModeAllow bool
-	val, err := listener.Attributes.Get(types.AttributeAuthenticationFailureModeAllow)
+	val, err := listener.Attributes.Get(types.AttributeExtAuthzFailureModeAllow)
 	if err == nil && val == types.AttributeValueTrue {
 		failureModeAllow = true
 	}
@@ -258,7 +258,7 @@ func (s *server) buildHTTPFilterExtAuthzConfig(listener types.Listener) *anypb.A
 		TransportApiVersion: core.ApiVersion_V3,
 	}
 
-	requestBodySize := listener.Attributes.GetAsUInt32(types.AttributeAuthenticationRequestBodySize, 0)
+	requestBodySize := listener.Attributes.GetAsUInt32(types.AttributeExtAuthzRequestBodySize, 0)
 	if requestBodySize > 0 {
 		extAuthz.WithRequestBody = &extauthz.BufferSettings{
 			MaxRequestBytes:     uint32(requestBodySize),
@@ -274,12 +274,6 @@ func (s *server) buildHTTPFilterExtAuthzConfig(listener types.Listener) *anypb.A
 }
 
 func (s *server) buildHTTPFilterRateLimiterConfig(listener types.Listener) *anypb.Any {
-
-	// Is authentication enabled for this listener?
-	if value, err := listener.Attributes.Get(
-		types.AttributeRateLimiting); err != nil || value != types.AttributeValueTrue {
-		return nil
-	}
 
 	cluster, err := listener.Attributes.Get(types.AttributeRateLimitingCluster)
 	if err != nil || cluster == "" {

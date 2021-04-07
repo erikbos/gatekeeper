@@ -479,7 +479,7 @@ func buildUpstreamHeadersToRemove(routeEntry types.Route) []string {
 	// extauthz will authenticate each request by evaluation the Authorization header.
 	// Given this we should not send the original Authorization upstream as it very unlikely
 	/// upstream will do authentication
-	if value, err := routeEntry.Attributes.Get(types.AttributeAuthentication); err == nil &&
+	if value, err := routeEntry.Attributes.Get(types.AttributeRouteExtAuthz); err == nil &&
 		value == types.AttributeValueTrue {
 		h = append(h, "Authorization")
 	}
@@ -517,7 +517,7 @@ func buildRateLimits(routeEntry types.Route) []*route.RateLimit {
 
 	// In case attribute RateLimiting does not exist or is not set to true
 	// no ratelimiting will be configured
-	value, err := routeEntry.Attributes.Get(types.AttributeRateLimiting)
+	value, err := routeEntry.Attributes.Get(types.AttributeRouteRateLimiting)
 	if err != nil || value != types.AttributeValueTrue {
 		return nil
 	}
@@ -622,7 +622,7 @@ func perRouteAuthzFilterConfig(routeEntry types.Route) *anypb.Any {
 
 	// In case attribute AuthzAuthentication=true is set for this route
 	// we enable authz on this route by not configuring filter settings for this route
-	value, err := routeEntry.Attributes.Get(types.AttributeAuthentication)
+	value, err := routeEntry.Attributes.Get(types.AttributeRouteExtAuthz)
 	if err == nil && value == types.AttributeValueTrue {
 		return nil
 	}

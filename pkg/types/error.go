@@ -8,22 +8,22 @@ import (
 
 var (
 	// errUpdateFailure indicates item cannot be updated
-	errUpdateFailure = errors.New("Cannot update item")
+	errUpdateFailure = errors.New("cannot update item")
 
 	// errBadRequest indicates we do not understand the requested action (400)
-	errBadRequest = errors.New("Bad request")
+	errBadRequest = errors.New("bad request")
 
 	// errUnauthorized indicates we are not allowed to do the requested action (401)
-	errUnauthorized = errors.New("Unauthorized request")
+	errUnauthorized = errors.New("unauthorized request")
 
 	// errForbidden indicates the requested action was understood but forbidden (403)
-	errForbidden = errors.New("Forbidden action")
+	errForbidden = errors.New("forbidden action")
 
 	// errItemNotFound indicates the item cannot be found (404)
-	errItemNotFound = errors.New("Entity cannot be found")
+	errItemNotFound = errors.New("entity cannot be found")
 
 	// errDatabaseIssue indicates a database error
-	errDatabaseIssue = errors.New("Database issue")
+	errDatabaseIssue = errors.New("database issue")
 )
 
 // Error is our error type providing additional (internal error detail

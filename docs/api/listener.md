@@ -51,6 +51,7 @@ HTTP listener on port `80` mapping incoming requests for http virtual host `www.
 | attribute name              | purpose                                            | possible values              |
 | --------------------------- | -------------------------------------------------- | ---------------------------- |
 | HTTPProtocol                | Highest HTTP protocol to support                   | HTTP/1.1, HTTP/2, HTTP/3     |
+| Filters                     | Comma separated list of filters to enable, see [listener filters](https://www.envoyproxy.io/docs/envoy/latest/api-v3/config/listener/v3/listener_components.proto#config-listener-v3-filter) | envoy.filters.network.ext_authz     |
 | TLS                         | Enable TLS or not, HTTP/2 always uses TLS          | true, false                  |
 | TLSCertificate              | Certificate to use for TLS                         |                              |
 | TLSCertificateKey           | Key of certificate                                 |                              |
@@ -67,7 +68,7 @@ HTTP listener on port `80` mapping incoming requests for http virtual host `www.
 | InitialConnectionWindowSize | HTTP/2 initial connection window size              | 65536                        |
 | InitialStreamWindowSize     | HTTP/2 initial window size                         | 1048576                      |
 
-All attributes listed above are mapped onto configuration properties of [Envoy listener API specifications](https://www.envoyproxy.io/docs/envoy/latest/api-v3/api/v3/listener.proto#listener) for detailed explanation of purpose and allowed value of each attribute.
+All attributes listed above are mapped onto configuration properties of [Envoy listener API specifications](https://www.envoyproxy.io/docs/envoy/latest/api-v3/config/listener/v3/listener.proto) for detailed explanation of purpose and allowed value of each attribute.
 
 The listener options exposed this way are a subset of Envoy's capabilities, in general any listener configuration option Envoy supports can be exposed  this way. Feel free to open an issue if you need more of Envoy's functionality exposed.
 

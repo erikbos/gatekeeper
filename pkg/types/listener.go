@@ -56,6 +56,8 @@ var (
 
 // listener specific attributes
 const (
+	AttributeListenerFilters = "Filters"
+
 	// File for storing access logs
 	AttributeAccessLogFile = "AccessLogFile"
 
@@ -81,19 +83,16 @@ const (
 	AttributeInitialStreamWindowSize = "InitialStreamWindowSize"
 
 	// Name of extzauth cluster
-	AttributeAuthenticationCluster = "AuthenticationCluster"
+	AttributeExtAuthzCluster = "ExtAuthzCluster"
 
 	// Extauthz cluster request timeout
-	AttributeAuthenticationTimeout = "AuthenticationTimeout"
+	AttributeExtAuthzTimeout = "ExtAuthzTimeout"
 
 	// Are requests allowed in case authentication times out
-	AttributeAuthenticationFailureModeAllow = "AuthenticationFailureModeAllow"
+	AttributeExtAuthzFailureModeAllow = "ExtAuthzFailureModeAllow"
 
 	// Number of bytes of POST request to include in authentication request
-	AttributeAuthenticationRequestBodySize = "AuthenticationRequestBodySize"
-
-	// CORS enable
-	AttributeCORS = "CORS"
+	AttributeExtAuthzRequestBodySize = "ExtAuthzRequestBodySize"
 
 	// Ratelimiting
 	AttributeRateLimitingCluster = "RateLimitingCluster"
@@ -156,7 +155,7 @@ func (l *Listener) ConfigCheck() error {
 
 	for _, attribute := range l.Attributes {
 		if !validListenerAttributes[attribute.Name] {
-			return fmt.Errorf("Unknown attribute '%s'", attribute.Name)
+			return fmt.Errorf("unknown attribute '%s'", attribute.Name)
 		}
 	}
 	return nil
@@ -164,6 +163,7 @@ func (l *Listener) ConfigCheck() error {
 
 // validListenerAttributes contains all valid attribute names for a listener
 var validListenerAttributes = map[string]bool{
+	AttributeListenerFilters:             true,
 	AttributeAccessLogFile:               true,
 	AttributeAccessLogCluster:            true,
 	AttributeAccessLogClusterBufferSize:  true,
