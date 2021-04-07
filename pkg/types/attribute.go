@@ -46,7 +46,7 @@ func (attributes *Attributes) Get(name string) (string, Error) {
 			return element.Value, nil
 		}
 	}
-	return "", NewItemNotFoundError(fmt.Errorf("Cannot find attribute '%s'", name))
+	return "", NewItemNotFoundError(fmt.Errorf("cannot find attribute '%s'", name))
 }
 
 // GetAsString returns attribute value (or provided default if not found) as type string
@@ -174,7 +174,7 @@ func (attributes *Attributes) Delete(name string) (valueOfDeletedAttribute strin
 	if attributeDeleted {
 		return valueOfDeletedAttribute, nil
 	}
-	return "", NewItemNotFoundError(fmt.Errorf("Cannot delete attribute '%s'", name))
+	return "", NewItemNotFoundError(fmt.Errorf("cannot delete attribute '%s'", name))
 }
 
 // Unmarshal unpacks JSON array of attributes

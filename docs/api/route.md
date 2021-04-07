@@ -60,8 +60,8 @@ Every route can have optional attributes which control what Envoy will do to mat
 | ------------------------ | ------------------------------------------------------------- | ----------------------- |
 | Cluster                  | Name of upstream cluster to forward requests to               |                         |
 | WeightedClusters         | Weighted list of clusters to load balance requests across     | backend:95,newbackend:5 |
-| Authentication           | Enable request authentication via extauthz                    | false, true             |
-| RateLimiting             | Enable request ratelimiting via ratelimiter                   | false, true             |
+| ExtAuthz                 | Enable/disable request authentication via extauthz            | false, true             |
+| RateLimiting             | Enable/disable request ratelimiting via ratelimiter           | false, true             |
 | DirectResponseStatusCode | Return an arbitrary HTTP response directly, without proxying. | 200                     |
 | DirectResponseBody       | Responsebody to return when direct response is done           | Hello World             |
 | RedirectStatusCode       | Return an HTTP redirect                                       | 301,302,303,307 or 308  |
@@ -89,7 +89,7 @@ Every route can have optional attributes which control what Envoy will do to mat
 | NumRetries               | Specify the allowed number of retries                                 | 1               |
 | RetryOnStatusCodes       | Upstream status codes which are to be retried                         | 503,504         |
 
-All attributes listed above are mapped onto configuration properties of [Envoy route API specifications](https://www.envoyproxy.io/docs/envoy/latest/api-v3/api/v3/route/route_components.proto#envoy-api-msg-route-route) for detailed explanation of purpose and allowed value of each attribute.
+All attributes listed above are mapped onto configuration properties of [Envoy route API specifications](https://www.envoyproxy.io/docs/envoy/latest/api-v3/config/route/v3/route.proto) for detailed explanation of purpose and allowed value of each attribute.
 
 The route options exposed this way are a subset of Envoy's capabilities, in general any route configuration option Envoy supports can be exposed  this way. Feel free to open an issue if you need more of Envoy's functionality exposed.
 

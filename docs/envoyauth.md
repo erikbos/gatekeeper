@@ -27,31 +27,30 @@ Scope:
 
 ### Configuration
 
-Envoyauth requires a startup configuration which needs to be provided as YAML file, see below for the supported fields. For an example configuration file see [envoyauth.yaml](../deployment/docker/envoyauth.yaml).
+Envoyauth requires a startup configuration which needs to be provided as YAML file, see below for the supported fields. For an example configuration file see [envoyauth.yaml](../deployment/docker/envoyauth.yaml)
 
-The configuration of envoyproxy to have it forward requests to envoyauth for authentication is done by envoycp.
+### Enabling authentication of requests
 
-### Envoyproxy
+To add authentication into a listener's request path the following [listener attributes](api/listener.md#Attribute) needs to be set:
 
-Envoyproxy's authentication configuration is pushed by envoycp, envoycp's configuration section `xds.extauthz` determine whether it's enabled, what the clustername, timeouts, etc.
+- `Filters` must include `envoy.filters.http.ext_authz` as one of the filters. E.g.: "envoy.filters.http.ext_authz,envoy.filters.http.cors"
 
-The envoycp section `xds.extauthz` contains parameters like:
+The following [listener attributes](api/listener.md#Attribute) configure the ("extauthz") authentication cluster details:
 
-- `enabled` envoyproxy-wide switch to enable or disable forwarding requests to envoyauth
-- `cluster` name of cluster which runs envoyauth
-- `timeout` maximum allowed duration of authentication requests to envoyauth
-- `failuremodeallow` in case envoyauth fails should requests be forwarded or not
-- `requestbodysize` number of bytes of the request body envoyproxy should forward to envoyauth. This is a prerequisite for envoyauth being able to inspect the body of a request.
+- `ExtAuthzCluster`, *required*, name of cluster which runs envoyauth
+- `ExtAuthzTimeout` optional, maximum allowed duration of authentication requests to envoyauth
+- `ExtAuthzFailureModeAllow` optional, should requests be forwarded or not in case envoyauth is not reachable or does not respond in time
+-  `ExtAuthzRequestBodySize` optional, number of bytes of the request body envoyproxy should forward to envoyauth. This is a prerequisite for envoyauth being able to inspect the body of a request.
 
-These configuration paramters get pushed out to every new envoyproxy instance.
+### Enable authentication for a route
 
-#### Enable authentication for a route
-
-By default authentication for a route is disabled. To have Envoyproxy forward request to the authentication cluster set [route attribute](api/route.md#Attribute) `Authentication` to `true`. The name of the authentication cluster is configured as `envoyproxy.extauthz.cluster` in envoycp's configuration.
+By default authentication for a route is disabled. To have Envoyproxy forward request to the authentication cluster set [route attribute](api/route.md#Attribute) `ExtAuthz` to `true`. The name of the authentication cluster used is determined by listener attribute `AuthenticationCluster`.
 
 ### OAuth2
 
-Envoyauth supports issueing and authentication using [OAuth 2 Client Credentials](https://aaronparecki.com/oauth-2-simplified/#client-credentials) mode. Two entities need to be configured:
+Envoyauth supports issueing and authentication using [OAuth 2 Client Credentials](https://aaronparecki.com/oauth-2-simplified/#client-credentials) mode.
+
+Next to the above mentioned attributes to inse, two entities need to be configured:
 
 1. A route that forwards the paths `oauth.tokenissuepath` and `oauth.tokeninfopath` to an OAuth cluster. Authentication should be disabled as OAuth2 endpoints are meant to be public.
 2. A cluster that accesses envoyauth on port `oauth.listen`, to make sure OAuth requests go to this public endpoint of envoyauth.

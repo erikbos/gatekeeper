@@ -60,11 +60,11 @@ const (
 	// Weighted list of clusters to load balance requests across
 	AttributeWeightedClusters = "WeightedClusters"
 
-	// Enable authentication via extauthz
-	AttributeAuthentication = "Authentication"
+	// Enable/disable authentication via extauthz
+	AttributeRouteExtAuthz = "ExtAuthz"
 
-	// Enable ratelimiting
-	AttributeRateLimiting = "RateLimiting"
+	// // Enable ratelimiting
+	AttributeRouteRateLimiting = "RateLimiting"
 
 	// Return an arbitrary HTTP response directly, without proxying
 	AttributeDirectResponseStatusCode = "DirectResponseStatusCode"
@@ -178,7 +178,7 @@ func (r *Route) ConfigCheck() error {
 
 	for _, attribute := range r.Attributes {
 		if !validRouteAttributes[attribute.Name] {
-			return fmt.Errorf("Unknown attribute '%s'", attribute.Name)
+			return fmt.Errorf("unknown attribute '%s'", attribute.Name)
 		}
 	}
 	return nil
@@ -188,8 +188,8 @@ func (r *Route) ConfigCheck() error {
 var validRouteAttributes = map[string]bool{
 	AttributeCluster:                  true,
 	AttributeWeightedClusters:         true,
-	AttributeAuthentication:           true,
-	AttributeRateLimiting:             true,
+	AttributeRouteExtAuthz:            true,
+	AttributeRouteRateLimiting:        true,
 	AttributeDirectResponseStatusCode: true,
 	AttributeDirectResponseBody:       true,
 	AttributePrefixRewrite:            true,

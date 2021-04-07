@@ -159,7 +159,7 @@ func (c *Cluster) ConfigCheck() error {
 
 	for _, attribute := range c.Attributes {
 		if !validClusterAttributes[attribute.Name] {
-			return fmt.Errorf("Unknown attribute '%s'", attribute.Name)
+			return fmt.Errorf("unknown attribute '%s'", attribute.Name)
 		}
 	}
 	return nil

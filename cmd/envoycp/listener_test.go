@@ -61,23 +61,23 @@ func Test_buildFilter(t *testing.T) {
 			listener: types.Listener{
 				Attributes: types.Attributes{
 					{
-						Name:  types.AttributeAuthentication,
-						Value: types.AttributeValueTrue,
+						Name:  types.AttributeListenerFilters,
+						Value: wellknown.HTTPExternalAuthorization,
 					},
 					{
-						Name:  types.AttributeAuthenticationRequestBodySize,
+						Name:  types.AttributeExtAuthzRequestBodySize,
 						Value: "3000",
 					},
 					{
-						Name:  types.AttributeAuthenticationFailureModeAllow,
+						Name:  types.AttributeExtAuthzFailureModeAllow,
 						Value: "true",
 					},
 					{
-						Name:  types.AttributeAuthenticationCluster,
+						Name:  types.AttributeExtAuthzCluster,
 						Value: "authz_cluster2",
 					},
 					{
-						Name:  types.AttributeAuthenticationTimeout,
+						Name:  types.AttributeExtAuthzTimeout,
 						Value: "48s",
 					},
 				},
@@ -111,28 +111,28 @@ func Test_buildFilter(t *testing.T) {
 			listener: types.Listener{
 				Attributes: types.Attributes{
 					{
-						Name:  types.AttributeAuthentication,
-						Value: types.AttributeValueTrue,
+						Name:  types.AttributeListenerFilters,
+						Value: wellknown.HTTPExternalAuthorization + "," + wellknown.CORS,
 					},
 					{
-						Name:  types.AttributeAuthenticationRequestBodySize,
+						Name:  types.AttributeExtAuthzRequestBodySize,
 						Value: "3000",
 					},
 					{
-						Name:  types.AttributeAuthenticationFailureModeAllow,
+						Name:  types.AttributeExtAuthzFailureModeAllow,
 						Value: "true",
 					},
 					{
-						Name:  types.AttributeAuthenticationCluster,
+						Name:  types.AttributeExtAuthzCluster,
 						Value: "authz_cluster2",
 					},
 					{
-						Name:  types.AttributeAuthenticationTimeout,
+						Name:  types.AttributeExtAuthzTimeout,
 						Value: "48s",
 					},
 					{
-						Name:  types.AttributeCORS,
-						Value: types.AttributeValueTrue,
+						Name:  types.AttributeListenerFilters,
+						Value: wellknown.CORS,
 					},
 				},
 			},
@@ -168,8 +168,8 @@ func Test_buildFilter(t *testing.T) {
 			listener: types.Listener{
 				Attributes: types.Attributes{
 					{
-						Name:  types.AttributeCORS,
-						Value: types.AttributeValueTrue,
+						Name:  types.AttributeListenerFilters,
+						Value: wellknown.CORS,
 					},
 				},
 			},
@@ -188,8 +188,8 @@ func Test_buildFilter(t *testing.T) {
 			listener: types.Listener{
 				Attributes: types.Attributes{
 					{
-						Name:  types.AttributeRateLimiting,
-						Value: types.AttributeValueTrue,
+						Name:  types.AttributeListenerFilters,
+						Value: wellknown.HTTPRateLimit,
 					},
 					{
 						Name:  types.AttributeRateLimitingDomain,
@@ -236,8 +236,8 @@ func Test_buildFilter(t *testing.T) {
 			listener: types.Listener{
 				Attributes: types.Attributes{
 					{
-						Name:  types.AttributeRateLimiting,
-						Value: types.AttributeValueTrue,
+						Name:  types.AttributeListenerFilters,
+						Value: wellknown.HTTPRateLimit,
 					},
 					{
 						Name:  types.AttributeRateLimitingDomain,
@@ -305,23 +305,23 @@ func Test_buildHTTPFilterExtAuthzConfig(t *testing.T) {
 			listener: types.Listener{
 				Attributes: types.Attributes{
 					{
-						Name:  types.AttributeAuthentication,
-						Value: types.AttributeValueTrue,
+						Name:  types.AttributeListenerFilters,
+						Value: wellknown.HTTPExternalAuthorization,
 					},
 					{
-						Name:  types.AttributeAuthenticationRequestBodySize,
+						Name:  types.AttributeExtAuthzRequestBodySize,
 						Value: "6000",
 					},
 					{
-						Name:  types.AttributeAuthenticationFailureModeAllow,
+						Name:  types.AttributeExtAuthzFailureModeAllow,
 						Value: "true",
 					},
 					{
-						Name:  types.AttributeAuthenticationCluster,
+						Name:  types.AttributeExtAuthzCluster,
 						Value: "authz_cluster",
 					},
 					{
-						Name:  types.AttributeAuthenticationTimeout,
+						Name:  types.AttributeExtAuthzTimeout,
 						Value: "24s",
 					},
 				},
@@ -340,31 +340,11 @@ func Test_buildHTTPFilterExtAuthzConfig(t *testing.T) {
 			}),
 		},
 		{
-			name: "BuildAuthz 2 (not enabled)",
+			name: "BuildAuthz 2 (not clustername)",
 			listener: types.Listener{
 				Attributes: types.Attributes{
 					{
-						Name:  types.AttributeAuthenticationCluster,
-						Value: "authz_cluster",
-					},
-					{
-						Name:  types.AttributeAuthenticationTimeout,
-						Value: "25s",
-					},
-				},
-			},
-			expected: nil,
-		},
-		{
-			name: "BuildAuthz 3 (no cluster)",
-			listener: types.Listener{
-				Attributes: types.Attributes{
-					{
-						Name:  types.AttributeAuthentication,
-						Value: types.AttributeValueTrue,
-					},
-					{
-						Name:  types.AttributeAuthenticationTimeout,
+						Name:  types.AttributeExtAuthzTimeout,
 						Value: "25s",
 					},
 				},
