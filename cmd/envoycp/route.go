@@ -52,9 +52,10 @@ func (s *server) buildEnvoyListenerRouteConfig(RouteGroup string,
 		Name: RouteGroup,
 		VirtualHosts: []*route.VirtualHost{
 			{
-				Name:    RouteGroup,
-				Domains: s.getVhostsInRouteGroup(RouteGroup),
-				Routes:  s.buildEnvoyRoutes(RouteGroup, routes),
+				Name:            RouteGroup,
+				Domains:         s.getVhostsInRouteGroup(RouteGroup),
+				Routes:          s.buildEnvoyRoutes(RouteGroup, routes),
+				VirtualClusters: s.buildEnvoyVirtualClusters(RouteGroup, routes),
 			},
 		},
 	}
@@ -639,4 +640,56 @@ func perRouteAuthzFilterConfig(routeEntry types.Route) *anypb.Any {
 		return nil
 	}
 	return ratelimitTypedConf
+}
+
+// buildEnvoyVirtualClusters returns a VirtualCluster configuration for each route
+func (s *server) buildEnvoyVirtualClusters(RouteGroup string, routes types.Routes) []*route.VirtualCluster {
+
+	var envoyVirtualClusters []*route.VirtualCluster
+
+	for _, routeEntry := range routes {
+		if routeEntry.RouteGroup == RouteGroup {
+			pathMatch := s.buildEnvoyVirtualClusterPathMatch(routeEntry)
+			if pathMatch == nil {
+				s.logger.Warn("Cannot build virtualcluster header match config",
+					zap.String("route", routeEntry.Name), zap.String("routegroup", RouteGroup))
+				return nil
+			}
+			envoyVirtualClusters = append(envoyVirtualClusters, &route.VirtualCluster{
+				Name: routeEntry.Name,
+				Headers: []*route.HeaderMatcher{
+					pathMatch,
+				},
+			})
+		}
+	}
+	return envoyVirtualClusters
+}
+
+// buildEnvoyVirtualClusterPathMatch returns a matcher based upon the path type of a route
+func (s *server) buildEnvoyVirtualClusterPathMatch(routeEntry types.Route) *route.HeaderMatcher {
+
+	matcher := &route.HeaderMatcher{
+		Name: ":path",
+	}
+	switch routeEntry.PathType {
+	case "path":
+		matcher.HeaderMatchSpecifier = &route.HeaderMatcher_ExactMatch{
+			ExactMatch: routeEntry.Path,
+		}
+		return matcher
+	case "prefix":
+		matcher.HeaderMatchSpecifier = &route.HeaderMatcher_PrefixMatch{
+			PrefixMatch: routeEntry.Path,
+		}
+		return matcher
+	case "regexp":
+		matcher.HeaderMatchSpecifier = &route.HeaderMatcher_SafeRegexMatch{
+			SafeRegexMatch: &envoymatcher.RegexMatcher{
+				Regex: routeEntry.Path,
+			},
+		}
+		return matcher
+	}
+	return nil
 }
