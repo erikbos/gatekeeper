@@ -157,6 +157,8 @@ const (
 	DefaultRouteTimeout = 20 * time.Second
 	// Default per retry timeout
 	DefaultPerRetryTimeout = 500 * time.Millisecond
+	// Default retry count
+	DefaultNumRetries = 2
 
 	// Default retry-on status codes
 	DefaultRetryStatusCodes = "500,503,504"
