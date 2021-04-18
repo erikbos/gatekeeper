@@ -8,12 +8,14 @@ import (
 	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	endpoint "github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3"
 	tls "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/tls/v3"
+	envoyExtensionsUpstreams "github.com/envoyproxy/go-control-plane/envoy/extensions/upstreams/http/v3"
 	envoyType "github.com/envoyproxy/go-control-plane/envoy/type/v3"
 	"github.com/golang/protobuf/ptypes/duration"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest/observer"
 	"google.golang.org/protobuf/runtime/protoiface"
+	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/durationpb"
 
 	"github.com/erikbos/gatekeeper/pkg/types"
@@ -40,6 +42,14 @@ func Test_buildEnvoyClusterConfig(t *testing.T) {
 					{
 						Name:  types.AttributePort,
 						Value: "1975",
+					},
+					{
+						Name:  types.AttributeIdleTimeout,
+						Value: "333ms",
+					},
+					{
+						Name:  types.AttributeHTTPProtocol,
+						Value: types.AttributeValueHTTPProtocol2,
 					},
 				},
 			},
@@ -69,8 +79,18 @@ func Test_buildEnvoyClusterConfig(t *testing.T) {
 
 				HealthChecks: nil,
 
-				CommonHttpProtocolOptions: &core.HttpProtocolOptions{
-					IdleTimeout: durationpb.New(types.DefaultClusterIdleTimeout),
+				TypedExtensionProtocolOptions: map[string]*anypb.Any{
+					"envoy.extensions.upstreams.http.v3.HttpProtocolOptions": mustMarshalAny(
+						&envoyExtensionsUpstreams.HttpProtocolOptions{
+							CommonHttpProtocolOptions: &core.HttpProtocolOptions{
+								IdleTimeout: durationpb.New(333 * time.Millisecond),
+							},
+							UpstreamProtocolOptions: &envoyExtensionsUpstreams.HttpProtocolOptions_ExplicitHttpConfig_{
+								ExplicitHttpConfig: &envoyExtensionsUpstreams.HttpProtocolOptions_ExplicitHttpConfig{
+									ProtocolConfig: &envoyExtensionsUpstreams.HttpProtocolOptions_ExplicitHttpConfig_Http2ProtocolOptions{},
+								},
+							},
+						}),
 				},
 
 				TrackClusterStats: &envoyCluster.TrackClusterStats{
@@ -135,6 +155,13 @@ func Test_clusterConnectTimeout(t *testing.T) {
 		expected *duration.Duration
 	}{
 		{
+			name: "cluster timeout no ttl specified",
+			cluster: types.Cluster{
+				Attributes: types.Attributes{},
+			},
+			expected: durationpb.New(types.DefaultClusterConnectTimeout),
+		},
+		{
 			name: "cluster timeout 131s ttl",
 			cluster: types.Cluster{
 				Attributes: types.Attributes{
@@ -145,13 +172,6 @@ func Test_clusterConnectTimeout(t *testing.T) {
 				},
 			},
 			expected: durationpb.New(131 * time.Second),
-		},
-		{
-			name: "cluster timeout no ttl specified",
-			cluster: types.Cluster{
-				Attributes: types.Attributes{},
-			},
-			expected: durationpb.New(types.DefaultClusterConnectTimeout),
 		},
 	}
 	for _, test := range tests {
@@ -556,97 +576,6 @@ func Test_clusterHealthCodec(t *testing.T) {
 	}
 }
 
-func Test_clusterCommonHTTPProtocolOptions(t *testing.T) {
-
-	s := newServerForTesting()
-
-	tests := []struct {
-		name     string
-		cluster  types.Cluster
-		expected *core.HttpProtocolOptions
-	}{
-		{
-			name: "Specific timeout",
-			cluster: types.Cluster{
-				Attributes: types.Attributes{
-					{
-						Name:  types.AttributeIdleTimeout,
-						Value: "42ms",
-					},
-				},
-			},
-			expected: &core.HttpProtocolOptions{
-				IdleTimeout: durationpb.New(42 * time.Millisecond),
-			},
-		},
-		{
-			name: "Default timeout",
-			cluster: types.Cluster{
-				Attributes: types.Attributes{},
-			},
-			expected: &core.HttpProtocolOptions{
-				IdleTimeout: durationpb.New(types.DefaultClusterIdleTimeout),
-			},
-		},
-	}
-	for _, test := range tests {
-		require.Equalf(t, test.expected,
-			s.clusterCommonHTTPProtocolOptions(test.cluster), test.name)
-	}
-}
-
-func Test_clusterHTTP2ProtocolOptions(t *testing.T) {
-
-	s := newServerForTesting()
-
-	tests := []struct {
-		name     string
-		cluster  types.Cluster
-		expected *core.Http2ProtocolOptions
-	}{
-		{
-			name: "HTTP11 protocol",
-			cluster: types.Cluster{
-				Attributes: types.Attributes{
-					{
-						Name:  types.AttributeHTTPProtocol,
-						Value: types.AttributeValueHTTPProtocol11,
-					},
-				},
-			},
-			expected: nil,
-		},
-		{
-			name: "HTTP2 protocol",
-			cluster: types.Cluster{
-				Attributes: types.Attributes{
-					{
-						Name:  types.AttributeHTTPProtocol,
-						Value: types.AttributeValueHTTPProtocol2,
-					},
-				},
-			},
-			expected: &core.Http2ProtocolOptions{},
-		},
-		{
-			name: "unknown protocol",
-			cluster: types.Cluster{
-				Attributes: types.Attributes{
-					{
-						Name:  types.AttributeHTTPProtocol,
-						Value: "blabla",
-					},
-				},
-			},
-			expected: nil,
-		},
-	}
-	for _, test := range tests {
-		require.Equalf(t, test.expected,
-			s.clusterHTTP2ProtocolOptions(test.cluster), test.name)
-	}
-}
-
 func Test_clusterTransportSocket(t *testing.T) {
 
 	s := newServerForTesting()
@@ -929,6 +858,128 @@ func Test_clusterDNSResolvers(t *testing.T) {
 	for _, test := range tests {
 		require.Equalf(t, test.expected,
 			s.clusterDNSResolvers(test.cluster), test.name)
+	}
+}
+
+func Test_clusterTypedExtensionProtocolOptions(t *testing.T) {
+
+	s := newServerForTesting()
+
+	tests := []struct {
+		name     string
+		cluster  types.Cluster
+		expected map[string]*anypb.Any
+	}{
+		{
+			name: "No parameters",
+			cluster: types.Cluster{
+				Attributes: types.Attributes{
+					{
+						Name:  types.AttributeHost,
+						Value: "www.example.com",
+					},
+				},
+			},
+			expected: nil,
+		},
+		{
+			name: "Specific timeout",
+			cluster: types.Cluster{
+				Attributes: types.Attributes{
+					{
+						Name:  types.AttributeIdleTimeout,
+						Value: "42ms",
+					},
+				},
+			},
+			expected: map[string]*anypb.Any{
+				"envoy.extensions.upstreams.http.v3.HttpProtocolOptions": mustMarshalAny(
+					&envoyExtensionsUpstreams.HttpProtocolOptions{
+						CommonHttpProtocolOptions: &core.HttpProtocolOptions{
+							IdleTimeout: durationpb.New(42 * time.Millisecond),
+						},
+						UpstreamProtocolOptions: &envoyExtensionsUpstreams.HttpProtocolOptions_ExplicitHttpConfig_{
+							ExplicitHttpConfig: &envoyExtensionsUpstreams.HttpProtocolOptions_ExplicitHttpConfig{
+								ProtocolConfig: &envoyExtensionsUpstreams.HttpProtocolOptions_ExplicitHttpConfig_HttpProtocolOptions{},
+							},
+						},
+					}),
+			},
+		},
+		{
+			name: "HTTP version 1",
+			cluster: types.Cluster{
+				Attributes: types.Attributes{
+					{
+						Name:  types.AttributeHTTPProtocol,
+						Value: types.AttributeValueHTTPProtocol11,
+					},
+				},
+			},
+			expected: map[string]*anypb.Any{
+				"envoy.extensions.upstreams.http.v3.HttpProtocolOptions": mustMarshalAny(
+					&envoyExtensionsUpstreams.HttpProtocolOptions{
+						UpstreamProtocolOptions: &envoyExtensionsUpstreams.HttpProtocolOptions_ExplicitHttpConfig_{
+							ExplicitHttpConfig: &envoyExtensionsUpstreams.HttpProtocolOptions_ExplicitHttpConfig{
+								ProtocolConfig: &envoyExtensionsUpstreams.HttpProtocolOptions_ExplicitHttpConfig_HttpProtocolOptions{},
+							},
+						},
+					}),
+			},
+		},
+		{
+			name: "HTTP version 2 + 555ms timeout",
+			cluster: types.Cluster{
+				Attributes: types.Attributes{
+					{
+						Name:  types.AttributeHTTPProtocol,
+						Value: types.AttributeValueHTTPProtocol2,
+					},
+					{
+						Name:  types.AttributeIdleTimeout,
+						Value: "555ms",
+					},
+				},
+			},
+			expected: map[string]*anypb.Any{
+				"envoy.extensions.upstreams.http.v3.HttpProtocolOptions": mustMarshalAny(
+					&envoyExtensionsUpstreams.HttpProtocolOptions{
+						CommonHttpProtocolOptions: &core.HttpProtocolOptions{
+							IdleTimeout: durationpb.New(555 * time.Millisecond),
+						},
+						UpstreamProtocolOptions: &envoyExtensionsUpstreams.HttpProtocolOptions_ExplicitHttpConfig_{
+							ExplicitHttpConfig: &envoyExtensionsUpstreams.HttpProtocolOptions_ExplicitHttpConfig{
+								ProtocolConfig: &envoyExtensionsUpstreams.HttpProtocolOptions_ExplicitHttpConfig_Http2ProtocolOptions{},
+							},
+						},
+					}),
+			},
+		},
+		{
+			name: "HTTP version 3",
+			cluster: types.Cluster{
+				Attributes: types.Attributes{
+					{
+						Name:  types.AttributeHTTPProtocol,
+						Value: types.AttributeValueHTTPProtocol3,
+					},
+				},
+			},
+			expected: map[string]*anypb.Any{
+				"envoy.extensions.upstreams.http.v3.HttpProtocolOptions": mustMarshalAny(
+					&envoyExtensionsUpstreams.HttpProtocolOptions{
+						UpstreamProtocolOptions: &envoyExtensionsUpstreams.HttpProtocolOptions_ExplicitHttpConfig_{
+							ExplicitHttpConfig: &envoyExtensionsUpstreams.HttpProtocolOptions_ExplicitHttpConfig{
+								ProtocolConfig: &envoyExtensionsUpstreams.HttpProtocolOptions_ExplicitHttpConfig_Http3ProtocolOptions{},
+							},
+						},
+					}),
+			},
+		},
+	}
+	for _, test := range tests {
+		require.Equalf(t, test.expected,
+			s.clusterTypedExtensionProtocolOptions(test.cluster), test.name)
 	}
 }
 

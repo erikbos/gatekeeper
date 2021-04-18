@@ -2,15 +2,18 @@ package main
 
 import (
 	"strings"
+	"time"
 
 	envoyCluster "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
 	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	endpoint "github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3"
 	tls "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/tls/v3"
+	envoyExtensionsUpstreams "github.com/envoyproxy/go-control-plane/envoy/extensions/upstreams/http/v3"
 	envoyType "github.com/envoyproxy/go-control-plane/envoy/type/v3"
 	cache "github.com/envoyproxy/go-control-plane/pkg/cache/types"
 	"github.com/golang/protobuf/ptypes/duration"
 	"go.uber.org/zap"
+	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/durationpb"
 
 	"github.com/erikbos/gatekeeper/pkg/types"
@@ -44,17 +47,17 @@ func (s *server) getEnvoyClusterConfig() ([]cache.Resource, error) {
 func (s *server) buildEnvoyClusterConfig(cluster types.Cluster) *envoyCluster.Cluster {
 
 	envoyCluster := &envoyCluster.Cluster{
-		Name:                      cluster.Name,
-		ConnectTimeout:            s.clusterConnectTimeout(cluster),
-		ClusterDiscoveryType:      &envoyCluster.Cluster_Type{Type: envoyCluster.Cluster_LOGICAL_DNS},
-		DnsLookupFamily:           s.clusterDNSLookupFamily(cluster),
-		DnsResolvers:              s.clusterDNSResolvers(cluster),
-		DnsRefreshRate:            s.clusterDNSRefreshRate(cluster),
-		LbPolicy:                  s.clusterLbPolicy(cluster),
-		HealthChecks:              s.clusterHealthChecks(cluster),
-		CommonHttpProtocolOptions: s.clusterCommonHTTPProtocolOptions(cluster),
-		CircuitBreakers:           s.clusterCircuitBreakers(cluster),
-		TrackClusterStats:         s.clusterTrackClusterStats(cluster),
+		Name:                          cluster.Name,
+		ConnectTimeout:                s.clusterConnectTimeout(cluster),
+		ClusterDiscoveryType:          &envoyCluster.Cluster_Type{Type: envoyCluster.Cluster_LOGICAL_DNS},
+		DnsLookupFamily:               s.clusterDNSLookupFamily(cluster),
+		DnsResolvers:                  s.clusterDNSResolvers(cluster),
+		DnsRefreshRate:                s.clusterDNSRefreshRate(cluster),
+		LbPolicy:                      s.clusterLbPolicy(cluster),
+		HealthChecks:                  s.clusterHealthChecks(cluster),
+		CircuitBreakers:               s.clusterCircuitBreakers(cluster),
+		TrackClusterStats:             s.clusterTrackClusterStats(cluster),
+		TypedExtensionProtocolOptions: s.clusterTypedExtensionProtocolOptions(cluster),
 	}
 
 	loadAssignment := s.clusterLoadAssignment(cluster)
@@ -68,10 +71,6 @@ func (s *server) buildEnvoyClusterConfig(cluster types.Cluster) *envoyCluster.Cl
 	value, err := cluster.Attributes.Get(types.AttributeTLS)
 	if err == nil && value == types.AttributeValueTrue {
 		envoyCluster.TransportSocket = s.clusterTransportSocket(cluster)
-		//TODO
-		//lint:ignore SA1019 we should adopt https://www.envoyproxy.io/docs/envoy/latest/api-v3/extensions/upstreams/http/v3/http_protocol_options.proto instead of setting Http2ProtocolOptions
-		//nolint
-		envoyCluster.Http2ProtocolOptions = s.clusterHTTP2ProtocolOptions(cluster)
 	}
 
 	return envoyCluster
@@ -240,39 +239,6 @@ func (s *server) clusterHealthCodec(cluster types.Cluster) envoyType.CodecClient
 	return envoyType.CodecClientType_HTTP1
 }
 
-// clusterCommonHTTPProtocolOptions sets HTTP options applicable to both HTTP/1 and /2
-func (s *server) clusterCommonHTTPProtocolOptions(cluster types.Cluster) *core.HttpProtocolOptions {
-
-	idleTimeout := cluster.Attributes.GetAsDuration(
-		types.AttributeIdleTimeout, types.DefaultClusterIdleTimeout)
-
-	return &core.HttpProtocolOptions{
-		IdleTimeout: durationpb.New(idleTimeout),
-	}
-}
-
-// clusterHTTP2ProtocolOptions returns HTTP/2 parameters
-func (s *server) clusterHTTP2ProtocolOptions(cluster types.Cluster) *core.Http2ProtocolOptions {
-
-	value, err := cluster.Attributes.Get(types.AttributeHTTPProtocol)
-	if err == nil {
-		switch value {
-		case types.AttributeValueHTTPProtocol11:
-			return nil
-		case types.AttributeValueHTTPProtocol2:
-			// according to spec we need to return at least empty struct to enable HTTP/2
-			return &core.Http2ProtocolOptions{}
-		default:
-			s.logger.Warn(unknownClusterAttributeValueWarning,
-				zap.String("cluster", cluster.Name),
-				zap.String("attribute", types.AttributeHTTPProtocol))
-			return nil
-		}
-	}
-	// Attribute was not set, we do not have to set HTTP/2 options
-	return nil
-}
-
 // clusterTransportSocket configures TLS settings
 func (s *server) clusterTransportSocket(cluster types.Cluster) *core.TransportSocket {
 
@@ -340,4 +306,63 @@ func (s *server) clusterDNSResolvers(cluster types.Cluster) []*core.Address {
 		return resolvers
 	}
 	return nil
+}
+
+func (s *server) clusterTypedExtensionProtocolOptions(cluster types.Cluster) map[string]*anypb.Any {
+
+	idleTimeout, _ := cluster.Attributes.Get(types.AttributeIdleTimeout)
+	clusterHTTPProtocol, _ := cluster.Attributes.Get(types.AttributeHTTPProtocol)
+
+	if idleTimeout == "" && clusterHTTPProtocol == "" {
+		return nil
+	}
+
+	httpProtocolOptions := &envoyExtensionsUpstreams.HttpProtocolOptions{
+		UpstreamProtocolOptions: &envoyExtensionsUpstreams.HttpProtocolOptions_ExplicitHttpConfig_{
+			ExplicitHttpConfig: &envoyExtensionsUpstreams.HttpProtocolOptions_ExplicitHttpConfig{
+				ProtocolConfig: &envoyExtensionsUpstreams.HttpProtocolOptions_ExplicitHttpConfig_HttpProtocolOptions{},
+			},
+		},
+	}
+	if idleTimeoutDuration, err := time.ParseDuration(idleTimeout); err == nil {
+		httpProtocolOptions.CommonHttpProtocolOptions = &core.HttpProtocolOptions{
+			IdleTimeout: durationpb.New(idleTimeoutDuration),
+		}
+	}
+
+	if clusterHTTPProtocol != "" {
+		switch clusterHTTPProtocol {
+		case types.AttributeValueHTTPProtocol11:
+			httpProtocolOptions.UpstreamProtocolOptions = &envoyExtensionsUpstreams.HttpProtocolOptions_ExplicitHttpConfig_{
+				ExplicitHttpConfig: &envoyExtensionsUpstreams.HttpProtocolOptions_ExplicitHttpConfig{
+					ProtocolConfig: &envoyExtensionsUpstreams.HttpProtocolOptions_ExplicitHttpConfig_HttpProtocolOptions{},
+				},
+			}
+		case types.AttributeValueHTTPProtocol2:
+			httpProtocolOptions.UpstreamProtocolOptions = &envoyExtensionsUpstreams.HttpProtocolOptions_ExplicitHttpConfig_{
+				ExplicitHttpConfig: &envoyExtensionsUpstreams.HttpProtocolOptions_ExplicitHttpConfig{
+					ProtocolConfig: &envoyExtensionsUpstreams.HttpProtocolOptions_ExplicitHttpConfig_Http2ProtocolOptions{},
+				},
+			}
+		case types.AttributeValueHTTPProtocol3:
+			httpProtocolOptions.UpstreamProtocolOptions = &envoyExtensionsUpstreams.HttpProtocolOptions_ExplicitHttpConfig_{
+				ExplicitHttpConfig: &envoyExtensionsUpstreams.HttpProtocolOptions_ExplicitHttpConfig{
+					ProtocolConfig: &envoyExtensionsUpstreams.HttpProtocolOptions_ExplicitHttpConfig_Http3ProtocolOptions{},
+				},
+			}
+		default:
+			s.logger.Warn(unknownClusterAttributeValueWarning,
+				zap.String("cluster", cluster.Name),
+				zap.String("attribute", types.AttributeHTTPProtocol))
+			return nil
+		}
+	}
+
+	httpProtocolOptionsTypedConf, e := anypb.New(httpProtocolOptions)
+	if e != nil {
+		s.logger.Panic("clusterTypedExtensionProtocolOptions", zap.Error(e))
+	}
+	return map[string]*anypb.Any{
+		"envoy.extensions.upstreams.http.v3.HttpProtocolOptions": httpProtocolOptionsTypedConf,
+	}
 }
