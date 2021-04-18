@@ -310,15 +310,14 @@ func (s *server) clusterDNSResolvers(cluster types.Cluster) []*core.Address {
 
 func (s *server) clusterTypedExtensionProtocolOptions(cluster types.Cluster) map[string]*anypb.Any {
 
-	idleTimeout, idleTimeoutError := cluster.Attributes.Get(types.AttributeIdleTimeout)
-	clusterHTTPProtocol, clusterHTTPProtocolError := cluster.Attributes.Get(types.AttributeHTTPProtocol)
+	idleTimeout, _ := cluster.Attributes.Get(types.AttributeIdleTimeout)
+	clusterHTTPProtocol, _ := cluster.Attributes.Get(types.AttributeHTTPProtocol)
 
-	if idleTimeoutError != nil || clusterHTTPProtocolError != nil {
+	if idleTimeout == "" && clusterHTTPProtocol == "" {
 		return nil
 	}
 
 	httpProtocolOptions := &envoyExtensionsUpstreams.HttpProtocolOptions{
-		CommonHttpProtocolOptions: &core.HttpProtocolOptions{},
 		UpstreamProtocolOptions: &envoyExtensionsUpstreams.HttpProtocolOptions_ExplicitHttpConfig_{
 			ExplicitHttpConfig: &envoyExtensionsUpstreams.HttpProtocolOptions_ExplicitHttpConfig{
 				ProtocolConfig: &envoyExtensionsUpstreams.HttpProtocolOptions_ExplicitHttpConfig_HttpProtocolOptions{},
@@ -326,7 +325,9 @@ func (s *server) clusterTypedExtensionProtocolOptions(cluster types.Cluster) map
 		},
 	}
 	if idleTimeoutDuration, err := time.ParseDuration(idleTimeout); err == nil {
-		httpProtocolOptions.CommonHttpProtocolOptions.IdleTimeout = durationpb.New(idleTimeoutDuration)
+		httpProtocolOptions.CommonHttpProtocolOptions = &core.HttpProtocolOptions{
+			IdleTimeout: durationpb.New(idleTimeoutDuration),
+		}
 	}
 
 	if clusterHTTPProtocol != "" {
