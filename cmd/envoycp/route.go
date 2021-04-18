@@ -274,19 +274,19 @@ func buildCorsPolicy(routeEntry types.Route) *route.CorsPolicy {
 	}
 
 	corsAllowHeaders, err := routeEntry.Attributes.Get(types.AttributeCORSAllowHeaders)
-	if err == nil && corsAllowMethods != "" {
+	if err == nil && corsAllowHeaders != "" {
 		corsPolicy.AllowHeaders = corsAllowHeaders
 		corsConfigured = true
 	}
 
 	corsExposeHeaders, err := routeEntry.Attributes.Get(types.AttributeCORSExposeHeaders)
-	if err == nil && corsAllowMethods != "" {
+	if err == nil && corsExposeHeaders != "" {
 		corsPolicy.ExposeHeaders = corsExposeHeaders
 		corsConfigured = true
 	}
 
 	corsMaxAge, err := routeEntry.Attributes.Get(types.AttributeCORSMaxAge)
-	if err == nil && corsAllowMethods != "" {
+	if err == nil && corsMaxAge != "" {
 		corsPolicy.MaxAge = corsMaxAge
 		corsConfigured = true
 	}
@@ -343,6 +343,10 @@ func buildRouteActionDirectResponse(routeEntry types.Route) *route.Route_DirectR
 	directResponseStatusCode, err := routeEntry.Attributes.Get(types.AttributeDirectResponseStatusCode)
 	if err == nil && directResponseStatusCode != "" {
 		statusCode, err := strconv.Atoi(directResponseStatusCode)
+
+		if statusCode < 100 || statusCode > 500 {
+			return nil
+		}
 
 		if err == nil && statusCode != 0 {
 			response := route.Route_DirectResponse{
@@ -457,7 +461,7 @@ func buildBasicAuth(routeEntry types.Route, headersToAdd map[string]string) {
 	if err == nil && usernamePassword != "" {
 		authenticationDigest := base64.StdEncoding.EncodeToString([]byte(usernamePassword))
 
-		headersToAdd["Authorization"] = authenticationDigest
+		headersToAdd["Authorization"] = "Basic " + authenticationDigest
 	}
 }
 
@@ -497,6 +501,7 @@ func buildUpstreamHeadersToRemove(routeEntry types.Route) []string {
 
 // buildHeadersList creates map to hold headers to add or remove
 func buildHeadersList(headers map[string]string) []*core.HeaderValueOption {
+
 	if len(headers) == 0 {
 		return nil
 	}
@@ -570,7 +575,8 @@ func buildRetryPolicy(routeEntry types.Route) *route.RetryPolicy {
 	}
 	perTryTimeout := routeEntry.Attributes.GetAsDuration(types.AttributePerTryTimeout,
 		types.DefaultPerRetryTimeout)
-	numRetries := uint32(routeEntry.Attributes.GetAsUInt32(types.AttributeNumRetries, 2))
+	numRetries := uint32(routeEntry.Attributes.GetAsUInt32(types.AttributeNumRetries,
+		types.DefaultNumRetries))
 	RetriableStatusCodes := buildStatusCodesSlice(
 		routeEntry.Attributes.GetAsString(types.AttributeRetryOnStatusCodes,
 			types.DefaultRetryStatusCodes))
@@ -635,11 +641,11 @@ func perRouteAuthzFilterConfig(routeEntry types.Route) *anypb.Any {
 			Disabled: true,
 		},
 	}
-	ratelimitTypedConf, e := anypb.New(perFilterExtAuthzConfig)
+	extAuthzTypedConf, e := anypb.New(perFilterExtAuthzConfig)
 	if e != nil {
 		return nil
 	}
-	return ratelimitTypedConf
+	return extAuthzTypedConf
 }
 
 // buildEnvoyVirtualClusters returns a VirtualCluster configuration for each route
@@ -649,7 +655,7 @@ func (s *server) buildEnvoyVirtualClusters(RouteGroup string, routes types.Route
 
 	for _, routeEntry := range routes {
 		if routeEntry.RouteGroup == RouteGroup {
-			pathMatch := s.buildEnvoyVirtualClusterPathMatch(routeEntry)
+			pathMatch := buildEnvoyVirtualClusterPathMatch(routeEntry)
 			if pathMatch == nil {
 				s.logger.Warn("Cannot build virtualcluster header match config",
 					zap.String("route", routeEntry.Name), zap.String("routegroup", RouteGroup))
@@ -667,7 +673,7 @@ func (s *server) buildEnvoyVirtualClusters(RouteGroup string, routes types.Route
 }
 
 // buildEnvoyVirtualClusterPathMatch returns a matcher based upon the path type of a route
-func (s *server) buildEnvoyVirtualClusterPathMatch(routeEntry types.Route) *route.HeaderMatcher {
+func buildEnvoyVirtualClusterPathMatch(routeEntry types.Route) *route.HeaderMatcher {
 
 	matcher := &route.HeaderMatcher{
 		Name: ":path",
