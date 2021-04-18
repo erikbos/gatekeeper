@@ -43,6 +43,14 @@ func Test_buildEnvoyClusterConfig(t *testing.T) {
 						Name:  types.AttributePort,
 						Value: "1975",
 					},
+					{
+						Name:  types.AttributeIdleTimeout,
+						Value: "333ms",
+					},
+					{
+						Name:  types.AttributeHTTPProtocol,
+						Value: types.AttributeValueHTTPProtocol2,
+					},
 				},
 			},
 			expected: &envoyCluster.Cluster{
@@ -71,8 +79,18 @@ func Test_buildEnvoyClusterConfig(t *testing.T) {
 
 				HealthChecks: nil,
 
-				CommonHttpProtocolOptions: &core.HttpProtocolOptions{
-					IdleTimeout: durationpb.New(types.DefaultClusterIdleTimeout),
+				TypedExtensionProtocolOptions: map[string]*anypb.Any{
+					"envoy.extensions.upstreams.http.v3.HttpProtocolOptions": mustMarshalAny(
+						&envoyExtensionsUpstreams.HttpProtocolOptions{
+							CommonHttpProtocolOptions: &core.HttpProtocolOptions{
+								IdleTimeout: durationpb.New(333 * time.Millisecond),
+							},
+							UpstreamProtocolOptions: &envoyExtensionsUpstreams.HttpProtocolOptions_ExplicitHttpConfig_{
+								ExplicitHttpConfig: &envoyExtensionsUpstreams.HttpProtocolOptions_ExplicitHttpConfig{
+									ProtocolConfig: &envoyExtensionsUpstreams.HttpProtocolOptions_ExplicitHttpConfig_Http2ProtocolOptions{},
+								},
+							},
+						}),
 				},
 
 				TrackClusterStats: &envoyCluster.TrackClusterStats{
