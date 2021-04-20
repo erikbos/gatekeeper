@@ -153,10 +153,21 @@ const (
 	// Tineout for cluster communication
 	AttributeTimeout = "Timeout"
 
+	// RouteType path will check for an exact match
+	AttributeValuePathTypePath = "path"
+
+	// RouteType prefix will match path starting with prefix
+	AttributeValuePathTypePrefix = "prefix"
+
+	// RouteType regexp will path regexp match
+	AttributeValuePathTypeRegexp = "regexp"
+
 	// Default route timeout
 	DefaultRouteTimeout = 20 * time.Second
+
 	// Default per retry timeout
 	DefaultPerRetryTimeout = 500 * time.Millisecond
+
 	// Default retry count
 	DefaultNumRetries = 2
 

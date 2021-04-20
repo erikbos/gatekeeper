@@ -127,25 +127,25 @@ func (s *server) buildEnvoyRoute(routeEntry types.Route) *route.Route {
 	return envoyRoute
 }
 
-// buildRouteMatch returns route config we match on
+// buildRouteMatch returns route config to match on
 func buildRouteMatch(routeEntry types.Route) *route.RouteMatch {
 
 	switch routeEntry.PathType {
-	case "path":
+	case types.AttributeValuePathTypePath:
 		return &route.RouteMatch{
 			PathSpecifier: &route.RouteMatch_Path{
 				Path: routeEntry.Path,
 			},
 		}
 
-	case "prefix":
+	case types.AttributeValuePathTypePrefix:
 		return &route.RouteMatch{
 			PathSpecifier: &route.RouteMatch_Prefix{
 				Prefix: routeEntry.Path,
 			},
 		}
 
-	case "regexp":
+	case types.AttributeValuePathTypeRegexp:
 		return &route.RouteMatch{
 			PathSpecifier: &route.RouteMatch_SafeRegex{
 				SafeRegex: buildRegexpMatcher(routeEntry.Path),
@@ -250,15 +250,17 @@ func (s *server) buildRequestMirrorPolicies(routeEntry types.Route) []*route.Rou
 		return nil
 	}
 
-	return []*route.RouteAction_RequestMirrorPolicy{{
-		Cluster: mirrorCluster,
-		RuntimeFraction: &core.RuntimeFractionalPercent{
-			DefaultValue: &envoytype.FractionalPercent{
-				Numerator:   uint32(percentage),
-				Denominator: envoytype.FractionalPercent_HUNDRED,
+	return []*route.RouteAction_RequestMirrorPolicy{
+		{
+			Cluster: mirrorCluster,
+			RuntimeFraction: &core.RuntimeFractionalPercent{
+				DefaultValue: &envoytype.FractionalPercent{
+					Numerator:   uint32(percentage),
+					Denominator: envoytype.FractionalPercent_HUNDRED,
+				},
 			},
 		},
-	}}
+	}
 }
 
 // buildCorsPolicy return CorsPolicy based upon a route's attribute(s)
@@ -679,17 +681,17 @@ func buildEnvoyVirtualClusterPathMatch(routeEntry types.Route) *route.HeaderMatc
 		Name: ":path",
 	}
 	switch routeEntry.PathType {
-	case "path":
+	case types.AttributeValuePathTypePath:
 		matcher.HeaderMatchSpecifier = &route.HeaderMatcher_ExactMatch{
 			ExactMatch: routeEntry.Path,
 		}
 		return matcher
-	case "prefix":
+	case types.AttributeValuePathTypePrefix:
 		matcher.HeaderMatchSpecifier = &route.HeaderMatcher_PrefixMatch{
 			PrefixMatch: routeEntry.Path,
 		}
 		return matcher
-	case "regexp":
+	case types.AttributeValuePathTypeRegexp:
 		matcher.HeaderMatchSpecifier = &route.HeaderMatcher_SafeRegexMatch{
 			SafeRegexMatch: &envoymatcher.RegexMatcher{
 				Regex: routeEntry.Path,
