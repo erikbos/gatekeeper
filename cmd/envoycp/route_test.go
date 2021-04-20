@@ -344,7 +344,7 @@ func Test_buildWeightedClusters(t *testing.T) {
 				Attributes: types.Attributes{
 					{
 						Name:  types.AttributeWeightedClusters,
-						Value: "cluster1,cluster2:50,cluster3:75",
+						Value: "cluster1:50,cluster2,cluster3:75",
 					},
 				},
 			},
@@ -353,10 +353,6 @@ func Test_buildWeightedClusters(t *testing.T) {
 					Clusters: []*envoy_route.WeightedCluster_ClusterWeight{
 						{
 							Name:   strings.TrimSpace("cluster1"),
-							Weight: protoUint32(uint32(1)),
-						},
-						{
-							Name:   strings.TrimSpace("cluster2"),
 							Weight: protoUint32(uint32(50)),
 						},
 						{
@@ -364,7 +360,7 @@ func Test_buildWeightedClusters(t *testing.T) {
 							Weight: protoUint32(uint32(75)),
 						},
 					},
-					TotalWeight: protoUint32(uint32(126)),
+					TotalWeight: protoUint32(uint32(125)),
 				},
 			},
 		},
