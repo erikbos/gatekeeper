@@ -1,6 +1,7 @@
 package main
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -8,14 +9,532 @@ import (
 	route "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
 	envoyauth "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/ext_authz/v3"
 	envoymatcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
+	envoytype "github.com/envoyproxy/go-control-plane/envoy/type/v3"
 	"github.com/envoyproxy/go-control-plane/pkg/wellknown"
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/durationpb"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 
 	"github.com/erikbos/gatekeeper/pkg/types"
 )
+
+func Test_buildEnvoyRoute(t *testing.T) {
+
+	s := newServerForTesting()
+
+	// s.dbentities = db.NewEntityCache()
+
+	tests := []struct {
+		name       string
+		RouteGroup string
+		routes     types.Routes
+		expected   []*route.Route
+	}{
+		{
+			name:       "1 upstream cluster + properties",
+			RouteGroup: "default",
+
+			routes: types.Routes{
+				{
+					Name:       "default",
+					Path:       "/default",
+					PathType:   types.AttributeValuePathTypePrefix,
+					RouteGroup: "default",
+					Attributes: types.Attributes{
+						{
+							Name:  types.AttributeCluster,
+							Value: "upstream",
+						},
+						{
+							Name:  types.AttributePrefixRewrite,
+							Value: "/seconddefault",
+						},
+						{
+							Name:  types.AttributeHostHeader,
+							Value: "www.example.com",
+						},
+						{
+							Name:  types.AttributeTimeout,
+							Value: "2s",
+						},
+					},
+				},
+			},
+			expected: []*route.Route{
+				{
+					Name: "default",
+					Match: &route.RouteMatch{
+						PathSpecifier: &route.RouteMatch_Prefix{
+							Prefix: "/default",
+						},
+					},
+					Action: &route.Route_Route{
+						Route: &route.RouteAction{
+							ClusterSpecifier: &route.RouteAction_Cluster{
+								Cluster: "upstream",
+							},
+							PrefixRewrite: "/seconddefault",
+							HostRewriteSpecifier: &route.RouteAction_HostRewriteLiteral{
+								HostRewriteLiteral: "www.example.com",
+							},
+							Timeout: durationpb.New(2 * time.Second),
+						},
+					},
+					TypedPerFilterConfig: map[string]*any.Any{
+						wellknown.HTTPExternalAuthorization: mustMarshalAny(&envoyauth.ExtAuthzPerRoute{
+							Override: &envoyauth.ExtAuthzPerRoute_Disabled{
+								Disabled: true,
+							},
+						}),
+					},
+				},
+			},
+		},
+		{
+			name:       "2 weighted upstream clusters + non-matching routegroup",
+			RouteGroup: "default",
+
+			routes: types.Routes{
+				{
+					Name:       "default",
+					Path:       "/",
+					PathType:   types.AttributeValuePathTypePrefix,
+					RouteGroup: "default",
+					Attributes: types.Attributes{
+						{
+							Name:  types.AttributeWeightedClusters,
+							Value: "upstream1:10,upstream2:25",
+						},
+					},
+				},
+				{
+					Name:       "backup",
+					Path:       "/backup",
+					PathType:   types.AttributeValuePathTypePrefix,
+					RouteGroup: "non-http",
+					Attributes: types.Attributes{
+						{
+							Name:  types.AttributeCluster,
+							Value: "upstream",
+						},
+					},
+				},
+			},
+			expected: []*route.Route{
+				{
+					Name: "default",
+					Match: &route.RouteMatch{
+						PathSpecifier: &route.RouteMatch_Prefix{
+							Prefix: "/",
+						},
+					},
+					Action: &route.Route_Route{
+						Route: &route.RouteAction{
+							ClusterSpecifier: &route.RouteAction_WeightedClusters{
+								WeightedClusters: &route.WeightedCluster{
+									Clusters: []*route.WeightedCluster_ClusterWeight{
+										{
+											Name: "upstream1",
+											Weight: &wrapperspb.UInt32Value{
+												Value: 10,
+											},
+										},
+										{
+											Name: "upstream2",
+											Weight: &wrapperspb.UInt32Value{
+												Value: 25,
+											},
+										},
+									},
+									TotalWeight: &wrapperspb.UInt32Value{
+										Value: 35,
+									},
+								},
+							},
+						},
+					},
+					TypedPerFilterConfig: map[string]*any.Any{
+						wellknown.HTTPExternalAuthorization: mustMarshalAny(&envoyauth.ExtAuthzPerRoute{
+							Override: &envoyauth.ExtAuthzPerRoute_Disabled{
+								Disabled: true,
+							},
+						}),
+					},
+				},
+			},
+		},
+		{
+			name:       "1 direct response",
+			RouteGroup: "default",
+
+			routes: types.Routes{
+				{
+					Name:       "default",
+					Path:       "/dsr",
+					PathType:   types.AttributeValuePathTypePath,
+					RouteGroup: "default",
+					Attributes: types.Attributes{
+						{
+							Name:  types.AttributeDirectResponseStatusCode,
+							Value: "200",
+						},
+						{
+							Name:  types.AttributeDirectResponseBody,
+							Value: "Hello World",
+						},
+					},
+				},
+			},
+			expected: []*route.Route{
+				{
+					Name: "default",
+					Match: &route.RouteMatch{
+						PathSpecifier: &route.RouteMatch_Path{
+							Path: "/dsr",
+						},
+					},
+					Action: &route.Route_DirectResponse{
+						DirectResponse: &route.DirectResponseAction{
+							Status: 200,
+							Body: &core.DataSource{
+								Specifier: &core.DataSource_InlineString{
+									InlineString: "Hello World",
+								},
+							},
+						},
+					},
+					TypedPerFilterConfig: map[string]*any.Any{
+						wellknown.HTTPExternalAuthorization: mustMarshalAny(&envoyauth.ExtAuthzPerRoute{
+							Override: &envoyauth.ExtAuthzPerRoute_Disabled{
+								Disabled: true,
+							},
+						}),
+					},
+				},
+			},
+		},
+		{
+			name:       "1 upstream cluster",
+			RouteGroup: "default",
+
+			routes: types.Routes{
+				{
+					Name:       "default",
+					Path:       "/",
+					PathType:   types.AttributeValuePathTypePrefix,
+					RouteGroup: "default",
+					Attributes: types.Attributes{
+						{
+							Name:  types.AttributeCluster,
+							Value: "upstream",
+						},
+					},
+				},
+			},
+			expected: []*route.Route{
+				{
+					Name: "default",
+					Match: &route.RouteMatch{
+						PathSpecifier: &route.RouteMatch_Prefix{
+							Prefix: "/",
+						},
+					},
+					Action: &route.Route_Route{
+						Route: &route.RouteAction{
+							ClusterSpecifier: &route.RouteAction_Cluster{
+								Cluster: "upstream",
+							},
+						},
+					},
+					TypedPerFilterConfig: map[string]*any.Any{
+						wellknown.HTTPExternalAuthorization: mustMarshalAny(&envoyauth.ExtAuthzPerRoute{
+							Override: &envoyauth.ExtAuthzPerRoute_Disabled{
+								Disabled: true,
+							},
+						}),
+					},
+				},
+			},
+		},
+	}
+	for _, test := range tests {
+		require.Equalf(t, test.expected,
+			s.buildEnvoyRoutes(test.RouteGroup, test.routes), test.name)
+	}
+}
+
+func Test_buildRouteMatch(t *testing.T) {
+
+	tests := []struct {
+		name     string
+		route    types.Route
+		expected *route.RouteMatch
+	}{
+		{
+			name: "path match",
+			route: types.Route{
+				PathType: types.AttributeValuePathTypePath,
+				Path:     "/users",
+			},
+			expected: &route.RouteMatch{
+				PathSpecifier: &route.RouteMatch_Path{
+					Path: "/users",
+				},
+			},
+		},
+		{
+			name: "prefix match",
+			route: types.Route{
+				PathType: types.AttributeValuePathTypePrefix,
+				Path:     "/developers",
+			},
+			expected: &route.RouteMatch{
+				PathSpecifier: &route.RouteMatch_Prefix{
+					Prefix: "/developers",
+				},
+			},
+		},
+		{
+			name: "regexp match",
+			route: types.Route{
+				PathType: types.AttributeValuePathTypeRegexp,
+				Path:     "/products",
+			},
+			expected: &route.RouteMatch{
+				PathSpecifier: &route.RouteMatch_SafeRegex{
+					SafeRegex: buildRegexpMatcher("/products"),
+				},
+			},
+		},
+		{
+			name: "no weighted loadbalancing",
+			route: types.Route{
+				PathType: "unknown",
+			},
+			expected: nil,
+		},
+	}
+	for _, test := range tests {
+		require.Equalf(t, test.expected,
+			buildRouteMatch(test.route), test.name)
+	}
+}
+
+func Test_buildWeightedClusters(t *testing.T) {
+
+	s := newServerForTesting()
+
+	tests := []struct {
+		name     string
+		route    types.Route
+		expected *route.RouteAction_WeightedClusters
+	}{
+		{
+			name: "1 weighted cluster",
+			route: types.Route{
+				Attributes: types.Attributes{
+					{
+						Name:  types.AttributeWeightedClusters,
+						Value: "cluster1:25",
+					},
+				},
+			},
+			expected: &route.RouteAction_WeightedClusters{
+				WeightedClusters: &route.WeightedCluster{
+					Clusters: []*route.WeightedCluster_ClusterWeight{
+						{
+							Name:   strings.TrimSpace("cluster1"),
+							Weight: protoUint32(uint32(25)),
+						},
+					},
+					TotalWeight: protoUint32(uint32(25)),
+				},
+			},
+		},
+		{
+			name: "2 clusters, one with weight",
+			route: types.Route{
+				Attributes: types.Attributes{
+					{
+						Name:  types.AttributeWeightedClusters,
+						Value: "cluster1,cluster2:50,cluster3:75",
+					},
+				},
+			},
+			expected: &route.RouteAction_WeightedClusters{
+				WeightedClusters: &route.WeightedCluster{
+					Clusters: []*route.WeightedCluster_ClusterWeight{
+						{
+							Name:   strings.TrimSpace("cluster1"),
+							Weight: protoUint32(uint32(1)),
+						},
+						{
+							Name:   strings.TrimSpace("cluster2"),
+							Weight: protoUint32(uint32(50)),
+						},
+						{
+							Name:   strings.TrimSpace("cluster3"),
+							Weight: protoUint32(uint32(75)),
+						},
+					},
+					TotalWeight: protoUint32(uint32(126)),
+				},
+			},
+		},
+		{
+			name: "3 weighted clusters",
+			route: types.Route{
+				Attributes: types.Attributes{
+					{
+						Name:  types.AttributeWeightedClusters,
+						Value: "cluster1:25,cluster2:50,cluster3:75",
+					},
+				},
+			},
+			expected: &route.RouteAction_WeightedClusters{
+				WeightedClusters: &route.WeightedCluster{
+					Clusters: []*route.WeightedCluster_ClusterWeight{
+						{
+							Name:   strings.TrimSpace("cluster1"),
+							Weight: protoUint32(uint32(25)),
+						},
+						{
+							Name:   strings.TrimSpace("cluster2"),
+							Weight: protoUint32(uint32(50)),
+						},
+						{
+							Name:   strings.TrimSpace("cluster3"),
+							Weight: protoUint32(uint32(75)),
+						},
+					},
+					TotalWeight: protoUint32(uint32(150)),
+				},
+			},
+		},
+		{
+			name: "no weighted loadbalancing",
+			route: types.Route{
+				Attributes: types.Attributes{
+					{},
+				},
+			},
+			expected: nil,
+		},
+	}
+	for _, test := range tests {
+		require.Equalf(t, test.expected,
+			s.buildWeightedClusters(test.route), test.name)
+	}
+}
+
+func Test_buildRequestMirrorPolicies(t *testing.T) {
+
+	s := newServerForTesting()
+
+	tests := []struct {
+		name     string
+		route    types.Route
+		expected []*route.RouteAction_RequestMirrorPolicy
+	}{
+		{
+			name: "mirror configuration ok",
+			route: types.Route{
+				Attributes: types.Attributes{
+					{
+						Name:  types.AttributeRequestMirrorCluster,
+						Value: "second_cluster",
+					},
+					{
+						Name:  types.AttributeRequestMirrorPercentage,
+						Value: "55",
+					},
+				},
+			},
+			expected: []*route.RouteAction_RequestMirrorPolicy{
+				{
+					Cluster: "second_cluster",
+					RuntimeFraction: &core.RuntimeFractionalPercent{
+						DefaultValue: &envoytype.FractionalPercent{
+							Numerator:   uint32(55),
+							Denominator: envoytype.FractionalPercent_HUNDRED,
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "cluster set, mirror percentage wrong 1",
+			route: types.Route{
+				Attributes: types.Attributes{
+					{
+						Name:  types.AttributeRequestMirrorCluster,
+						Value: "second_cluster",
+					},
+					{
+						Name:  types.AttributeRequestMirrorPercentage,
+						Value: "101",
+					},
+				},
+			},
+			expected: nil,
+		},
+		{
+			name: "cluster set, mirror percentage wrong 2",
+			route: types.Route{
+				Attributes: types.Attributes{
+					{
+						Name:  types.AttributeRequestMirrorCluster,
+						Value: "second_cluster",
+					},
+					{
+						Name:  types.AttributeRequestMirrorPercentage,
+						Value: "-1",
+					},
+				},
+			},
+			expected: nil,
+		},
+		{
+			name: "mirror cluster only, no percentage",
+			route: types.Route{
+				Attributes: types.Attributes{
+					{
+						Name:  types.AttributeRequestMirrorCluster,
+						Value: "second_cluster",
+					},
+				},
+			},
+			expected: nil,
+		},
+		{
+			name: "mirror percentage only, no cluster",
+			route: types.Route{
+				Attributes: types.Attributes{
+					{
+						Name:  types.AttributeRequestMirrorPercentage,
+						Value: "25",
+					},
+				},
+			},
+			expected: nil,
+		},
+		{
+			name: "no mirror config",
+			route: types.Route{
+				Attributes: types.Attributes{
+					{},
+				},
+			},
+			expected: nil,
+		},
+	}
+	for _, test := range tests {
+		require.Equalf(t, test.expected,
+			s.buildRequestMirrorPolicies(test.route), test.name)
+	}
+}
 
 func Test_buildCorsPolicy(t *testing.T) {
 
@@ -436,7 +955,7 @@ func Test_buildUpstreamHeadersToRemove(t *testing.T) {
 			route: types.Route{
 				Attributes: types.Attributes{},
 			},
-			expected: []string{},
+			expected: nil,
 		},
 	}
 	for _, test := range tests {
@@ -705,13 +1224,13 @@ func Test_buildEnvoyVirtualClusters(t *testing.T) {
 	tests := []struct {
 		name       string
 		RouteGroup string
-		route      types.Routes
+		routes     types.Routes
 		expected   []*route.VirtualCluster
 	}{
 		{
 			name:       "routegroup 1 match, 1 mismatch",
 			RouteGroup: "bikes",
-			route: types.Routes{
+			routes: types.Routes{
 				{
 
 					RouteGroup: "bikes",
@@ -740,7 +1259,7 @@ func Test_buildEnvoyVirtualClusters(t *testing.T) {
 		},
 		{
 			name: "unknown match",
-			route: types.Routes{
+			routes: types.Routes{
 				{
 					PathType: "unknown",
 				},
@@ -749,7 +1268,7 @@ func Test_buildEnvoyVirtualClusters(t *testing.T) {
 	}
 	for _, test := range tests {
 		require.Equalf(t, test.expected,
-			s.buildEnvoyVirtualClusters(test.RouteGroup, test.route), test.name)
+			s.buildEnvoyVirtualClusters(test.RouteGroup, test.routes), test.name)
 	}
 }
 

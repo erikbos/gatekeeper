@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"strconv"
 	"strings"
+	"time"
 
 	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	route "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
@@ -61,7 +62,7 @@ func (s *server) buildEnvoyListenerRouteConfig(RouteGroup string,
 	}
 }
 
-// buildEnvoyRoute returns all Envoy routes belong to one RouteGroup
+// buildEnvoyRoutes returns all Envoy routes belonging to a RouteGroup
 func (s *server) buildEnvoyRoutes(RouteGroup string, routes types.Routes) []*route.Route {
 	var envoyRoutes []*route.Route
 
@@ -108,9 +109,9 @@ func (s *server) buildEnvoyRoute(routeEntry types.Route) *route.Route {
 	}
 
 	// Add cluster(s) to forward this route to
-	_, err1 := routeEntry.Attributes.Get(types.AttributeCluster)
-	_, err2 := routeEntry.Attributes.Get(types.AttributeWeightedClusters)
-	if err1 != nil || err2 != nil {
+	cluster, _ := routeEntry.Attributes.Get(types.AttributeCluster)
+	weightedClusters, _ := routeEntry.Attributes.Get(types.AttributeWeightedClusters)
+	if cluster != "" || weightedClusters != "" {
 		envoyRoute.Action = s.buildRouteActionCluster(routeEntry)
 	}
 
@@ -160,12 +161,23 @@ func (s *server) buildRouteActionCluster(routeEntry types.Route) *route.Route_Ro
 
 	action := &route.Route_Route{
 		Route: &route.RouteAction{
-			Cors:                 buildCorsPolicy(routeEntry),
-			HostRewriteSpecifier: buildHostRewriteSpecifier(routeEntry),
-			RetryPolicy:          buildRetryPolicy(routeEntry),
-			Timeout: durationpb.New(routeEntry.Attributes.GetAsDuration(
-				types.AttributeTimeout, types.DefaultRouteTimeout)),
+			Cors:        buildCorsPolicy(routeEntry),
+			RetryPolicy: buildRetryPolicy(routeEntry),
 		},
+	}
+
+	upstreamTimeout, err := routeEntry.Attributes.Get(types.AttributeTimeout)
+	if err == nil && upstreamTimeout != "" {
+		if upstreamTimeoutDuration, err := time.ParseDuration(upstreamTimeout); err == nil {
+			action.Route.Timeout = durationpb.New(upstreamTimeoutDuration)
+		}
+	}
+
+	upstreamHostHeader, err := routeEntry.Attributes.Get(types.AttributeHostHeader)
+	if err == nil && upstreamHostHeader != "" {
+		action.Route.HostRewriteSpecifier = &route.RouteAction_HostRewriteLiteral{
+			HostRewriteLiteral: upstreamHostHeader,
+		}
 	}
 
 	prefixRewrite, err := routeEntry.Attributes.Get(types.AttributePrefixRewrite)
@@ -173,17 +185,20 @@ func (s *server) buildRouteActionCluster(routeEntry types.Route) *route.Route_Ro
 		action.Route.PrefixRewrite = prefixRewrite
 	}
 
-	if cluster, err := routeEntry.Attributes.Get(types.AttributeCluster); err == nil {
+	cluster, err := routeEntry.Attributes.Get(types.AttributeCluster)
+	if err == nil && cluster != "" {
 		action.Route.ClusterSpecifier = &route.RouteAction_Cluster{
 			Cluster: cluster,
 		}
 	}
 
-	if _, err := routeEntry.Attributes.Get(types.AttributeWeightedClusters); err == nil {
+	weightedClusters, err := routeEntry.Attributes.Get(types.AttributeWeightedClusters)
+	if err == nil && weightedClusters != "" {
 		action.Route.ClusterSpecifier = s.buildWeightedClusters(routeEntry)
 	}
 
-	// Stop in case we do not have any route cluster destination
+	// Stop in case we do not have any route cluster destination as
+	// this route would be invalid..
 	if action.Route.ClusterSpecifier == nil {
 		return nil
 	}
@@ -324,19 +339,6 @@ func buildRegexpMatcher(regexp string) *envoymatcher.RegexMatcher {
 		},
 		Regex: regexp,
 	}
-}
-
-// buildHostRewrite returns HostRewrite config based upon route attribute(s)
-func buildHostRewriteSpecifier(routeEntry types.Route) *route.RouteAction_HostRewriteLiteral {
-
-	upstreamHostHeader, err := routeEntry.Attributes.Get(types.AttributeHostHeader)
-	if err == nil && upstreamHostHeader != "" {
-		return &route.RouteAction_HostRewriteLiteral{
-			HostRewriteLiteral: upstreamHostHeader,
-		}
-	}
-
-	return nil
 }
 
 // buildRouteActionDirectResponse builds route config to have Envoy itself answer with status code and body
@@ -492,11 +494,13 @@ func buildUpstreamHeadersToRemove(routeEntry types.Route) []string {
 	}
 
 	headersToRemove, err := routeEntry.Attributes.Get(types.AttributeRequestHeadersToRemove)
-	if err != nil || headersToRemove == "" {
-		return h
+	if err == nil || headersToRemove != "" {
+		for _, value := range strings.Split(headersToRemove, ",") {
+			h = append(h, strings.TrimSpace(value))
+		}
 	}
-	for _, value := range strings.Split(headersToRemove, ",") {
-		h = append(h, strings.TrimSpace(value))
+	if len(h) == 0 {
+		return nil
 	}
 	return h
 }
