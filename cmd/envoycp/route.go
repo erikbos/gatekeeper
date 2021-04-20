@@ -4,12 +4,13 @@ import (
 	"encoding/base64"
 	"strconv"
 	"strings"
+	"time"
 
-	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
-	route "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
-	envoyauth "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/ext_authz/v3"
-	envoymatcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
-	envoytype "github.com/envoyproxy/go-control-plane/envoy/type/v3"
+	envoy_core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
+	envoy_route "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
+	envoy_filter_authz "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/ext_authz/v3"
+	envoy_matcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
+	envoy_type "github.com/envoyproxy/go-control-plane/envoy/type/v3"
 	cache "github.com/envoyproxy/go-control-plane/pkg/cache/types"
 	"github.com/envoyproxy/go-control-plane/pkg/wellknown"
 	"github.com/golang/protobuf/ptypes/any"
@@ -28,8 +29,7 @@ func (s *server) getEnvoyRouteConfig() ([]cache.Resource, error) {
 	for RouteGroupName := range RouteGroupNames {
 		s.logger.Info("Compiling configuration", zap.String("routegroup", RouteGroupName))
 		envoyRoutes = append(envoyRoutes,
-			s.buildEnvoyListenerRouteConfig(RouteGroupName,
-				s.dbentities.GetRoutes()))
+			s.buildEnvoyListenerRouteConfig(RouteGroupName, s.dbentities.GetRoutes()))
 	}
 
 	return envoyRoutes, nil
@@ -38,19 +38,19 @@ func (s *server) getEnvoyRouteConfig() ([]cache.Resource, error) {
 // getListenerPorts returns set of unique RouteGroup names
 func (s *server) getRouteGroupNames(vhosts types.Routes) map[string]bool {
 	RouteGroupNames := map[string]bool{}
-	for _, routeEntry := range s.dbentities.GetRoutes() {
-		RouteGroupNames[routeEntry.RouteGroup] = true
+	for _, route := range s.dbentities.GetRoutes() {
+		RouteGroupNames[route.RouteGroup] = true
 	}
 	return RouteGroupNames
 }
 
 // buildEnvoyListenerRouteConfig builds vhost and route configuration of one RouteGroup
 func (s *server) buildEnvoyListenerRouteConfig(RouteGroup string,
-	routes types.Routes) *route.RouteConfiguration {
+	routes types.Routes) *envoy_route.RouteConfiguration {
 
-	return &route.RouteConfiguration{
+	return &envoy_route.RouteConfiguration{
 		Name: RouteGroup,
-		VirtualHosts: []*route.VirtualHost{
+		VirtualHosts: []*envoy_route.VirtualHost{
 			{
 				Name:            RouteGroup,
 				Domains:         s.getVhostsInRouteGroup(RouteGroup),
@@ -61,9 +61,9 @@ func (s *server) buildEnvoyListenerRouteConfig(RouteGroup string,
 	}
 }
 
-// buildEnvoyRoute returns all Envoy routes belong to one RouteGroup
-func (s *server) buildEnvoyRoutes(RouteGroup string, routes types.Routes) []*route.Route {
-	var envoyRoutes []*route.Route
+// buildEnvoyRoutes returns all Envoy routes belonging to a RouteGroup
+func (s *server) buildEnvoyRoutes(RouteGroup string, routes types.Routes) []*envoy_route.Route {
+	var envoyRoutes []*envoy_route.Route
 
 	for _, route := range routes {
 		if err := route.ConfigCheck(); err != nil {
@@ -80,75 +80,72 @@ func (s *server) buildEnvoyRoutes(RouteGroup string, routes types.Routes) []*rou
 }
 
 // buildEnvoyRoute returns a single Envoy route
-func (s *server) buildEnvoyRoute(routeEntry types.Route) *route.Route {
-	routeMatch := buildRouteMatch(routeEntry)
+func (s *server) buildEnvoyRoute(route types.Route) *envoy_route.Route {
+	routeMatch := buildRouteMatch(route)
 	if routeMatch == nil {
-		s.logger.Warn("Cannot build route match config", zap.String("route", routeEntry.Name))
+		s.logger.Warn("Cannot build route match config", zap.String("route", route.Name))
 		return nil
 	}
 
-	envoyRoute := &route.Route{
-		Name:  routeEntry.Name,
+	envoyRoute := &envoy_route.Route{
+		Name:  route.Name,
 		Match: routeMatch,
 	}
 
 	// Set all route specific filter options
-	envoyRoute.TypedPerFilterConfig = buildPerRouteFilterConfig(routeEntry)
+	envoyRoute.TypedPerFilterConfig = buildPerRouteFilterConfig(route)
 
 	// Add direct response if configured: in this case Envoy itself will answer
-	if _, err := routeEntry.Attributes.Get(types.AttributeDirectResponseStatusCode); err == nil {
-		envoyRoute.Action = buildRouteActionDirectResponse(routeEntry)
+	if _, err := route.Attributes.Get(types.AttributeDirectResponseStatusCode); err == nil {
+		envoyRoute.Action = buildRouteActionDirectResponse(route)
 		return envoyRoute
 	}
 
 	// Add redirect response if configured: in this case Envoy will generate HTTP redirect
-	if _, err := routeEntry.Attributes.Get(types.AttributeRedirectStatusCode); err == nil {
-		envoyRoute.Action = s.buildRouteActionRedirectResponse(routeEntry)
+	if _, err := route.Attributes.Get(types.AttributeRedirectStatusCode); err == nil {
+		envoyRoute.Action = s.buildRouteActionRedirectResponse(route)
 		return envoyRoute
 	}
 
 	// Add cluster(s) to forward this route to
-	_, err1 := routeEntry.Attributes.Get(types.AttributeCluster)
-	_, err2 := routeEntry.Attributes.Get(types.AttributeWeightedClusters)
-	if err1 != nil || err2 != nil {
-		envoyRoute.Action = s.buildRouteActionCluster(routeEntry)
-	}
-
-	// Stop in case we do not have any route action defined
-	// WARNING: We cannot compare against just "nil" as .Action is an interface
-	if envoyRoute.Action == (*route.Route_Route)(nil) {
-		s.logger.Warn("Route without destination cluster", zap.String("route", routeEntry.Name))
+	cluster, _ := route.Attributes.Get(types.AttributeCluster)
+	weightedClusters, _ := route.Attributes.Get(types.AttributeWeightedClusters)
+	if cluster == "" && weightedClusters == "" {
+		// Stop in case we do not have any route cluster destination as
+		// this route would be invalid..
+		s.logger.Warn("Route without destination cluster", zap.String("route", route.Name))
 		return nil
 	}
 
-	envoyRoute.RequestHeadersToAdd = buildUpstreamHeadersToAdd(routeEntry)
-	envoyRoute.RequestHeadersToRemove = buildUpstreamHeadersToRemove(routeEntry)
+	envoyRoute.Action = s.buildRouteActionCluster(route)
+	envoyRoute.RequestHeadersToAdd = buildUpstreamHeadersToAdd(route)
+	envoyRoute.RequestHeadersToRemove = buildUpstreamHeadersToRemove(route)
 
 	return envoyRoute
 }
 
-// buildRouteMatch returns route config we match on
-func buildRouteMatch(routeEntry types.Route) *route.RouteMatch {
+// buildRouteMatch returns route config to match on
+func buildRouteMatch(route types.Route) *envoy_route.RouteMatch {
 
-	switch routeEntry.PathType {
-	case "path":
-		return &route.RouteMatch{
-			PathSpecifier: &route.RouteMatch_Path{
-				Path: routeEntry.Path,
+	switch route.PathType {
+	case types.AttributeValuePathTypePath:
+		return &envoy_route.RouteMatch{
+			PathSpecifier: &envoy_route.RouteMatch_Path{
+				Path: route.Path,
 			},
 		}
 
-	case "prefix":
-		return &route.RouteMatch{
-			PathSpecifier: &route.RouteMatch_Prefix{
-				Prefix: routeEntry.Path,
+	case types.AttributeValuePathTypePrefix:
+		return &envoy_route.RouteMatch{
+			PathSpecifier: &envoy_route.RouteMatch_Prefix{
+				Prefix: route.Path,
 			},
 		}
 
-	case "regexp":
-		return &route.RouteMatch{
-			PathSpecifier: &route.RouteMatch_SafeRegex{
-				SafeRegex: buildRegexpMatcher(routeEntry.Path),
+	case types.AttributeValuePathTypeRegexp:
+		return &envoy_route.RouteMatch{
+			PathSpecifier: &envoy_route.RouteMatch_SafeRegex{
+				SafeRegex: buildRegexpMatcher(route.Path),
 			},
 		}
 	}
@@ -156,87 +153,91 @@ func buildRouteMatch(routeEntry types.Route) *route.RouteMatch {
 }
 
 // buildRouteActionCluster return route action in of forwarding to a cluster
-func (s *server) buildRouteActionCluster(routeEntry types.Route) *route.Route_Route {
+func (s *server) buildRouteActionCluster(route types.Route) *envoy_route.Route_Route {
 
-	action := &route.Route_Route{
-		Route: &route.RouteAction{
-			Cors:                 buildCorsPolicy(routeEntry),
-			HostRewriteSpecifier: buildHostRewriteSpecifier(routeEntry),
-			RetryPolicy:          buildRetryPolicy(routeEntry),
-			Timeout: durationpb.New(routeEntry.Attributes.GetAsDuration(
-				types.AttributeTimeout, types.DefaultRouteTimeout)),
+	action := &envoy_route.Route_Route{
+		Route: &envoy_route.RouteAction{
+			Cors:        buildCorsPolicy(route),
+			RetryPolicy: buildRetryPolicy(route),
 		},
 	}
 
-	prefixRewrite, err := routeEntry.Attributes.Get(types.AttributePrefixRewrite)
+	upstreamTimeout, err := route.Attributes.Get(types.AttributeTimeout)
+	if err == nil && upstreamTimeout != "" {
+		if upstreamTimeoutDuration, err := time.ParseDuration(upstreamTimeout); err == nil {
+			action.Route.Timeout = durationpb.New(upstreamTimeoutDuration)
+		}
+	}
+
+	upstreamHostHeader, err := route.Attributes.Get(types.AttributeHostHeader)
+	if err == nil && upstreamHostHeader != "" {
+		action.Route.HostRewriteSpecifier = &envoy_route.RouteAction_HostRewriteLiteral{
+			HostRewriteLiteral: upstreamHostHeader,
+		}
+	}
+
+	prefixRewrite, err := route.Attributes.Get(types.AttributePrefixRewrite)
 	if err == nil && prefixRewrite != "" {
 		action.Route.PrefixRewrite = prefixRewrite
 	}
 
-	if cluster, err := routeEntry.Attributes.Get(types.AttributeCluster); err == nil {
-		action.Route.ClusterSpecifier = &route.RouteAction_Cluster{
+	cluster, err := route.Attributes.Get(types.AttributeCluster)
+	if err == nil && cluster != "" {
+		action.Route.ClusterSpecifier = &envoy_route.RouteAction_Cluster{
 			Cluster: cluster,
 		}
 	}
 
-	if _, err := routeEntry.Attributes.Get(types.AttributeWeightedClusters); err == nil {
-		action.Route.ClusterSpecifier = s.buildWeightedClusters(routeEntry)
+	weightedClusters, err := route.Attributes.Get(types.AttributeWeightedClusters)
+	if err == nil && weightedClusters != "" {
+		action.Route.ClusterSpecifier = s.buildWeightedClusters(route)
 	}
 
-	// Stop in case we do not have any route cluster destination
-	if action.Route.ClusterSpecifier == nil {
-		return nil
-	}
-
-	action.Route.RateLimits = buildRateLimits(routeEntry)
-	action.Route.RequestMirrorPolicies = s.buildRequestMirrorPolicies(routeEntry)
+	action.Route.RateLimits = buildRateLimits(route)
+	action.Route.RequestMirrorPolicies = s.buildRequestMirrorPolicies(route)
 
 	return action
 }
 
-func (s *server) buildWeightedClusters(routeEntry types.Route) *route.RouteAction_WeightedClusters {
+func (s *server) buildWeightedClusters(route types.Route) *envoy_route.RouteAction_WeightedClusters {
 
-	weightedClusterSpec, err := routeEntry.Attributes.Get(types.AttributeWeightedClusters)
+	weightedClusterSpec, err := route.Attributes.Get(types.AttributeWeightedClusters)
 	if err != nil || weightedClusterSpec == "" {
 		return nil
 	}
 
-	weightedClusters := make([]*route.WeightedCluster_ClusterWeight, 0)
-	var clusterWeight, totalWeight int
+	weightedClusters := make([]*envoy_route.WeightedCluster_ClusterWeight, 0)
 
+	var weight, totalWeight int
 	for _, cluster := range strings.Split(weightedClusterSpec, ",") {
-
+		// format = clustername : weight
 		clusterConfig := strings.Split(cluster, ":")
-
 		if len(clusterConfig) == 2 {
-			clusterWeight, _ = strconv.Atoi(clusterConfig[1])
+			weight, _ = strconv.Atoi(clusterConfig[1])
+			weightedClusters = append(weightedClusters,
+				&envoy_route.WeightedCluster_ClusterWeight{
+					Name:   strings.TrimSpace(clusterConfig[0]),
+					Weight: protoUint32(uint32(weight)),
+				})
+			totalWeight += weight
 		} else {
 			s.logger.Warn("Weighted destination cluster does not have weight value",
-				zap.String("route", routeEntry.Name), zap.String("cluster", cluster))
-
-			clusterWeight = 1
+				zap.String("route", route.Name), zap.String("cluster", cluster))
 		}
-		totalWeight += clusterWeight
-
-		clusterToAdd := &route.WeightedCluster_ClusterWeight{
-			Name:   strings.TrimSpace(clusterConfig[0]),
-			Weight: protoUint32(uint32(clusterWeight)),
-		}
-		weightedClusters = append(weightedClusters, clusterToAdd)
 	}
 
-	return &route.RouteAction_WeightedClusters{
-		WeightedClusters: &route.WeightedCluster{
+	return &envoy_route.RouteAction_WeightedClusters{
+		WeightedClusters: &envoy_route.WeightedCluster{
 			Clusters:    weightedClusters,
 			TotalWeight: protoUint32(uint32(totalWeight)),
 		},
 	}
 }
 
-func (s *server) buildRequestMirrorPolicies(routeEntry types.Route) []*route.RouteAction_RequestMirrorPolicy {
+func (s *server) buildRequestMirrorPolicies(route types.Route) []*envoy_route.RouteAction_RequestMirrorPolicy {
 
-	mirrorCluster := routeEntry.Attributes.GetAsString(types.AttributeRequestMirrorCluster, "")
-	mirrorPercentage := routeEntry.Attributes.GetAsString(types.AttributeRequestMirrorPercentage, "")
+	mirrorCluster := route.Attributes.GetAsString(types.AttributeRequestMirrorCluster, "")
+	mirrorPercentage := route.Attributes.GetAsString(types.AttributeRequestMirrorPercentage, "")
 
 	if mirrorCluster == "" || mirrorPercentage == "" {
 		return nil
@@ -245,115 +246,108 @@ func (s *server) buildRequestMirrorPolicies(routeEntry types.Route) []*route.Rou
 	percentage, _ := strconv.Atoi(mirrorPercentage)
 	if percentage < 0 || percentage > 100 {
 		s.logger.Warn("Route has incorrect request mirror ratio",
-			zap.String("route", routeEntry.Name), zap.String("cluster", mirrorCluster),
+			zap.String("route", route.Name), zap.String("cluster", mirrorCluster),
 			zap.String("percentage", mirrorPercentage))
 		return nil
 	}
 
-	return []*route.RouteAction_RequestMirrorPolicy{{
-		Cluster: mirrorCluster,
-		RuntimeFraction: &core.RuntimeFractionalPercent{
-			DefaultValue: &envoytype.FractionalPercent{
-				Numerator:   uint32(percentage),
-				Denominator: envoytype.FractionalPercent_HUNDRED,
+	return []*envoy_route.RouteAction_RequestMirrorPolicy{
+		{
+			Cluster: mirrorCluster,
+			RuntimeFraction: &envoy_core.RuntimeFractionalPercent{
+				DefaultValue: &envoy_type.FractionalPercent{
+					Numerator:   uint32(percentage),
+					Denominator: envoy_type.FractionalPercent_HUNDRED,
+				},
 			},
 		},
-	}}
+	}
 }
 
 // buildCorsPolicy return CorsPolicy based upon a route's attribute(s)
-func buildCorsPolicy(routeEntry types.Route) *route.CorsPolicy {
+func buildCorsPolicy(route types.Route) *envoy_route.CorsPolicy {
 
 	var corsConfigured bool
-	corsPolicy := route.CorsPolicy{}
+	corsPolicy := envoy_route.CorsPolicy{}
 
-	corsAllowMethods, err := routeEntry.Attributes.Get(types.AttributeCORSAllowMethods)
+	corsAllowMethods, err := route.Attributes.Get(types.AttributeCORSAllowMethods)
 	if err == nil && corsAllowMethods != "" {
 		corsPolicy.AllowMethods = corsAllowMethods
 		corsConfigured = true
 	}
 
-	corsAllowHeaders, err := routeEntry.Attributes.Get(types.AttributeCORSAllowHeaders)
-	if err == nil && corsAllowMethods != "" {
+	corsAllowHeaders, err := route.Attributes.Get(types.AttributeCORSAllowHeaders)
+	if err == nil && corsAllowHeaders != "" {
 		corsPolicy.AllowHeaders = corsAllowHeaders
 		corsConfigured = true
 	}
 
-	corsExposeHeaders, err := routeEntry.Attributes.Get(types.AttributeCORSExposeHeaders)
-	if err == nil && corsAllowMethods != "" {
+	corsExposeHeaders, err := route.Attributes.Get(types.AttributeCORSExposeHeaders)
+	if err == nil && corsExposeHeaders != "" {
 		corsPolicy.ExposeHeaders = corsExposeHeaders
 		corsConfigured = true
 	}
 
-	corsMaxAge, err := routeEntry.Attributes.Get(types.AttributeCORSMaxAge)
-	if err == nil && corsAllowMethods != "" {
+	corsMaxAge, err := route.Attributes.Get(types.AttributeCORSMaxAge)
+	if err == nil && corsMaxAge != "" {
 		corsPolicy.MaxAge = corsMaxAge
 		corsConfigured = true
 	}
 
-	corsAllowCredentials, err := routeEntry.Attributes.Get(types.AttributeCORSAllowCredentials)
+	corsAllowCredentials, err := route.Attributes.Get(types.AttributeCORSAllowCredentials)
 	if err == nil && corsAllowCredentials == types.AttributeValueTrue {
 		corsPolicy.AllowCredentials = protoBool(true)
 		corsConfigured = true
 	}
 
 	if corsConfigured {
-		stringMatch := make([]*envoymatcher.StringMatcher, 0, 1)
+		stringMatch := make([]*envoy_matcher.StringMatcher, 0, 1)
 		corsPolicy.AllowOriginStringMatch = append(stringMatch, buildStringMatcher("."))
 		return &corsPolicy
 	}
 	return nil
 }
 
-func buildStringMatcher(regexp string) *envoymatcher.StringMatcher {
+func buildStringMatcher(regexp string) *envoy_matcher.StringMatcher {
 
-	return &envoymatcher.StringMatcher{
-		MatchPattern: &envoymatcher.StringMatcher_SafeRegex{
+	return &envoy_matcher.StringMatcher{
+		MatchPattern: &envoy_matcher.StringMatcher_SafeRegex{
 			SafeRegex: buildRegexpMatcher(regexp),
 		},
 	}
 }
 
-func buildRegexpMatcher(regexp string) *envoymatcher.RegexMatcher {
+func buildRegexpMatcher(regexp string) *envoy_matcher.RegexMatcher {
 
-	return &envoymatcher.RegexMatcher{
-		EngineType: &envoymatcher.RegexMatcher_GoogleRe2{
-			GoogleRe2: &envoymatcher.RegexMatcher_GoogleRE2{},
+	return &envoy_matcher.RegexMatcher{
+		EngineType: &envoy_matcher.RegexMatcher_GoogleRe2{
+			GoogleRe2: &envoy_matcher.RegexMatcher_GoogleRE2{},
 		},
 		Regex: regexp,
 	}
 }
 
-// buildHostRewrite returns HostRewrite config based upon route attribute(s)
-func buildHostRewriteSpecifier(routeEntry types.Route) *route.RouteAction_HostRewriteLiteral {
-
-	upstreamHostHeader, err := routeEntry.Attributes.Get(types.AttributeHostHeader)
-	if err == nil && upstreamHostHeader != "" {
-		return &route.RouteAction_HostRewriteLiteral{
-			HostRewriteLiteral: upstreamHostHeader,
-		}
-	}
-
-	return nil
-}
-
 // buildRouteActionDirectResponse builds route config to have Envoy itself answer with status code and body
-func buildRouteActionDirectResponse(routeEntry types.Route) *route.Route_DirectResponse {
+func buildRouteActionDirectResponse(route types.Route) *envoy_route.Route_DirectResponse {
 
-	directResponseStatusCode, err := routeEntry.Attributes.Get(types.AttributeDirectResponseStatusCode)
+	directResponseStatusCode, err := route.Attributes.Get(types.AttributeDirectResponseStatusCode)
 	if err == nil && directResponseStatusCode != "" {
 		statusCode, err := strconv.Atoi(directResponseStatusCode)
 
+		if statusCode < 100 || statusCode > 500 {
+			return nil
+		}
+
 		if err == nil && statusCode != 0 {
-			response := route.Route_DirectResponse{
-				DirectResponse: &route.DirectResponseAction{
+			response := envoy_route.Route_DirectResponse{
+				DirectResponse: &envoy_route.DirectResponseAction{
 					Status: uint32(statusCode),
 				},
 			}
-			directResponseStatusBody, err := routeEntry.Attributes.Get(types.AttributeDirectResponseBody)
+			directResponseStatusBody, err := route.Attributes.Get(types.AttributeDirectResponseBody)
 			if err == nil && directResponseStatusCode != "" {
-				response.DirectResponse.Body = &core.DataSource{
-					Specifier: &core.DataSource_InlineString{
+				response.DirectResponse.Body = &envoy_core.DataSource{
+					Specifier: &envoy_core.DataSource_InlineString{
 						InlineString: directResponseStatusBody,
 					},
 				}
@@ -365,46 +359,46 @@ func buildRouteActionDirectResponse(routeEntry types.Route) *route.Route_DirectR
 }
 
 // buildRouteActionRedirectResponse builds response to have Envoy redirect to different path
-func (s *server) buildRouteActionRedirectResponse(routeEntry types.Route) *route.Route_Redirect {
+func (s *server) buildRouteActionRedirectResponse(route types.Route) *envoy_route.Route_Redirect {
 
-	redirectStatusCode := routeEntry.Attributes.GetAsString(types.AttributeRedirectStatusCode, "")
-	redirectScheme := routeEntry.Attributes.GetAsString(types.AttributeRedirectScheme, "")
-	RedirectHostName := routeEntry.Attributes.GetAsString(types.AttributeRedirectHostName, "")
-	redirectPort := routeEntry.Attributes.GetAsString(types.AttributeRedirectPort, "")
-	redirectPath := routeEntry.Attributes.GetAsString(types.AttributeRedirectPath, "")
-	redirectStripQuery := routeEntry.Attributes.GetAsString(types.AttributeRedirectStripQuery, "")
+	redirectStatusCode := route.Attributes.GetAsString(types.AttributeRedirectStatusCode, "")
+	redirectScheme := route.Attributes.GetAsString(types.AttributeRedirectScheme, "")
+	RedirectHostName := route.Attributes.GetAsString(types.AttributeRedirectHostName, "")
+	redirectPort := route.Attributes.GetAsString(types.AttributeRedirectPort, "")
+	redirectPath := route.Attributes.GetAsString(types.AttributeRedirectPath, "")
+	redirectStripQuery := route.Attributes.GetAsString(types.AttributeRedirectStripQuery, "")
 
 	// Status code must be set other wise we not build redirect configuration
 	if redirectStatusCode == "" {
 		return nil
 	}
 
-	response := route.Route_Redirect{
-		Redirect: &route.RedirectAction{},
+	response := envoy_route.Route_Redirect{
+		Redirect: &envoy_route.RedirectAction{},
 	}
 
 	// Do we have to set a particular statuscode?
 	statusCode, _ := strconv.Atoi(redirectStatusCode)
 	switch statusCode {
 	case 301:
-		response.Redirect.ResponseCode = route.RedirectAction_MOVED_PERMANENTLY
+		response.Redirect.ResponseCode = envoy_route.RedirectAction_MOVED_PERMANENTLY
 	case 302:
-		response.Redirect.ResponseCode = route.RedirectAction_FOUND
+		response.Redirect.ResponseCode = envoy_route.RedirectAction_FOUND
 	case 303:
-		response.Redirect.ResponseCode = route.RedirectAction_SEE_OTHER
+		response.Redirect.ResponseCode = envoy_route.RedirectAction_SEE_OTHER
 	case 307:
-		response.Redirect.ResponseCode = route.RedirectAction_TEMPORARY_REDIRECT
+		response.Redirect.ResponseCode = envoy_route.RedirectAction_TEMPORARY_REDIRECT
 	case 308:
-		response.Redirect.ResponseCode = route.RedirectAction_PERMANENT_REDIRECT
+		response.Redirect.ResponseCode = envoy_route.RedirectAction_PERMANENT_REDIRECT
 	default:
 		s.logger.Warn("Unsupported redirect status code value",
-			zap.String("route", routeEntry.Name),
+			zap.String("route", route.Name),
 			zap.String("attribute", types.AttributeRedirectStatusCode))
 		return nil
 	}
 	// Do we have to update scheme to http or https?
 	if redirectScheme != "" {
-		response.Redirect.SchemeRewriteSpecifier = &route.RedirectAction_SchemeRedirect{
+		response.Redirect.SchemeRewriteSpecifier = &envoy_route.RedirectAction_SchemeRedirect{
 			SchemeRedirect: redirectScheme,
 		}
 	}
@@ -419,7 +413,7 @@ func (s *server) buildRouteActionRedirectResponse(routeEntry types.Route) *route
 	}
 	// Do we have to redirect to a specific path?
 	if redirectPath != "" {
-		response.Redirect.PathRewriteSpecifier = &route.RedirectAction_PathRedirect{
+		response.Redirect.PathRewriteSpecifier = &envoy_route.RedirectAction_PathRedirect{
 			PathRedirect: redirectPath,
 		}
 	}
@@ -432,17 +426,17 @@ func (s *server) buildRouteActionRedirectResponse(routeEntry types.Route) *route
 }
 
 // buildUpstreamHeadersToAdd consolidates all possible source for route upstream headers
-func buildUpstreamHeadersToAdd(routeEntry types.Route) []*core.HeaderValueOption {
+func buildUpstreamHeadersToAdd(route types.Route) []*envoy_core.HeaderValueOption {
 
 	// In case route-level attributes exist we have additional upstream headers
 	headersToAdd := make(map[string]string)
 
-	buildBasicAuth(routeEntry, headersToAdd)
-	buildOptionalUpstreamHeader(routeEntry, headersToAdd, types.AttributeRequestHeaderToAdd1)
-	buildOptionalUpstreamHeader(routeEntry, headersToAdd, types.AttributeRequestHeaderToAdd2)
-	buildOptionalUpstreamHeader(routeEntry, headersToAdd, types.AttributeRequestHeaderToAdd3)
-	buildOptionalUpstreamHeader(routeEntry, headersToAdd, types.AttributeRequestHeaderToAdd4)
-	buildOptionalUpstreamHeader(routeEntry, headersToAdd, types.AttributeRequestHeaderToAdd5)
+	buildBasicAuth(route, headersToAdd)
+	buildOptionalUpstreamHeader(route, headersToAdd, types.AttributeRequestHeaderToAdd1)
+	buildOptionalUpstreamHeader(route, headersToAdd, types.AttributeRequestHeaderToAdd2)
+	buildOptionalUpstreamHeader(route, headersToAdd, types.AttributeRequestHeaderToAdd3)
+	buildOptionalUpstreamHeader(route, headersToAdd, types.AttributeRequestHeaderToAdd4)
+	buildOptionalUpstreamHeader(route, headersToAdd, types.AttributeRequestHeaderToAdd5)
 
 	if len(headersToAdd) != 0 {
 		return buildHeadersList(headersToAdd)
@@ -451,20 +445,20 @@ func buildUpstreamHeadersToAdd(routeEntry types.Route) []*core.HeaderValueOption
 }
 
 // buildBasicAuth sets Basic Authentication for upstream requests
-func buildBasicAuth(routeEntry types.Route, headersToAdd map[string]string) {
+func buildBasicAuth(route types.Route, headersToAdd map[string]string) {
 
-	usernamePassword, err := routeEntry.Attributes.Get(types.AttributeBasicAuth)
+	usernamePassword, err := route.Attributes.Get(types.AttributeBasicAuth)
 	if err == nil && usernamePassword != "" {
 		authenticationDigest := base64.StdEncoding.EncodeToString([]byte(usernamePassword))
 
-		headersToAdd["Authorization"] = authenticationDigest
+		headersToAdd["Authorization"] = "Basic " + authenticationDigest
 	}
 }
 
-func buildOptionalUpstreamHeader(routeEntry types.Route,
+func buildOptionalUpstreamHeader(route types.Route,
 	headersToAdd map[string]string, attributeName string) {
 
-	if headerToSet, err := routeEntry.Attributes.Get(attributeName); err == nil {
+	if headerToSet, err := route.Attributes.Get(attributeName); err == nil {
 		if headerValue := strings.Split(headerToSet, "="); len(headerValue) == 2 {
 			headersToAdd[headerValue[0]] = headerValue[1]
 		}
@@ -472,7 +466,7 @@ func buildOptionalUpstreamHeader(routeEntry types.Route,
 }
 
 // buildUpstreamHeadersToRemove compiles list of headers we need to remove
-func buildUpstreamHeadersToRemove(routeEntry types.Route) []string {
+func buildUpstreamHeadersToRemove(route types.Route) []string {
 
 	h := make([]string, 0, 10)
 
@@ -480,31 +474,34 @@ func buildUpstreamHeadersToRemove(routeEntry types.Route) []string {
 	// extauthz will authenticate each request by evaluation the Authorization header.
 	// Given this we should not send the original Authorization upstream as it very unlikely
 	/// upstream will do authentication
-	if value, err := routeEntry.Attributes.Get(types.AttributeRouteExtAuthz); err == nil &&
+	if value, err := route.Attributes.Get(types.AttributeRouteExtAuthz); err == nil &&
 		value == types.AttributeValueTrue {
 		h = append(h, "Authorization")
 	}
 
-	headersToRemove, err := routeEntry.Attributes.Get(types.AttributeRequestHeadersToRemove)
-	if err != nil || headersToRemove == "" {
-		return h
+	headersToRemove, err := route.Attributes.Get(types.AttributeRequestHeadersToRemove)
+	if err == nil || headersToRemove != "" {
+		for _, value := range strings.Split(headersToRemove, ",") {
+			h = append(h, strings.TrimSpace(value))
+		}
 	}
-	for _, value := range strings.Split(headersToRemove, ",") {
-		h = append(h, strings.TrimSpace(value))
+	if len(h) == 0 {
+		return nil
 	}
 	return h
 }
 
 // buildHeadersList creates map to hold headers to add or remove
-func buildHeadersList(headers map[string]string) []*core.HeaderValueOption {
+func buildHeadersList(headers map[string]string) []*envoy_core.HeaderValueOption {
+
 	if len(headers) == 0 {
 		return nil
 	}
 
-	headerList := make([]*core.HeaderValueOption, 0, len(headers))
+	headerList := make([]*envoy_core.HeaderValueOption, 0, len(headers))
 	for key, value := range headers {
-		headerList = append(headerList, &core.HeaderValueOption{
-			Header: &core.HeaderValue{
+		headerList = append(headerList, &envoy_core.HeaderValueOption{
+			Header: &envoy_core.HeaderValue{
 				Key:   key,
 				Value: value,
 			},
@@ -514,11 +511,11 @@ func buildHeadersList(headers map[string]string) []*core.HeaderValueOption {
 }
 
 // buildRateLimits returns ratelimit configuration for a route
-func buildRateLimits(routeEntry types.Route) []*route.RateLimit {
+func buildRateLimits(route types.Route) []*envoy_route.RateLimit {
 
 	// In case attribute RateLimiting does not exist or is not set to true
 	// no ratelimiting will be configured
-	value, err := routeEntry.Attributes.Get(types.AttributeRouteRateLimiting)
+	value, err := route.Attributes.Get(types.AttributeRouteRateLimiting)
 	if err != nil || value != types.AttributeValueTrue {
 		return nil
 	}
@@ -562,25 +559,26 @@ func buildRateLimits(routeEntry types.Route) []*route.RateLimit {
 	// }}
 }
 
-func buildRetryPolicy(routeEntry types.Route) *route.RetryPolicy {
+func buildRetryPolicy(route types.Route) *envoy_route.RetryPolicy {
 
-	RetryOn := routeEntry.Attributes.GetAsString(types.AttributeRetryOn, "")
+	RetryOn := route.Attributes.GetAsString(types.AttributeRetryOn, "")
 	if RetryOn == "" {
 		return nil
 	}
-	perTryTimeout := routeEntry.Attributes.GetAsDuration(types.AttributePerTryTimeout,
+	perTryTimeout := route.Attributes.GetAsDuration(types.AttributePerTryTimeout,
 		types.DefaultPerRetryTimeout)
-	numRetries := uint32(routeEntry.Attributes.GetAsUInt32(types.AttributeNumRetries, 2))
+	numRetries := uint32(route.Attributes.GetAsUInt32(types.AttributeNumRetries,
+		types.DefaultNumRetries))
 	RetriableStatusCodes := buildStatusCodesSlice(
-		routeEntry.Attributes.GetAsString(types.AttributeRetryOnStatusCodes,
+		route.Attributes.GetAsString(types.AttributeRetryOnStatusCodes,
 			types.DefaultRetryStatusCodes))
 
-	return &route.RetryPolicy{
+	return &envoy_route.RetryPolicy{
 		RetryOn:              RetryOn,
 		NumRetries:           protoUint32(numRetries),
 		PerTryTimeout:        durationpb.New(perTryTimeout),
 		RetriableStatusCodes: RetriableStatusCodes,
-		RetryHostPredicate: []*route.RetryPolicy_RetryHostPredicate{
+		RetryHostPredicate: []*envoy_route.RetryPolicy_RetryHostPredicate{
 			{Name: "envoy.retry_host_predicates.previous_hosts"},
 		},
 		// HostSelectionRetryMaxAttempts: 5,
@@ -601,11 +599,11 @@ func buildStatusCodesSlice(statusCodes string) []uint32 {
 	return statusCodeSlice
 }
 
-func buildPerRouteFilterConfig(routeEntry types.Route) map[string]*any.Any {
+func buildPerRouteFilterConfig(route types.Route) map[string]*any.Any {
 
 	perRouteFilterConfigMap := make(map[string]*any.Any)
 
-	if authzFilterConfig := perRouteAuthzFilterConfig(routeEntry); authzFilterConfig != nil {
+	if authzFilterConfig := perRouteAuthzFilterConfig(route); authzFilterConfig != nil {
 		perRouteFilterConfigMap[wellknown.HTTPExternalAuthorization] = authzFilterConfig
 	}
 
@@ -616,48 +614,48 @@ func buildPerRouteFilterConfig(routeEntry types.Route) map[string]*any.Any {
 }
 
 // perRouteAuthzFilterConfig sets all the authz specific filter options of a route
-func perRouteAuthzFilterConfig(routeEntry types.Route) *anypb.Any {
+func perRouteAuthzFilterConfig(route types.Route) *anypb.Any {
 
 	// filter http.ext_authz is always inline in the default filter chain configuration
 	//
 
 	// In case attribute AuthzAuthentication=true is set for this route
 	// we enable authz on this route by not configuring filter settings for this route
-	value, err := routeEntry.Attributes.Get(types.AttributeRouteExtAuthz)
+	value, err := route.Attributes.Get(types.AttributeRouteExtAuthz)
 	if err == nil && value == types.AttributeValueTrue {
 		return nil
 	}
 
 	// Our default HTTP forwarding behaviour is to not authenticate,
 	// hence we need to disable this filter per route
-	perFilterExtAuthzConfig := &envoyauth.ExtAuthzPerRoute{
-		Override: &envoyauth.ExtAuthzPerRoute_Disabled{
+	perFilterExtAuthzConfig := &envoy_filter_authz.ExtAuthzPerRoute{
+		Override: &envoy_filter_authz.ExtAuthzPerRoute_Disabled{
 			Disabled: true,
 		},
 	}
-	ratelimitTypedConf, e := anypb.New(perFilterExtAuthzConfig)
+	extAuthzTypedConf, e := anypb.New(perFilterExtAuthzConfig)
 	if e != nil {
 		return nil
 	}
-	return ratelimitTypedConf
+	return extAuthzTypedConf
 }
 
 // buildEnvoyVirtualClusters returns a VirtualCluster configuration for each route
-func (s *server) buildEnvoyVirtualClusters(RouteGroup string, routes types.Routes) []*route.VirtualCluster {
+func (s *server) buildEnvoyVirtualClusters(RouteGroup string, routes types.Routes) []*envoy_route.VirtualCluster {
 
-	var envoyVirtualClusters []*route.VirtualCluster
+	var envoyVirtualClusters []*envoy_route.VirtualCluster
 
-	for _, routeEntry := range routes {
-		if routeEntry.RouteGroup == RouteGroup {
-			pathMatch := s.buildEnvoyVirtualClusterPathMatch(routeEntry)
+	for _, route := range routes {
+		if route.RouteGroup == RouteGroup {
+			pathMatch := buildEnvoyVirtualClusterPathMatch(route)
 			if pathMatch == nil {
 				s.logger.Warn("Cannot build virtualcluster header match config",
-					zap.String("route", routeEntry.Name), zap.String("routegroup", RouteGroup))
+					zap.String("route", route.Name), zap.String("routegroup", RouteGroup))
 				return nil
 			}
-			envoyVirtualClusters = append(envoyVirtualClusters, &route.VirtualCluster{
-				Name: routeEntry.Name,
-				Headers: []*route.HeaderMatcher{
+			envoyVirtualClusters = append(envoyVirtualClusters, &envoy_route.VirtualCluster{
+				Name: route.Name,
+				Headers: []*envoy_route.HeaderMatcher{
 					pathMatch,
 				},
 			})
@@ -667,26 +665,26 @@ func (s *server) buildEnvoyVirtualClusters(RouteGroup string, routes types.Route
 }
 
 // buildEnvoyVirtualClusterPathMatch returns a matcher based upon the path type of a route
-func (s *server) buildEnvoyVirtualClusterPathMatch(routeEntry types.Route) *route.HeaderMatcher {
+func buildEnvoyVirtualClusterPathMatch(route types.Route) *envoy_route.HeaderMatcher {
 
-	matcher := &route.HeaderMatcher{
+	matcher := &envoy_route.HeaderMatcher{
 		Name: ":path",
 	}
-	switch routeEntry.PathType {
-	case "path":
-		matcher.HeaderMatchSpecifier = &route.HeaderMatcher_ExactMatch{
-			ExactMatch: routeEntry.Path,
+	switch route.PathType {
+	case types.AttributeValuePathTypePath:
+		matcher.HeaderMatchSpecifier = &envoy_route.HeaderMatcher_ExactMatch{
+			ExactMatch: route.Path,
 		}
 		return matcher
-	case "prefix":
-		matcher.HeaderMatchSpecifier = &route.HeaderMatcher_PrefixMatch{
-			PrefixMatch: routeEntry.Path,
+	case types.AttributeValuePathTypePrefix:
+		matcher.HeaderMatchSpecifier = &envoy_route.HeaderMatcher_PrefixMatch{
+			PrefixMatch: route.Path,
 		}
 		return matcher
-	case "regexp":
-		matcher.HeaderMatchSpecifier = &route.HeaderMatcher_SafeRegexMatch{
-			SafeRegexMatch: &envoymatcher.RegexMatcher{
-				Regex: routeEntry.Path,
+	case types.AttributeValuePathTypeRegexp:
+		matcher.HeaderMatchSpecifier = &envoy_route.HeaderMatcher_SafeRegexMatch{
+			SafeRegexMatch: &envoy_matcher.RegexMatcher{
+				Regex: route.Path,
 			},
 		}
 		return matcher

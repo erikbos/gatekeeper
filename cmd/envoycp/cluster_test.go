@@ -155,13 +155,6 @@ func Test_clusterConnectTimeout(t *testing.T) {
 		expected *duration.Duration
 	}{
 		{
-			name: "cluster timeout no ttl specified",
-			cluster: types.Cluster{
-				Attributes: types.Attributes{},
-			},
-			expected: durationpb.New(types.DefaultClusterConnectTimeout),
-		},
-		{
 			name: "cluster timeout 131s ttl",
 			cluster: types.Cluster{
 				Attributes: types.Attributes{
@@ -172,6 +165,13 @@ func Test_clusterConnectTimeout(t *testing.T) {
 				},
 			},
 			expected: durationpb.New(131 * time.Second),
+		},
+		{
+			name: "cluster timeout no ttl specified",
+			cluster: types.Cluster{
+				Attributes: types.Attributes{},
+			},
+			expected: durationpb.New(types.DefaultClusterConnectTimeout),
 		},
 	}
 	for _, test := range tests {
