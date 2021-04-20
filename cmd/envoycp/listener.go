@@ -5,16 +5,16 @@ import (
 	"strings"
 	"time"
 
-	accesslog "github.com/envoyproxy/go-control-plane/envoy/config/accesslog/v3"
-	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
-	listener "github.com/envoyproxy/go-control-plane/envoy/config/listener/v3"
-	ratelimitconf "github.com/envoyproxy/go-control-plane/envoy/config/ratelimit/v3"
-	fileaccesslog "github.com/envoyproxy/go-control-plane/envoy/extensions/access_loggers/file/v3"
-	grpcaccesslog "github.com/envoyproxy/go-control-plane/envoy/extensions/access_loggers/grpc/v3"
-	extauthz "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/ext_authz/v3"
-	ratelimit "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/ratelimit/v3"
-	hcm "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
-	tls "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/tls/v3"
+	envoy_accesslog "github.com/envoyproxy/go-control-plane/envoy/config/accesslog/v3"
+	envoy_core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
+	envoy_listener "github.com/envoyproxy/go-control-plane/envoy/config/listener/v3"
+	envoy_ratelimit "github.com/envoyproxy/go-control-plane/envoy/config/ratelimit/v3"
+	envoy_extention_fileaccesslog "github.com/envoyproxy/go-control-plane/envoy/extensions/access_loggers/file/v3"
+	envoy_extention_grpcaccesslog "github.com/envoyproxy/go-control-plane/envoy/extensions/access_loggers/grpc/v3"
+	envoy_filter_extauthz "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/ext_authz/v3"
+	envoy_filter_ratelimit "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/ratelimit/v3"
+	envoy_hcm "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
+	envoy_tls "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/tls/v3"
 	cache "github.com/envoyproxy/go-control-plane/pkg/cache/types"
 	"github.com/envoyproxy/go-control-plane/pkg/wellknown"
 	"go.uber.org/zap"
@@ -74,9 +74,9 @@ func (s *server) getVhostsInRouteGroup(routeGroupName string) []string {
 	return VhostsInRouteGroup
 }
 
-func (s *server) buildEnvoyListenerConfig(port uint32) *listener.Listener {
+func (s *server) buildEnvoyListenerConfig(port uint32) *envoy_listener.Listener {
 
-	envoyListener := &listener.Listener{
+	envoyListener := &envoy_listener.Listener{
 		Name:            fmt.Sprintf("port_%d", port),
 		Address:         buildAddress("0.0.0.0", port),
 		ListenerFilters: buildListenerFilterHTTP(),
@@ -91,7 +91,7 @@ func (s *server) buildEnvoyListenerConfig(port uint32) *listener.Listener {
 			TLSEnabled := configuredListener.Attributes.GetAsString(types.AttributeTLS, "")
 			if TLSEnabled == types.AttributeValueTrue {
 				// Enable TLS protocol on listener
-				envoyListener.ListenerFilters = []*listener.ListenerFilter{
+				envoyListener.ListenerFilters = []*envoy_listener.ListenerFilter{
 					{
 						Name: wellknown.TlsInspector,
 					},
@@ -114,16 +114,16 @@ func (s *server) buildEnvoyListenerConfig(port uint32) *listener.Listener {
 	return envoyListener
 }
 
-func buildListenerFilterHTTP() []*listener.ListenerFilter {
+func buildListenerFilterHTTP() []*envoy_listener.ListenerFilter {
 
-	return []*listener.ListenerFilter{
+	return []*envoy_listener.ListenerFilter{
 		{
 			Name: wellknown.HttpInspector,
 		},
 	}
 }
 
-func (s *server) buildFilterChainEntry(v types.Listener, configuredListener *listener.Listener) *listener.FilterChain {
+func (s *server) buildFilterChainEntry(v types.Listener, configuredListener *envoy_listener.Listener) *envoy_listener.FilterChain {
 
 	manager := s.buildConnectionManager(v)
 	managerProtoBuf, err := anypb.New(manager)
@@ -131,10 +131,10 @@ func (s *server) buildFilterChainEntry(v types.Listener, configuredListener *lis
 		s.logger.Panic("buildFilterChainEntry", zap.Error(err))
 	}
 
-	FilterChainEntry := &listener.FilterChain{
-		Filters: []*listener.Filter{{
+	FilterChainEntry := &envoy_listener.FilterChain{
+		Filters: []*envoy_listener.Filter{{
 			Name: wellknown.HTTPConnectionManager,
-			ConfigType: &listener.Filter_TypedConfig{
+			ConfigType: &envoy_listener.Filter_TypedConfig{
 				TypedConfig: managerProtoBuf,
 			},
 		}},
@@ -157,12 +157,12 @@ func (s *server) buildFilterChainEntry(v types.Listener, configuredListener *lis
 
 	// Configure listener to use SNI to match against vhost names
 	FilterChainEntry.FilterChainMatch =
-		&listener.FilterChainMatch{
+		&envoy_listener.FilterChainMatch{
 			ServerNames: v.VirtualHosts,
 		}
 
 	// Set TLS configuration based upon listeners attributes
-	downStreamTLSConfig := &tls.DownstreamTlsContext{
+	downStreamTLSConfig := &envoy_tls.DownstreamTlsContext{
 		CommonTlsContext: buildCommonTLSContext(v.Name, v.Attributes),
 	}
 	FilterChainEntry.TransportSocket = buildTransportSocket(v.Name, downStreamTLSConfig)
@@ -170,10 +170,10 @@ func (s *server) buildFilterChainEntry(v types.Listener, configuredListener *lis
 	return FilterChainEntry
 }
 
-func (s *server) buildConnectionManager(listener types.Listener) *hcm.HttpConnectionManager {
+func (s *server) buildConnectionManager(listener types.Listener) *envoy_hcm.HttpConnectionManager {
 
-	connectionManager := &hcm.HttpConnectionManager{
-		CodecType:                 hcm.HttpConnectionManager_AUTO,
+	connectionManager := &envoy_hcm.HttpConnectionManager{
+		CodecType:                 envoy_hcm.HttpConnectionManager_AUTO,
 		StatPrefix:                "ingress_http",
 		UseRemoteAddress:          protoBool(true),
 		HttpFilters:               s.buildFilter(listener),
@@ -192,33 +192,33 @@ func (s *server) buildConnectionManager(listener types.Listener) *hcm.HttpConnec
 	return connectionManager
 }
 
-func (s *server) buildFilter(listener types.Listener) []*hcm.HttpFilter {
+func (s *server) buildFilter(listener types.Listener) []*envoy_hcm.HttpFilter {
 
-	httpFilter := make([]*hcm.HttpFilter, 0, 10)
+	httpFilter := make([]*envoy_hcm.HttpFilter, 0, 10)
 
 	if filters, err := listener.Attributes.Get(types.AttributeListenerFilters); err == nil {
 		for _, filter := range strings.Split(filters, ",") {
 			switch filter {
 			case wellknown.HTTPExternalAuthorization:
 				if extAuthz := s.buildHTTPFilterExtAuthzConfig(listener); extAuthz != nil {
-					httpFilter = append(httpFilter, &hcm.HttpFilter{
+					httpFilter = append(httpFilter, &envoy_hcm.HttpFilter{
 						Name: wellknown.HTTPExternalAuthorization,
-						ConfigType: &hcm.HttpFilter_TypedConfig{
+						ConfigType: &envoy_hcm.HttpFilter_TypedConfig{
 							TypedConfig: extAuthz,
 						},
 					})
 				}
 
 			case wellknown.CORS:
-				httpFilter = append(httpFilter, &hcm.HttpFilter{
+				httpFilter = append(httpFilter, &envoy_hcm.HttpFilter{
 					Name: wellknown.CORS,
 				})
 
 			case wellknown.HTTPRateLimit:
 				if ratelimiter := s.buildHTTPFilterRateLimiterConfig(listener); ratelimiter != nil {
-					httpFilter = append(httpFilter, &hcm.HttpFilter{
+					httpFilter = append(httpFilter, &envoy_hcm.HttpFilter{
 						Name: wellknown.HTTPRateLimit,
-						ConfigType: &hcm.HttpFilter_TypedConfig{
+						ConfigType: &envoy_hcm.HttpFilter_TypedConfig{
 							TypedConfig: ratelimiter,
 						},
 					})
@@ -228,7 +228,7 @@ func (s *server) buildFilter(listener types.Listener) []*hcm.HttpFilter {
 	}
 
 	// Always add http router filter as last, as we want to forward traffic
-	httpFilter = append(httpFilter, &hcm.HttpFilter{
+	httpFilter = append(httpFilter, &envoy_hcm.HttpFilter{
 		Name: wellknown.Router,
 	})
 
@@ -250,17 +250,17 @@ func (s *server) buildHTTPFilterExtAuthzConfig(listener types.Listener) *anypb.A
 		failureModeAllow = true
 	}
 
-	extAuthz := &extauthz.ExtAuthz{
+	extAuthz := &envoy_filter_extauthz.ExtAuthz{
 		FailureModeAllow: failureModeAllow,
-		Services: &extauthz.ExtAuthz_GrpcService{
+		Services: &envoy_filter_extauthz.ExtAuthz_GrpcService{
 			GrpcService: buildGRPCService(cluster, timeout),
 		},
-		TransportApiVersion: core.ApiVersion_V3,
+		TransportApiVersion: envoy_core.ApiVersion_V3,
 	}
 
 	requestBodySize := listener.Attributes.GetAsUInt32(types.AttributeExtAuthzRequestBodySize, 0)
 	if requestBodySize > 0 {
-		extAuthz.WithRequestBody = &extauthz.BufferSettings{
+		extAuthz.WithRequestBody = &envoy_filter_extauthz.BufferSettings{
 			MaxRequestBytes:     uint32(requestBodySize),
 			AllowPartialMessage: false,
 		}
@@ -290,14 +290,14 @@ func (s *server) buildHTTPFilterRateLimiterConfig(listener types.Listener) *anyp
 		failureModeAllow = true
 	}
 
-	ratelimit := &ratelimit.RateLimit{
+	ratelimit := &envoy_filter_ratelimit.RateLimit{
 		Domain:          domain,
 		Stage:           0,
 		FailureModeDeny: failureModeAllow,
 		Timeout:         durationpb.New(timeout),
-		RateLimitService: &ratelimitconf.RateLimitServiceConfig{
+		RateLimitService: &envoy_ratelimit.RateLimitServiceConfig{
 			GrpcService:         buildGRPCService(cluster, timeout),
-			TransportApiVersion: core.ApiVersion_V3,
+			TransportApiVersion: envoy_core.ApiVersion_V3,
 		},
 	}
 
@@ -308,23 +308,23 @@ func (s *server) buildHTTPFilterRateLimiterConfig(listener types.Listener) *anyp
 	return ratelimitTypedConf
 }
 
-func (s *server) buildRouteSpecifierRDS(routeGroup string) *hcm.HttpConnectionManager_Rds {
+func (s *server) buildRouteSpecifierRDS(routeGroup string) *envoy_hcm.HttpConnectionManager_Rds {
 
 	if routeGroup == "" || s.config.XDS.Cluster == "" {
 		return nil
 	}
 
-	return &hcm.HttpConnectionManager_Rds{
-		Rds: &hcm.Rds{
+	return &envoy_hcm.HttpConnectionManager_Rds{
+		Rds: &envoy_hcm.Rds{
 			RouteConfigName: routeGroup,
 			ConfigSource:    buildConfigSource(s.config.XDS.Cluster, s.config.XDS.Timeout),
 		},
 	}
 }
 
-func (s *server) buildAccessLog(listener types.Listener) []*accesslog.AccessLog {
+func (s *server) buildAccessLog(listener types.Listener) []*envoy_accesslog.AccessLog {
 
-	accessLog := make([]*accesslog.AccessLog, 0, 10)
+	accessLog := make([]*envoy_accesslog.AccessLog, 0, 10)
 
 	// Set up access logging to file, in case we have a filename
 	accessLogFile, error := listener.Attributes.Get(types.AttributeAccessLogFile)
@@ -347,7 +347,7 @@ func (s *server) buildAccessLog(listener types.Listener) []*accesslog.AccessLog 
 	return accessLog
 }
 
-func (s *server) buildFileAccessLog(path, fields string) *accesslog.AccessLog {
+func (s *server) buildFileAccessLog(path, fields string) *envoy_accesslog.AccessLog {
 
 	jsonFormat := &structpb.Struct{
 		Fields: map[string]*structpb.Value{},
@@ -365,11 +365,11 @@ func (s *server) buildFileAccessLog(path, fields string) *accesslog.AccessLog {
 			}
 		}
 	}
-	accessLogConf := &fileaccesslog.FileAccessLog{
+	accessLogConf := &envoy_extention_fileaccesslog.FileAccessLog{
 		Path: path,
-		AccessLogFormat: &fileaccesslog.FileAccessLog_LogFormat{
-			LogFormat: &core.SubstitutionFormatString{
-				Format: &core.SubstitutionFormatString_JsonFormat{
+		AccessLogFormat: &envoy_extention_fileaccesslog.FileAccessLog_LogFormat{
+			LogFormat: &envoy_core.SubstitutionFormatString{
+				Format: &envoy_core.SubstitutionFormatString_JsonFormat{
 					JsonFormat: jsonFormat,
 				},
 			},
@@ -379,21 +379,22 @@ func (s *server) buildFileAccessLog(path, fields string) *accesslog.AccessLog {
 	if err != nil {
 		s.logger.Panic("buildFileAccessLog", zap.Error(err))
 	}
-	return &accesslog.AccessLog{
+	return &envoy_accesslog.AccessLog{
 		Name: wellknown.FileAccessLog,
-		ConfigType: &accesslog.AccessLog_TypedConfig{
+		ConfigType: &envoy_accesslog.AccessLog_TypedConfig{
 			TypedConfig: accessLogTypedConf,
 		},
 	}
 }
 
-func (s *server) buildGRPCAccessLog(clusterName, logName string, timeout time.Duration, bufferSize uint32) *accesslog.AccessLog {
+func (s *server) buildGRPCAccessLog(clusterName, logName string,
+	timeout time.Duration, bufferSize uint32) *envoy_accesslog.AccessLog {
 
-	accessLogConf := &grpcaccesslog.HttpGrpcAccessLogConfig{
-		CommonConfig: &grpcaccesslog.CommonGrpcAccessLogConfig{
+	accessLogConf := &envoy_extention_grpcaccesslog.HttpGrpcAccessLogConfig{
+		CommonConfig: &envoy_extention_grpcaccesslog.CommonGrpcAccessLogConfig{
 			LogName:             logName,
 			GrpcService:         buildGRPCService(clusterName, timeout),
-			TransportApiVersion: core.ApiVersion_V3,
+			TransportApiVersion: envoy_core.ApiVersion_V3,
 			BufferSizeBytes:     protoUint32orNil(bufferSize),
 		},
 	}
@@ -402,31 +403,31 @@ func (s *server) buildGRPCAccessLog(clusterName, logName string, timeout time.Du
 	if err != nil {
 		s.logger.Panic("buildGRPCAccessLog", zap.Error(err))
 	}
-	return &accesslog.AccessLog{
+	return &envoy_accesslog.AccessLog{
 		Name: wellknown.HTTPGRPCAccessLog,
-		ConfigType: &accesslog.AccessLog_TypedConfig{
+		ConfigType: &envoy_accesslog.AccessLog_TypedConfig{
 			TypedConfig: accessLogTypedConf,
 		},
 	}
 }
 
-func listenerCommonHTTPProtocolOptions(listener types.Listener) *core.HttpProtocolOptions {
+func listenerCommonHTTPProtocolOptions(listener types.Listener) *envoy_core.HttpProtocolOptions {
 
 	idleTimeout := listener.Attributes.GetAsDuration(
 		types.AttributeIdleTimeout, listenerIdleTimeout)
 
-	return &core.HttpProtocolOptions{
+	return &envoy_core.HttpProtocolOptions{
 		IdleTimeout: durationpb.New(idleTimeout),
 	}
 }
 
-func buildHTTP2ProtocolOptions(listener types.Listener) *core.Http2ProtocolOptions {
+func buildHTTP2ProtocolOptions(listener types.Listener) *envoy_core.Http2ProtocolOptions {
 
 	maxConcurrentStreams := listener.Attributes.GetAsUInt32(types.AttributeMaxConcurrentStreams, 0)
 	initialConnectionWindowSize := listener.Attributes.GetAsUInt32(types.AttributeInitialConnectionWindowSize, 0)
 	initialStreamWindowSize := listener.Attributes.GetAsUInt32(types.AttributeInitialStreamWindowSize, 0)
 
-	return &core.Http2ProtocolOptions{
+	return &envoy_core.Http2ProtocolOptions{
 		MaxConcurrentStreams:        protoUint32orNil(maxConcurrentStreams),
 		InitialConnectionWindowSize: protoUint32orNil(initialConnectionWindowSize),
 		InitialStreamWindowSize:     protoUint32orNil(initialStreamWindowSize),

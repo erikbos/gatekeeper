@@ -4,8 +4,8 @@ import (
 	"strings"
 	"time"
 
-	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
-	tls "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/tls/v3"
+	envoy_core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
+	envoy_tls "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/tls/v3"
 	"github.com/golang/protobuf/ptypes/wrappers"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/known/anypb"
@@ -22,14 +22,14 @@ const (
 )
 
 // buildAddress builds an Envoy address to connect to
-func buildAddress(hostname string, port uint32) *core.Address {
+func buildAddress(hostname string, port uint32) *envoy_core.Address {
 
-	return &core.Address{
-		Address: &core.Address_SocketAddress{
-			SocketAddress: &core.SocketAddress{
+	return &envoy_core.Address{
+		Address: &envoy_core.Address_SocketAddress{
+			SocketAddress: &envoy_core.SocketAddress{
 				Address:  hostname,
-				Protocol: core.SocketAddress_TCP,
-				PortSpecifier: &core.SocketAddress_PortValue{
+				Protocol: envoy_core.SocketAddress_TCP,
+				PortSpecifier: &envoy_core.SocketAddress_PortValue{
 					PortValue: port,
 				},
 			},
@@ -37,52 +37,52 @@ func buildAddress(hostname string, port uint32) *core.Address {
 	}
 }
 
-func buildGRPCService(clusterName string, timeout time.Duration) *core.GrpcService {
+func buildGRPCService(clusterName string, timeout time.Duration) *envoy_core.GrpcService {
 
-	return &core.GrpcService{
+	return &envoy_core.GrpcService{
 		Timeout: durationpb.New(timeout),
-		TargetSpecifier: &core.GrpcService_EnvoyGrpc_{
-			EnvoyGrpc: &core.GrpcService_EnvoyGrpc{
+		TargetSpecifier: &envoy_core.GrpcService_EnvoyGrpc_{
+			EnvoyGrpc: &envoy_core.GrpcService_EnvoyGrpc{
 				ClusterName: clusterName,
 			},
 		},
 	}
 }
 
-func buildConfigSource(clusterName string, timeout time.Duration) *core.ConfigSource {
+func buildConfigSource(clusterName string, timeout time.Duration) *envoy_core.ConfigSource {
 
-	grpcService := []*core.GrpcService{
+	grpcService := []*envoy_core.GrpcService{
 		buildGRPCService(clusterName, timeout),
 	}
-	return &core.ConfigSource{
-		ConfigSourceSpecifier: &core.ConfigSource_ApiConfigSource{
-			ApiConfigSource: &core.ApiConfigSource{
-				ApiType:             core.ApiConfigSource_GRPC,
+	return &envoy_core.ConfigSource{
+		ConfigSourceSpecifier: &envoy_core.ConfigSource_ApiConfigSource{
+			ApiConfigSource: &envoy_core.ApiConfigSource{
+				ApiType:             envoy_core.ApiConfigSource_GRPC,
 				GrpcServices:        grpcService,
-				TransportApiVersion: core.ApiVersion_V3,
+				TransportApiVersion: envoy_core.ApiVersion_V3,
 			},
 		},
-		ResourceApiVersion: core.ApiVersion_V3,
+		ResourceApiVersion: envoy_core.ApiVersion_V3,
 	}
 }
 
-func buildTransportSocket(resourceName string, tlsContext protoreflect.ProtoMessage) *core.TransportSocket {
+func buildTransportSocket(resourceName string, tlsContext protoreflect.ProtoMessage) *envoy_core.TransportSocket {
 
 	tlsContextProtoBuf, err := anypb.New(tlsContext)
 	if err != nil {
 		return nil
 	}
-	return &core.TransportSocket{
+	return &envoy_core.TransportSocket{
 		Name: "tls",
-		ConfigType: &core.TransportSocket_TypedConfig{
+		ConfigType: &envoy_core.TransportSocket_TypedConfig{
 			TypedConfig: tlsContextProtoBuf,
 		},
 	}
 }
 
-func buildCommonTLSContext(resourceName string, attributes types.Attributes) *tls.CommonTlsContext {
+func buildCommonTLSContext(resourceName string, attributes types.Attributes) *envoy_tls.CommonTlsContext {
 
-	return &tls.CommonTlsContext{
+	return &envoy_tls.CommonTlsContext{
 		AlpnProtocols:   buildALPNProtocols(resourceName, attributes),
 		TlsParams:       buildTLSParameters(attributes),
 		TlsCertificates: buildTLSCertificates(attributes),
@@ -103,9 +103,9 @@ func buildTLSCipherSuites(attributes types.Attributes) []string {
 	return nil
 }
 
-func buildTLSParameters(attributes types.Attributes) *tls.TlsParameters {
+func buildTLSParameters(attributes types.Attributes) *envoy_tls.TlsParameters {
 
-	tlsParameters := &tls.TlsParameters{
+	tlsParameters := &envoy_tls.TlsParameters{
 		CipherSuites: buildTLSCipherSuites(attributes),
 	}
 
@@ -119,19 +119,19 @@ func buildTLSParameters(attributes types.Attributes) *tls.TlsParameters {
 	return tlsParameters
 }
 
-func buildTLSVersion(version string) tls.TlsParameters_TlsProtocol {
+func buildTLSVersion(version string) envoy_tls.TlsParameters_TlsProtocol {
 
 	switch version {
 	case types.AttributeValueTLSVersion10:
-		return tls.TlsParameters_TLSv1_0
+		return envoy_tls.TlsParameters_TLSv1_0
 	case types.AttributeValueTLSVersion11:
-		return tls.TlsParameters_TLSv1_1
+		return envoy_tls.TlsParameters_TLSv1_1
 	case types.AttributeValueTLSVersion12:
-		return tls.TlsParameters_TLSv1_2
+		return envoy_tls.TlsParameters_TLSv1_2
 	case types.AttributeValueTLSVersion13:
-		return tls.TlsParameters_TLSv1_3
+		return envoy_tls.TlsParameters_TLSv1_3
 	}
-	return tls.TlsParameters_TLS_AUTO
+	return envoy_tls.TlsParameters_TLS_AUTO
 }
 
 // buildALPNOptions return supported ALPN protocols
@@ -150,7 +150,7 @@ func buildALPNProtocols(entity string, attributes types.Attributes) []string {
 	return []string{alpnProtocolHTTP11}
 }
 
-func buildTLSCertificates(attributes types.Attributes) []*tls.TlsCertificate {
+func buildTLSCertificates(attributes types.Attributes) []*envoy_tls.TlsCertificate {
 
 	certificate, certificateError := attributes.Get(types.AttributeTLSCertificate)
 	certificateKey, certificateKeyError := attributes.Get(types.AttributeTLSCertificateKey)
@@ -159,15 +159,15 @@ func buildTLSCertificates(attributes types.Attributes) []*tls.TlsCertificate {
 		return nil
 	}
 
-	return []*tls.TlsCertificate{
+	return []*envoy_tls.TlsCertificate{
 		{
-			CertificateChain: &core.DataSource{
-				Specifier: &core.DataSource_InlineString{
+			CertificateChain: &envoy_core.DataSource{
+				Specifier: &envoy_core.DataSource_InlineString{
 					InlineString: certificate,
 				},
 			},
-			PrivateKey: &core.DataSource{
-				Specifier: &core.DataSource_InlineString{
+			PrivateKey: &envoy_core.DataSource{
+				Specifier: &envoy_core.DataSource_InlineString{
 					InlineString: certificateKey,
 				},
 			},

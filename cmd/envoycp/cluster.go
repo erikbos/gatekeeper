@@ -4,12 +4,12 @@ import (
 	"strings"
 	"time"
 
-	envoyCluster "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
-	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
-	endpoint "github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3"
-	tls "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/tls/v3"
-	envoyExtensionsUpstreams "github.com/envoyproxy/go-control-plane/envoy/extensions/upstreams/http/v3"
-	envoyType "github.com/envoyproxy/go-control-plane/envoy/type/v3"
+	envoy_cluster "github.com/envoyproxy/go-control-plane/envoy/config/cluster/v3"
+	envoy_core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
+	envoy_endpoint "github.com/envoyproxy/go-control-plane/envoy/config/endpoint/v3"
+	envoy_tls "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/tls/v3"
+	envoy_upstreams "github.com/envoyproxy/go-control-plane/envoy/extensions/upstreams/http/v3"
+	envoy_type "github.com/envoyproxy/go-control-plane/envoy/type/v3"
 	cache "github.com/envoyproxy/go-control-plane/pkg/cache/types"
 	"github.com/golang/protobuf/ptypes/duration"
 	"go.uber.org/zap"
@@ -44,12 +44,12 @@ func (s *server) getEnvoyClusterConfig() ([]cache.Resource, error) {
 }
 
 // buildEnvoyClusterConfig builds one envoy cluster configuration
-func (s *server) buildEnvoyClusterConfig(cluster types.Cluster) *envoyCluster.Cluster {
+func (s *server) buildEnvoyClusterConfig(cluster types.Cluster) *envoy_cluster.Cluster {
 
-	envoyCluster := &envoyCluster.Cluster{
+	envoyCluster := &envoy_cluster.Cluster{
 		Name:                          cluster.Name,
 		ConnectTimeout:                s.clusterConnectTimeout(cluster),
-		ClusterDiscoveryType:          &envoyCluster.Cluster_Type{Type: envoyCluster.Cluster_LOGICAL_DNS},
+		ClusterDiscoveryType:          &envoy_cluster.Cluster_Type{Type: envoy_cluster.Cluster_LOGICAL_DNS},
 		DnsLookupFamily:               s.clusterDNSLookupFamily(cluster),
 		DnsResolvers:                  s.clusterDNSResolvers(cluster),
 		DnsRefreshRate:                s.clusterDNSRefreshRate(cluster),
@@ -84,25 +84,25 @@ func (s *server) clusterConnectTimeout(cluster types.Cluster) *duration.Duration
 	return durationpb.New(connectTimeout)
 }
 
-func (s *server) clusterLbPolicy(cluster types.Cluster) envoyCluster.Cluster_LbPolicy {
+func (s *server) clusterLbPolicy(cluster types.Cluster) envoy_cluster.Cluster_LbPolicy {
 
 	value, err := cluster.Attributes.Get(types.AttributeLbPolicy)
 	if err == nil {
 		switch value {
 		case types.AttributeValueLBRoundRobin:
-			return envoyCluster.Cluster_ROUND_ROBIN
+			return envoy_cluster.Cluster_ROUND_ROBIN
 
 		case types.AttributeValueLBLeastRequest:
-			return envoyCluster.Cluster_LEAST_REQUEST
+			return envoy_cluster.Cluster_LEAST_REQUEST
 
 		case types.AttributeValueLBRingHash:
-			return envoyCluster.Cluster_RING_HASH
+			return envoy_cluster.Cluster_RING_HASH
 
 		case types.AttributeValueLBRandom:
-			return envoyCluster.Cluster_RANDOM
+			return envoy_cluster.Cluster_RANDOM
 
 		case types.AttributeValueLBMaglev:
-			return envoyCluster.Cluster_MAGLEV
+			return envoy_cluster.Cluster_MAGLEV
 
 		default:
 			s.logger.Warn(unknownClusterAttributeValueWarning,
@@ -110,11 +110,11 @@ func (s *server) clusterLbPolicy(cluster types.Cluster) envoyCluster.Cluster_LbP
 				zap.String("attribute", types.AttributeLbPolicy))
 		}
 	}
-	return envoyCluster.Cluster_ROUND_ROBIN
+	return envoy_cluster.Cluster_ROUND_ROBIN
 }
 
 // clusterLoadAssignment sets cluster loadbalance based upon hostname & port attributes
-func (s *server) clusterLoadAssignment(cluster types.Cluster) *endpoint.ClusterLoadAssignment {
+func (s *server) clusterLoadAssignment(cluster types.Cluster) *envoy_endpoint.ClusterLoadAssignment {
 
 	hostName, err := cluster.Attributes.Get(types.AttributeHost)
 	if err != nil {
@@ -124,14 +124,14 @@ func (s *server) clusterLoadAssignment(cluster types.Cluster) *endpoint.ClusterL
 	if port == 0 {
 		return nil
 	}
-	return &endpoint.ClusterLoadAssignment{
+	return &envoy_endpoint.ClusterLoadAssignment{
 		ClusterName: cluster.Name,
-		Endpoints: []*endpoint.LocalityLbEndpoints{
+		Endpoints: []*envoy_endpoint.LocalityLbEndpoints{
 			{
-				LbEndpoints: []*endpoint.LbEndpoint{
+				LbEndpoints: []*envoy_endpoint.LbEndpoint{
 					{
-						HostIdentifier: &endpoint.LbEndpoint_Endpoint{
-							Endpoint: &endpoint.Endpoint{
+						HostIdentifier: &envoy_endpoint.LbEndpoint_Endpoint{
+							Endpoint: &envoy_endpoint.Endpoint{
 								Address: buildAddress(hostName, port),
 							},
 						},
@@ -142,15 +142,15 @@ func (s *server) clusterLoadAssignment(cluster types.Cluster) *endpoint.ClusterL
 	}
 }
 
-func (s *server) clusterCircuitBreakers(cluster types.Cluster) *envoyCluster.CircuitBreakers {
+func (s *server) clusterCircuitBreakers(cluster types.Cluster) *envoy_cluster.CircuitBreakers {
 
 	maxConnections := cluster.Attributes.GetAsUInt32(types.AttributeMaxConnections, 0)
 	maxPendingRequests := cluster.Attributes.GetAsUInt32(types.AttributeMaxPendingRequests, 0)
 	maxRequests := cluster.Attributes.GetAsUInt32(types.AttributeMaxRequests, 0)
 	maxRetries := cluster.Attributes.GetAsUInt32(types.AttributeMaxRetries, 0)
 
-	return &envoyCluster.CircuitBreakers{
-		Thresholds: []*envoyCluster.CircuitBreakers_Thresholds{{
+	return &envoy_cluster.CircuitBreakers{
+		Thresholds: []*envoy_cluster.CircuitBreakers_Thresholds{{
 			MaxConnections:     protoUint32orNil(maxConnections),
 			MaxPendingRequests: protoUint32orNil(maxPendingRequests),
 			MaxRequests:        protoUint32orNil(maxRequests),
@@ -160,16 +160,16 @@ func (s *server) clusterCircuitBreakers(cluster types.Cluster) *envoyCluster.Cir
 }
 
 // clusterTrackClusterStats build cluster statistics configuration
-func (s *server) clusterTrackClusterStats(cluster types.Cluster) *envoyCluster.TrackClusterStats {
+func (s *server) clusterTrackClusterStats(cluster types.Cluster) *envoy_cluster.TrackClusterStats {
 
-	return &envoyCluster.TrackClusterStats{
+	return &envoy_cluster.TrackClusterStats{
 		TimeoutBudgets:       true,
 		RequestResponseSizes: true,
 	}
 }
 
 // clusterHealthCheckConfig builds health configuration for a cluster
-func (s *server) clusterHealthChecks(cluster types.Cluster) []*core.HealthCheck {
+func (s *server) clusterHealthChecks(cluster types.Cluster) []*envoy_core.HealthCheck {
 
 	healthCheckProtocol, err := cluster.Attributes.Get(types.AttributeHealthCheckProtocol)
 	healthCheckPath, _ := cluster.Attributes.Get(types.AttributeHealthCheckPath)
@@ -194,9 +194,9 @@ func (s *server) clusterHealthChecks(cluster types.Cluster) []*core.HealthCheck 
 
 		logFile := cluster.Attributes.GetAsString(types.AttributeHealthCheckLogFile, "")
 
-		healthCheck := &core.HealthCheck{
-			HealthChecker: &core.HealthCheck_HttpHealthCheck_{
-				HttpHealthCheck: &core.HealthCheck_HttpHealthCheck{
+		healthCheck := &envoy_core.HealthCheck{
+			HealthChecker: &envoy_core.HealthCheck_HttpHealthCheck_{
+				HttpHealthCheck: &envoy_core.HealthCheck_HttpHealthCheck{
 					Host:            healthCheckHostName,
 					Path:            healthCheckPath,
 					CodecClientType: s.clusterHealthCodec(cluster),
@@ -211,24 +211,24 @@ func (s *server) clusterHealthChecks(cluster types.Cluster) []*core.HealthCheck 
 			healthCheck.EventLogPath = logFile
 		}
 
-		return append([]*core.HealthCheck{}, healthCheck)
+		return append([]*envoy_core.HealthCheck{}, healthCheck)
 	}
 	return nil
 }
 
-func (s *server) clusterHealthCodec(cluster types.Cluster) envoyType.CodecClientType {
+func (s *server) clusterHealthCodec(cluster types.Cluster) envoy_type.CodecClientType {
 
 	value, err := cluster.Attributes.Get(types.AttributeHTTPProtocol)
 	if err == nil {
 		switch value {
 		case types.AttributeValueHTTPProtocol11:
-			return envoyType.CodecClientType_HTTP1
+			return envoy_type.CodecClientType_HTTP1
 
 		case types.AttributeValueHTTPProtocol2:
-			return envoyType.CodecClientType_HTTP2
+			return envoy_type.CodecClientType_HTTP2
 
 		case types.AttributeValueHTTPProtocol3:
-			return envoyType.CodecClientType_HTTP3
+			return envoy_type.CodecClientType_HTTP3
 
 		default:
 			s.logger.Warn(unknownClusterAttributeValueWarning,
@@ -236,14 +236,14 @@ func (s *server) clusterHealthCodec(cluster types.Cluster) envoyType.CodecClient
 				zap.String("attribute", types.AttributeHTTPProtocol))
 		}
 	}
-	return envoyType.CodecClientType_HTTP1
+	return envoy_type.CodecClientType_HTTP1
 }
 
 // clusterTransportSocket configures TLS settings
-func (s *server) clusterTransportSocket(cluster types.Cluster) *core.TransportSocket {
+func (s *server) clusterTransportSocket(cluster types.Cluster) *envoy_core.TransportSocket {
 
 	// Set TLS configuration based upon cluster attributes
-	TLSContext := &tls.UpstreamTlsContext{
+	TLSContext := &envoy_tls.UpstreamTlsContext{
 		Sni:              s.clusterSNIHostname(cluster),
 		CommonTlsContext: buildCommonTLSContext(cluster.Name, cluster.Attributes),
 	}
@@ -266,24 +266,24 @@ func (s *server) clusterSNIHostname(cluster types.Cluster) string {
 	return ""
 }
 
-func (s *server) clusterDNSLookupFamily(cluster types.Cluster) envoyCluster.Cluster_DnsLookupFamily {
+func (s *server) clusterDNSLookupFamily(cluster types.Cluster) envoy_cluster.Cluster_DnsLookupFamily {
 
 	value, err := cluster.Attributes.Get(types.AttributeDNSLookupFamily)
 	if err == nil {
 		switch value {
 		case types.AttributeValueDNSIPV4Only:
-			return envoyCluster.Cluster_V4_ONLY
+			return envoy_cluster.Cluster_V4_ONLY
 		case types.AttributeValueDNSIPV6Only:
-			return envoyCluster.Cluster_V6_ONLY
+			return envoy_cluster.Cluster_V6_ONLY
 		case types.AttributeValueDNSAUTO:
-			return envoyCluster.Cluster_AUTO
+			return envoy_cluster.Cluster_AUTO
 		default:
 			s.logger.Warn(unknownClusterAttributeValueWarning,
 				zap.String("cluster", cluster.Name),
 				zap.String("attribute", types.AttributeDNSLookupFamily))
 		}
 	}
-	return envoyCluster.Cluster_AUTO
+	return envoy_cluster.Cluster_AUTO
 }
 
 func (s *server) clusterDNSRefreshRate(cluster types.Cluster) *duration.Duration {
@@ -294,11 +294,11 @@ func (s *server) clusterDNSRefreshRate(cluster types.Cluster) *duration.Duration
 	return durationpb.New(refreshInterval)
 }
 
-func (s *server) clusterDNSResolvers(cluster types.Cluster) []*core.Address {
+func (s *server) clusterDNSResolvers(cluster types.Cluster) []*envoy_core.Address {
 
 	value, err := cluster.Attributes.Get(types.AttributeDNSResolvers)
 	if err == nil && value != "" {
-		var resolvers []*core.Address
+		var resolvers []*envoy_core.Address
 
 		for _, resolver := range strings.Split(value, ",") {
 			resolvers = append(resolvers, buildAddress(resolver, 53))
@@ -317,15 +317,15 @@ func (s *server) clusterTypedExtensionProtocolOptions(cluster types.Cluster) map
 		return nil
 	}
 
-	httpProtocolOptions := &envoyExtensionsUpstreams.HttpProtocolOptions{
-		UpstreamProtocolOptions: &envoyExtensionsUpstreams.HttpProtocolOptions_ExplicitHttpConfig_{
-			ExplicitHttpConfig: &envoyExtensionsUpstreams.HttpProtocolOptions_ExplicitHttpConfig{
-				ProtocolConfig: &envoyExtensionsUpstreams.HttpProtocolOptions_ExplicitHttpConfig_HttpProtocolOptions{},
+	httpProtocolOptions := &envoy_upstreams.HttpProtocolOptions{
+		UpstreamProtocolOptions: &envoy_upstreams.HttpProtocolOptions_ExplicitHttpConfig_{
+			ExplicitHttpConfig: &envoy_upstreams.HttpProtocolOptions_ExplicitHttpConfig{
+				ProtocolConfig: &envoy_upstreams.HttpProtocolOptions_ExplicitHttpConfig_HttpProtocolOptions{},
 			},
 		},
 	}
 	if idleTimeoutDuration, err := time.ParseDuration(idleTimeout); err == nil {
-		httpProtocolOptions.CommonHttpProtocolOptions = &core.HttpProtocolOptions{
+		httpProtocolOptions.CommonHttpProtocolOptions = &envoy_core.HttpProtocolOptions{
 			IdleTimeout: durationpb.New(idleTimeoutDuration),
 		}
 	}
@@ -333,21 +333,21 @@ func (s *server) clusterTypedExtensionProtocolOptions(cluster types.Cluster) map
 	if clusterHTTPProtocol != "" {
 		switch clusterHTTPProtocol {
 		case types.AttributeValueHTTPProtocol11:
-			httpProtocolOptions.UpstreamProtocolOptions = &envoyExtensionsUpstreams.HttpProtocolOptions_ExplicitHttpConfig_{
-				ExplicitHttpConfig: &envoyExtensionsUpstreams.HttpProtocolOptions_ExplicitHttpConfig{
-					ProtocolConfig: &envoyExtensionsUpstreams.HttpProtocolOptions_ExplicitHttpConfig_HttpProtocolOptions{},
+			httpProtocolOptions.UpstreamProtocolOptions = &envoy_upstreams.HttpProtocolOptions_ExplicitHttpConfig_{
+				ExplicitHttpConfig: &envoy_upstreams.HttpProtocolOptions_ExplicitHttpConfig{
+					ProtocolConfig: &envoy_upstreams.HttpProtocolOptions_ExplicitHttpConfig_HttpProtocolOptions{},
 				},
 			}
 		case types.AttributeValueHTTPProtocol2:
-			httpProtocolOptions.UpstreamProtocolOptions = &envoyExtensionsUpstreams.HttpProtocolOptions_ExplicitHttpConfig_{
-				ExplicitHttpConfig: &envoyExtensionsUpstreams.HttpProtocolOptions_ExplicitHttpConfig{
-					ProtocolConfig: &envoyExtensionsUpstreams.HttpProtocolOptions_ExplicitHttpConfig_Http2ProtocolOptions{},
+			httpProtocolOptions.UpstreamProtocolOptions = &envoy_upstreams.HttpProtocolOptions_ExplicitHttpConfig_{
+				ExplicitHttpConfig: &envoy_upstreams.HttpProtocolOptions_ExplicitHttpConfig{
+					ProtocolConfig: &envoy_upstreams.HttpProtocolOptions_ExplicitHttpConfig_Http2ProtocolOptions{},
 				},
 			}
 		case types.AttributeValueHTTPProtocol3:
-			httpProtocolOptions.UpstreamProtocolOptions = &envoyExtensionsUpstreams.HttpProtocolOptions_ExplicitHttpConfig_{
-				ExplicitHttpConfig: &envoyExtensionsUpstreams.HttpProtocolOptions_ExplicitHttpConfig{
-					ProtocolConfig: &envoyExtensionsUpstreams.HttpProtocolOptions_ExplicitHttpConfig_Http3ProtocolOptions{},
+			httpProtocolOptions.UpstreamProtocolOptions = &envoy_upstreams.HttpProtocolOptions_ExplicitHttpConfig_{
+				ExplicitHttpConfig: &envoy_upstreams.HttpProtocolOptions_ExplicitHttpConfig{
+					ProtocolConfig: &envoy_upstreams.HttpProtocolOptions_ExplicitHttpConfig_Http3ProtocolOptions{},
 				},
 			}
 		default:
