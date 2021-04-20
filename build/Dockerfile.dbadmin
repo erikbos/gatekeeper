@@ -12,6 +12,7 @@ RUN make dbadmin
 FROM alpine
 WORKDIR /app/
 COPY --from=build-env /build/bin/dbadmin .
+USER nobody
 CMD ["/app/dbadmin"]
 
 EXPOSE 7777
