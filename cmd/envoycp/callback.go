@@ -7,6 +7,8 @@ import (
 	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	discovery "github.com/envoyproxy/go-control-plane/envoy/service/discovery/v3"
 	"go.uber.org/zap"
+
+	"github.com/erikbos/gatekeeper/cmd/envoycp/metrics"
 )
 
 type callback struct {
@@ -14,7 +16,7 @@ type callback struct {
 	signal      chan newNode
 	connections map[int64]*core.Node
 	logger      *zap.Logger
-	metrics     *metrics
+	metrics     *metrics.Metrics
 }
 
 type newNode struct {

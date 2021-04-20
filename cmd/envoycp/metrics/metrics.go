@@ -1,22 +1,22 @@
-package main
+package metrics
 
 import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-type metrics struct {
+type Metrics struct {
 	xdsEntities  *prometheus.GaugeVec
 	xdsSnapshots *prometheus.CounterVec
 	xdsMessages  *prometheus.CounterVec
 }
 
-func newMetrics() *metrics {
+func New() *Metrics {
 
-	return &metrics{}
+	return &Metrics{}
 }
 
 // RegisterWithPrometheus registers envoycp operational metrics
-func (m *metrics) RegisterWithPrometheus(metricNamespace string) {
+func (m *Metrics) RegisterWithPrometheus(metricNamespace string) {
 
 	m.xdsEntities = prometheus.NewGaugeVec(
 		prometheus.GaugeOpts{
@@ -44,19 +44,19 @@ func (m *metrics) RegisterWithPrometheus(metricNamespace string) {
 }
 
 // SetEntityCount sets number of listeners we know
-func (m *metrics) SetEntityCount(label string, count int) {
+func (m *Metrics) SetEntityCount(label string, count int) {
 
 	m.xdsEntities.WithLabelValues(label).Set(float64(count))
 }
 
 // IncXDSSnapshotCreateCount increases number of snapshots taken
-func (m *metrics) IncXDSSnapshotCreateCount(messageType string) {
+func (m *Metrics) IncXDSSnapshotCreateCount(messageType string) {
 
 	m.xdsSnapshots.WithLabelValues(messageType).Inc()
 }
 
 // IncXDSMessageCount increases counter per XDS messageType
-func (m *metrics) IncXDSMessageCount(messageType string) {
+func (m *Metrics) IncXDSMessageCount(messageType string) {
 
 	m.xdsMessages.WithLabelValues(messageType).Inc()
 }

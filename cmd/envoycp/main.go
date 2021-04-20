@@ -8,6 +8,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 
+	"github.com/erikbos/gatekeeper/cmd/envoycp/metrics"
 	"github.com/erikbos/gatekeeper/pkg/db"
 	"github.com/erikbos/gatekeeper/pkg/db/cassandra"
 	"github.com/erikbos/gatekeeper/pkg/shared"
@@ -25,7 +26,7 @@ type server struct {
 	db         *db.Database
 	dbentities *db.EntityCache
 	readiness  *shared.Readiness
-	metrics    *metrics
+	metrics    *metrics.Metrics
 	logger     *zap.Logger
 }
 
@@ -52,7 +53,7 @@ func main() {
 		zap.String("version", version),
 		zap.String("buildtime", buildTime))
 
-	s.metrics = newMetrics()
+	s.metrics = metrics.New()
 	s.metrics.RegisterWithPrometheus(applicationName)
 
 	if s.db, err = cassandra.New(s.config.Database, applicationName, s.logger, false, 0); err != nil {
