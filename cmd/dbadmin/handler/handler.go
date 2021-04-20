@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
+	"github.com/erikbos/gatekeeper/cmd/dbadmin/metrics"
 	"github.com/erikbos/gatekeeper/cmd/dbadmin/service"
 	"github.com/erikbos/gatekeeper/pkg/db"
 	"github.com/erikbos/gatekeeper/pkg/types"
@@ -17,7 +18,7 @@ import (
 // Handler contains our runtime parameters
 type Handler struct {
 	service *service.Service
-	metrics *metrics
+	metrics *metrics.Metrics
 	logger  *zap.Logger
 }
 
@@ -26,7 +27,7 @@ func NewHandler(g *gin.Engine, db *db.Database, s *service.Service, applicationN
 	organizationName string, disableAPIAuthentication bool, logger *zap.Logger) *Handler {
 
 	// Instal prometheus metrics
-	m := newMetrics()
+	m := metrics.New()
 	m.RegisterWithPrometheus(applicationName)
 	g.Use(metricsMiddleware(m))
 
@@ -76,7 +77,7 @@ func (h *Handler) handler(function func(c *gin.Context) handlerResponse) gin.Han
 		if POSTwithoutContentTypeJSON(c) {
 			showErrorMessageAndAbort(c, http.StatusUnsupportedMediaType,
 				types.NewBadRequestError(errors.New(
-					"Content-type application/json required when submitting data")))
+					"content-type application/json required when submitting data")))
 			return
 		}
 
@@ -154,7 +155,7 @@ func handleBadRequest(e error) handlerResponse {
 func handleNameMismatch() handlerResponse {
 
 	return handlerResponse{
-		error: types.NewBadRequestError(errors.New("Name field value mismatch")),
+		error: types.NewBadRequestError(errors.New("name field value mismatch")),
 	}
 }
 
@@ -169,7 +170,7 @@ func showErrorMessageAndAbort(c *gin.Context, statusCode int, e types.Error) {
 }
 
 // metricsMiddleware is gin middleware to maintain prometheus metrics on user, paths and status codes
-func metricsMiddleware(m *metrics) gin.HandlerFunc {
+func metricsMiddleware(m *metrics.Metrics) gin.HandlerFunc {
 
 	return func(c *gin.Context) {
 

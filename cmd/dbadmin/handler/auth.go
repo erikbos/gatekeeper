@@ -16,10 +16,10 @@ import (
 )
 
 var (
-	errBasicAuthRequired = types.NewUnauthorizedError(errors.New("Basic Authorization required"))
-	errUnknownUser       = types.NewUnauthorizedError(errors.New("Unknown user"))
-	errPasswordMismatch  = types.NewUnauthorizedError(errors.New("Password mismatch"))
-	errPathNotAllowed    = types.NewUnauthorizedError(errors.New("Path not allowed"))
+	errBasicAuthRequired = types.NewUnauthorizedError(errors.New("basic Authorization required"))
+	errUnknownUser       = types.NewUnauthorizedError(errors.New("unknown user"))
+	errPasswordMismatch  = types.NewUnauthorizedError(errors.New("password mismatch"))
+	errPathNotAllowed    = types.NewUnauthorizedError(errors.New("path not allowed"))
 )
 
 //

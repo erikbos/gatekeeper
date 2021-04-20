@@ -1,20 +1,21 @@
-package handler
+package metrics
 
 import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-type metrics struct {
+type Metrics struct {
 	requestPerPathHits *prometheus.CounterVec
 }
 
-func newMetrics() *metrics {
+func New() *Metrics {
 
-	return &metrics{}
+	return &Metrics{}
 }
 
 // registerMetrics registers our operational metrics
-func (m *metrics) RegisterWithPrometheus(metricNamespace string) {
+func (m *Metrics) RegisterWithPrometheus(metricNamespace string) {
+
 	m.requestPerPathHits = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: metricNamespace,
@@ -24,6 +25,7 @@ func (m *metrics) RegisterWithPrometheus(metricNamespace string) {
 	prometheus.MustRegister(m.requestPerPathHits)
 }
 
-func (m *metrics) IncRequestPathHit(user, method, path, status string) {
+func (m *Metrics) IncRequestPathHit(user, method, path, status string) {
+
 	m.requestPerPathHits.WithLabelValues(user, method, path, status).Inc()
 }

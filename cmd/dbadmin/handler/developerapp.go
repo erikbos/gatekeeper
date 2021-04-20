@@ -110,7 +110,7 @@ func (h *Handler) createDeveloperApp(c *gin.Context) handlerResponse {
 	}
 	if _, err := h.service.DeveloperApp.GetByName(newDeveloperApp.Name); err == nil {
 		return handleError(types.NewBadRequestError(
-			fmt.Errorf("Developer app '%s' already exists", newDeveloperApp.Name)))
+			fmt.Errorf("developer app '%s' already exists", newDeveloperApp.Name)))
 	}
 	storedDeveloperApp, err := h.service.DeveloperApp.Create(developer.Email, newDeveloperApp, h.who(c))
 	if err != nil {
