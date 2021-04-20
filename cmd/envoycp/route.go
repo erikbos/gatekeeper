@@ -6,11 +6,11 @@ import (
 	"strings"
 	"time"
 
-	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
-	route "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
-	envoyauth "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/ext_authz/v3"
-	envoymatcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
-	envoytype "github.com/envoyproxy/go-control-plane/envoy/type/v3"
+	envoy_core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
+	envoy_route "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
+	envoy_filter_authz "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/ext_authz/v3"
+	envoy_matcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
+	envoy_type "github.com/envoyproxy/go-control-plane/envoy/type/v3"
 	cache "github.com/envoyproxy/go-control-plane/pkg/cache/types"
 	"github.com/envoyproxy/go-control-plane/pkg/wellknown"
 	"github.com/golang/protobuf/ptypes/any"
@@ -47,11 +47,11 @@ func (s *server) getRouteGroupNames(vhosts types.Routes) map[string]bool {
 
 // buildEnvoyListenerRouteConfig builds vhost and route configuration of one RouteGroup
 func (s *server) buildEnvoyListenerRouteConfig(RouteGroup string,
-	routes types.Routes) *route.RouteConfiguration {
+	routes types.Routes) *envoy_route.RouteConfiguration {
 
-	return &route.RouteConfiguration{
+	return &envoy_route.RouteConfiguration{
 		Name: RouteGroup,
-		VirtualHosts: []*route.VirtualHost{
+		VirtualHosts: []*envoy_route.VirtualHost{
 			{
 				Name:            RouteGroup,
 				Domains:         s.getVhostsInRouteGroup(RouteGroup),
@@ -63,8 +63,8 @@ func (s *server) buildEnvoyListenerRouteConfig(RouteGroup string,
 }
 
 // buildEnvoyRoutes returns all Envoy routes belonging to a RouteGroup
-func (s *server) buildEnvoyRoutes(RouteGroup string, routes types.Routes) []*route.Route {
-	var envoyRoutes []*route.Route
+func (s *server) buildEnvoyRoutes(RouteGroup string, routes types.Routes) []*envoy_route.Route {
+	var envoyRoutes []*envoy_route.Route
 
 	for _, route := range routes {
 		if err := route.ConfigCheck(); err != nil {
@@ -81,14 +81,14 @@ func (s *server) buildEnvoyRoutes(RouteGroup string, routes types.Routes) []*rou
 }
 
 // buildEnvoyRoute returns a single Envoy route
-func (s *server) buildEnvoyRoute(routeEntry types.Route) *route.Route {
+func (s *server) buildEnvoyRoute(routeEntry types.Route) *envoy_route.Route {
 	routeMatch := buildRouteMatch(routeEntry)
 	if routeMatch == nil {
 		s.logger.Warn("Cannot build route match config", zap.String("route", routeEntry.Name))
 		return nil
 	}
 
-	envoyRoute := &route.Route{
+	envoyRoute := &envoy_route.Route{
 		Name:  routeEntry.Name,
 		Match: routeMatch,
 	}
@@ -111,17 +111,14 @@ func (s *server) buildEnvoyRoute(routeEntry types.Route) *route.Route {
 	// Add cluster(s) to forward this route to
 	cluster, _ := routeEntry.Attributes.Get(types.AttributeCluster)
 	weightedClusters, _ := routeEntry.Attributes.Get(types.AttributeWeightedClusters)
-	if cluster != "" || weightedClusters != "" {
-		envoyRoute.Action = s.buildRouteActionCluster(routeEntry)
-	}
-
-	// Stop in case we do not have any route action defined
-	// WARNING: We cannot compare against just "nil" as .Action is an interface
-	if envoyRoute.Action == (*route.Route_Route)(nil) {
+	if cluster == "" && weightedClusters == "" {
+		// Stop in case we do not have any route cluster destination as
+		// this route would be invalid..
 		s.logger.Warn("Route without destination cluster", zap.String("route", routeEntry.Name))
 		return nil
 	}
 
+	envoyRoute.Action = s.buildRouteActionCluster(routeEntry)
 	envoyRoute.RequestHeadersToAdd = buildUpstreamHeadersToAdd(routeEntry)
 	envoyRoute.RequestHeadersToRemove = buildUpstreamHeadersToRemove(routeEntry)
 
@@ -129,26 +126,26 @@ func (s *server) buildEnvoyRoute(routeEntry types.Route) *route.Route {
 }
 
 // buildRouteMatch returns route config to match on
-func buildRouteMatch(routeEntry types.Route) *route.RouteMatch {
+func buildRouteMatch(routeEntry types.Route) *envoy_route.RouteMatch {
 
 	switch routeEntry.PathType {
 	case types.AttributeValuePathTypePath:
-		return &route.RouteMatch{
-			PathSpecifier: &route.RouteMatch_Path{
+		return &envoy_route.RouteMatch{
+			PathSpecifier: &envoy_route.RouteMatch_Path{
 				Path: routeEntry.Path,
 			},
 		}
 
 	case types.AttributeValuePathTypePrefix:
-		return &route.RouteMatch{
-			PathSpecifier: &route.RouteMatch_Prefix{
+		return &envoy_route.RouteMatch{
+			PathSpecifier: &envoy_route.RouteMatch_Prefix{
 				Prefix: routeEntry.Path,
 			},
 		}
 
 	case types.AttributeValuePathTypeRegexp:
-		return &route.RouteMatch{
-			PathSpecifier: &route.RouteMatch_SafeRegex{
+		return &envoy_route.RouteMatch{
+			PathSpecifier: &envoy_route.RouteMatch_SafeRegex{
 				SafeRegex: buildRegexpMatcher(routeEntry.Path),
 			},
 		}
@@ -157,10 +154,10 @@ func buildRouteMatch(routeEntry types.Route) *route.RouteMatch {
 }
 
 // buildRouteActionCluster return route action in of forwarding to a cluster
-func (s *server) buildRouteActionCluster(routeEntry types.Route) *route.Route_Route {
+func (s *server) buildRouteActionCluster(routeEntry types.Route) *envoy_route.Route_Route {
 
-	action := &route.Route_Route{
-		Route: &route.RouteAction{
+	action := &envoy_route.Route_Route{
+		Route: &envoy_route.RouteAction{
 			Cors:        buildCorsPolicy(routeEntry),
 			RetryPolicy: buildRetryPolicy(routeEntry),
 		},
@@ -175,7 +172,7 @@ func (s *server) buildRouteActionCluster(routeEntry types.Route) *route.Route_Ro
 
 	upstreamHostHeader, err := routeEntry.Attributes.Get(types.AttributeHostHeader)
 	if err == nil && upstreamHostHeader != "" {
-		action.Route.HostRewriteSpecifier = &route.RouteAction_HostRewriteLiteral{
+		action.Route.HostRewriteSpecifier = &envoy_route.RouteAction_HostRewriteLiteral{
 			HostRewriteLiteral: upstreamHostHeader,
 		}
 	}
@@ -187,7 +184,7 @@ func (s *server) buildRouteActionCluster(routeEntry types.Route) *route.Route_Ro
 
 	cluster, err := routeEntry.Attributes.Get(types.AttributeCluster)
 	if err == nil && cluster != "" {
-		action.Route.ClusterSpecifier = &route.RouteAction_Cluster{
+		action.Route.ClusterSpecifier = &envoy_route.RouteAction_Cluster{
 			Cluster: cluster,
 		}
 	}
@@ -197,26 +194,20 @@ func (s *server) buildRouteActionCluster(routeEntry types.Route) *route.Route_Ro
 		action.Route.ClusterSpecifier = s.buildWeightedClusters(routeEntry)
 	}
 
-	// Stop in case we do not have any route cluster destination as
-	// this route would be invalid..
-	if action.Route.ClusterSpecifier == nil {
-		return nil
-	}
-
 	action.Route.RateLimits = buildRateLimits(routeEntry)
 	action.Route.RequestMirrorPolicies = s.buildRequestMirrorPolicies(routeEntry)
 
 	return action
 }
 
-func (s *server) buildWeightedClusters(routeEntry types.Route) *route.RouteAction_WeightedClusters {
+func (s *server) buildWeightedClusters(routeEntry types.Route) *envoy_route.RouteAction_WeightedClusters {
 
 	weightedClusterSpec, err := routeEntry.Attributes.Get(types.AttributeWeightedClusters)
 	if err != nil || weightedClusterSpec == "" {
 		return nil
 	}
 
-	weightedClusters := make([]*route.WeightedCluster_ClusterWeight, 0)
+	weightedClusters := make([]*envoy_route.WeightedCluster_ClusterWeight, 0)
 	var clusterWeight, totalWeight int
 
 	for _, cluster := range strings.Split(weightedClusterSpec, ",") {
@@ -233,22 +224,22 @@ func (s *server) buildWeightedClusters(routeEntry types.Route) *route.RouteActio
 		}
 		totalWeight += clusterWeight
 
-		clusterToAdd := &route.WeightedCluster_ClusterWeight{
+		clusterToAdd := &envoy_route.WeightedCluster_ClusterWeight{
 			Name:   strings.TrimSpace(clusterConfig[0]),
 			Weight: protoUint32(uint32(clusterWeight)),
 		}
 		weightedClusters = append(weightedClusters, clusterToAdd)
 	}
 
-	return &route.RouteAction_WeightedClusters{
-		WeightedClusters: &route.WeightedCluster{
+	return &envoy_route.RouteAction_WeightedClusters{
+		WeightedClusters: &envoy_route.WeightedCluster{
 			Clusters:    weightedClusters,
 			TotalWeight: protoUint32(uint32(totalWeight)),
 		},
 	}
 }
 
-func (s *server) buildRequestMirrorPolicies(routeEntry types.Route) []*route.RouteAction_RequestMirrorPolicy {
+func (s *server) buildRequestMirrorPolicies(routeEntry types.Route) []*envoy_route.RouteAction_RequestMirrorPolicy {
 
 	mirrorCluster := routeEntry.Attributes.GetAsString(types.AttributeRequestMirrorCluster, "")
 	mirrorPercentage := routeEntry.Attributes.GetAsString(types.AttributeRequestMirrorPercentage, "")
@@ -265,13 +256,13 @@ func (s *server) buildRequestMirrorPolicies(routeEntry types.Route) []*route.Rou
 		return nil
 	}
 
-	return []*route.RouteAction_RequestMirrorPolicy{
+	return []*envoy_route.RouteAction_RequestMirrorPolicy{
 		{
 			Cluster: mirrorCluster,
-			RuntimeFraction: &core.RuntimeFractionalPercent{
-				DefaultValue: &envoytype.FractionalPercent{
+			RuntimeFraction: &envoy_core.RuntimeFractionalPercent{
+				DefaultValue: &envoy_type.FractionalPercent{
 					Numerator:   uint32(percentage),
-					Denominator: envoytype.FractionalPercent_HUNDRED,
+					Denominator: envoy_type.FractionalPercent_HUNDRED,
 				},
 			},
 		},
@@ -279,10 +270,10 @@ func (s *server) buildRequestMirrorPolicies(routeEntry types.Route) []*route.Rou
 }
 
 // buildCorsPolicy return CorsPolicy based upon a route's attribute(s)
-func buildCorsPolicy(routeEntry types.Route) *route.CorsPolicy {
+func buildCorsPolicy(routeEntry types.Route) *envoy_route.CorsPolicy {
 
 	var corsConfigured bool
-	corsPolicy := route.CorsPolicy{}
+	corsPolicy := envoy_route.CorsPolicy{}
 
 	corsAllowMethods, err := routeEntry.Attributes.Get(types.AttributeCORSAllowMethods)
 	if err == nil && corsAllowMethods != "" {
@@ -315,34 +306,34 @@ func buildCorsPolicy(routeEntry types.Route) *route.CorsPolicy {
 	}
 
 	if corsConfigured {
-		stringMatch := make([]*envoymatcher.StringMatcher, 0, 1)
+		stringMatch := make([]*envoy_matcher.StringMatcher, 0, 1)
 		corsPolicy.AllowOriginStringMatch = append(stringMatch, buildStringMatcher("."))
 		return &corsPolicy
 	}
 	return nil
 }
 
-func buildStringMatcher(regexp string) *envoymatcher.StringMatcher {
+func buildStringMatcher(regexp string) *envoy_matcher.StringMatcher {
 
-	return &envoymatcher.StringMatcher{
-		MatchPattern: &envoymatcher.StringMatcher_SafeRegex{
+	return &envoy_matcher.StringMatcher{
+		MatchPattern: &envoy_matcher.StringMatcher_SafeRegex{
 			SafeRegex: buildRegexpMatcher(regexp),
 		},
 	}
 }
 
-func buildRegexpMatcher(regexp string) *envoymatcher.RegexMatcher {
+func buildRegexpMatcher(regexp string) *envoy_matcher.RegexMatcher {
 
-	return &envoymatcher.RegexMatcher{
-		EngineType: &envoymatcher.RegexMatcher_GoogleRe2{
-			GoogleRe2: &envoymatcher.RegexMatcher_GoogleRE2{},
+	return &envoy_matcher.RegexMatcher{
+		EngineType: &envoy_matcher.RegexMatcher_GoogleRe2{
+			GoogleRe2: &envoy_matcher.RegexMatcher_GoogleRE2{},
 		},
 		Regex: regexp,
 	}
 }
 
 // buildRouteActionDirectResponse builds route config to have Envoy itself answer with status code and body
-func buildRouteActionDirectResponse(routeEntry types.Route) *route.Route_DirectResponse {
+func buildRouteActionDirectResponse(routeEntry types.Route) *envoy_route.Route_DirectResponse {
 
 	directResponseStatusCode, err := routeEntry.Attributes.Get(types.AttributeDirectResponseStatusCode)
 	if err == nil && directResponseStatusCode != "" {
@@ -353,15 +344,15 @@ func buildRouteActionDirectResponse(routeEntry types.Route) *route.Route_DirectR
 		}
 
 		if err == nil && statusCode != 0 {
-			response := route.Route_DirectResponse{
-				DirectResponse: &route.DirectResponseAction{
+			response := envoy_route.Route_DirectResponse{
+				DirectResponse: &envoy_route.DirectResponseAction{
 					Status: uint32(statusCode),
 				},
 			}
 			directResponseStatusBody, err := routeEntry.Attributes.Get(types.AttributeDirectResponseBody)
 			if err == nil && directResponseStatusCode != "" {
-				response.DirectResponse.Body = &core.DataSource{
-					Specifier: &core.DataSource_InlineString{
+				response.DirectResponse.Body = &envoy_core.DataSource{
+					Specifier: &envoy_core.DataSource_InlineString{
 						InlineString: directResponseStatusBody,
 					},
 				}
@@ -373,7 +364,7 @@ func buildRouteActionDirectResponse(routeEntry types.Route) *route.Route_DirectR
 }
 
 // buildRouteActionRedirectResponse builds response to have Envoy redirect to different path
-func (s *server) buildRouteActionRedirectResponse(routeEntry types.Route) *route.Route_Redirect {
+func (s *server) buildRouteActionRedirectResponse(routeEntry types.Route) *envoy_route.Route_Redirect {
 
 	redirectStatusCode := routeEntry.Attributes.GetAsString(types.AttributeRedirectStatusCode, "")
 	redirectScheme := routeEntry.Attributes.GetAsString(types.AttributeRedirectScheme, "")
@@ -387,23 +378,23 @@ func (s *server) buildRouteActionRedirectResponse(routeEntry types.Route) *route
 		return nil
 	}
 
-	response := route.Route_Redirect{
-		Redirect: &route.RedirectAction{},
+	response := envoy_route.Route_Redirect{
+		Redirect: &envoy_route.RedirectAction{},
 	}
 
 	// Do we have to set a particular statuscode?
 	statusCode, _ := strconv.Atoi(redirectStatusCode)
 	switch statusCode {
 	case 301:
-		response.Redirect.ResponseCode = route.RedirectAction_MOVED_PERMANENTLY
+		response.Redirect.ResponseCode = envoy_route.RedirectAction_MOVED_PERMANENTLY
 	case 302:
-		response.Redirect.ResponseCode = route.RedirectAction_FOUND
+		response.Redirect.ResponseCode = envoy_route.RedirectAction_FOUND
 	case 303:
-		response.Redirect.ResponseCode = route.RedirectAction_SEE_OTHER
+		response.Redirect.ResponseCode = envoy_route.RedirectAction_SEE_OTHER
 	case 307:
-		response.Redirect.ResponseCode = route.RedirectAction_TEMPORARY_REDIRECT
+		response.Redirect.ResponseCode = envoy_route.RedirectAction_TEMPORARY_REDIRECT
 	case 308:
-		response.Redirect.ResponseCode = route.RedirectAction_PERMANENT_REDIRECT
+		response.Redirect.ResponseCode = envoy_route.RedirectAction_PERMANENT_REDIRECT
 	default:
 		s.logger.Warn("Unsupported redirect status code value",
 			zap.String("route", routeEntry.Name),
@@ -412,7 +403,7 @@ func (s *server) buildRouteActionRedirectResponse(routeEntry types.Route) *route
 	}
 	// Do we have to update scheme to http or https?
 	if redirectScheme != "" {
-		response.Redirect.SchemeRewriteSpecifier = &route.RedirectAction_SchemeRedirect{
+		response.Redirect.SchemeRewriteSpecifier = &envoy_route.RedirectAction_SchemeRedirect{
 			SchemeRedirect: redirectScheme,
 		}
 	}
@@ -427,7 +418,7 @@ func (s *server) buildRouteActionRedirectResponse(routeEntry types.Route) *route
 	}
 	// Do we have to redirect to a specific path?
 	if redirectPath != "" {
-		response.Redirect.PathRewriteSpecifier = &route.RedirectAction_PathRedirect{
+		response.Redirect.PathRewriteSpecifier = &envoy_route.RedirectAction_PathRedirect{
 			PathRedirect: redirectPath,
 		}
 	}
@@ -440,7 +431,7 @@ func (s *server) buildRouteActionRedirectResponse(routeEntry types.Route) *route
 }
 
 // buildUpstreamHeadersToAdd consolidates all possible source for route upstream headers
-func buildUpstreamHeadersToAdd(routeEntry types.Route) []*core.HeaderValueOption {
+func buildUpstreamHeadersToAdd(routeEntry types.Route) []*envoy_core.HeaderValueOption {
 
 	// In case route-level attributes exist we have additional upstream headers
 	headersToAdd := make(map[string]string)
@@ -506,16 +497,16 @@ func buildUpstreamHeadersToRemove(routeEntry types.Route) []string {
 }
 
 // buildHeadersList creates map to hold headers to add or remove
-func buildHeadersList(headers map[string]string) []*core.HeaderValueOption {
+func buildHeadersList(headers map[string]string) []*envoy_core.HeaderValueOption {
 
 	if len(headers) == 0 {
 		return nil
 	}
 
-	headerList := make([]*core.HeaderValueOption, 0, len(headers))
+	headerList := make([]*envoy_core.HeaderValueOption, 0, len(headers))
 	for key, value := range headers {
-		headerList = append(headerList, &core.HeaderValueOption{
-			Header: &core.HeaderValue{
+		headerList = append(headerList, &envoy_core.HeaderValueOption{
+			Header: &envoy_core.HeaderValue{
 				Key:   key,
 				Value: value,
 			},
@@ -525,7 +516,7 @@ func buildHeadersList(headers map[string]string) []*core.HeaderValueOption {
 }
 
 // buildRateLimits returns ratelimit configuration for a route
-func buildRateLimits(routeEntry types.Route) []*route.RateLimit {
+func buildRateLimits(routeEntry types.Route) []*envoy_route.RateLimit {
 
 	// In case attribute RateLimiting does not exist or is not set to true
 	// no ratelimiting will be configured
@@ -573,7 +564,7 @@ func buildRateLimits(routeEntry types.Route) []*route.RateLimit {
 	// }}
 }
 
-func buildRetryPolicy(routeEntry types.Route) *route.RetryPolicy {
+func buildRetryPolicy(routeEntry types.Route) *envoy_route.RetryPolicy {
 
 	RetryOn := routeEntry.Attributes.GetAsString(types.AttributeRetryOn, "")
 	if RetryOn == "" {
@@ -587,12 +578,12 @@ func buildRetryPolicy(routeEntry types.Route) *route.RetryPolicy {
 		routeEntry.Attributes.GetAsString(types.AttributeRetryOnStatusCodes,
 			types.DefaultRetryStatusCodes))
 
-	return &route.RetryPolicy{
+	return &envoy_route.RetryPolicy{
 		RetryOn:              RetryOn,
 		NumRetries:           protoUint32(numRetries),
 		PerTryTimeout:        durationpb.New(perTryTimeout),
 		RetriableStatusCodes: RetriableStatusCodes,
-		RetryHostPredicate: []*route.RetryPolicy_RetryHostPredicate{
+		RetryHostPredicate: []*envoy_route.RetryPolicy_RetryHostPredicate{
 			{Name: "envoy.retry_host_predicates.previous_hosts"},
 		},
 		// HostSelectionRetryMaxAttempts: 5,
@@ -642,8 +633,8 @@ func perRouteAuthzFilterConfig(routeEntry types.Route) *anypb.Any {
 
 	// Our default HTTP forwarding behaviour is to not authenticate,
 	// hence we need to disable this filter per route
-	perFilterExtAuthzConfig := &envoyauth.ExtAuthzPerRoute{
-		Override: &envoyauth.ExtAuthzPerRoute_Disabled{
+	perFilterExtAuthzConfig := &envoy_filter_authz.ExtAuthzPerRoute{
+		Override: &envoy_filter_authz.ExtAuthzPerRoute_Disabled{
 			Disabled: true,
 		},
 	}
@@ -655,9 +646,9 @@ func perRouteAuthzFilterConfig(routeEntry types.Route) *anypb.Any {
 }
 
 // buildEnvoyVirtualClusters returns a VirtualCluster configuration for each route
-func (s *server) buildEnvoyVirtualClusters(RouteGroup string, routes types.Routes) []*route.VirtualCluster {
+func (s *server) buildEnvoyVirtualClusters(RouteGroup string, routes types.Routes) []*envoy_route.VirtualCluster {
 
-	var envoyVirtualClusters []*route.VirtualCluster
+	var envoyVirtualClusters []*envoy_route.VirtualCluster
 
 	for _, routeEntry := range routes {
 		if routeEntry.RouteGroup == RouteGroup {
@@ -667,9 +658,9 @@ func (s *server) buildEnvoyVirtualClusters(RouteGroup string, routes types.Route
 					zap.String("route", routeEntry.Name), zap.String("routegroup", RouteGroup))
 				return nil
 			}
-			envoyVirtualClusters = append(envoyVirtualClusters, &route.VirtualCluster{
+			envoyVirtualClusters = append(envoyVirtualClusters, &envoy_route.VirtualCluster{
 				Name: routeEntry.Name,
-				Headers: []*route.HeaderMatcher{
+				Headers: []*envoy_route.HeaderMatcher{
 					pathMatch,
 				},
 			})
@@ -679,25 +670,25 @@ func (s *server) buildEnvoyVirtualClusters(RouteGroup string, routes types.Route
 }
 
 // buildEnvoyVirtualClusterPathMatch returns a matcher based upon the path type of a route
-func buildEnvoyVirtualClusterPathMatch(routeEntry types.Route) *route.HeaderMatcher {
+func buildEnvoyVirtualClusterPathMatch(routeEntry types.Route) *envoy_route.HeaderMatcher {
 
-	matcher := &route.HeaderMatcher{
+	matcher := &envoy_route.HeaderMatcher{
 		Name: ":path",
 	}
 	switch routeEntry.PathType {
 	case types.AttributeValuePathTypePath:
-		matcher.HeaderMatchSpecifier = &route.HeaderMatcher_ExactMatch{
+		matcher.HeaderMatchSpecifier = &envoy_route.HeaderMatcher_ExactMatch{
 			ExactMatch: routeEntry.Path,
 		}
 		return matcher
 	case types.AttributeValuePathTypePrefix:
-		matcher.HeaderMatchSpecifier = &route.HeaderMatcher_PrefixMatch{
+		matcher.HeaderMatchSpecifier = &envoy_route.HeaderMatcher_PrefixMatch{
 			PrefixMatch: routeEntry.Path,
 		}
 		return matcher
 	case types.AttributeValuePathTypeRegexp:
-		matcher.HeaderMatchSpecifier = &route.HeaderMatcher_SafeRegexMatch{
-			SafeRegexMatch: &envoymatcher.RegexMatcher{
+		matcher.HeaderMatchSpecifier = &envoy_route.HeaderMatcher_SafeRegexMatch{
+			SafeRegexMatch: &envoy_matcher.RegexMatcher{
 				Regex: routeEntry.Path,
 			},
 		}

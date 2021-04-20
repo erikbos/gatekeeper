@@ -5,11 +5,11 @@ import (
 	"testing"
 	"time"
 
-	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
-	route "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
-	envoyauth "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/ext_authz/v3"
-	envoymatcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
-	envoytype "github.com/envoyproxy/go-control-plane/envoy/type/v3"
+	envoy_core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
+	envoy_route "github.com/envoyproxy/go-control-plane/envoy/config/route/v3"
+	envoy_filter_authz "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/ext_authz/v3"
+	envoy_matcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
+	envoy_type "github.com/envoyproxy/go-control-plane/envoy/type/v3"
 	"github.com/envoyproxy/go-control-plane/pkg/wellknown"
 	"github.com/golang/protobuf/ptypes/any"
 	"github.com/stretchr/testify/require"
@@ -30,7 +30,7 @@ func Test_buildEnvoyRoute(t *testing.T) {
 		name       string
 		RouteGroup string
 		routes     types.Routes
-		expected   []*route.Route
+		expected   []*envoy_route.Route
 	}{
 		{
 			name:       "1 upstream cluster + properties",
@@ -62,29 +62,29 @@ func Test_buildEnvoyRoute(t *testing.T) {
 					},
 				},
 			},
-			expected: []*route.Route{
+			expected: []*envoy_route.Route{
 				{
 					Name: "default",
-					Match: &route.RouteMatch{
-						PathSpecifier: &route.RouteMatch_Prefix{
+					Match: &envoy_route.RouteMatch{
+						PathSpecifier: &envoy_route.RouteMatch_Prefix{
 							Prefix: "/default",
 						},
 					},
-					Action: &route.Route_Route{
-						Route: &route.RouteAction{
-							ClusterSpecifier: &route.RouteAction_Cluster{
+					Action: &envoy_route.Route_Route{
+						Route: &envoy_route.RouteAction{
+							ClusterSpecifier: &envoy_route.RouteAction_Cluster{
 								Cluster: "upstream",
 							},
 							PrefixRewrite: "/seconddefault",
-							HostRewriteSpecifier: &route.RouteAction_HostRewriteLiteral{
+							HostRewriteSpecifier: &envoy_route.RouteAction_HostRewriteLiteral{
 								HostRewriteLiteral: "www.example.com",
 							},
 							Timeout: durationpb.New(2 * time.Second),
 						},
 					},
 					TypedPerFilterConfig: map[string]*any.Any{
-						wellknown.HTTPExternalAuthorization: mustMarshalAny(&envoyauth.ExtAuthzPerRoute{
-							Override: &envoyauth.ExtAuthzPerRoute_Disabled{
+						wellknown.HTTPExternalAuthorization: mustMarshalAny(&envoy_filter_authz.ExtAuthzPerRoute{
+							Override: &envoy_filter_authz.ExtAuthzPerRoute_Disabled{
 								Disabled: true,
 							},
 						}),
@@ -122,19 +122,19 @@ func Test_buildEnvoyRoute(t *testing.T) {
 					},
 				},
 			},
-			expected: []*route.Route{
+			expected: []*envoy_route.Route{
 				{
 					Name: "default",
-					Match: &route.RouteMatch{
-						PathSpecifier: &route.RouteMatch_Prefix{
+					Match: &envoy_route.RouteMatch{
+						PathSpecifier: &envoy_route.RouteMatch_Prefix{
 							Prefix: "/",
 						},
 					},
-					Action: &route.Route_Route{
-						Route: &route.RouteAction{
-							ClusterSpecifier: &route.RouteAction_WeightedClusters{
-								WeightedClusters: &route.WeightedCluster{
-									Clusters: []*route.WeightedCluster_ClusterWeight{
+					Action: &envoy_route.Route_Route{
+						Route: &envoy_route.RouteAction{
+							ClusterSpecifier: &envoy_route.RouteAction_WeightedClusters{
+								WeightedClusters: &envoy_route.WeightedCluster{
+									Clusters: []*envoy_route.WeightedCluster_ClusterWeight{
 										{
 											Name: "upstream1",
 											Weight: &wrapperspb.UInt32Value{
@@ -156,8 +156,8 @@ func Test_buildEnvoyRoute(t *testing.T) {
 						},
 					},
 					TypedPerFilterConfig: map[string]*any.Any{
-						wellknown.HTTPExternalAuthorization: mustMarshalAny(&envoyauth.ExtAuthzPerRoute{
-							Override: &envoyauth.ExtAuthzPerRoute_Disabled{
+						wellknown.HTTPExternalAuthorization: mustMarshalAny(&envoy_filter_authz.ExtAuthzPerRoute{
+							Override: &envoy_filter_authz.ExtAuthzPerRoute_Disabled{
 								Disabled: true,
 							},
 						}),
@@ -187,27 +187,27 @@ func Test_buildEnvoyRoute(t *testing.T) {
 					},
 				},
 			},
-			expected: []*route.Route{
+			expected: []*envoy_route.Route{
 				{
 					Name: "default",
-					Match: &route.RouteMatch{
-						PathSpecifier: &route.RouteMatch_Path{
+					Match: &envoy_route.RouteMatch{
+						PathSpecifier: &envoy_route.RouteMatch_Path{
 							Path: "/dsr",
 						},
 					},
-					Action: &route.Route_DirectResponse{
-						DirectResponse: &route.DirectResponseAction{
+					Action: &envoy_route.Route_DirectResponse{
+						DirectResponse: &envoy_route.DirectResponseAction{
 							Status: 200,
-							Body: &core.DataSource{
-								Specifier: &core.DataSource_InlineString{
+							Body: &envoy_core.DataSource{
+								Specifier: &envoy_core.DataSource_InlineString{
 									InlineString: "Hello World",
 								},
 							},
 						},
 					},
 					TypedPerFilterConfig: map[string]*any.Any{
-						wellknown.HTTPExternalAuthorization: mustMarshalAny(&envoyauth.ExtAuthzPerRoute{
-							Override: &envoyauth.ExtAuthzPerRoute_Disabled{
+						wellknown.HTTPExternalAuthorization: mustMarshalAny(&envoy_filter_authz.ExtAuthzPerRoute{
+							Override: &envoy_filter_authz.ExtAuthzPerRoute_Disabled{
 								Disabled: true,
 							},
 						}),
@@ -216,7 +216,7 @@ func Test_buildEnvoyRoute(t *testing.T) {
 			},
 		},
 		{
-			name:       "1 upstream cluster",
+			name:       "no upstream cluster",
 			RouteGroup: "default",
 
 			routes: types.Routes{
@@ -227,36 +227,21 @@ func Test_buildEnvoyRoute(t *testing.T) {
 					RouteGroup: "default",
 					Attributes: types.Attributes{
 						{
-							Name:  types.AttributeCluster,
-							Value: "upstream",
+							Name:  types.AttributePrefixRewrite,
+							Value: "/seconddefault",
+						},
+						{
+							Name:  types.AttributeHostHeader,
+							Value: "www.example.com",
+						},
+						{
+							Name:  types.AttributeTimeout,
+							Value: "2s",
 						},
 					},
 				},
 			},
-			expected: []*route.Route{
-				{
-					Name: "default",
-					Match: &route.RouteMatch{
-						PathSpecifier: &route.RouteMatch_Prefix{
-							Prefix: "/",
-						},
-					},
-					Action: &route.Route_Route{
-						Route: &route.RouteAction{
-							ClusterSpecifier: &route.RouteAction_Cluster{
-								Cluster: "upstream",
-							},
-						},
-					},
-					TypedPerFilterConfig: map[string]*any.Any{
-						wellknown.HTTPExternalAuthorization: mustMarshalAny(&envoyauth.ExtAuthzPerRoute{
-							Override: &envoyauth.ExtAuthzPerRoute_Disabled{
-								Disabled: true,
-							},
-						}),
-					},
-				},
-			},
+			expected: nil,
 		},
 	}
 	for _, test := range tests {
@@ -270,7 +255,7 @@ func Test_buildRouteMatch(t *testing.T) {
 	tests := []struct {
 		name     string
 		route    types.Route
-		expected *route.RouteMatch
+		expected *envoy_route.RouteMatch
 	}{
 		{
 			name: "path match",
@@ -278,8 +263,8 @@ func Test_buildRouteMatch(t *testing.T) {
 				PathType: types.AttributeValuePathTypePath,
 				Path:     "/users",
 			},
-			expected: &route.RouteMatch{
-				PathSpecifier: &route.RouteMatch_Path{
+			expected: &envoy_route.RouteMatch{
+				PathSpecifier: &envoy_route.RouteMatch_Path{
 					Path: "/users",
 				},
 			},
@@ -290,8 +275,8 @@ func Test_buildRouteMatch(t *testing.T) {
 				PathType: types.AttributeValuePathTypePrefix,
 				Path:     "/developers",
 			},
-			expected: &route.RouteMatch{
-				PathSpecifier: &route.RouteMatch_Prefix{
+			expected: &envoy_route.RouteMatch{
+				PathSpecifier: &envoy_route.RouteMatch_Prefix{
 					Prefix: "/developers",
 				},
 			},
@@ -302,8 +287,8 @@ func Test_buildRouteMatch(t *testing.T) {
 				PathType: types.AttributeValuePathTypeRegexp,
 				Path:     "/products",
 			},
-			expected: &route.RouteMatch{
-				PathSpecifier: &route.RouteMatch_SafeRegex{
+			expected: &envoy_route.RouteMatch{
+				PathSpecifier: &envoy_route.RouteMatch_SafeRegex{
 					SafeRegex: buildRegexpMatcher("/products"),
 				},
 			},
@@ -329,7 +314,7 @@ func Test_buildWeightedClusters(t *testing.T) {
 	tests := []struct {
 		name     string
 		route    types.Route
-		expected *route.RouteAction_WeightedClusters
+		expected *envoy_route.RouteAction_WeightedClusters
 	}{
 		{
 			name: "1 weighted cluster",
@@ -341,9 +326,9 @@ func Test_buildWeightedClusters(t *testing.T) {
 					},
 				},
 			},
-			expected: &route.RouteAction_WeightedClusters{
-				WeightedClusters: &route.WeightedCluster{
-					Clusters: []*route.WeightedCluster_ClusterWeight{
+			expected: &envoy_route.RouteAction_WeightedClusters{
+				WeightedClusters: &envoy_route.WeightedCluster{
+					Clusters: []*envoy_route.WeightedCluster_ClusterWeight{
 						{
 							Name:   strings.TrimSpace("cluster1"),
 							Weight: protoUint32(uint32(25)),
@@ -363,9 +348,9 @@ func Test_buildWeightedClusters(t *testing.T) {
 					},
 				},
 			},
-			expected: &route.RouteAction_WeightedClusters{
-				WeightedClusters: &route.WeightedCluster{
-					Clusters: []*route.WeightedCluster_ClusterWeight{
+			expected: &envoy_route.RouteAction_WeightedClusters{
+				WeightedClusters: &envoy_route.WeightedCluster{
+					Clusters: []*envoy_route.WeightedCluster_ClusterWeight{
 						{
 							Name:   strings.TrimSpace("cluster1"),
 							Weight: protoUint32(uint32(1)),
@@ -393,9 +378,9 @@ func Test_buildWeightedClusters(t *testing.T) {
 					},
 				},
 			},
-			expected: &route.RouteAction_WeightedClusters{
-				WeightedClusters: &route.WeightedCluster{
-					Clusters: []*route.WeightedCluster_ClusterWeight{
+			expected: &envoy_route.RouteAction_WeightedClusters{
+				WeightedClusters: &envoy_route.WeightedCluster{
+					Clusters: []*envoy_route.WeightedCluster_ClusterWeight{
 						{
 							Name:   strings.TrimSpace("cluster1"),
 							Weight: protoUint32(uint32(25)),
@@ -436,7 +421,7 @@ func Test_buildRequestMirrorPolicies(t *testing.T) {
 	tests := []struct {
 		name     string
 		route    types.Route
-		expected []*route.RouteAction_RequestMirrorPolicy
+		expected []*envoy_route.RouteAction_RequestMirrorPolicy
 	}{
 		{
 			name: "mirror configuration ok",
@@ -452,13 +437,13 @@ func Test_buildRequestMirrorPolicies(t *testing.T) {
 					},
 				},
 			},
-			expected: []*route.RouteAction_RequestMirrorPolicy{
+			expected: []*envoy_route.RouteAction_RequestMirrorPolicy{
 				{
 					Cluster: "second_cluster",
-					RuntimeFraction: &core.RuntimeFractionalPercent{
-						DefaultValue: &envoytype.FractionalPercent{
+					RuntimeFraction: &envoy_core.RuntimeFractionalPercent{
+						DefaultValue: &envoy_type.FractionalPercent{
 							Numerator:   uint32(55),
-							Denominator: envoytype.FractionalPercent_HUNDRED,
+							Denominator: envoy_type.FractionalPercent_HUNDRED,
 						},
 					},
 				},
@@ -538,13 +523,13 @@ func Test_buildRequestMirrorPolicies(t *testing.T) {
 
 func Test_buildCorsPolicy(t *testing.T) {
 
-	stringMatch := make([]*envoymatcher.StringMatcher, 0, 1)
+	stringMatch := make([]*envoy_matcher.StringMatcher, 0, 1)
 	defaultStringMatcher := append(stringMatch, buildStringMatcher("."))
 
 	tests := []struct {
 		name     string
 		route    types.Route
-		expected *route.CorsPolicy
+		expected *envoy_route.CorsPolicy
 	}{
 		{
 			name: "CORS methods",
@@ -556,7 +541,7 @@ func Test_buildCorsPolicy(t *testing.T) {
 					},
 				},
 			},
-			expected: &route.CorsPolicy{
+			expected: &envoy_route.CorsPolicy{
 				AllowMethods:           "GET",
 				AllowOriginStringMatch: defaultStringMatcher,
 			},
@@ -571,7 +556,7 @@ func Test_buildCorsPolicy(t *testing.T) {
 					},
 				},
 			},
-			expected: &route.CorsPolicy{
+			expected: &envoy_route.CorsPolicy{
 				AllowHeaders:           "supercors",
 				AllowOriginStringMatch: defaultStringMatcher,
 			},
@@ -586,7 +571,7 @@ func Test_buildCorsPolicy(t *testing.T) {
 					},
 				},
 			},
-			expected: &route.CorsPolicy{
+			expected: &envoy_route.CorsPolicy{
 				ExposeHeaders:          "accept",
 				AllowOriginStringMatch: defaultStringMatcher,
 			},
@@ -601,7 +586,7 @@ func Test_buildCorsPolicy(t *testing.T) {
 					},
 				},
 			},
-			expected: &route.CorsPolicy{
+			expected: &envoy_route.CorsPolicy{
 				MaxAge:                 "3600",
 				AllowOriginStringMatch: defaultStringMatcher,
 			},
@@ -616,7 +601,7 @@ func Test_buildCorsPolicy(t *testing.T) {
 					},
 				},
 			},
-			expected: &route.CorsPolicy{
+			expected: &envoy_route.CorsPolicy{
 				AllowCredentials:       protoBool(true),
 				AllowOriginStringMatch: defaultStringMatcher,
 			},
@@ -640,7 +625,7 @@ func Test_buildRouteActionDirectResponse(t *testing.T) {
 	tests := []struct {
 		name     string
 		route    types.Route
-		expected *route.Route_DirectResponse
+		expected *envoy_route.Route_DirectResponse
 	}{
 		{
 			name: "200 direct",
@@ -652,8 +637,8 @@ func Test_buildRouteActionDirectResponse(t *testing.T) {
 					},
 				},
 			},
-			expected: &route.Route_DirectResponse{
-				DirectResponse: &route.DirectResponseAction{
+			expected: &envoy_route.Route_DirectResponse{
+				DirectResponse: &envoy_route.DirectResponseAction{
 					Status: uint32(200),
 				},
 			},
@@ -672,11 +657,11 @@ func Test_buildRouteActionDirectResponse(t *testing.T) {
 					},
 				},
 			},
-			expected: &route.Route_DirectResponse{
-				DirectResponse: &route.DirectResponseAction{
+			expected: &envoy_route.Route_DirectResponse{
+				DirectResponse: &envoy_route.DirectResponseAction{
 					Status: uint32(255),
-					Body: &core.DataSource{
-						Specifier: &core.DataSource_InlineString{
+					Body: &envoy_core.DataSource{
+						Specifier: &envoy_core.DataSource_InlineString{
 							InlineString: "Hello World",
 						},
 					},
@@ -716,7 +701,7 @@ func Test_buildRouteActionRedirectResponse(t *testing.T) {
 	tests := []struct {
 		name     string
 		route    types.Route
-		expected *route.Route_Redirect
+		expected *envoy_route.Route_Redirect
 	}{
 		{
 			name: "301 redirect status code + scheme",
@@ -732,10 +717,10 @@ func Test_buildRouteActionRedirectResponse(t *testing.T) {
 					},
 				},
 			},
-			expected: &route.Route_Redirect{
-				Redirect: &route.RedirectAction{
-					ResponseCode: route.RedirectAction_MOVED_PERMANENTLY,
-					SchemeRewriteSpecifier: &route.RedirectAction_SchemeRedirect{
+			expected: &envoy_route.Route_Redirect{
+				Redirect: &envoy_route.RedirectAction{
+					ResponseCode: envoy_route.RedirectAction_MOVED_PERMANENTLY,
+					SchemeRewriteSpecifier: &envoy_route.RedirectAction_SchemeRedirect{
 						SchemeRedirect: "https",
 					},
 				},
@@ -755,9 +740,9 @@ func Test_buildRouteActionRedirectResponse(t *testing.T) {
 					},
 				},
 			},
-			expected: &route.Route_Redirect{
-				Redirect: &route.RedirectAction{
-					ResponseCode: route.RedirectAction_FOUND,
+			expected: &envoy_route.Route_Redirect{
+				Redirect: &envoy_route.RedirectAction{
+					ResponseCode: envoy_route.RedirectAction_FOUND,
 					HostRedirect: "www.example.com",
 				},
 			},
@@ -776,9 +761,9 @@ func Test_buildRouteActionRedirectResponse(t *testing.T) {
 					},
 				},
 			},
-			expected: &route.Route_Redirect{
-				Redirect: &route.RedirectAction{
-					ResponseCode: route.RedirectAction_SEE_OTHER,
+			expected: &envoy_route.Route_Redirect{
+				Redirect: &envoy_route.RedirectAction{
+					ResponseCode: envoy_route.RedirectAction_SEE_OTHER,
 					PortRedirect: 8080,
 				},
 			},
@@ -797,10 +782,10 @@ func Test_buildRouteActionRedirectResponse(t *testing.T) {
 					},
 				},
 			},
-			expected: &route.Route_Redirect{
-				Redirect: &route.RedirectAction{
-					ResponseCode: route.RedirectAction_TEMPORARY_REDIRECT,
-					PathRewriteSpecifier: &route.RedirectAction_PathRedirect{
+			expected: &envoy_route.Route_Redirect{
+				Redirect: &envoy_route.RedirectAction{
+					ResponseCode: envoy_route.RedirectAction_TEMPORARY_REDIRECT,
+					PathRewriteSpecifier: &envoy_route.RedirectAction_PathRedirect{
 						PathRedirect: "/newlocation",
 					},
 				},
@@ -820,9 +805,9 @@ func Test_buildRouteActionRedirectResponse(t *testing.T) {
 					},
 				},
 			},
-			expected: &route.Route_Redirect{
-				Redirect: &route.RedirectAction{
-					ResponseCode: route.RedirectAction_PERMANENT_REDIRECT,
+			expected: &envoy_route.Route_Redirect{
+				Redirect: &envoy_route.RedirectAction{
+					ResponseCode: envoy_route.RedirectAction_PERMANENT_REDIRECT,
 					StripQuery:   true,
 				},
 			},
@@ -851,7 +836,7 @@ func Test_buildUpstreamHeadersToAdd(t *testing.T) {
 	tests := []struct {
 		name     string
 		route    types.Route
-		expected []*core.HeaderValueOption
+		expected []*envoy_core.HeaderValueOption
 	}{
 		{
 			name: "1 upstream header",
@@ -863,9 +848,9 @@ func Test_buildUpstreamHeadersToAdd(t *testing.T) {
 					},
 				},
 			},
-			expected: []*core.HeaderValueOption{
+			expected: []*envoy_core.HeaderValueOption{
 				{
-					Header: &core.HeaderValue{
+					Header: &envoy_core.HeaderValue{
 						Key:   "extra",
 						Value: "900",
 					},
@@ -886,15 +871,15 @@ func Test_buildUpstreamHeadersToAdd(t *testing.T) {
 					},
 				},
 			},
-			expected: []*core.HeaderValueOption{
+			expected: []*envoy_core.HeaderValueOption{
 				{
-					Header: &core.HeaderValue{
+					Header: &envoy_core.HeaderValue{
 						Key:   "Authorization",
 						Value: "Basic dGVzdDoxMjM=",
 					},
 				},
 				{
-					Header: &core.HeaderValue{
+					Header: &envoy_core.HeaderValue{
 						Key:   "name",
 						Value: "api",
 					},
@@ -969,16 +954,16 @@ func Test_buildHeadersList(t *testing.T) {
 	tests := []struct {
 		name     string
 		headers  map[string]string
-		expected []*core.HeaderValueOption
+		expected []*envoy_core.HeaderValueOption
 	}{
 		{
 			name: "1 header",
 			headers: map[string]string{
 				"user-agent": "netscape",
 			},
-			expected: []*core.HeaderValueOption{
+			expected: []*envoy_core.HeaderValueOption{
 				{
-					Header: &core.HeaderValue{
+					Header: &envoy_core.HeaderValue{
 						Key:   "user-agent",
 						Value: "netscape",
 					},
@@ -1006,7 +991,7 @@ func Test_buildRetryPolicy(t *testing.T) {
 	tests := []struct {
 		name     string
 		route    types.Route
-		expected *route.RetryPolicy
+		expected *envoy_route.RetryPolicy
 	}{
 		{
 			name: "retry policy 5xx",
@@ -1018,12 +1003,12 @@ func Test_buildRetryPolicy(t *testing.T) {
 					},
 				},
 			},
-			expected: &route.RetryPolicy{
+			expected: &envoy_route.RetryPolicy{
 				RetryOn:              "5xx",
 				NumRetries:           protoUint32(types.DefaultNumRetries),
 				PerTryTimeout:        durationpb.New(types.DefaultPerRetryTimeout),
 				RetriableStatusCodes: buildStatusCodesSlice(types.DefaultRetryStatusCodes),
-				RetryHostPredicate: []*route.RetryPolicy_RetryHostPredicate{
+				RetryHostPredicate: []*envoy_route.RetryPolicy_RetryHostPredicate{
 					{Name: "envoy.retry_host_predicates.previous_hosts"},
 				},
 			},
@@ -1050,12 +1035,12 @@ func Test_buildRetryPolicy(t *testing.T) {
 					},
 				},
 			},
-			expected: &route.RetryPolicy{
+			expected: &envoy_route.RetryPolicy{
 				RetryOn:              "connect-failure,reset",
 				NumRetries:           protoUint32(7),
 				PerTryTimeout:        durationpb.New(21 * time.Millisecond),
 				RetriableStatusCodes: buildStatusCodesSlice("506,507"),
-				RetryHostPredicate: []*route.RetryPolicy_RetryHostPredicate{
+				RetryHostPredicate: []*envoy_route.RetryPolicy_RetryHostPredicate{
 					{Name: "envoy.retry_host_predicates.previous_hosts"},
 				},
 			},
@@ -1138,8 +1123,8 @@ func Test_buildPerRouteFilterConfig(t *testing.T) {
 				},
 			},
 			expected: map[string]*any.Any{
-				wellknown.HTTPExternalAuthorization: mustMarshalAny(&envoyauth.ExtAuthzPerRoute{
-					Override: &envoyauth.ExtAuthzPerRoute_Disabled{
+				wellknown.HTTPExternalAuthorization: mustMarshalAny(&envoy_filter_authz.ExtAuthzPerRoute{
+					Override: &envoy_filter_authz.ExtAuthzPerRoute_Disabled{
 						Disabled: true,
 					},
 				}),
@@ -1181,8 +1166,8 @@ func Test_perRouteAuthzFilterConfig(t *testing.T) {
 					},
 				},
 			},
-			expected: mustMarshalAny(&envoyauth.ExtAuthzPerRoute{
-				Override: &envoyauth.ExtAuthzPerRoute_Disabled{
+			expected: mustMarshalAny(&envoy_filter_authz.ExtAuthzPerRoute{
+				Override: &envoy_filter_authz.ExtAuthzPerRoute_Disabled{
 					Disabled: true,
 				},
 			}),
@@ -1204,8 +1189,8 @@ func Test_perRouteAuthzFilterConfig(t *testing.T) {
 			route: types.Route{
 				Attributes: types.Attributes{},
 			},
-			expected: mustMarshalAny(&envoyauth.ExtAuthzPerRoute{
-				Override: &envoyauth.ExtAuthzPerRoute_Disabled{
+			expected: mustMarshalAny(&envoy_filter_authz.ExtAuthzPerRoute{
+				Override: &envoy_filter_authz.ExtAuthzPerRoute_Disabled{
 					Disabled: true,
 				},
 			}),
@@ -1225,7 +1210,7 @@ func Test_buildEnvoyVirtualClusters(t *testing.T) {
 		name       string
 		RouteGroup string
 		routes     types.Routes
-		expected   []*route.VirtualCluster
+		expected   []*envoy_route.VirtualCluster
 	}{
 		{
 			name:       "routegroup 1 match, 1 mismatch",
@@ -1244,12 +1229,12 @@ func Test_buildEnvoyVirtualClusters(t *testing.T) {
 					Path:       "/cars",
 				},
 			},
-			expected: []*route.VirtualCluster{
+			expected: []*envoy_route.VirtualCluster{
 				{
-					Headers: []*route.HeaderMatcher{
+					Headers: []*envoy_route.HeaderMatcher{
 						{
 							Name: ":path",
-							HeaderMatchSpecifier: &route.HeaderMatcher_ExactMatch{
+							HeaderMatchSpecifier: &envoy_route.HeaderMatcher_ExactMatch{
 								ExactMatch: "/bikes",
 							},
 						},
@@ -1277,7 +1262,7 @@ func Test_buildEnvoyVirtualClusterPathMatch(t *testing.T) {
 	tests := []struct {
 		name     string
 		route    types.Route
-		expected *route.HeaderMatcher
+		expected *envoy_route.HeaderMatcher
 	}{
 		{
 			name: "path match",
@@ -1285,9 +1270,9 @@ func Test_buildEnvoyVirtualClusterPathMatch(t *testing.T) {
 				PathType: "path",
 				Path:     "/customers",
 			},
-			expected: &route.HeaderMatcher{
+			expected: &envoy_route.HeaderMatcher{
 				Name: ":path",
-				HeaderMatchSpecifier: &route.HeaderMatcher_ExactMatch{
+				HeaderMatchSpecifier: &envoy_route.HeaderMatcher_ExactMatch{
 					ExactMatch: "/customers",
 				},
 			},
@@ -1298,9 +1283,9 @@ func Test_buildEnvoyVirtualClusterPathMatch(t *testing.T) {
 				PathType: "prefix",
 				Path:     "/users",
 			},
-			expected: &route.HeaderMatcher{
+			expected: &envoy_route.HeaderMatcher{
 				Name: ":path",
-				HeaderMatchSpecifier: &route.HeaderMatcher_PrefixMatch{
+				HeaderMatchSpecifier: &envoy_route.HeaderMatcher_PrefixMatch{
 					PrefixMatch: "/users",
 				},
 			},
@@ -1311,10 +1296,10 @@ func Test_buildEnvoyVirtualClusterPathMatch(t *testing.T) {
 				PathType: "regexp",
 				Path:     "/*bills*",
 			},
-			expected: &route.HeaderMatcher{
+			expected: &envoy_route.HeaderMatcher{
 				Name: ":path",
-				HeaderMatchSpecifier: &route.HeaderMatcher_SafeRegexMatch{
-					SafeRegexMatch: &envoymatcher.RegexMatcher{
+				HeaderMatchSpecifier: &envoy_route.HeaderMatcher_SafeRegexMatch{
+					SafeRegexMatch: &envoy_matcher.RegexMatcher{
 						Regex: "/*bills*",
 					},
 				},
