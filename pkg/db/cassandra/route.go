@@ -65,7 +65,7 @@ func (s *RouteStore) Get(routeName string) (*types.Route, types.Error) {
 	if len(routes) == 0 {
 		s.db.metrics.QueryMiss(routeMetricLabel)
 		return nil, types.NewItemNotFoundError(
-			fmt.Errorf("Can not find route '%s'", routeName))
+			fmt.Errorf("can not find route '%s'", routeName))
 	}
 
 	s.db.metrics.QueryHit(routeMetricLabel)
@@ -121,7 +121,7 @@ func (s *RouteStore) Update(r *types.Route) types.Error {
 
 		s.db.metrics.QueryFailed(routeMetricLabel)
 		return types.NewDatabaseError(
-			fmt.Errorf("Cannot update route '%s'", r.Name))
+			fmt.Errorf("cannot update route '%s'", r.Name))
 	}
 	return nil
 }

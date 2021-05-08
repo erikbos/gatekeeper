@@ -67,7 +67,7 @@ func (s *DeveloperStore) GetByEmail(developerEmail string) (*types.Developer, ty
 	if len(developers) == 0 {
 		s.db.metrics.QueryMiss(developerMetricLabel)
 		return nil, types.NewItemNotFoundError(
-			fmt.Errorf("Can not find developer '%s'", developerEmail))
+			fmt.Errorf("can not find developer '%s'", developerEmail))
 	}
 
 	s.db.metrics.QueryHit(developerMetricLabel)
@@ -87,7 +87,7 @@ func (s *DeveloperStore) GetByID(developerID string) (*types.Developer, types.Er
 	if len(developers) == 0 {
 		s.db.metrics.QueryMiss(developerMetricLabel)
 		return nil, types.NewItemNotFoundError(
-			fmt.Errorf("Can not find developerId '%s'", developerID))
+			fmt.Errorf("can not find developerId '%s'", developerID))
 	}
 
 	s.db.metrics.QueryHit(developerMetricLabel)
@@ -150,7 +150,7 @@ func (s *DeveloperStore) Update(d *types.Developer) types.Error {
 
 		s.db.metrics.QueryFailed(developerMetricLabel)
 		return types.NewDatabaseError(
-			fmt.Errorf("Cannot update developer '%s'", d.DeveloperID))
+			fmt.Errorf("cannot update developer '%s'", d.DeveloperID))
 	}
 	return nil
 }

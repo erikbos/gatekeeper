@@ -74,7 +74,7 @@ func (das *DeveloperAppService) Create(developerEmail string,
 	existingDeveloperApp, err := das.GetByName(newDeveloperApp.Name)
 	if err == nil {
 		return types.NullDeveloperApp, types.NewBadRequestError(
-			fmt.Errorf("DeveloperApp '%s' already exists", existingDeveloperApp.Name))
+			fmt.Errorf("developerApp '%s' already exists", existingDeveloperApp.Name))
 	}
 
 	// Automatically set default fields
@@ -204,7 +204,7 @@ func (das *DeveloperAppService) Delete(developerID, developerAppName string,
 	developerAppKeyCount := len(developerAppKeys)
 	if developerAppKeyCount > 0 {
 		return types.NullDeveloperApp, types.NewBadRequestError(
-			fmt.Errorf("Cannot delete developer app '%s' with %d apikeys",
+			fmt.Errorf("cannot delete developer app '%s' with %d apikeys",
 				developerApp.Name, developerAppKeyCount))
 	}
 

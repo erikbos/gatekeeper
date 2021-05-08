@@ -61,7 +61,7 @@ func (s *ClusterStore) Get(clusterName string) (*types.Cluster, types.Error) {
 	if len(clusters) == 0 {
 		s.db.metrics.QueryMiss(clusterMetricLabel)
 		return nil, types.NewItemNotFoundError(
-			fmt.Errorf("Can not find cluster (%s)", clusterName))
+			fmt.Errorf("can not find cluster (%s)", clusterName))
 	}
 
 	s.db.metrics.QueryHit(clusterMetricLabel)
@@ -111,7 +111,7 @@ func (s *ClusterStore) Update(c *types.Cluster) types.Error {
 
 		s.db.metrics.QueryFailed(clusterMetricLabel)
 		return types.NewDatabaseError(
-			fmt.Errorf("Cannot update cluster '%s'", c.Name))
+			fmt.Errorf("cannot update cluster '%s'", c.Name))
 	}
 	return nil
 }

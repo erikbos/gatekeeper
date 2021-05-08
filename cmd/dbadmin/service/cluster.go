@@ -58,7 +58,7 @@ func (cs *ClusterService) Create(newCluster types.Cluster, who Requester) (
 
 	if _, err := cs.db.Cluster.Get(newCluster.Name); err == nil {
 		return types.NullCluster, types.NewBadRequestError(
-			fmt.Errorf("Cluster '%s' already exists", newCluster.Name))
+			fmt.Errorf("cluster '%s' already exists", newCluster.Name))
 	}
 	// Automatically set default fields
 	newCluster.CreatedAt = shared.GetCurrentTimeMilliseconds()

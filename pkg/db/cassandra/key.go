@@ -64,7 +64,7 @@ func (s *KeyStore) GetByKey(key *string) (*types.Key, types.Error) {
 	if len(keys) == 0 {
 		s.db.metrics.QueryMiss(keysMetricLabel)
 		return nil, types.NewItemNotFoundError(
-			fmt.Errorf("Can not find apikey '%s'", *key))
+			fmt.Errorf("can not find apikey '%s'", *key))
 	}
 
 	s.db.metrics.QueryHit(keysMetricLabel)
@@ -85,7 +85,7 @@ func (s *KeyStore) GetByDeveloperAppID(developerAppID string) (types.Keys, types
 		s.db.metrics.QueryMiss(keysMetricLabel)
 		// Not being able to find a developer is not an error
 		return keys, types.NewItemNotFoundError(
-			fmt.Errorf("Can not find api keys of developer app id '%s'", developerAppID))
+			fmt.Errorf("can not find api keys of developer app id '%s'", developerAppID))
 	}
 
 	s.db.metrics.QueryHit(keysMetricLabel)
@@ -136,7 +136,7 @@ func (s *KeyStore) UpdateByKey(c *types.Key) types.Error {
 
 		s.db.metrics.QueryFailed(keysMetricLabel)
 		return types.NewDatabaseError(
-			fmt.Errorf("Cannot update key '%s'", c.ConsumerKey))
+			fmt.Errorf("cannot update key '%s'", c.ConsumerKey))
 	}
 	return nil
 }

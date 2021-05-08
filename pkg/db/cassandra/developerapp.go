@@ -64,7 +64,7 @@ func (s *DeveloperAppStore) GetByName(developerAppName string) (*types.Developer
 	if len(developerapps) == 0 {
 		s.db.metrics.QueryMiss(developerAppsMetricLabel)
 		return nil, types.NewItemNotFoundError(
-			fmt.Errorf("Can not find developer app '%s'", developerAppName))
+			fmt.Errorf("can not find developer app '%s'", developerAppName))
 	}
 
 	s.db.metrics.QueryHit(developerAppsMetricLabel)
@@ -83,7 +83,7 @@ func (s *DeveloperAppStore) GetByID(developerAppID string) (*types.DeveloperApp,
 	if len(developerapps) == 0 {
 		s.db.metrics.QueryMiss(developerAppsMetricLabel)
 		return nil, types.NewItemNotFoundError(
-			fmt.Errorf("Can not find developer app id '%s'", developerAppID))
+			fmt.Errorf("can not find developer app id '%s'", developerAppID))
 	}
 
 	s.db.metrics.QueryHit(developerAppsMetricLabel)
@@ -153,7 +153,7 @@ func (s *DeveloperAppStore) Update(app *types.DeveloperApp) types.Error {
 
 		s.db.metrics.QueryFailed(developerAppsMetricLabel)
 		return types.NewDatabaseError(
-			fmt.Errorf("Cannot update developer app '%s'", app.AppID))
+			fmt.Errorf("cannot update developer app '%s'", app.AppID))
 	}
 	return nil
 }

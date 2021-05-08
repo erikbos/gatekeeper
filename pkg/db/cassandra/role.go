@@ -61,7 +61,7 @@ func (s *RoleStore) Get(roleName string) (*types.Role, types.Error) {
 	if len(roles) == 0 {
 		s.db.metrics.QueryMiss(roleMetricLabel)
 		return nil, types.NewItemNotFoundError(
-			fmt.Errorf("Can not find role '%s'", roleName))
+			fmt.Errorf("can not find role '%s'", roleName))
 	}
 
 	s.db.metrics.QueryHit(roleMetricLabel)
@@ -111,7 +111,7 @@ func (s *RoleStore) Update(c *types.Role) types.Error {
 
 		s.db.metrics.QueryFailed(roleMetricLabel)
 		return types.NewDatabaseError(
-			fmt.Errorf("Cannot update role '%s'", c.Name))
+			fmt.Errorf("cannot update role '%s'", c.Name))
 	}
 	return nil
 }

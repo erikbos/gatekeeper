@@ -49,7 +49,7 @@ func (ks *KeyService) Create(newKey types.Key, developerApp *types.DeveloperApp,
 
 	if _, err := ks.db.Key.GetByKey(&newKey.ConsumerKey); err == nil {
 		return types.NullDeveloperAppKey, types.NewBadRequestError(
-			fmt.Errorf("ConsumerKey '%s' already exists", newKey.ConsumerKey))
+			fmt.Errorf("consumerKey '%s' already exists", newKey.ConsumerKey))
 	}
 
 	// Generate consumerkey if not provided

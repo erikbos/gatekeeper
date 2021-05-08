@@ -40,7 +40,7 @@ func (rs *RoleService) Create(newRole types.Role, who Requester) (*types.Role, t
 
 	if _, err := rs.db.Role.Get(newRole.Name); err == nil {
 		return nil, types.NewBadRequestError(
-			fmt.Errorf("Role '%s' already exists", newRole.Name))
+			fmt.Errorf("role '%s' already exists", newRole.Name))
 	}
 	// Automatically set default fields
 	newRole.CreatedAt = shared.GetCurrentTimeMilliseconds()
@@ -90,7 +90,7 @@ func (rs *RoleService) Delete(roleName string, who Requester) (deletedRole *type
 	userWithRoleCount := rs.countUserWithRole(roleName)
 	if userWithRoleCount > 0 {
 		return nil, types.NewForbiddenError(
-			fmt.Errorf("Cannot delete role '%s' still assigned to %d users",
+			fmt.Errorf("cannot delete role '%s' still assigned to %d users",
 				roleName, userWithRoleCount))
 	}
 	if err = rs.db.Role.Delete(roleName); err != nil {
