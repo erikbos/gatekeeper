@@ -101,10 +101,11 @@ func buildClusterConfig(config DatabaseConfig) *gocql.ClusterConfig {
 	clusterConfig.Port = config.Port
 
 	if config.TLS.Enable {
-		// Enable TLS, minimum TLS1.2
+		// Enforece TLS, minimum TLS1.2, set hostname to match with presented certificate
 		clusterConfig.SslOpts = &gocql.SslOptions{
 			Config: &tls.Config{
 				MinVersion: tls.VersionTLS12,
+				ServerName: config.Hostname,
 			},
 		}
 
@@ -138,7 +139,6 @@ func connect(cluster *gocql.ClusterConfig, config DatabaseConfig,
 	}
 
 	var err error
-	var cassandraSession *gocql.Session
 
 	attempt := 0
 	for attempt < config.ConnectAttempts {
@@ -146,6 +146,7 @@ func connect(cluster *gocql.ClusterConfig, config DatabaseConfig,
 		logger.Debug(fmt.Sprintf("Attemping to connect to database, attempt %d of %d",
 			attempt, config.ConnectAttempts))
 
+		var cassandraSession *gocql.Session
 		cassandraSession, err = cluster.CreateSession()
 		if cassandraSession != nil {
 			logger.Info(fmt.Sprintf("Connected to database as %s to %s",
