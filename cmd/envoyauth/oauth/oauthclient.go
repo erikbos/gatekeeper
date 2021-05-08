@@ -33,7 +33,7 @@ func NewClientTokenStore(database *db.Database, metrics *metrics.Metrics,
 func (clientstore *ClientTokenStore) GetByID(id string) (oauth2.ClientInfo, error) {
 
 	if clientstore == nil || id == "" {
-		return nil, errors.New("Cannot handle nil GetByID request")
+		return nil, errors.New("cannot handle nil GetByID request")
 	}
 	clientstore.logger.Debug("GetByID", zap.String("id", id))
 

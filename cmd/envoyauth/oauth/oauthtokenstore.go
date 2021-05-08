@@ -68,7 +68,7 @@ func (tokenstore *TokenStore) GetByAccess(access string) (oauth2.TokenInfo, erro
 	tokenstore.logger.Debug("GetByAccess", zap.String(method, access))
 	if access == "" {
 		tokenstore.metrics.IncOAuthTokenStoreLookupMisses(method)
-		return nil, errors.New("Empty token provided")
+		return nil, errors.New("empty token provided")
 	}
 	token, err := tokenstore.db.OAuth.OAuthAccessTokenGetByAccess(access)
 	if err != nil {

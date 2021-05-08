@@ -59,7 +59,7 @@ func (oauth *Server) Start(applicationName string) error {
 		return nil
 	}
 	if oauth.config.TokenIssuePath == "" {
-		return errors.New("OAuth TokenIssuePath needs to be configured")
+		return errors.New("oauth TokenIssuePath needs to be configured")
 	}
 
 	oauth.logger = shared.NewLogger(&oauth.config.Logger)
