@@ -112,12 +112,12 @@ func CheckIPACL(ipAccessList string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if ipAccessList == "" {
 			JSONMessageAndAbort(c, http.StatusForbidden,
-				errors.New("Permission denied, No IP ACL configured"))
+				errors.New("permission denied, No IP ACL configured"))
 			return
 		}
 		if !shared.CheckIPinAccessList(net.ParseIP(c.ClientIP()), ipAccessList) {
 			JSONMessageAndAbort(c, http.StatusForbidden,
-				errors.New("Permission denied, Access denied by IP ACL"))
+				errors.New("permission denied, Access denied by IP ACL"))
 			return
 		}
 		// no hit, we allow request
@@ -234,7 +234,7 @@ func JSONMessageAndAbort(c *gin.Context, statusCode int, errorMessage error) {
 // LivenessProbe answer with OK
 func LivenessProbe(c *gin.Context) {
 
-	JSONMessage(c, http.StatusOK, errors.New("Liveness OK"))
+	JSONMessage(c, http.StatusOK, errors.New("liveness OK"))
 }
 
 // LogHTTPRequest logs details of an HTTP request

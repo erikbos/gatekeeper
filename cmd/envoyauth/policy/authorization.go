@@ -30,26 +30,26 @@ func (p *Policy) CheckProductEntitlement(request *request.State) error {
 func (p *Policy) getAPIKeyDevDevAppDetails(request *request.State) error {
 
 	if request == nil {
-		return errors.New("No request details available")
+		return errors.New("no request details available")
 	}
 
 	var err error
 	request.Key, err = p.config.db.Key.GetByKey(request.ConsumerKey)
 	if err != nil {
 		p.config.metrics.IncUnknownAPIKey(request)
-		return errors.New("Cannot find apikey")
+		return errors.New("cannot find apikey")
 	}
 
 	request.DeveloperApp, err = p.config.db.DeveloperApp.GetByID(request.Key.AppID)
 	if err != nil {
 		p.config.metrics.IncDatabaseFetchFailure(request)
-		return errors.New("Cannot find developer app of this apikey")
+		return errors.New("cannot find developer app of this apikey")
 	}
 
 	request.Developer, err = p.config.db.Developer.GetByID(request.DeveloperApp.DeveloperID)
 	if err != nil {
 		p.config.metrics.IncDatabaseFetchFailure(request)
-		return errors.New("Cannot find developer of developer app")
+		return errors.New("cannot find developer of developer app")
 	}
 	return nil
 }
@@ -58,25 +58,25 @@ func (p *Policy) getAPIKeyDevDevAppDetails(request *request.State) error {
 func (p *Policy) checkDevAndKeyValidity(request *request.State) error {
 
 	if request == nil {
-		return errors.New("No request details available")
+		return errors.New("no request details available")
 	}
 
 	if !request.Developer.IsActive() {
-		return errors.New("Developer not active")
+		return errors.New("developer not active")
 	}
 
 	if request.Developer.IsSuspended(request.Timestamp) {
-		return errors.New("Developer suspended")
+		return errors.New("developer suspended")
 	}
 
 	if !request.Key.IsApproved() {
 		// FIXME increase unapproved dev app counter (not an error state)
-		return errors.New("Unapproved apikey")
+		return errors.New("unapproved apikey")
 	}
 
 	if request.Key.IsExpired(request.Timestamp) {
 		// FIXME increase expired key counter (not an error state))
-		return errors.New("Expired apikey")
+		return errors.New("expired apikey")
 	}
 	return nil
 }
@@ -88,7 +88,7 @@ func (p *Policy) IsPathAllowed(requestPath string,
 
 	// Does this apikey have any products assigned?
 	if len(key.APIProducts) == 0 {
-		return nil, errors.New("No active products for apikey")
+		return nil, errors.New("no active products for apikey")
 	}
 
 	// Iterate over this key's apiproducts
@@ -112,5 +112,5 @@ func (p *Policy) IsPathAllowed(requestPath string,
 			}
 		}
 	}
-	return nil, errors.New("Not authorized for requested path")
+	return nil, errors.New("not authorized for requested path")
 }

@@ -60,7 +60,7 @@ func (ls *ListenerService) Create(newListener types.Listener, who Requester) (ty
 
 	if _, err := ls.db.Listener.Get(newListener.Name); err == nil {
 		return types.NullListener, types.NewBadRequestError(
-			fmt.Errorf("Listener '%s' already exists", newListener.Name))
+			fmt.Errorf("listener '%s' already exists", newListener.Name))
 	}
 	// Automatically set default fields
 	newListener.CreatedAt = shared.GetCurrentTimeMilliseconds()

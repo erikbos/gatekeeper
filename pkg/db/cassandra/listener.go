@@ -67,7 +67,7 @@ func (s *ListenerStore) Get(listenerName string) (*types.Listener, types.Error) 
 	if len(listeners) == 0 {
 		s.db.metrics.QueryMiss(listenerMetricLabel)
 		return nil, types.NewItemNotFoundError(
-			fmt.Errorf("Can not find listener '%s'", listenerName))
+			fmt.Errorf("can not find listener '%s'", listenerName))
 	}
 
 	s.db.metrics.QueryHit(listenerMetricLabel)
@@ -127,7 +127,7 @@ func (s *ListenerStore) Update(l *types.Listener) types.Error {
 
 		s.db.metrics.QueryFailed(listenerMetricLabel)
 		return types.NewDatabaseError(
-			fmt.Errorf("Cannot update listener '%s'", l.Name))
+			fmt.Errorf("cannot update listener '%s'", l.Name))
 	}
 	return nil
 }

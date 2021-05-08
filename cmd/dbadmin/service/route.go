@@ -60,7 +60,7 @@ func (rs *RouteService) Create(newRoute types.Route, who Requester) (types.Route
 
 	if _, err := rs.db.Route.Get(newRoute.Name); err == nil {
 		return types.NullRoute, types.NewBadRequestError(
-			fmt.Errorf("Route '%s' already exists", newRoute.Name))
+			fmt.Errorf("route '%s' already exists", newRoute.Name))
 	}
 	// Automatically set default fields
 	newRoute.CreatedAt = shared.GetCurrentTimeMilliseconds()

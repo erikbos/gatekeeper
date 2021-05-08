@@ -65,7 +65,7 @@ func (ds *DeveloperService) Create(newDeveloper types.Developer,
 
 	if _, err := ds.Get(newDeveloper.Email); err == nil {
 		return types.NullDeveloper, types.NewBadRequestError(
-			fmt.Errorf("Developer '%s' already exists", newDeveloper.Email))
+			fmt.Errorf("developer '%s' already exists", newDeveloper.Email))
 	}
 	// Automatically set default fields
 	newDeveloper.CreatedAt = shared.GetCurrentTimeMilliseconds()
@@ -182,7 +182,7 @@ func (ds *DeveloperService) Delete(developerName string,
 	}
 	if appCountOfDeveloper > 0 {
 		return types.NullDeveloper, types.NewBadRequestError(
-			fmt.Errorf("Cannot delete developer '%s' with %d active developer apps",
+			fmt.Errorf("cannot delete developer '%s' with %d active developer apps",
 				developer.Email, appCountOfDeveloper))
 	}
 	if err := ds.db.Developer.DeleteByID(developer.DeveloperID); err != nil {

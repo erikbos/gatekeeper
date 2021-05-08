@@ -63,7 +63,7 @@ func (s *UserStore) Get(userName string) (*types.User, types.Error) {
 	if len(users) == 0 {
 		s.db.metrics.QueryMiss(userMetricLabel)
 		return nil, types.NewItemNotFoundError(
-			fmt.Errorf("Can not find user '%s'", userName))
+			fmt.Errorf("can not find user '%s'", userName))
 	}
 
 	s.db.metrics.QueryHit(userMetricLabel)
@@ -117,7 +117,7 @@ func (s *UserStore) Update(c *types.User) types.Error {
 
 		s.db.metrics.QueryFailed(userMetricLabel)
 		return types.NewDatabaseError(
-			fmt.Errorf("Cannot update user '%s'", c.Name))
+			fmt.Errorf("cannot update user '%s'", c.Name))
 	}
 	return nil
 }

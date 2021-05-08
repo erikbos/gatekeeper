@@ -42,7 +42,7 @@ func (us *UserService) Create(newUser types.User, who Requester) (*types.User, t
 
 	if _, err := us.db.User.Get(newUser.Name); err == nil {
 		return nil, types.NewBadRequestError(
-			fmt.Errorf("User '%s' already exists", newUser.Name))
+			fmt.Errorf("user '%s' already exists", newUser.Name))
 	}
 	// Automatically set default fields
 	newUser.CreatedAt = shared.GetCurrentTimeMilliseconds()

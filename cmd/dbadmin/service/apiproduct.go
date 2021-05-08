@@ -61,7 +61,7 @@ func (ds *APIProductService) Create(newAPIProduct types.APIProduct,
 
 	if _, err := ds.Get(newAPIProduct.Name); err == nil {
 		return types.NullAPIProduct, types.NewBadRequestError(
-			fmt.Errorf("APIProduct '%s' already exists", newAPIProduct.Name))
+			fmt.Errorf("apiproduct '%s' already exists", newAPIProduct.Name))
 	}
 	// Automatically set default fields
 	newAPIProduct.CreatedAt = shared.GetCurrentTimeMilliseconds()

@@ -68,7 +68,7 @@ func (s *APIProductStore) Get(apiproductName string) (*types.APIProduct, types.E
 	if len(apiproducts) == 0 {
 		s.db.metrics.QueryMiss(apiProductsMetricLabel)
 		return nil, types.NewItemNotFoundError(
-			fmt.Errorf("Cannot find apiproduct '%s'", apiproductName))
+			fmt.Errorf("cannot find apiproduct '%s'", apiproductName))
 	}
 
 	s.db.metrics.QueryHit(apiProductsMetricLabel)
@@ -137,7 +137,7 @@ func (s *APIProductStore) Update(p *types.APIProduct) types.Error {
 
 		s.db.metrics.QueryFailed(apiProductsMetricLabel)
 		return types.NewDatabaseError(
-			fmt.Errorf("Cannot update apiproduct '%s'", p.Name))
+			fmt.Errorf("cannot update apiproduct '%s'", p.Name))
 	}
 	return nil
 }
