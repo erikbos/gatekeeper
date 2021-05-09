@@ -108,7 +108,7 @@ func startWebAdmin(s *server, applicationName, organization string, enableAPIAut
 	s.webadmin.Router.GET(webadmin.ConfigDumpPath, webadmin.ShowStartupConfiguration(s.config))
 
 	s.webadmin.Router.GET("/docs/", shared.ServeEmbedFile(apiDocFiles, "apidocs/index.htm"))
-	s.webadmin.Router.GET("/docs/:filename", shared.ServeEmbedDirectory(apiDocFiles, "apidocs"))
+	s.webadmin.Router.GET("/docs/:path", shared.ServeEmbedDirectory(apiDocFiles, "apidocs"))
 
 	changeLogLogger := shared.NewLogger(&s.config.Changelog.Logger)
 	service := service.New(s.db, changeLogLogger)
