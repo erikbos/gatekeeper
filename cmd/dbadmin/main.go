@@ -1,6 +1,7 @@
 package main
 
 import (
+	"embed"
 	"flag"
 	"fmt"
 	"os"
@@ -22,6 +23,9 @@ var (
 	version   string // Git version of build, set by Makefile
 	buildTime string // Build time, set by Makefile
 )
+
+//go:embed apidocs/*
+var apiDocFiles embed.FS
 
 type server struct {
 	config    *DBAdminConfig
@@ -103,8 +107,10 @@ func startWebAdmin(s *server, applicationName, organization string, enableAPIAut
 	s.webadmin.Router.GET(webadmin.MetricsPath, gin.WrapH(promhttp.Handler()))
 	s.webadmin.Router.GET(webadmin.ConfigDumpPath, webadmin.ShowStartupConfiguration(s.config))
 
-	changeLogLogger := shared.NewLogger(&s.config.Changelog.Logger)
+	s.webadmin.Router.GET("/docs/", shared.ServeEmbedFile(apiDocFiles, "apidocs/index.htm"))
+	s.webadmin.Router.GET("/docs/:path", shared.ServeEmbedDirectory(apiDocFiles, "apidocs"))
 
+	changeLogLogger := shared.NewLogger(&s.config.Changelog.Logger)
 	service := service.New(s.db, changeLogLogger)
 	s.handler = handler.NewHandler(s.webadmin.Router, s.db, service,
 		applicationName, organization, enableAPIAuthentication, webAdminLogger)
