@@ -72,7 +72,7 @@ var createTablesCQL = [...]string{
         )`,
 
 	// Default database user 'admin', password 'passwd', role 'admin'
-	`INSERT INTO users (name,password,status,roles,created_by,created_at,lastmodified_at) VALUES('admin','passwd','active','["admin"]','initdb',toUnixTimestamp(now()),toUnixTimestamp(now())) IF NOT EXISTS`,
+	`INSERT INTO users (name,password,status,roles,created_by,created_at,lastmodified_at) VALUES('admin','$2a$07$zWlw6WvswAFGZzNpBJg5qelwyg87NM/w4ypXP.NhfpuYmmv.WPyJO','active','["admin"]','initdb',toUnixTimestamp(now()),toUnixTimestamp(now())) IF NOT EXISTS`,
 
 	`CREATE TABLE IF NOT EXISTS roles (
         name text,
