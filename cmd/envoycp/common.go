@@ -152,25 +152,46 @@ func buildALPNProtocols(entity string, attributes types.Attributes) []string {
 
 func buildTLSCertificates(attributes types.Attributes) []*envoy_tls.TlsCertificate {
 
-	certificate, certificateError := attributes.Get(types.AttributeTLSCertificate)
-	certificateKey, certificateKeyError := attributes.Get(types.AttributeTLSCertificateKey)
+	var certificateChain, privateKey *envoy_core.DataSource
 
-	if certificateError != nil || certificateKeyError != nil {
+	certificateString, certificateError := attributes.Get(types.AttributeTLSCertificate)
+	certificateKeyString, certificateKeyError := attributes.Get(types.AttributeTLSCertificateKey)
+	if certificateError == nil && certificateKeyError == nil {
+		certificateChain = &envoy_core.DataSource{
+			Specifier: &envoy_core.DataSource_InlineString{
+				InlineString: certificateString,
+			},
+		}
+		privateKey = &envoy_core.DataSource{
+			Specifier: &envoy_core.DataSource_InlineString{
+				InlineString: certificateKeyString,
+			},
+		}
+	}
+
+	certificateFile, certificateError := attributes.Get(types.AttributeTLSCertificateFile)
+	certificateKeyFile, certificateKeyError := attributes.Get(types.AttributeTLSCertificateKeyFile)
+	if certificateError == nil && certificateKeyError == nil {
+		certificateChain = &envoy_core.DataSource{
+			Specifier: &envoy_core.DataSource_InlineString{
+				InlineString: certificateFile,
+			},
+		}
+		privateKey = &envoy_core.DataSource{
+			Specifier: &envoy_core.DataSource_InlineString{
+				InlineString: certificateKeyFile,
+			},
+		}
+	}
+
+	if certificateChain == nil || privateKey == nil {
 		return nil
 	}
 
 	return []*envoy_tls.TlsCertificate{
 		{
-			CertificateChain: &envoy_core.DataSource{
-				Specifier: &envoy_core.DataSource_InlineString{
-					InlineString: certificate,
-				},
-			},
-			PrivateKey: &envoy_core.DataSource{
-				Specifier: &envoy_core.DataSource_InlineString{
-					InlineString: certificateKey,
-				},
-			},
+			CertificateChain: certificateChain,
+			PrivateKey:       privateKey,
 		},
 	}
 }

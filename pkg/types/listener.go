@@ -115,6 +115,12 @@ const (
 	// AttributeTLSCertificateKey holds certicate key
 	AttributeTLSCertificateKey = "TLSCertificateKey"
 
+	// AttributeTLSCertificateFile holds filename of pem encoded certicate
+	AttributeTLSCertificateFile = "TLSCertificateFile"
+
+	// AttributeTLSCertificateKeyFile holds filename of certicate key
+	AttributeTLSCertificateKeyFile = "TLSCertificateKeyFile"
+
 	// AttributeTLSMinimumVersion determines minimum TLS version accepted
 	AttributeTLSMinimumVersion = "TLSMinimumVersion"
 
@@ -172,7 +178,9 @@ var validListenerAttributes = map[string]bool{
 	AttributeTLSMinimumVersion:           true,
 	AttributeTLSMaximumVersion:           true,
 	AttributeTLSCertificate:              true,
+	AttributeTLSCertificateFile:          true,
 	AttributeTLSCertificateKey:           true,
+	AttributeTLSCertificateKeyFile:       true,
 	AttributeTLSCipherSuites:             true,
 	AttributeServerName:                  true,
 	AttributeMaxConcurrentStreams:        true,
