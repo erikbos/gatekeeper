@@ -7,7 +7,7 @@ require (
 	github.com/coocood/freecache v1.1.1
 	github.com/dchest/uniuri v0.0.0-20200228104902-7aecb25e1fe5
 	github.com/envoyproxy/go-control-plane v0.9.9-0.20210217033140-668b12f5399d
-	github.com/gin-gonic/gin v1.7.1
+	github.com/gin-gonic/gin v1.7.2
 	github.com/gocql/gocql v0.0.0-20210504150947-558dfae50b5d
 	github.com/gogo/googleapis v1.4.1
 	github.com/golang/protobuf v1.5.2
