@@ -30,6 +30,8 @@ var (
 
 	// NullAttributes is an empty attributes slice
 	NullAttributes = Attributes{}
+
+	errAttributeNotFound = NewItemNotFoundError(fmt.Errorf("cannot find attribute"))
 )
 
 // AttributeValue is the single attribute type we receive from API
@@ -46,7 +48,7 @@ func (attributes *Attributes) Get(name string) (string, Error) {
 			return element.Value, nil
 		}
 	}
-	return "", NewItemNotFoundError(fmt.Errorf("cannot find attribute '%s'", name))
+	return "", errAttributeNotFound
 }
 
 // GetAsString returns attribute value (or provided default if not found) as type string
@@ -174,7 +176,7 @@ func (attributes *Attributes) Delete(name string) (valueOfDeletedAttribute strin
 	if attributeDeleted {
 		return valueOfDeletedAttribute, nil
 	}
-	return "", NewItemNotFoundError(fmt.Errorf("cannot delete attribute '%s'", name))
+	return "", errAttributeNotFound
 }
 
 // Unmarshal unpacks JSON array of attributes
