@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -201,4 +202,101 @@ func Test_Attribute_GetAsDuration(t *testing.T) {
 		require.Equalf(t, test.expectedValue,
 			test.attributes.GetAsDuration(test.attributeName, test.defaultValue), test.name)
 	}
+}
+
+func Test_Attribute_Set(t *testing.T) {
+
+	tests := []struct {
+		name            string
+		attributes      Attributes
+		attributeToSet  Attribute
+		attributesAfter Attributes
+		err             Error
+	}{
+		{
+			name:       "1 - One attribute",
+			attributes: Attributes{},
+			attributeToSet: Attribute{
+				Name:  AttributeSNIHostName,
+				Value: "www.test.com",
+			},
+			attributesAfter: Attributes{
+				Attribute{
+					Name:  AttributeSNIHostName,
+					Value: "www.test.com",
+				},
+			},
+			err: nil,
+		},
+		{
+			name: "2 - Second attribute",
+			attributes: Attributes{
+				Attribute{
+					Name:  AttributeSNIHostName,
+					Value: "www.test.com",
+				},
+			},
+			attributeToSet: Attribute{
+				Name:  AttributeHTTPProtocol,
+				Value: AttributeValueHTTPProtocol2,
+			},
+			attributesAfter: Attributes{
+				Attribute{
+					Name:  AttributeSNIHostName,
+					Value: "www.test.com",
+				},
+				Attribute{
+					Name:  AttributeHTTPProtocol,
+					Value: AttributeValueHTTPProtocol2,
+				},
+			},
+			err: nil,
+		},
+		{
+			name: "3 - Overwrite first attribute",
+			attributes: Attributes{
+				Attribute{
+					Name:  AttributeSNIHostName,
+					Value: "www.test.com",
+				},
+				Attribute{
+					Name:  AttributeHTTPProtocol,
+					Value: AttributeValueHTTPProtocol2,
+				},
+			},
+			attributeToSet: Attribute{
+				Name:  AttributeSNIHostName,
+				Value: "www.example.com",
+			},
+			attributesAfter: Attributes{
+				Attribute{
+					Name:  AttributeSNIHostName,
+					Value: "www.example.com",
+				},
+				Attribute{
+					Name:  AttributeHTTPProtocol,
+					Value: AttributeValueHTTPProtocol2,
+				},
+			},
+			err: nil,
+		},
+	}
+	for _, test := range tests {
+		err := test.attributes.Set(test.attributeToSet)
+		require.Equalf(t, test.err, err, test.name)
+		require.Equalf(t, test.attributesAfter, test.attributes, test.name)
+	}
+
+	// Try filling up attribute bag with more than MaximumNumberofAttributesAllowed entries
+	a := Attributes{}
+	for i := 0; i <= MaximumNumberofAttributesAllowed; i++ {
+		a.Set(Attribute{
+			Name:  fmt.Sprintf("attribute%d", i),
+			Value: fmt.Sprintf("value%d", i),
+		})
+	}
+	require.Equal(t, errAttributeTooMany, a.Set(Attribute{
+		Name:  "ShouldNotFitAnymore",
+		Value: "WeAreFull",
+	}))
 }
