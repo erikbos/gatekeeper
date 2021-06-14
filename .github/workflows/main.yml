@@ -32,9 +32,42 @@ jobs:
     - name: Run unit tests
       run: make test
 
-    - name: Upload coverage to Codecov
+    - name: Upload coverage to Codecov (dbadmin)
       uses: codecov/codecov-action@v1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        yml: .codecov.yml
         file: tmp/coverage.txt
+        directory: cmd/dbadmin/
+        flags: dbadmin
+
+    - name: Upload coverage to Codecov (envoyals)
+      uses: codecov/codecov-action@v1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: tmp/coverage.txt
+        directory: cmd/envoyals/
+        flags: envoyals
+
+    - name: Upload coverage to Codecov (envoyauth)
+      uses: codecov/codecov-action@v1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: tmp/coverage.txt
+        directory: cmd/envoyauth/
+        flags: envoyauth
+
+    - name: Upload coverage to Codecov (envoycp)
+      uses: codecov/codecov-action@v1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: tmp/coverage.txt
+        directory: cmd/envoycp/
+        flags: envoycp
+
+    - name: Upload coverage to Codecov (pkg)
+      uses: codecov/codecov-action@v1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        file: tmp/coverage.txt
+        directory: pkg/
+        flags: pkg

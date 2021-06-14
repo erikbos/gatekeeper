@@ -14,11 +14,11 @@ coverage:
           - pkg
       envoycp:
         flags:
-          - emvoycp
+          - envoycp
           - pkg
       envoyals:
         flags:
-          - emvoycp
+          - envoyals
           - pkg
 
 flags:
