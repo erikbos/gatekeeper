@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/dchest/uniuri"
+
 	"github.com/erikbos/gatekeeper/pkg/db"
 	"github.com/erikbos/gatekeeper/pkg/shared"
 	"github.com/erikbos/gatekeeper/pkg/types"
@@ -68,8 +70,10 @@ func (ds *DeveloperService) Create(newDeveloper types.Developer,
 			fmt.Errorf("developer '%s' already exists", newDeveloper.Email))
 	}
 	// Automatically set default fields
+	newDeveloper.DeveloperID = generateDeveloperID(newDeveloper.Email)
 	newDeveloper.CreatedAt = shared.GetCurrentTimeMilliseconds()
 	newDeveloper.CreatedBy = who.User
+	newDeveloper.Activate()
 
 	if err := ds.updateDeveloper(&newDeveloper, who); err != nil {
 		return types.NullDeveloper, err
@@ -190,4 +194,9 @@ func (ds *DeveloperService) Delete(developerName string,
 	}
 	ds.changelog.Delete(developer, who)
 	return *developer, nil
+}
+
+// generateDeveloperID generates a DeveloperID
+func generateDeveloperID(developer string) string {
+	return uniuri.New()
 }

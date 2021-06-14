@@ -89,6 +89,9 @@ type (
 		// GetAll retrieves all developer apps
 		GetAll() (types.DeveloperApps, types.Error)
 
+		// GetAllByDeveloperID retrieves all developer apps from one developer
+		GetAllByDeveloperID(developerID string) (types.DeveloperApps, types.Error)
+
 		// GetByName returns a developer app
 		GetByName(developerAppName string) (*types.DeveloperApp, types.Error)
 

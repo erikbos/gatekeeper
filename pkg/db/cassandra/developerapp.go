@@ -51,6 +51,20 @@ func (s *DeveloperAppStore) GetAll() (types.DeveloperApps, types.Error) {
 	return developerapps, nil
 }
 
+// GetAllByDeveloperID retrieves all developer apps from a developer
+func (s *DeveloperAppStore) GetAllByDeveloperID(developerID string) (types.DeveloperApps, types.Error) {
+
+	query := "SELECT " + developerAppColumns + " FROM developer_apps WHERE developer_id = ?"
+	developerapps, err := s.runGetDeveloperAppQuery(query, developerID)
+	if err != nil {
+		s.db.metrics.QueryMiss(developerAppsMetricLabel)
+		return types.NullDeveloperApps, types.NewDatabaseError(err)
+	}
+
+	s.db.metrics.QueryHit(developerAppsMetricLabel)
+	return developerapps, nil
+}
+
 // GetByName returns a developer app
 func (s *DeveloperAppStore) GetByName(developerAppName string) (*types.DeveloperApp, types.Error) {
 

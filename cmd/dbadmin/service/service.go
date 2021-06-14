@@ -115,6 +115,8 @@ type (
 	DeveloperApp interface {
 		GetAll() (developerApps types.DeveloperApps, err types.Error)
 
+		GetAllByEmail(developerName string) (developerApps types.DeveloperApps, err types.Error)
+
 		GetByName(developerAppName string) (developerApp *types.DeveloperApp, err types.Error)
 
 		GetByID(developerAppName string) (developerApp *types.DeveloperApp, err types.Error)

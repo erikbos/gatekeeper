@@ -56,11 +56,11 @@ func (h *Handler) getAllDevelopersApps(c *gin.Context) handlerResponse {
 // getDeveloperAppsByDeveloperEmail returns apps of a developer
 func (h *Handler) getDeveloperAppsByDeveloperEmail(c *gin.Context) handlerResponse {
 
-	developer, err := h.service.Developer.Get(c.Param(developerParameter))
+	developerapps, err := h.service.DeveloperApp.GetAllByEmail(c.Param(developerParameter))
 	if err != nil {
 		return handleError(err)
 	}
-	return handleOK(developer.Apps)
+	return handleOK(StringMap{"apps": developerapps})
 }
 
 // getDeveloperAppByName returns one named app of a developer

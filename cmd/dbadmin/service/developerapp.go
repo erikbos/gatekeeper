@@ -21,13 +21,25 @@ func NewDeveloperApp(database *db.Database, c *Changelog) *DeveloperAppService {
 
 	return &DeveloperAppService{
 		db:        database,
-		changelog: c}
+		changelog: c,
+	}
 }
 
 // GetAll returns all developerApp apps
 func (das *DeveloperAppService) GetAll() (developerApps types.DeveloperApps, err types.Error) {
 
 	return das.db.DeveloperApp.GetAll()
+}
+
+// GetAll returns all developer apps of one develoepr
+func (das *DeveloperAppService) GetAllByEmail(developerEmail string) (developerApps types.DeveloperApps, err types.Error) {
+
+	developer, err := das.db.Developer.GetByEmail(developerEmail)
+	if err != nil {
+		return types.NullDeveloperApps, err
+	}
+
+	return das.db.DeveloperApp.GetAllByDeveloperID(developer.DeveloperID)
 }
 
 // GetByName returns details of an developerApp
