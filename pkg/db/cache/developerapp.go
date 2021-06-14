@@ -1,6 +1,8 @@
 package cache
 
 import (
+	"fmt"
+
 	"github.com/erikbos/gatekeeper/pkg/db"
 	"github.com/erikbos/gatekeeper/pkg/types"
 )
@@ -28,6 +30,20 @@ func (s *DeveloperAppCache) GetAll() (types.DeveloperApps, types.Error) {
 	var developerApps types.DeveloperApps
 	// TODO/FIXME
 	if err := s.cache.fetchEntity(types.TypeDeveloperAppName, "--all-apps--", &developerApps, getDeveloperApps); err != nil {
+		return nil, err
+	}
+	return developerApps, nil
+}
+
+// GetAllByDeveloperID retrieves all developer apps from one developer
+func (s *DeveloperAppCache) GetAllByDeveloperID(developerID string) (types.DeveloperApps, types.Error) {
+
+	getDeveloperApps := func() (interface{}, types.Error) {
+		return s.developerapp.GetAllByDeveloperID(developerID)
+	}
+	var developerApps types.DeveloperApps
+	cacheKey := fmt.Sprintf("--all-apps-%s-", developerID)
+	if err := s.cache.fetchEntity(types.TypeDeveloperAppName, cacheKey, &developerApps, getDeveloperApps); err != nil {
 		return nil, err
 	}
 	return developerApps, nil
