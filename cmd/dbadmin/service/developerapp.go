@@ -157,7 +157,9 @@ func (das *DeveloperAppService) UpdateAttribute(developerAppName string,
 		return err
 	}
 	updatedDeveloperApp := currentDeveloperApp
-	updatedDeveloperApp.Attributes.Set(attributeValue)
+	if err := updatedDeveloperApp.Attributes.Set(attributeValue); err != nil {
+		return err
+	}
 
 	if err = das.updateDeveloperApp(updatedDeveloperApp, who); err != nil {
 		return err

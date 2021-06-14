@@ -133,7 +133,9 @@ func (ds *DeveloperService) UpdateAttribute(developerName string,
 		return err
 	}
 	updatedDeveloper := currentDeveloper
-	updatedDeveloper.Attributes.Set(attributeValue)
+	if err := updatedDeveloper.Attributes.Set(attributeValue); err != nil {
+		return err
+	}
 
 	if err = ds.updateDeveloper(updatedDeveloper, who); err != nil {
 		return err

@@ -37,7 +37,7 @@ var (
 
 	errAttributeNotFound = NewItemNotFoundError(fmt.Errorf("cannot find attribute"))
 
-	errAttributeTooMany = NewUpdateFailureError(errors.New("cannot add more than 100 attributes"))
+	errTooManyAttributes = NewUpdateFailureError(errors.New("cannot add more than 100 attributes"))
 )
 
 // AttributeValue is the single attribute type we receive from API
@@ -97,7 +97,7 @@ func (attributes *Attributes) GetAsDuration(name string, defaultDuration time.Du
 func (attributes *Attributes) Set(attributeValue Attribute) Error {
 
 	if len(*attributes) > MaximumNumberofAttributesAllowed {
-		return errAttributeTooMany
+		return errTooManyAttributes
 	}
 
 	updatedAttributes := Attributes{}

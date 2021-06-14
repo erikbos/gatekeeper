@@ -289,14 +289,15 @@ func Test_Attribute_Set(t *testing.T) {
 
 	// Try filling up attribute bag with more than MaximumNumberofAttributesAllowed entries
 	a := Attributes{}
+	testName := "MaximumNumberofAttributesAllowed"
 	for i := 0; i <= MaximumNumberofAttributesAllowed; i++ {
-		a.Set(Attribute{
+		require.Equalf(t, nil, a.Set(Attribute{
 			Name:  fmt.Sprintf("attribute%d", i),
 			Value: fmt.Sprintf("value%d", i),
-		})
+		}), testName)
 	}
-	require.Equal(t, errAttributeTooMany, a.Set(Attribute{
+	require.Equalf(t, errTooManyAttributes, a.Set(Attribute{
 		Name:  "ShouldNotFitAnymore",
 		Value: "WeAreFull",
-	}))
+	}), testName)
 }

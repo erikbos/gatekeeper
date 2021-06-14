@@ -120,7 +120,9 @@ func (cs *ClusterService) UpdateAttribute(clusterName string,
 		return err
 	}
 	updatedCluster := currentCluster
-	updatedCluster.Attributes.Set(attributeValue)
+	if err := updatedCluster.Attributes.Set(attributeValue); err != nil {
+		return err
+	}
 
 	if err := cs.updateCluster(updatedCluster, who); err != nil {
 		return err
