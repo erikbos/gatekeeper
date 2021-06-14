@@ -121,7 +121,9 @@ func (ls *ListenerService) UpdateAttribute(listenerName string,
 		return err
 	}
 	updatedListener := currentListener
-	updatedListener.Attributes.Set(attributeValue)
+	if err := updatedListener.Attributes.Set(attributeValue); err != nil {
+		return err
+	}
 
 	if err = ls.updateListener(updatedListener, who); err != nil {
 		return err

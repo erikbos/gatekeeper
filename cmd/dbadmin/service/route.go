@@ -122,7 +122,9 @@ func (rs *RouteService) UpdateAttribute(routeName string,
 		return err
 	}
 	updatedRoute := currentRoute
-	updatedRoute.Attributes.Set(attributeValue)
+	if err := updatedRoute.Attributes.Set(attributeValue); err != nil {
+		return err
+	}
 
 	if err = rs.updateRoute(updatedRoute, who); err != nil {
 		return err

@@ -124,7 +124,9 @@ func (ds *APIProductService) UpdateAttribute(apiproductName string,
 		return err
 	}
 	updatedAPIProduct := currentAPIProduct
-	updatedAPIProduct.Attributes.Set(attributeValue)
+	if err := updatedAPIProduct.Attributes.Set(attributeValue); err != nil {
+		return err
+	}
 
 	if err := ds.updateAPIProduct(updatedAPIProduct, who); err != nil {
 		return err
