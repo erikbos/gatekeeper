@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/json"
+	"fmt"
 )
 
 // StringSlice holds a number of strings
@@ -34,4 +35,14 @@ func (s StringSlice) Marshal() string {
 		}
 	}
 	return "[]"
+}
+
+func checkForUnknownAttributes(attributes Attributes, validAttributes map[string]bool) error {
+
+	for _, attribute := range attributes {
+		if !validAttributes[attribute.Name] {
+			return fmt.Errorf("unknown attribute '%s'", attribute.Name)
+		}
+	}
+	return nil
 }
