@@ -1,7 +1,6 @@
 package types
 
 import (
-	"fmt"
 	"sort"
 )
 
@@ -150,15 +149,10 @@ func (listeners Listeners) Sort() {
 	})
 }
 
-// ConfigCheck checks if a listener's configuration is correct
-func (l *Listener) ConfigCheck() error {
+// CheckForUnknownAttributes checks if a listeners's attribute list contains unknown attributes
+func (l *Listener) CheckForUnknownAttributes() error {
 
-	for _, attribute := range l.Attributes {
-		if !validListenerAttributes[attribute.Name] {
-			return fmt.Errorf("unknown attribute '%s'", attribute.Name)
-		}
-	}
-	return nil
+	return checkForUnknownAttributes(l.Attributes, validListenerAttributes)
 }
 
 // validListenerAttributes contains all valid attribute names for a listener

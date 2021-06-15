@@ -1,7 +1,6 @@
 package types
 
 import (
-	"fmt"
 	"sort"
 	"time"
 )
@@ -186,15 +185,10 @@ func (routes Routes) Sort() {
 	})
 }
 
-// ConfigCheck checks if a route's configuration is correct
-func (r *Route) ConfigCheck() error {
+// CheckForUnknownAttributes checks if a route's attribute list contains unknown attributes
+func (r *Route) CheckForUnknownAttributes() error {
 
-	for _, attribute := range r.Attributes {
-		if !validRouteAttributes[attribute.Name] {
-			return fmt.Errorf("unknown attribute '%s'", attribute.Name)
-		}
-	}
-	return nil
+	return checkForUnknownAttributes(r.Attributes, validRouteAttributes)
 }
 
 // validRouteAttributes contains all valid attribute names for a route
