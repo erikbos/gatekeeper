@@ -66,9 +66,8 @@ func (s *server) buildEnvoyRoutes(RouteGroup string, routes types.Routes) []*env
 	var envoyRoutes []*envoy_route.Route
 
 	for _, route := range routes {
-		if err := route.CheckForUnknownAttributes(); err != nil {
-			s.logger.Warn("route has unknown attribute",
-				zap.String("route", route.Name), zap.Error(err))
+		if err := route.ConfigCheck(); err != nil {
+			s.logger.Warn("Unsupported configuration", zap.String("route", route.Name), zap.Error(err))
 		}
 
 		if route.RouteGroup == RouteGroup {

@@ -1,6 +1,7 @@
 package types
 
 import (
+	"fmt"
 	"sort"
 	"time"
 )
@@ -153,10 +154,15 @@ func (clusters Clusters) Sort() {
 	})
 }
 
-// CheckForUnknownAttributes checks if a cluster's attribute list contains unknown attributes
-func (c *Cluster) CheckForUnknownAttributes() error {
+// ConfigCheck checks if a cluster's configuration is correct
+func (c *Cluster) ConfigCheck() error {
 
-	return checkForUnknownAttributes(c.Attributes, validClusterAttributes)
+	for _, attribute := range c.Attributes {
+		if !validClusterAttributes[attribute.Name] {
+			return fmt.Errorf("unknown attribute '%s'", attribute.Name)
+		}
+	}
+	return nil
 }
 
 // validClusterAttributes contains all valid attribute names for a cluster

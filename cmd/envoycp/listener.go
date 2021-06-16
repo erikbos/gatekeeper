@@ -84,12 +84,6 @@ func (s *server) buildEnvoyListenerConfig(port uint32) *envoy_listener.Listener 
 
 	// add all vhosts belonging to this listener's port
 	for _, configuredListener := range s.dbentities.GetListeners() {
-
-		if err := configuredListener.CheckForUnknownAttributes(); err != nil {
-			s.logger.Warn("listener has unknown attribute",
-				zap.String("listener", configuredListener.Name), zap.Error(err))
-		}
-
 		if configuredListener.Port == int(port) {
 			envoyListener.FilterChains = append(envoyListener.FilterChains,
 				s.buildFilterChainEntry(configuredListener, envoyListener))

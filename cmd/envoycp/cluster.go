@@ -29,8 +29,8 @@ func (s *server) getEnvoyClusterConfig() ([]cache.Resource, error) {
 	envoyClusters := []cache.Resource{}
 
 	for _, cluster := range s.dbentities.GetClusters() {
-		if err := cluster.CheckForUnknownAttributes(); err != nil {
-			s.logger.Warn("Cluster has unknown attribute",
+		if err := cluster.ConfigCheck(); err != nil {
+			s.logger.Warn("Cluster has unsupported configuration",
 				zap.String("cluster", cluster.Name), zap.Error(err))
 		}
 		if clusterToAdd := s.buildEnvoyClusterConfig(cluster); clusterToAdd != nil {
