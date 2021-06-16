@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"sort"
 	"strconv"
@@ -30,6 +31,13 @@ var (
 
 	// NullAttributes is an empty attributes slice
 	NullAttributes = Attributes{}
+
+	// Maximum number of attributes allowed in set
+	MaximumNumberofAttributesAllowed = 100
+
+	errAttributeNotFound = NewItemNotFoundError(fmt.Errorf("cannot find attribute"))
+
+	errTooManyAttributes = NewUpdateFailureError(errors.New("cannot add more than 100 attributes"))
 )
 
 // AttributeValue is the single attribute type we receive from API
@@ -46,7 +54,7 @@ func (attributes *Attributes) Get(name string) (string, Error) {
 			return element.Value, nil
 		}
 	}
-	return "", NewItemNotFoundError(fmt.Errorf("cannot find attribute '%s'", name))
+	return "", errAttributeNotFound
 }
 
 // GetAsString returns attribute value (or provided default if not found) as type string
@@ -86,40 +94,41 @@ func (attributes *Attributes) GetAsDuration(name string, defaultDuration time.Du
 }
 
 // Set updates or adds attribute in slice. Returns old value if attribute already existed.
-func (attributes *Attributes) Set(attributeValue Attribute) (oldValue string, oldValuePresent bool) {
+func (attributes *Attributes) Set(attributeValue Attribute) Error {
+
+	if len(*attributes) > MaximumNumberofAttributesAllowed {
+		return errTooManyAttributes
+	}
 
 	updatedAttributes := Attributes{}
+	attributePresent := false
 
 	for _, oldAttribute := range *attributes {
-		// In case attribute exists overwrite it
+		// In case attribute exists append new value
 		if oldAttribute.Name == attributeValue.Name {
-			oldValuePresent = true
-			oldValue = oldAttribute.Value
-
+			attributePresent = true
 			updatedAttributes = append(updatedAttributes, attributeValue)
 		} else {
 			updatedAttributes = append(updatedAttributes, oldAttribute)
 		}
 	}
 	// In case it is a new attribute append it
-	if !oldValuePresent {
+	if !attributePresent {
 		updatedAttributes = append(updatedAttributes, attributeValue)
 	}
-
 	// Overwrite existing slice with new slice
 	*attributes = updatedAttributes
 
-	if oldValuePresent {
-		return oldValue, true
-	}
-	return "", false
+	return nil
 }
 
 // SetMultiple updates or adds multiple attribute. Returns error in case of isses
 func (attributes *Attributes) SetMultiple(attributeValues Attributes) Error {
 
 	for _, attribute := range attributeValues {
-		_, _ = attributes.Set(attribute)
+		if err := attributes.Set(attribute); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -174,7 +183,7 @@ func (attributes *Attributes) Delete(name string) (valueOfDeletedAttribute strin
 	if attributeDeleted {
 		return valueOfDeletedAttribute, nil
 	}
-	return "", NewItemNotFoundError(fmt.Errorf("cannot delete attribute '%s'", name))
+	return "", errAttributeNotFound
 }
 
 // Unmarshal unpacks JSON array of attributes
