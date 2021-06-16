@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"testing"
 	"time"
 
@@ -286,10 +285,9 @@ func Test_buildCommonTLSContext(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		log.Printf("# %+v\n", test.expected)
-		log.Printf("# %+v\n", buildCommonTLSContext(test.resourceName, test.attributes))
-		RequireEqual(t, test.expected,
-			buildCommonTLSContext(test.resourceName, test.attributes))
+		// log.Printf("# %+v\n", test.expected)
+		// log.Printf("# %+v\n", buildCommonTLSContext(test.resourceName, test.attributes))
+		RequireEqual(t, test.expected, buildCommonTLSContext(test.resourceName, test.attributes))
 	}
 }
 
