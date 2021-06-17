@@ -178,7 +178,7 @@ func Test_buildCommonTLSContext(t *testing.T) {
 		expected     *tls.CommonTlsContext
 	}{
 		{
-			name:         "1",
+			name:         "1 certificate",
 			resourceName: "example.com",
 			attributes: types.Attributes{
 				{
@@ -196,19 +196,98 @@ func Test_buildCommonTLSContext(t *testing.T) {
 				TlsParams: buildTLSParameters(types.Attributes{
 					{
 						Name:  types.AttributeTLSMaximumVersion,
-						Value: types.AttributeValueTLSVersion11},
+						Value: types.AttributeValueTLSVersion11,
+					},
 				}),
 				TlsCertificates: buildTLSCertificates(types.Attributes{
 					{
 						Name:  types.AttributeTLSMaximumVersion,
-						Value: types.AttributeValueTLSVersion11},
+						Value: types.AttributeValueTLSVersion11,
+					},
+				}),
+			},
+		},
+		{
+			name:         "certificate via file",
+			resourceName: "example.com",
+			attributes: types.Attributes{
+				{
+					Name:  types.AttributeTLSMaximumVersion,
+					Value: types.AttributeValueTLSVersion12,
+				},
+				{
+					Name:  types.AttributeTLSCertificateFile,
+					Value: "/data/cert",
+				},
+				{
+					Name:  types.AttributeTLSCertificateKeyFile,
+					Value: "/data/cert.key",
+				},
+			},
+			expected: &tls.CommonTlsContext{
+				AlpnProtocols: buildALPNProtocols("example.com", types.Attributes{
+					{
+						Name:  types.AttributeTLSMaximumVersion,
+						Value: types.AttributeValueTLSVersion12,
+					},
+				}),
+				TlsParams: buildTLSParameters(types.Attributes{
+					{
+						Name:  types.AttributeTLSMaximumVersion,
+						Value: types.AttributeValueTLSVersion12,
+					},
+				}),
+				TlsCertificates: buildTLSCertificates(types.Attributes{
+					{
+						Name:  types.AttributeTLSCertificateFile,
+						Value: "/data/cert",
+					},
+					{
+						Name:  types.AttributeTLSCertificateKeyFile,
+						Value: "/data/cert.key",
+					},
+				}),
+			},
+		},
+		{
+			name:         "certificate via file, no key",
+			resourceName: "example.com",
+			attributes: types.Attributes{
+				{
+					Name:  types.AttributeTLSMaximumVersion,
+					Value: types.AttributeValueTLSVersion12,
+				},
+				{
+					Name:  types.AttributeTLSCertificateFile,
+					Value: "/data/cert",
+				},
+			},
+			expected: &tls.CommonTlsContext{
+				AlpnProtocols: buildALPNProtocols("example.com", types.Attributes{
+					{
+						Name:  types.AttributeTLSMaximumVersion,
+						Value: types.AttributeValueTLSVersion12,
+					},
+				}),
+				TlsParams: buildTLSParameters(types.Attributes{
+					{
+						Name:  types.AttributeTLSMaximumVersion,
+						Value: types.AttributeValueTLSVersion12,
+					},
+				}),
+				TlsCertificates: buildTLSCertificates(types.Attributes{
+					{
+						Name:  types.AttributeTLSCertificateFile,
+						Value: "/data/cert",
+					},
 				}),
 			},
 		},
 	}
 	for _, test := range tests {
-		require.Equalf(t, test.expected,
-			buildCommonTLSContext(test.resourceName, test.attributes), test.name)
+		// log.Printf("# %+v\n", test.expected)
+		// log.Printf("# %+v\n", buildCommonTLSContext(test.resourceName, test.attributes))
+		RequireEqual(t, test.expected, buildCommonTLSContext(test.resourceName, test.attributes))
 	}
 }
 
