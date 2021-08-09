@@ -6,10 +6,6 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/gin-gonic/gin"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"go.uber.org/zap"
-
 	"github.com/erikbos/gatekeeper/cmd/dbadmin/handler"
 	"github.com/erikbos/gatekeeper/cmd/dbadmin/service"
 	"github.com/erikbos/gatekeeper/pkg/db"
@@ -17,6 +13,9 @@ import (
 	"github.com/erikbos/gatekeeper/pkg/db/cassandra"
 	"github.com/erikbos/gatekeeper/pkg/shared"
 	"github.com/erikbos/gatekeeper/pkg/webadmin"
+	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"go.uber.org/zap"
 )
 
 var (
@@ -116,4 +115,8 @@ func startWebAdmin(s *server, applicationName, organization string, enableAPIAut
 		applicationName, organization, enableAPIAuthentication, webAdminLogger)
 
 	s.webadmin.Start()
+}
+
+func ci_test() {
+
 }
