@@ -116,7 +116,3 @@ func startWebAdmin(s *server, applicationName, organization string, enableAPIAut
 
 	s.webadmin.Start()
 }
-
-func ci_test() {
-
-}
