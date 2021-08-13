@@ -407,8 +407,11 @@ func (s *server) buildRouteActionRedirectResponse(route types.Route) *envoy_rout
 	}
 	// Do we have to redirect to a specific port?
 	if redirectPort != "" {
-		port, _ := strconv.Atoi(redirectPort)
-		response.Redirect.PortRedirect = uint32(port)
+		if port, err := strconv.Atoi(redirectPort); err == nil {
+			if port >= 0 && port <= 65535 {
+				response.Redirect.PortRedirect = uint32(port)
+			}
+		}
 	}
 	// Do we have to redirect to a specific path?
 	if redirectPath != "" {
