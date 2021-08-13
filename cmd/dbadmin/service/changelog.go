@@ -3,11 +3,10 @@ package service
 import (
 	"net/http"
 
-	"go.uber.org/zap"
-
 	"github.com/erikbos/gatekeeper/pkg/db"
 	"github.com/erikbos/gatekeeper/pkg/shared"
 	"github.com/erikbos/gatekeeper/pkg/types"
+	"go.uber.org/zap"
 )
 
 type (
@@ -81,6 +80,9 @@ func (cl *Changelog) Delete(old interface{}, who Requester) {
 // log logs a changed entity
 func (cl *Changelog) log(eventType, entityType string, old, new interface{}, who Requester) {
 
+	emptySensitiveFields(old)
+	emptySensitiveFields(new)
+
 	cl.logger.Info("changelog",
 		zap.String("changetype", eventType),
 		zap.String("entity", entityType),
@@ -97,4 +99,14 @@ func (cl *Changelog) log(eventType, entityType string, old, new interface{}, who
 		zap.Any("new", map[string]interface{}{
 			entityType: new,
 		}))
+}
+
+// empty sensitive fields from struct such as Password
+func emptySensitiveFields(m interface{}) {
+
+	// Empty Password field
+	if _, ok := m.(types.User); ok {
+		user := m.(types.User)
+		user.Password = ""
+	}
 }

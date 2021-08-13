@@ -13,12 +13,11 @@ import (
 	envoy_type "github.com/envoyproxy/go-control-plane/envoy/type/v3"
 	cache "github.com/envoyproxy/go-control-plane/pkg/cache/types"
 	"github.com/envoyproxy/go-control-plane/pkg/wellknown"
+	"github.com/erikbos/gatekeeper/pkg/types"
 	"github.com/golang/protobuf/ptypes/any"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/durationpb"
-
-	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
 // getEnvoyRouteConfig returns array of all envoy routes
@@ -208,20 +207,29 @@ func (s *server) buildWeightedClusters(route types.Route) *envoy_route.RouteActi
 
 	weightedClusters := make([]*envoy_route.WeightedCluster_ClusterWeight, 0)
 
-	var weight, totalWeight int
+	var totalWeight int
 	for _, cluster := range strings.Split(weightedClusterSpec, ",") {
 		// format = clustername : weight
 		clusterConfig := strings.Split(cluster, ":")
 		if len(clusterConfig) == 2 {
-			weight, _ = strconv.Atoi(clusterConfig[1])
-			weightedClusters = append(weightedClusters,
-				&envoy_route.WeightedCluster_ClusterWeight{
-					Name:   strings.TrimSpace(clusterConfig[0]),
-					Weight: protoUint32(uint32(weight)),
-				})
-			totalWeight += weight
+
+			var clusterName, clusterWeight string = clusterConfig[0], clusterConfig[1]
+
+			if weight, err := strconv.Atoi(clusterWeight); err == nil {
+				if weight >= 1 && weight <= 10000000 {
+					weightedClusters = append(weightedClusters,
+						&envoy_route.WeightedCluster_ClusterWeight{
+							Name:   strings.TrimSpace(clusterName),
+							Weight: protoUint32(uint32(weight)),
+						})
+					totalWeight += weight
+				}
+			} else {
+				s.logger.Warn("Weighted cluster unparsable weight value",
+					zap.String("route", route.Name), zap.String("cluster", cluster))
+			}
 		} else {
-			s.logger.Warn("Weighted destination cluster does not have weight value",
+			s.logger.Warn("Weighted cluster does not have weight value",
 				zap.String("route", route.Name), zap.String("cluster", cluster))
 		}
 	}
@@ -408,8 +416,11 @@ func (s *server) buildRouteActionRedirectResponse(route types.Route) *envoy_rout
 	}
 	// Do we have to redirect to a specific port?
 	if redirectPort != "" {
-		port, _ := strconv.Atoi(redirectPort)
-		response.Redirect.PortRedirect = uint32(port)
+		if port, err := strconv.Atoi(redirectPort); err == nil {
+			if port >= 0 && port <= 65535 {
+				response.Redirect.PortRedirect = uint32(port)
+			}
+		}
 	}
 	// Do we have to redirect to a specific path?
 	if redirectPath != "" {
@@ -593,7 +604,9 @@ func buildStatusCodesSlice(statusCodes string) []uint32 {
 	for _, statusCode := range strings.Split(statusCodes, ",") {
 		// we only add successfully parse integers
 		if value, err := strconv.Atoi(statusCode); err == nil {
-			statusCodeSlice = append(statusCodeSlice, uint32(value))
+			if value >= 100 && value < 600 {
+				statusCodeSlice = append(statusCodeSlice, uint32(value))
+			}
 		}
 	}
 	return statusCodeSlice
