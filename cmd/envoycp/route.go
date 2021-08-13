@@ -13,12 +13,11 @@ import (
 	envoy_type "github.com/envoyproxy/go-control-plane/envoy/type/v3"
 	cache "github.com/envoyproxy/go-control-plane/pkg/cache/types"
 	"github.com/envoyproxy/go-control-plane/pkg/wellknown"
+	"github.com/erikbos/gatekeeper/pkg/types"
 	"github.com/golang/protobuf/ptypes/any"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/durationpb"
-
-	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
 // getEnvoyRouteConfig returns array of all envoy routes
@@ -593,7 +592,9 @@ func buildStatusCodesSlice(statusCodes string) []uint32 {
 	for _, statusCode := range strings.Split(statusCodes, ",") {
 		// we only add successfully parse integers
 		if value, err := strconv.Atoi(statusCode); err == nil {
-			statusCodeSlice = append(statusCodeSlice, uint32(value))
+			if value >= 100 && value < 600 {
+				statusCodeSlice = append(statusCodeSlice, uint32(value))
+			}
 		}
 	}
 	return statusCodeSlice
