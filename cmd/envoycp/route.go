@@ -212,18 +212,24 @@ func (s *server) buildWeightedClusters(route types.Route) *envoy_route.RouteActi
 		// format = clustername : weight
 		clusterConfig := strings.Split(cluster, ":")
 		if len(clusterConfig) == 2 {
-			if weight, err := strconv.Atoi(clusterConfig[1]); err == nil {
+
+			var clusterName, clusterWeight string = clusterConfig[0], clusterConfig[1]
+
+			if weight, err := strconv.Atoi(clusterWeight); err == nil {
 				if weight >= 1 && weight <= 10000000 {
 					weightedClusters = append(weightedClusters,
 						&envoy_route.WeightedCluster_ClusterWeight{
-							Name:   strings.TrimSpace(clusterConfig[0]),
+							Name:   strings.TrimSpace(clusterName),
 							Weight: protoUint32(uint32(weight)),
 						})
 					totalWeight += weight
 				}
+			} else {
+				s.logger.Warn("Weighted cluster unparsable weight value",
+					zap.String("route", route.Name), zap.String("cluster", cluster))
 			}
 		} else {
-			s.logger.Warn("Weighted destination cluster does not have weight value",
+			s.logger.Warn("Weighted cluster does not have weight value",
 				zap.String("route", route.Name), zap.String("cluster", cluster))
 		}
 	}
