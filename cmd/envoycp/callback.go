@@ -2,13 +2,13 @@ package main
 
 import (
 	"context"
+	"errors"
 	"sync"
 
 	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	discovery "github.com/envoyproxy/go-control-plane/envoy/service/discovery/v3"
-	"go.uber.org/zap"
-
 	"github.com/erikbos/gatekeeper/cmd/envoycp/metrics"
+	"go.uber.org/zap"
 )
 
 type callback struct {
@@ -110,4 +110,45 @@ func (cb *callback) OnFetchResponse(*discovery.DiscoveryRequest, *discovery.Disc
 
 	cb.logger.Info("OnFetchResponse")
 	cb.metrics.IncXDSMessageCount("OnFetchResponse")
+}
+
+// Delta XDS
+// TODO, not yet implemented
+
+var errDeltaXDSNotImplemented = errors.New("delta XDS not implemented")
+
+// OnDeltaStreamOpen is called once an incremental xDS stream is open with a stream ID and the type URL (or "" for ADS).
+// Returning an error will end processing and close the stream. OnStreamClosed will still be called.
+func (cb *callback) OnDeltaStreamOpen(_ context.Context, id int64, typ string) error {
+
+	cb.logger.Info("OnDeltaStreamOpen", zap.Int64("stream", id), zap.String("type", typ))
+	cb.metrics.IncXDSMessageCount("OnDeltaStreamOpen")
+	// Unimplemented
+	return errDeltaXDSNotImplemented
+}
+
+// OnDeltaStreamClosed is called immediately prior to closing an xDS stream with a stream ID.
+func (cb *callback) OnDeltaStreamClosed(id int64) {
+
+	cb.logger.Info("OnStreamClosed", zap.Int64("stream", id))
+	cb.metrics.IncXDSMessageCount("OnStreamClosed")
+	// Unimplemented
+}
+
+// OnStreamDeltaRequest is called once a request is received on a stream.
+// Returning an error will end processing and close the stream. OnStreamClosed will still be called.
+func (cb *callback) OnStreamDeltaRequest(a int64, req *discovery.DeltaDiscoveryRequest) error {
+
+	cb.logger.Info("OnStreamDeltaRequest", zap.Int64("a", a))
+	cb.metrics.IncXDSMessageCount("OnStreamDeltaRequest")
+	// Unimplemented
+	return errDeltaXDSNotImplemented
+}
+
+// OnStreamDelatResponse is called immediately prior to sending a response on a stream.
+func (cb *callback) OnStreamDeltaResponse(a int64, req *discovery.DeltaDiscoveryRequest, resp *discovery.DeltaDiscoveryResponse) {
+
+	cb.logger.Info("OnStreamDeltaResponse", zap.Int64("a", a))
+	cb.metrics.IncXDSMessageCount("OnStreamDeltaResponse")
+	// Unimplemented
 }
