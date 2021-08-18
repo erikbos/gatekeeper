@@ -53,38 +53,41 @@ func NewChangelog(database *db.Database, logger *zap.Logger) *Changelog {
 	}
 }
 
+type eventType string
+
+func (c eventType) String() string {
+	return string(c)
+}
+
 const (
-	createEvent = "create"
-	updateEvent = "update"
-	deleteEvent = "delete"
+	createEvent eventType = "create"
+	updateEvent eventType = "update"
+	deleteEvent eventType = "delete"
 )
 
-// Create logs a created entity
+// Create logs a created entity to changelog
 func (cl *Changelog) Create(new interface{}, who Requester) {
 
 	cl.log(createEvent, types.NameOf(new), nil, new, who)
 }
 
-// Update logs an updated entity
+// Update logs an updated entity to changelog
 func (cl *Changelog) Update(old, new interface{}, who Requester) {
 
 	cl.log(updateEvent, types.NameOf(old), old, new, who)
 }
 
-// Delete logs a deleted entity
+// Delete logs a deleted entity to changelog
 func (cl *Changelog) Delete(old interface{}, who Requester) {
 
 	cl.log(deleteEvent, types.NameOf(old), old, nil, who)
 }
 
-// log logs a changed entity
-func (cl *Changelog) log(eventType, entityType string, old, new interface{}, who Requester) {
-
-	emptySensitiveFields(old)
-	emptySensitiveFields(new)
+// log logs the changed entity to changelog
+func (cl *Changelog) log(eType eventType, entityType string, old, new interface{}, who Requester) {
 
 	cl.logger.Info("changelog",
-		zap.String("changetype", eventType),
+		zap.String("changetype", eType.String()),
 		zap.String("entity", entityType),
 		zap.Any("who", map[string]interface{}{
 			"ip":        who.RemoteAddr,
@@ -94,19 +97,27 @@ func (cl *Changelog) log(eventType, entityType string, old, new interface{}, who
 			// "headers", who.Header,
 		}),
 		zap.Any("old", map[string]interface{}{
-			entityType: old,
+			entityType: clearSensitiveFields(old),
 		}),
 		zap.Any("new", map[string]interface{}{
-			entityType: new,
-		}))
+			entityType: clearSensitiveFields(new),
+		}),
+	)
 }
 
-// empty sensitive fields from struct such as Password
-func emptySensitiveFields(m interface{}) {
+// Clear sensitive fields such as User.Password that we do not want end up in the changelog.
+// Returns new struct in case fields have been cleared to not modify original.
+func clearSensitiveFields(m interface{}) interface{} {
 
-	// Empty Password field
-	if _, ok := m.(types.User); ok {
-		user := m.(types.User)
-		user.Password = ""
+	switch t := m.(type) {
+	case types.User:
+		// Copy & empty password of User
+		scrubbedUser := t
+		scrubbedUser.Password = ""
+
+		return scrubbedUser
+	default:
+		// Do not modify other types, return as is
+		return m
 	}
 }
