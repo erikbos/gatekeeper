@@ -3,35 +3,39 @@ package service
 import (
 	"testing"
 
+	"github.com/erikbos/gatekeeper/pkg/types"
+	"github.com/stretchr/testify/require"
 )
 
 func Test_clearSensitiveFields(t *testing.T) {
 
 	tests := []struct {
 		name     string
-		hostname string
-		port     uint32
-		expected *core.Address
+		value    interface{}
+		expected interface{}
 	}{
 		{
-			name:     "1",
-			hostname: "localhost",
-			port:     80,
-			expected: &core.Address{
-				Address: &core.Address_SocketAddress{
-					SocketAddress: &core.SocketAddress{
-						Address:  "localhost",
-						Protocol: core.SocketAddress_TCP,
-						PortSpecifier: &core.SocketAddress_PortValue{
-							PortValue: 80,
-						},
-					},
-				},
+			name: "Unmodified Developer",
+			value: types.Developer{
+				UserName: "joop",
+			},
+			expected: types.Developer{
+				UserName: "joop",
+			},
+		},
+		{
+			name: "Modified User",
+			value: types.User{
+				Name:     "bill",
+				Password: "tobedeleted",
+			},
+			expected: types.User{
+				Name:     "bill",
+				Password: "",
 			},
 		},
 	}
 	for _, test := range tests {
-		require.Equalf(t, test.expected,
-			buildAddress(test.hostname, test.port), test.name)
+		require.Equalf(t, test.expected, clearSensitiveFields(test.value), test.name)
 	}
 }
