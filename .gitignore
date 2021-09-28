@@ -1,8 +1,21 @@
 .gitignore
+
+# editor
 .vscode/*
-tmp/*
-bin/*
+
+# tmp
+tmp/
+bin/
+dist/
 *~
+
+
+# python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# e
 run*.sh
 GeoIP2-City.mmdb
 todo.txt
