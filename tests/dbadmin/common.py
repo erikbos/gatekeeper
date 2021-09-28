@@ -1,4 +1,4 @@
-from os.path import join, dirname
+import os
 import jsonref
 import jsonschema
 
@@ -14,7 +14,18 @@ HTTP_BAD_CONTENT = 406
 # Required for each request
 default_headers = {
     'accept': 'application/json',
-    'user-agent': 'gatekeeper testsuite'
+      'user-agent': 'Gatekeeper testsuite'
+    }
+
+
+def get_config():
+    """Returns endpoint configuration"""
+
+    return {
+        "api_url": os.environ['API_URL'],
+        "api_username": os.environ['API_USERNAME'],
+        "api_password": os.environ['API_PASSWORD'],
+        "request_headers": default_headers,
     }
 
 
@@ -40,10 +51,10 @@ def _load_json_schema(filename):
     """
     Loads the given schema file
     """
-    relative_path = join('schemas', filename)
-    absolute_path = join(dirname(__file__), relative_path)
+    relative_path = os.path.join('schemas', filename)
+    absolute_path = os.path.join(os.path.dirname(__file__), relative_path)
 
-    base_path = dirname(absolute_path)
+    base_path = os.path.dirname(absolute_path)
     base_uri = 'file://{}/'.format(base_path)
 
     with open(absolute_path) as schema_file:

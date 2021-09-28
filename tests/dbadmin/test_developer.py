@@ -1,13 +1,15 @@
 import os
 import requests
 import random
+import json
 # from common import assert_valid_schema, assert_status_code, assert_content_type_json
 from common import *
+from attribute import test_attributes
 
-base_url = os.environ['API_URL']
-user  = os.environ['API_USER']
-password = os.environ['API_PASSWORD']
-
+config = get_config()
+base_url = config['api_url']
+user = config['api_username']
+password = config['api_password']
 
 # Number of developers to create while CRUDing
 developer_crud_test_count = 10
@@ -52,16 +54,16 @@ def test_crud_lifecycle_one_developer():
 
      # Update email address while preserving developerID
      updated_developer = created_developer
-     updated_developer['email'] = 'newemailaddress@test.com'
-     updated_developer['attributes'] = [
-               {
-                    "name" : "Status"
-               },
-               {
-                    "name" : "Shoesize",
-                    "value" : "42"
-               }
-          ]
+     # updated_developer['email'] = 'newemailaddress@test.com'
+     # updated_developer['attributes'] = [
+     #           {
+     #                "name" : "Status"
+     #           },
+     #           {
+     #                "name" : "Shoesize",
+     #                "value" : "42"
+     #           }
+     #      ]
      update_existing_developer(updated_developer)
 
      # Read updated developer by developerid
@@ -139,7 +141,6 @@ def test_change_developer_status():
      delete_existing_developer(test_developer['email'])
 
 
-# Attributes
 def test_developer_attributes():
      """
      Test create, read, update, delete attributes of developer
@@ -147,126 +148,10 @@ def test_developer_attributes():
      test_developer = create_new_developer()
 
      developer_attributes_url = base_url + '/' + test_developer['developerId'] + '/attributes'
-     _test_attributes(developer_attributes_url)
+     test_attributes(config, developer_attributes_url)
 
      delete_existing_developer(test_developer['developerId'])
 
-
-def _test_attributes(attribute_url):
-     """
-     Test all attributes operations
-     """
-
-     # Update attributes to known set
-     attribute_status = {
-          "name" : "Status"
-     }
-     attribute_shoesize = {
-          "name" : "Shoesize",
-          "value" : "42"
-     }
-     new_attributes = {
-          "attribute": [
-               attribute_status,
-               attribute_shoesize
-          ]
-     }
-     _post_attributes(attribute_url, new_attributes)
-     retrieved_attributes = _get_attributes(attribute_url)
-
-     # Did all attributes get stored?
-     _compare_attributes_responses(retrieved_attributes, new_attributes)
-
-     # Retrieve single attributes
-     assert _get_existing_attribute(attribute_url, attribute_status['name']) == attribute_status
-     assert _get_existing_attribute(attribute_url, attribute_shoesize['name']) == attribute_shoesize
-
-     # Delete one attribute
-     _delete_existing_attribute(attribute_url, attribute_status['name'])
-     _get_non_existing_attribute(attribute_url, attribute_status['name'])
-
-     # Attempt to delete attribute that just got deleted
-     _delete_non_existing_attribute(attribute_url, attribute_status['name'])
-
-
-def _post_attributes(attribute_url, attributes):
-     """
-     Update all attributes
-     """
-     response = requests.post(attribute_url, auth=(user, password), headers=default_headers, json=attributes)
-     assert_status_code(response, HTTP_OK)
-     assert_content_type_json(response)
-     assert_valid_schema(response.json(), 'attributes.json')
-
-
-def _get_attributes(attribute_url):
-     """
-     Retrieve all attributes
-     """
-     response = requests.get(attribute_url, auth=(user, password), headers=default_headers)
-     assert_status_code(response, HTTP_OK)
-     assert_content_type_json(response)
-
-     retrieved_attributes = response.json()
-     assert_valid_schema(retrieved_attributes, 'attributes.json')
-
-     return retrieved_attributes
-
-
-def _get_existing_attribute(attribute_url, attribute_name):
-     """
-     Retrieve an existing attribute
-     """
-     response = requests.get(attribute_url + '/' + attribute_name, auth=(user, password), headers=default_headers)
-     assert_status_code(response, HTTP_OK)
-     assert_content_type_json(response)
-
-     retrieved_attribute = response.json()
-     assert_valid_schema(retrieved_attribute, 'attribute.json')
-
-     return retrieved_attribute
-
-
-def _get_non_existing_attribute(attribute_url, attribute_name):
-     """
-     Attempt to retrieve a non-existing attribute
-     """
-     response = requests.get(attribute_url + '/' + attribute_name, auth=(user, password), headers=default_headers)
-     assert_status_code(response, HTTP_NOT_FOUND)
-     assert_content_type_json(response)
-
-
-def _delete_existing_attribute(attribute_url, attribute_name):
-     """
-     Delete an existing attribute
-     """
-     response = requests.delete(attribute_url + '/' + attribute_name, auth=(user, password), headers=default_headers)
-     assert_status_code(response, HTTP_OK)
-     assert_content_type_json(response)
-
-     retrieved_attribute = response.json()
-     assert_valid_schema(retrieved_attribute, 'attribute.json')
-
-     return retrieved_attribute
-
-
-def _delete_non_existing_attribute(attribute_url, attribute_name):
-     """
-     Attempt to delete a non-existing attribute
-     """
-     response = requests.delete(attribute_url + '/' + attribute_name, auth=(user, password), headers=default_headers)
-     assert_status_code(response, HTTP_NOT_FOUND)
-     assert_content_type_json(response)
-
-
-def _compare_attributes_responses(attribute_response_a, attribute_response_b):
-     """
-     Compare two attribute response sets
-     """
-     assert [i for i in attribute_response_a['attribute'] if i not in attribute_response_b['attribute']] == []
-
-
-#########################################
 
 def test_developer_field_lengths():
      """
