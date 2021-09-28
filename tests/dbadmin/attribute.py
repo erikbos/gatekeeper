@@ -1,8 +1,7 @@
-import os
 import requests
-import random
 from common import assert_valid_schema, assert_status_code, assert_content_type_json
-from httperror import *
+from httpstatus import *
+
 
 class Attribute:
     """
@@ -14,8 +13,9 @@ class Attribute:
 
 
     def _get_auth(self):
-        """Returns HTTP auth parameters"""
-
+        """
+        Returns HTTP auth parameters
+        """
         if 'api_username' in self.config and 'api_password' in self.config:
             return (self.config['api_username'], self.config['api_password'])
         else:
@@ -99,7 +99,7 @@ class Attribute:
         assert [i for i in attribute_response_a['attribute'] if i not in attribute_response_b['attribute']] == []
 
 
-def run_attributes_test(config, attribute_url):
+def run_attribute_tests(config, attribute_url):
     """
     Test all operations that can be done on an attribute endpoints
     """

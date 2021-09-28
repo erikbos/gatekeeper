@@ -3,8 +3,8 @@ import jsonref
 import jsonschema
 
 
-# Required for each request
-default_headers = {
+# Default headers for a request
+request_headers = {
     'accept': 'application/json',
       'user-agent': 'Gatekeeper testsuite'
     }
@@ -14,10 +14,11 @@ def get_config():
     """Returns endpoint configuration"""
 
     return {
-        "api_url": os.environ['API_URL'],
-        "api_username": os.environ['API_USERNAME'],
-        "api_password": os.environ['API_PASSWORD'],
-        "request_headers": default_headers,
+        'api_url': os.environ['API_URL'],
+        'api_username': os.environ['API_USERNAME'],
+        'api_password': os.environ['API_PASSWORD'],
+        'request_headers': request_headers,
+        'entity_count': 3,
     }
 
 def http_auth(config):
