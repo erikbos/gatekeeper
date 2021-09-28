@@ -1,6 +1,6 @@
 import requests
 import random
-from common import assert_valid_schema, assert_status_code, get_config, request_headers
+from common import assert_valid_schema_error, assert_status_code, get_config, request_headers
 from httpstatus import *
 from developer import Developer
 from attribute import run_attribute_tests
@@ -130,7 +130,7 @@ def test_developer_change_status():
     url = developerAPI.developer_url + '/' + test_developer['email'] + '?action=unknown'
     response = requests.post(url, auth=developerAPI._get_auth(), headers=request_headers)
     assert_status_code(response, HTTP_BAD_REQUEST)
-    assert_valid_schema(response.json(), 'error.json')
+    assert_valid_schema_error(response.json())
 
     developerAPI.delete_existing(test_developer['email'])
 

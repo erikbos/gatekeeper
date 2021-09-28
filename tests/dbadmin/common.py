@@ -41,15 +41,21 @@ def assert_content_type_json(response):
     assert response.headers['content-type'].startswith('application/json')
 
 
-def assert_valid_schema(data, schema_file):
+def assert_valid_schema(data, schema):
     """
     Checks whether the given data matches the schema
     """
-    schema = _load_json_schema(schema_file)
     return jsonschema.validate(data, schema)
 
 
-def _load_json_schema(filename):
+def assert_valid_schema_error(data):
+    """
+    Checks whether the given data matches the schema
+    """
+    return jsonschema.validate(data, load_json_schema('error.json'))
+
+
+def load_json_schema(filename):
     """
     Loads the given schema file
     """

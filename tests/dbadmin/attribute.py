@@ -1,5 +1,5 @@
 import requests
-from common import assert_valid_schema, assert_status_code, assert_content_type_json
+from common import assert_valid_schema, assert_status_code, assert_content_type_json, load_json_schema
 from httpstatus import *
 
 
@@ -10,7 +10,9 @@ class Attribute:
     def __init__(self, config, attribute_url):
         self.config = config
         self.attribute_url = attribute_url
-
+        self.schema_attribute = load_json_schema('attribute.json')
+        self.schema_attributes = load_json_schema('attributes.json')
+        self.schema_error = load_json_schema('error.json')
 
     def _get_auth(self):
         """
@@ -29,7 +31,7 @@ class Attribute:
         response = requests.post(self.attribute_url, auth=self._get_auth(), headers=self.config['request_headers'], json=attributes)
         assert_status_code(response, HTTP_OK)
         assert_content_type_json(response)
-        assert_valid_schema(response.json(), 'attributes.json')
+        assert_valid_schema(response.json(), self.schema_attributes)
 
 
     def get_all(self):
@@ -41,7 +43,7 @@ class Attribute:
         assert_content_type_json(response)
 
         retrieved_attributes = response.json()
-        assert_valid_schema(retrieved_attributes, 'attributes.json')
+        assert_valid_schema(retrieved_attributes, self.schema_attributes)
 
         return retrieved_attributes
 
@@ -55,7 +57,7 @@ class Attribute:
         assert_content_type_json(response)
 
         retrieved_attribute = response.json()
-        assert_valid_schema(retrieved_attribute, 'attribute.json')
+        assert_valid_schema(retrieved_attribute, self.schema_attribute)
 
         return retrieved_attribute
 
@@ -78,7 +80,7 @@ class Attribute:
         assert_content_type_json(response)
 
         retrieved_attribute = response.json()
-        assert_valid_schema(retrieved_attribute, 'attribute.json')
+        assert_valid_schema(retrieved_attribute, self.schema_attribute)
 
         return retrieved_attribute
 

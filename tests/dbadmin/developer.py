@@ -1,6 +1,6 @@
 import requests
 import random
-from common import assert_valid_schema, assert_status_code, assert_content_type_json
+from common import assert_valid_schema, assert_status_code, assert_content_type_json, load_json_schema
 from httpstatus import *
 from attribute import run_attribute_tests
 
@@ -12,7 +12,10 @@ class Developer:
     def __init__(self, config):
         self.config = config
         self.developer_url = config['api_url'] + '/developers'
-
+        self.schema_developer = load_json_schema('developer.json')
+        self.schema_developers = load_json_schema('developers.json')
+        self.schema_developers_email = load_json_schema('developers-email-addresses.json')
+        self.schema_error = load_json_schema('error.json')
 
     def _get_auth(self):
         """Returns HTTP auth parameters"""
@@ -50,7 +53,7 @@ class Developer:
 
         # Check if just created developer matches with what we requested
         created_developer = response.json()
-        assert_valid_schema(created_developer, 'developer.json')
+        assert_valid_schema(created_developer, self.schema_developer)
         self.assert_compare_developer(created_developer, new_developer)
 
         return created_developer
@@ -63,7 +66,7 @@ class Developer:
         response = requests.post(self.developer_url, auth=self._get_auth(), headers=self.config['request_headers'], json=developer)
         assert_status_code(response, HTTP_BAD_REQUEST)
         assert_content_type_json(response)
-        assert_valid_schema(response.json(), 'error.json')
+        assert_valid_schema(response.json(), self.schema_error)
 
 
     def get_all(self):
@@ -73,7 +76,7 @@ class Developer:
         response = requests.get(self.developer_url, auth=self._get_auth(), headers=self.config['request_headers'])
         assert_status_code(response, HTTP_OK)
         assert_content_type_json(response)
-        assert_valid_schema(response.json(), 'developers-email-addresses.json')
+        assert_valid_schema(response.json(), self.schema_developers_email)
 
 
     def get_all_detailed(self):
@@ -83,7 +86,7 @@ class Developer:
         response = requests.get(self.developer_url + '?expand=true', auth=self._get_auth(), headers=self.config['request_headers'])
         assert_status_code(response, HTTP_OK)
         assert_content_type_json(response)
-        assert_valid_schema(response.json(), 'developers.json')
+        assert_valid_schema(response.json(), self.schema_developers)
         # TODO (erikbos) testing of paginating
 
 
@@ -96,7 +99,7 @@ class Developer:
         assert_status_code(response, HTTP_OK)
         assert_content_type_json(response)
         retrieved_developer = response.json()
-        assert_valid_schema(retrieved_developer, 'developer.json')
+        assert_valid_schema(retrieved_developer, self.schema_developer)
 
         return retrieved_developer
 
@@ -111,7 +114,7 @@ class Developer:
         assert_content_type_json(response)
 
         updated_developer = response.json()
-        assert_valid_schema(updated_developer, 'developer.json')
+        assert_valid_schema(updated_developer, self.schema_developer)
 
         return updated_developer
 
@@ -125,7 +128,7 @@ class Developer:
         assert_status_code(response, HTTP_OK)
         assert_content_type_json(response)
         deleted_developer = response.json()
-        assert_valid_schema(deleted_developer, 'developer.json')
+        assert_valid_schema(deleted_developer, self.schema_developer)
 
         return deleted_developer
 
