@@ -1,12 +1,16 @@
 import os
 import requests
 import random
-from common import assert_valid_schema, assert_status_code, assert_content_type_json, HTTP_OK, HTTP_NOT_FOUND, HTTP_AUTHORIZATION_REQUIRED, HTTP_BAD_CONTENT, HTTP_BAD_REQUEST, HTTP_CREATED
+from common import assert_valid_schema, assert_status_code, assert_content_type_json
+from httperror import *
 
 class Attribute:
-    def __init__(self, config, url):
+    """
+    Attribute does all REST API functions on developer endpoint
+    """
+    def __init__(self, config, attribute_url):
         self.config = config
-        self.url = url
+        self.attribute_url = attribute_url
 
 
     def _get_auth(self):
@@ -22,7 +26,7 @@ class Attribute:
         """
         Update all attributes
         """
-        response = requests.post(self.url, auth=self._get_auth(), headers=self.config['request_headers'], json=attributes)
+        response = requests.post(self.attribute_url, auth=self._get_auth(), headers=self.config['request_headers'], json=attributes)
         assert_status_code(response, HTTP_OK)
         assert_content_type_json(response)
         assert_valid_schema(response.json(), 'attributes.json')
@@ -32,7 +36,7 @@ class Attribute:
         """
         Retrieve all attributes
         """
-        response = requests.get(self.url, auth=self._get_auth(), headers=self.config['request_headers'])
+        response = requests.get(self.attribute_url, auth=self._get_auth(), headers=self.config['request_headers'])
         assert_status_code(response, HTTP_OK)
         assert_content_type_json(response)
 
@@ -46,7 +50,7 @@ class Attribute:
         """
         Retrieve an existing attribute
         """
-        response = requests.get(self.url + '/' + attribute_name, auth=self._get_auth(), headers=self.config['request_headers'])
+        response = requests.get(self.attribute_url + '/' + attribute_name, auth=self._get_auth(), headers=self.config['request_headers'])
         assert_status_code(response, HTTP_OK)
         assert_content_type_json(response)
 
@@ -60,7 +64,7 @@ class Attribute:
         """
         Attempt to retrieve a non-existing attribute
         """
-        response = requests.get(self.url + '/' + attribute_name, auth=self._get_auth(), headers=self.config['request_headers'])
+        response = requests.get(self.attribute_url + '/' + attribute_name, auth=self._get_auth(), headers=self.config['request_headers'])
         assert_status_code(response, HTTP_NOT_FOUND)
         assert_content_type_json(response)
 
@@ -69,7 +73,7 @@ class Attribute:
         """
         Delete an existing attribute
         """
-        response = requests.delete(self.url + '/' + attribute_name, auth=self._get_auth(), headers=self.config['request_headers'])
+        response = requests.delete(self.attribute_url + '/' + attribute_name, auth=self._get_auth(), headers=self.config['request_headers'])
         assert_status_code(response, HTTP_OK)
         assert_content_type_json(response)
 
@@ -83,7 +87,7 @@ class Attribute:
         """
         Attempt to delete a non-existing attribute
         """
-        response = requests.delete(self.url + '/' + attribute_name, auth=self._get_auth(), headers=self.config['request_headers'])
+        response = requests.delete(self.attribute_url + '/' + attribute_name, auth=self._get_auth(), headers=self.config['request_headers'])
         assert_status_code(response, HTTP_NOT_FOUND)
         assert_content_type_json(response)
 
@@ -95,7 +99,7 @@ class Attribute:
         assert [i for i in attribute_response_a['attribute'] if i not in attribute_response_b['attribute']] == []
 
 
-def test_attributes(config, attribute_url):
+def run_attributes_test(config, attribute_url):
     """
     Test all operations that can be done on an attribute endpoints
     """

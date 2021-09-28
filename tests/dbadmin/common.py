@@ -3,14 +3,6 @@ import jsonref
 import jsonschema
 
 
-HTTP_OK = 200
-HTTP_CREATED = 201
-HTTP_BAD_REQUEST = 400
-HTTP_AUTHORIZATION_REQUIRED = 401
-HTTP_NOT_FOUND = 404
-HTTP_BAD_CONTENT = 406
-
-
 # Required for each request
 default_headers = {
     'accept': 'application/json',
@@ -27,6 +19,15 @@ def get_config():
         "api_password": os.environ['API_PASSWORD'],
         "request_headers": default_headers,
     }
+
+def http_auth(config):
+    """
+    Returns HTTP auth parameters
+    """
+    if 'api_username' in config and 'api_password' in config:
+        return (config['api_username'], config['api_password'])
+    else:
+        return None
 
 
 def assert_status_code(response, status_code):
