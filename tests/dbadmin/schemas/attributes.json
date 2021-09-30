@@ -2,14 +2,14 @@
     "$schema": "http://json-schema.org/draft-04/schema#",
     "type": "object",
     "properties": {
-      "attribute": {
-        "type": "array",
-        "items": {
-            "$ref": "attribute.json"
+        "attribute": {
+            "type": "array",
+            "items": {
+                "$ref": "attribute.json"
+            }
         }
-      }
     },
     "required": [
-      "attribute"
+        "attribute"
     ]
 }

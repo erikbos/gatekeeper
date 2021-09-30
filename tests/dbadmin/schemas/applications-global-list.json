@@ -2,8 +2,8 @@
     "$schema": "http://json-schema.org/draft-04/schema#",
     "type": "array",
     "items": [{
-        "description": "Email address of developer",
+        "description": "The unique identifier of application. (A UUID specified by RFC4122).",
         "type": "string",
-        "format": "email"
+        "format": "uuid"
     }]
 }

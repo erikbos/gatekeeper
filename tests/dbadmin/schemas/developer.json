@@ -2,80 +2,62 @@
     "$schema": "http://json-schema.org/draft-04/schema#",
     "type": "object",
     "properties": {
-      "developerId": {
-        "type": "string"
-      },
-      "status": {
-        "type": "string",
-        "enum": ["active", "inactive"]
-      },
-      "apps": {
-        "type": "array",
-        "items": [
-          {
+        "developerId": {
             "type": "string"
-          }
-        ]
-      },
-      "attributes": {
-        "type": "array",
-        "items": [
-          {
-            "type": "object",
-            "properties": {
-              "name": {
+        },
+        "status": {
+            "type": "string",
+            "enum": ["active", "inactive"]
+        },
+        "apps": {
+            "type": "array",
+            "items": [{
                 "type": "string"
-              },
-              "value": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "name"
-            ]
-          }
-        ]
-      },
-      "email": {
-        "type": "string"
-      },
-      "userName": {
-        "type": "string"
-      },
-      "firstName": {
-        "type": "string"
-      },
-      "lastName": {
-        "type": "string"
-      },
-      "createdAt": {
-        "type": "integer"
-      },
-      "createdBy": {
-        "type": "string"
-      },
-      "suspendedTill": {
-        "type": "integer"
-      },
-      "lastmodifiedAt": {
-        "type": "integer"
-      },
-      "lastmodifiedBy": {
-        "type": "string"
-      }
+            }]
+        },
+        "attributes": {
+            "type": "array",
+            "items": {
+                "$ref": "attribute.json"
+            }
+        },
+        "email": {
+            "type": "string"
+        },
+        "userName": {
+            "type": "string"
+        },
+        "firstName": {
+            "type": "string"
+        },
+        "lastName": {
+            "type": "string"
+        },
+        "createdAt": {
+            "type": "integer"
+        },
+        "createdBy": {
+            "type": "string"
+        },
+        "lastmodifiedAt": {
+            "type": "integer"
+        },
+        "lastmodifiedBy": {
+            "type": "string"
+        }
     },
     "required": [
-      "developerId",
-      "status",
-      "apps",
-      "attributes",
-      "email",
-      "userName",
-      "firstName",
-      "lastName",
-      "createdAt",
-      "createdBy",
-      "lastModifiedAt",
-      "lastModifiedBy"
+        "developerId",
+        "status",
+        "apps",
+        "attributes",
+        "email",
+        "userName",
+        "firstName",
+        "lastName",
+        "createdAt",
+        "createdBy",
+        "lastModifiedAt",
+        "lastModifiedBy"
     ]
-  }
+}
