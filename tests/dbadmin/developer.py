@@ -1,7 +1,7 @@
 import requests
 import random
 from common import assert_valid_schema, assert_status_code, assert_content_type_json, load_json_schema
-from httpstatus import *
+from httpstatus import HTTP_OK, HTTP_NOT_FOUND, HTTP_CREATED, HTTP_BAD_REQUEST
 from attribute import run_attribute_tests
 
 
