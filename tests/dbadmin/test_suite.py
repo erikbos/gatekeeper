@@ -1,17 +1,25 @@
 import requests
 import random
-from common import assert_valid_schema_error, assert_status_code, get_config, request_headers
-from httpstatus import HTTP_AUTHORIZATION_REQUIRED, HTTP_BAD_REQUEST, HTTP_BAD_CONTENT
+from common import assert_valid_schema_error, assert_status_code, get_config
+from httpstatus import HTTP_NO_CONTENT, HTTP_AUTHORIZATION_REQUIRED, HTTP_BAD_REQUEST, HTTP_BAD_CONTENT
 from developer import Developer
 from attribute import run_attribute_tests
 
 config = get_config()
 
+session = requests.Session()
+session.auth = (config['api_username'], config['api_password'])
+session.headers = {
+    'accept': 'application/json',
+      'user-agent': 'Gatekeeper testsuite'
+    }
+
+
 def test_developer_get_all():
     """
     Test get all developers, returns array of email addresses of developers
     """
-    developerAPI = Developer(config)
+    developerAPI = Developer(config, session)
     developerAPI.get_all()
 
 
@@ -19,7 +27,7 @@ def test_developer_list_detailed():
     """
     Test get all developers, returns array with zero or more developers
     """
-    developerAPI = Developer(config)
+    developerAPI = Developer(config, session)
     developerAPI.get_all_detailed()
 
 
@@ -27,7 +35,7 @@ def test_developer_crud_lifecycle():
     """
     Test create, read, update, delete one developer
     """
-    developerAPI = Developer(config)
+    developerAPI = Developer(config, session)
 
     created_developer = developerAPI.create_new()
 
@@ -70,9 +78,9 @@ def test_developer_crud_lifecycle():
 
 def test_developer_crud_lifecycle_ten_random():
     """
-    Test create, read, update, delete ten developers
+    Test create, read, update, delete ten randomly named developers
     """
-    developerAPI = Developer(config)
+    developerAPI = Developer(config, session)
 
     # Create developers
     created_developers = []
@@ -105,29 +113,29 @@ def test_developer_change_status():
     """
     Test changing status of developer
     """
-    developerAPI = Developer(config)
+    developerAPI = Developer(config, session)
 
     test_developer = developerAPI.create_new()
 
     # Change status to active
     url = developerAPI.developer_url + '/' + test_developer['email'] + '?action=active'
-    response = requests.post(url, auth=developerAPI._get_auth(), headers=request_headers)
-    assert_status_code(response, 204)
+    response = session.post(url)
+    assert_status_code(response, HTTP_NO_CONTENT)
     assert response.content == b''
 
     assert developerAPI.get_existing(test_developer['email'])['status'] == 'active'
 
     # Change status to inactive
     url = developerAPI.developer_url + '/' + test_developer['email'] + '?action=inactive'
-    response = requests.post(url, auth=developerAPI._get_auth(), headers=request_headers)
-    assert_status_code(response, 204)
+    response = session.post(url)
+    assert_status_code(response, HTTP_NO_CONTENT)
     assert response.content == b''
 
     assert developerAPI.get_existing(test_developer['email'])['status'] == 'inactive'
 
     # Change status to unknown value is unsupported
     url = developerAPI.developer_url + '/' + test_developer['email'] + '?action=unknown'
-    response = requests.post(url, auth=developerAPI._get_auth(), headers=request_headers)
+    response = session.post(url)
     assert_status_code(response, HTTP_BAD_REQUEST)
     assert_valid_schema_error(response.json())
 
@@ -138,12 +146,12 @@ def test_developer_attributes():
     """
     Test create, read, update, delete attributes of developer
     """
-    developerAPI = Developer(config)
+    developerAPI = Developer(config, session)
 
     test_developer = developerAPI.create_new()
 
     developer_attributes_url = developerAPI.developer_url + '/' + test_developer['developerId'] + '/attributes'
-    run_attribute_tests(config, developer_attributes_url)
+    run_attribute_tests(config, session, developer_attributes_url)
 
     developerAPI.delete_existing(test_developer['developerId'])
 
@@ -152,6 +160,7 @@ def test_developer_field_lengths():
     """
     Test field lengths
     """
+    # We want to test that we cannot send zero-length, too long fields etc
     # TODO (erikbos)
 
 
@@ -160,9 +169,9 @@ def test_developer_get_all_no_auth():
     """
     Test get all developers without basic auth
     """
-    developerAPI = Developer(config)
+    developerAPI = Developer(config, session)
 
-    response = requests.get(developerAPI.developer_url)
+    response = session.get(developerAPI.developer_url, auth=())
     assert_status_code(response, HTTP_AUTHORIZATION_REQUIRED)
 
 
@@ -170,9 +179,9 @@ def test_developer_get_no_auth():
     """
     Test developer without basic auth
     """
-    developerAPI = Developer(config)
+    developerAPI = Developer(config, session)
 
-    response = requests.get(developerAPI.developer_url + "/example@test.com")
+    response = session.get(developerAPI.developer_url + "/example@test.com", auth=())
     assert_status_code(response, HTTP_AUTHORIZATION_REQUIRED)
 
 
@@ -180,10 +189,10 @@ def test_developers_get_all_wrong_content_type():
     """
     Test get all developers, non-json content type
     """
-    developerAPI = Developer(config)
+    developerAPI = Developer(config, session)
 
     wrong_header = {'accept': 'application/unknown'}
-    response = requests.get(developerAPI.developer_url, auth=developerAPI._get_auth(), headers=wrong_header)
+    response = session.get(developerAPI.developer_url, headers=wrong_header)
     assert_status_code(response, HTTP_BAD_CONTENT)
 
 
@@ -191,7 +200,7 @@ def test_developer_create_wrong_content_type():
     """
     Test create developer, non-json content type
     """
-    developerAPI = Developer(config)
+    developerAPI = Developer(config, session)
 
     developer = {
         "email" : "example@test.com",
@@ -199,7 +208,7 @@ def test_developer_create_wrong_content_type():
         "lastName" : "smith"
     }
     wrong_header = {'accept': 'application/unknown'}
-    response = requests.post(developerAPI.developer_url, auth=developerAPI._get_auth(), headers=wrong_header, json=developer)
+    response = session.post(developerAPI.developer_url, headers=wrong_header, json=developer)
     assert_status_code(response, HTTP_BAD_CONTENT)
 
 
@@ -207,7 +216,7 @@ def test_developer_create_ignore_provided_fields():
     """
     Test create developer and try to set fields that cannot be set
     """
-    developerAPI = Developer(config)
+    developerAPI = Developer(config, session)
 
     r = random.randint(0,99999)
     email = developerAPI.generate_email_address(r)
@@ -238,6 +247,6 @@ def cleanup_test_developers():
     """
     Delete all leftover developers of partial executed tests
     """
-    developerAPI = Developer(config)
+    developerAPI = Developer(config, session)
 
     developerAPI.delete_all_test_developer()

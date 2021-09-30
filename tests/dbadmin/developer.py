@@ -1,29 +1,22 @@
-import requests
 import random
 from common import assert_valid_schema, assert_status_code, assert_content_type_json, load_json_schema
 from httpstatus import HTTP_OK, HTTP_NOT_FOUND, HTTP_CREATED, HTTP_BAD_REQUEST
-from attribute import run_attribute_tests
 
 
 class Developer:
     """
     Developer does all REST API functions on developer endpoint
     """
-    def __init__(self, config):
+    def __init__(self, config, session):
         self.config = config
+        self.session = session
         self.developer_url = config['api_url'] + '/developers'
-        self.schema_developer = load_json_schema('developer.json')
-        self.schema_developers = load_json_schema('developers.json')
-        self.schema_developers_email = load_json_schema('developers-email-addresses.json')
-        self.schema_error = load_json_schema('error.json')
-
-    def _get_auth(self):
-        """Returns HTTP auth parameters"""
-
-        if 'api_username' in self.config and 'api_password' in self.config:
-            return (self.config['api_username'], self.config['api_password'])
-        else:
-            return None
+        self.schemas = {
+            'developer': load_json_schema('developer.json'),
+            'developers': load_json_schema('developers.json'),
+            'developers_email': load_json_schema('developers-email-addresses.json'),
+            'error': load_json_schema('error.json'),
+        }
 
 
     def generate_email_address(self, number):
@@ -47,13 +40,13 @@ class Developer:
                 "attributes" : [ ],
             }
 
-        response = requests.post(self.developer_url, auth=self._get_auth(), headers=self.config['request_headers'], json=new_developer)
+        response = self.session.post(self.developer_url, json=new_developer)
         assert_status_code(response, HTTP_CREATED)
         assert_content_type_json(response)
 
         # Check if just created developer matches with what we requested
         created_developer = response.json()
-        assert_valid_schema(created_developer, self.schema_developer)
+        assert_valid_schema(created_developer, self.schemas['developer'])
         self.assert_compare_developer(created_developer, new_developer)
 
         return created_developer
@@ -63,30 +56,30 @@ class Developer:
         """
         Attempt to create new developer which already exists, should fail
         """
-        response = requests.post(self.developer_url, auth=self._get_auth(), headers=self.config['request_headers'], json=developer)
+        response = self.session.post(self.developer_url, json=developer)
         assert_status_code(response, HTTP_BAD_REQUEST)
         assert_content_type_json(response)
-        assert_valid_schema(response.json(), self.schema_error)
+        assert_valid_schema(response.json(), self.schemas)
 
 
     def get_all(self):
         """
         Get all developers email addresses
         """
-        response = requests.get(self.developer_url, auth=self._get_auth(), headers=self.config['request_headers'])
+        response = self.session.get(self.developer_url)
         assert_status_code(response, HTTP_OK)
         assert_content_type_json(response)
-        assert_valid_schema(response.json(), self.schema_developers_email)
+        assert_valid_schema(response.json(), self.schemas['developers_email'])
 
 
     def get_all_detailed(self):
         """
         Get all developers with full details
         """
-        response = requests.get(self.developer_url + '?expand=true', auth=self._get_auth(), headers=self.config['request_headers'])
+        response = self.session.get(self.developer_url + '?expand=true')
         assert_status_code(response, HTTP_OK)
         assert_content_type_json(response)
-        assert_valid_schema(response.json(), self.schema_developers)
+        assert_valid_schema(response.json(), self.schemas['developers'])
         # TODO (erikbos) testing of paginating
 
 
@@ -95,11 +88,11 @@ class Developer:
         Get existing developer
         """
         developer_url = self.developer_url + '/' + id
-        response = requests.get(developer_url, auth=self._get_auth(), headers=self.config['request_headers'])
+        response = self.session.get(developer_url)
         assert_status_code(response, HTTP_OK)
         assert_content_type_json(response)
         retrieved_developer = response.json()
-        assert_valid_schema(retrieved_developer, self.schema_developer)
+        assert_valid_schema(retrieved_developer, self.schemas['developer'])
 
         return retrieved_developer
 
@@ -109,12 +102,12 @@ class Developer:
         Update existing developer
         """
         developer_url = self.developer_url + '/' + developer['developerId']
-        response = requests.post(developer_url, auth=self._get_auth(), headers=self.config['request_headers'], json=developer)
+        response = self.session.post(developer_url, json=developer)
         assert_status_code(response, HTTP_OK)
         assert_content_type_json(response)
 
         updated_developer = response.json()
-        assert_valid_schema(updated_developer, self.schema_developer)
+        assert_valid_schema(updated_developer, self.schemas['developer'])
 
         return updated_developer
 
@@ -124,11 +117,11 @@ class Developer:
         Delete existing developer
         """
         developer_url = self.developer_url + '/' + id
-        response = requests.delete(developer_url, auth=self._get_auth(), headers=self.config['request_headers'])
+        response = self.session.delete(developer_url)
         assert_status_code(response, HTTP_OK)
         assert_content_type_json(response)
         deleted_developer = response.json()
-        assert_valid_schema(deleted_developer, self.schema_developer)
+        assert_valid_schema(deleted_developer, self.schemas['developer'])
 
         return deleted_developer
 
@@ -138,7 +131,7 @@ class Developer:
         Delete non-existing developer, which should fail
         """
         developer_url = self.developer_url + '/' + id
-        response = requests.delete(developer_url, auth=self._get_auth(), headers=self.config['request_headers'])
+        response = self.session.delete(developer_url)
         assert_status_code(response, HTTP_NOT_FOUND)
         assert_content_type_json(response)
 
@@ -149,7 +142,7 @@ class Developer:
                 "email" : self.generate_email_address(i),
             }
             developer_url = self.developer_url + '/' + new_developer['email']
-            requests.delete(developer_url, auth=self._get_auth())
+            self.session.delete(developer_url)
 
 
     def assert_compare_developer(self, a, b):

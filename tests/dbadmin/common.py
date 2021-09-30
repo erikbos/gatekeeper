@@ -11,33 +11,33 @@ request_headers = {
 
 
 def get_config():
-    """Returns endpoint configuration"""
+    """
+    Returns endpoint configuration
+    """
+    REQUIRED_ENVS = ['API_URL', 'API_USERNAME', 'API_PASSWORD']
+    for var in REQUIRED_ENVS:
+        if var not in os.environ:
+            raise EnvironmentError("Please set {} for configuration!".format(var))
 
     return {
         'api_url': os.environ['API_URL'],
         'api_username': os.environ['API_USERNAME'],
         'api_password': os.environ['API_PASSWORD'],
-        'request_headers': request_headers,
         'entity_count': 3,
     }
 
-def http_auth(config):
-    """
-    Returns HTTP auth parameters
-    """
-    if 'api_username' in config and 'api_password' in config:
-        return (config['api_username'], config['api_password'])
-    else:
-        return None
-
 
 def assert_status_code(response, status_code):
-    """Checks response status code"""
+    """
+    Checks response status code
+    """
     assert response.status_code == status_code
 
 
 def assert_content_type_json(response):
-    """Checks content-type is json"""
+    """
+    Checks content-type is json
+    """
     assert response.headers['content-type'].startswith('application/json')
 
 
