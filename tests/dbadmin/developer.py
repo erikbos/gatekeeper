@@ -59,7 +59,7 @@ class Developer:
         response = self.session.post(self.developer_url, json=developer)
         assert_status_code(response, HTTP_BAD_REQUEST)
         assert_content_type_json(response)
-        assert_valid_schema(response.json(), self.schemas)
+        assert_valid_schema(response.json(), self.schemas['error'])
 
 
     def get_all(self):
@@ -138,10 +138,8 @@ class Developer:
 
     def delete_all_test_developer(self):
         for i in range(self.config['entity_count']):
-            new_developer = {
-                "email" : self.generate_email_address(i),
-            }
-            developer_url = self.developer_url + '/' + new_developer['email']
+            email = self.generate_email_address(i)
+            developer_url = self.developer_url + '/' + email
             self.session.delete(developer_url)
 
 

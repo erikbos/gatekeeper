@@ -4,6 +4,9 @@
     "items": [{
         "description": "Email address of developer",
         "type": "string",
-        "format": "email"
+        "pattern": "^\\S+@\\S+\\.\\S+$",
+        "format": "email",
+        "minLength": 6,
+        "maxLength": 127
     }]
 }

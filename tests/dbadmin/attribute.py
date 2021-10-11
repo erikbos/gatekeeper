@@ -10,9 +10,11 @@ class Attribute:
         self.config = config
         self.session = session
         self.attribute_url = attribute_url
-        self.schema_attribute = load_json_schema('attribute.json')
-        self.schema_attributes = load_json_schema('attributes.json')
-        self.schema_error = load_json_schema('error.json')
+        self.schemas = {
+            'attribute': load_json_schema('attribute.json'),
+            'attributes': load_json_schema('attributes.json'),
+            'error': load_json_schema('error.json'),
+        }
 
 
     def post(self, attributes):
@@ -22,7 +24,7 @@ class Attribute:
         response = self.session.post(self.attribute_url, json=attributes)
         assert_status_code(response, HTTP_OK)
         assert_content_type_json(response)
-        assert_valid_schema(response.json(), self.schema_attributes)
+        assert_valid_schema(response.json(), self.schemas['attributes'])
 
 
     def get_all(self):
@@ -34,7 +36,7 @@ class Attribute:
         assert_content_type_json(response)
 
         retrieved_attributes = response.json()
-        assert_valid_schema(retrieved_attributes, self.schema_attributes)
+        assert_valid_schema(retrieved_attributes, self.schemas['attributes'])
 
         return retrieved_attributes
 
@@ -48,7 +50,7 @@ class Attribute:
         assert_content_type_json(response)
 
         retrieved_attribute = response.json()
-        assert_valid_schema(retrieved_attribute, self.schema_attribute)
+        assert_valid_schema(retrieved_attribute, self.schemas['attribute'])
 
         return retrieved_attribute
 
@@ -71,7 +73,7 @@ class Attribute:
         assert_content_type_json(response)
 
         retrieved_attribute = response.json()
-        assert_valid_schema(retrieved_attribute, self.schema_attribute)
+        assert_valid_schema(retrieved_attribute, self.schemas['attribute'])
 
         return retrieved_attribute
 

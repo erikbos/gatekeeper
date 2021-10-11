@@ -3,6 +3,7 @@ import random
 from common import assert_valid_schema_error, assert_status_code, get_config
 from httpstatus import HTTP_NO_CONTENT, HTTP_AUTHORIZATION_REQUIRED, HTTP_BAD_REQUEST, HTTP_BAD_CONTENT
 from developer import Developer
+from application import Application
 from attribute import run_attribute_tests
 
 config = get_config()
@@ -250,3 +251,58 @@ def cleanup_test_developers():
     developerAPI = Developer(config, session)
 
     developerAPI.delete_all_test_developer()
+
+##############################
+
+def test_application_get_all():
+    """
+    Test get all applications
+    """
+    applicationAPI = Application(config, session, '')
+    applicationAPI.get_all_global()
+
+
+def test_application_crud_lifecycle():
+    """
+    Test create, read, update, delete one application of one developer
+    """
+    # developerAPI = Developer(config, session)
+    # created_developer = developerAPI.create_new()
+
+    # applicationAPI = Application(config, session, created_developer['developerId'])
+
+    # # Creating same, now existing developer, must not be possible
+    # developerAPI.create_existing_developer(created_developer)
+
+    # # Read existing developer by email
+    # retrieved_developer = developerAPI.get_existing(created_developer['email'])
+    # developerAPI.assert_compare_developer(retrieved_developer, created_developer)
+
+    # # Read existing developer by developerid
+    # retrieved_developer = developerAPI.get_existing(created_developer['developerId'])
+    # developerAPI.assert_compare_developer(retrieved_developer, created_developer)
+
+    # # Update email address while preserving developerID
+    # updated_developer = created_developer
+    # updated_developer['email'] = 'newemailaddress@test.com'
+    # updated_developer['attributes'] = [
+    #           {
+    #                "name" : "Status"
+    #           },
+    #           {
+    #                "name" : "Shoesize",
+    #                "value" : "42"
+    #           }
+    #      ]
+    # developerAPI.update_existing(updated_developer)
+
+    # # Read updated developer by developerid
+    # retrieved_developer = developerAPI.get_existing(updated_developer['email'])
+    # developerAPI.assert_compare_developer(retrieved_developer, updated_developer)
+
+    # # Delete just created developer
+    # deleted_developer = developerAPI.delete_existing(updated_developer['email'])
+    # developerAPI.assert_compare_developer(deleted_developer, updated_developer)
+
+    # # Try to delete developer once more, must not exist anymore
+    # developerAPI.delete_nonexisting(updated_developer['email'])
