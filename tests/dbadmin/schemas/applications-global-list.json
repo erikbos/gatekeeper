@@ -4,6 +4,7 @@
     "items": [{
         "description": "The unique identifier of application. (A UUID specified by RFC4122).",
         "type": "string",
+        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
         "format": "uuid"
     }]
 }

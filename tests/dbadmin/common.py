@@ -1,3 +1,6 @@
+"""
+Provides common functions
+"""
 import os
 import jsonref
 import jsonschema
@@ -14,10 +17,10 @@ def get_config():
     """
     Returns endpoint configuration
     """
-    REQUIRED_ENVS = ['API_URL', 'API_USERNAME', 'API_PASSWORD']
-    for var in REQUIRED_ENVS:
+    required_envs = ['API_URL', 'API_USERNAME', 'API_PASSWORD']
+    for var in required_envs:
         if var not in os.environ:
-            raise EnvironmentError("Please set {} for configuration!".format(var))
+            raise EnvironmentError(f'Please set {var} as configuration parameter.')
 
     return {
         'api_url': os.environ['API_URL'],
@@ -63,7 +66,7 @@ def load_json_schema(filename):
     absolute_path = os.path.join(os.path.dirname(__file__), relative_path)
 
     base_path = os.path.dirname(absolute_path)
-    base_uri = 'file://{}/'.format(base_path)
+    base_uri = f'file://{base_path}/'
 
-    with open(absolute_path) as schema_file:
+    with open(absolute_path, encoding='utf-8') as schema_file:
         return jsonref.loads(schema_file.read(), base_uri=base_uri, jsonschema=True)

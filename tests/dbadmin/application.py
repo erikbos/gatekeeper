@@ -2,6 +2,7 @@
 Application module does all REST API operations on application endpoint
 """
 import random
+import urllib
 from common import assert_valid_schema, assert_status_code, assert_content_type_json, \
     load_json_schema
 from httpstatus import HTTP_OK, HTTP_NOT_FOUND, HTTP_CREATED, HTTP_BAD_REQUEST
@@ -11,19 +12,20 @@ class Application:
     """
     Application does all REST API functions on application endpoint
     """
-    def __init__(self, config, session, developer_id):
+    def __init__(self, config, session, developer_email):
         self.config = config
         self.session = session
-        self.application_url = config['api_url'] + '/developers/' + developer_id + '/apps'
+        if developer_email is not None:
+            self.application_url = config['api_url'] + '/developers/' + developer_email + '/apps'
         self.schemas = {
             'application': load_json_schema('application.json'),
             'applications': load_json_schema('applications.json'),
-            'applications-global-list': load_json_schema('applications-all-ids.json'),
+            'applications-global-list': load_json_schema('applications-global-list.json'),
             'error': load_json_schema('error.json'),
         }
 
 
-    def _generate_app_name(self, number):
+    def generate_app_name(self, number):
         """
         Returns generated test application name
         """
@@ -32,17 +34,19 @@ class Application:
 
     def create_new(self, new_application=None):
         """
-        Create new application to be used as test subject. If none provided generate
-        random application
+        Create new application to be used as test subject.
+        If no app data provided generate application with random data
         """
         if new_application is None:
             random_int = random.randint(0,99999)
             new_application = {
-                "name" : self._generate_app_name(random_int),
-                # "firstName" : f"first{r}",
-                # "lastName" : f"last{r}",
-                # "userName" : f"username{r}",
-                "attributes" : [ ],
+                "name" : self.generate_app_name(random_int),
+                "attributes" : [
+                    {
+                        "name" : f"name{random_int}",
+                        "value" : f"value{random_int}",
+                    }
+                ],
             }
 
         response = self.session.post(self.application_url, json=new_application)
@@ -51,20 +55,20 @@ class Application:
 
         # Check if just created application matches with what we requested
         created_application = response.json()
-        assert_valid_schema(created_application, self.schemas['developer'])
-        self.assert_compare_application(created_application, new_application)
+        assert_valid_schema(created_application, self.schemas['application'])
+        self.assert_compare(created_application, new_application)
 
         return created_application
 
 
-    def create_existing_application(self, application):
+    def create_existing(self, application):
         """
         Attempt to create new application which already exists, should fail
         """
         response = self.session.post(self.application_url, json=application)
         assert_status_code(response, HTTP_BAD_REQUEST)
         assert_content_type_json(response)
-        assert_valid_schema(response.json(), self.schemas)
+        assert_valid_schema(response.json(), self.schemas['error'])
 
 
     def get_all(self):
@@ -91,12 +95,12 @@ class Application:
         """
         Get existing application
         """
-        developer_url = self.application_url + '/' + app_name
+        developer_url = self.application_url + '/' + urllib.parse.quote(app_name)
         response = self.session.get(developer_url)
         assert_status_code(response, HTTP_OK)
         assert_content_type_json(response)
         retrieved_developer = response.json()
-        assert_valid_schema(retrieved_developer, self.schemas['developer'])
+        assert_valid_schema(retrieved_developer, self.schemas['application'])
 
         return retrieved_developer
 
@@ -105,13 +109,17 @@ class Application:
         """
         Update existing application
         """
-        application_url = self.application_url + '/' + application['AppId']
+        application_url = self.application_url + '/' + urllib.parse.quote(application['name'])
         response = self.session.post(application_url, json=application)
+        # print(app_name)
+        # print(application_url)
+        # print(application)
+        # print(response.text)
         assert_status_code(response, HTTP_OK)
         assert_content_type_json(response)
 
         updated_application = response.json()
-        assert_valid_schema(updated_application, self.schemas['developer'])
+        assert_valid_schema(updated_application, self.schemas['application'])
 
         return updated_application
 
@@ -120,12 +128,12 @@ class Application:
         """
         Delete existing application
         """
-        application_url = self.application_url + '/' + app_name
+        application_url = self.application_url + '/' + urllib.parse.quote(app_name)
         response = self.session.delete(application_url)
         assert_status_code(response, HTTP_OK)
         assert_content_type_json(response)
         updated_application = response.json()
-        assert_valid_schema(updated_application, self.schemas['developer'])
+        assert_valid_schema(updated_application, self.schemas['application'])
 
         return updated_application
 
@@ -134,7 +142,7 @@ class Application:
         """
         Delete non-existing application, which should fail
         """
-        application_url = self.application_url + '/' + app_name
+        application_url = self.application_url + '/' + urllib.parse.quote(app_name)
         response = self.session.delete(application_url)
         assert_status_code(response, HTTP_NOT_FOUND)
         assert_content_type_json(response)
@@ -145,14 +153,14 @@ class Application:
         Delete all application created by test suite
         """
         for i in range(self.config['entity_count']):
-            app_name = self._generate_app_name(i)
-            application_url = self.application_url + '/' + app_name
+            app_name = self.generate_app_name(i)
+            application_url = self.application_url + '/' + urllib.parse.quote(app_name)
             self.session.delete(application_url)
 
 
-    def assert_compare_application(self, application_a, application_b):
+    def assert_compare(self, application_a, application_b):
         """
         Compares minimum required fields that can be set of two applications
         """
         assert application_a['name'] == application_b['name']
-        assert application_a['appId'] == application_b['AppId']
+        assert application_a['attributes'] == application_b['attributes']

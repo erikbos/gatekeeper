@@ -12,8 +12,6 @@ class Developer:
     Developer does all REST API operations on developer endpoint
     """
 
-    # https://apidocs.apigee.com/docs/developers/1/overview
-
     def __init__(self, config, session):
         self.config = config
         self.session = session
@@ -44,7 +42,12 @@ class Developer:
                 "firstName" : f"first{random_int}",
                 "lastName" : f"last{random_int}",
                 "userName" : f"username{random_int}",
-                "attributes" : [ ],
+                "attributes" : [
+                    {
+                        "name" : f"name{random_int}",
+                        "value" : f"value{random_int}",
+                    }
+                ],
             }
 
         response = self.session.post(self.developer_url, json=new_developer)
@@ -54,12 +57,12 @@ class Developer:
         # Check if just created developer matches with what we requested
         created_developer = response.json()
         assert_valid_schema(created_developer, self.schemas['developer'])
-        self.assert_compare_developer(created_developer, new_developer)
+        self.assert_compare(created_developer, new_developer)
 
         return created_developer
 
 
-    def create_existing_developer(self, developer):
+    def create_existing(self, developer):
         """
         Attempt to create new developer which already exists, should fail
         """
@@ -87,14 +90,14 @@ class Developer:
         assert_status_code(response, HTTP_OK)
         assert_content_type_json(response)
         assert_valid_schema(response.json(), self.schemas['developers'])
-        # TODO (erikbos) testing of paginating
+        # TODO testing of paginating response
 
 
-    def get_existing(self, developer_id):
+    def get_existing(self, developer_email):
         """
         Get existing developer
         """
-        developer_url = self.developer_url + '/' + developer_id
+        developer_url = self.developer_url + '/' + developer_email
         response = self.session.get(developer_url)
         assert_status_code(response, HTTP_OK)
         assert_content_type_json(response)
@@ -104,11 +107,11 @@ class Developer:
         return retrieved_developer
 
 
-    def update_existing(self, developer):
+    def update_existing(self, developer_email, developer):
         """
         Update existing developer
         """
-        developer_url = self.developer_url + '/' + developer['developerId']
+        developer_url = self.developer_url + '/' + developer_email
         response = self.session.post(developer_url, json=developer)
         assert_status_code(response, HTTP_OK)
         assert_content_type_json(response)
@@ -119,11 +122,11 @@ class Developer:
         return updated_developer
 
 
-    def delete_existing(self, developer_id):
+    def delete_existing(self, developer_email):
         """
         Delete existing developer
         """
-        developer_url = self.developer_url + '/' + developer_id
+        developer_url = self.developer_url + '/' + developer_email
         response = self.session.delete(developer_url)
         assert_status_code(response, HTTP_OK)
         assert_content_type_json(response)
@@ -133,11 +136,11 @@ class Developer:
         return deleted_developer
 
 
-    def delete_nonexisting(self, developer_id):
+    def delete_nonexisting(self, developer_email):
         """
         Delete non-existing developer, which should fail
         """
-        developer_url = self.developer_url + '/' + developer_id
+        developer_url = self.developer_url + '/' + developer_email
         response = self.session.delete(developer_url)
         assert_status_code(response, HTTP_NOT_FOUND)
         assert_content_type_json(response)
@@ -153,10 +156,11 @@ class Developer:
             self.session.delete(developer_url)
 
 
-    def assert_compare_developer(self, developer_a, developer_b):
+    def assert_compare(self, developer_a, developer_b):
         """
         Compares minimum required fields that can be set of two developers
         """
         assert developer_a['email'] == developer_b['email']
         assert developer_a['firstName'] == developer_b['firstName']
         assert developer_a['lastName'] == developer_b['lastName']
+        assert developer_a['attributes'] == developer_b['attributes']
