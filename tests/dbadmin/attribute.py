@@ -1,4 +1,8 @@
-from common import assert_valid_schema, assert_status_code, assert_content_type_json, load_json_schema
+"""
+Attribute module does all REST API operations on an attribute endpoint
+"""
+from common import assert_valid_schema, assert_status_code, \
+    assert_content_type_json, load_json_schema
 from httpstatus import HTTP_OK, HTTP_NOT_FOUND
 
 
@@ -91,15 +95,15 @@ class Attribute:
         """
         Compare two attribute response sets
         """
-        assert [i for i in attribute_response_a['attribute'] if i not in attribute_response_b['attribute']] == []
+        assert [i for i in attribute_response_a['attribute'] \
+            if i not in attribute_response_b['attribute']] == []
 
 
 def run_attribute_tests(config, session, attribute_url):
     """
     Test all operations that can be done on an attribute endpoints
     """
-
-    attributeAPI = Attribute(config, session, attribute_url)
+    attribute_api = Attribute(config, session, attribute_url)
 
     # Update attributes to known set
     attribute_status = {
@@ -115,19 +119,19 @@ def run_attribute_tests(config, session, attribute_url):
             attribute_shoesize
         ]
     }
-    attributeAPI.post(new_attributes)
+    attribute_api.post(new_attributes)
 
     # Did all attributes get stored?
-    retrieved_attributes = attributeAPI.get_all()
-    attributeAPI.compare_sets(retrieved_attributes, new_attributes)
+    retrieved_attributes = attribute_api.get_all()
+    attribute_api.compare_sets(retrieved_attributes, new_attributes)
 
     # Retrieve single attributes
-    assert attributeAPI.get_existing(attribute_status['name']) == attribute_status
-    assert attributeAPI.get_existing(attribute_shoesize['name']) == attribute_shoesize
+    assert attribute_api.get_existing(attribute_status['name']) == attribute_status
+    assert attribute_api.get_existing(attribute_shoesize['name']) == attribute_shoesize
 
     # Delete one attribute
-    attributeAPI.delete(attribute_status['name'])
-    attributeAPI.get_non_existing(attribute_status['name'])
+    attribute_api.delete(attribute_status['name'])
+    attribute_api.get_non_existing(attribute_status['name'])
 
     # Attempt to delete attribute that just got deleted
-    attributeAPI.delete_non_existing(attribute_status['name'])
+    attribute_api.delete_non_existing(attribute_status['name'])

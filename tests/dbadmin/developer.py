@@ -1,12 +1,19 @@
+"""
+Developer module does all REST API operations on developer endpoint
+"""
 import random
-from common import assert_valid_schema, assert_status_code, assert_content_type_json, load_json_schema
+from common import assert_valid_schema, assert_status_code, \
+    assert_content_type_json, load_json_schema
 from httpstatus import HTTP_OK, HTTP_NOT_FOUND, HTTP_CREATED, HTTP_BAD_REQUEST
 
 
 class Developer:
     """
-    Developer does all REST API functions on developer endpoint
+    Developer does all REST API operations on developer endpoint
     """
+
+    # https://apidocs.apigee.com/docs/developers/1/overview
+
     def __init__(self, config, session):
         self.config = config
         self.session = session
@@ -23,20 +30,20 @@ class Developer:
         """
         Returns email address of test developer based upon provided number
         """
-        return "testuser{}@test.com".format(number)
+        return f"testuser{number}@test.com"
 
 
     def create_new(self, new_developer=None):
         """
-        Create new developer to be used as test subject. If none provided generate random developer data
+        Create new developer to be used as test subject. If none provided generate random developer
         """
-        if new_developer == None:
-            r = random.randint(0,99999)
+        if new_developer is None:
+            random_int = random.randint(0,99999)
             new_developer = {
-                "email" : self.generate_email_address(r),
-                "firstName" : f"first{r}",
-                "lastName" : f"last{r}",
-                "userName" : f"username{r}",
+                "email" : self.generate_email_address(random_int),
+                "firstName" : f"first{random_int}",
+                "lastName" : f"last{random_int}",
+                "userName" : f"username{random_int}",
                 "attributes" : [ ],
             }
 
@@ -83,11 +90,11 @@ class Developer:
         # TODO (erikbos) testing of paginating
 
 
-    def get_existing(self, id):
+    def get_existing(self, developer_id):
         """
         Get existing developer
         """
-        developer_url = self.developer_url + '/' + id
+        developer_url = self.developer_url + '/' + developer_id
         response = self.session.get(developer_url)
         assert_status_code(response, HTTP_OK)
         assert_content_type_json(response)
@@ -112,11 +119,11 @@ class Developer:
         return updated_developer
 
 
-    def delete_existing(self, id):
+    def delete_existing(self, developer_id):
         """
         Delete existing developer
         """
-        developer_url = self.developer_url + '/' + id
+        developer_url = self.developer_url + '/' + developer_id
         response = self.session.delete(developer_url)
         assert_status_code(response, HTTP_OK)
         assert_content_type_json(response)
@@ -126,27 +133,30 @@ class Developer:
         return deleted_developer
 
 
-    def delete_nonexisting(self, id):
+    def delete_nonexisting(self, developer_id):
         """
         Delete non-existing developer, which should fail
         """
-        developer_url = self.developer_url + '/' + id
+        developer_url = self.developer_url + '/' + developer_id
         response = self.session.delete(developer_url)
         assert_status_code(response, HTTP_NOT_FOUND)
         assert_content_type_json(response)
 
 
     def delete_all_test_developer(self):
+        """
+        Delete all developers created by test suite
+        """
         for i in range(self.config['entity_count']):
             email = self.generate_email_address(i)
             developer_url = self.developer_url + '/' + email
             self.session.delete(developer_url)
 
 
-    def assert_compare_developer(self, a, b):
+    def assert_compare_developer(self, developer_a, developer_b):
         """
         Compares minimum required fields that can be set of two developers
         """
-        assert a['email'] == b['email']
-        assert a['firstName'] == b['firstName']
-        assert a['lastName'] == b['lastName']
+        assert developer_a['email'] == developer_b['email']
+        assert developer_a['firstName'] == developer_b['firstName']
+        assert developer_a['lastName'] == developer_b['lastName']
