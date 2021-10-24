@@ -29,7 +29,7 @@ class Application:
         """
         Returns generated test application name
         """
-        return f"testapp{number}"
+        return f"testsuite-app{number}"
 
 
     def create_new(self, new_application=None):
@@ -71,6 +71,18 @@ class Application:
         assert_valid_schema(response.json(), self.schemas['error'])
 
 
+    def get_all_global(self):
+        """
+        Get all apps of all developers (uuid list)
+        """
+        response = self.session.get(self.config['api_url'] + '/apps')
+        assert_status_code(response, HTTP_OK)
+        assert_content_type_json(response)
+        assert_valid_schema(response.json(), self.schemas['applications-global-list'])
+
+        return response.json()
+
+
     def get_all(self):
         """
         Get all applications of one developer
@@ -80,15 +92,7 @@ class Application:
         assert_content_type_json(response)
         assert_valid_schema(response.json(), self.schemas['applications'])
 
-
-    def get_all_global(self):
-        """
-        Get all apps of all developers (uuid list)
-        """
-        response = self.session.get(self.config['api_url'] + '/apps')
-        assert_status_code(response, HTTP_OK)
-        assert_content_type_json(response)
-        assert_valid_schema(response.json(), self.schemas['applications-global-list'])
+        return response.json()
 
 
     def get_existing(self, app_name):

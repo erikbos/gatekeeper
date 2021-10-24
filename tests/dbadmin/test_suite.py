@@ -56,9 +56,14 @@ def test_developer_crud_lifecycle():
     retrieved_developer = developer_api.get_existing(created_developer['developerId'])
     developer_api.assert_compare(retrieved_developer, created_developer)
 
-    # Update email address and attributes
+    # Check if created developer shows up in global developer list
+    if created_developer['email'] not in developer_api.get_all():
+        assert()
+
+    # Update to new email address and attributes
     updated_developer = copy.deepcopy(created_developer)
-    updated_developer['email'] = 'newemailaddress@test.com'
+    random_int = random.randint(0,99999)
+    updated_developer['email'] = f'newemailaddress{random_int}@test.com'
     updated_developer['attributes'] = [
               {
                    "name" : "Status"
@@ -74,8 +79,9 @@ def test_developer_crud_lifecycle():
     retrieved_developer = developer_api.get_existing(updated_developer['developerId'])
     developer_api.assert_compare(retrieved_developer, updated_developer)
 
-    # TODO check if developer shows up in global endpoint!
-    # developer_api.get_all()
+    # Check if updated developer shows up in global developer list
+    if updated_developer['email'] not in developer_api.get_all():
+        assert()
 
     # Delete just created developer
     deleted_developer = developer_api.delete_existing(updated_developer['email'])
@@ -85,9 +91,9 @@ def test_developer_crud_lifecycle():
     developer_api.delete_nonexisting(updated_developer['email'])
 
 
-def test_developer_crud_lifecycle_ten_random():
+def test_developer_crud_lifecycle_multiple():
     """
-    Test create, read, update, delete ten randomly named developers
+    Test create, read, update, delete multiple developers
     """
     developer_api = Developer(config, session)
 
@@ -106,6 +112,12 @@ def test_developer_crud_lifecycle_ten_random():
     for i in range(config['entity_count']):
         retrieved_developer = developer_api.get_existing(created_developers[i]['developerId'])
         developer_api.assert_compare(retrieved_developer, created_developers[i])
+
+    # Check if all created developers shows up in global developers list
+    all_created = [created_developers[i]['email'] for i in range(config['entity_count'])]
+    all_developers = developer_api.get_all()
+    if not all(email_address in all_developers for email_address in all_created):
+        assert()
 
     # Delete each created developer
     random.shuffle(created_developers)
@@ -336,23 +348,33 @@ def test_application_crud_lifecycle():
     retrieved_application = application_api.get_existing(updated_application['name'])
     application_api.assert_compare(retrieved_application, updated_application)
 
+    # Check if application shows up in developer's object
+    retrieved_developer = developer_api.get_existing(created_developer['email'])
+    if created_application['name'] not in retrieved_developer['apps']:
+        assert()
+
+    # Check if application shows up in global application list
+    if created_application['appId'] not in application_api.get_all_global():
+        assert()
+
+    # Check if application shows up in developer's application list
+    if created_application['name'] not in application_api.get_all():
+        assert()
+
     # # Delete just created application
     deleted_application = application_api.delete_existing(updated_application['name'])
     application_api.assert_compare(deleted_application, updated_application)
 
-    # # Try to delete application once more, must not exist anymore
+    # Try to delete application once more, must not exist anymore
     application_api.delete_nonexisting(updated_application['name'])
 
-    # TODO check if app shows up in global endpoint!
-    # application_api.get_all_global()
-
     # clean up
-    developer_api.delete_existing(created_developer['developerId'])
+    developer_api.delete_existing(created_developer['email'])
 
 
-def test_application_crud_lifecycle_ten_random():
+def test_application_crud_lifecycle_multiple():
     """
-    Test create, read, update, delete ten randomly named applications
+    Test create, read, update, delete multiple applications, randomly named
     """
     developer_api = Developer(config, session)
     created_developer = developer_api.create_new()
@@ -375,7 +397,11 @@ def test_application_crud_lifecycle_ten_random():
         retrieved_application = application_api.get_existing(created_applications[i]['name'])
         application_api.assert_compare(retrieved_application, created_applications[i])
 
-    # TODO all apps should be in global app list
+    # Check all apps are in global app list
+    all_created = [created_applications[i]['appId'] for i in range(config['entity_count'])]
+    all_apps = application_api.get_all_global()
+    if not all(email_address in all_apps for email_address in all_created):
+        assert()
 
     # Delete each created application
     random.shuffle(created_applications)

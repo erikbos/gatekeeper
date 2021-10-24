@@ -28,7 +28,7 @@ class Developer:
         """
         Returns email address of test developer based upon provided number
         """
-        return f"testuser{number}@test.com"
+        return f"testsuite-dev{number}@test.com"
 
 
     def create_new(self, new_developer=None):
@@ -81,6 +81,8 @@ class Developer:
         assert_content_type_json(response)
         assert_valid_schema(response.json(), self.schemas['developers_email'])
 
+        return response.json()
+
 
     def get_all_detailed(self):
         """
@@ -113,6 +115,7 @@ class Developer:
         """
         developer_url = self.developer_url + '/' + developer_email
         response = self.session.post(developer_url, json=developer)
+        print(response.text)
         assert_status_code(response, HTTP_OK)
         assert_content_type_json(response)
 
