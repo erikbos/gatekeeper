@@ -6,13 +6,6 @@ import jsonref
 import jsonschema
 
 
-# Default headers for a request
-request_headers = {
-    'accept': 'application/json',
-      'user-agent': 'Gatekeeper testsuite'
-    }
-
-
 def get_config():
     """
     Returns endpoint configuration
