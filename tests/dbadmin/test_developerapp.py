@@ -33,13 +33,13 @@ def test_application_crud_lifecycle():
     Test create, read, update, delete one application of one developer
     """
     developer_api = Developer(config, session)
-    created_developer = developer_api.create_new()
+    created_developer = developer_api.create(True)
 
     application_api = Application(config, session, created_developer['email'])
-    created_application = application_api.create_new()
+    created_application = application_api.create(True)
 
     # Attempt to creating same, already existing application, must not be possible
-    application_api.create_existing(created_application)
+    application_api.create(False, created_application)
 
     # Read existing app by name
     retrieved_application = application_api.get_existing(created_application['name'])
@@ -96,19 +96,19 @@ def test_application_crud_lifecycle_multiple():
     Test create, read, update, delete multiple applications, randomly named
     """
     developer_api = Developer(config, session)
-    created_developer = developer_api.create_new()
+    created_developer = developer_api.create(True)
 
     application_api = Application(config, session, created_developer['email'])
 
     # Create applications
     created_applications = []
     for i in range(config['entity_count']):
-        created_applications.append(application_api.create_new())
+        created_applications.append(application_api.create(True))
 
     # Creating them once more must not be possible
     random.shuffle(created_applications)
     for i in range(config['entity_count']):
-        application_api.create_existing(created_applications[i])
+        application_api.create(False, created_applications[i])
 
     # Read created application in random order
     random.shuffle(created_applications)
@@ -141,10 +141,10 @@ def test_application_attributes():
     Test create, read, update, delete attributes of application
     """
     developer_api = Developer(config, session)
-    created_developer = developer_api.create_new()
+    created_developer = developer_api.create(True)
 
     application_api = Application(config, session, created_developer['email'])
-    created_application = application_api.create_new()
+    created_application = application_api.create(True)
 
     application_attributes_url = (application_api.application_url +
                                 '/' + created_application['name'] + '/attributes')
@@ -161,10 +161,10 @@ def test_application_delete_developer():
     """
 
     developer_api = Developer(config, session)
-    created_developer = developer_api.create_new()
+    created_developer = developer_api.create(True)
 
     application_api = Application(config, session, created_developer['email'])
-    created_application = application_api.create_new()
+    created_application = application_api.create(True)
 
     # we expect delete developer to fail
     developer_api.delete_badrequest(created_developer['email'])

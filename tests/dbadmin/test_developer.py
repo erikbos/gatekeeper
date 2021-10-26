@@ -34,10 +34,10 @@ def test_developer_crud_lifecycle():
     """
     developer_api = Developer(config, session)
 
-    created_developer = developer_api.create_new()
+    created_developer = developer_api.create(True)
 
     # Creating same, now existing developer, must not be possible
-    developer_api.create_existing(created_developer)
+    developer_api.create(False, created_developer)
 
     # Read existing developer by email
     retrieved_developer = developer_api.get_existing(created_developer['email'])
@@ -91,12 +91,12 @@ def test_developer_crud_lifecycle_multiple():
     # Create developers
     created_developers = []
     for i in range(config['entity_count']):
-        created_developers.append(developer_api.create_new())
+        created_developers.append(developer_api.create(True))
 
     # Creating them once more must not be possible
     random.shuffle(created_developers)
     for i in range(config['entity_count']):
-        developer_api.create_existing(created_developers[i])
+        developer_api.create(False, created_developers[i])
 
     # Read created developers in random order
     random.shuffle(created_developers)
@@ -127,7 +127,7 @@ def test_developer_attributes():
     """
     developer_api = Developer(config, session)
 
-    test_developer = developer_api.create_new()
+    test_developer = developer_api.create(True)
 
     developer_attributes_url = (developer_api.developer_url +
         '/' + test_developer['email'] + '/attributes')
@@ -142,7 +142,7 @@ def test_developer_change_status():
     Test changing status of developer
     """
     developer_api = Developer(config, session)
-    test_developer = developer_api.create_new()
+    test_developer = developer_api.create(True)
 
     # Change status to active
     developer_api.change_status(test_developer['email'], 'active', True)
@@ -234,7 +234,7 @@ def test_developer_create_ignore_provided_fields():
         "lastModifiedAt": 1562687288865,
         "lastModifiedBy": email
     }
-    created_developer = developer_api.create_new(new_developer)
+    created_developer = developer_api.create(True, new_developer)
 
     # Not all provided fields must be accepted
     assert created_developer['developerId'] != new_developer['developerId']
@@ -252,7 +252,7 @@ def test_developer_update_ignore_provided_developer_id():
     Test create developer and try to overwrite its developerId
     """
     developer_api = Developer(config, session)
-    created_developer = developer_api.create_new()
+    created_developer = developer_api.create(True)
 
     developer_id = created_developer['developerId']
 
@@ -268,10 +268,10 @@ def test_developer_update_ignore_provided_developer_id():
     developer_api.delete_existing(created_developer['email'])
 
 
-def cleanup_test_developers():
-    """
-    Delete all leftover developers created by tests
-    """
-    developer_api = Developer(config, session)
+# def cleanup_test_developers():
+#     """
+#     Delete all leftover developers created by tests
+#     """
+#     developer_api = Developer(config, session)
 
-    developer_api.delete_all_test_developer()
+#     developer_api.delete_all_test_developer()

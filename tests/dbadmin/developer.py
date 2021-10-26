@@ -31,7 +31,7 @@ class Developer:
         return f"testsuite-dev{number}@test.com"
 
 
-    def create_new(self, new_developer=None):
+    def create(self, success_expected, new_developer=None):
         """
         Create new developer to be used as test subject. If none provided generate random developer
         """
@@ -51,22 +51,17 @@ class Developer:
             }
 
         response = self.session.post(self.developer_url, json=new_developer)
-        assert_status_code(response, HTTP_CREATED)
-        assert_content_type_json(response)
+        if success_expected:
+            assert_status_code(response, HTTP_CREATED)
+            assert_content_type_json(response)
 
-        # Check if just created developer matches with what we requested
-        created_developer = response.json()
-        assert_valid_schema(created_developer, self.schemas['developer'])
-        self.assert_compare(created_developer, new_developer)
+            # Check if just created developer matches with what we requested
+            created_developer = response.json()
+            assert_valid_schema(created_developer, self.schemas['developer'])
+            self.assert_compare(created_developer, new_developer)
 
-        return created_developer
+            return created_developer
 
-
-    def create_existing(self, developer):
-        """
-        Attempt to create developer which already exists, should fail
-        """
-        response = self.session.post(self.developer_url, json=developer)
         assert_status_code(response, HTTP_BAD_REQUEST)
         assert_content_type_json(response)
         assert_valid_schema(response.json(), self.schemas['error'])
@@ -127,14 +122,14 @@ class Developer:
         return updated_developer
 
 
-    def change_status(self, developer_email, status, expect_success):
+    def change_status(self, developer_email, status, success_expected):
         """
         Update status to a value that is supported
         """
         developer_url = self.developer_url + '/' + developer_email + '?action=' + status
         response = self.session.post(developer_url)
 
-        if expect_success:
+        if success_expected:
             assert_status_code(response, HTTP_NO_CONTENT)
             assert response.content == b''
         else:
@@ -177,14 +172,14 @@ class Developer:
         assert_content_type_json(response)
 
 
-    def delete_all_test_developer(self):
-        """
-        Delete all developers created by test suite
-        """
-        for i in range(self.config['entity_count']):
-            email = self.generate_email_address(i)
-            developer_url = self.developer_url + '/' + email
-            self.session.delete(developer_url)
+    # def delete_all_test_developer(self):
+    #     """
+    #     Delete all developers created by test suite
+    #     """
+    #     for i in range(self.config['entity_count']):
+    #         email = self.generate_email_address(i)
+    #         developer_url = self.developer_url + '/' + email
+    #         self.session.delete(developer_url)
 
 
     def assert_compare(self, developer_a, developer_b):

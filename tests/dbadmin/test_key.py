@@ -17,10 +17,10 @@ def test_key_crud_lifecycle():
     Test create, read, update, delete keys of one application
     """
     developer_api = Developer(config, session)
-    created_developer = developer_api.create_new()
+    created_developer = developer_api.create(True)
 
     application_api = Application(config, session, created_developer['email'])
-    created_application = application_api.create_new()
+    created_application = application_api.create(True)
 
     key_api = Key(config, session, created_developer['email'], created_application['name'])
 
@@ -42,7 +42,7 @@ def test_key_crud_lifecycle():
     # Attempt to creating same, already existing application, must not be possible
     key_api.create(created_key, False)
 
-    # Validate just added key is part of app response set
+    # Validate the just added key is part of get app response set
     retrieved_application = application_api.get_existing(created_application['name'])
     key_present = False
     for i in range(len(retrieved_application['credentials'])):
@@ -61,10 +61,10 @@ def test_key_attributes():
     Test create, read, update, delete attributes of key
     """
     developer_api = Developer(config, session)
-    created_developer = developer_api.create_new()
+    created_developer = developer_api.create(True)
 
     application_api = Application(config, session, created_developer['email'])
-    created_application = application_api.create_new()
+    created_application = application_api.create(True)
 
     # Each new app has one auto-generated key, test against that key's attribute endpoint
     key_attributes_url = (config['api_url'] +
@@ -85,7 +85,8 @@ def test_key_attributes():
 # test deleting app while it has a key
 
 # test key import /organizations/{org_name}/developers/{developer_email}/apps/{app_name}/keys/create
-# POST /v1/organizations/{organization}/developers/{developer_email_or_id}/apps/{app_name}/keys/create
+# POST /v1/organizations/{organization}/developers/{developer_email_or_id}
+#                   /apps/{app_name}/keys/create
 # {
 #   "consumerKey": "key",
 #   "consumerSecret": "secret"
@@ -100,7 +101,8 @@ def test_key_attributes():
 # apiproduct assignment
 
 # test adding product to key
-# POST /v1/organizations/{organization}/developers/{developer_email_or_id}/apps/{app_name}/keys/{consumer_key_name}
+# POST /v1/organizations/{organization}/developers/{developer_email_or_id}
+#                   /apps/{app_name}/keys/{consumer_key_name}
 # {
 #  "apiProducts": ["product_1", "product_2"]
 # }

@@ -33,7 +33,7 @@ class Application:
         return f"testsuite-app{number}"
 
 
-    def create_new(self, new_application=None):
+    def create(self, success_expected, new_application=None):
         """
         Create new application to be used as test subject.
         If no app data provided generate application with random data
@@ -51,22 +51,18 @@ class Application:
             }
 
         response = self.session.post(self.application_url, json=new_application)
-        assert_status_code(response, HTTP_CREATED)
-        assert_content_type_json(response)
 
-        # Check if just created application matches with what we requested
-        created_application = response.json()
-        assert_valid_schema(created_application, self.schemas['application'])
-        self.assert_compare(created_application, new_application)
+        if success_expected:
+            assert_status_code(response, HTTP_CREATED)
+            assert_content_type_json(response)
 
-        return created_application
+            # Check if just created application matches with what we requested
+            created_application = response.json()
+            assert_valid_schema(created_application, self.schemas['application'])
+            self.assert_compare(created_application, new_application)
 
+            return created_application
 
-    def create_existing(self, application):
-        """
-        Attempt to create new application which already exists, should fail
-        """
-        response = self.session.post(self.application_url, json=application)
         assert_status_code(response, HTTP_BAD_REQUEST)
         assert_content_type_json(response)
         assert_valid_schema(response.json(), self.schemas['error'])
