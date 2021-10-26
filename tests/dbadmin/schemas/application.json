@@ -4,7 +4,9 @@
     "properties": {
         "apiProducts": {
             "type": "array",
-            "items": {}
+            "items": [{
+                "type": "string"
+            }]
         },
         "appFamily": {
             "type": "string"
@@ -44,10 +46,13 @@
         },
         "scopes": {
             "type": "array",
-            "items": {}
+            "items": [{
+                "type": "string"
+            }]
         },
         "status": {
-            "type": "string"
+            "type": "string",
+            "enum": ["approved", "revoked"]
         }
     },
     "required": [

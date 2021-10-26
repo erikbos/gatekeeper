@@ -23,7 +23,8 @@
             "items": {}
         },
         "status": {
-            "type": "string"
+            "type": "string",
+            "enum": ["approved", "revoked"]
         }
     },
     "required": [
