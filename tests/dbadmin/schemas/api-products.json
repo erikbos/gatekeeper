@@ -2,7 +2,7 @@
     "$schema": "http://json-schema.org/draft-04/schema#",
     "type": "array",
     "items": [{
-        "description": "The name of an apiproduct.",
+        "description": "The name of an api product.",
         "type": "string"
     }]
 }

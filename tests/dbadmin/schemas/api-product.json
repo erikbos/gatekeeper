@@ -28,10 +28,10 @@
             }]
         },
         "createdAt": {
-            "type": "string"
+            "type": "integer"
         },
         "lastModifiedAt": {
-            "type": "string"
+            "type": "integer"
         },
         "operationGroup": {
             "type": "object",
@@ -84,7 +84,6 @@
         "displayName",
         "approvalType",
         "attributes",
-        "description",
         "environments",
         "createdAt",
         "lastModifiedAt"

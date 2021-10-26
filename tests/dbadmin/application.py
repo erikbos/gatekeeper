@@ -15,12 +15,13 @@ class Application:
     def __init__(self, config, session, developer_email):
         self.config = config
         self.session = session
+        self.global_application_url = self.config['api_url'] + '/apps'
         if developer_email is not None:
             self.application_url = config['api_url'] + '/developers/' + developer_email + '/apps'
         self.schemas = {
             'application': load_json_schema('application.json'),
             'applications': load_json_schema('applications.json'),
-            'applications-global-list': load_json_schema('applications-global-list.json'),
+            'applications-uuid': load_json_schema('applications-uuids.json'),
             'error': load_json_schema('error.json'),
         }
 
@@ -73,19 +74,31 @@ class Application:
 
     def get_all_global(self):
         """
-        Get all apps of all developers (uuid list)
+        Get global list of all application uuids
         """
-        response = self.session.get(self.config['api_url'] + '/apps')
+        response = self.session.get(self.global_application_url)
         assert_status_code(response, HTTP_OK)
         assert_content_type_json(response)
-        assert_valid_schema(response.json(), self.schemas['applications-global-list'])
+        assert_valid_schema(response.json(), self.schemas['applications-uuid'])
 
         return response.json()
 
 
+    def get_all_global_detailed(self):
+        """
+        Get global list of all application names
+        """
+        response = self.session.get(self.global_application_url + '?expand=true')
+        assert_status_code(response, HTTP_OK)
+        assert_content_type_json(response)
+        assert_valid_schema(response.json(), self.schemas['applications'])
+        # TODO testing of paginating response
+        # TODO filtering of apptype, expand, rows, startKey, status queryparameters to filter
+
+
     def get_all(self):
         """
-        Get all applications of one developer
+        Get all application names of one developer
         """
         response = self.session.get(self.application_url)
         assert_status_code(response, HTTP_OK)
@@ -99,14 +112,28 @@ class Application:
         """
         Get existing application
         """
-        developer_url = self.application_url + '/' + urllib.parse.quote(app_name)
-        response = self.session.get(developer_url)
+        application_url = self.application_url + '/' + urllib.parse.quote(app_name)
+        response = self.session.get(application_url)
         assert_status_code(response, HTTP_OK)
         assert_content_type_json(response)
-        retrieved_developer = response.json()
-        assert_valid_schema(retrieved_developer, self.schemas['application'])
+        retrieved_application = response.json()
+        assert_valid_schema(retrieved_application, self.schemas['application'])
 
-        return retrieved_developer
+        return retrieved_application
+
+
+    def get_by_uuid_existing(self, app_uuid):
+        """
+        Get existing application by uuid
+        """
+        application_url = self.global_application_url + '/' + app_uuid
+        response = self.session.get(application_url)
+        assert_status_code(response, HTTP_OK)
+        assert_content_type_json(response)
+        retrieved_application = response.json()
+        assert_valid_schema(retrieved_application, self.schemas['application'])
+
+        return retrieved_application
 
 
     def update_existing(self, application):

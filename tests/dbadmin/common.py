@@ -2,6 +2,7 @@
 Provides common functions
 """
 import os
+import requests
 import jsonref
 import jsonschema
 
@@ -21,6 +22,19 @@ def get_config():
         'api_password': os.environ['API_PASSWORD'],
         'entity_count': 3,
     }
+
+
+def get_http_session(config):
+    """
+    Returns HTTP session for all API requests
+    """
+    session = requests.Session()
+    session.auth = (config['api_username'], config['api_password'])
+    session.headers = {
+        'accept': 'application/json',
+        'user-agent': 'Gatekeeper testsuite'
+        }
+    return session
 
 
 def assert_status_code(response, status_code):

@@ -1,24 +1,15 @@
 """
-Test suite to validate developer, application and key endpoints operations
+Test suite to validate developer endpoints operations
 """
 import copy
 import random
-import requests
-from common import assert_valid_schema_error, assert_status_code, get_config
-from httpstatus import HTTP_NO_CONTENT, HTTP_AUTHORIZATION_REQUIRED, \
-    HTTP_BAD_REQUEST, HTTP_BAD_CONTENT
+from common import get_config, get_http_session, assert_status_code
+from httpstatus import  HTTP_AUTHORIZATION_REQUIRED, HTTP_BAD_CONTENT
 from developer import Developer
-from application import Application
 from attribute import run_attribute_tests
 
 config = get_config()
-
-session = requests.Session()
-session.auth = (config['api_username'], config['api_password'])
-session.headers = {
-    'accept': 'application/json',
-      'user-agent': 'Gatekeeper testsuite'
-    }
+session = get_http_session(config)
 
 
 def test_developer_get_all():
@@ -29,7 +20,7 @@ def test_developer_get_all():
     developer_api.get_all()
 
 
-def test_developer_list_detailed():
+def test_developer_get_all_detailed():
     """
     Test get all developers, returns array with zero or more developers
     """
@@ -130,39 +121,6 @@ def test_developer_crud_lifecycle_multiple():
         developer_api.delete_nonexisting(created_developers[i]['developerId'])
 
 
-def test_developer_change_status():
-    """
-    Test changing status of developer
-    """
-    developer_api = Developer(config, session)
-
-    test_developer = developer_api.create_new()
-
-    # Change status to active
-    url = developer_api.developer_url + '/' + test_developer['email'] + '?action=active'
-    response = session.post(url)
-    assert_status_code(response, HTTP_NO_CONTENT)
-    assert response.content == b''
-
-    assert developer_api.get_existing(test_developer['email'])['status'] == 'active'
-
-    # Change status to inactive
-    url = developer_api.developer_url + '/' + test_developer['email'] + '?action=inactive'
-    response = session.post(url)
-    assert_status_code(response, HTTP_NO_CONTENT)
-    assert response.content == b''
-
-    assert developer_api.get_existing(test_developer['email'])['status'] == 'inactive'
-
-    # Change status to unknown value is unsupported
-    url = developer_api.developer_url + '/' + test_developer['email'] + '?action=unknown'
-    response = session.post(url)
-    assert_status_code(response, HTTP_BAD_REQUEST)
-    assert_valid_schema_error(response.json())
-
-    developer_api.delete_existing(test_developer['email'])
-
-
 def test_developer_attributes():
     """
     Test create, read, update, delete attributes of developer
@@ -176,6 +134,27 @@ def test_developer_attributes():
     run_attribute_tests(config, session, developer_attributes_url)
 
     # clean up
+    developer_api.delete_existing(test_developer['email'])
+
+
+def test_developer_change_status():
+    """
+    Test changing status of developer
+    """
+    developer_api = Developer(config, session)
+    test_developer = developer_api.create_new()
+
+    # Change status to active
+    developer_api.change_status(test_developer['email'], 'active', True)
+    assert developer_api.get_existing(test_developer['email'])['status'] == 'active'
+
+    # try inactivating
+    developer_api.change_status(test_developer['email'], 'inactive', True)
+    assert developer_api.get_existing(test_developer['email'])['status'] == 'inactive'
+
+    # Change status to unknown value is unsupported
+    developer_api.change_status(test_developer['email'], 'unknown', False)
+
     developer_api.delete_existing(test_developer['email'])
 
 
@@ -268,9 +247,9 @@ def test_developer_create_ignore_provided_fields():
     developer_api.delete_existing(created_developer['developerId'])
 
 
-def test_developer_update_ignore_provided_id():
+def test_developer_update_ignore_provided_developer_id():
     """
-    Test update developer and try to update its developerId
+    Test create developer and try to overwrite its developerId
     """
     developer_api = Developer(config, session)
     created_developer = developer_api.create_new()
@@ -296,138 +275,3 @@ def cleanup_test_developers():
     developer_api = Developer(config, session)
 
     developer_api.delete_all_test_developer()
-
-    #
-   # #   #####  #####   ####
-  #   #  #    # #    # #
- #     # #    # #    #  ####
- ####### #####  #####       #
- #     # #      #      #    #
- #     # #      #       ####
-
-def test_application_get_all():
-    """
-    Test get all applications
-    """
-    application_api = Application(config, session, None)
-    application_api.get_all_global()
-
-
-def test_application_crud_lifecycle():
-    """
-    Test create, read, update, delete one application of one developer
-    """
-    developer_api = Developer(config, session)
-    created_developer = developer_api.create_new()
-
-    application_api = Application(config, session, created_developer['email'])
-    created_application = application_api.create_new()
-
-    # Attempt to creating same, already existing application, must not be possible
-    application_api.create_existing(created_application)
-
-    # Read existing app by name
-    retrieved_application = application_api.get_existing(created_application['name'])
-    application_api.assert_compare(retrieved_application, created_application)
-
-    # Update name and attributes
-    updated_application = copy.deepcopy(created_application)
-    updated_application['displayName'] = 'Test change of app name'
-    updated_application['attributes'] = [
-              {
-                   "name" : "Test",
-              },
-              {
-                   "name" : "Status",
-                   "value" : "Royal"
-              }
-         ]
-    application_api.update_existing(updated_application)
-
-    # Read updated application by name
-    retrieved_application = application_api.get_existing(updated_application['name'])
-    application_api.assert_compare(retrieved_application, updated_application)
-
-    # Check if application shows up in developer's object
-    retrieved_developer = developer_api.get_existing(created_developer['email'])
-    if created_application['name'] not in retrieved_developer['apps']:
-        assert()
-
-    # Check if application shows up in global application list
-    if created_application['appId'] not in application_api.get_all_global():
-        assert()
-
-    # Check if application shows up in developer's application list
-    if created_application['name'] not in application_api.get_all():
-        assert()
-
-    # # Delete just created application
-    deleted_application = application_api.delete_existing(updated_application['name'])
-    application_api.assert_compare(deleted_application, updated_application)
-
-    # Try to delete application once more, must not exist anymore
-    application_api.delete_nonexisting(updated_application['name'])
-
-    # clean up
-    developer_api.delete_existing(created_developer['email'])
-
-
-def test_application_crud_lifecycle_multiple():
-    """
-    Test create, read, update, delete multiple applications, randomly named
-    """
-    developer_api = Developer(config, session)
-    created_developer = developer_api.create_new()
-
-    application_api = Application(config, session, created_developer['email'])
-
-    # Create applications
-    created_applications = []
-    for i in range(config['entity_count']):
-        created_applications.append(application_api.create_new())
-
-    # Creating them once more must not be possible
-    random.shuffle(created_applications)
-    for i in range(config['entity_count']):
-        application_api.create_existing(created_applications[i])
-
-    # Read created application in random order
-    random.shuffle(created_applications)
-    for i in range(config['entity_count']):
-        retrieved_application = application_api.get_existing(created_applications[i]['name'])
-        application_api.assert_compare(retrieved_application, created_applications[i])
-
-    # Check all apps are in global app list
-    all_created = [created_applications[i]['appId'] for i in range(config['entity_count'])]
-    all_apps = application_api.get_all_global()
-    if not all(email_address in all_apps for email_address in all_created):
-        assert()
-
-    # Delete each created application
-    random.shuffle(created_applications)
-    for i in range(config['entity_count']):
-        deleted_application = application_api.delete_existing(created_applications[i]['name'])
-        # Check if just deleted application matches with as created application
-        application_api.assert_compare(deleted_application, created_applications[i])
-
-        # Try to delete developer once more, must not exist anymore
-        application_api.delete_nonexisting(created_applications[i]['name'])
-
-
-def test_application_attributes():
-    """
-    Test create, read, update, delete attributes of application
-    """
-    developer_api = Developer(config, session)
-    created_developer = developer_api.create_new()
-
-    application_api = Application(config, session, created_developer['email'])
-    created_application = application_api.create_new()
-
-    application_attributes_url = (application_api.application_url +
-        '/' + created_application['name'] + '/attributes')
-    run_attribute_tests(config, session, application_attributes_url)
-
-    # clean up
-    application_api.delete_existing(created_application['name'])
-    developer_api.delete_existing(created_developer['email'])

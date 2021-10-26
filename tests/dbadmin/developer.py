@@ -2,9 +2,9 @@
 Developer module does all REST API operations on developer endpoint
 """
 import random
-from common import assert_valid_schema, assert_status_code, \
-    assert_content_type_json, load_json_schema
-from httpstatus import HTTP_OK, HTTP_NOT_FOUND, HTTP_CREATED, HTTP_BAD_REQUEST
+from common import assert_valid_schema, assert_valid_schema_error, \
+            assert_status_code, assert_content_type_json, load_json_schema
+from httpstatus import HTTP_OK, HTTP_NOT_FOUND, HTTP_CREATED, HTTP_BAD_REQUEST, HTTP_NO_CONTENT
 
 
 class Developer:
@@ -64,7 +64,7 @@ class Developer:
 
     def create_existing(self, developer):
         """
-        Attempt to create new developer which already exists, should fail
+        Attempt to create developer which already exists, should fail
         """
         response = self.session.post(self.developer_url, json=developer)
         assert_status_code(response, HTTP_BAD_REQUEST)
@@ -80,6 +80,8 @@ class Developer:
         assert_status_code(response, HTTP_OK)
         assert_content_type_json(response)
         assert_valid_schema(response.json(), self.schemas['developers_email'])
+        # TODO testing of paginating response
+        # TODO filtering on apptype, expand, rows, startKey, status queryparameters to filter
 
         return response.json()
 
@@ -93,6 +95,7 @@ class Developer:
         assert_content_type_json(response)
         assert_valid_schema(response.json(), self.schemas['developers'])
         # TODO testing of paginating response
+        # TODO filtering on apptype, expand, rows, startKey, status queryparameters to filter
 
 
     def get_existing(self, developer_email):
@@ -115,7 +118,6 @@ class Developer:
         """
         developer_url = self.developer_url + '/' + developer_email
         response = self.session.post(developer_url, json=developer)
-        print(response.text)
         assert_status_code(response, HTTP_OK)
         assert_content_type_json(response)
 
@@ -123,6 +125,21 @@ class Developer:
         assert_valid_schema(updated_developer, self.schemas['developer'])
 
         return updated_developer
+
+
+    def change_status(self, developer_email, status, expect_success):
+        """
+        Update status to a value that is supported
+        """
+        developer_url = self.developer_url + '/' + developer_email + '?action=' + status
+        response = self.session.post(developer_url)
+
+        if expect_success:
+            assert_status_code(response, HTTP_NO_CONTENT)
+            assert response.content == b''
+        else:
+            assert_status_code(response, HTTP_BAD_REQUEST)
+            assert_valid_schema_error(response.json())
 
 
     def delete_existing(self, developer_email):
@@ -141,11 +158,22 @@ class Developer:
 
     def delete_nonexisting(self, developer_email):
         """
-        Delete non-existing developer, which should fail
+        Attempt to delete non-existing developer, which should fail
         """
         developer_url = self.developer_url + '/' + developer_email
         response = self.session.delete(developer_url)
         assert_status_code(response, HTTP_NOT_FOUND)
+        assert_content_type_json(response)
+
+
+    def delete_badrequest(self, developer_email):
+        """
+        Attempt to delete developer with at least one app assigned,
+        which should fail
+        """
+        developer_url = self.developer_url + '/' + developer_email
+        response = self.session.delete(developer_url)
+        assert_status_code(response, HTTP_BAD_REQUEST)
         assert_content_type_json(response)
 
 
