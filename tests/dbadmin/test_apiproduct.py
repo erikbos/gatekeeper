@@ -32,13 +32,13 @@ def test_api_product_crud_lifecycle():
     Test create, read, update, delete one api product
     """
     product_api = APIproduct(config, session)
-    created_product = product_api.create_new()
+    created_product = product_api.create_positive()
 
     # Creating same, now existing developer, must not be possible
-    product_api.create_existing(created_product)
+    product_api.create_negative(created_product)
 
     # Read existing developer by name
-    retrieved_product = product_api.get_existing(created_product['name'])
+    retrieved_product = product_api.get_positive(created_product['name'])
     product_api.assert_compare(retrieved_product, created_product)
 
     # Check if created product shows up in global apiproduct list
@@ -58,18 +58,18 @@ def test_api_product_crud_lifecycle():
                    "value" : "Royal"
               }
          ]
-    product_api.update_existing(created_product['name'], updated_product)
+    product_api.update_positive(created_product['name'], updated_product)
 
     # Check if updated product shows up in global product list
     if updated_product['name'] not in product_api.get_all():
         assert()
 
     # Delete just created product
-    deleted_product = product_api.delete_existing(updated_product['name'])
+    deleted_product = product_api.delete_positive(updated_product['name'])
     product_api.assert_compare(deleted_product, updated_product)
 
     # Try to delete product once more, must not exist anymore
-    product_api.delete_nonexisting(updated_product['name'])
+    product_api.delete_negative(updated_product['name'])
 
 
 def test_api_product_attributes():
@@ -78,11 +78,11 @@ def test_api_product_attributes():
     """
     product_api = APIproduct(config, session)
 
-    test_api_product = product_api.create_new()
+    test_api_product = product_api.create_positive()
 
     product_attributes_url = (product_api.api_product_url +
         '/' + test_api_product['name'] + '/attributes')
     run_attribute_tests(config, session, product_attributes_url)
 
     # clean up
-    product_api.delete_existing(test_api_product['name'])
+    product_api.delete_positive(test_api_product['name'])

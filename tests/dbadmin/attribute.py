@@ -45,7 +45,7 @@ class Attribute:
         return retrieved_attributes
 
 
-    def get_existing(self, attribute_name):
+    def get_positive(self, attribute_name):
         """
         Retrieve an existing attribute
         """
@@ -59,7 +59,7 @@ class Attribute:
         return retrieved_attribute
 
 
-    def get_non_existing(self, attribute_name):
+    def get_negative(self, attribute_name):
         """
         Attempt to retrieve a non-existing attribute
         """
@@ -68,7 +68,7 @@ class Attribute:
         assert_content_type_json(response)
 
 
-    def delete(self, attribute_name):
+    def delete_positive(self, attribute_name):
         """
         Delete an existing attribute
         """
@@ -82,7 +82,7 @@ class Attribute:
         return retrieved_attribute
 
 
-    def delete_non_existing(self, attribute_name):
+    def delete_negative(self, attribute_name):
         """
         Attempt to delete a non-existing attribute
         """
@@ -125,13 +125,13 @@ def run_attribute_tests(config, session, attribute_url):
     retrieved_attributes = attribute_api.get_all()
     attribute_api.compare_sets(retrieved_attributes, new_attributes)
 
-    # Retrieve single attributes
-    assert attribute_api.get_existing(attribute_status['name']) == attribute_status
-    assert attribute_api.get_existing(attribute_shoesize['name']) == attribute_shoesize
+    # Retrieve single attribute
+    assert attribute_api.get_positive(attribute_status['name']) == attribute_status
+    assert attribute_api.get_positive(attribute_shoesize['name']) == attribute_shoesize
 
-    # Delete one attribute
-    attribute_api.delete(attribute_status['name'])
-    attribute_api.get_non_existing(attribute_status['name'])
+    # Delete one attribute and attempt to fetch it again
+    attribute_api.delete_positive(attribute_status['name'])
+    attribute_api.get_negative(attribute_status['name'])
 
     # Attempt to delete attribute that just got deleted
-    attribute_api.delete_non_existing(attribute_status['name'])
+    attribute_api.delete_negative(attribute_status['name'])

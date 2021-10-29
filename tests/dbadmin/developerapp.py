@@ -33,7 +33,7 @@ class Application:
         return f"testsuite-app{number}"
 
 
-    def create(self, success_expected, new_application=None):
+    def _create(self, success_expected, new_application=None):
         """
         Create new application to be used as test subject.
         If no app data provided generate application with random data
@@ -51,7 +51,6 @@ class Application:
             }
 
         response = self.session.post(self.application_url, json=new_application)
-
         if success_expected:
             assert_status_code(response, HTTP_CREATED)
             assert_content_type_json(response)
@@ -66,6 +65,40 @@ class Application:
         assert_status_code(response, HTTP_BAD_REQUEST)
         assert_content_type_json(response)
         assert_valid_schema(response.json(), self.schemas['error'])
+
+
+    def create_new(self, new_application=None):
+        """
+        Create new application, if no app data provided generate application with random data
+        """
+        return self._create(True, new_application)
+
+
+    def create_negative(self, application):
+        """
+        Attempt to create new application which already exists, should fail
+        """
+        return self._create(False, application)
+
+
+    def create_key_positive(self, app_name, api_product_name):
+        """
+        Create new key with assigned api product
+        """
+        new_key = {
+            "apiProducts": [ api_product_name ],
+            "status": "approved"
+        }
+
+        headers = self.session.headers
+        headers['content-type'] = 'application/json'
+        application_url = self.application_url + '/' + urllib.parse.quote(app_name)
+        response = self.session.put(application_url, headers=headers, json=new_key)
+        assert_status_code(response, HTTP_OK)
+        assert_content_type_json(response)
+        assert_valid_schema(response.json(), self.schemas['application'])
+
+        return response.json()
 
 
     def get_all_global(self):
@@ -104,7 +137,7 @@ class Application:
         return response.json()
 
 
-    def get_existing(self, app_name):
+    def get_positive(self, app_name):
         """
         Get existing application
         """
@@ -118,7 +151,7 @@ class Application:
         return retrieved_application
 
 
-    def get_by_uuid_existing(self, app_uuid):
+    def get_by_uuid_positive(self, app_uuid):
         """
         Get existing application by uuid
         """
@@ -132,16 +165,12 @@ class Application:
         return retrieved_application
 
 
-    def update_existing(self, application):
+    def update_positive(self, application):
         """
         Update existing application
         """
         application_url = self.application_url + '/' + urllib.parse.quote(application['name'])
         response = self.session.post(application_url, json=application)
-        # print(app_name)
-        # print(application_url)
-        # print(application)
-        # print(response.text)
         assert_status_code(response, HTTP_OK)
         assert_content_type_json(response)
 
@@ -151,7 +180,7 @@ class Application:
         return updated_application
 
 
-    def delete_existing(self, app_name):
+    def delete_positive(self, app_name):
         """
         Delete existing application
         """
@@ -165,7 +194,7 @@ class Application:
         return updated_application
 
 
-    def delete_nonexisting(self, app_name):
+    def delete_negative(self, app_name):
         """
         Delete non-existing application, which should fail
         """

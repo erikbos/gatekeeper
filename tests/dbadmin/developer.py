@@ -31,9 +31,9 @@ class Developer:
         return f"testsuite-dev{number}@test.com"
 
 
-    def create(self, success_expected, new_developer=None):
+    def _create(self, success_expected, new_developer=None):
         """
-        Create new developer to be used as test subject. If none provided generate random developer
+        Create new developer, if none provided generate random developer
         """
         if new_developer is None:
             random_int = random.randint(0,99999)
@@ -67,6 +67,20 @@ class Developer:
         assert_valid_schema(response.json(), self.schemas['error'])
 
 
+    def create_positive(self, new_developer=None):
+        """
+        Create new developer to be used as test subject. If none provided generate random developer
+        """
+        return self._create(True, new_developer)
+
+
+    def create_negative(self, developer):
+        """
+        Attempt to create developer which already exists, should fail
+        """
+        return self._create(False, developer)
+
+
     def get_all(self):
         """
         Get all developers email addresses
@@ -93,7 +107,7 @@ class Developer:
         # TODO filtering on apptype, expand, rows, startKey, status queryparameters to filter
 
 
-    def get_existing(self, developer_email):
+    def get_positive(self, developer_email):
         """
         Get existing developer
         """
@@ -107,7 +121,7 @@ class Developer:
         return retrieved_developer
 
 
-    def update_existing(self, developer_email, developer):
+    def update_negative(self, developer_email, developer):
         """
         Update existing developer
         """
@@ -122,14 +136,14 @@ class Developer:
         return updated_developer
 
 
-    def change_status(self, developer_email, status, success_expected):
+    def change_status(self, developer_email, status, expect_success):
         """
-        Update status to a value that is supported
+        Update developer' status to a value that is supported
         """
         developer_url = self.developer_url + '/' + developer_email + '?action=' + status
         response = self.session.post(developer_url)
 
-        if success_expected:
+        if expect_success:
             assert_status_code(response, HTTP_NO_CONTENT)
             assert response.content == b''
         else:
@@ -137,7 +151,7 @@ class Developer:
             assert_valid_schema_error(response.json())
 
 
-    def delete_existing(self, developer_email):
+    def delete_positive(self, developer_email):
         """
         Delete existing developer
         """
@@ -151,7 +165,7 @@ class Developer:
         return deleted_developer
 
 
-    def delete_nonexisting(self, developer_email):
+    def delete_negative_notfound(self, developer_email):
         """
         Attempt to delete non-existing developer, which should fail
         """
@@ -161,7 +175,7 @@ class Developer:
         assert_content_type_json(response)
 
 
-    def delete_badrequest(self, developer_email):
+    def delete_negative_badrequest(self, developer_email):
         """
         Attempt to delete developer with at least one app assigned,
         which should fail
@@ -172,14 +186,14 @@ class Developer:
         assert_content_type_json(response)
 
 
-    # def delete_all_test_developer(self):
-    #     """
-    #     Delete all developers created by test suite
-    #     """
-    #     for i in range(self.config['entity_count']):
-    #         email = self.generate_email_address(i)
-    #         developer_url = self.developer_url + '/' + email
-    #         self.session.delete(developer_url)
+    def delete_all_test_developer(self):
+        """
+        Delete all developers created by test suite
+        """
+        for i in range(self.config['entity_count']):
+            email = self.generate_email_address(i)
+            developer_url = self.developer_url + '/' + email
+            self.session.delete(developer_url)
 
 
     def assert_compare(self, developer_a, developer_b):

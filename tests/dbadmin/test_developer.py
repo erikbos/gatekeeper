@@ -34,17 +34,17 @@ def test_developer_crud_lifecycle():
     """
     developer_api = Developer(config, session)
 
-    created_developer = developer_api.create(True)
+    created_developer = developer_api.create_positive()
 
     # Creating same, now existing developer, must not be possible
-    developer_api.create(False, created_developer)
+    developer_api.create_negative(created_developer)
 
     # Read existing developer by email
-    retrieved_developer = developer_api.get_existing(created_developer['email'])
+    retrieved_developer = developer_api.get_positive(created_developer['email'])
     developer_api.assert_compare(retrieved_developer, created_developer)
 
     # Read existing developer by developerid
-    retrieved_developer = developer_api.get_existing(created_developer['developerId'])
+    retrieved_developer = developer_api.get_positive(created_developer['developerId'])
     developer_api.assert_compare(retrieved_developer, created_developer)
 
     # Check if created developer shows up in global developer list
@@ -64,10 +64,10 @@ def test_developer_crud_lifecycle():
                    "value" : "42"
               }
          ]
-    developer_api.update_existing(created_developer['email'], updated_developer)
+    developer_api.update_negative(created_developer['email'], updated_developer)
 
     # Read updated developer by developerid
-    retrieved_developer = developer_api.get_existing(updated_developer['developerId'])
+    retrieved_developer = developer_api.get_positive(updated_developer['developerId'])
     developer_api.assert_compare(retrieved_developer, updated_developer)
 
     # Check if updated developer shows up in global developer list
@@ -75,11 +75,11 @@ def test_developer_crud_lifecycle():
         assert()
 
     # Delete just created developer
-    deleted_developer = developer_api.delete_existing(updated_developer['email'])
+    deleted_developer = developer_api.delete_positive(updated_developer['email'])
     developer_api.assert_compare(deleted_developer, updated_developer)
 
     # Try to delete developer once more, must not exist anymore
-    developer_api.delete_nonexisting(updated_developer['email'])
+    developer_api.delete_negative_notfound(updated_developer['email'])
 
 
 def test_developer_crud_lifecycle_multiple():
@@ -91,17 +91,17 @@ def test_developer_crud_lifecycle_multiple():
     # Create developers
     created_developers = []
     for i in range(config['entity_count']):
-        created_developers.append(developer_api.create(True))
+        created_developers.append(developer_api.create_positive())
 
     # Creating them once more must not be possible
     random.shuffle(created_developers)
     for i in range(config['entity_count']):
-        developer_api.create(False, created_developers[i])
+        developer_api.create_negative(created_developers[i])
 
     # Read created developers in random order
     random.shuffle(created_developers)
     for i in range(config['entity_count']):
-        retrieved_developer = developer_api.get_existing(created_developers[i]['developerId'])
+        retrieved_developer = developer_api.get_positive(created_developers[i]['developerId'])
         developer_api.assert_compare(retrieved_developer, created_developers[i])
 
     # Check if all created developers shows up in global developers list
@@ -113,12 +113,12 @@ def test_developer_crud_lifecycle_multiple():
     # Delete each created developer
     random.shuffle(created_developers)
     for i in range(config['entity_count']):
-        deleted_developer = developer_api.delete_existing(created_developers[i]['developerId'])
+        deleted_developer = developer_api.delete_positive(created_developers[i]['developerId'])
         # Check if just deleted developer matches with as created developer
         developer_api.assert_compare(deleted_developer, created_developers[i])
 
         # Try to delete developer once more, must not exist anymore
-        developer_api.delete_nonexisting(created_developers[i]['developerId'])
+        developer_api.delete_negative_notfound(created_developers[i]['developerId'])
 
 
 def test_developer_attributes():
@@ -127,14 +127,14 @@ def test_developer_attributes():
     """
     developer_api = Developer(config, session)
 
-    test_developer = developer_api.create(True)
+    test_developer = developer_api.create_positive()
 
     developer_attributes_url = (developer_api.developer_url +
         '/' + test_developer['email'] + '/attributes')
     run_attribute_tests(config, session, developer_attributes_url)
 
     # clean up
-    developer_api.delete_existing(test_developer['email'])
+    developer_api.delete_positive(test_developer['email'])
 
 
 def test_developer_change_status():
@@ -142,20 +142,20 @@ def test_developer_change_status():
     Test changing status of developer
     """
     developer_api = Developer(config, session)
-    test_developer = developer_api.create(True)
+    test_developer = developer_api.create_positive()
 
     # Change status to active
     developer_api.change_status(test_developer['email'], 'active', True)
-    assert developer_api.get_existing(test_developer['email'])['status'] == 'active'
+    assert developer_api.get_positive(test_developer['email'])['status'] == 'active'
 
     # try inactivating
     developer_api.change_status(test_developer['email'], 'inactive', True)
-    assert developer_api.get_existing(test_developer['email'])['status'] == 'inactive'
+    assert developer_api.get_positive(test_developer['email'])['status'] == 'inactive'
 
     # Change status to unknown value is unsupported
     developer_api.change_status(test_developer['email'], 'unknown', False)
 
-    developer_api.delete_existing(test_developer['email'])
+    developer_api.delete_positive(test_developer['email'])
 
 
 def test_developer_field_lengths():
@@ -234,7 +234,7 @@ def test_developer_create_ignore_provided_fields():
         "lastModifiedAt": 1562687288865,
         "lastModifiedBy": email
     }
-    created_developer = developer_api.create(True, new_developer)
+    created_developer = developer_api.create_positive(new_developer)
 
     # Not all provided fields must be accepted
     assert created_developer['developerId'] != new_developer['developerId']
@@ -244,7 +244,7 @@ def test_developer_create_ignore_provided_fields():
     assert created_developer['lastModifiedBy'] != new_developer['lastModifiedBy']
 
     # clean up
-    developer_api.delete_existing(created_developer['developerId'])
+    developer_api.delete_positive(created_developer['developerId'])
 
 
 def test_developer_update_ignore_provided_developer_id():
@@ -252,26 +252,26 @@ def test_developer_update_ignore_provided_developer_id():
     Test create developer and try to overwrite its developerId
     """
     developer_api = Developer(config, session)
-    created_developer = developer_api.create(True)
+    created_developer = developer_api.create_positive()
 
     developer_id = created_developer['developerId']
 
     # attempt to manipulate developer_id to wrong value
     created_developer['developerId'] = developer_id + 'wrong'
-    developer_api.update_existing(created_developer['email'], created_developer)
+    developer_api.update_negative(created_developer['email'], created_developer)
 
     # Retrieve developer, id should still be the original one
-    change_developer = developer_api.get_existing(created_developer['email'])
+    change_developer = developer_api.get_positive(created_developer['email'])
     assert change_developer['developerId'] != created_developer['developerId']
 
     # clean up
-    developer_api.delete_existing(created_developer['email'])
+    developer_api.delete_positive(created_developer['email'])
 
 
-# def cleanup_test_developers():
-#     """
-#     Delete all leftover developers created by tests
-#     """
-#     developer_api = Developer(config, session)
+def cleanup_test_developers():
+    """
+    Delete all leftover developers created by tests
+    """
+    developer_api = Developer(config, session)
 
-#     developer_api.delete_all_test_developer()
+    developer_api.delete_all_test_developer()

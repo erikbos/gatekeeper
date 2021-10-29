@@ -31,10 +31,10 @@ class APIproduct:
         return f"testsuite-apiproduct{number}"
 
 
-    def create_new(self, new_api_product=None):
+    def _create(self, success_expected, new_api_product=None):
         """
         Create new api product to be used as test subject.
-        If none provided generate random API product.
+        If none provided generate API product with random name.
         """
 
         if new_api_product is None:
@@ -53,26 +53,36 @@ class APIproduct:
             }
 
         response = self.session.post(self.api_product_url, json=new_api_product)
-        print(response.text)
-        assert_status_code(response, HTTP_CREATED)
-        assert_content_type_json(response)
+        if success_expected:
+            assert_status_code(response, HTTP_CREATED)
+            assert_content_type_json(response)
 
-        # Check if just created api product matches with what we requested
-        created_api_product = response.json()
-        assert_valid_schema(created_api_product, self.schemas['api-product'])
-        self.assert_compare(created_api_product, new_api_product)
+            # Check if just created api product matches with what we requested
+            created_api_product = response.json()
+            assert_valid_schema(created_api_product, self.schemas['api-product'])
+            self.assert_compare(created_api_product, new_api_product)
 
-        return created_api_product
+            return created_api_product
 
-
-    def create_existing(self, api_product):
-        """
-        Attempt to create api product which already exists, should fail
-        """
-        response = self.session.post(self.api_product_url, json=api_product)
         assert_status_code(response, HTTP_BAD_REQUEST)
         assert_content_type_json(response)
         assert_valid_schema(response.json(), self.schemas['error'])
+
+        return response.json()
+
+
+    def create_positive(self, new_api_product=None):
+        """
+        Create new api product, if none provided generate API product with random data.
+        """
+        return self._create(True, new_api_product)
+
+
+    def create_negative(self, api_product):
+        """
+        Attempt to create api product which already exists, should fail
+        """
+        return self._create(False, api_product)
 
 
     def get_all(self):
@@ -99,7 +109,7 @@ class APIproduct:
         # TODO filtering on attributename, attributevalue, startKey
 
 
-    def get_existing(self, api_product):
+    def get_positive(self, api_product):
         """
         Get existing api product
         """
@@ -113,7 +123,7 @@ class APIproduct:
         return retrieved_api_product
 
 
-    def update_existing(self, api_product, updated_api_product):
+    def update_positive(self, api_product, updated_api_product):
         """
         Update existing api product
         """
@@ -128,11 +138,12 @@ class APIproduct:
         return updated_api_product
 
 
-    def delete_existing(self, api_product):
+    def delete_positive(self, api_product):
         """
         Delete existing api product
         """
         api_product_url = self.api_product_url + '/' + api_product
+        print("delete", api_product_url)
         response = self.session.delete(api_product_url)
         assert_status_code(response, HTTP_OK)
         assert_content_type_json(response)
@@ -142,13 +153,23 @@ class APIproduct:
         return deleted_api_product
 
 
-    def delete_nonexisting(self, api_product):
+    def delete_negative(self, api_product):
         """
-        Delete non-existing api product, which should fail
+        Attempt to delete non-existing api product, should fail
         """
         api_product_url = self.api_product_url + '/' + api_product
         response = self.session.delete(api_product_url)
         assert_status_code(response, HTTP_NOT_FOUND)
+        assert_content_type_json(response)
+
+
+    def delete_negative_bad_request(self, api_product):
+        """
+        Attempt to delete product associated with assigned keys, should fail
+        """
+        api_product_url = self.api_product_url + '/' + api_product
+        response = self.session.delete(api_product_url)
+        assert_status_code(response, HTTP_BAD_REQUEST)
         assert_content_type_json(response)
 
 
