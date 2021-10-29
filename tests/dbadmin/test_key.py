@@ -18,23 +18,19 @@ def test_key_crud_lifecycle():
     """
     developer_api = Developer(config, session)
     created_developer = developer_api.create_positive()
-
     application_api = Application(config, session, created_developer['email'])
     created_application = application_api.create_new()
-
     key_api = Key(config, session, created_developer['email'], created_application['name'])
 
     # create product as we cannot create a key without assigned product
     product_api = APIproduct(config, session)
     created_product = product_api.create_positive()
 
-    # print("created_product -> ",  created_product)
-
-    # new key can be assigned via application (really !)
+    # create new key with assigned product
     updated_application = application_api.create_key_positive(
         created_application['name'], created_product['name'])
 
-    # Updated application should now have two keys (first one gets created with app creation)
+    # Updated application should now have two keys (first key gets created with app creation)
     assert len(updated_application['credentials']) == 2
 
     # attempt to delete product, not possible yet as it is assigned to key
@@ -51,8 +47,8 @@ def test_key_crud_lifecycle():
     # clean up
     application_api.delete_positive(created_application['name'])
     developer_api.delete_positive(created_developer['email'])
-    # product must be deleted after application delete
-    # eventhough it was not assigned to any key anymore
+    # product must be deleted after application is deleted
+    # (eventhough it was already not assigned to any key anymore)
     product_api.delete_positive(created_product['name'])
 
 
@@ -62,10 +58,8 @@ def test_key_import_various_lengths():
     """
     developer_api = Developer(config, session)
     created_developer = developer_api.create_positive()
-
     application_api = Application(config, session, created_developer['email'])
     created_application = application_api.create_new()
-
     key_api = Key(config, session, created_developer['email'], created_application['name'])
 
     # Validate retrieve first key that is auto-generated when app is created
@@ -73,8 +67,8 @@ def test_key_import_various_lengths():
     first_key = key_api.get_positive(app_first_key['consumerKey'])
     key_api.assert_compare(first_key, app_first_key)
 
+    # create new keys
     for key_size in [1, 10, 100, 500, 1000, 2000]:
-        # create a new key
         new_key = {
             'consumerKey': secrets.token_hex(key_size),
             'consumerSecret': secrets.token_hex(key_size),
@@ -94,25 +88,22 @@ def test_key_import_various_lengths():
                 key_present = True
         assert key_present
 
-
     # clean up
     application_api.delete_positive(created_application['name'])
     developer_api.delete_positive(created_developer['email'])
 
 
-def test_change_key_status():
+def test_key_change_status():
     """
     Test changing status of apikey
     """
     developer_api = Developer(config, session)
     created_developer = developer_api.create_positive()
-
     application_api = Application(config, session, created_developer['email'])
     created_application = application_api.create_new()
-
     key_api = Key(config, session, created_developer['email'], created_application['name'])
 
-    # After app creation status of first key is approved
+    # After application creation status of first key is approved
     assert created_application['credentials'][0]['status'] == 'approved'
 
     # Change status to revoke and back to approve
@@ -128,9 +119,43 @@ def test_change_key_status():
     developer_api.delete_positive(created_developer['email'])
 
 
+def test_key_change_status_of_api_product():
+    """
+    Test changing status of product assigned to apikey
+    """
+    developer_api = Developer(config, session)
+    created_developer = developer_api.create_positive()
+    application_api = Application(config, session, created_developer['email'])
+    created_application = application_api.create_new()
+    key_api = Key(config, session, created_developer['email'], created_application['name'])
 
-# apiproduct assignment
+    # remove default provided key
+    key_api.delete_positive(created_application['credentials'][0]['consumerKey'])
 
+    # create product as we want to create a key with assigned product
+    product_api = APIproduct(config, session)
+    created_product = product_api.create_positive()
+
+    # create new key with one assigned product
+    updated_application = application_api.create_key_positive(
+        created_application['name'], created_product['name'])
+    consumer_key = updated_application['credentials'][0]['consumerKey']
+    api_product_name = updated_application['credentials'][0]['apiProducts'][0]['apiproduct']
+
+    # Change status to revoke(d) and back to approve(d)
+    key_api.change_api_product_status(consumer_key, api_product_name, 'revoke', True)
+    assert key_api.get_positive(consumer_key)['apiProducts'][0]['status'] == 'revoked'
+
+    key_api.change_api_product_status(consumer_key, api_product_name, 'approve', True)
+    assert key_api.get_positive(consumer_key)['apiProducts'][0]['status'] == 'approved'
+
+    # clean up
+    application_api.delete_positive(created_application['name'])
+    developer_api.delete_positive(created_developer['email'])
+
+
+# test posting full key details
+# test setting all fields
 # test adding product to key
 # POST /v1/organizations/{organization}/developers/{developer_email_or_id}
 #           /apps/{app_name}/keys/{consumer_key_name}
@@ -138,15 +163,10 @@ def test_change_key_status():
 #  "apiProducts": ["product_1", "product_2"]
 # }
 
+
+# test posting and put key to app endpoint
+
+# apiproduct assignment
 # test removing apiproduct
 
-# test change apiproduct status per key
-# POST /organizations/{org_name}/developers/{developer_email}/apps/
-#           {app_name}/keys/{consumer_key}/apiproducts/{apiproduct_name}
-# action=approve / revoke
 
-# test setting all fields
-
-# test deleting app while it has a key
-
-# test deleting app while it has a key

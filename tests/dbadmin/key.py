@@ -3,7 +3,8 @@ Key module does all REST API operations on key endpoint
 """
 from common import assert_status_code, assert_content_type_json, \
     assert_valid_schema, assert_valid_schema_error, load_json_schema
-from httpstatus import HTTP_OK, HTTP_NOT_FOUND, HTTP_CREATED, HTTP_CONFLICT, HTTP_NO_CONTENT, HTTP_BAD_REQUEST
+from httpstatus import HTTP_OK, HTTP_NOT_FOUND, HTTP_CREATED, \
+    HTTP_CONFLICT, HTTP_NO_CONTENT, HTTP_BAD_REQUEST
 
 
 class Key:
@@ -81,6 +82,24 @@ class Key:
         headers = self.session.headers
         headers['content-type'] = 'application/octet-stream'
         key_url = self.key_url + '/' + consumer_key + '?action=' + status
+        response = self.session.post(key_url, headers=headers)
+
+        if expect_success:
+            assert_status_code(response, HTTP_NO_CONTENT)
+            assert response.content == b''
+        else:
+            assert_status_code(response, HTTP_BAD_REQUEST)
+            assert_valid_schema_error(response.json())
+
+
+    def change_api_product_status(self, consumer_key, api_product_name, status, expect_success):
+        """
+        Update apiproduct status to a value that is supported
+        """
+        headers = self.session.headers
+        headers['content-type'] = 'application/octet-stream'
+        key_url = (self.key_url + '/' + consumer_key
+                                + '/apiproducts/' + api_product_name + '?action=' + status)
         response = self.session.post(key_url, headers=headers)
 
         if expect_success:
