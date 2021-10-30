@@ -3,9 +3,9 @@ Application module does all REST API operations on application endpoint
 """
 import random
 import urllib
-from common import assert_valid_schema, assert_status_code, assert_content_type_json, \
-    load_json_schema
-from httpstatus import HTTP_OK, HTTP_NOT_FOUND, HTTP_CREATED, HTTP_BAD_REQUEST
+from common import assert_status_code, assert_content_type_json, \
+                    load_json_schema, assert_valid_schema, assert_valid_schema_error
+from httpstatus import HTTP_OK, HTTP_NOT_FOUND, HTTP_CREATED, HTTP_BAD_REQUEST, HTTP_NO_CONTENT
 
 
 class Application:
@@ -178,6 +178,39 @@ class Application:
         assert_valid_schema(updated_application, self.schemas['application'])
 
         return updated_application
+
+
+    def _change_status(self, app_name, status, expect_success):
+        """
+        Update status of application
+        """
+        headers = self.session.headers
+        headers['content-type'] = 'application/octet-stream'
+        application_url = (self.application_url + '/' +
+                    urllib.parse.quote(app_name) + '?action=' + status)
+
+        response = self.session.post(application_url, headers=headers)
+
+        if expect_success:
+            assert_status_code(response, HTTP_NO_CONTENT)
+            assert response.content == b''
+        else:
+            assert_status_code(response, HTTP_BAD_REQUEST)
+            assert_valid_schema_error(response.json())
+
+
+    def change_status_approve_positive(self, app_name):
+        """
+        Update status of developer to inactive
+        """
+        self._change_status(app_name, 'approve', True)
+
+
+    def change_status_revoke_positive(self, app_name):
+        """
+        Update status of developer to active
+        """
+        self._change_status(app_name, 'revoke', True)
 
 
     def delete_positive(self, app_name):

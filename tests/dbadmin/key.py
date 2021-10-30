@@ -1,7 +1,7 @@
 """
 Key module does all REST API operations on key endpoint
 """
-from common import assert_status_code, assert_content_type_json, \
+from common import assert_status_code, assert_status_codes, assert_content_type_json, \
     assert_valid_schema, assert_valid_schema_error, load_json_schema
 from httpstatus import HTTP_OK, HTTP_NOT_FOUND, HTTP_CREATED, \
     HTTP_CONFLICT, HTTP_NO_CONTENT, HTTP_BAD_REQUEST
@@ -25,11 +25,10 @@ class Key:
         }
 
 
-    def create(self, new_key, success_expected):
+    def _create(self, new_key, success_expected):
         """
-        Create new key to be used as test subject.
+        Create new key
         """
-
         response = self.session.post(self.key_url + "/create", json=new_key)
 
         if success_expected:
@@ -43,9 +42,23 @@ class Key:
 
             return created_key
 
-        assert_status_code(response, HTTP_CONFLICT)
+        assert_status_codes(response, [ HTTP_BAD_REQUEST, HTTP_CONFLICT ] )
         assert_content_type_json(response)
         assert_valid_schema(response.json(), self.schemas['error'])
+
+
+    def create_positive(self, new_key):
+        """
+        Create and import new key
+        """
+        return self._create(new_key, True)
+
+
+    def create_negative(self, new_key):
+        """
+        Create and import new key, should fail
+        """
+        self._create(new_key, False)
 
 
     def get_positive(self, consumer_key):
@@ -75,13 +88,14 @@ class Key:
         return updated_key
 
 
-    def change_status(self, consumer_key, status, expect_success):
+    def _change_status(self, consumer_key, status, expect_success):
         """
         Update key status to a value that is supported
         """
         headers = self.session.headers
         headers['content-type'] = 'application/octet-stream'
         key_url = self.key_url + '/' + consumer_key + '?action=' + status
+
         response = self.session.post(key_url, headers=headers)
 
         if expect_success:
@@ -90,6 +104,20 @@ class Key:
         else:
             assert_status_code(response, HTTP_BAD_REQUEST)
             assert_valid_schema_error(response.json())
+
+
+    def change_status_approve_positive(self, consumer_key):
+        """
+        Update status of key to approve
+        """
+        self._change_status(consumer_key, 'approve', True)
+
+
+    def change_status_revoke_positive(self, consumer_key):
+        """
+        Update status of key to revoke
+        """
+        self._change_status(consumer_key, 'revoke', True)
 
 
     def change_api_product_status(self, consumer_key, api_product_name, status, expect_success):

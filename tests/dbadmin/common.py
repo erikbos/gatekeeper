@@ -44,6 +44,13 @@ def assert_status_code(response, status_code):
     assert response.status_code == status_code
 
 
+def assert_status_codes(response, status_codes):
+    """
+    Checks one or more response status codes
+    """
+    assert [ True for code in status_codes if code == response.status_code]
+
+
 def assert_content_type_json(response):
     """
     Checks content-type is json

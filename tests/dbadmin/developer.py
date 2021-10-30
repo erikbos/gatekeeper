@@ -2,8 +2,8 @@
 Developer module does all REST API operations on developer endpoint
 """
 import random
-from common import assert_valid_schema, assert_valid_schema_error, \
-            assert_status_code, assert_content_type_json, load_json_schema
+from common import assert_status_code, assert_content_type_json, \
+                    load_json_schema, assert_valid_schema, assert_valid_schema_error
 from httpstatus import HTTP_OK, HTTP_NOT_FOUND, HTTP_CREATED, HTTP_BAD_REQUEST, HTTP_NO_CONTENT
 
 
@@ -50,7 +50,12 @@ class Developer:
                 ],
             }
 
-        response = self.session.post(self.developer_url, json=new_developer)
+        # Workaround for intermittent 415s:
+        #   request module should take of content-type given we provide json
+        #   or perhaps it sets wrong content-type..
+        headers = self.session.headers
+        headers['content-type'] = 'application/json'
+        response = self.session.post(self.developer_url, headers=headers, json=new_developer)
         if success_expected:
             assert_status_code(response, HTTP_CREATED)
             assert_content_type_json(response)
@@ -121,7 +126,7 @@ class Developer:
         return retrieved_developer
 
 
-    def update_negative(self, developer_email, developer):
+    def update_positive(self, developer_email, developer):
         """
         Update existing developer
         """
@@ -136,12 +141,15 @@ class Developer:
         return updated_developer
 
 
-    def change_status(self, developer_email, status, expect_success):
+    def _change_status(self, developer_email, status, expect_success):
         """
-        Update developer' status to a value that is supported
+        Update status of developer
         """
+        headers = self.session.headers
+        headers['content-type'] = 'application/octet-stream'
         developer_url = self.developer_url + '/' + developer_email + '?action=' + status
-        response = self.session.post(developer_url)
+
+        response = self.session.post(developer_url, headers=headers)
 
         if expect_success:
             assert_status_code(response, HTTP_NO_CONTENT)
@@ -149,6 +157,20 @@ class Developer:
         else:
             assert_status_code(response, HTTP_BAD_REQUEST)
             assert_valid_schema_error(response.json())
+
+
+    def change_status_active_positive(self, developer_email):
+        """
+        Update status of developer to active
+        """
+        self._change_status(developer_email, 'active', True)
+
+
+    def change_status_inactive_positive(self, developer_email):
+        """
+        Update status of developer to inactive
+        """
+        self._change_status(developer_email, 'inactive', True)
 
 
     def delete_positive(self, developer_email):

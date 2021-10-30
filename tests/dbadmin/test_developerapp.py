@@ -28,7 +28,7 @@ def test_application_get_all_detailed():
     application_api.get_all_global()
 
 
-def test_application_crud_lifecycle():
+def test_application_crud():
     """
     Test create, read, update, delete one application of one developer
     """
@@ -91,7 +91,7 @@ def test_application_crud_lifecycle():
     developer_api.delete_positive(created_developer['email'])
 
 
-def test_application_crud_lifecycle_multiple():
+def test_application_crud_multiple():
     """
     Test create, read, update, delete multiple applications, randomly named
     """
@@ -155,7 +155,32 @@ def test_application_attributes():
     developer_api.delete_positive(created_developer['email'])
 
 
-def test_developer_delete_with_application():
+def test_application_change_status():
+    """
+    Test changing status of application
+    """
+    developer_api = Developer(config, session)
+    created_developer = developer_api.create_positive()
+
+    application_api = Application(config, session, created_developer['email'])
+    created_application = application_api.create_new()
+
+    # application status should be approved after creation
+    assert created_application['status'] == 'approved'
+
+    # try revoking followed by approving
+    app_name = created_application['name']
+    application_api.change_status_revoke_positive(app_name)
+    assert application_api.get_positive(app_name)['status'] == 'revoked'
+
+    application_api.change_status_approve_positive(app_name)
+    assert application_api.get_positive(app_name)['status'] == 'approved'
+
+    application_api.delete_positive(created_application['name'])
+    developer_api.delete_positive(created_developer['email'])
+
+
+def test_developer_attempt_delete_with_one_application():
     """
     Attempt to delete developer with one application, should fail
     """
@@ -172,3 +197,11 @@ def test_developer_delete_with_application():
     # cleanup
     application_api.delete_positive(created_application['name'])
     developer_api.delete_positive(created_developer['email'])
+
+
+def test_application_field_lengths():
+    """
+    Test field lengths
+    """
+    # We want to test that we cannot send zero-length, too long fields etc
+    # TODO test wrong field lengths

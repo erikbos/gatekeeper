@@ -28,12 +28,11 @@ def test_developer_get_all_detailed():
     developer_api.get_all_detailed()
 
 
-def test_developer_crud_lifecycle():
+def test_developer_crud():
     """
     Test create, read, update, delete one developer
     """
     developer_api = Developer(config, session)
-
     created_developer = developer_api.create_positive()
 
     # Creating same, now existing developer, must not be possible
@@ -64,7 +63,7 @@ def test_developer_crud_lifecycle():
                    "value" : "42"
               }
          ]
-    developer_api.update_negative(created_developer['email'], updated_developer)
+    developer_api.update_positive(created_developer['email'], updated_developer)
 
     # Read updated developer by developerid
     retrieved_developer = developer_api.get_positive(updated_developer['developerId'])
@@ -82,7 +81,7 @@ def test_developer_crud_lifecycle():
     developer_api.delete_negative_notfound(updated_developer['email'])
 
 
-def test_developer_crud_lifecycle_multiple():
+def test_developer_crud_multiple():
     """
     Test create, read, update, delete multiple developers
     """
@@ -144,18 +143,18 @@ def test_developer_change_status():
     developer_api = Developer(config, session)
     test_developer = developer_api.create_positive()
 
-    # Change status to active
-    developer_api.change_status(test_developer['email'], 'active', True)
-    assert developer_api.get_positive(test_developer['email'])['status'] == 'active'
+    # Developer status should be active after creation
+    assert test_developer['status'] == 'active'
 
-    # try inactivating
-    developer_api.change_status(test_developer['email'], 'inactive', True)
-    assert developer_api.get_positive(test_developer['email'])['status'] == 'inactive'
+    # Change status to inactive & active
+    email = test_developer['email']
+    developer_api.change_status_inactive_positive(email)
+    assert developer_api.get_positive(email)['status'] == 'inactive'
 
-    # Change status to unknown value is unsupported
-    developer_api.change_status(test_developer['email'], 'unknown', False)
+    developer_api.change_status_active_positive(email)
+    assert developer_api.get_positive(email)['status'] == 'active'
 
-    developer_api.delete_positive(test_developer['email'])
+    developer_api.delete_positive(email)
 
 
 def test_developer_field_lengths():
@@ -187,7 +186,7 @@ def test_developer_get_no_auth():
     assert_status_code(response, HTTP_AUTHORIZATION_REQUIRED)
 
 
-def test_developers_get_all_wrong_content_type():
+def test_developer_get_all_wrong_content_type():
     """
     Test get all developers, non-json content type
     """
@@ -258,7 +257,7 @@ def test_developer_update_ignore_provided_developer_id():
 
     # attempt to manipulate developer_id to wrong value
     created_developer['developerId'] = developer_id + 'wrong'
-    developer_api.update_negative(created_developer['email'], created_developer)
+    developer_api.update_positive(created_developer['email'], created_developer)
 
     # Retrieve developer, id should still be the original one
     change_developer = developer_api.get_positive(created_developer['email'])

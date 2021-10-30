@@ -2,8 +2,8 @@
 APIproduct module does all REST API operations on api_product endpoint
 """
 import random
-from common import assert_valid_schema, assert_status_code, \
-    assert_content_type_json, load_json_schema
+from common import assert_status_code, assert_content_type_json, \
+                    load_json_schema, assert_valid_schema
 from httpstatus import HTTP_OK, HTTP_NOT_FOUND, HTTP_CREATED, HTTP_BAD_REQUEST
 
 
