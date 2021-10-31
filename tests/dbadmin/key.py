@@ -74,18 +74,46 @@ class Key:
         return retrieved_key
 
 
+    def _update(self, consumer_key, updated_key, success_expected):
+        """
+        Update existing key
+        """
+        print ("updated_key", updated_key)
+
+        headers = self.session.headers
+        headers['content-type'] = 'application/json'
+        key_url = self.key_url + '/' + consumer_key
+        response = self.session.post(key_url, headers=headers, json=updated_key)
+
+        print ("res", response.text)
+        if success_expected:
+            assert_status_code(response, HTTP_OK)
+            assert_content_type_json(response)
+
+            updated_key = response.json()
+            assert_valid_schema(updated_key, self.schemas['key'])
+
+            return updated_key
+
+        assert_status_codes(response, [ HTTP_BAD_REQUEST ])
+        assert_content_type_json(response)
+
+        updated_key = response.json()
+        assert_valid_schema_error(response.json())
+
+
     def update_positive(self, consumer_key, updated_key):
         """
         Update existing key
         """
-        response = self.session.post(self.key_url + '/' + consumer_key, json=updated_key)
-        assert_status_code(response, HTTP_OK)
-        assert_content_type_json(response)
+        return self._update(consumer_key, updated_key, True)
 
-        updated_key = response.json()
-        assert_valid_schema(updated_key, self.schemas['key'])
 
-        return updated_key
+    def update_negative(self, consumer_key, updated_key):
+        """
+        Update existing key with changed consumerKey, should fail
+        """
+        self._update(consumer_key, updated_key, False)
 
 
     def _change_status(self, consumer_key, status, expect_success):
@@ -120,7 +148,45 @@ class Key:
         self._change_status(consumer_key, 'revoke', True)
 
 
-    def change_api_product_status(self, consumer_key, api_product_name, status, expect_success):
+    def _delete(self, consumer_key, expect_success):
+        """
+        Delete existing key
+        """
+        response = self.session.delete(self.key_url + '/' + consumer_key)
+        if expect_success:
+            assert_status_code(response, HTTP_OK)
+            assert_content_type_json(response)
+            assert_valid_schema(response.json(), self.schemas['key'])
+        else:
+            assert_status_code(response, HTTP_NOT_FOUND)
+            assert_content_type_json(response)
+
+        return response.json()
+
+
+    def delete_positive(self, consumer_key):
+        """
+        Delete existing key
+        """
+        return self._delete(consumer_key, True)
+
+
+    def delete_negative(self, consumer_key):
+        """
+        Attempt to delete key, which should fail
+        """
+        return self._delete(consumer_key, False)
+
+
+    def assert_compare(self, key_a, key_b):
+        """
+        Compares minimum required fields that can be set of two keys
+        """
+        assert key_a['consumerKey'] == key_b['consumerKey']
+        assert key_a['consumerSecret'] == key_b['consumerSecret']
+
+
+    def api_product_change_status(self, consumer_key, api_product_name, status, expect_success):
         """
         Update apiproduct status to a value that is supported
         """
@@ -138,32 +204,30 @@ class Key:
             assert_valid_schema_error(response.json())
 
 
-    def delete_positive(self, consumer_key):
+    def _api_product_delete(self, consumer_key, api_product_name, expect_success):
+        """
+        Delete apiproduct from key
+        """
+        key_api_product_url = (self.key_url + '/' + consumer_key
+                                            + '/apiproducts/' + api_product_name)
+        response = self.session.delete(key_api_product_url)
+        if expect_success:
+            assert_content_type_json(response)
+            assert_valid_schema(response.json(), self.schemas['key'])
+        else:
+            assert_status_code(response, HTTP_BAD_REQUEST)
+            assert_valid_schema_error(response.json())
+
+
+    def api_product_delete_positive(self, consumer_key, api_product_name):
         """
         Delete existing key
         """
-        response = self.session.delete(self.key_url + '/' + consumer_key)
-        print("del key", self.key_url + '/' + consumer_key)
-        assert_status_code(response, HTTP_OK)
-        assert_content_type_json(response)
-        deleted_key = response.json()
-        assert_valid_schema(deleted_key, self.schemas['key'])
-
-        return deleted_key
+        return self._api_product_delete(consumer_key, api_product_name, True)
 
 
-    def delete_negative(self, consumer_key):
+    def api_product_delete_negative(self, consumer_key, api_product_name):
         """
-        Delete non-existing key, which should fail
+        Attempt to delete key, which should fail
         """
-        response = self.session.delete(self.key_url + '/' + consumer_key)
-        assert_status_code(response, HTTP_NOT_FOUND)
-        assert_content_type_json(response)
-
-
-    def assert_compare(self, key_a, key_b):
-        """
-        Compares minimum required fields that can be set of two keys
-        """
-        assert key_a['consumerKey'] == key_b['consumerKey']
-        assert key_a['consumerSecret'] == key_b['consumerSecret']
+        return self._api_product_delete(consumer_key, api_product_name, False)

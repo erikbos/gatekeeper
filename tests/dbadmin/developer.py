@@ -2,7 +2,8 @@
 Developer module does all REST API operations on developer endpoint
 """
 import random
-from common import assert_status_code, assert_content_type_json, \
+import urllib
+from common import assert_status_code, assert_status_codes, assert_content_type_json, \
                     load_json_schema, assert_valid_schema, assert_valid_schema_error
 from httpstatus import HTTP_OK, HTTP_NOT_FOUND, HTTP_CREATED, HTTP_BAD_REQUEST, HTTP_NO_CONTENT
 
@@ -61,16 +62,14 @@ class Developer:
             assert_content_type_json(response)
 
             # Check if just created developer matches with what we requested
-            created_developer = response.json()
-            assert_valid_schema(created_developer, self.schemas['developer'])
-            self.assert_compare(created_developer, new_developer)
+            assert_valid_schema(response.json(), self.schemas['developer'])
+            self.assert_compare(response.json(), new_developer)
+        else:
+            assert_status_code(response, HTTP_BAD_REQUEST)
+            assert_content_type_json(response)
+            assert_valid_schema(response.json(), self.schemas['error'])
 
-            return created_developer
-
-        assert_status_code(response, HTTP_BAD_REQUEST)
-        assert_content_type_json(response)
-        assert_valid_schema(response.json(), self.schemas['error'])
-
+        return response.json()
 
     def create_positive(self, new_developer=None):
         """
@@ -148,7 +147,6 @@ class Developer:
         headers = self.session.headers
         headers['content-type'] = 'application/octet-stream'
         developer_url = self.developer_url + '/' + developer_email + '?action=' + status
-
         response = self.session.post(developer_url, headers=headers)
 
         if expect_success:
@@ -173,28 +171,34 @@ class Developer:
         self._change_status(developer_email, 'inactive', True)
 
 
+    def _delete(self, developer_email, expected_success):
+        """
+        Delete developer
+        """
+        developer_url = self.developer_url + '/' + urllib.parse.quote(developer_email)
+        response = self.session.delete(developer_url)
+        if expected_success:
+            assert_status_code(response, HTTP_OK)
+            assert_content_type_json(response)
+            assert_valid_schema(response.json(), self.schemas['developer'])
+        else:
+            assert_status_codes(response, [ HTTP_NOT_FOUND, HTTP_BAD_REQUEST ])
+            assert_content_type_json(response)
+
+        return response.json()
+
     def delete_positive(self, developer_email):
         """
         Delete existing developer
         """
-        developer_url = self.developer_url + '/' + developer_email
-        response = self.session.delete(developer_url)
-        assert_status_code(response, HTTP_OK)
-        assert_content_type_json(response)
-        deleted_developer = response.json()
-        assert_valid_schema(deleted_developer, self.schemas['developer'])
-
-        return deleted_developer
+        return self._delete(developer_email, True)
 
 
     def delete_negative_notfound(self, developer_email):
         """
-        Attempt to delete non-existing developer, which should fail
+        Attempt to delete developer, which should fail
         """
-        developer_url = self.developer_url + '/' + developer_email
-        response = self.session.delete(developer_url)
-        assert_status_code(response, HTTP_NOT_FOUND)
-        assert_content_type_json(response)
+        return self._delete(developer_email, False)
 
 
     def delete_negative_badrequest(self, developer_email):
@@ -202,10 +206,7 @@ class Developer:
         Attempt to delete developer with at least one app assigned,
         which should fail
         """
-        developer_url = self.developer_url + '/' + developer_email
-        response = self.session.delete(developer_url)
-        assert_status_code(response, HTTP_BAD_REQUEST)
-        assert_content_type_json(response)
+        return self._delete(developer_email, False)
 
 
     def delete_all_test_developer(self):

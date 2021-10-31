@@ -242,20 +242,9 @@ def test_developer_create_ignore_provided_fields():
     assert created_developer['lastModifiedAt'] != new_developer['lastModifiedAt']
     assert created_developer['lastModifiedBy'] != new_developer['lastModifiedBy']
 
-    # clean up
-    developer_api.delete_positive(created_developer['developerId'])
-
-
-def test_developer_update_ignore_provided_developer_id():
-    """
-    Test create developer and try to overwrite its developerId
-    """
-    developer_api = Developer(config, session)
-    created_developer = developer_api.create_positive()
-
     developer_id = created_developer['developerId']
 
-    # attempt to manipulate developer_id to wrong value
+    # attempt to manipulate developer_id of existing developer to wrong value
     created_developer['developerId'] = developer_id + 'wrong'
     developer_api.update_positive(created_developer['email'], created_developer)
 
@@ -264,7 +253,7 @@ def test_developer_update_ignore_provided_developer_id():
     assert change_developer['developerId'] != created_developer['developerId']
 
     # clean up
-    developer_api.delete_positive(created_developer['email'])
+    developer_api.delete_positive(developer_id)
 
 
 def cleanup_test_developers():

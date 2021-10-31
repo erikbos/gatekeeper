@@ -56,15 +56,14 @@ class Application:
             assert_content_type_json(response)
 
             # Check if just created application matches with what we requested
-            created_application = response.json()
-            assert_valid_schema(created_application, self.schemas['application'])
-            self.assert_compare(created_application, new_application)
+            assert_valid_schema(response.json(), self.schemas['application'])
+            self.assert_compare(response.json(), new_application)
+        else:
+            assert_status_code(response, HTTP_BAD_REQUEST)
+            assert_content_type_json(response)
+            assert_valid_schema(response.json(), self.schemas['error'])
 
-            return created_application
-
-        assert_status_code(response, HTTP_BAD_REQUEST)
-        assert_content_type_json(response)
-        assert_valid_schema(response.json(), self.schemas['error'])
+        return response.json()
 
 
     def create_new(self, new_application=None):
@@ -188,7 +187,6 @@ class Application:
         headers['content-type'] = 'application/octet-stream'
         application_url = (self.application_url + '/' +
                     urllib.parse.quote(app_name) + '?action=' + status)
-
         response = self.session.post(application_url, headers=headers)
 
         if expect_success:
@@ -213,28 +211,34 @@ class Application:
         self._change_status(app_name, 'revoke', True)
 
 
+    def _delete(self, app_name, expected_success):
+        """
+        Delete existing application
+        """
+        response = self.session.delete(self.application_url + '/' + urllib.parse.quote(app_name))
+        if expected_success:
+            assert_status_code(response, HTTP_OK)
+            assert_content_type_json(response)
+            assert_valid_schema(response.json(), self.schemas['application'])
+        else:
+            assert_status_code(response, HTTP_NOT_FOUND)
+            assert_content_type_json(response)
+
+        return response.json()
+
+
     def delete_positive(self, app_name):
         """
         Delete existing application
         """
-        application_url = self.application_url + '/' + urllib.parse.quote(app_name)
-        response = self.session.delete(application_url)
-        assert_status_code(response, HTTP_OK)
-        assert_content_type_json(response)
-        updated_application = response.json()
-        assert_valid_schema(updated_application, self.schemas['application'])
-
-        return updated_application
+        return self._delete(app_name, True)
 
 
     def delete_negative(self, app_name):
         """
-        Delete non-existing application, which should fail
+        Attempt to delete application, which should fail
         """
-        application_url = self.application_url + '/' + urllib.parse.quote(app_name)
-        response = self.session.delete(application_url)
-        assert_status_code(response, HTTP_NOT_FOUND)
-        assert_content_type_json(response)
+        return self._delete(app_name, False)
 
 
     def delete_all_test_developer(self):

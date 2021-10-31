@@ -2,6 +2,7 @@
 APIproduct module does all REST API operations on api_product endpoint
 """
 import random
+import urllib
 from common import assert_status_code, assert_content_type_json, \
                     load_json_schema, assert_valid_schema
 from httpstatus import HTTP_OK, HTTP_NOT_FOUND, HTTP_CREATED, HTTP_BAD_REQUEST
@@ -138,36 +139,42 @@ class APIproduct:
         return updated_api_product
 
 
-    def delete_positive(self, api_product):
+    def _delete(self, api_product_name, expected_success):
         """
         Delete existing api product
         """
-        api_product_url = self.api_product_url + '/' + api_product
-        print("delete", api_product_url)
+        api_product_url = self.api_product_url + '/' + urllib.parse.quote(api_product_name)
         response = self.session.delete(api_product_url)
-        assert_status_code(response, HTTP_OK)
-        assert_content_type_json(response)
-        deleted_api_product = response.json()
-        assert_valid_schema(deleted_api_product, self.schemas['api-product'])
+        if expected_success:
+            assert_status_code(response, HTTP_OK)
+            assert_content_type_json(response)
+            assert_valid_schema(response.json(), self.schemas['api-product'])
+        else:
+            assert_status_code(response, HTTP_NOT_FOUND)
+            assert_content_type_json(response)
 
-        return deleted_api_product
+        return response.json()
 
 
-    def delete_negative(self, api_product):
+    def delete_positive(self, api_product_name):
+        """
+        Delete existing api product
+        """
+        return self._delete(api_product_name, True)
+
+
+    def delete_negative(self, api_product_name):
         """
         Attempt to delete non-existing api product, should fail
         """
-        api_product_url = self.api_product_url + '/' + api_product
-        response = self.session.delete(api_product_url)
-        assert_status_code(response, HTTP_NOT_FOUND)
-        assert_content_type_json(response)
+        return self._delete(api_product_name, False)
 
 
-    def delete_negative_bad_request(self, api_product):
+    def delete_negative_bad_request(self, api_product_name):
         """
         Attempt to delete product associated with assigned keys, should fail
         """
-        api_product_url = self.api_product_url + '/' + api_product
+        api_product_url = self.api_product_url + '/' + urllib.parse.quote(api_product_name)
         response = self.session.delete(api_product_url)
         assert_status_code(response, HTTP_BAD_REQUEST)
         assert_content_type_json(response)
