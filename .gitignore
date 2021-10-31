@@ -1,5 +1,9 @@
 .gitignore
 
+# this file gets copied by go generate from /openapi/ to be embedded in
+# dbadmin
+cmd/dbadmin/apidocs/gatekeeper.yaml
+
 # editor
 .vscode/*
 
