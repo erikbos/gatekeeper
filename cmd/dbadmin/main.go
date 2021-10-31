@@ -24,6 +24,8 @@ var (
 	buildTime string // Build time, set by Makefile
 )
 
+// Copy openapi spec file from root so Go can embed it
+//go:generate cp ../../openapi/gatekeeper.yaml apidocs/
 //go:embed apidocs/*
 var apiDocFiles embed.FS
 

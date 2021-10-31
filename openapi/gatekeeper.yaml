@@ -1,0 +1,834 @@
+openapi: 3.0.1
+info:
+  version: 1.0.0
+  title: Gatekeeper API
+  description: 'Gatekepeer offers an HTTP-based RESTful API. It has predictable URLs for all resources. Payload is formatted as JSON and it returns HTTP status codes to indicate errors.'
+
+tags:
+  - name: Intro
+    description: blabla
+  - name: Listener
+    description: Operations on listeners
+  - name: Route
+    description: Operations on routes
+  - name: Cluster
+    description: Operations on clusters
+
+x-tagGroups:
+  - name: HTTP forwarding
+    tags:
+      - Intro
+      - Listener
+      - Route
+      - Cluster
+
+paths:
+  /v1/listeners:
+    get:
+      tags:
+        - Listener
+      description: Retrieve all listeners
+      responses:
+        '200':
+          description: Successfully retrieved all listeners
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  listeners:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Listener"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Listener
+      description: Create a new listener
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Listener'
+      responses:
+        '200':
+          description: Successfully created a new listener
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listener'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /v1/listeners/{listenername}:
+    get:
+      tags:
+        - Listener
+      description: Retrieve listener
+      parameters:
+        - $ref: '#/components/parameters/listenername'
+      responses:
+        '200':
+          description: Successfully retrieved listener
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listener'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: Listener to retrieve does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+    post:
+      tags:
+        - Listener
+      description: Update a listener
+      parameters:
+        - $ref: '#/components/parameters/listenername'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Listener'
+      responses:
+        '200':
+          description: Successfully updated listener
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listener'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: Listener to update does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+    delete:
+      tags:
+        - Listener
+      description: Delete a listener
+      parameters:
+        - $ref: '#/components/parameters/listenername'
+      responses:
+        '200':
+          description: Successfully deleted a listener
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listener'
+        '404':
+          description: Listener to delete does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+
+  /v1/listeners/{listenername}/attributes:
+    get:
+      tags:
+        - Listener
+      description: Retrieve attributes of a listener
+      parameters:
+        - $ref: '#/components/parameters/listenername'
+      responses:
+        '200':
+          $ref: '#/components/responses/AttributesRetrieved'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: Listener to retrieve attributes from does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+    post:
+      tags:
+        - Listener
+      description: Add attributes to a listener
+      parameters:
+        - $ref: '#/components/parameters/listenername'
+      responses:
+        '200':
+          $ref: '#/components/responses/AttributesUpdated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: Listener to update does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+
+  /v1/listeners/{listenername}/attributes/{attributename}:
+    get:
+      tags:
+        - Listener
+      description: Retrieve attribute of a listener
+      parameters:
+        - $ref: '#/components/parameters/listenername'
+        - $ref: '#/components/parameters/attributename'
+      responses:
+        '200':
+          $ref: '#/components/responses/AttributeRetrieved'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/AttributeDoesNotExist'
+    post:
+      tags:
+        - Listener
+      description: Update attribute of a listener
+      parameters:
+        - $ref: '#/components/parameters/listenername'
+        - $ref: '#/components/parameters/attributename'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Attribute'
+      responses:
+        '200':
+          $ref: '#/components/responses/AttributeUpdated'
+        '201':
+          $ref: '#/components/responses/AttributeCreated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/AttributeDoesNotExist'
+    delete:
+      tags:
+        - Listener
+      description: Delete attribute of a listener
+      parameters:
+        - $ref: '#/components/parameters/listenername'
+        - $ref: '#/components/parameters/attributename'
+      responses:
+        '200':
+          $ref: '#/components/responses/AttributeDeleted'
+        '404':
+          $ref: '#/components/responses/AttributeDoesNotExist'
+
+  /v1/routes:
+    get:
+      tags:
+        - Route
+      description: Retrieve all routes
+      responses:
+        '200':
+          description: Successfully retrieved all routes
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  routes:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Route"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Route
+      description: Create a new route
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Route'
+      responses:
+        '200':
+          description: Successfully created a new route
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Route'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /v1/routes/{routename}:
+    get:
+      tags:
+        - Route
+      description: Retrieve route
+      parameters:
+        - $ref: '#/components/parameters/routename'
+      responses:
+        '200':
+          description: Successfully retrieved route
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Route'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: Route to retrieve does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+    post:
+      tags:
+        - Route
+      description: Update a route
+      parameters:
+        - $ref: '#/components/parameters/routename'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Route'
+      responses:
+        '200':
+          description: Successfully updated route
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Route'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: Route to update does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+    delete:
+      tags:
+        - Route
+      description: Delete a route
+      parameters:
+        - $ref: '#/components/parameters/routename'
+      responses:
+        '200':
+          description: Successfully deleted a route
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Route'
+        '404':
+          description: Route to delete does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+
+  /v1/routes/{routename}/attributes:
+    get:
+      tags:
+        - Route
+      description: Retrieve attributes of a route
+      parameters:
+        - $ref: '#/components/parameters/routename'
+      responses:
+        '200':
+          $ref: '#/components/responses/AttributesRetrieved'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: Route to retrieve attributes from does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+    post:
+      tags:
+        - Route
+      description: Add attributes to a route
+      parameters:
+        - $ref: '#/components/parameters/routename'
+      responses:
+        '200':
+          $ref: '#/components/responses/AttributesUpdated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: Route to update does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+
+  /v1/routes/{routename}/attributes/{attributename}:
+    get:
+      tags:
+        - Route
+      description: Retrieve attribute of a route
+      parameters:
+        - $ref: '#/components/parameters/routename'
+        - $ref: '#/components/parameters/attributename'
+      responses:
+        '200':
+          $ref: '#/components/responses/AttributeRetrieved'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/AttributeDoesNotExist'
+    post:
+      tags:
+        - Route
+      description: Update attribute of a route
+      parameters:
+        - $ref: '#/components/parameters/routename'
+        - $ref: '#/components/parameters/attributename'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Attribute'
+      responses:
+        '200':
+          $ref: '#/components/responses/AttributeUpdated'
+        '201':
+          $ref: '#/components/responses/AttributeCreated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/AttributeDoesNotExist'
+    delete:
+      tags:
+        - Route
+      description: Delete attribute of a route
+      parameters:
+        - $ref: '#/components/parameters/routename'
+        - $ref: '#/components/parameters/attributename'
+      responses:
+        '200':
+          $ref: '#/components/responses/AttributeDeleted'
+        '404':
+          $ref: '#/components/responses/AttributeDoesNotExist'
+
+  /v1/clusters:
+    get:
+      tags:
+        - Cluster
+      description: Retrieve all clusters
+      responses:
+        '200':
+          description: Successfully retrieved all clusters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  clusters:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Cluster"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      tags:
+        - Cluster
+      description: Create a new cluster
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Cluster'
+      responses:
+        '200':
+          description: Successfully created a new cluster
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cluster'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /v1/clusters/{clustername}:
+    get:
+      tags:
+        - Cluster
+      description: Retrieve cluster
+      parameters:
+        - $ref: '#/components/parameters/clustername'
+      responses:
+        '200':
+          description: Successfully retrieved cluster
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cluster'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: Cluster to retrieve does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+    post:
+      tags:
+        - Cluster
+      description: Update a cluster
+      parameters:
+        - $ref: '#/components/parameters/clustername'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Cluster'
+      responses:
+        '200':
+          description: Successfully updated cluster
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cluster'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: Cluster to update does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+    delete:
+      tags:
+        - Cluster
+      description: Delete a cluster
+      parameters:
+        - $ref: '#/components/parameters/clustername'
+      responses:
+        '200':
+          description: Successfully deleted a cluster
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Cluster'
+        '404':
+          description: Cluster to delete does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+
+  /v1/clusters/{clustername}/attributes:
+    get:
+      tags:
+        - Cluster
+      description: Retrieve attributes of a cluster
+      parameters:
+        - $ref: '#/components/parameters/clustername'
+      responses:
+        '200':
+          $ref: '#/components/responses/AttributesRetrieved'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: Cluster to retrieve attributes from does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+    post:
+      tags:
+        - Cluster
+      description: Add attributes to a cluster
+      parameters:
+        - $ref: '#/components/parameters/clustername'
+      responses:
+        '200':
+          $ref: '#/components/responses/AttributesUpdated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: Cluster to update does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+
+  /v1/clusters/{clustername}/attributes/{attributename}:
+    get:
+      tags:
+        - Cluster
+      description: Retrieve attribute of a cluster
+      parameters:
+        - $ref: '#/components/parameters/clustername'
+        - $ref: '#/components/parameters/attributename'
+      responses:
+        '200':
+          $ref: '#/components/responses/AttributeRetrieved'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/AttributeDoesNotExist'
+    post:
+      tags:
+        - Cluster
+      description: Update attribute of a cluster
+      parameters:
+        - $ref: '#/components/parameters/clustername'
+        - $ref: '#/components/parameters/attributename'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Attribute'
+      responses:
+        '200':
+          $ref: '#/components/responses/AttributeUpdated'
+        '201':
+          $ref: '#/components/responses/AttributeCreated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/AttributeDoesNotExist'
+    delete:
+      tags:
+        - Cluster
+      description: Delete attribute of a cluster
+      parameters:
+        - $ref: '#/components/parameters/clustername'
+        - $ref: '#/components/parameters/attributename'
+      responses:
+        '200':
+          $ref: '#/components/responses/AttributeDeleted'
+        '404':
+          $ref: '#/components/responses/AttributeDoesNotExist'
+
+components:
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorMessage'
+
+    AttributeRetrieved:
+      description: Successfully retrieved attribute
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Attribute'
+
+    AttributeCreated:
+      description: Successfully created attribute
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Attribute'
+
+    AttributeUpdated:
+      description: Successfully updated attribute
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Attribute'
+
+    AttributeDoesNotExist:
+      description: Attribute does not exist
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorMessage'
+
+    AttributeDeleted:
+      description: Successfully deleted attribute
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Attribute'
+
+    AttributesRetrieved:
+      description: Successfully retrieved attributes
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              attributes:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Attribute"
+
+    AttributesUpdated:
+      description: Successfully updated attributes
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              attributes:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Attribute"
+
+  parameters:
+    listenername:
+      name: listenername
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Name of listener
+
+    routename:
+      name: routename
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Name of route
+
+    clustername:
+      name: clustername
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Name of cluster
+
+    attributename:
+      name: attributename
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Name of attribute
+
+  schemas:
+    Listener:
+      type: object
+      properties:
+        name:
+          type: string
+          readOnly: true
+          description: Name of listener
+        displayName:
+          type: string
+        VirtualHosts:
+          type: array
+          items:
+            type: string
+        Port:
+          type: integer
+        RouteGroup:
+          type: string
+        Policies:
+          type: string
+        Attributes:
+          type: array
+          items:
+            $ref: "#/components/schemas/Attribute"
+        createdAt:
+          type: integer
+          readOnly: true
+          description: Create timestamp in milliseconds since epoch.
+        createdBy:
+          type: string
+          readOnly: true
+          description: User which created this listener
+        lastModifiedAt:
+          type: string
+          readOnly: true
+          description: Last modified timestamp in milliseconds since epoch.
+        LastmodifiedBy:
+          type: string
+          readOnly: true
+          description: User who last updated this listener
+      required:
+        - name
+
+    Route:
+      type: object
+      properties:
+        name:
+          type: string
+          readOnly: true
+          description: Name of route
+        displayName:
+          type: string
+        RouteGroup:
+          type: string
+        Path:
+          type: string
+        PathType:
+          type: string
+        Attributes:
+          type: array
+          items:
+            $ref: "#/components/schemas/Attribute"
+        createdAt:
+          type: integer
+          readOnly: true
+          description: Create timestamp in milliseconds since epoch.
+        createdBy:
+          type: string
+          readOnly: true
+          description: User which created this route
+        lastModifiedAt:
+          type: string
+          readOnly: true
+          description: Last modified timestamp in milliseconds since epoch.
+        LastmodifiedBy:
+          type: string
+          readOnly: true
+          description: User who last updated this route
+      required:
+        - name
+
+    Cluster:
+      type: object
+      properties:
+        name:
+          type: string
+          readOnly: true
+          description: Name of cluster
+        displayName:
+          type: string
+        Attributes:
+          type: array
+          items:
+            $ref: "#/components/schemas/Attribute"
+        createdAt:
+          type: integer
+          readOnly: true
+          description: Create timestamp in milliseconds since epoch.
+        createdBy:
+          type: string
+          readOnly: true
+          description: User who created this cluster
+        lastModifiedAt:
+          type: string
+          readOnly: true
+          description: Last modified timestamp in milliseconds since epoch.
+        LastmodifiedBy:
+          type: string
+          readOnly: true
+          description: User who last updated this cluster
+      required:
+        - name
+
+    Attribute:
+      type: object
+      properties:
+        name:
+          type: string
+        value:
+          type: string
+
+    ErrorMessage:
+      type: object
+      properties:
+        message:
+          type: string
