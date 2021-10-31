@@ -7,21 +7,24 @@ This directory contains test suite to test developer endpoints.
 Environment variable required to be set before running tests:
 
 * API_URL, base URL (including organization path, if set)
-* API_USER, username used for HTTP Basic authentication
+* API_USERNAME, username used for HTTP Basic authentication
 * API_PASSWORD, password used for HTTP Basic authentication
 
 ## Example
 
     # Set envs
+
+    cd tests/dbadmin
+
     export API_URL=<https://dbadmin/v1/organization/default>
-    export API_USER=admin
+    export API_USERNAME=admin
     export API_PASSWORD=passwd
 
     # Run all developer related tests
-    pytest tests/test_developer.py
+    pytest -v test_developer
 
     # Run five tests in parallel
-    pytest -n 5 test_developer.py
+    pytest -n 5 test_developer
 
     # Run one test named 'test_crud_lifecycle_10_developers'
-    pytest -k test_get_all_developers_list test_developer.py
+    pytest -k test_get_all_developers_list

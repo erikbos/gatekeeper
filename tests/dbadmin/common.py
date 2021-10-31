@@ -1,54 +1,78 @@
+"""
+Provides common functions
+"""
 import os
+import requests
 import jsonref
 import jsonschema
 
 
-# Required for each request
-default_headers = {
-    'accept': 'application/json',
-      'user-agent': 'Gatekeeper testsuite'
-    }
-
-
 def get_config():
-    """Returns endpoint configuration"""
+    """
+    Returns endpoint configuration
+    """
+    required_envs = ['API_URL', 'API_USERNAME', 'API_PASSWORD']
+    for var in required_envs:
+        if var not in os.environ:
+            raise EnvironmentError(f'Please set {var} as configuration parameter.')
 
     return {
-        "api_url": os.environ['API_URL'],
-        "api_username": os.environ['API_USERNAME'],
-        "api_password": os.environ['API_PASSWORD'],
-        "request_headers": default_headers,
+        'api_url': os.environ['API_URL'],
+        'api_username': os.environ['API_USERNAME'],
+        'api_password': os.environ['API_PASSWORD'],
+        'entity_count': 3,
     }
 
-def http_auth(config):
+
+def get_http_session(config):
     """
-    Returns HTTP auth parameters
+    Returns HTTP session for all API requests
     """
-    if 'api_username' in config and 'api_password' in config:
-        return (config['api_username'], config['api_password'])
-    else:
-        return None
+    session = requests.Session()
+    session.auth = (config['api_username'], config['api_password'])
+    session.headers = {
+        'accept': 'application/json',
+        'user-agent': 'Gatekeeper testsuite'
+        }
+    return session
 
 
 def assert_status_code(response, status_code):
-    """Checks response status code"""
+    """
+    Checks response status code
+    """
     assert response.status_code == status_code
 
 
+def assert_status_codes(response, status_codes):
+    """
+    Checks one or more response status codes
+    """
+    assert [ True for code in status_codes if code == response.status_code]
+
+
 def assert_content_type_json(response):
-    """Checks content-type is json"""
+    """
+    Checks content-type is json
+    """
     assert response.headers['content-type'].startswith('application/json')
 
 
-def assert_valid_schema(data, schema_file):
+def assert_valid_schema(data, schema):
     """
     Checks whether the given data matches the schema
     """
-    schema = _load_json_schema(schema_file)
     return jsonschema.validate(data, schema)
 
 
-def _load_json_schema(filename):
+def assert_valid_schema_error(data):
+    """
+    Checks whether the given data matches the schema
+    """
+    return jsonschema.validate(data, load_json_schema('error.json'))
+
+
+def load_json_schema(filename):
     """
     Loads the given schema file
     """
@@ -56,7 +80,7 @@ def _load_json_schema(filename):
     absolute_path = os.path.join(os.path.dirname(__file__), relative_path)
 
     base_path = os.path.dirname(absolute_path)
-    base_uri = 'file://{}/'.format(base_path)
+    base_uri = f'file://{base_path}/'
 
-    with open(absolute_path) as schema_file:
+    with open(absolute_path, encoding='utf-8') as schema_file:
         return jsonref.loads(schema_file.read(), base_uri=base_uri, jsonschema=True)

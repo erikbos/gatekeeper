@@ -1,0 +1,91 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "type": "object",
+    "properties": {
+        "name": {
+            "type": "string"
+        },
+        "displayName": {
+            "type": "string"
+        },
+        "approvalType": {
+            "type": "string",
+            "enum": ["auto", "manual"]
+        },
+        "attributes": {
+            "type": "array",
+            "items": {
+                "$ref": "attribute.json"
+            }
+        },
+        "description": {
+            "type": "string"
+        },
+        "environments": {
+            "type": "array",
+            "items": [{
+                "type": "string"
+            }]
+        },
+        "createdAt": {
+            "type": "integer"
+        },
+        "lastModifiedAt": {
+            "type": "integer"
+        },
+        "operationGroup": {
+            "type": "object",
+            "properties": {
+                "operationConfigs": {
+                    "type": "array",
+                    "items": [{
+                        "type": "object",
+                        "properties": {
+                            "apiSource": {
+                                "type": "string"
+                            },
+                            "operations": {
+                                "type": "array",
+                                "items": [{
+                                    "type": "object",
+                                    "properties": {
+                                        "resource": {
+                                            "type": "string"
+                                        },
+                                        "methods": {
+                                            "type": "array",
+                                            "items": [{
+                                                "type": "string"
+                                            }]
+                                        }
+                                    }
+                                }]
+                            },
+                            "quota": {
+                                "type": "object"
+                            },
+                            "attributes": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "attribute.json"
+                                }
+                            }
+                        }
+                    }]
+                },
+                "operationConfigType": {
+                    "type": "string"
+                }
+            }
+        }
+    },
+    "required": [
+        "name",
+        "displayName",
+        "approvalType",
+        "attributes",
+        "environments",
+        "createdAt",
+        "lastModifiedAt"
+    ]
+}

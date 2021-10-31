@@ -2,14 +2,14 @@
     "$schema": "http://json-schema.org/draft-04/schema#",
     "type": "object",
     "properties": {
-        "attribute": {
+        "apiProduct": {
             "type": "array",
             "items": {
-                "$ref": "attribute.json"
+                "$ref": "api-product.json"
             }
         }
     },
     "required": [
-        "attribute"
+        "apiProduct"
     ]
 }
