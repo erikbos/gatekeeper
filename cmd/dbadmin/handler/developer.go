@@ -39,7 +39,14 @@ func (h *Handler) getAllDevelopers(c *gin.Context) handlerResponse {
 	if err != nil {
 		return handleError(err)
 	}
-	return handleOK(StringMap{"developers": developers})
+	if c.Query("expand") == "true" {
+		return handleOK(StringMap{"developer": developers})
+	}
+	emailAddresses := make([]string, len(developers)-1)
+	for _, developer := range developers {
+		emailAddresses = append(emailAddresses, developer.Email)
+	}
+	return handleOK(emailAddresses)
 }
 
 // getDeveloper returns full details of one developer

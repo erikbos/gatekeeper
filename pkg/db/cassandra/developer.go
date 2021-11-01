@@ -21,7 +21,6 @@ user_name,
 email,
 first_name,
 last_name,
-suspended_till,
 created_at,
 created_by,
 lastmodified_at,
@@ -115,7 +114,6 @@ func (s *DeveloperStore) runGetDeveloperQuery(query string, queryParameters ...i
 			Email:          columnValueString(m, "email"),
 			FirstName:      columnValueString(m, "first_name"),
 			LastName:       columnValueString(m, "last_name"),
-			SuspendedTill:  columnValueInt64(m, "suspended_till"),
 			CreatedAt:      columnValueInt64(m, "created_at"),
 			CreatedBy:      columnValueString(m, "created_by"),
 			LastmodifiedAt: columnValueInt64(m, "lastmodified_at"),
@@ -132,7 +130,7 @@ func (s *DeveloperStore) runGetDeveloperQuery(query string, queryParameters ...i
 // Update UPSERTs a developer in database
 func (s *DeveloperStore) Update(d *types.Developer) types.Error {
 
-	query := "INSERT INTO developers (" + developerColumns + ") VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)"
+	query := "INSERT INTO developers (" + developerColumns + ") VALUES(?,?,?,?,?,?,?,?,?,?,?,?)"
 	if err := s.db.CassandraSession.Query(query,
 		d.DeveloperID,
 		d.Apps.Marshal(),
@@ -142,7 +140,6 @@ func (s *DeveloperStore) Update(d *types.Developer) types.Error {
 		d.Email,
 		d.FirstName,
 		d.LastName,
-		d.SuspendedTill,
 		d.CreatedAt,
 		d.CreatedBy,
 		d.LastmodifiedAt,

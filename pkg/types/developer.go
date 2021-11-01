@@ -34,14 +34,11 @@ type Developer struct {
 	// Name of user who created this organiz
 	CreatedBy string `json:"createdBy"`
 
-	// if set developer is suspend till this time, epoch milliseconds
-	SuspendedTill int64 `json:"suspendedTill"`
-
 	// Last modified at timestamp in epoch milliseconds
-	LastmodifiedAt int64 `json:"lastmodifiedAt"`
+	LastmodifiedAt int64 `json:"lastModifiedAt"`
 
 	// Name of user who last updated this developer
-	LastmodifiedBy string `json:"lastmodifiedBy"`
+	LastmodifiedBy string `json:"lastModifiedBy"`
 }
 
 // Developers holds one or more developers
@@ -71,16 +68,4 @@ func (d *Developer) Deactivate() {
 func (d *Developer) IsActive() bool {
 
 	return d.Status == "active"
-}
-
-// IsSuspended returns true in case developer is suspended
-func (d *Developer) IsSuspended(now int64) bool {
-
-	if d.SuspendedTill == 0 || d.SuspendedTill == -1 {
-		return false
-	}
-	if now < d.SuspendedTill {
-		return true
-	}
-	return false
 }
