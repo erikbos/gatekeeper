@@ -65,10 +65,6 @@ func (p *Policy) checkDevAndKeyValidity(request *request.State) error {
 		return errors.New("developer not active")
 	}
 
-	if request.Developer.IsSuspended(request.Timestamp) {
-		return errors.New("developer suspended")
-	}
-
 	if !request.Key.IsApproved() {
 		// FIXME increase unapproved dev app counter (not an error state)
 		return errors.New("unapproved apikey")
