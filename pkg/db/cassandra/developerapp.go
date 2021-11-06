@@ -137,8 +137,8 @@ func (s *DeveloperAppStore) runGetDeveloperAppQuery(query string, queryParameter
 			Status:         columnValueString(m, "status"),
 			CreatedAt:      columnValueInt64(m, "created_at"),
 			CreatedBy:      columnValueString(m, "created_by"),
-			LastmodifiedAt: columnValueInt64(m, "lastmodified_at"),
-			LastmodifiedBy: columnValueString(m, "lastmodified_by"),
+			LastModifiedAt: columnValueInt64(m, "lastmodified_at"),
+			LastModifiedBy: columnValueString(m, "lastmodified_by"),
 		})
 		m = map[string]interface{}{}
 	}
@@ -162,8 +162,8 @@ func (s *DeveloperAppStore) Update(app *types.DeveloperApp) types.Error {
 		app.Status,
 		app.CreatedAt,
 		app.CreatedBy,
-		app.LastmodifiedAt,
-		app.LastmodifiedBy).Exec(); err != nil {
+		app.LastModifiedAt,
+		app.LastModifiedBy).Exec(); err != nil {
 
 		s.db.metrics.QueryFailed(developerAppsMetricLabel)
 		return types.NewDatabaseError(

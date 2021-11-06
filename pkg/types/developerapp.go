@@ -5,34 +5,34 @@ package types
 // Field validation (binding) is done using https://godoc.org/github.com/go-playground/validator
 type DeveloperApp struct {
 	// Id of developer app (not changable)
-	AppID string `json:"appId"`
+	AppID string
 
 	// Id of developer (not changable)
-	DeveloperID string `json:"developerId"`
+	DeveloperID string
 
 	// Activation status of developer application
-	Status string `json:"status"`
+	Status string
 
 	// Attributes of developer application
-	Attributes Attributes `json:"attributes"`
+	Attributes Attributes
 
 	// Name of developer application
-	Name string `json:"name" binding:"required"`
+	Name string
 
-	// Friendly name of developer app , can be updated afterwards
-	DisplayName string `json:"displayName"`
+	// Friendly name of developer app
+	DisplayName string
 
 	// Created at timestamp in epoch milliseconds
-	CreatedAt int64 `json:"createdAt"`
+	CreatedAt int64
 
 	// Name of user who created this app
-	CreatedBy string `json:"createdBy"`
+	CreatedBy string
 
 	// Last modified at timestamp in epoch milliseconds
-	LastmodifiedAt int64 `json:"lastmodifiedAt"`
+	LastModifiedAt int64
 
 	// Name of user who last updated this app
-	LastmodifiedBy string `json:"lastmodifiedBy"`
+	LastModifiedBy string
 }
 
 // DeveloperApps holds one or more developer apps

@@ -8,7 +8,6 @@ require (
 	github.com/dchest/uniuri v0.0.0-20200228104902-7aecb25e1fe5
 	github.com/deepmap/oapi-codegen v1.9.0
 	github.com/envoyproxy/go-control-plane v0.9.9-0.20210512163311-63b5d3c536b0
-	github.com/getkin/kin-openapi v0.80.0
 	github.com/gin-gonic/gin v1.7.4
 	github.com/gocql/gocql v0.0.0-20210504150947-558dfae50b5d
 	github.com/gogo/googleapis v1.4.1
