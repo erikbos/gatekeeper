@@ -3,16 +3,13 @@ package handler
 import (
 	"errors"
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
-	"github.com/erikbos/gatekeeper/cmd/dbadmin/metrics"
 	"github.com/erikbos/gatekeeper/cmd/dbadmin/service"
 	"github.com/erikbos/gatekeeper/pkg/db"
 	"github.com/erikbos/gatekeeper/pkg/types"
-	"github.com/erikbos/gatekeeper/pkg/webadmin"
 )
 
 // Generate REST API handlers from OpenAPI specification
@@ -21,35 +18,36 @@ import (
 // Handler contains our runtime parameters
 type Handler struct {
 	service *service.Service
-	metrics *metrics.Metrics
-	logger  *zap.Logger
+	// metrics *metrics.Metrics
+	logger *zap.Logger
 }
 
 type Handler2 struct {
 	service *service.Service
-	metrics *metrics.Metrics
-	logger  *zap.Logger
+	// metrics *metrics.Metrics
+	// logger  *zap.Logger
 }
 
 // NewHandler sets up all API endpoint routes
 func NewHandler(g *gin.Engine, db *db.Database, s *service.Service, applicationName,
 	organizationName string, disableAPIAuthentication bool, logger *zap.Logger) *Handler {
 
-	// Instal prometheus metrics
-	m := metrics.New()
-	m.RegisterWithPrometheus(applicationName)
-	g.Use(metricsMiddleware(m))
+	registerMetricsRoute(g, applicationName)
+	// // Instal prometheus metrics
+	// m := metrics.New()
+	// m.RegisterWithPrometheus(applicationName)
+	// g.Use(metricsMiddleware(m))
 
 	handler := &Handler{
 		service: s,
-		metrics: m,
-		logger:  logger,
+		// metrics: m,
+		logger: logger,
 	}
 
 	handler2 := &Handler2{
 		service: s,
-		metrics: m,
-		logger:  logger,
+		// metrics: m,
+		// logger:  logger,
 	}
 
 	// Insert authentication middleware for every /v1 prefix'ed API endpoint
@@ -73,11 +71,6 @@ func NewHandler(g *gin.Engine, db *db.Database, s *service.Service, applicationN
 	handler.registerRouteRoutes(apiRoutes)
 	handler.registerClusterRoutes(apiRoutes)
 
-	// Insert organization path if required
-	// if organizationName != "" {
-	// 	apiRoutes = apiRoutes.Group("/organizations/" + organizationName)
-	// }
-	// // handler.registerDeveloperRoutes(apiRoutes)
 	handler.registerDeveloperAppRoutes(apiRoutes)
 	handler.registerKeyRoutes(apiRoutes)
 	handler.registerAPIProductRoutes(apiRoutes)
@@ -186,20 +179,6 @@ func showErrorMessageAndAbort(c *gin.Context, statusCode int, e types.Error) {
 	c.Abort()
 }
 
-// metricsMiddleware is gin middleware to maintain prometheus metrics on user, paths and status codes
-func metricsMiddleware(m *metrics.Metrics) gin.HandlerFunc {
-
-	return func(c *gin.Context) {
-
-		c.Next()
-
-		m.IncRequestPathHit(webadmin.GetUser(c),
-			c.Request.Method,
-			c.FullPath(),
-			strconv.Itoa(c.Writer.Status()))
-	}
-}
-
 // responseError returns formated error back to API client
 func (h *Handler2) responseError(c *gin.Context, e types.Error) {
 
@@ -222,7 +201,7 @@ func (h *Handler2) responseErrorBadRequest(c *gin.Context, e error) {
 }
 
 // responseError returns formated error back to API client
-func (h *Handler2) responseErrorNameMisMatch(c *gin.Context) {
+// func (h *Handler2) responseErrorNameMisMatch(c *gin.Context) {
 
-	h.responseErrorBadRequest(c, errors.New("name field value mismatch"))
-}
+// 	h.responseErrorBadRequest(c, errors.New("name field value mismatch"))
+// }

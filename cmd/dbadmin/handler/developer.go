@@ -9,6 +9,7 @@ import (
 	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
+// return all developers
 // (GET /v1/organizations/{organization_name}/developers)
 func (h *Handler2) GetV1OrganizationsOrganizationNameDevelopers(c *gin.Context, organizationName OrganizationName, params GetV1OrganizationsOrganizationNameDevelopersParams) {
 
@@ -25,6 +26,7 @@ func (h *Handler2) GetV1OrganizationsOrganizationNameDevelopers(c *gin.Context, 
 	h.responseDeveloperEmailAddresses(c, developers)
 }
 
+// creates a new developer
 // (POST /v1/organizations/{organization_name}/developers)
 func (h *Handler2) PostV1OrganizationsOrganizationNameDevelopers(c *gin.Context, organizationName OrganizationName) {
 
@@ -42,6 +44,7 @@ func (h *Handler2) PostV1OrganizationsOrganizationNameDevelopers(c *gin.Context,
 	h.responseDeveloperCreated(c, &createdDeveloper)
 }
 
+// deletes a developer
 // (DELETE /v1/organizations/{organization_name}/developers/{developer_emailaddress})
 func (h *Handler2) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddress(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress) {
 
@@ -53,6 +56,7 @@ func (h *Handler2) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmail
 	h.responseDeveloper(c, &developer)
 }
 
+// returns full details of one developer
 // (GET /v1/organizations/{organization_name}/developers/{developer_emailaddress})
 func (h *Handler2) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddress(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress) {
 
@@ -64,6 +68,7 @@ func (h *Handler2) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 	h.responseDeveloper(c, developer)
 }
 
+// updates existing developer
 // (POST /v1/organizations/{organization_name}/developers/{developer_emailaddress})
 func (h *Handler2) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddress(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, params PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressParams) {
 
@@ -85,6 +90,7 @@ func (h *Handler2) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailad
 	h.responseDeveloperUpdated(c, &storedDeveloper)
 }
 
+// change status of developer
 func (h *Handler2) changeDeveloperStatus(c *gin.Context, developerEmailaddress, requestedStatus string) {
 
 	developer, err := h.service.Developer.Get(string(developerEmailaddress))
@@ -109,6 +115,7 @@ func (h *Handler2) changeDeveloperStatus(c *gin.Context, developerEmailaddress, 
 	c.Status(http.StatusNoContent)
 }
 
+// returns attributes of a developer
 // (GET /v1/organizations/{organization_name}/developers/{developer_emailaddress}/attributes)
 func (h *Handler2) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributes(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress) {
 
@@ -120,6 +127,7 @@ func (h *Handler2) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 	h.responseAttributes(c, developer.Attributes)
 }
 
+// replaces attributes of a developer
 // (POST /v1/organizations/{organization_name}/developers/{developer_emailaddress}/attributes)
 func (h *Handler2) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributes(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress) {
 
@@ -140,6 +148,7 @@ func (h *Handler2) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailad
 	h.responseAttributes(c, attributes)
 }
 
+// deletes one attriubte of a developer
 // (DELETE /v1/organizations/{organization_name}/developers/{developer_emailaddress}/attributes/{attribute_name})
 func (h *Handler2) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributesAttributeName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, attributeName AttributeName) {
 
@@ -155,6 +164,7 @@ func (h *Handler2) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmail
 	})
 }
 
+// returns one attribute of a developer
 // (GET /v1/organizations/{organization_name}/developers/{developer_emailaddress}/attributes/{attribute_name})
 func (h *Handler2) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributesAttributeName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, attributeName AttributeName) {
 
@@ -174,6 +184,7 @@ func (h *Handler2) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 	})
 }
 
+// updates on attribute of a developer
 // (POST /v1/organizations/{organization_name}/developers/{developer_emailaddress}/attributes/{attribute_name})
 func (h *Handler2) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributesAttributeName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, attributeName AttributeName) {
 
@@ -197,6 +208,7 @@ func (h *Handler2) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailad
 
 // Responses
 
+// Returns API response with list of developer email addresses
 func (h *Handler2) responseDeveloperEmailAddresses(c *gin.Context, developers types.Developers) {
 
 	DevelopersEmailAddresses := make([]string, len(developers))
@@ -206,6 +218,7 @@ func (h *Handler2) responseDeveloperEmailAddresses(c *gin.Context, developers ty
 	c.IndentedJSON(http.StatusOK, DevelopersEmailAddresses)
 }
 
+// Returns API response with list of developer email addresses
 func (h *Handler2) responseDevelopers(c *gin.Context, developers types.Developers) {
 
 	all_developers := make([]Developer, len(developers))
