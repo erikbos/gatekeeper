@@ -136,7 +136,7 @@ func (das *DeveloperAppService) UpdateAttributes(developerAppName string,
 	if err != nil {
 		return err
 	}
-	updatedDeveloperApp := currentDeveloperApp
+	updatedDeveloperApp := copyDeveloperApp(*currentDeveloperApp)
 	if err = updatedDeveloperApp.Attributes.SetMultiple(receivedAttributes); err != nil {
 		return err
 	}
@@ -156,7 +156,7 @@ func (das *DeveloperAppService) UpdateAttribute(developerAppName string,
 	if err != nil {
 		return err
 	}
-	updatedDeveloperApp := currentDeveloperApp
+	updatedDeveloperApp := copyDeveloperApp(*currentDeveloperApp)
 	if err := updatedDeveloperApp.Attributes.Set(attributeValue); err != nil {
 		return err
 	}
@@ -192,8 +192,8 @@ func (das *DeveloperAppService) DeleteAttribute(developerAppName,
 func (das *DeveloperAppService) updateDeveloperApp(updatedDeveloperApp *types.DeveloperApp, who Requester) types.Error {
 
 	updatedDeveloperApp.Attributes.Tidy()
-	updatedDeveloperApp.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
-	updatedDeveloperApp.LastmodifiedBy = who.User
+	updatedDeveloperApp.LastModifiedAt = shared.GetCurrentTimeMilliseconds()
+	updatedDeveloperApp.LastModifiedBy = who.User
 	return das.db.DeveloperApp.Update(updatedDeveloperApp)
 }
 
@@ -244,4 +244,20 @@ func (das *DeveloperAppService) Delete(developerID, developerAppName string,
 // generateAppID creates unique primary key for developer app row
 func generateAppID() string {
 	return (uuid.New().String())
+}
+
+func copyDeveloperApp(d types.DeveloperApp) *types.DeveloperApp {
+
+	return &types.DeveloperApp{
+		AppID:          d.AppID,
+		Attributes:     d.Attributes,
+		CreatedAt:      d.CreatedAt,
+		CreatedBy:      d.CreatedBy,
+		DeveloperID:    d.DeveloperID,
+		DisplayName:    d.DisplayName,
+		LastModifiedBy: d.LastModifiedBy,
+		LastModifiedAt: d.LastModifiedAt,
+		Name:           d.Name,
+		Status:         d.Status,
+	}
 }
