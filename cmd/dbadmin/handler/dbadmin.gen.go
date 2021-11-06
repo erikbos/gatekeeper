@@ -11,6 +11,54 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// Application defines model for Application.
+type Application struct {
+	// User who last updated this application.
+	LastModifiedBy *string `json:"LastModifiedBy,omitempty"`
+
+	// Application ID
+	AppId      *string      `json:"appId,omitempty"`
+	Attributes *[]Attribute `json:"attributes,omitempty"`
+
+	// OAuth callback URL.
+	CallbackUrl *string `json:"callbackUrl,omitempty"`
+
+	// Create timestamp in milliseconds since epoch.
+	CreatedAt *int64 `json:"createdAt,omitempty"`
+
+	// User who created this application
+	CreatedBy *string `json:"createdBy,omitempty"`
+
+	// Developer ID
+	DeveloperId *string `json:"developerId,omitempty"`
+
+	// Display name of application
+	DisplayName *string `json:"displayName,omitempty"`
+
+	// Default time-to-live of new api keys.
+	KeyExpiresIn *int64 `json:"keyExpiresIn,omitempty"`
+
+	// Last modified timestamp in milliseconds since epoch.
+	LastModifiedAt *int64 `json:"lastModifiedAt,omitempty"`
+
+	// Application name
+	Name *string `json:"name,omitempty"`
+
+	// OAuth scopes
+	Scopes *[]string `json:"scopes,omitempty"`
+
+	// Status of application.
+	Status *string `json:"status,omitempty"`
+}
+
+// Application names.
+type ApplicationNames []string
+
+// All application details
+type Applications struct {
+	Application *[]Application `json:"application,omitempty"`
+}
+
 // Attribute defines model for Attribute.
 type Attribute struct {
 	// Name of attribute
@@ -79,6 +127,12 @@ type ErrorMessage struct {
 // Action defines model for action.
 type Action string
 
+// AppId defines model for app_id.
+type AppId string
+
+// AppName defines model for app_name.
+type AppName string
+
 // AttributeName defines model for attribute_name.
 type AttributeName string
 
@@ -116,13 +170,22 @@ type AttributesUpdated struct {
 // BadRequest defines model for BadRequest.
 type BadRequest ErrorMessage
 
+// GetV1OrganizationsOrganizationNameAppsParams defines parameters for GetV1OrganizationsOrganizationNameApps.
+type GetV1OrganizationsOrganizationNameAppsParams struct {
+	// Return full details of each application
+	Expand *bool `json:"expand,omitempty"`
+
+	// Maximum number of applications to return
+	Rows *int32 `json:"rows,omitempty"`
+}
+
 // GetV1OrganizationsOrganizationNameDevelopersParams defines parameters for GetV1OrganizationsOrganizationNameDevelopers.
 type GetV1OrganizationsOrganizationNameDevelopersParams struct {
 	// Return full developer details
 	Expand *bool `json:"expand,omitempty"`
 
 	// maximum number of developers to return
-	Count *int32 `json:"count,omitempty"`
+	Count *int `json:"count,omitempty"`
 }
 
 // PostV1OrganizationsOrganizationNameDevelopersJSONBody defines parameters for PostV1OrganizationsOrganizationNameDevelopers.
@@ -137,6 +200,33 @@ type PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressParams st
 	Action *Action `json:"action,omitempty"`
 }
 
+// GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsParams defines parameters for GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressApps.
+type GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsParams struct {
+	// Return full details of each application
+	Expand *bool `json:"expand,omitempty"`
+
+	// Maximum number of applications to return
+	Count *int `json:"count,omitempty"`
+}
+
+// PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsJSONBody defines parameters for PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressApps.
+type PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsJSONBody Application
+
+// PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameJSONBody defines parameters for PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppName.
+type PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameJSONBody Application
+
+// PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameParams defines parameters for PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppName.
+type PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameParams struct {
+	// Optional, request status change of developer to 'active' or 'inactive', requires Content-type to be set to 'application/octet-stream'.
+	Action *Action `json:"action,omitempty"`
+}
+
+// PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesJSONBody defines parameters for PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributes.
+type PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesJSONBody Attributes
+
+// PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesAttributeNameJSONBody defines parameters for PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesAttributeName.
+type PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesAttributeNameJSONBody Attribute
+
 // PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributesJSONBody defines parameters for PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributes.
 type PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributesJSONBody Attributes
 
@@ -149,6 +239,18 @@ type PostV1OrganizationsOrganizationNameDevelopersJSONRequestBody PostV1Organiza
 // PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressJSONRequestBody defines body for PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddress for application/json ContentType.
 type PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressJSONRequestBody PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressJSONBody
 
+// PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsJSONRequestBody defines body for PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressApps for application/json ContentType.
+type PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsJSONRequestBody PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsJSONBody
+
+// PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameJSONRequestBody defines body for PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppName for application/json ContentType.
+type PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameJSONRequestBody PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameJSONBody
+
+// PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesJSONRequestBody defines body for PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributes for application/json ContentType.
+type PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesJSONRequestBody PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesJSONBody
+
+// PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesAttributeNameJSONRequestBody defines body for PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesAttributeName for application/json ContentType.
+type PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesAttributeNameJSONRequestBody PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesAttributeNameJSONBody
+
 // PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributesJSONRequestBody defines body for PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributes for application/json ContentType.
 type PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributesJSONRequestBody PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributesJSONBody
 
@@ -157,6 +259,12 @@ type PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttribute
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+
+	// (GET /v1/organizations/{organization_name}/apps)
+	GetV1OrganizationsOrganizationNameApps(c *gin.Context, organizationName OrganizationName, params GetV1OrganizationsOrganizationNameAppsParams)
+
+	// (GET /v1/organizations/{organization_name}/apps/{app_id})
+	GetV1OrganizationsOrganizationNameAppsAppId(c *gin.Context, organizationName OrganizationName, appId AppId)
 
 	// (GET /v1/organizations/{organization_name}/developers)
 	GetV1OrganizationsOrganizationNameDevelopers(c *gin.Context, organizationName OrganizationName, params GetV1OrganizationsOrganizationNameDevelopersParams)
@@ -172,6 +280,36 @@ type ServerInterface interface {
 
 	// (POST /v1/organizations/{organization_name}/developers/{developer_emailaddress})
 	PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddress(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, params PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressParams)
+
+	// (GET /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps)
+	GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressApps(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, params GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsParams)
+
+	// (POST /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps)
+	PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressApps(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress)
+
+	// (DELETE /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name})
+	DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName)
+
+	// (GET /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name})
+	GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName)
+
+	// (POST /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name})
+	PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, params PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameParams)
+
+	// (GET /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/attributes)
+	GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributes(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName)
+
+	// (POST /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/attributes)
+	PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributes(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName)
+
+	// (DELETE /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/attributes/{attribute_name})
+	DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesAttributeName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, attributeName AttributeName)
+
+	// (GET /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/attributes/{attribute_name})
+	GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesAttributeName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, attributeName AttributeName)
+
+	// (POST /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/attributes/{attribute_name})
+	PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesAttributeName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, attributeName AttributeName)
 
 	// (GET /v1/organizations/{organization_name}/developers/{developer_emailaddress}/attributes)
 	GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributes(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress)
@@ -196,6 +334,82 @@ type ServerInterfaceWrapper struct {
 }
 
 type MiddlewareFunc func(c *gin.Context)
+
+// GetV1OrganizationsOrganizationNameApps operation middleware
+func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameApps(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "organization_name" -------------
+	var organizationName OrganizationName
+
+	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetV1OrganizationsOrganizationNameAppsParams
+
+	// ------------- Optional query parameter "expand" -------------
+	if paramValue := c.Query("expand"); paramValue != "" {
+
+	}
+
+	err = runtime.BindQueryParameter("form", true, false, "expand", c.Request.URL.Query(), &params.Expand)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter expand: %s", err)})
+		return
+	}
+
+	// ------------- Optional query parameter "rows" -------------
+	if paramValue := c.Query("rows"); paramValue != "" {
+
+	}
+
+	err = runtime.BindQueryParameter("form", true, false, "rows", c.Request.URL.Query(), &params.Rows)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter rows: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.GetV1OrganizationsOrganizationNameApps(c, organizationName, params)
+}
+
+// GetV1OrganizationsOrganizationNameAppsAppId operation middleware
+func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameAppsAppId(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "organization_name" -------------
+	var organizationName OrganizationName
+
+	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "app_id" -------------
+	var appId AppId
+
+	err = runtime.BindStyledParameter("simple", false, "app_id", c.Param("app_id"), &appId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_id: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.GetV1OrganizationsOrganizationNameAppsAppId(c, organizationName, appId)
+}
 
 // GetV1OrganizationsOrganizationNameDevelopers operation middleware
 func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopers(c *gin.Context) {
@@ -366,6 +580,444 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 	}
 
 	siw.Handler.PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddress(c, organizationName, developerEmailaddress, params)
+}
+
+// GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressApps operation middleware
+func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressApps(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "organization_name" -------------
+	var organizationName OrganizationName
+
+	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "developer_emailaddress" -------------
+	var developerEmailaddress DeveloperEmailaddress
+
+	err = runtime.BindStyledParameter("simple", false, "developer_emailaddress", c.Param("developer_emailaddress"), &developerEmailaddress)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsParams
+
+	// ------------- Optional query parameter "expand" -------------
+	if paramValue := c.Query("expand"); paramValue != "" {
+
+	}
+
+	err = runtime.BindQueryParameter("form", true, false, "expand", c.Request.URL.Query(), &params.Expand)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter expand: %s", err)})
+		return
+	}
+
+	// ------------- Optional query parameter "count" -------------
+	if paramValue := c.Query("count"); paramValue != "" {
+
+	}
+
+	err = runtime.BindQueryParameter("form", true, false, "count", c.Request.URL.Query(), &params.Count)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter count: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressApps(c, organizationName, developerEmailaddress, params)
+}
+
+// PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressApps operation middleware
+func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressApps(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "organization_name" -------------
+	var organizationName OrganizationName
+
+	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "developer_emailaddress" -------------
+	var developerEmailaddress DeveloperEmailaddress
+
+	err = runtime.BindStyledParameter("simple", false, "developer_emailaddress", c.Param("developer_emailaddress"), &developerEmailaddress)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressApps(c, organizationName, developerEmailaddress)
+}
+
+// DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppName operation middleware
+func (siw *ServerInterfaceWrapper) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppName(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "organization_name" -------------
+	var organizationName OrganizationName
+
+	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "developer_emailaddress" -------------
+	var developerEmailaddress DeveloperEmailaddress
+
+	err = runtime.BindStyledParameter("simple", false, "developer_emailaddress", c.Param("developer_emailaddress"), &developerEmailaddress)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "app_name" -------------
+	var appName AppName
+
+	err = runtime.BindStyledParameter("simple", false, "app_name", c.Param("app_name"), &appName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppName(c, organizationName, developerEmailaddress, appName)
+}
+
+// GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppName operation middleware
+func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppName(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "organization_name" -------------
+	var organizationName OrganizationName
+
+	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "developer_emailaddress" -------------
+	var developerEmailaddress DeveloperEmailaddress
+
+	err = runtime.BindStyledParameter("simple", false, "developer_emailaddress", c.Param("developer_emailaddress"), &developerEmailaddress)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "app_name" -------------
+	var appName AppName
+
+	err = runtime.BindStyledParameter("simple", false, "app_name", c.Param("app_name"), &appName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppName(c, organizationName, developerEmailaddress, appName)
+}
+
+// PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppName operation middleware
+func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppName(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "organization_name" -------------
+	var organizationName OrganizationName
+
+	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "developer_emailaddress" -------------
+	var developerEmailaddress DeveloperEmailaddress
+
+	err = runtime.BindStyledParameter("simple", false, "developer_emailaddress", c.Param("developer_emailaddress"), &developerEmailaddress)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "app_name" -------------
+	var appName AppName
+
+	err = runtime.BindStyledParameter("simple", false, "app_name", c.Param("app_name"), &appName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameParams
+
+	// ------------- Optional query parameter "action" -------------
+	if paramValue := c.Query("action"); paramValue != "" {
+
+	}
+
+	err = runtime.BindQueryParameter("form", true, false, "action", c.Request.URL.Query(), &params.Action)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter action: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppName(c, organizationName, developerEmailaddress, appName, params)
+}
+
+// GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributes operation middleware
+func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributes(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "organization_name" -------------
+	var organizationName OrganizationName
+
+	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "developer_emailaddress" -------------
+	var developerEmailaddress DeveloperEmailaddress
+
+	err = runtime.BindStyledParameter("simple", false, "developer_emailaddress", c.Param("developer_emailaddress"), &developerEmailaddress)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "app_name" -------------
+	var appName AppName
+
+	err = runtime.BindStyledParameter("simple", false, "app_name", c.Param("app_name"), &appName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributes(c, organizationName, developerEmailaddress, appName)
+}
+
+// PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributes operation middleware
+func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributes(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "organization_name" -------------
+	var organizationName OrganizationName
+
+	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "developer_emailaddress" -------------
+	var developerEmailaddress DeveloperEmailaddress
+
+	err = runtime.BindStyledParameter("simple", false, "developer_emailaddress", c.Param("developer_emailaddress"), &developerEmailaddress)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "app_name" -------------
+	var appName AppName
+
+	err = runtime.BindStyledParameter("simple", false, "app_name", c.Param("app_name"), &appName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributes(c, organizationName, developerEmailaddress, appName)
+}
+
+// DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesAttributeName operation middleware
+func (siw *ServerInterfaceWrapper) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesAttributeName(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "organization_name" -------------
+	var organizationName OrganizationName
+
+	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "developer_emailaddress" -------------
+	var developerEmailaddress DeveloperEmailaddress
+
+	err = runtime.BindStyledParameter("simple", false, "developer_emailaddress", c.Param("developer_emailaddress"), &developerEmailaddress)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "app_name" -------------
+	var appName AppName
+
+	err = runtime.BindStyledParameter("simple", false, "app_name", c.Param("app_name"), &appName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "attribute_name" -------------
+	var attributeName AttributeName
+
+	err = runtime.BindStyledParameter("simple", false, "attribute_name", c.Param("attribute_name"), &attributeName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesAttributeName(c, organizationName, developerEmailaddress, appName, attributeName)
+}
+
+// GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesAttributeName operation middleware
+func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesAttributeName(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "organization_name" -------------
+	var organizationName OrganizationName
+
+	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "developer_emailaddress" -------------
+	var developerEmailaddress DeveloperEmailaddress
+
+	err = runtime.BindStyledParameter("simple", false, "developer_emailaddress", c.Param("developer_emailaddress"), &developerEmailaddress)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "app_name" -------------
+	var appName AppName
+
+	err = runtime.BindStyledParameter("simple", false, "app_name", c.Param("app_name"), &appName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "attribute_name" -------------
+	var attributeName AttributeName
+
+	err = runtime.BindStyledParameter("simple", false, "attribute_name", c.Param("attribute_name"), &attributeName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesAttributeName(c, organizationName, developerEmailaddress, appName, attributeName)
+}
+
+// PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesAttributeName operation middleware
+func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesAttributeName(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "organization_name" -------------
+	var organizationName OrganizationName
+
+	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "developer_emailaddress" -------------
+	var developerEmailaddress DeveloperEmailaddress
+
+	err = runtime.BindStyledParameter("simple", false, "developer_emailaddress", c.Param("developer_emailaddress"), &developerEmailaddress)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "app_name" -------------
+	var appName AppName
+
+	err = runtime.BindStyledParameter("simple", false, "app_name", c.Param("app_name"), &appName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "attribute_name" -------------
+	var attributeName AttributeName
+
+	err = runtime.BindStyledParameter("simple", false, "attribute_name", c.Param("attribute_name"), &attributeName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesAttributeName(c, organizationName, developerEmailaddress, appName, attributeName)
 }
 
 // GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributes operation middleware
@@ -563,6 +1215,10 @@ func RegisterHandlersWithOptions(router *gin.Engine, si ServerInterface, options
 		HandlerMiddlewares: options.Middlewares,
 	}
 
+	router.GET(options.BaseURL+"/v1/organizations/:organization_name/apps", wrapper.GetV1OrganizationsOrganizationNameApps)
+
+	router.GET(options.BaseURL+"/v1/organizations/:organization_name/apps/:app_id", wrapper.GetV1OrganizationsOrganizationNameAppsAppId)
+
 	router.GET(options.BaseURL+"/v1/organizations/:organization_name/developers", wrapper.GetV1OrganizationsOrganizationNameDevelopers)
 
 	router.POST(options.BaseURL+"/v1/organizations/:organization_name/developers", wrapper.PostV1OrganizationsOrganizationNameDevelopers)
@@ -572,6 +1228,26 @@ func RegisterHandlersWithOptions(router *gin.Engine, si ServerInterface, options
 	router.GET(options.BaseURL+"/v1/organizations/:organization_name/developers/:developer_emailaddress", wrapper.GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddress)
 
 	router.POST(options.BaseURL+"/v1/organizations/:organization_name/developers/:developer_emailaddress", wrapper.PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddress)
+
+	router.GET(options.BaseURL+"/v1/organizations/:organization_name/developers/:developer_emailaddress/apps", wrapper.GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressApps)
+
+	router.POST(options.BaseURL+"/v1/organizations/:organization_name/developers/:developer_emailaddress/apps", wrapper.PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressApps)
+
+	router.DELETE(options.BaseURL+"/v1/organizations/:organization_name/developers/:developer_emailaddress/apps/:app_name", wrapper.DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppName)
+
+	router.GET(options.BaseURL+"/v1/organizations/:organization_name/developers/:developer_emailaddress/apps/:app_name", wrapper.GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppName)
+
+	router.POST(options.BaseURL+"/v1/organizations/:organization_name/developers/:developer_emailaddress/apps/:app_name", wrapper.PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppName)
+
+	router.GET(options.BaseURL+"/v1/organizations/:organization_name/developers/:developer_emailaddress/apps/:app_name/attributes", wrapper.GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributes)
+
+	router.POST(options.BaseURL+"/v1/organizations/:organization_name/developers/:developer_emailaddress/apps/:app_name/attributes", wrapper.PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributes)
+
+	router.DELETE(options.BaseURL+"/v1/organizations/:organization_name/developers/:developer_emailaddress/apps/:app_name/attributes/:attribute_name", wrapper.DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesAttributeName)
+
+	router.GET(options.BaseURL+"/v1/organizations/:organization_name/developers/:developer_emailaddress/apps/:app_name/attributes/:attribute_name", wrapper.GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesAttributeName)
+
+	router.POST(options.BaseURL+"/v1/organizations/:organization_name/developers/:developer_emailaddress/apps/:app_name/attributes/:attribute_name", wrapper.PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesAttributeName)
 
 	router.GET(options.BaseURL+"/v1/organizations/:organization_name/developers/:developer_emailaddress/attributes", wrapper.GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributes)
 

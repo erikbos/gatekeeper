@@ -72,7 +72,7 @@ func (h *Handler2) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 // (POST /v1/organizations/{organization_name}/developers/{developer_emailaddress})
 func (h *Handler2) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddress(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, params PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressParams) {
 
-	if params.Action != nil {
+	if params.Action != nil && c.ContentType() == "application/octet-stream" {
 		h.changeDeveloperStatus(c, string(developerEmailaddress), string(*params.Action))
 		return
 	}
@@ -131,9 +131,6 @@ func (h *Handler2) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 // (POST /v1/organizations/{organization_name}/developers/{developer_emailaddress}/attributes)
 func (h *Handler2) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributes(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress) {
 
-	// var receivedAttributes struct {
-	// 	Attributes types.Attributes `json:"attribute"`
-	// }
 	var receivedAttributes Attributes
 	if err := c.ShouldBindJSON(&receivedAttributes); err != nil {
 		h.responseErrorBadRequest(c, err)
@@ -152,8 +149,8 @@ func (h *Handler2) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailad
 // (DELETE /v1/organizations/{organization_name}/developers/{developer_emailaddress}/attributes/{attribute_name})
 func (h *Handler2) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributesAttributeName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, attributeName AttributeName) {
 
-	oldValue, err := h.service.Developer.DeleteAttribute(string(
-		developerEmailaddress), string(attributeName), h.who(c))
+	oldValue, err := h.service.Developer.DeleteAttribute(
+		string(developerEmailaddress), string(attributeName), h.who(c))
 	if err != nil {
 		h.responseError(c, err)
 		return
@@ -184,7 +181,7 @@ func (h *Handler2) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 	})
 }
 
-// updates on attribute of a developer
+// updates an attribute of a developer
 // (POST /v1/organizations/{organization_name}/developers/{developer_emailaddress}/attributes/{attribute_name})
 func (h *Handler2) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributesAttributeName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, attributeName AttributeName) {
 
@@ -208,7 +205,7 @@ func (h *Handler2) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailad
 
 // Responses
 
-// Returns API response with list of developer email addresses
+// Returns API response list of developer email addresses
 func (h *Handler2) responseDeveloperEmailAddresses(c *gin.Context, developers types.Developers) {
 
 	DevelopersEmailAddresses := make([]string, len(developers))
@@ -218,12 +215,12 @@ func (h *Handler2) responseDeveloperEmailAddresses(c *gin.Context, developers ty
 	c.IndentedJSON(http.StatusOK, DevelopersEmailAddresses)
 }
 
-// Returns API response with list of developer email addresses
+// Returns API response all developer details
 func (h *Handler2) responseDevelopers(c *gin.Context, developers types.Developers) {
 
 	all_developers := make([]Developer, len(developers))
 	for i, d := range developers {
-		all_developers[i] = Developer(ToDeveloperResponse(&d))
+		all_developers[i] = Developer(h.ToDeveloperResponse(&d))
 	}
 	c.IndentedJSON(http.StatusOK, Developers{
 		Developer: &all_developers,
@@ -231,20 +228,20 @@ func (h *Handler2) responseDevelopers(c *gin.Context, developers types.Developer
 }
 
 func (h *Handler2) responseDeveloper(c *gin.Context, developer *types.Developer) {
-	c.IndentedJSON(http.StatusOK, ToDeveloperResponse(developer))
+	c.IndentedJSON(http.StatusOK, h.ToDeveloperResponse(developer))
 }
 
 func (h *Handler2) responseDeveloperCreated(c *gin.Context, developer *types.Developer) {
-	c.IndentedJSON(http.StatusCreated, ToDeveloperResponse(developer))
+	c.IndentedJSON(http.StatusCreated, h.ToDeveloperResponse(developer))
 }
 
 func (h *Handler2) responseDeveloperUpdated(c *gin.Context, developer *types.Developer) {
-	c.IndentedJSON(http.StatusOK, ToDeveloperResponse(developer))
+	c.IndentedJSON(http.StatusOK, h.ToDeveloperResponse(developer))
 }
 
 // type conversion
 
-func ToDeveloperResponse(d *types.Developer) Developer {
+func (h *Handler2) ToDeveloperResponse(d *types.Developer) Developer {
 
 	return Developer{
 		Apps:           toAppNamesResponse(d.Apps),
@@ -275,6 +272,9 @@ func fromDeveloper(d Developer) types.Developer {
 
 	dev := types.Developer{
 		Attributes: fromAttributesRequest(d.Attributes),
+	}
+	if d.Apps != nil {
+		dev.Apps = *d.Apps
 	}
 	if d.CreatedAt != nil {
 		dev.CreatedAt = *d.CreatedAt

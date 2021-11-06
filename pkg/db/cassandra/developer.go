@@ -107,7 +107,7 @@ func (s *DeveloperStore) runGetDeveloperQuery(query string, queryParameters ...i
 	for iterable.MapScan(m) {
 		developers = append(developers, types.Developer{
 			DeveloperID:    columnValueString(m, "developer_id"),
-			Apps:           types.Developer{}.Apps.Unmarshal(columnValueString(m, "apps")),
+			Apps:           stringSliceUnmarshal(columnValueString(m, "apps")),
 			Attributes:     types.Developer{}.Attributes.Unmarshal(columnValueString(m, "attributes")),
 			Status:         columnValueString(m, "status"),
 			UserName:       columnValueString(m, "user_name"),
@@ -133,7 +133,7 @@ func (s *DeveloperStore) Update(d *types.Developer) types.Error {
 	query := "INSERT INTO developers (" + developerColumns + ") VALUES(?,?,?,?,?,?,?,?,?,?,?,?)"
 	if err := s.db.CassandraSession.Query(query,
 		d.DeveloperID,
-		d.Apps.Marshal(),
+		stringSliceMarshal(d.Apps),
 		d.Attributes.Marshal(),
 		d.Status,
 		d.UserName,

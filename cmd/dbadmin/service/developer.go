@@ -32,7 +32,7 @@ func (ds *DeveloperService) GetAll() (developers types.Developers, err types.Err
 	return ds.db.Developer.GetAll()
 }
 
-// Get returns details of an developer
+// Get returns details of an developer, in case name contains a @ assumption is developerId was provided
 func (ds *DeveloperService) Get(developerName string) (developer *types.Developer, err types.Error) {
 
 	if strings.Contains(developerName, "@") {

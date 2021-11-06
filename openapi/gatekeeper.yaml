@@ -50,7 +50,6 @@ paths:
           required: false
           schema:
             type: integer
-            format: int32
       description: Retrieve all developers
       tags:
         - Developer
@@ -258,6 +257,295 @@ paths:
           $ref: '#/components/responses/AttributeDeleted'
         '404':
           $ref: '#/components/responses/AttributeDoesNotExist'
+
+  /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps:
+    get:
+      parameters:
+        - $ref: '#/components/parameters/organization_name'
+        - $ref: '#/components/parameters/developer_emailaddress'
+        - name: expand
+          in: query
+          description: Return full details of each application
+          required: false
+          schema:
+            type: boolean
+        - name: count
+          in: query
+          description: Maximum number of applications to return
+          required: false
+          schema:
+            type: integer
+      description: Retrieve all applications of developer
+      tags:
+        - Application
+      responses:
+        '200':
+          description: Successfully retrieved all applictions
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/ApplicationNames'
+                  - $ref: '#/components/schemas/Applications'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      parameters:
+        - $ref: '#/components/parameters/organization_name'
+        - $ref: '#/components/parameters/developer_emailaddress'
+      description: Create new application
+      tags:
+        - Application
+      requestBody:
+        description: Details of application to create
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Application'
+      responses:
+        '201':
+          description: Successfully created application
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Application'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}:
+    get:
+      parameters:
+        - $ref: '#/components/parameters/organization_name'
+        - $ref: '#/components/parameters/developer_emailaddress'
+        - $ref: '#/components/parameters/app_name'
+      description: Retrieve application
+      tags:
+        - Application
+      responses:
+        '200':
+          description: Succesfully retrieved application
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Application'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: Application to retrieve does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+    post:
+      parameters:
+        - $ref: '#/components/parameters/organization_name'
+        - $ref: '#/components/parameters/developer_emailaddress'
+        - $ref: '#/components/parameters/app_name'
+        - $ref: '#/components/parameters/action'
+      description: Update application
+      tags:
+        - Application
+      requestBody:
+        description: Details of application to update.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Application'
+          application/octet-stream:
+            schema:
+              type: string
+      responses:
+        '200':
+          description: Succesfully updated application
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Application'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: Application to update does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+    delete:
+      parameters:
+        - $ref: '#/components/parameters/organization_name'
+        - $ref: '#/components/parameters/developer_emailaddress'
+        - $ref: '#/components/parameters/app_name'
+      description: Delete application
+      tags:
+        - Application
+      responses:
+        '200':
+          description: Succesfully deleted application
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Application'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: Application to delete does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/attributes:
+    get:
+      description: Replace all attributes of an application
+      tags:
+        - Application
+      parameters:
+        - $ref: '#/components/parameters/organization_name'
+        - $ref: '#/components/parameters/developer_emailaddress'
+        - $ref: '#/components/parameters/app_name'
+      responses:
+        '200':
+          $ref: '#/components/responses/AttributesRetrieved'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: application to replace all attributes from does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+    post:
+      description: Replace all attributes of an application
+      tags:
+        - Application
+      parameters:
+        - $ref: '#/components/parameters/organization_name'
+        - $ref: '#/components/parameters/developer_emailaddress'
+        - $ref: '#/components/parameters/app_name'
+      requestBody:
+        description: Details of new attributes
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Attributes'
+      responses:
+        '200':
+          $ref: '#/components/responses/AttributesUpdated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: Application to update does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/attributes/{attribute_name}:
+    get:
+      description: Retrieve attribute of an application
+      tags:
+        - Application
+      parameters:
+        - $ref: '#/components/parameters/organization_name'
+        - $ref: '#/components/parameters/developer_emailaddress'
+        - $ref: '#/components/parameters/app_name'
+        - $ref: '#/components/parameters/attribute_name'
+      responses:
+        '200':
+          $ref: '#/components/responses/AttributeRetrieved'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/AttributeDoesNotExist'
+    post:
+      description: Update attribute of an application
+      tags:
+        - Application
+      parameters:
+        - $ref: '#/components/parameters/organization_name'
+        - $ref: '#/components/parameters/developer_emailaddress'
+        - $ref: '#/components/parameters/app_name'
+        - $ref: '#/components/parameters/attribute_name'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Attribute'
+      responses:
+        '200':
+          $ref: '#/components/responses/AttributeUpdated'
+        '201':
+          $ref: '#/components/responses/AttributeCreated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/AttributeDoesNotExist'
+    delete:
+      description: Delete attribute of an application
+      tags:
+        - Application
+      parameters:
+        - $ref: '#/components/parameters/organization_name'
+        - $ref: '#/components/parameters/developer_emailaddress'
+        - $ref: '#/components/parameters/app_name'
+        - $ref: '#/components/parameters/attribute_name'
+      responses:
+        '200':
+          $ref: '#/components/responses/AttributeDeleted'
+        '404':
+          $ref: '#/components/responses/AttributeDoesNotExist'
+
+  /v1/organizations/{organization_name}/apps:
+    get:
+      parameters:
+        - $ref: '#/components/parameters/organization_name'
+        - name: expand
+          in: query
+          description: Return full details of each application
+          required: false
+          schema:
+            type: boolean
+        - name: rows
+          in: query
+          description: Maximum number of applications to return
+          required: false
+          schema:
+            type: integer
+            format: int32
+      description: Retrieve all applications
+      tags:
+        - Application
+      responses:
+        '200':
+          description: Successfully retrieved all applictions
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/ApplicationNames'
+                  - $ref: '#/components/schemas/Applications'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /v1/organizations/{organization_name}/apps/{app_id}:
+    get:
+      parameters:
+        - $ref: '#/components/parameters/organization_name'
+        - $ref: '#/components/parameters/app_id'
+      description: Retrieve application by appId
+      tags:
+        - Application
+      responses:
+        '200':
+          description: Succesfully retrieved application
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Application'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: Application to retrieve does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
 
   /v1/listeners:
     get:
@@ -932,6 +1220,22 @@ components:
         type: string
       description: Email address of developer
 
+    app_name:
+      name: app_name
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Application name
+
+    app_id:
+      name: app_id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Application id
+
     listener_name:
       name: listener_name
       in: path
@@ -1034,6 +1338,75 @@ components:
       items:
         type: string
       description: All developer email addresses
+
+    Application:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Application name
+        displayName:
+          type: string
+          readOnly: true
+          description: Display name of application
+        appId:
+          type: string
+          readOnly: true
+          description: Application ID
+        developerId:
+          type: string
+          readOnly: true
+          description: Developer ID
+        scopes:
+          type: array
+          items:
+            type: string
+          description: OAuth scopes
+        attributes:
+          type: array
+          items:
+            $ref: "#/components/schemas/Attribute"
+        status:
+          type: string
+          description: Status of application.
+        callbackUrl:
+          type: string
+          description: OAuth callback URL.
+        keyExpiresIn:
+          type: integer
+          format: int64
+          description: Default time-to-live of new api keys.
+        createdAt:
+          type: integer
+          format: int64
+          readOnly: true
+          description: Create timestamp in milliseconds since epoch.
+        createdBy:
+          type: string
+          readOnly: true
+          description: User who created this application
+        lastModifiedAt:
+          type: integer
+          format: int64
+          readOnly: true
+          description: Last modified timestamp in milliseconds since epoch.
+        LastModifiedBy:
+          type: string
+          readOnly: true
+          description: User who last updated this application.
+    Applications:
+      type: object
+      properties:
+        application:
+          type: array
+          items:
+            $ref: "#/components/schemas/Application"
+      description: All application details
+    ApplicationNames:
+      type: array
+      items:
+        type: string
+      description: Application names.
 
     Listener:
       type: object

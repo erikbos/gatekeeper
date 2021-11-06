@@ -27,7 +27,7 @@ func (h *Handler) getDeveloperAppKeys(c *gin.Context) handlerResponse {
 	if err != nil {
 		return handleError(err)
 	}
-	developerApp, err := h.service.DeveloperApp.GetByName(c.Param(developerAppParameter))
+	developerApp, err := h.service.DeveloperApp.GetByName(c.Param("application"))
 	if err != nil {
 		return handleError(err)
 	}
@@ -45,7 +45,7 @@ func (h *Handler) getDeveloperAppKeyByKey(c *gin.Context) handlerResponse {
 	if err != nil {
 		return handleError(err)
 	}
-	_, err = h.service.DeveloperApp.GetByName(c.Param(developerAppParameter))
+	_, err = h.service.DeveloperApp.GetByName(c.Param("application"))
 	if err != nil {
 		return handleError(err)
 	}

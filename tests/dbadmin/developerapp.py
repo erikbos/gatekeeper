@@ -256,4 +256,5 @@ class Application:
         Compares minimum required fields that can be set of two applications
         """
         assert application_a['name'] == application_b['name']
-        assert application_a['attributes'] == application_b['attributes']
+        assert (application_a['attributes'].sort(key=lambda x: x['name'])
+            == application_b['attributes'].sort(key=lambda x: x['name']))

@@ -95,13 +95,20 @@ func (das *DeveloperAppService) Create(developerEmail string,
 
 	newDeveloperApp.AppID = generateAppID()
 	newDeveloperApp.DeveloperID = developer.DeveloperID
-	// New developer starts actived
-	newDeveloperApp.Status = "active"
+	// New developer starts approved
+	newDeveloperApp.Approve()
 
 	if err = das.updateDeveloperApp(&newDeveloperApp, who); err != nil {
 		return types.NullDeveloperApp, err
 	}
 	das.changelog.Create(newDeveloperApp, who)
+
+	// Add app to the apps field in developer entity
+	developer.Apps = append(developer.Apps, newDeveloperApp.Name)
+	if err := das.db.Developer.Update(developer); err != nil {
+		return newDeveloperApp, err
+	}
+
 	return newDeveloperApp, nil
 }
 
@@ -137,9 +144,7 @@ func (das *DeveloperAppService) UpdateAttributes(developerAppName string,
 		return err
 	}
 	updatedDeveloperApp := copyDeveloperApp(*currentDeveloperApp)
-	if err = updatedDeveloperApp.Attributes.SetMultiple(receivedAttributes); err != nil {
-		return err
-	}
+	updatedDeveloperApp.Attributes = receivedAttributes
 
 	if err = das.updateDeveloperApp(updatedDeveloperApp, who); err != nil {
 		return err
@@ -210,9 +215,11 @@ func (das *DeveloperAppService) Delete(developerID, developerAppName string,
 	if err != nil {
 		return types.NullDeveloperApp, err
 	}
-	developerAppKeys, err := das.db.Key.GetByDeveloperAppID(developerApp.AppID)
-	if err != nil {
-		return types.NullDeveloperApp, err
+	developerAppKeys, _ := das.db.Key.GetByDeveloperAppID(developerApp.AppID)
+	if len(developerAppKeys) != 0 {
+		for _, k := range developerAppKeys {
+			das.db.Key.DeleteByKey(k.ConsumerKey)
+		}
 	}
 
 	developerAppKeyCount := len(developerAppKeys)

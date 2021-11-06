@@ -9,9 +9,9 @@ import (
 	"github.com/erikbos/gatekeeper/pkg/webadmin"
 )
 
+// registerMetricsRoute registers prometheus route
 func registerMetricsRoute(g *gin.Engine, applicationName string) {
 
-	// Instal prometheus metrics
 	m := metrics.New()
 	m.RegisterWithPrometheus(applicationName)
 	g.Use(metricsMiddleware(m))

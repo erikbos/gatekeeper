@@ -13,7 +13,7 @@ import (
 )
 
 // Generate REST API handlers from OpenAPI specification
-//go:generate oapi-codegen -package handler -generate types,gin -include-tags Developer -o dbadmin.gen.go ../../../openapi/gatekeeper.yaml
+//go:generate oapi-codegen -package handler -generate types,gin -include-tags Developer,Application -o dbadmin.gen.go ../../../openapi/gatekeeper.yaml
 
 // Handler contains our runtime parameters
 type Handler struct {
@@ -22,6 +22,7 @@ type Handler struct {
 	logger *zap.Logger
 }
 
+// Handler2 implements generated from API schema ServerInterface
 type Handler2 struct {
 	service *service.Service
 	// metrics *metrics.Metrics
@@ -50,12 +51,14 @@ func NewHandler(g *gin.Engine, db *db.Database, s *service.Service, applicationN
 		// logger:  logger,
 	}
 
-	// Insert authentication middleware for every /v1 prefix'ed API endpoint
 	apiRoutes := g.Group("/v1")
+	// TODO add middle ware which checks organization
 
+	// Insert authentication middleware for every /v1 prefix'ed API endpoint
 	if !disableAPIAuthentication {
 		auth := newAuth(s.User, s.Role, logger)
 		apiRoutes.Use(auth.AuthenticateAndAuthorize)
+
 	}
 
 	g.GET(showHTTPForwardingPath, handler.showHTTPForwardingPage)
@@ -71,7 +74,6 @@ func NewHandler(g *gin.Engine, db *db.Database, s *service.Service, applicationN
 	handler.registerRouteRoutes(apiRoutes)
 	handler.registerClusterRoutes(apiRoutes)
 
-	handler.registerDeveloperAppRoutes(apiRoutes)
 	handler.registerKeyRoutes(apiRoutes)
 	handler.registerAPIProductRoutes(apiRoutes)
 
@@ -201,7 +203,7 @@ func (h *Handler2) responseErrorBadRequest(c *gin.Context, e error) {
 }
 
 // responseError returns formated error back to API client
-// func (h *Handler2) responseErrorNameMisMatch(c *gin.Context) {
+func (h *Handler2) responseErrorNameValueMisMatch(c *gin.Context) {
 
-// 	h.responseErrorBadRequest(c, errors.New("name field value mismatch"))
-// }
+	h.responseErrorBadRequest(c, errors.New("name field value mismatch"))
+}
