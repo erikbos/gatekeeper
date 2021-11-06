@@ -15,8 +15,17 @@ import (
 	"github.com/erikbos/gatekeeper/pkg/webadmin"
 )
 
+// Generate REST API handlers from OpenAPI specification
+//go:generate oapi-codegen -package handler -generate types,gin -include-tags Developer -o dbadmin.gen.go ../../../openapi/gatekeeper.yaml
+
 // Handler contains our runtime parameters
 type Handler struct {
+	service *service.Service
+	metrics *metrics.Metrics
+	logger  *zap.Logger
+}
+
+type Handler2 struct {
 	service *service.Service
 	metrics *metrics.Metrics
 	logger  *zap.Logger
@@ -37,9 +46,14 @@ func NewHandler(g *gin.Engine, db *db.Database, s *service.Service, applicationN
 		logger:  logger,
 	}
 
+	handler2 := &Handler2{
+		service: s,
+		metrics: m,
+		logger:  logger,
+	}
+
 	// Insert authentication middleware for every /v1 prefix'ed API endpoint
 	apiRoutes := g.Group("/v1")
-	// apiRoutes.Use(metricsMiddleware(m))
 
 	if !disableAPIAuthentication {
 		auth := newAuth(s.User, s.Role, logger)
@@ -50,6 +64,8 @@ func NewHandler(g *gin.Engine, db *db.Database, s *service.Service, applicationN
 	g.GET(showDevelopersPath, handler.showDevelopersPage)
 	g.GET(showUserRolesPath, handler.showUserRolePage)
 
+	RegisterHandlers(g, handler2)
+
 	// Register all API endpoint routes
 	handler.registerUserRoutes(apiRoutes)
 	handler.registerRoleRoutes(apiRoutes)
@@ -58,13 +74,14 @@ func NewHandler(g *gin.Engine, db *db.Database, s *service.Service, applicationN
 	handler.registerClusterRoutes(apiRoutes)
 
 	// Insert organization path if required
-	if organizationName != "" {
-		apiRoutes = apiRoutes.Group("/organizations/" + organizationName)
-	}
-	handler.registerDeveloperRoutes(apiRoutes)
+	// if organizationName != "" {
+	// 	apiRoutes = apiRoutes.Group("/organizations/" + organizationName)
+	// }
+	// // handler.registerDeveloperRoutes(apiRoutes)
 	handler.registerDeveloperAppRoutes(apiRoutes)
 	handler.registerKeyRoutes(apiRoutes)
 	handler.registerAPIProductRoutes(apiRoutes)
+
 	return handler
 }
 
@@ -181,4 +198,31 @@ func metricsMiddleware(m *metrics.Metrics) gin.HandlerFunc {
 			c.FullPath(),
 			strconv.Itoa(c.Writer.Status()))
 	}
+}
+
+// responseError returns formated error back to API client
+func (h *Handler2) responseError(c *gin.Context, e types.Error) {
+
+	code := types.HTTPErrorStatusCode(e)
+	msg := e.ErrorDetails()
+
+	// Save internal error details in request context so we can write it in access log later
+	_ = c.Error(errors.New(msg))
+
+	c.IndentedJSON(code, ErrorMessage{
+		Code:    &code,
+		Message: &msg,
+	})
+}
+
+// responseError returns formated error back to API client
+func (h *Handler2) responseErrorBadRequest(c *gin.Context, e error) {
+
+	h.responseError(c, types.NewBadRequestError(e))
+}
+
+// responseError returns formated error back to API client
+func (h *Handler2) responseErrorNameMisMatch(c *gin.Context) {
+
+	h.responseErrorBadRequest(c, errors.New("name field value mismatch"))
 }

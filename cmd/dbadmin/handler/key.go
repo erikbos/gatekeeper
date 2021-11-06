@@ -23,7 +23,7 @@ const (
 // getDeveloperAppKeys returns all keys of one particular developer application
 func (h *Handler) getDeveloperAppKeys(c *gin.Context) handlerResponse {
 
-	_, err := h.service.Developer.Get(c.Param(developerParameter))
+	_, err := h.service.Developer.Get(c.Param("developer"))
 	if err != nil {
 		return handleError(err)
 	}
@@ -41,7 +41,7 @@ func (h *Handler) getDeveloperAppKeys(c *gin.Context) handlerResponse {
 // getDeveloperAppKeyByKey returns one key of one particular developer application
 func (h *Handler) getDeveloperAppKeyByKey(c *gin.Context) handlerResponse {
 
-	_, err := h.service.Developer.Get(c.Param(developerParameter))
+	_, err := h.service.Developer.Get(c.Param("developer"))
 	if err != nil {
 		return handleError(err)
 	}

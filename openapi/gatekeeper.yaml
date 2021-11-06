@@ -1005,6 +1005,7 @@ components:
           description: Status of develoepr
         createdAt:
           type: integer
+          format: int64
           readOnly: true
           description: Create timestamp in milliseconds since epoch.
         createdBy:
@@ -1012,17 +1013,18 @@ components:
           readOnly: true
           description: User who created this developer
         lastModifiedAt:
-          type: string
+          type: integer
+          format: int64
           readOnly: true
           description: Last modified timestamp in milliseconds since epoch.
-        LastmodifiedBy:
+        LastModifiedBy:
           type: string
           readOnly: true
           description: User who last updated this developer
     Developers:
       type: object
       properties:
-        developers:
+        developer:
           type: array
           items:
             $ref: "#/components/schemas/Developer"
@@ -1058,6 +1060,7 @@ components:
             $ref: "#/components/schemas/Attribute"
         createdAt:
           type: integer
+          format: int64
           readOnly: true
           description: Create timestamp in milliseconds since epoch.
         createdBy:
@@ -1066,9 +1069,10 @@ components:
           description: User which created this listener
         lastModifiedAt:
           type: string
+          format: int64
           readOnly: true
           description: Last modified timestamp in milliseconds since epoch.
-        LastmodifiedBy:
+        LastModifiedBy:
           type: string
           readOnly: true
           description: User who last updated this listener
@@ -1096,6 +1100,7 @@ components:
             $ref: "#/components/schemas/Attribute"
         createdAt:
           type: integer
+          format: int64
           readOnly: true
           description: Create timestamp in milliseconds since epoch.
         createdBy:
@@ -1103,10 +1108,11 @@ components:
           readOnly: true
           description: User which created this route
         lastModifiedAt:
-          type: string
+          type: integer
+          format: int64
           readOnly: true
           description: Last modified timestamp in milliseconds since epoch.
-        LastmodifiedBy:
+        LastModifiedBy:
           type: string
           readOnly: true
           description: User who last updated this route
@@ -1128,6 +1134,7 @@ components:
             $ref: "#/components/schemas/Attribute"
         createdAt:
           type: integer
+          format: int64
           readOnly: true
           description: Create timestamp in milliseconds since epoch.
         createdBy:
@@ -1135,10 +1142,11 @@ components:
           readOnly: true
           description: User who created this cluster
         lastModifiedAt:
-          type: string
+          type: integer
+          format: int64
           readOnly: true
           description: Last modified timestamp in milliseconds since epoch.
-        LastmodifiedBy:
+        LastModifiedBy:
           type: string
           readOnly: true
           description: User who last updated this cluster
@@ -1158,7 +1166,7 @@ components:
     Attributes:
       type: object
       properties:
-        attributes:
+        attribute:
           type: array
           items:
             $ref: "#/components/schemas/Attribute"
@@ -1169,3 +1177,5 @@ components:
       properties:
         message:
           type: string
+        code:
+          type: integer

@@ -24,6 +24,8 @@ func (h *Handler) registerAPIProductRoutes(r *gin.RouterGroup) {
 }
 
 const (
+	attributeParameter = "attribute"
+
 	// Name of apiproduct parameter in the route definition
 	apiproductParameter = "apiproduct"
 )

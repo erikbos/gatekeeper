@@ -83,10 +83,10 @@ func (ds *DeveloperService) Create(newDeveloper types.Developer,
 }
 
 // Update updates an existing developer
-func (ds *DeveloperService) Update(updatedDeveloper types.Developer, who Requester) (
+func (ds *DeveloperService) Update(developerEmail string, updatedDeveloper types.Developer, who Requester) (
 	types.Developer, types.Error) {
 
-	currentDeveloper, err := ds.db.Developer.GetByEmail(updatedDeveloper.Email)
+	currentDeveloper, err := ds.db.Developer.GetByEmail(developerEmail)
 	if err != nil {
 		return types.NullDeveloper, err
 	}
@@ -112,11 +112,8 @@ func (ds *DeveloperService) UpdateAttributes(developerName string,
 	if err != nil {
 		return err
 	}
-	updatedDeveloper := currentDeveloper
-	if err = updatedDeveloper.Attributes.SetMultiple(receivedAttributes); err != nil {
-		return err
-	}
-
+	updatedDeveloper := copyDeveloper(*currentDeveloper)
+	updatedDeveloper.Attributes = receivedAttributes
 	if err = ds.updateDeveloper(updatedDeveloper, who); err != nil {
 		return err
 	}
@@ -132,7 +129,7 @@ func (ds *DeveloperService) UpdateAttribute(developerName string,
 	if err != nil {
 		return err
 	}
-	updatedDeveloper := currentDeveloper
+	updatedDeveloper := copyDeveloper(*currentDeveloper)
 	if err := updatedDeveloper.Attributes.Set(attributeValue); err != nil {
 		return err
 	}
@@ -152,7 +149,7 @@ func (ds *DeveloperService) DeleteAttribute(developerName,
 	if err != nil {
 		return "", err
 	}
-	updatedDeveloper := currentDeveloper
+	updatedDeveloper := copyDeveloper(*currentDeveloper)
 	oldValue, err := updatedDeveloper.Attributes.Delete(attributeToDelete)
 	if err != nil {
 		return "", err
@@ -169,8 +166,8 @@ func (ds *DeveloperService) DeleteAttribute(developerName,
 func (ds *DeveloperService) updateDeveloper(updatedDeveloper *types.Developer, who Requester) types.Error {
 
 	updatedDeveloper.Attributes.Tidy()
-	updatedDeveloper.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
-	updatedDeveloper.LastmodifiedBy = who.User
+	updatedDeveloper.LastModifiedAt = shared.GetCurrentTimeMilliseconds()
+	updatedDeveloper.LastModifiedBy = who.User
 	return ds.db.Developer.Update(updatedDeveloper)
 }
 
@@ -201,4 +198,22 @@ func (ds *DeveloperService) Delete(developerName string,
 // generateDeveloperID generates a DeveloperID
 func generateDeveloperID(developer string) string {
 	return uniuri.New()
+}
+
+func copyDeveloper(d types.Developer) *types.Developer {
+
+	return &types.Developer{
+		Apps:           d.Apps,
+		Attributes:     d.Attributes,
+		CreatedAt:      d.CreatedAt,
+		CreatedBy:      d.CreatedBy,
+		DeveloperID:    d.DeveloperID,
+		Email:          d.Email,
+		FirstName:      d.FirstName,
+		LastModifiedBy: d.LastModifiedBy,
+		LastModifiedAt: d.LastModifiedAt,
+		LastName:       d.LastName,
+		Status:         d.Status,
+		UserName:       d.UserName,
+	}
 }

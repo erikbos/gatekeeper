@@ -16,10 +16,10 @@ import (
 // https://godoc.org/github.com/go-playground/validator
 type Attribute struct {
 	// Attribute name, minimum required length is 4
-	Name string `json:"name" binding:"required,min=4"`
+	Name string `binding:"required,min=4"`
 
 	// Attribute value, minimum required length is 1 as we do not want empty values
-	Value string `json:"value" binding:"required,min=1"`
+	Value string `binding:"required,min=1"`
 }
 
 // Attributes holds one or more attributes
@@ -43,7 +43,7 @@ var (
 // AttributeValue is the single attribute type we receive from API
 type AttributeValue struct {
 	// Attribute value, minimum required length is 1
-	Value string `json:"value" binding:"required,min=1"`
+	Value string `binding:"required,min=1"`
 }
 
 // Get return one named attribute from attributes

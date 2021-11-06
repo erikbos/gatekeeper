@@ -226,4 +226,6 @@ class Developer:
         assert developer_a['email'] == developer_b['email']
         assert developer_a['firstName'] == developer_b['firstName']
         assert developer_a['lastName'] == developer_b['lastName']
-        assert developer_a['attributes'] == developer_b['attributes']
+
+        assert (developer_a['attributes'].sort(key=lambda x: x['name'])
+            == developer_b['attributes'].sort(key=lambda x: x['name']))

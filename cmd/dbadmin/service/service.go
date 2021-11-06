@@ -100,7 +100,7 @@ type (
 
 		Create(newDeveloper types.Developer, who Requester) (types.Developer, types.Error)
 
-		Update(updatedDeveloper types.Developer, who Requester) (types.Developer, types.Error)
+		Update(developerName string, updatedDeveloper types.Developer, who Requester) (types.Developer, types.Error)
 
 		UpdateAttributes(developerName string, receivedAttributes types.Attributes, who Requester) types.Error
 

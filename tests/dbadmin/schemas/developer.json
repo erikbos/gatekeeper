@@ -56,8 +56,6 @@
         "firstName",
         "lastName",
         "createdAt",
-        "createdBy",
-        "lastModifiedAt",
-        "lastModifiedBy"
+        "lastModifiedAt"
     ]
 }

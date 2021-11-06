@@ -107,7 +107,8 @@ def run_attribute_tests(config, session, attribute_url):
 
     # Update attributes to known set
     attribute_status = {
-        "name" : "Status"
+        "name" : "Status",
+        "value" : ""
     }
     attribute_shoesize = {
         "name" : "Shoesize",

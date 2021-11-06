@@ -5,40 +5,40 @@ package types
 // Field validation (binding) is done using https://godoc.org/github.com/go-playground/validator
 type Developer struct {
 	// Id of developer (not changable)
-	DeveloperID string `json:"developerId"`
+	DeveloperID string
 
 	// Status of developer (should be "approved" to allow access)
-	Status string `json:"status"`
+	Status string
 
 	// Name of developer applications of this developer
-	Apps StringSlice `json:"apps"`
+	Apps StringSlice
 
 	// Attributes of developer
-	Attributes Attributes `json:"attributes"`
+	Attributes Attributes
 
 	// Email address
-	Email string `json:"email" binding:"required"`
+	Email string
 
 	// Username
-	UserName string `json:"userName" binding:"required"`
+	UserName string
 
 	// First name
-	FirstName string `json:"firstName" binding:"required"`
+	FirstName string
 
 	// Last name
-	LastName string `json:"lastName" binding:"required"`
+	LastName string
 
 	// Created at timestamp in epoch milliseconds
-	CreatedAt int64 `json:"createdAt"`
+	CreatedAt int64
 
 	// Name of user who created this organiz
-	CreatedBy string `json:"createdBy"`
+	CreatedBy string
 
 	// Last modified at timestamp in epoch milliseconds
-	LastmodifiedAt int64 `json:"lastModifiedAt"`
+	LastModifiedAt int64
 
 	// Name of user who last updated this developer
-	LastmodifiedBy string `json:"lastModifiedBy"`
+	LastModifiedBy string
 }
 
 // Developers holds one or more developers

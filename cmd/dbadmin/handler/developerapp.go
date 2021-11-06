@@ -56,7 +56,7 @@ func (h *Handler) getAllDevelopersApps(c *gin.Context) handlerResponse {
 // getDeveloperAppsByDeveloperEmail returns apps of a developer
 func (h *Handler) getDeveloperAppsByDeveloperEmail(c *gin.Context) handlerResponse {
 
-	developerapps, err := h.service.DeveloperApp.GetAllByEmail(c.Param(developerParameter))
+	developerapps, err := h.service.DeveloperApp.GetAllByEmail(c.Param("developer"))
 	if err != nil {
 		return handleError(err)
 	}
@@ -104,7 +104,7 @@ func (h *Handler) createDeveloperApp(c *gin.Context) handlerResponse {
 	if err := c.ShouldBindJSON(&newDeveloperApp); err != nil {
 		return handleBadRequest(err)
 	}
-	developer, err := h.service.Developer.Get(c.Param(developerParameter))
+	developer, err := h.service.Developer.Get(c.Param("developer"))
 	if err != nil {
 		return handleError(err)
 	}
@@ -130,7 +130,7 @@ func (h *Handler) updateDeveloperApp(c *gin.Context) handlerResponse {
 	if updateRequest.Name != c.Param(developerAppParameter) {
 		return handleNameMismatch()
 	}
-	_, err := h.service.Developer.Get(c.Param(developerParameter))
+	_, err := h.service.Developer.Get(c.Param("developer"))
 	if err != nil {
 		return handleError(err)
 	}
@@ -150,7 +150,7 @@ func (h *Handler) updateDeveloperAppAttributes(c *gin.Context) handlerResponse {
 	if err := c.ShouldBindJSON(&receivedAttributes); err != nil {
 		return handleBadRequest(err)
 	}
-	_, err := h.service.Developer.Get(c.Param(developerParameter))
+	_, err := h.service.Developer.Get(c.Param("developer"))
 	if err != nil {
 		return handleError(err)
 	}
@@ -186,7 +186,7 @@ func (h *Handler) updateDeveloperAppAttributeByName(c *gin.Context) handlerRespo
 // deleteDeveloperAppAttributeByName removes an attribute of developer
 func (h *Handler) deleteDeveloperAppAttributeByName(c *gin.Context) handlerResponse {
 
-	_, err := h.service.Developer.Get(c.Param(developerParameter))
+	_, err := h.service.Developer.Get(c.Param("developer"))
 	if err != nil {
 		return handleError(err)
 	}
@@ -205,7 +205,7 @@ func (h *Handler) deleteDeveloperAppAttributeByName(c *gin.Context) handlerRespo
 // deleteDeveloperAppByName deletes a developer app
 func (h *Handler) deleteDeveloperAppByName(c *gin.Context) handlerResponse {
 
-	developer, err := h.service.Developer.Get(c.Param(developerParameter))
+	developer, err := h.service.Developer.Get(c.Param("developer"))
 	if err != nil {
 		return handleError(err)
 	}
