@@ -122,7 +122,7 @@ func (h *Handler) updateAPIProductAttributes(c *gin.Context) handlerResponse {
 // updateAPIProductAttributeByName update an attribute of apiproduct
 func (h *Handler) updateAPIProductAttributeByName(c *gin.Context) handlerResponse {
 
-	var receivedValue types.AttributeValue
+	var receivedValue AttributeValue
 	if err := c.ShouldBindJSON(&receivedValue); err != nil {
 		return handleBadRequest(err)
 	}

@@ -81,7 +81,7 @@ func (s *ClusterStore) runGetClusterQuery(query string, queryParameters ...inter
 		clusters = append(clusters, types.Cluster{
 			Name:           columnValueString(m, "name"),
 			DisplayName:    columnValueString(m, "display_name"),
-			Attributes:     types.Cluster{}.Attributes.Unmarshal(columnValueString(m, "attributes")),
+			Attributes:     AttributesUnmarshal(columnValueString(m, "attributes")),
 			CreatedAt:      columnValueInt64(m, "created_at"),
 			CreatedBy:      columnValueString(m, "created_by"),
 			LastmodifiedAt: columnValueInt64(m, "lastmodified_at"),
@@ -103,7 +103,7 @@ func (s *ClusterStore) Update(c *types.Cluster) types.Error {
 	if err := s.db.CassandraSession.Query(query,
 		c.Name,
 		c.DisplayName,
-		c.Attributes.Marshal(),
+		AttributesMarshal(c.Attributes),
 		c.CreatedAt,
 		c.CreatedBy,
 		c.LastmodifiedAt,

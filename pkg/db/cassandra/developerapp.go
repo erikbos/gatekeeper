@@ -19,6 +19,7 @@ name,
 display_name,
 attributes,
 status,
+callback_url,
 created_at,
 created_by,
 lastmodified_at,
@@ -130,15 +131,17 @@ func (s *DeveloperAppStore) runGetDeveloperAppQuery(query string, queryParameter
 	for iterable.MapScan(m) {
 		developerapps = append(developerapps, types.DeveloperApp{
 			AppID:          columnValueString(m, "app_id"),
-			DeveloperID:    columnValueString(m, "developer_id"),
-			Name:           columnValueString(m, "name"),
-			DisplayName:    columnValueString(m, "display_name"),
-			Attributes:     types.DeveloperApp{}.Attributes.Unmarshal(m["attributes"].(string)),
-			Status:         columnValueString(m, "status"),
+			Attributes:     AttributesUnmarshal(m["attributes"].(string)),
+			CallbackUrl:    columnValueString(m, "callback_url"),
 			CreatedAt:      columnValueInt64(m, "created_at"),
 			CreatedBy:      columnValueString(m, "created_by"),
+			DeveloperID:    columnValueString(m, "developer_id"),
+			DisplayName:    columnValueString(m, "display_name"),
 			LastModifiedAt: columnValueInt64(m, "lastmodified_at"),
 			LastModifiedBy: columnValueString(m, "lastmodified_by"),
+			Scopes:         stringSliceUnmarshal(columnValueString(m, "scopes")),
+			Status:         columnValueString(m, "status"),
+			Name:           columnValueString(m, "name"),
 		})
 		m = map[string]interface{}{}
 	}
@@ -152,14 +155,15 @@ func (s *DeveloperAppStore) runGetDeveloperAppQuery(query string, queryParameter
 // Update UPSERTs a developer app
 func (s *DeveloperAppStore) Update(app *types.DeveloperApp) types.Error {
 
-	query := "INSERT INTO developer_apps (" + developerAppColumns + ") VALUES(?,?,?,?,?,?,?,?,?,?)"
+	query := "INSERT INTO developer_apps (" + developerAppColumns + ") VALUES(?,?,?,?,?,?,?,?,?,?,?)"
 	if err := s.db.CassandraSession.Query(query,
 		app.AppID,
 		app.DeveloperID,
 		app.Name,
 		app.DisplayName,
-		app.Attributes.Marshal(),
+		AttributesMarshal(app.Attributes),
 		app.Status,
+		app.CallbackUrl,
 		app.CreatedAt,
 		app.CreatedBy,
 		app.LastModifiedAt,

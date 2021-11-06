@@ -106,18 +106,18 @@ func (s *DeveloperStore) runGetDeveloperQuery(query string, queryParameters ...i
 	m := make(map[string]interface{})
 	for iterable.MapScan(m) {
 		developers = append(developers, types.Developer{
-			DeveloperID:    columnValueString(m, "developer_id"),
 			Apps:           stringSliceUnmarshal(columnValueString(m, "apps")),
-			Attributes:     types.Developer{}.Attributes.Unmarshal(columnValueString(m, "attributes")),
-			Status:         columnValueString(m, "status"),
-			UserName:       columnValueString(m, "user_name"),
+			Attributes:     AttributesUnmarshal(columnValueString(m, "attributes")),
+			CreatedAt:      columnValueInt64(m, "created_at"),
+			CreatedBy:      columnValueString(m, "created_by"),
+			DeveloperID:    columnValueString(m, "developer_id"),
 			Email:          columnValueString(m, "email"),
 			FirstName:      columnValueString(m, "first_name"),
 			LastName:       columnValueString(m, "last_name"),
-			CreatedAt:      columnValueInt64(m, "created_at"),
-			CreatedBy:      columnValueString(m, "created_by"),
 			LastModifiedAt: columnValueInt64(m, "lastmodified_at"),
 			LastModifiedBy: columnValueString(m, "lastmodified_by"),
+			Status:         columnValueString(m, "status"),
+			UserName:       columnValueString(m, "user_name"),
 		})
 		m = map[string]interface{}{}
 	}
@@ -134,7 +134,7 @@ func (s *DeveloperStore) Update(d *types.Developer) types.Error {
 	if err := s.db.CassandraSession.Query(query,
 		d.DeveloperID,
 		stringSliceMarshal(d.Apps),
-		d.Attributes.Marshal(),
+		AttributesMarshal(d.Attributes),
 		d.Status,
 		d.UserName,
 		d.Email,

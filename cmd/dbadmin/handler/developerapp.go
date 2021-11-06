@@ -292,7 +292,6 @@ func ToApplicationResponse(d *types.DeveloperApp) Application {
 		LastModifiedBy: &d.LastModifiedBy,
 		LastModifiedAt: &d.LastModifiedAt,
 		Name:           &d.Name,
-		Scopes:         &d.Scopes,
 		Status:         &d.Status,
 	}
 	if d.Scopes != nil {

@@ -42,6 +42,8 @@ class Application:
             random_int = random.randint(0,99999)
             new_application = {
                 "name" : self.generate_app_name(random_int),
+                "displayName": "Testsuite app",
+                "callbackUrl": "1",
                 "attributes" : [
                     {
                         "name" : f"name{random_int}",
@@ -253,8 +255,10 @@ class Application:
 
     def assert_compare(self, application_a, application_b):
         """
-        Compares minimum required fields that can be set of two applications
+        Compares minimum required fields that can be freely, as is, on applications
         """
         assert application_a['name'] == application_b['name']
+        assert application_a['displayName'] == application_b['displayName']
+        assert application_a['callbackUrl'] == application_b['callbackUrl']
         assert (application_a['attributes'].sort(key=lambda x: x['name'])
             == application_b['attributes'].sort(key=lambda x: x['name']))

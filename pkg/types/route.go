@@ -9,40 +9,42 @@ import (
 // Route holds configuration of a route
 //
 // Field validation (binding) is done using https://godoc.org/github.com/go-playground/validator
-type Route struct {
-	// Name of route (not changable)
-	Name string `json:"name" binding:"required,min=4"`
+type (
+	Route struct {
+		// Name of route (not changable)
+		Name string `json:"name" binding:"required,min=4"`
 
-	// Friendly display name of route
-	DisplayName string `json:"displayName"`
+		// Friendly display name of route
+		DisplayName string `json:"displayName"`
 
-	// Routegroup this route is part of
-	RouteGroup string `json:"RouteGroup" binding:"required,min=4"`
+		// Routegroup this route is part of
+		RouteGroup string `json:"RouteGroup" binding:"required,min=4"`
 
-	// Path of route (should always start with a /)
-	Path string `json:"path" binding:"required,min=1,startswith=/"`
+		// Path of route (should always start with a /)
+		Path string `json:"path" binding:"required,min=1,startswith=/"`
 
-	// Type of pathmatching: path, prefix, regexp
-	PathType string `json:"pathType" binding:"required,oneof=path prefix regexp"`
+		// Type of pathmatching: path, prefix, regexp
+		PathType string `json:"pathType" binding:"required,oneof=path prefix regexp"`
 
-	// Attributes of this route
-	Attributes Attributes `json:"attributes"`
+		// Attributes of this route
+		Attributes Attributes `json:"attributes"`
 
-	// Created at timestamp in epoch milliseconds
-	CreatedAt int64 `json:"createdAt"`
+		// Created at timestamp in epoch milliseconds
+		CreatedAt int64 `json:"createdAt"`
 
-	// Name of user who created this route
-	CreatedBy string `json:"createdBy"`
+		// Name of user who created this route
+		CreatedBy string `json:"createdBy"`
 
-	// Last modified at timestamp in epoch milliseconds
-	LastmodifiedAt int64 `json:"lastmodifiedAt"`
+		// Last modified at timestamp in epoch milliseconds
+		LastmodifiedAt int64 `json:"lastmodifiedAt"`
 
-	// Name of user who last updated this route
-	LastmodifiedBy string `json:"lastmodifiedBy"`
-}
+		// Name of user who last updated this route
+		LastmodifiedBy string `json:"lastmodifiedBy"`
+	}
 
-// Routes holds one or more routes
-type Routes []Route
+	// Routes holds one or more routes
+	Routes []Route
+)
 
 var (
 	// NullRoute is an empty route type

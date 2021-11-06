@@ -5,31 +5,33 @@ import "encoding/json"
 // Key contains an apikey entitlement
 //
 // Field validation (binding) is done using https://godoc.org/github.com/go-playground/validator
-type Key struct {
-	// ConsumerKey is the key required for authentication
-	ConsumerKey string `json:"consumerKey"`
+type (
+	Key struct {
+		// ConsumerKey is the key required for authentication
+		ConsumerKey string `json:"consumerKey"`
 
-	// ConsumerSecret is secretid of this key, needed to request OAuth2 access token
-	ConsumerSecret string `json:"consumerSecret"`
+		// ConsumerSecret is secretid of this key, needed to request OAuth2 access token
+		ConsumerSecret string `json:"consumerSecret"`
 
-	// List of apiproducts which can be accessed using this key
-	APIProducts APIProductStatuses `json:"apiProducts"`
+		// List of apiproducts which can be accessed using this key
+		APIProducts APIProductStatuses `json:"apiProducts"`
 
-	// Expiry date in epoch milliseconds
-	ExpiresAt int64 `json:"expiresAt"`
+		// Expiry date in epoch milliseconds
+		ExpiresAt int64 `json:"expiresAt"`
 
-	// Issue date in epoch milliseconds
-	IssuedAt int64 `json:"issuesAt"`
+		// Issue date in epoch milliseconds
+		IssuedAt int64 `json:"issuesAt"`
 
-	// Developer app id this key belongs to
-	AppID string `json:"AppId"`
+		// Developer app id this key belongs to
+		AppID string `json:"AppId"`
 
-	// Status (should be "approved" to allow access)
-	Status string `json:"status"`
-}
+		// Status (should be "approved" to allow access)
+		Status string `json:"status"`
+	}
 
-// Keys holds one or more apikeys
-type Keys []Key
+	// Keys holds one or more apikeys
+	Keys []Key
+)
 
 var (
 	// NullDeveloperAppKey is an empty key type

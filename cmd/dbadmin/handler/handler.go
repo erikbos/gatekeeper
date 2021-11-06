@@ -207,3 +207,9 @@ func (h *Handler2) responseErrorNameValueMisMatch(c *gin.Context) {
 
 	h.responseErrorBadRequest(c, errors.New("name field value mismatch"))
 }
+
+// AttributeValue is the single attribute type we receive from API
+type AttributeValue struct {
+	// Attribute value, minimum required length is 1
+	Value string `binding:"required,min=1"`
+}

@@ -2,6 +2,8 @@ package cassandra
 
 import (
 	"encoding/json"
+
+	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
 // stringSliceUnmarshal unpacks JSON to slice of strings
@@ -26,6 +28,32 @@ func stringSliceMarshal(s []string) string {
 		SliceStringsInJSON, err := json.Marshal(s)
 		if err == nil {
 			return string(SliceStringsInJSON)
+		}
+	}
+	return "[]"
+}
+
+// Unmarshal unpacks JSON array of attributes
+// Example input: [{"name":"Shoesize","value":"42"}, {"name":"Destination","value":"Mars"}]
+func AttributesUnmarshal(jsonArrayOfAttributes string) types.Attributes {
+
+	if jsonArrayOfAttributes != "" {
+		var attributes = make(types.Attributes, 0)
+		if err := json.Unmarshal([]byte(jsonArrayOfAttributes), &attributes); err == nil {
+			return attributes
+		}
+	}
+	return types.NullAttributes
+}
+
+// Marshal packs slice of attributes into JSON
+// Example output: [{"name":"Shoesize","value":"42"}, {"name":"Destination","value":"Mars"}]
+func AttributesMarshal(attributes types.Attributes) string {
+
+	if len(attributes) > 0 {
+		json, err := json.Marshal(attributes)
+		if err == nil {
+			return string(json)
 		}
 	}
 	return "[]"

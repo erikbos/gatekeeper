@@ -122,7 +122,7 @@ func (h *Handler) updateRouteAttributes(c *gin.Context) handlerResponse {
 // updateRouteAttribute update an attribute of developer
 func (h *Handler) updateRouteAttribute(c *gin.Context) handlerResponse {
 
-	var receivedValue types.AttributeValue
+	var receivedValue AttributeValue
 	if err := c.ShouldBindJSON(&receivedValue); err != nil {
 		return handleBadRequest(err)
 	}

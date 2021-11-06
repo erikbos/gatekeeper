@@ -11,31 +11,33 @@ import (
 // Role holds an role
 //
 // Field validation (binding) is done using https://godoc.org/github.com/go-playground/validator
-type Role struct {
-	// Name of role (not changable)
-	Name string `json:"name" binding:"required,min=4"`
+type (
+	Role struct {
+		// Name of role (not changable)
+		Name string `json:"name" binding:"required,min=4"`
 
-	// Display name
-	DisplayName string `json:"displayName"`
+		// Display name
+		DisplayName string `json:"displayName"`
 
-	// Allowed methods & paths
-	Allows `json:"allows" binding:"required"`
+		// Allowed methods & paths
+		Allows `json:"allows" binding:"required"`
 
-	// Created at timestamp in epoch milliseconds
-	CreatedAt int64 `json:"createdAt"`
+		// Created at timestamp in epoch milliseconds
+		CreatedAt int64 `json:"createdAt"`
 
-	// Name of user who created this role
-	CreatedBy string `json:"createdBy"`
+		// Name of user who created this role
+		CreatedBy string `json:"createdBy"`
 
-	// Last modified at timestamp in epoch milliseconds
-	LastmodifiedAt int64 `json:"lastmodifiedAt"`
+		// Last modified at timestamp in epoch milliseconds
+		LastmodifiedAt int64 `json:"lastmodifiedAt"`
 
-	// Name of user who last updated this role
-	LastmodifiedBy string `json:"lastmodifiedBy"`
-}
+		// Name of user who last updated this role
+		LastmodifiedBy string `json:"lastmodifiedBy"`
+	}
 
-// Roles holds one or more roles
-type Roles []Role
+	// Roles holds one or more roles
+	Roles []Role
+)
 
 // Allow holds the criteria a role will allow request
 type Allow struct {

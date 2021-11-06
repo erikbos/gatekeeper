@@ -58,7 +58,7 @@ def test_application_crud_one():
                    "value" : "Royal"
               }
          ]
-    updated_application['callbackUrl'] = 'https://www.example.com'
+    updated_application['callbackUrl'] = ''
     application_api.update_positive(updated_application)
 
     # Read updated application by name

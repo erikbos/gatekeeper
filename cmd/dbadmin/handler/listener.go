@@ -125,7 +125,7 @@ func (h *Handler) updateListenerAttributes(c *gin.Context) handlerResponse {
 // updateListenerAttribute update an attribute of developer
 func (h *Handler) updateListenerAttribute(c *gin.Context) handlerResponse {
 
-	var receivedValue types.AttributeValue
+	var receivedValue AttributeValue
 	if err := c.ShouldBindJSON(&receivedValue); err != nil {
 		return handleBadRequest(err)
 	}

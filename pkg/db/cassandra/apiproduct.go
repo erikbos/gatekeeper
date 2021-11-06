@@ -97,16 +97,15 @@ func (s *APIProductStore) runGetAPIProductQuery(query string, queryParameters ..
 	for iter.MapScan(m) {
 		apiproducts = append(apiproducts, types.APIProduct{
 			Name:           columnValueString(m, "name"),
-			DisplayName:    columnValueString(m, "display_name"),
-			Description:    m["description"].(string),
-			Attributes:     types.APIProduct{}.Attributes.Unmarshal(columnValueString(m, "attributes")),
-			RouteGroup:     m["route_group"].(string),
-			Paths:          types.APIProduct{}.Paths.Unmarshal(columnValueString(m, "paths")),
-			Policies:       m["policies"].(string),
 			CreatedAt:      columnValueInt64(m, "created_at"),
 			CreatedBy:      columnValueString(m, "created_by"),
+			Description:    columnValueString(m, "description"),
+			DisplayName:    columnValueString(m, "display_name"),
 			LastmodifiedAt: columnValueInt64(m, "lastmodified_at"),
 			LastmodifiedBy: columnValueString(m, "lastmodified_by"),
+			Paths:          types.APIProduct{}.Paths.Unmarshal(columnValueString(m, "paths")),
+			Policies:       columnValueString(m, "policies"),
+			RouteGroup:     columnValueString(m, "route_group"),
 		})
 		m = map[string]interface{}{}
 	}
@@ -126,7 +125,7 @@ func (s *APIProductStore) Update(p *types.APIProduct) types.Error {
 		p.Name,
 		p.DisplayName,
 		p.Description,
-		p.Attributes.Marshal(),
+		AttributesMarshal(p.Attributes),
 		p.RouteGroup,
 		p.Paths.Marshal(),
 		p.Policies,
