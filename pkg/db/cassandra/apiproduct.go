@@ -103,7 +103,7 @@ func (s *APIProductStore) runGetAPIProductQuery(query string, queryParameters ..
 			DisplayName:    columnValueString(m, "display_name"),
 			LastmodifiedAt: columnValueInt64(m, "lastmodified_at"),
 			LastmodifiedBy: columnValueString(m, "lastmodified_by"),
-			Paths:          types.APIProduct{}.Paths.Unmarshal(columnValueString(m, "paths")),
+			Paths:          stringSliceUnmarshal(columnValueString(m, "paths")),
 			Policies:       columnValueString(m, "policies"),
 			RouteGroup:     columnValueString(m, "route_group"),
 		})
@@ -127,7 +127,7 @@ func (s *APIProductStore) Update(p *types.APIProduct) types.Error {
 		p.Description,
 		AttributesMarshal(p.Attributes),
 		p.RouteGroup,
-		p.Paths.Marshal(),
+		stringSliceMarshal(p.Paths),
 		p.Policies,
 		p.CreatedAt,
 		p.CreatedBy,

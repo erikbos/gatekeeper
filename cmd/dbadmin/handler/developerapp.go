@@ -304,43 +304,44 @@ func ToApplicationResponse(d *types.DeveloperApp) Application {
 
 func fromApplication(a Application) types.DeveloperApp {
 
-	dev := types.DeveloperApp{
-		Attributes: fromAttributesRequest(a.Attributes),
-	}
+	app := types.DeveloperApp{}
 	if a.AppId != nil {
-		dev.AppID = *a.AppId
+		app.AppID = *a.AppId
+	}
+	if a.Attributes != nil {
+		app.Attributes = fromAttributesRequest(a.Attributes)
 	}
 	if a.CallbackUrl != nil {
-		dev.CallbackUrl = *a.CallbackUrl
+		app.CallbackUrl = *a.CallbackUrl
 	}
 	if a.CreatedAt != nil {
-		dev.CreatedAt = *a.CreatedAt
+		app.CreatedAt = *a.CreatedAt
 	}
 	if a.CreatedBy != nil {
-		dev.CreatedBy = *a.CreatedBy
+		app.CreatedBy = *a.CreatedBy
 	}
 	if a.DeveloperId != nil {
-		dev.DeveloperID = *a.DeveloperId
+		app.DeveloperID = *a.DeveloperId
 	}
 	if a.DisplayName != nil {
-		dev.DisplayName = *a.DisplayName
+		app.DisplayName = *a.DisplayName
 	}
 	if a.LastModifiedBy != nil {
-		dev.LastModifiedBy = *a.LastModifiedBy
+		app.LastModifiedBy = *a.LastModifiedBy
 	}
 	if a.LastModifiedAt != nil {
-		dev.LastModifiedAt = *a.LastModifiedAt
+		app.LastModifiedAt = *a.LastModifiedAt
 	}
 	if a.Name != nil {
-		dev.Name = *a.Name
+		app.Name = *a.Name
 	}
 	if a.Scopes != nil {
-		dev.Scopes = *a.Scopes
+		app.Scopes = *a.Scopes
 	} else {
-		dev.Scopes = []string{}
+		app.Scopes = []string{}
 	}
 	if a.Status != nil {
-		dev.Status = *a.Status
+		app.Status = *a.Status
 	}
-	return dev
+	return app
 }

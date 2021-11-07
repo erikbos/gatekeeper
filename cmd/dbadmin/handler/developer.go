@@ -244,7 +244,7 @@ func (h *Handler2) responseDeveloperUpdated(c *gin.Context, developer *types.Dev
 func (h *Handler2) ToDeveloperResponse(d *types.Developer) Developer {
 
 	return Developer{
-		Apps:           toAppNamesResponse(d.Apps),
+		Apps:           &d.Apps,
 		Attributes:     toAttributesResponse(d.Attributes),
 		CreatedAt:      &d.CreatedAt,
 		CreatedBy:      &d.CreatedBy,
@@ -259,22 +259,14 @@ func (h *Handler2) ToDeveloperResponse(d *types.Developer) Developer {
 	}
 }
 
-func toAppNamesResponse(apps types.StringSlice) *[]string {
-
-	all_apps := make([]string, len(apps))
-	for i, a := range apps {
-		all_apps[i] = a
-	}
-	return &all_apps
-}
-
 func fromDeveloper(d Developer) types.Developer {
 
-	dev := types.Developer{
-		Attributes: fromAttributesRequest(d.Attributes),
-	}
+	dev := types.Developer{}
 	if d.Apps != nil {
 		dev.Apps = *d.Apps
+	}
+	if d.Attributes != nil {
+		dev.Attributes = fromAttributesRequest(d.Attributes)
 	}
 	if d.CreatedAt != nil {
 		dev.CreatedAt = *d.CreatedAt

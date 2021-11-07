@@ -34,10 +34,6 @@ func NewHandler(g *gin.Engine, db *db.Database, s *service.Service, applicationN
 	organizationName string, disableAPIAuthentication bool, logger *zap.Logger) *Handler {
 
 	registerMetricsRoute(g, applicationName)
-	// // Instal prometheus metrics
-	// m := metrics.New()
-	// m.RegisterWithPrometheus(applicationName)
-	// g.Use(metricsMiddleware(m))
 
 	handler := &Handler{
 		service: s,

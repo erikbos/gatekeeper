@@ -20,7 +20,7 @@ type (
 		Status string `json:"status"`
 
 		// Role of this user
-		Roles StringSlice `json:"roles"`
+		Roles []string `json:"roles"`
 
 		// Created at timestamp in epoch milliseconds
 		CreatedAt int64 `json:"createdAt"`

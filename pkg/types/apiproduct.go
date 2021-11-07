@@ -18,7 +18,7 @@ type (
 		RouteGroup string `json:"RouteGroup"`
 
 		// List of paths this apiproduct applies to
-		Paths StringSlice `json:"paths" binding:"required,min=1"`
+		Paths []string `json:"paths" binding:"required,min=1"`
 
 		// Attributes of this apiproduct
 		Attributes Attributes `json:"attributes"`

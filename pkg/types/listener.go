@@ -17,7 +17,7 @@ type (
 		DisplayName string `json:"displayName"`
 
 		// Virtual hosts of this listener (at least one, each value must be a fqdn)
-		VirtualHosts StringSlice `json:"virtualHosts" binding:"required,min=1,dive,fqdn"`
+		VirtualHosts []string `json:"virtualHosts" binding:"required,min=1,dive,fqdn"`
 
 		// tcp port to listen on
 		Port int `json:"port" binding:"required,min=1,max=65535"`
