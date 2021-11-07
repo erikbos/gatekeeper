@@ -35,7 +35,7 @@ type AuthHandler struct {
 	logger *zap.Logger
 }
 
-// newAuth setups new AuthHandler entity
+// newAuth setups new AuthHandler entity which can authenticate HTTP requests
 func newAuth(user service.User, role service.Role, logger *zap.Logger) *AuthHandler {
 
 	return &AuthHandler{

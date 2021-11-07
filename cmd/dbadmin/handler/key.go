@@ -6,19 +6,14 @@ import (
 	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
-func (h *Handler) registerKeyRoutes(r *gin.RouterGroup) {
-	r.GET("/developers/:developer/apps/:application/keys", h.handler(h.getDeveloperAppKeys))
-	r.POST("/developers/:developer/apps/:application/keys", h.handler(h.createDeveloperAppKey))
+// func (h *Handler) registerKeyRoutes(r *gin.RouterGroup) {
+// 	r.GET("/developers/:developer/apps/:application/keys", h.handler(h.getDeveloperAppKeys))
+// 	r.POST("/developers/:developer/apps/:application/keys", h.handler(h.createDeveloperAppKey))
 
-	r.GET("/developers/:developer/apps/:application/keys/:key", h.handler(h.getDeveloperAppKeyByKey))
-	r.POST("/developers/:developer/apps/:application/keys/:key", h.handler(h.updateDeveloperAppKeyByKey))
-	r.DELETE("/developers/:developer/apps/:application/keys/:key", h.handler(h.deleteDeveloperAppKeyByKey))
-}
-
-const (
-	// Name of key parameter in the route definition
-	keyParameter = "key"
-)
+// 	r.GET("/developers/:developer/apps/:application/keys/:key", h.handler(h.getDeveloperAppKeyByKey))
+// 	r.POST("/developers/:developer/apps/:application/keys/:key", h.handler(h.updateDeveloperAppKeyByKey))
+// 	r.DELETE("/developers/:developer/apps/:application/keys/:key", h.handler(h.deleteDeveloperAppKeyByKey))
+// }
 
 // getDeveloperAppKeys returns all keys of one particular developer application
 func (h *Handler) getDeveloperAppKeys(c *gin.Context) handlerResponse {
@@ -49,7 +44,7 @@ func (h *Handler) getDeveloperAppKeyByKey(c *gin.Context) handlerResponse {
 	if err != nil {
 		return handleError(err)
 	}
-	key, err := h.service.Key.Get(c.Param(keyParameter))
+	key, err := h.service.Key.Get(c.Param("key"))
 	if err != nil {
 		return handleError(err)
 	}
@@ -82,7 +77,7 @@ func (h *Handler) updateDeveloperAppKeyByKey(c *gin.Context) handlerResponse {
 		return handleBadRequest(err)
 	}
 	// apikey in path must match consumer key in posted body
-	if receivedKey.ConsumerKey != c.Param(keyParameter) {
+	if receivedKey.ConsumerKey != c.Param("key") {
 		return handleNameMismatch()
 	}
 	storedKey, err := h.service.Key.Update(receivedKey, h.who(c))
@@ -95,7 +90,7 @@ func (h *Handler) updateDeveloperAppKeyByKey(c *gin.Context) handlerResponse {
 // deleteDeveloperAppKeyByKey deletes apikey of developer app
 func (h *Handler) deleteDeveloperAppKeyByKey(c *gin.Context) handlerResponse {
 
-	deletedKey, err := h.service.Key.Delete(c.Param(keyParameter), h.who(c))
+	deletedKey, err := h.service.Key.Delete(c.Param("key"), h.who(c))
 	if err != nil {
 		return handleError(err)
 	}

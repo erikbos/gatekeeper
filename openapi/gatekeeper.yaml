@@ -36,14 +36,14 @@ tags:
     description: Operations on roles.
 
 x-tagGroups:
-  - name: HTTP forwarding
+  - name: Gatekeeper
     tags:
       - Intro
       - Developer
       - Application
       - Key
       - APIProduct
-      - HTTP
+      - HTTP forwarding
       - Listener
       - Route
       - Cluster
@@ -2138,20 +2138,10 @@ components:
         displayName:
           type: string
           description: Display name of role.
-        allows:
+        allow:
           type: array
           items:
-            type: object
-            properties:
-              methods:
-                type: array
-                format: string
-                description: If specified request must match one of these methods.
-              paths:
-                type: array
-                format: string
-                description: If specified request must match one of these paths.
-          description: Methods and paths allowed by this role.
+            $ref: "#/components/schemas/RoleAllow"
         createdAt:
           type: integer
           format: int64
@@ -2172,6 +2162,20 @@ components:
           description: Role who last updated this role.
       required:
         - name
+    RoleAllow:
+      type: object
+      properties:
+        methods:
+          type: array
+          items:
+            type: string
+          description: If specified request must match one of these methods.
+        paths:
+          type: array
+          items:
+            type: string
+          description: If specified request must match one of these paths.
+      description: Methods and paths allowed by this role.
     Roles:
       type: object
       properties:
@@ -2179,7 +2183,6 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Role"
-      description: Details of all roles.
 
     Attribute:
       type: object

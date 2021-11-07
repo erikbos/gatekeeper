@@ -234,14 +234,7 @@ type Listeners struct {
 
 // Role defines model for Role.
 type Role struct {
-	// Methods and paths allowed by this role.
-	Allows *[]struct {
-		// If specified request must match one of these methods.
-		Methods *[]interface{} `json:"methods,omitempty"`
-
-		// If specified request must match one of these paths.
-		Paths *[]interface{} `json:"paths,omitempty"`
-	} `json:"allows,omitempty"`
+	Allow *[]RoleAllow `json:"allow,omitempty"`
 
 	// Create timestamp in milliseconds since epoch.
 	CreatedAt *int64 `json:"createdAt,omitempty"`
@@ -262,7 +255,16 @@ type Role struct {
 	Name string `json:"name"`
 }
 
-// Details of all roles.
+// Methods and paths allowed by this role.
+type RoleAllow struct {
+	// If specified request must match one of these methods.
+	Methods *[]string `json:"methods,omitempty"`
+
+	// If specified request must match one of these paths.
+	Paths *[]string `json:"paths,omitempty"`
+}
+
+// Roles defines model for Roles.
 type Roles struct {
 	Role *[]Role `json:"role,omitempty"`
 }

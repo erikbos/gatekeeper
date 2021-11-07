@@ -123,15 +123,30 @@ func (h *Handler) ToRoleResponse(l *types.Role) Role {
 		LastModifiedAt: &l.LastModifiedAt,
 		Name:           l.Name,
 	}
-	// if l.Allows != nil {
-	// 	role.Allows = l.Allows
-	// }
+	if l.Allows != nil {
+		role.Allow = ToRoleAllowsResponse(l.Allows)
+	}
 	return role
+}
+
+func ToRoleAllowsResponse(allows types.Allows) *[]RoleAllow {
+
+	allowed_paths := make([]RoleAllow, len(allows))
+	for i, v := range allows {
+		allowed_paths[i] = RoleAllow{
+			Methods: &v.Methods,
+			Paths:   &v.Paths,
+		}
+	}
+	return &allowed_paths
 }
 
 func fromRole(u Role) types.Role {
 
 	role := types.Role{}
+	if u.Allow != nil {
+		role.Allows = fromRoleAllow(u.Allow)
+	}
 	if u.CreatedAt != nil {
 		role.CreatedAt = *u.CreatedAt
 	}
@@ -147,8 +162,20 @@ func fromRole(u Role) types.Role {
 	if u.LastModifiedAt != nil {
 		role.LastModifiedAt = *u.LastModifiedAt
 	}
-	if u.Name != "" {
-		role.Name = u.Name
-	}
 	return role
+}
+
+func fromRoleAllow(a *[]RoleAllow) types.Allows {
+
+	if a == nil {
+		return types.NullAllows
+	}
+	all_attributes := make([]types.Allow, len(*a))
+	for i, a := range *a {
+		all_attributes[i] = types.Allow{
+			Methods: *a.Methods,
+			Paths:   *a.Paths,
+		}
+	}
+	return all_attributes
 }

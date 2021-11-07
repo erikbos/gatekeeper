@@ -25,31 +25,26 @@ type Handler struct {
 func NewHandler(g *gin.Engine, db *db.Database, s *service.Service, applicationName,
 	organizationName string, disableAPIAuthentication bool, logger *zap.Logger) *Handler {
 
-	registerMetricsRoute(g, applicationName)
-
 	handler := &Handler{
 		service: s,
 		logger:  logger,
 	}
 
-	apiRoutes := g.Group("/v1")
-	// TODO add middle ware which checks organization
-
-	// Insert authentication middleware for every /v1 prefix'ed API endpoint
-	if !disableAPIAuthentication {
-		auth := newAuth(s.User, s.Role, logger)
-		apiRoutes.Use(auth.AuthenticateAndAuthorize)
-
-	}
+	registerMetricsRoute(g, applicationName)
 
 	g.GET(showHTTPForwardingPath, handler.showHTTPForwardingPage)
 	g.GET(showDevelopersPath, handler.showDevelopersPage)
 	g.GET(showUserRolesPath, handler.showUserRolePage)
 
+	// Insert authentication middleware for endpoint we are registering next
+	auth := newAuth(s.User, s.Role, logger)
+	g.Use(auth.AuthenticateAndAuthorize)
+
 	// Register all API endpoint routes
-	// TODO call right fucntion that adds middle ware
 	RegisterHandlers(g, handler)
-	handler.registerKeyRoutes(apiRoutes)
+
+	// apiRoutes := g.Group("/v1")
+	// handler.registerKeyRoutes(apiRoutes)
 
 	return handler
 }
@@ -116,10 +111,6 @@ func handleError(e types.Error) handlerResponse {
 func handleBadRequest(e error) handlerResponse {
 	return handlerResponse{error: types.NewBadRequestError(e)}
 }
-
-// func handleUnauthorized(e error) handlerResponse {
-// 	return handlerResponse{error: types.NewUnauthorizedError(e)}
-// }
 
 // handleNameMismatch when an entity update request has a name mismatch between name of entity in url path
 // vs name of entity in POSTed JSON name field
