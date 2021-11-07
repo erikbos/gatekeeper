@@ -15,18 +15,11 @@ import (
 // Generate REST API handlers from OpenAPI specification
 //go:generate oapi-codegen -package handler -generate types,gin -o dbadmin.gen.go ../../../openapi/gatekeeper.yaml
 
-// Handler contains our runtime parameters
+// Handler has implements all methods of oapi-codegen's ServiceInterface
+// and contains our runtime parameters
 type Handler struct {
 	service *service.Service
-	// metrics *metrics.Metrics
-	logger *zap.Logger
-}
-
-// Handler2 implements generated from API schema ServerInterface
-type Handler2 struct {
-	service *service.Service
-	// metrics *metrics.Metrics
-	// logger  *zap.Logger
+	logger  *zap.Logger
 }
 
 // NewHandler sets up all API endpoint routes
@@ -37,14 +30,7 @@ func NewHandler(g *gin.Engine, db *db.Database, s *service.Service, applicationN
 
 	handler := &Handler{
 		service: s,
-		// metrics: m,
-		logger: logger,
-	}
-
-	handler2 := &Handler2{
-		service: s,
-		// metrics: m,
-		// logger:  logger,
+		logger:  logger,
 	}
 
 	apiRoutes := g.Group("/v1")
@@ -61,7 +47,7 @@ func NewHandler(g *gin.Engine, db *db.Database, s *service.Service, applicationN
 	g.GET(showDevelopersPath, handler.showDevelopersPage)
 	g.GET(showUserRolesPath, handler.showUserRolePage)
 
-	RegisterHandlers(g, handler2)
+	RegisterHandlers(g, handler)
 
 	// Register all API endpoint routes
 	handler.registerUserRoutes(apiRoutes)
@@ -127,16 +113,6 @@ func handleOK(body interface{}) handlerResponse {
 	return handlerResponse{error: nil, responseBody: body}
 }
 
-// handleOKAttribute returns 200 + json contents of single attribute
-func handleOKAttribute(a types.Attribute) handlerResponse {
-	return handleOK(types.Attribute{Name: a.Name, Value: a.Value})
-}
-
-// handleOKAttributes returns 200 + json contents of multiple attributes
-func handleOKAttributes(a types.Attributes) handlerResponse {
-	return handleOK(StringMap{"attribute": a})
-}
-
 // handleCreated returns 201 + json contents
 func handleCreated(body interface{}) handlerResponse {
 	return handlerResponse{error: nil, created: true, responseBody: body}
@@ -174,7 +150,7 @@ func showErrorMessageAndAbort(c *gin.Context, statusCode int, e types.Error) {
 }
 
 // responseError returns formated error back to API client
-func (h *Handler2) responseError(c *gin.Context, e types.Error) {
+func (h *Handler) responseError(c *gin.Context, e types.Error) {
 
 	code := types.HTTPErrorStatusCode(e)
 	msg := e.ErrorDetails()
@@ -186,22 +162,17 @@ func (h *Handler2) responseError(c *gin.Context, e types.Error) {
 		Code:    &code,
 		Message: &msg,
 	})
+	c.Abort()
 }
 
 // responseError returns formated error back to API client
-func (h *Handler2) responseErrorBadRequest(c *gin.Context, e error) {
+func (h *Handler) responseErrorBadRequest(c *gin.Context, e error) {
 
 	h.responseError(c, types.NewBadRequestError(e))
 }
 
 // responseError returns formated error back to API client
-func (h *Handler2) responseErrorNameValueMisMatch(c *gin.Context) {
+func (h *Handler) responseErrorNameValueMisMatch(c *gin.Context) {
 
 	h.responseErrorBadRequest(c, errors.New("name field value mismatch"))
-}
-
-// AttributeValue is the single attribute type we receive from API
-type AttributeValue struct {
-	// Attribute value, minimum required length is 1
-	Value string `binding:"required,min=1"`
 }

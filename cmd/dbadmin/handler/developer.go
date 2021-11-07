@@ -11,7 +11,7 @@ import (
 
 // return all developers
 // (GET /v1/organizations/{organization_name}/developers)
-func (h *Handler2) GetV1OrganizationsOrganizationNameDevelopers(c *gin.Context, organizationName OrganizationName, params GetV1OrganizationsOrganizationNameDevelopersParams) {
+func (h *Handler) GetV1OrganizationsOrganizationNameDevelopers(c *gin.Context, organizationName OrganizationName, params GetV1OrganizationsOrganizationNameDevelopersParams) {
 
 	developers, err := h.service.Developer.GetAll()
 	if err != nil {
@@ -28,7 +28,7 @@ func (h *Handler2) GetV1OrganizationsOrganizationNameDevelopers(c *gin.Context, 
 
 // creates a new developer
 // (POST /v1/organizations/{organization_name}/developers)
-func (h *Handler2) PostV1OrganizationsOrganizationNameDevelopers(c *gin.Context, organizationName OrganizationName) {
+func (h *Handler) PostV1OrganizationsOrganizationNameDevelopers(c *gin.Context, organizationName OrganizationName) {
 
 	var receivedDeveloper Developer
 	if err := c.ShouldBindJSON(&receivedDeveloper); err != nil {
@@ -46,7 +46,7 @@ func (h *Handler2) PostV1OrganizationsOrganizationNameDevelopers(c *gin.Context,
 
 // deletes a developer
 // (DELETE /v1/organizations/{organization_name}/developers/{developer_emailaddress})
-func (h *Handler2) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddress(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress) {
+func (h *Handler) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddress(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress) {
 
 	developer, err := h.service.Developer.Delete(string(developerEmailaddress), h.who(c))
 	if err != nil {
@@ -58,7 +58,7 @@ func (h *Handler2) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmail
 
 // returns full details of one developer
 // (GET /v1/organizations/{organization_name}/developers/{developer_emailaddress})
-func (h *Handler2) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddress(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress) {
+func (h *Handler) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddress(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress) {
 
 	developer, err := h.service.Developer.Get(string(developerEmailaddress))
 	if err != nil {
@@ -70,7 +70,7 @@ func (h *Handler2) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 
 // updates existing developer
 // (POST /v1/organizations/{organization_name}/developers/{developer_emailaddress})
-func (h *Handler2) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddress(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, params PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressParams) {
+func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddress(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, params PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressParams) {
 
 	if params.Action != nil && c.ContentType() == "application/octet-stream" {
 		h.changeDeveloperStatus(c, string(developerEmailaddress), string(*params.Action))
@@ -91,7 +91,7 @@ func (h *Handler2) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailad
 }
 
 // change status of developer
-func (h *Handler2) changeDeveloperStatus(c *gin.Context, developerEmailaddress, requestedStatus string) {
+func (h *Handler) changeDeveloperStatus(c *gin.Context, developerEmailaddress, requestedStatus string) {
 
 	developer, err := h.service.Developer.Get(string(developerEmailaddress))
 	if err != nil {
@@ -117,7 +117,7 @@ func (h *Handler2) changeDeveloperStatus(c *gin.Context, developerEmailaddress, 
 
 // returns attributes of a developer
 // (GET /v1/organizations/{organization_name}/developers/{developer_emailaddress}/attributes)
-func (h *Handler2) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributes(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress) {
+func (h *Handler) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributes(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress) {
 
 	developer, err := h.service.Developer.Get(string(developerEmailaddress))
 	if err != nil {
@@ -129,7 +129,7 @@ func (h *Handler2) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 
 // replaces attributes of a developer
 // (POST /v1/organizations/{organization_name}/developers/{developer_emailaddress}/attributes)
-func (h *Handler2) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributes(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress) {
+func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributes(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress) {
 
 	var receivedAttributes Attributes
 	if err := c.ShouldBindJSON(&receivedAttributes); err != nil {
@@ -147,7 +147,7 @@ func (h *Handler2) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailad
 
 // deletes one attriubte of a developer
 // (DELETE /v1/organizations/{organization_name}/developers/{developer_emailaddress}/attributes/{attribute_name})
-func (h *Handler2) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributesAttributeName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, attributeName AttributeName) {
+func (h *Handler) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributesAttributeName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, attributeName AttributeName) {
 
 	oldValue, err := h.service.Developer.DeleteAttribute(
 		string(developerEmailaddress), string(attributeName), h.who(c))
@@ -163,7 +163,7 @@ func (h *Handler2) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmail
 
 // returns one attribute of a developer
 // (GET /v1/organizations/{organization_name}/developers/{developer_emailaddress}/attributes/{attribute_name})
-func (h *Handler2) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributesAttributeName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, attributeName AttributeName) {
+func (h *Handler) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributesAttributeName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, attributeName AttributeName) {
 
 	developer, err := h.service.Developer.Get(string(developerEmailaddress))
 	if err != nil {
@@ -183,7 +183,7 @@ func (h *Handler2) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 
 // updates an attribute of a developer
 // (POST /v1/organizations/{organization_name}/developers/{developer_emailaddress}/attributes/{attribute_name})
-func (h *Handler2) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributesAttributeName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, attributeName AttributeName) {
+func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributesAttributeName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, attributeName AttributeName) {
 
 	var receivedValue Attribute
 	if err := c.ShouldBindJSON(&receivedValue); err != nil {
@@ -205,7 +205,7 @@ func (h *Handler2) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailad
 // Responses
 
 // Returns API response list of developer email addresses
-func (h *Handler2) responseDeveloperEmailAddresses(c *gin.Context, developers types.Developers) {
+func (h *Handler) responseDeveloperEmailAddresses(c *gin.Context, developers types.Developers) {
 
 	DevelopersEmailAddresses := make([]string, len(developers))
 	for i := range developers {
@@ -215,7 +215,7 @@ func (h *Handler2) responseDeveloperEmailAddresses(c *gin.Context, developers ty
 }
 
 // Returns API response all developer details
-func (h *Handler2) responseDevelopers(c *gin.Context, developers types.Developers) {
+func (h *Handler) responseDevelopers(c *gin.Context, developers types.Developers) {
 
 	all_developers := make([]Developer, len(developers))
 	for i := range developers {
@@ -226,21 +226,21 @@ func (h *Handler2) responseDevelopers(c *gin.Context, developers types.Developer
 	})
 }
 
-func (h *Handler2) responseDeveloper(c *gin.Context, developer *types.Developer) {
+func (h *Handler) responseDeveloper(c *gin.Context, developer *types.Developer) {
 	c.IndentedJSON(http.StatusOK, h.ToDeveloperResponse(developer))
 }
 
-func (h *Handler2) responseDeveloperCreated(c *gin.Context, developer *types.Developer) {
+func (h *Handler) responseDeveloperCreated(c *gin.Context, developer *types.Developer) {
 	c.IndentedJSON(http.StatusCreated, h.ToDeveloperResponse(developer))
 }
 
-func (h *Handler2) responseDeveloperUpdated(c *gin.Context, developer *types.Developer) {
+func (h *Handler) responseDeveloperUpdated(c *gin.Context, developer *types.Developer) {
 	c.IndentedJSON(http.StatusOK, h.ToDeveloperResponse(developer))
 }
 
 // type conversion
 
-func (h *Handler2) ToDeveloperResponse(d *types.Developer) Developer {
+func (h *Handler) ToDeveloperResponse(d *types.Developer) Developer {
 
 	dev := Developer{
 		Attributes:     toAttributesResponse(d.Attributes),

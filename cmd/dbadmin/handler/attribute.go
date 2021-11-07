@@ -8,14 +8,14 @@ import (
 	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
-func (h *Handler2) responseAttributes(c *gin.Context, attributes types.Attributes) {
+func (h *Handler) responseAttributes(c *gin.Context, attributes types.Attributes) {
 
 	c.IndentedJSON(http.StatusOK, Attributes{
 		Attribute: toAttributesResponse(attributes),
 	})
 }
 
-func (h *Handler2) responseAttributeRetrieved(c *gin.Context, attribute *types.Attribute) {
+func (h *Handler) responseAttributeRetrieved(c *gin.Context, attribute *types.Attribute) {
 
 	c.IndentedJSON(http.StatusOK, AttributeRetrieved{
 		Name:  &attribute.Name,
@@ -23,7 +23,7 @@ func (h *Handler2) responseAttributeRetrieved(c *gin.Context, attribute *types.A
 	})
 }
 
-func (h *Handler2) responseAttributeUpdated(c *gin.Context, attribute *types.Attribute) {
+func (h *Handler) responseAttributeUpdated(c *gin.Context, attribute *types.Attribute) {
 
 	c.IndentedJSON(http.StatusOK, AttributeUpdated{
 		Name:  &attribute.Name,
@@ -31,7 +31,7 @@ func (h *Handler2) responseAttributeUpdated(c *gin.Context, attribute *types.Att
 	})
 }
 
-func (h *Handler2) responseAttributeDeleted(c *gin.Context, attribute *types.Attribute) {
+func (h *Handler) responseAttributeDeleted(c *gin.Context, attribute *types.Attribute) {
 
 	c.IndentedJSON(http.StatusOK, AttributeDeleted{
 		Name:  &attribute.Name,

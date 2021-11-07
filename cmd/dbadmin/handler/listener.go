@@ -10,7 +10,7 @@ import (
 
 // returns all listeners
 // (GET /v1/listeners)
-func (h *Handler2) GetV1Listeners(c *gin.Context) {
+func (h *Handler) GetV1Listeners(c *gin.Context) {
 
 	listeners, err := h.service.Listener.GetAll()
 	if err != nil {
@@ -22,7 +22,7 @@ func (h *Handler2) GetV1Listeners(c *gin.Context) {
 
 // creates a new listener
 // (POST /v1/listeners)
-func (h *Handler2) PostV1Listeners(c *gin.Context) {
+func (h *Handler) PostV1Listeners(c *gin.Context) {
 
 	var receivedListener Listener
 	if err := c.ShouldBindJSON(&receivedListener); err != nil {
@@ -40,7 +40,7 @@ func (h *Handler2) PostV1Listeners(c *gin.Context) {
 
 // deletes an listener
 // (DELETE /v1/listeners/{listener_name})
-func (h *Handler2) DeleteV1ListenersListenerName(c *gin.Context, listenerName ListenerName) {
+func (h *Handler) DeleteV1ListenersListenerName(c *gin.Context, listenerName ListenerName) {
 
 	listener, err := h.service.Listener.Delete(string(listenerName), h.who(c))
 	if err != nil {
@@ -52,7 +52,7 @@ func (h *Handler2) DeleteV1ListenersListenerName(c *gin.Context, listenerName Li
 
 // returns full details of one listener
 // (GET /v1/listeners/{listener_name})
-func (h *Handler2) GetV1ListenersListenerName(c *gin.Context, listenerName ListenerName) {
+func (h *Handler) GetV1ListenersListenerName(c *gin.Context, listenerName ListenerName) {
 
 	listener, err := h.service.Listener.Get(string(listenerName))
 	if err != nil {
@@ -63,7 +63,7 @@ func (h *Handler2) GetV1ListenersListenerName(c *gin.Context, listenerName Liste
 }
 
 // (POST /v1/listeners/{listener_name})
-func (h *Handler2) PostV1ListenersListenerName(c *gin.Context, listenerName ListenerName) {
+func (h *Handler) PostV1ListenersListenerName(c *gin.Context, listenerName ListenerName) {
 
 	var receivedListener Listener
 	if err := c.ShouldBindJSON(&receivedListener); err != nil {
@@ -81,7 +81,7 @@ func (h *Handler2) PostV1ListenersListenerName(c *gin.Context, listenerName List
 
 // returns attributes of a listener
 // (GET /v1/listeners/{listener_name}/attributes)
-func (h *Handler2) GetV1ListenersListenerNameAttributes(c *gin.Context, listenerName ListenerName) {
+func (h *Handler) GetV1ListenersListenerNameAttributes(c *gin.Context, listenerName ListenerName) {
 
 	listener, err := h.service.Listener.Get(string(listenerName))
 	if err != nil {
@@ -93,7 +93,7 @@ func (h *Handler2) GetV1ListenersListenerNameAttributes(c *gin.Context, listener
 
 // replaces attributes of an listener
 // (POST /v1/listeners/{listener_name}/attributes)
-func (h *Handler2) PostV1ListenersListenerNameAttributes(c *gin.Context, listenerName ListenerName) {
+func (h *Handler) PostV1ListenersListenerNameAttributes(c *gin.Context, listenerName ListenerName) {
 
 	var receivedAttributes Attributes
 	if err := c.ShouldBindJSON(&receivedAttributes); err != nil {
@@ -111,7 +111,7 @@ func (h *Handler2) PostV1ListenersListenerNameAttributes(c *gin.Context, listene
 
 // deletes one attribute of an listener
 // (DELETE /v1/listeners/{listener_name}/attributes/{attribute_name})
-func (h *Handler2) DeleteV1ListenersListenerNameAttributesAttributeName(c *gin.Context, listenerName ListenerName, attributeName AttributeName) {
+func (h *Handler) DeleteV1ListenersListenerNameAttributesAttributeName(c *gin.Context, listenerName ListenerName, attributeName AttributeName) {
 
 	oldValue, err := h.service.Listener.DeleteAttribute(
 		string(listenerName), string(attributeName), h.who(c))
@@ -127,7 +127,7 @@ func (h *Handler2) DeleteV1ListenersListenerNameAttributesAttributeName(c *gin.C
 
 // returns one attribute of an listener
 // (GET /v1/listeners/{listener_name}/attributes/{attribute_name})
-func (h *Handler2) GetV1ListenersListenerNameAttributesAttributeName(c *gin.Context, listenerName ListenerName, attributeName AttributeName) {
+func (h *Handler) GetV1ListenersListenerNameAttributesAttributeName(c *gin.Context, listenerName ListenerName, attributeName AttributeName) {
 
 	listener, err := h.service.Listener.Get(string(listenerName))
 	if err != nil {
@@ -147,7 +147,7 @@ func (h *Handler2) GetV1ListenersListenerNameAttributesAttributeName(c *gin.Cont
 
 // updates an attribute of an listener
 // (POST /v1/listeners/{listener_name}/attributes/{attribute_name})
-func (h *Handler2) PostV1ListenersListenerNameAttributesAttributeName(c *gin.Context, listenerName ListenerName, attributeName AttributeName) {
+func (h *Handler) PostV1ListenersListenerNameAttributesAttributeName(c *gin.Context, listenerName ListenerName, attributeName AttributeName) {
 
 	var receivedValue Attribute
 	if err := c.ShouldBindJSON(&receivedValue); err != nil {
@@ -169,7 +169,7 @@ func (h *Handler2) PostV1ListenersListenerNameAttributesAttributeName(c *gin.Con
 // Responses
 
 // Returns API response all developer details
-func (h *Handler2) responseListenerss(c *gin.Context, listeners types.Listeners) {
+func (h *Handler) responseListenerss(c *gin.Context, listeners types.Listeners) {
 
 	all_listeners := make([]Listener, len(listeners))
 	for i := range listeners {
@@ -180,24 +180,24 @@ func (h *Handler2) responseListenerss(c *gin.Context, listeners types.Listeners)
 	})
 }
 
-func (h *Handler2) responseListeners(c *gin.Context, listener *types.Listener) {
+func (h *Handler) responseListeners(c *gin.Context, listener *types.Listener) {
 
 	c.IndentedJSON(http.StatusOK, h.ToListenerResponse(listener))
 }
 
-func (h *Handler2) responseListenerCreated(c *gin.Context, listener *types.Listener) {
+func (h *Handler) responseListenerCreated(c *gin.Context, listener *types.Listener) {
 
 	c.IndentedJSON(http.StatusCreated, h.ToListenerResponse(listener))
 }
 
-func (h *Handler2) responseListenersUpdated(c *gin.Context, listener *types.Listener) {
+func (h *Handler) responseListenersUpdated(c *gin.Context, listener *types.Listener) {
 
 	c.IndentedJSON(http.StatusOK, h.ToListenerResponse(listener))
 }
 
 // type conversion
 
-func (h *Handler2) ToListenerResponse(l *types.Listener) Listener {
+func (h *Handler) ToListenerResponse(l *types.Listener) Listener {
 
 	lis := Listener{
 		Attributes:     toAttributesResponse(l.Attributes),

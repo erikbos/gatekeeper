@@ -10,7 +10,7 @@ import (
 
 // returns all routes
 // (GET /v1/routes)
-func (h *Handler2) GetV1Routes(c *gin.Context) {
+func (h *Handler) GetV1Routes(c *gin.Context) {
 
 	routes, err := h.service.Route.GetAll()
 	if err != nil {
@@ -22,7 +22,7 @@ func (h *Handler2) GetV1Routes(c *gin.Context) {
 
 // creates a new route
 // (POST /v1/routes)
-func (h *Handler2) PostV1Routes(c *gin.Context) {
+func (h *Handler) PostV1Routes(c *gin.Context) {
 
 	var receivedRoute Route
 	if err := c.ShouldBindJSON(&receivedRoute); err != nil {
@@ -40,7 +40,7 @@ func (h *Handler2) PostV1Routes(c *gin.Context) {
 
 // deletes an route
 // (DELETE /v1/routes/{route_name})
-func (h *Handler2) DeleteV1RoutesRouteName(c *gin.Context, routeName RouteName) {
+func (h *Handler) DeleteV1RoutesRouteName(c *gin.Context, routeName RouteName) {
 
 	route, err := h.service.Route.Delete(string(routeName), h.who(c))
 	if err != nil {
@@ -52,7 +52,7 @@ func (h *Handler2) DeleteV1RoutesRouteName(c *gin.Context, routeName RouteName) 
 
 // returns full details of one route
 // (GET /v1/routes/{route_name})
-func (h *Handler2) GetV1RoutesRouteName(c *gin.Context, routeName RouteName) {
+func (h *Handler) GetV1RoutesRouteName(c *gin.Context, routeName RouteName) {
 
 	route, err := h.service.Route.Get(string(routeName))
 	if err != nil {
@@ -63,7 +63,7 @@ func (h *Handler2) GetV1RoutesRouteName(c *gin.Context, routeName RouteName) {
 }
 
 // (POST /v1/routes/{route_name})
-func (h *Handler2) PostV1RoutesRouteName(c *gin.Context, routeName RouteName) {
+func (h *Handler) PostV1RoutesRouteName(c *gin.Context, routeName RouteName) {
 
 	var receivedRoute Route
 	if err := c.ShouldBindJSON(&receivedRoute); err != nil {
@@ -81,7 +81,7 @@ func (h *Handler2) PostV1RoutesRouteName(c *gin.Context, routeName RouteName) {
 
 // returns attributes of a route
 // (GET /v1/routes/{route_name}/attributes)
-func (h *Handler2) GetV1RoutesRouteNameAttributes(c *gin.Context, routeName RouteName) {
+func (h *Handler) GetV1RoutesRouteNameAttributes(c *gin.Context, routeName RouteName) {
 
 	route, err := h.service.Route.Get(string(routeName))
 	if err != nil {
@@ -93,7 +93,7 @@ func (h *Handler2) GetV1RoutesRouteNameAttributes(c *gin.Context, routeName Rout
 
 // replaces attributes of an route
 // (POST /v1/routes/{route_name}/attributes)
-func (h *Handler2) PostV1RoutesRouteNameAttributes(c *gin.Context, routeName RouteName) {
+func (h *Handler) PostV1RoutesRouteNameAttributes(c *gin.Context, routeName RouteName) {
 
 	var receivedAttributes Attributes
 	if err := c.ShouldBindJSON(&receivedAttributes); err != nil {
@@ -111,7 +111,7 @@ func (h *Handler2) PostV1RoutesRouteNameAttributes(c *gin.Context, routeName Rou
 
 // deletes one attribute of an route
 // (DELETE /v1/routes/{route_name}/attributes/{attribute_name})
-func (h *Handler2) DeleteV1RoutesRouteNameAttributesAttributeName(c *gin.Context, routeName RouteName, attributeName AttributeName) {
+func (h *Handler) DeleteV1RoutesRouteNameAttributesAttributeName(c *gin.Context, routeName RouteName, attributeName AttributeName) {
 
 	oldValue, err := h.service.Route.DeleteAttribute(
 		string(routeName), string(attributeName), h.who(c))
@@ -127,7 +127,7 @@ func (h *Handler2) DeleteV1RoutesRouteNameAttributesAttributeName(c *gin.Context
 
 // returns one attribute of an route
 // (GET /v1/routes/{route_name}/attributes/{attribute_name})
-func (h *Handler2) GetV1RoutesRouteNameAttributesAttributeName(c *gin.Context, routeName RouteName, attributeName AttributeName) {
+func (h *Handler) GetV1RoutesRouteNameAttributesAttributeName(c *gin.Context, routeName RouteName, attributeName AttributeName) {
 
 	route, err := h.service.Route.Get(string(routeName))
 	if err != nil {
@@ -147,7 +147,7 @@ func (h *Handler2) GetV1RoutesRouteNameAttributesAttributeName(c *gin.Context, r
 
 // updates an attribute of an route
 // (POST /v1/routes/{route_name}/attributes/{attribute_name})
-func (h *Handler2) PostV1RoutesRouteNameAttributesAttributeName(c *gin.Context, routeName RouteName, attributeName AttributeName) {
+func (h *Handler) PostV1RoutesRouteNameAttributesAttributeName(c *gin.Context, routeName RouteName, attributeName AttributeName) {
 
 	var receivedValue Attribute
 	if err := c.ShouldBindJSON(&receivedValue); err != nil {
@@ -169,7 +169,7 @@ func (h *Handler2) PostV1RoutesRouteNameAttributesAttributeName(c *gin.Context, 
 // Responses
 
 // Returns API response all developer details
-func (h *Handler2) responseRoutess(c *gin.Context, routes types.Routes) {
+func (h *Handler) responseRoutess(c *gin.Context, routes types.Routes) {
 
 	all_routes := make([]Route, len(routes))
 	for i := range routes {
@@ -180,24 +180,24 @@ func (h *Handler2) responseRoutess(c *gin.Context, routes types.Routes) {
 	})
 }
 
-func (h *Handler2) responseRoutes(c *gin.Context, route *types.Route) {
+func (h *Handler) responseRoutes(c *gin.Context, route *types.Route) {
 
 	c.IndentedJSON(http.StatusOK, h.ToRouteResponse(route))
 }
 
-func (h *Handler2) responseRouteCreated(c *gin.Context, route *types.Route) {
+func (h *Handler) responseRouteCreated(c *gin.Context, route *types.Route) {
 
 	c.IndentedJSON(http.StatusCreated, h.ToRouteResponse(route))
 }
 
-func (h *Handler2) responseRoutesUpdated(c *gin.Context, route *types.Route) {
+func (h *Handler) responseRoutesUpdated(c *gin.Context, route *types.Route) {
 
 	c.IndentedJSON(http.StatusOK, h.ToRouteResponse(route))
 }
 
 // type conversion
 
-func (h *Handler2) ToRouteResponse(r *types.Route) Route {
+func (h *Handler) ToRouteResponse(r *types.Route) Route {
 
 	route := Route{
 		Attributes:     toAttributesResponse(r.Attributes),

@@ -11,7 +11,7 @@ import (
 
 // returns all developer apps
 // (GET /v1/organizations/{organization_name}/apps)
-func (h *Handler2) GetV1OrganizationsOrganizationNameApps(c *gin.Context, organizationName OrganizationName, params GetV1OrganizationsOrganizationNameAppsParams) {
+func (h *Handler) GetV1OrganizationsOrganizationNameApps(c *gin.Context, organizationName OrganizationName, params GetV1OrganizationsOrganizationNameAppsParams) {
 
 	apps, err := h.service.DeveloperApp.GetAll()
 	if err != nil {
@@ -27,7 +27,7 @@ func (h *Handler2) GetV1OrganizationsOrganizationNameApps(c *gin.Context, organi
 }
 
 // (GET /v1/organizations/{organization_name}/apps/{app_id})
-func (h *Handler2) GetV1OrganizationsOrganizationNameAppsAppId(c *gin.Context, organizationName OrganizationName, appId AppId) {
+func (h *Handler) GetV1OrganizationsOrganizationNameAppsAppId(c *gin.Context, organizationName OrganizationName, appId AppId) {
 
 	app, err := h.service.DeveloperApp.GetByID(string(appId))
 	if err != nil {
@@ -39,7 +39,7 @@ func (h *Handler2) GetV1OrganizationsOrganizationNameAppsAppId(c *gin.Context, o
 
 // returns one named app of a developer
 // (GET /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps)
-func (h *Handler2) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressApps(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, params GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsParams) {
+func (h *Handler) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressApps(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, params GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsParams) {
 
 	apps, err := h.service.DeveloperApp.GetAllByEmail(string(developerEmailaddress))
 	if err != nil {
@@ -51,7 +51,7 @@ func (h *Handler2) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 
 // creates a developer application
 // (POST /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps)
-func (h *Handler2) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressApps(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress) {
+func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressApps(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress) {
 
 	var receivedApplication Application
 	if err := c.ShouldBindJSON(&receivedApplication); err != nil {
@@ -73,7 +73,7 @@ func (h *Handler2) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailad
 }
 
 // (DELETE /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name})
-func (h *Handler2) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName) {
+func (h *Handler) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName) {
 
 	developer, err := h.service.Developer.Get(string(developerEmailaddress))
 	if err != nil {
@@ -90,7 +90,7 @@ func (h *Handler2) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmail
 }
 
 // (GET /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name})
-func (h *Handler2) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName) {
+func (h *Handler) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName) {
 
 	app, err := h.service.DeveloperApp.GetByName(string(appName))
 	if err != nil {
@@ -101,7 +101,7 @@ func (h *Handler2) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 }
 
 // (POST /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name})
-func (h *Handler2) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, params PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameParams) {
+func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, params PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameParams) {
 
 	if params.Action != nil && c.ContentType() == "application/octet-stream" {
 		h.changeDeveloperAppStatus(c, string(developerEmailaddress), string(appName), string(*params.Action))
@@ -122,7 +122,7 @@ func (h *Handler2) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailad
 }
 
 // change status of application
-func (h *Handler2) changeDeveloperAppStatus(c *gin.Context, developerEmailaddress, appName, requestedStatus string) {
+func (h *Handler) changeDeveloperAppStatus(c *gin.Context, developerEmailaddress, appName, requestedStatus string) {
 
 	app, err := h.service.DeveloperApp.GetByName(string(appName))
 	if err != nil {
@@ -148,7 +148,7 @@ func (h *Handler2) changeDeveloperAppStatus(c *gin.Context, developerEmailaddres
 
 // returns attributes of an application
 // (GET /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/attributes)
-func (h *Handler2) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributes(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName) {
+func (h *Handler) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributes(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName) {
 
 	app, err := h.service.DeveloperApp.GetByName(string(appName))
 	if err != nil {
@@ -159,7 +159,7 @@ func (h *Handler2) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 }
 
 // (POST /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/attributes)
-func (h *Handler2) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributes(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName) {
+func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributes(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName) {
 
 	var receivedAttributes Attributes
 	if err := c.ShouldBindJSON(&receivedAttributes); err != nil {
@@ -177,7 +177,7 @@ func (h *Handler2) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailad
 
 // deletes one attriubte of an application
 // (DELETE /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/attributes/{attribute_name})´
-func (h *Handler2) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesAttributeName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, attributeName AttributeName) {
+func (h *Handler) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesAttributeName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, attributeName AttributeName) {
 
 	oldValue, err := h.service.DeveloperApp.DeleteAttribute(
 		string(appName), string(attributeName), h.who(c))
@@ -193,7 +193,7 @@ func (h *Handler2) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmail
 
 // returns one attribute of an application
 // (GET /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/attributes/{attribute_name})
-func (h *Handler2) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesAttributeName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, attributeName AttributeName) {
+func (h *Handler) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesAttributeName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, attributeName AttributeName) {
 
 	app, err := h.service.DeveloperApp.GetByName(string(appName))
 	if err != nil {
@@ -213,7 +213,7 @@ func (h *Handler2) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 
 // updates an attribute of an application
 // (POST /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/attributes/{attribute_name})
-func (h *Handler2) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesAttributeName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, attributeName AttributeName) {
+func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesAttributeName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, attributeName AttributeName) {
 
 	var receivedValue Attribute
 	if err := c.ShouldBindJSON(&receivedValue); err != nil {
@@ -233,7 +233,7 @@ func (h *Handler2) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailad
 }
 
 // Returns API response list ALL developer application ids
-func (h *Handler2) responseDeveloperAppIDs(c *gin.Context, developerapps types.DeveloperApps) {
+func (h *Handler) responseDeveloperAppIDs(c *gin.Context, developerapps types.DeveloperApps) {
 
 	ApplicationNames := make([]string, len(developerapps))
 	for i := range developerapps {
@@ -243,7 +243,7 @@ func (h *Handler2) responseDeveloperAppIDs(c *gin.Context, developerapps types.D
 }
 
 // Returns API response list application names of a developer
-func (h *Handler2) responseDeveloperAppNames(c *gin.Context, developerapps types.DeveloperApps) {
+func (h *Handler) responseDeveloperAppNames(c *gin.Context, developerapps types.DeveloperApps) {
 
 	ApplicationNames := make([]string, len(developerapps))
 	for i := range developerapps {
@@ -253,7 +253,7 @@ func (h *Handler2) responseDeveloperAppNames(c *gin.Context, developerapps types
 }
 
 // Returns API response list ALL applcations
-func (h *Handler2) responseDeveloperAllApps(c *gin.Context, developerapps types.DeveloperApps) {
+func (h *Handler) responseDeveloperAllApps(c *gin.Context, developerapps types.DeveloperApps) {
 
 	all_apps := make([]Application, len(developerapps))
 	for i := range developerapps {
@@ -264,15 +264,15 @@ func (h *Handler2) responseDeveloperAllApps(c *gin.Context, developerapps types.
 	})
 }
 
-func (h *Handler2) responseApplication(c *gin.Context, app *types.DeveloperApp) {
+func (h *Handler) responseApplication(c *gin.Context, app *types.DeveloperApp) {
 	c.IndentedJSON(http.StatusOK, ToApplicationResponse(app))
 }
 
-func (h *Handler2) responseApplicationCreated(c *gin.Context, app *types.DeveloperApp) {
+func (h *Handler) responseApplicationCreated(c *gin.Context, app *types.DeveloperApp) {
 	c.IndentedJSON(http.StatusCreated, ToApplicationResponse(app))
 }
 
-func (h *Handler2) responseApplicationUpdated(c *gin.Context, app *types.DeveloperApp) {
+func (h *Handler) responseApplicationUpdated(c *gin.Context, app *types.DeveloperApp) {
 	c.IndentedJSON(http.StatusOK, ToApplicationResponse(app))
 }
 
