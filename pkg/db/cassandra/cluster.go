@@ -91,7 +91,7 @@ func (s *ClusterStore) runGetClusterQuery(query string, queryParameters ...inter
 	}
 	// In case query failed we return query error
 	if err := iter.Close(); err != nil {
-		return types.Clusters{}, err
+		return types.NullClusters, err
 	}
 	return clusters, nil
 }

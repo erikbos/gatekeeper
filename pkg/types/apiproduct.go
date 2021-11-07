@@ -6,37 +6,43 @@ package types
 type (
 	APIProduct struct {
 		// Name of apiproduct (not changable)
-		Name string `json:"name" binding:"required,min=5"`
-
-		// Friendly display name of route
-		DisplayName string `json:"displayName"`
-
-		// Full description of this api product
-		Description string `json:"description"`
+		Name string `binding:"required,min=3"`
 
 		// Routegroup this apiproduct should match to
-		RouteGroup string `json:"RouteGroup"`
+		RouteGroup string
 
 		// List of paths this apiproduct applies to
-		Paths []string `json:"paths" binding:"required,min=1"`
+		APIResources []string `binding:"required,min=1"`
+
+		// List of scopes that apply to this product
+		Scopes []string
+
+		// Approval type of this apiproduct
+		ApprovalType string
 
 		// Attributes of this apiproduct
-		Attributes Attributes `json:"attributes"`
+		Attributes Attributes
+
+		// Friendly display name of route
+		DisplayName string
+
+		// Full description of this api product
+		Description string
 
 		// Comma separated list of policynames, to apply to requests
-		Policies string `json:"policies"`
+		Policies string
 
 		// Created at timestamp in epoch milliseconds
-		CreatedAt int64 `json:"createdAt"`
+		CreatedAt int64
 
 		// Name of user who created this apiproduct
-		CreatedBy string `json:"createdBy"`
+		CreatedBy string
 
 		// Last modified at timestamp in epoch milliseconds
-		LastmodifiedAt int64 `json:"lastmodifiedAt"`
+		LastModifiedAt int64
 
 		// Name of user who last updated this apiproduct
-		LastmodifiedBy string `json:"lastmodifiedBy"`
+		LastModifiedBy string
 	}
 
 	// APIProducts holds one or more apiproducts

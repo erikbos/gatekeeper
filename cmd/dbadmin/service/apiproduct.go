@@ -67,6 +67,10 @@ func (ds *APIProductService) Create(newAPIProduct types.APIProduct,
 	newAPIProduct.CreatedAt = shared.GetCurrentTimeMilliseconds()
 	newAPIProduct.CreatedBy = who.User
 
+	if newAPIProduct.ApprovalType == "" {
+		newAPIProduct.ApprovalType = "auto"
+	}
+
 	if err := ds.updateAPIProduct(&newAPIProduct, who); err != nil {
 		return types.NullAPIProduct, err
 	}
@@ -103,11 +107,8 @@ func (ds *APIProductService) UpdateAttributes(apiproductName string,
 	if err != nil {
 		return err
 	}
-	updatedAPIProduct := currentAPIProduct
-	if err = updatedAPIProduct.Attributes.SetMultiple(receivedAttributes); err != nil {
-		return err
-	}
-
+	updatedAPIProduct := copyAPIProduct(*currentAPIProduct)
+	updatedAPIProduct.Attributes = receivedAttributes
 	if err = ds.updateAPIProduct(updatedAPIProduct, who); err != nil {
 		return err
 	}
@@ -123,7 +124,7 @@ func (ds *APIProductService) UpdateAttribute(apiproductName string,
 	if err != nil {
 		return err
 	}
-	updatedAPIProduct := currentAPIProduct
+	updatedAPIProduct := copyAPIProduct(*currentAPIProduct)
 	if err := updatedAPIProduct.Attributes.Set(attributeValue); err != nil {
 		return err
 	}
@@ -143,7 +144,7 @@ func (ds *APIProductService) DeleteAttribute(apiproductName,
 	if err != nil {
 		return "", err
 	}
-	updatedAPIProduct := currentAPIProduct
+	updatedAPIProduct := copyAPIProduct(*currentAPIProduct)
 	oldValue, err := updatedAPIProduct.Attributes.Delete(attributeToDelete)
 	if err != nil {
 		return "", err
@@ -160,8 +161,8 @@ func (ds *APIProductService) DeleteAttribute(apiproductName,
 func (ds *APIProductService) updateAPIProduct(updatedAPIProduct *types.APIProduct, who Requester) types.Error {
 
 	updatedAPIProduct.Attributes.Tidy()
-	updatedAPIProduct.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
-	updatedAPIProduct.LastmodifiedBy = who.User
+	updatedAPIProduct.LastModifiedAt = shared.GetCurrentTimeMilliseconds()
+	updatedAPIProduct.LastModifiedBy = who.User
 	return ds.db.APIProduct.Update(updatedAPIProduct)
 }
 
@@ -174,7 +175,28 @@ func (ds *APIProductService) Delete(apiproductName string,
 		return types.NullAPIProduct, err
 	}
 
-	// FIX ME (we probably allow deletion only in case no dev app uses the product)
+	// TODO we probably allow deletion only in case no apikey has the product assigned
+	if err := ds.db.APIProduct.Delete(apiproductName); err != nil {
+		return types.NullAPIProduct, err
+	}
 	ds.changelog.Delete(apiproduct, who)
 	return *apiproduct, nil
+}
+
+func copyAPIProduct(d types.APIProduct) *types.APIProduct {
+
+	return &types.APIProduct{
+		ApprovalType:   d.ApprovalType,
+		APIResources:   d.APIResources,
+		Attributes:     d.Attributes,
+		CreatedAt:      d.CreatedAt,
+		CreatedBy:      d.CreatedBy,
+		Description:    d.Description,
+		DisplayName:    d.DisplayName,
+		LastModifiedBy: d.LastModifiedBy,
+		LastModifiedAt: d.LastModifiedAt,
+		Name:           d.Name,
+		Policies:       d.Policies,
+		RouteGroup:     d.RouteGroup,
+	}
 }

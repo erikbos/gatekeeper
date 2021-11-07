@@ -96,7 +96,7 @@ func (p *Policy) IsPathAllowed(requestPath string,
 				// FIXME increase "unknown product in apikey" counter (not an error state)
 			} else {
 				// Iterate over all paths of apiproduct and try to match with path of request
-				for _, productPath := range apiproductDetails.Paths {
+				for _, productPath := range apiproductDetails.APIResources {
 					p.config.logger.Debug("IsRequestPathAllowed",
 						zap.String("productpath", productPath),
 						zap.String("requestpath", requestPath))

@@ -207,3 +207,5 @@ def test_application_field_lengths():
     """
     # We want to test that we cannot send zero-length, too long fields etc
     # TODO test wrong field lengths
+
+## TODO two developer each "My First App"

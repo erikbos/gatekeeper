@@ -122,7 +122,7 @@ func (s *DeveloperStore) runGetDeveloperQuery(query string, queryParameters ...i
 		m = map[string]interface{}{}
 	}
 	if err := iterable.Close(); err != nil {
-		return types.Developers{}, err
+		return types.NullDevelopers, err
 	}
 	return developers, nil
 }

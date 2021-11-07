@@ -58,13 +58,12 @@ func (h *Handler2) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailad
 		h.responseErrorBadRequest(c, err)
 		return
 	}
-	_, err := h.service.Developer.Get(c.Param("developer"))
+	_, err := h.service.Developer.Get(string(developerEmailaddress))
 	if err != nil {
 		h.responseError(c, err)
 		return
 	}
 	newApp := fromApplication(receivedApplication)
-	// FIXME there should be a service Create method
 	createdApp, err := h.service.DeveloperApp.Create(string(developerEmailaddress), newApp, h.who(c))
 	if err != nil {
 		h.responseError(c, err)
@@ -233,22 +232,22 @@ func (h *Handler2) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailad
 	h.responseAttributeUpdated(c, &newAttribute)
 }
 
-// Returns API response list ALL developer application names
+// Returns API response list ALL developer application ids
 func (h *Handler2) responseDeveloperAppIDs(c *gin.Context, developerapps types.DeveloperApps) {
 
 	ApplicationNames := make([]string, len(developerapps))
-	for i, d := range developerapps {
-		ApplicationNames[i] = d.AppID
+	for i := range developerapps {
+		ApplicationNames[i] = developerapps[i].AppID
 	}
 	c.IndentedJSON(http.StatusOK, ApplicationNames)
 }
 
-// Returns API response list ALL developer application names
+// Returns API response list application names of a developer
 func (h *Handler2) responseDeveloperAppNames(c *gin.Context, developerapps types.DeveloperApps) {
 
 	ApplicationNames := make([]string, len(developerapps))
-	for i, d := range developerapps {
-		ApplicationNames[i] = d.Name
+	for i := range developerapps {
+		ApplicationNames[i] = developerapps[i].Name
 	}
 	c.IndentedJSON(http.StatusOK, ApplicationNames)
 }
@@ -257,8 +256,8 @@ func (h *Handler2) responseDeveloperAppNames(c *gin.Context, developerapps types
 func (h *Handler2) responseDeveloperAllApps(c *gin.Context, developerapps types.DeveloperApps) {
 
 	all_apps := make([]Application, len(developerapps))
-	for i, d := range developerapps {
-		all_apps[i] = Application(ToApplicationResponse(&d))
+	for i := range developerapps {
+		all_apps[i] = ToApplicationResponse(&developerapps[i])
 	}
 	c.IndentedJSON(http.StatusOK, Applications{
 		Application: &all_apps,

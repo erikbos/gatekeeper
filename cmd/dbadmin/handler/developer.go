@@ -185,7 +185,6 @@ func (h *Handler2) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 // (POST /v1/organizations/{organization_name}/developers/{developer_emailaddress}/attributes/{attribute_name})
 func (h *Handler2) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributesAttributeName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, attributeName AttributeName) {
 
-	// var receivedValue types.AttributeValue
 	var receivedValue Attribute
 	if err := c.ShouldBindJSON(&receivedValue); err != nil {
 		h.responseErrorBadRequest(c, err)
@@ -209,8 +208,8 @@ func (h *Handler2) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailad
 func (h *Handler2) responseDeveloperEmailAddresses(c *gin.Context, developers types.Developers) {
 
 	DevelopersEmailAddresses := make([]string, len(developers))
-	for i, d := range developers {
-		DevelopersEmailAddresses[i] = d.Email
+	for i := range developers {
+		DevelopersEmailAddresses[i] = developers[i].Email
 	}
 	c.IndentedJSON(http.StatusOK, DevelopersEmailAddresses)
 }
@@ -219,8 +218,8 @@ func (h *Handler2) responseDeveloperEmailAddresses(c *gin.Context, developers ty
 func (h *Handler2) responseDevelopers(c *gin.Context, developers types.Developers) {
 
 	all_developers := make([]Developer, len(developers))
-	for i, d := range developers {
-		all_developers[i] = Developer(h.ToDeveloperResponse(&d))
+	for i := range developers {
+		all_developers[i] = h.ToDeveloperResponse(&developers[i])
 	}
 	c.IndentedJSON(http.StatusOK, Developers{
 		Developer: &all_developers,
@@ -243,8 +242,7 @@ func (h *Handler2) responseDeveloperUpdated(c *gin.Context, developer *types.Dev
 
 func (h *Handler2) ToDeveloperResponse(d *types.Developer) Developer {
 
-	return Developer{
-		Apps:           &d.Apps,
+	dev := Developer{
 		Attributes:     toAttributesResponse(d.Attributes),
 		CreatedAt:      &d.CreatedAt,
 		CreatedBy:      &d.CreatedBy,
@@ -257,6 +255,12 @@ func (h *Handler2) ToDeveloperResponse(d *types.Developer) Developer {
 		Status:         &d.Status,
 		UserName:       &d.UserName,
 	}
+	if d.Apps != nil {
+		dev.Apps = &d.Apps
+	} else {
+		dev.Apps = &[]string{}
+	}
+	return dev
 }
 
 func fromDeveloper(d Developer) types.Developer {

@@ -84,7 +84,6 @@
         "displayName",
         "approvalType",
         "attributes",
-        "environments",
         "createdAt",
         "lastModifiedAt"
     ]

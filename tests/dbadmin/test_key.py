@@ -309,6 +309,7 @@ def test_key_api_product_change_status():
 
 # test keyexpiresin from developerapp
 
+# test key for product with approvalType manual
 
 # test posting full key details
 # test setting all fields

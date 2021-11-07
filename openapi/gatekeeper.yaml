@@ -14,6 +14,8 @@ tags:
     description: Operations on applications
   - name: Key
     description: Operations on keys
+  - name: APIProduct
+    description: Operations on APIProducts
 
   - name: Listener
     description: Operations on listeners
@@ -29,6 +31,7 @@ x-tagGroups:
       - Developer
       - Application
       - Key
+      - APIProduct
       - Listener
       - Route
       - Cluster
@@ -546,6 +549,228 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorMessage'
+
+  /v1/organizations/{organization_name}/apiproducts:
+    get:
+      parameters:
+        - $ref: '#/components/parameters/organization_name'
+        - name: expand
+          in: query
+          description: Return full APIProducts details
+          required: false
+          schema:
+            type: boolean
+        - name: count
+          in: query
+          description: maximum number of APIProducts to return
+          required: false
+          schema:
+            type: integer
+      description: Retrieve all APIProducts
+      tags:
+        - APIProduct
+      responses:
+        '200':
+          description: Successfully retrieved all APIProducts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIProducts'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      parameters:
+        - $ref: '#/components/parameters/organization_name'
+      description: Create new APIProduct
+      tags:
+        - APIProduct
+      requestBody:
+        description: Details of APIProduct to create
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/APIProduct'
+      responses:
+        '201':
+          description: Successfully created APIProduct
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIProduct'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /v1/organizations/{organization_name}/apiproducts/{apiproduct_name}:
+    get:
+      parameters:
+        - $ref: '#/components/parameters/organization_name'
+        - $ref: '#/components/parameters/apiproduct_name'
+      description: Retrieve APIProduct
+      tags:
+        - APIProduct
+      responses:
+        '200':
+          description: Succesfully retrieved APIProduct
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIProduct'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: APIProduct to retrieve does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+    post:
+      parameters:
+        - $ref: '#/components/parameters/organization_name'
+        - $ref: '#/components/parameters/apiproduct_name'
+        - $ref: '#/components/parameters/action'
+      description: Update APIProduct
+      tags:
+        - APIProduct
+      requestBody:
+        description: Details of APIProduct to update.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/APIProduct'
+          application/octet-stream:
+            schema:
+              type: string
+      responses:
+        '200':
+          description: Succesfully updated APIProduct.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIProduct'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: APIProduct to update does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+    delete:
+      parameters:
+        - $ref: '#/components/parameters/organization_name'
+        - $ref: '#/components/parameters/apiproduct_name'
+      description: Delete APIProduct
+      tags:
+        - APIProduct
+      responses:
+        '200':
+          description: Succesfully deleted APIProduct.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIProduct'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: APIProduct to delete does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  /v1/organizations/{organization_name}/apiproducts/{apiproduct_name}/attributes:
+    get:
+      description: Replace all attributes of a APIProduct.
+      tags:
+        - APIProduct
+      parameters:
+        - $ref: '#/components/parameters/organization_name'
+        - $ref: '#/components/parameters/apiproduct_name'
+      responses:
+        '200':
+          $ref: '#/components/responses/AttributesRetrieved'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: APIProduct to replace all attributes from does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+    post:
+      description: Replace all attributes of an APIProduct.
+      tags:
+        - APIProduct
+      parameters:
+        - $ref: '#/components/parameters/organization_name'
+        - $ref: '#/components/parameters/apiproduct_name'
+      requestBody:
+        description: Details of new attributes.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Attributes'
+      responses:
+        '200':
+          $ref: '#/components/responses/AttributesUpdated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: APIProduct to update does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  /v1/organizations/{organization_name}/apiproducts/{apiproduct_name}/attributes/{attribute_name}:
+    get:
+      description: Retrieve attribute of a APIProduct.
+      tags:
+        - APIProduct
+      parameters:
+        - $ref: '#/components/parameters/organization_name'
+        - $ref: '#/components/parameters/apiproduct_name'
+        - $ref: '#/components/parameters/attribute_name'
+      responses:
+        '200':
+          $ref: '#/components/responses/AttributeRetrieved'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/AttributeDoesNotExist'
+    post:
+      description: Update attribute of a APIProduct.
+      tags:
+        - APIProduct
+      parameters:
+        - $ref: '#/components/parameters/organization_name'
+        - $ref: '#/components/parameters/apiproduct_name'
+        - $ref: '#/components/parameters/attribute_name'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Attribute'
+      responses:
+        '200':
+          $ref: '#/components/responses/AttributeUpdated'
+        '201':
+          $ref: '#/components/responses/AttributeCreated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/AttributeDoesNotExist'
+    delete:
+      description: Delete attribute of a APIProduct.
+      tags:
+        - APIProduct
+      parameters:
+        - $ref: '#/components/parameters/organization_name'
+        - $ref: '#/components/parameters/apiproduct_name'
+        - $ref: '#/components/parameters/attribute_name'
+      responses:
+        '200':
+          $ref: '#/components/responses/AttributeDeleted'
+        '404':
+          $ref: '#/components/responses/AttributeDoesNotExist'
 
   /v1/listeners:
     get:
@@ -1236,6 +1461,14 @@ components:
         type: string
       description: Application id
 
+    apiproduct_name:
+      name: apiproduct_name
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Name of APIProduct
+
     listener_name:
       name: listener_name
       in: path
@@ -1407,6 +1640,71 @@ components:
       items:
         type: string
       description: Application names.
+
+    APIProduct:
+      type: object
+      properties:
+        approvalType:
+          type: string
+          readOnly: true
+          description: Description of APIProduct.
+        attributes:
+          type: array
+          items:
+            $ref: "#/components/schemas/Attribute"
+        createdAt:
+          type: integer
+          format: int64
+          readOnly: true
+          description: Create timestamp in milliseconds since epoch.
+        createdBy:
+          type: string
+          readOnly: true
+          description: User who created this APIProduct.
+        displayName:
+          type: string
+          readOnly: true
+          description: Display name of APIProduct.
+        description:
+          type: string
+          readOnly: true
+          description: Description of APIProduct.
+        lastModifiedAt:
+          type: integer
+          format: int64
+          readOnly: true
+          description: Last modified timestamp in milliseconds since epoch.
+        LastModifiedBy:
+          type: string
+          readOnly: true
+          description: User who last updated this APIProduct.
+        name:
+          type: string
+          description: APIProduct name.
+        apiResources:
+          type: array
+          items:
+            type: string
+          description: List of paths belonging to this APIProduct.
+        policy:
+          type: string
+          description: List of policies to apply to APIProduct.
+        routeGroup:
+          type: string
+          description: Route group this product belongs to.
+        scopes:
+          type: array
+          items:
+            type: string
+          description: List of scopes this APIProduct belongs to
+    APIProducts:
+      type: object
+      properties:
+        apiProduct:
+          type: array
+          items:
+            $ref: "#/components/schemas/APIProduct"
+      description: All APIProduct details.
 
     Listener:
       type: object

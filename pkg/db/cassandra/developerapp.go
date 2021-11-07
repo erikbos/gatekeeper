@@ -147,7 +147,7 @@ func (s *DeveloperAppStore) runGetDeveloperAppQuery(query string, queryParameter
 	}
 	// In case query failed we return query error
 	if err := iterable.Close(); err != nil {
-		return types.DeveloperApps{}, err
+		return types.NullDeveloperApps, err
 	}
 	return developerapps, nil
 }

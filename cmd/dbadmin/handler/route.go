@@ -65,7 +65,7 @@ func (h *Handler) getRouteAttribute(c *gin.Context) handlerResponse {
 	if err != nil {
 		return handleError(err)
 	}
-	value, err := route.Attributes.Get(c.Param(attributeParameter))
+	value, err := route.Attributes.Get(c.Param("attribute"))
 	if err != nil {
 		return handleError(err)
 	}
@@ -127,7 +127,7 @@ func (h *Handler) updateRouteAttribute(c *gin.Context) handlerResponse {
 		return handleBadRequest(err)
 	}
 	newAttribute := types.Attribute{
-		Name:  c.Param(attributeParameter),
+		Name:  c.Param("attribute"),
 		Value: receivedValue.Value,
 	}
 	if err := h.service.Route.UpdateAttribute(c.Param(routeParameter), newAttribute, h.who(c)); err != nil {
@@ -139,7 +139,7 @@ func (h *Handler) updateRouteAttribute(c *gin.Context) handlerResponse {
 // deleteRouteAttribute removes an attribute of an route
 func (h *Handler) deleteRouteAttribute(c *gin.Context) handlerResponse {
 
-	attributeToDelete := c.Param(attributeParameter)
+	attributeToDelete := c.Param("attribute")
 	oldValue, err := h.service.Route.DeleteAttribute(c.Param(routeParameter), attributeToDelete, h.who(c))
 	if err != nil {
 		return handleBadRequest(err)

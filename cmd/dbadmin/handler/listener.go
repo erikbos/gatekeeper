@@ -24,7 +24,7 @@ func (h *Handler) registerListenerRoutes(r *gin.RouterGroup) {
 }
 
 const (
-	// attributeParameter = "attribute"
+	// "attribute" = "attribute"
 
 	// Name of listener parameter in the route definition
 	listenerParameter = "listener"
@@ -67,7 +67,7 @@ func (h *Handler) getListenerAttribute(c *gin.Context) handlerResponse {
 	if err != nil {
 		return handleError(err)
 	}
-	value, err := listener.Attributes.Get(c.Param(attributeParameter))
+	value, err := listener.Attributes.Get(c.Param("attribute"))
 	if err != nil {
 		return handleError(err)
 	}
@@ -130,7 +130,7 @@ func (h *Handler) updateListenerAttribute(c *gin.Context) handlerResponse {
 		return handleBadRequest(err)
 	}
 	newAttribute := types.Attribute{
-		Name:  c.Param(attributeParameter),
+		Name:  c.Param("attribute"),
 		Value: receivedValue.Value,
 	}
 	if err := h.service.Listener.UpdateAttribute(c.Param(listenerParameter),
@@ -143,7 +143,7 @@ func (h *Handler) updateListenerAttribute(c *gin.Context) handlerResponse {
 // deleteListenerAttribute removes an attribute of an listener
 func (h *Handler) deleteListenerAttribute(c *gin.Context) handlerResponse {
 
-	attributeToDelete := c.Param(attributeParameter)
+	attributeToDelete := c.Param("attribute")
 	oldValue, err := h.service.Listener.DeleteAttribute(c.Param(listenerParameter),
 		attributeToDelete, h.who(c))
 	if err != nil {

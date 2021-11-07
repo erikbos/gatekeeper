@@ -187,4 +187,5 @@ class APIproduct:
         assert api_product_a['name'] == api_product_b['name']
         assert api_product_a['apiResources'] == api_product_b['apiResources']
         assert api_product_a['approvalType'] == api_product_b['approvalType']
-        assert api_product_a['attributes'] == api_product_b['attributes']
+        assert (api_product_a['attributes'].sort(key=lambda x: x['name'])
+            == api_product_b['attributes'].sort(key=lambda x: x['name']))

@@ -65,7 +65,7 @@ func (h *Handler) getClusterAttribute(c *gin.Context) handlerResponse {
 	if err != nil {
 		return handleError(err)
 	}
-	attributeValue, err := cluster.Attributes.Get(c.Param(attributeParameter))
+	attributeValue, err := cluster.Attributes.Get(c.Param("attribute"))
 	if err != nil {
 		return handleError(err)
 	}
@@ -128,7 +128,7 @@ func (h *Handler) updateClusterAttribute(c *gin.Context) handlerResponse {
 		return handleBadRequest(err)
 	}
 	newAttribute := types.Attribute{
-		Name:  c.Param(attributeParameter),
+		Name:  c.Param("attribute"),
 		Value: receivedValue.Value,
 	}
 	if err := h.service.Cluster.UpdateAttribute(c.Param(clusterParameter),
@@ -141,7 +141,7 @@ func (h *Handler) updateClusterAttribute(c *gin.Context) handlerResponse {
 // deleteClusterAttribute removes an attribute of an cluster
 func (h *Handler) deleteClusterAttribute(c *gin.Context) handlerResponse {
 
-	attributeToDelete := c.Param(attributeParameter)
+	attributeToDelete := c.Param("attribute")
 	oldValue, err := h.service.Cluster.DeleteAttribute(c.Param(clusterParameter),
 		attributeToDelete, h.who(c))
 	if err != nil {

@@ -42,13 +42,10 @@ func (h *Handler2) responseAttributeDeleted(c *gin.Context, attribute *types.Att
 func toAttributesResponse(attributes types.Attributes) *[]Attribute {
 
 	all_attributes := make([]Attribute, len(attributes))
-	for i, a := range attributes {
-		// Dereference and make local copies
-		name := string(a.Name)
-		value := string(a.Value)
+	for i := range attributes {
 		all_attributes[i] = Attribute{
-			Name:  &name,
-			Value: &value,
+			Name:  &attributes[i].Name,
+			Value: &attributes[i].Value,
 		}
 	}
 	return &all_attributes
