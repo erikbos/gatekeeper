@@ -12,34 +12,34 @@ import (
 type (
 	Route struct {
 		// Name of route (not changable)
-		Name string `json:"name" binding:"required,min=4"`
+		Name string `binding:"required,min=4"`
 
 		// Friendly display name of route
-		DisplayName string `json:"displayName"`
+		DisplayName string
 
 		// Routegroup this route is part of
-		RouteGroup string `json:"RouteGroup" binding:"required,min=4"`
+		RouteGroup string `binding:"required,min=4"`
 
 		// Path of route (should always start with a /)
-		Path string `json:"path" binding:"required,min=1,startswith=/"`
+		Path string `binding:"required,min=1,startswith=/"`
 
 		// Type of pathmatching: path, prefix, regexp
-		PathType string `json:"pathType" binding:"required,oneof=path prefix regexp"`
+		PathType string `binding:"required,oneof=path prefix regexp"`
 
 		// Attributes of this route
-		Attributes Attributes `json:"attributes"`
+		Attributes Attributes
 
 		// Created at timestamp in epoch milliseconds
-		CreatedAt int64 `json:"createdAt"`
+		CreatedAt int64
 
 		// Name of user who created this route
-		CreatedBy string `json:"createdBy"`
+		CreatedBy string
 
 		// Last modified at timestamp in epoch milliseconds
-		LastmodifiedAt int64 `json:"lastmodifiedAt"`
+		LastModifiedAt int64
 
 		// Name of user who last updated this route
-		LastmodifiedBy string `json:"lastmodifiedBy"`
+		LastModifiedBy string
 	}
 
 	// Routes holds one or more routes

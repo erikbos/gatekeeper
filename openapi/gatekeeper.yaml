@@ -17,12 +17,23 @@ tags:
   - name: APIProduct
     description: Operations on APIProducts
 
+  - name: HTTP
+    description: Explanation here
+
   - name: Listener
     description: Operations on listeners
   - name: Route
     description: Operations on routes
   - name: Cluster
     description: Operations on clusters
+
+  - name: Admin
+    description: Explanation here
+
+  - name: User
+    description: Operations on users
+  - name: Roles
+    description: Operations on roles
 
 x-tagGroups:
   - name: HTTP forwarding
@@ -32,9 +43,13 @@ x-tagGroups:
       - Application
       - Key
       - APIProduct
+      - HTTP
       - Listener
       - Route
       - Cluster
+      - Admin
+      - User
+      - Roles
 
 paths:
   /v1/organizations/{organization_name}/developers:
@@ -783,12 +798,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  listeners:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/Listener"
+                $ref: '#/components/schemas/Listeners'
         '400':
           $ref: '#/components/responses/BadRequest'
     post:
@@ -977,12 +987,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  routes:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/Route"
+                $ref: '#/components/schemas/Routes'
         '400':
           $ref: '#/components/responses/BadRequest'
     post:
@@ -1177,12 +1182,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  clusters:
-                    type: array
-                    items:
-                      $ref: "#/components/schemas/Cluster"
+                $ref: '#/components/schemas/Clusters'
         '400':
           $ref: '#/components/responses/BadRequest'
     post:
@@ -1709,22 +1709,6 @@ components:
     Listener:
       type: object
       properties:
-        name:
-          type: string
-          readOnly: true
-          description: Name of listener
-        displayName:
-          type: string
-        virtualHosts:
-          type: array
-          items:
-            type: string
-        port:
-          type: integer
-        routeGroup:
-          type: string
-        policies:
-          type: string
         attributes:
           type: array
           items:
@@ -1738,17 +1722,41 @@ components:
           type: string
           readOnly: true
           description: User which created this listener
-        lastModifiedAt:
+        displayName:
           type: string
+        lastModifiedAt:
+          type: integer
           format: int64
           readOnly: true
           description: Last modified timestamp in milliseconds since epoch.
-        LastModifiedBy:
+        lastModifiedBy:
           type: string
           readOnly: true
           description: User who last updated this listener
+        name:
+          type: string
+          readOnly: true
+          description: Name of listener
+        policies:
+          type: string
+        port:
+          type: integer
+        routeGroup:
+          type: string
+        virtualHosts:
+          type: array
+          items:
+            type: string
       required:
         - name
+    Listeners:
+      type: object
+      properties:
+        listeners:
+          type: array
+          items:
+            $ref: "#/components/schemas/Listener"
+      description: All listener details.
 
     Route:
       type: object
@@ -1789,6 +1797,14 @@ components:
           description: User who last updated this route
       required:
         - name
+    Routes:
+      type: object
+      properties:
+        routes:
+          type: array
+          items:
+            $ref: "#/components/schemas/Route"
+      description: Details of all routes.
 
     Cluster:
       type: object
@@ -1823,6 +1839,14 @@ components:
           description: User who last updated this cluster
       required:
         - name
+    Clusters:
+      type: object
+      properties:
+        clusters:
+          type: array
+          items:
+            $ref: "#/components/schemas/Cluster"
+      description: Details of all clusters.
 
     Attribute:
       type: object

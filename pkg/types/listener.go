@@ -11,37 +11,37 @@ import (
 type (
 	Listener struct {
 		// Name of listener (not changable)
-		Name string `json:"name" binding:"required,min=4"`
+		Name string `binding:"required,min=4"`
 
 		// Friendly display name of listener
-		DisplayName string `json:"displayName"`
+		DisplayName string
 
 		// Virtual hosts of this listener (at least one, each value must be a fqdn)
-		VirtualHosts []string `json:"virtualHosts" binding:"required,min=1,dive,fqdn"`
+		VirtualHosts []string `binding:"required,min=1,dive,fqdn"`
 
 		// tcp port to listen on
-		Port int `json:"port" binding:"required,min=1,max=65535"`
+		Port int `binding:"required,min=1,max=65535"`
 
 		// Routegroup to forward traffic to
-		RouteGroup string `json:"routeGroup" binding:"required"`
+		RouteGroup string `binding:"required"`
 
 		// Comma separated list of policynames, to apply to requests
-		Policies string `json:"policies"`
+		Policies string
 
 		// Attributes of this listener
-		Attributes Attributes `json:"attributes"`
+		Attributes Attributes
 
 		// Created at timestamp in epoch milliseconds
-		CreatedAt int64 `json:"createdAt"`
-		// Name of user who created this listener
+		CreatedAt int64
 
-		CreatedBy string `json:"createdBy"`
+		// Name of user who created this listener
+		CreatedBy string
 
 		// Last modified at timestamp in epoch milliseconds
-		LastmodifiedAt int64 `json:"lastmodifiedAt"`
+		LastModifiedAt int64
 
 		// Name of user who last updated this listener
-		LastmodifiedBy string `json:"lastmodifiedBy"`
+		LastModifiedBy string
 	}
 
 	// Listeners holds one or more Listeners

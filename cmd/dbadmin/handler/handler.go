@@ -13,7 +13,7 @@ import (
 )
 
 // Generate REST API handlers from OpenAPI specification
-//go:generate oapi-codegen -package handler -generate types,gin -include-tags Developer,Application,APIProduct -o dbadmin.gen.go ../../../openapi/gatekeeper.yaml
+//go:generate oapi-codegen -package handler -generate types,gin -o dbadmin.gen.go ../../../openapi/gatekeeper.yaml
 
 // Handler contains our runtime parameters
 type Handler struct {
@@ -66,12 +66,8 @@ func NewHandler(g *gin.Engine, db *db.Database, s *service.Service, applicationN
 	// Register all API endpoint routes
 	handler.registerUserRoutes(apiRoutes)
 	handler.registerRoleRoutes(apiRoutes)
-	handler.registerListenerRoutes(apiRoutes)
-	handler.registerRouteRoutes(apiRoutes)
-	handler.registerClusterRoutes(apiRoutes)
 
 	handler.registerKeyRoutes(apiRoutes)
-	// handler.registerAPIProductRoutes(apiRoutes)
 
 	return handler
 }

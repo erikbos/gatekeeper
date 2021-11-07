@@ -156,8 +156,8 @@ func (cs *ClusterService) DeleteAttribute(clusterName, attributeToDelete string,
 func (cs *ClusterService) updateCluster(updatedCluster *types.Cluster, who Requester) types.Error {
 
 	updatedCluster.Attributes.Tidy()
-	updatedCluster.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
-	updatedCluster.LastmodifiedBy = who.User
+	updatedCluster.LastModifiedAt = shared.GetCurrentTimeMilliseconds()
+	updatedCluster.LastModifiedBy = who.User
 	return cs.db.Cluster.Update(updatedCluster)
 }
 

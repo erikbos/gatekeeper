@@ -12,25 +12,25 @@ import (
 type (
 	Cluster struct {
 		// Name of cluster (not changable)
-		Name string `json:"name" binding:"required,min=4"`
+		Name string `binding:"required,min=4"`
 
 		// Friendly display name of cluster
-		DisplayName string `json:"displayName"`
+		DisplayName string
 
 		// Attributes of this cluster
-		Attributes Attributes `json:"attributes"`
+		Attributes Attributes
 
 		// Created at timestamp in epoch milliseconds
-		CreatedAt int64 `json:"createdAt"`
+		CreatedAt int64
 
 		// Name of user who created this cluster
-		CreatedBy string `json:"createdBy"`
+		CreatedBy string
 
 		// Last modified at timestamp in epoch milliseconds
-		LastmodifiedAt int64 `json:"lastmodifiedAt"`
+		LastModifiedAt int64
 
 		// Name of user who last updated this cluster
-		LastmodifiedBy string `json:"lastmodifiedBy"`
+		LastModifiedBy string
 	}
 
 	// Clusters holds one or more clusters

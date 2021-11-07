@@ -118,6 +118,32 @@ type Attributes struct {
 	Attribute *[]Attribute `json:"attribute,omitempty"`
 }
 
+// Cluster defines model for Cluster.
+type Cluster struct {
+	Attributes *[]Attribute `json:"Attributes,omitempty"`
+
+	// User who last updated this cluster
+	LastModifiedBy *string `json:"LastModifiedBy,omitempty"`
+
+	// Create timestamp in milliseconds since epoch.
+	CreatedAt *int64 `json:"createdAt,omitempty"`
+
+	// User who created this cluster
+	CreatedBy   *string `json:"createdBy,omitempty"`
+	DisplayName *string `json:"displayName,omitempty"`
+
+	// Last modified timestamp in milliseconds since epoch.
+	LastModifiedAt *int64 `json:"lastModifiedAt,omitempty"`
+
+	// Name of cluster
+	Name string `json:"name"`
+}
+
+// Details of all clusters.
+type Clusters struct {
+	Clusters *[]Cluster `json:"clusters,omitempty"`
+}
+
 // Developer defines model for Developer.
 type Developer struct {
 	// User who last updated this developer
@@ -169,6 +195,64 @@ type ErrorMessage struct {
 	Message *string `json:"message,omitempty"`
 }
 
+// Listener defines model for Listener.
+type Listener struct {
+	Attributes *[]Attribute `json:"attributes,omitempty"`
+
+	// Create timestamp in milliseconds since epoch.
+	CreatedAt *int64 `json:"createdAt,omitempty"`
+
+	// User which created this listener
+	CreatedBy   *string `json:"createdBy,omitempty"`
+	DisplayName *string `json:"displayName,omitempty"`
+
+	// Last modified timestamp in milliseconds since epoch.
+	LastModifiedAt *int64 `json:"lastModifiedAt,omitempty"`
+
+	// User who last updated this listener
+	LastModifiedBy *string `json:"lastModifiedBy,omitempty"`
+
+	// Name of listener
+	Name         string    `json:"name"`
+	Policies     *string   `json:"policies,omitempty"`
+	Port         *int      `json:"port,omitempty"`
+	RouteGroup   *string   `json:"routeGroup,omitempty"`
+	VirtualHosts *[]string `json:"virtualHosts,omitempty"`
+}
+
+// All listener details.
+type Listeners struct {
+	Listeners *[]Listener `json:"listeners,omitempty"`
+}
+
+// Route defines model for Route.
+type Route struct {
+	// User who last updated this route
+	LastModifiedBy *string      `json:"LastModifiedBy,omitempty"`
+	Attributes     *[]Attribute `json:"attributes,omitempty"`
+
+	// Create timestamp in milliseconds since epoch.
+	CreatedAt *int64 `json:"createdAt,omitempty"`
+
+	// User which created this route
+	CreatedBy   *string `json:"createdBy,omitempty"`
+	DisplayName *string `json:"displayName,omitempty"`
+
+	// Last modified timestamp in milliseconds since epoch.
+	LastModifiedAt *int64 `json:"lastModifiedAt,omitempty"`
+
+	// Name of route
+	Name       string  `json:"name"`
+	Path       *string `json:"path,omitempty"`
+	PathType   *string `json:"pathType,omitempty"`
+	RouteGroup *string `json:"routeGroup,omitempty"`
+}
+
+// Details of all routes.
+type Routes struct {
+	Routes *[]Route `json:"routes,omitempty"`
+}
+
 // Action defines model for action.
 type Action string
 
@@ -184,11 +268,20 @@ type AppName string
 // AttributeName defines model for attribute_name.
 type AttributeName string
 
+// ClusterName defines model for cluster_name.
+type ClusterName string
+
 // DeveloperEmailaddress defines model for developer_emailaddress.
 type DeveloperEmailaddress string
 
+// ListenerName defines model for listener_name.
+type ListenerName string
+
 // OrganizationName defines model for organization_name.
 type OrganizationName string
+
+// RouteName defines model for route_name.
+type RouteName string
 
 // AttributeCreated defines model for AttributeCreated.
 type AttributeCreated Attribute
@@ -217,6 +310,24 @@ type AttributesUpdated struct {
 
 // BadRequest defines model for BadRequest.
 type BadRequest ErrorMessage
+
+// PostV1ClustersJSONBody defines parameters for PostV1Clusters.
+type PostV1ClustersJSONBody Cluster
+
+// PostV1ClustersClusterNameJSONBody defines parameters for PostV1ClustersClusterName.
+type PostV1ClustersClusterNameJSONBody Cluster
+
+// PostV1ClustersClusterNameAttributesAttributeNameJSONBody defines parameters for PostV1ClustersClusterNameAttributesAttributeName.
+type PostV1ClustersClusterNameAttributesAttributeNameJSONBody Attribute
+
+// PostV1ListenersJSONBody defines parameters for PostV1Listeners.
+type PostV1ListenersJSONBody Listener
+
+// PostV1ListenersListenerNameJSONBody defines parameters for PostV1ListenersListenerName.
+type PostV1ListenersListenerNameJSONBody Listener
+
+// PostV1ListenersListenerNameAttributesAttributeNameJSONBody defines parameters for PostV1ListenersListenerNameAttributesAttributeName.
+type PostV1ListenersListenerNameAttributesAttributeNameJSONBody Attribute
 
 // GetV1OrganizationsOrganizationNameApiproductsParams defines parameters for GetV1OrganizationsOrganizationNameApiproducts.
 type GetV1OrganizationsOrganizationNameApiproductsParams struct {
@@ -308,6 +419,36 @@ type PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttribute
 // PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributesAttributeNameJSONBody defines parameters for PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributesAttributeName.
 type PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributesAttributeNameJSONBody Attribute
 
+// PostV1RoutesJSONBody defines parameters for PostV1Routes.
+type PostV1RoutesJSONBody Route
+
+// PostV1RoutesRouteNameJSONBody defines parameters for PostV1RoutesRouteName.
+type PostV1RoutesRouteNameJSONBody Route
+
+// PostV1RoutesRouteNameAttributesJSONBody defines parameters for PostV1RoutesRouteNameAttributes.
+type PostV1RoutesRouteNameAttributesJSONBody Attributes
+
+// PostV1RoutesRouteNameAttributesAttributeNameJSONBody defines parameters for PostV1RoutesRouteNameAttributesAttributeName.
+type PostV1RoutesRouteNameAttributesAttributeNameJSONBody Attribute
+
+// PostV1ClustersJSONRequestBody defines body for PostV1Clusters for application/json ContentType.
+type PostV1ClustersJSONRequestBody PostV1ClustersJSONBody
+
+// PostV1ClustersClusterNameJSONRequestBody defines body for PostV1ClustersClusterName for application/json ContentType.
+type PostV1ClustersClusterNameJSONRequestBody PostV1ClustersClusterNameJSONBody
+
+// PostV1ClustersClusterNameAttributesAttributeNameJSONRequestBody defines body for PostV1ClustersClusterNameAttributesAttributeName for application/json ContentType.
+type PostV1ClustersClusterNameAttributesAttributeNameJSONRequestBody PostV1ClustersClusterNameAttributesAttributeNameJSONBody
+
+// PostV1ListenersJSONRequestBody defines body for PostV1Listeners for application/json ContentType.
+type PostV1ListenersJSONRequestBody PostV1ListenersJSONBody
+
+// PostV1ListenersListenerNameJSONRequestBody defines body for PostV1ListenersListenerName for application/json ContentType.
+type PostV1ListenersListenerNameJSONRequestBody PostV1ListenersListenerNameJSONBody
+
+// PostV1ListenersListenerNameAttributesAttributeNameJSONRequestBody defines body for PostV1ListenersListenerNameAttributesAttributeName for application/json ContentType.
+type PostV1ListenersListenerNameAttributesAttributeNameJSONRequestBody PostV1ListenersListenerNameAttributesAttributeNameJSONBody
+
 // PostV1OrganizationsOrganizationNameApiproductsJSONRequestBody defines body for PostV1OrganizationsOrganizationNameApiproducts for application/json ContentType.
 type PostV1OrganizationsOrganizationNameApiproductsJSONRequestBody PostV1OrganizationsOrganizationNameApiproductsJSONBody
 
@@ -344,8 +485,80 @@ type PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttribute
 // PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributesAttributeNameJSONRequestBody defines body for PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributesAttributeName for application/json ContentType.
 type PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributesAttributeNameJSONRequestBody PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributesAttributeNameJSONBody
 
+// PostV1RoutesJSONRequestBody defines body for PostV1Routes for application/json ContentType.
+type PostV1RoutesJSONRequestBody PostV1RoutesJSONBody
+
+// PostV1RoutesRouteNameJSONRequestBody defines body for PostV1RoutesRouteName for application/json ContentType.
+type PostV1RoutesRouteNameJSONRequestBody PostV1RoutesRouteNameJSONBody
+
+// PostV1RoutesRouteNameAttributesJSONRequestBody defines body for PostV1RoutesRouteNameAttributes for application/json ContentType.
+type PostV1RoutesRouteNameAttributesJSONRequestBody PostV1RoutesRouteNameAttributesJSONBody
+
+// PostV1RoutesRouteNameAttributesAttributeNameJSONRequestBody defines body for PostV1RoutesRouteNameAttributesAttributeName for application/json ContentType.
+type PostV1RoutesRouteNameAttributesAttributeNameJSONRequestBody PostV1RoutesRouteNameAttributesAttributeNameJSONBody
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+
+	// (GET /v1/clusters)
+	GetV1Clusters(c *gin.Context)
+
+	// (POST /v1/clusters)
+	PostV1Clusters(c *gin.Context)
+
+	// (DELETE /v1/clusters/{cluster_name})
+	DeleteV1ClustersClusterName(c *gin.Context, clusterName ClusterName)
+
+	// (GET /v1/clusters/{cluster_name})
+	GetV1ClustersClusterName(c *gin.Context, clusterName ClusterName)
+
+	// (POST /v1/clusters/{cluster_name})
+	PostV1ClustersClusterName(c *gin.Context, clusterName ClusterName)
+
+	// (GET /v1/clusters/{cluster_name}/attributes)
+	GetV1ClustersClusterNameAttributes(c *gin.Context, clusterName ClusterName)
+
+	// (POST /v1/clusters/{cluster_name}/attributes)
+	PostV1ClustersClusterNameAttributes(c *gin.Context, clusterName ClusterName)
+
+	// (DELETE /v1/clusters/{cluster_name}/attributes/{attribute_name})
+	DeleteV1ClustersClusterNameAttributesAttributeName(c *gin.Context, clusterName ClusterName, attributeName AttributeName)
+
+	// (GET /v1/clusters/{cluster_name}/attributes/{attribute_name})
+	GetV1ClustersClusterNameAttributesAttributeName(c *gin.Context, clusterName ClusterName, attributeName AttributeName)
+
+	// (POST /v1/clusters/{cluster_name}/attributes/{attribute_name})
+	PostV1ClustersClusterNameAttributesAttributeName(c *gin.Context, clusterName ClusterName, attributeName AttributeName)
+
+	// (GET /v1/listeners)
+	GetV1Listeners(c *gin.Context)
+
+	// (POST /v1/listeners)
+	PostV1Listeners(c *gin.Context)
+
+	// (DELETE /v1/listeners/{listener_name})
+	DeleteV1ListenersListenerName(c *gin.Context, listenerName ListenerName)
+
+	// (GET /v1/listeners/{listener_name})
+	GetV1ListenersListenerName(c *gin.Context, listenerName ListenerName)
+
+	// (POST /v1/listeners/{listener_name})
+	PostV1ListenersListenerName(c *gin.Context, listenerName ListenerName)
+
+	// (GET /v1/listeners/{listener_name}/attributes)
+	GetV1ListenersListenerNameAttributes(c *gin.Context, listenerName ListenerName)
+
+	// (POST /v1/listeners/{listener_name}/attributes)
+	PostV1ListenersListenerNameAttributes(c *gin.Context, listenerName ListenerName)
+
+	// (DELETE /v1/listeners/{listener_name}/attributes/{attribute_name})
+	DeleteV1ListenersListenerNameAttributesAttributeName(c *gin.Context, listenerName ListenerName, attributeName AttributeName)
+
+	// (GET /v1/listeners/{listener_name}/attributes/{attribute_name})
+	GetV1ListenersListenerNameAttributesAttributeName(c *gin.Context, listenerName ListenerName, attributeName AttributeName)
+
+	// (POST /v1/listeners/{listener_name}/attributes/{attribute_name})
+	PostV1ListenersListenerNameAttributesAttributeName(c *gin.Context, listenerName ListenerName, attributeName AttributeName)
 
 	// (GET /v1/organizations/{organization_name}/apiproducts)
 	GetV1OrganizationsOrganizationNameApiproducts(c *gin.Context, organizationName OrganizationName, params GetV1OrganizationsOrganizationNameApiproductsParams)
@@ -442,6 +655,36 @@ type ServerInterface interface {
 
 	// (POST /v1/organizations/{organization_name}/developers/{developer_emailaddress}/attributes/{attribute_name})
 	PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributesAttributeName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, attributeName AttributeName)
+
+	// (GET /v1/routes)
+	GetV1Routes(c *gin.Context)
+
+	// (POST /v1/routes)
+	PostV1Routes(c *gin.Context)
+
+	// (DELETE /v1/routes/{route_name})
+	DeleteV1RoutesRouteName(c *gin.Context, routeName RouteName)
+
+	// (GET /v1/routes/{route_name})
+	GetV1RoutesRouteName(c *gin.Context, routeName RouteName)
+
+	// (POST /v1/routes/{route_name})
+	PostV1RoutesRouteName(c *gin.Context, routeName RouteName)
+
+	// (GET /v1/routes/{route_name}/attributes)
+	GetV1RoutesRouteNameAttributes(c *gin.Context, routeName RouteName)
+
+	// (POST /v1/routes/{route_name}/attributes)
+	PostV1RoutesRouteNameAttributes(c *gin.Context, routeName RouteName)
+
+	// (DELETE /v1/routes/{route_name}/attributes/{attribute_name})
+	DeleteV1RoutesRouteNameAttributesAttributeName(c *gin.Context, routeName RouteName, attributeName AttributeName)
+
+	// (GET /v1/routes/{route_name}/attributes/{attribute_name})
+	GetV1RoutesRouteNameAttributesAttributeName(c *gin.Context, routeName RouteName, attributeName AttributeName)
+
+	// (POST /v1/routes/{route_name}/attributes/{attribute_name})
+	PostV1RoutesRouteNameAttributesAttributeName(c *gin.Context, routeName RouteName, attributeName AttributeName)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -451,6 +694,436 @@ type ServerInterfaceWrapper struct {
 }
 
 type MiddlewareFunc func(c *gin.Context)
+
+// GetV1Clusters operation middleware
+func (siw *ServerInterfaceWrapper) GetV1Clusters(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.GetV1Clusters(c)
+}
+
+// PostV1Clusters operation middleware
+func (siw *ServerInterfaceWrapper) PostV1Clusters(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PostV1Clusters(c)
+}
+
+// DeleteV1ClustersClusterName operation middleware
+func (siw *ServerInterfaceWrapper) DeleteV1ClustersClusterName(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "cluster_name" -------------
+	var clusterName ClusterName
+
+	err = runtime.BindStyledParameter("simple", false, "cluster_name", c.Param("cluster_name"), &clusterName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter cluster_name: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.DeleteV1ClustersClusterName(c, clusterName)
+}
+
+// GetV1ClustersClusterName operation middleware
+func (siw *ServerInterfaceWrapper) GetV1ClustersClusterName(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "cluster_name" -------------
+	var clusterName ClusterName
+
+	err = runtime.BindStyledParameter("simple", false, "cluster_name", c.Param("cluster_name"), &clusterName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter cluster_name: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.GetV1ClustersClusterName(c, clusterName)
+}
+
+// PostV1ClustersClusterName operation middleware
+func (siw *ServerInterfaceWrapper) PostV1ClustersClusterName(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "cluster_name" -------------
+	var clusterName ClusterName
+
+	err = runtime.BindStyledParameter("simple", false, "cluster_name", c.Param("cluster_name"), &clusterName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter cluster_name: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PostV1ClustersClusterName(c, clusterName)
+}
+
+// GetV1ClustersClusterNameAttributes operation middleware
+func (siw *ServerInterfaceWrapper) GetV1ClustersClusterNameAttributes(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "cluster_name" -------------
+	var clusterName ClusterName
+
+	err = runtime.BindStyledParameter("simple", false, "cluster_name", c.Param("cluster_name"), &clusterName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter cluster_name: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.GetV1ClustersClusterNameAttributes(c, clusterName)
+}
+
+// PostV1ClustersClusterNameAttributes operation middleware
+func (siw *ServerInterfaceWrapper) PostV1ClustersClusterNameAttributes(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "cluster_name" -------------
+	var clusterName ClusterName
+
+	err = runtime.BindStyledParameter("simple", false, "cluster_name", c.Param("cluster_name"), &clusterName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter cluster_name: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PostV1ClustersClusterNameAttributes(c, clusterName)
+}
+
+// DeleteV1ClustersClusterNameAttributesAttributeName operation middleware
+func (siw *ServerInterfaceWrapper) DeleteV1ClustersClusterNameAttributesAttributeName(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "cluster_name" -------------
+	var clusterName ClusterName
+
+	err = runtime.BindStyledParameter("simple", false, "cluster_name", c.Param("cluster_name"), &clusterName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter cluster_name: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "attribute_name" -------------
+	var attributeName AttributeName
+
+	err = runtime.BindStyledParameter("simple", false, "attribute_name", c.Param("attribute_name"), &attributeName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.DeleteV1ClustersClusterNameAttributesAttributeName(c, clusterName, attributeName)
+}
+
+// GetV1ClustersClusterNameAttributesAttributeName operation middleware
+func (siw *ServerInterfaceWrapper) GetV1ClustersClusterNameAttributesAttributeName(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "cluster_name" -------------
+	var clusterName ClusterName
+
+	err = runtime.BindStyledParameter("simple", false, "cluster_name", c.Param("cluster_name"), &clusterName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter cluster_name: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "attribute_name" -------------
+	var attributeName AttributeName
+
+	err = runtime.BindStyledParameter("simple", false, "attribute_name", c.Param("attribute_name"), &attributeName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.GetV1ClustersClusterNameAttributesAttributeName(c, clusterName, attributeName)
+}
+
+// PostV1ClustersClusterNameAttributesAttributeName operation middleware
+func (siw *ServerInterfaceWrapper) PostV1ClustersClusterNameAttributesAttributeName(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "cluster_name" -------------
+	var clusterName ClusterName
+
+	err = runtime.BindStyledParameter("simple", false, "cluster_name", c.Param("cluster_name"), &clusterName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter cluster_name: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "attribute_name" -------------
+	var attributeName AttributeName
+
+	err = runtime.BindStyledParameter("simple", false, "attribute_name", c.Param("attribute_name"), &attributeName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PostV1ClustersClusterNameAttributesAttributeName(c, clusterName, attributeName)
+}
+
+// GetV1Listeners operation middleware
+func (siw *ServerInterfaceWrapper) GetV1Listeners(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.GetV1Listeners(c)
+}
+
+// PostV1Listeners operation middleware
+func (siw *ServerInterfaceWrapper) PostV1Listeners(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PostV1Listeners(c)
+}
+
+// DeleteV1ListenersListenerName operation middleware
+func (siw *ServerInterfaceWrapper) DeleteV1ListenersListenerName(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "listener_name" -------------
+	var listenerName ListenerName
+
+	err = runtime.BindStyledParameter("simple", false, "listener_name", c.Param("listener_name"), &listenerName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter listener_name: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.DeleteV1ListenersListenerName(c, listenerName)
+}
+
+// GetV1ListenersListenerName operation middleware
+func (siw *ServerInterfaceWrapper) GetV1ListenersListenerName(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "listener_name" -------------
+	var listenerName ListenerName
+
+	err = runtime.BindStyledParameter("simple", false, "listener_name", c.Param("listener_name"), &listenerName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter listener_name: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.GetV1ListenersListenerName(c, listenerName)
+}
+
+// PostV1ListenersListenerName operation middleware
+func (siw *ServerInterfaceWrapper) PostV1ListenersListenerName(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "listener_name" -------------
+	var listenerName ListenerName
+
+	err = runtime.BindStyledParameter("simple", false, "listener_name", c.Param("listener_name"), &listenerName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter listener_name: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PostV1ListenersListenerName(c, listenerName)
+}
+
+// GetV1ListenersListenerNameAttributes operation middleware
+func (siw *ServerInterfaceWrapper) GetV1ListenersListenerNameAttributes(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "listener_name" -------------
+	var listenerName ListenerName
+
+	err = runtime.BindStyledParameter("simple", false, "listener_name", c.Param("listener_name"), &listenerName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter listener_name: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.GetV1ListenersListenerNameAttributes(c, listenerName)
+}
+
+// PostV1ListenersListenerNameAttributes operation middleware
+func (siw *ServerInterfaceWrapper) PostV1ListenersListenerNameAttributes(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "listener_name" -------------
+	var listenerName ListenerName
+
+	err = runtime.BindStyledParameter("simple", false, "listener_name", c.Param("listener_name"), &listenerName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter listener_name: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PostV1ListenersListenerNameAttributes(c, listenerName)
+}
+
+// DeleteV1ListenersListenerNameAttributesAttributeName operation middleware
+func (siw *ServerInterfaceWrapper) DeleteV1ListenersListenerNameAttributesAttributeName(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "listener_name" -------------
+	var listenerName ListenerName
+
+	err = runtime.BindStyledParameter("simple", false, "listener_name", c.Param("listener_name"), &listenerName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter listener_name: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "attribute_name" -------------
+	var attributeName AttributeName
+
+	err = runtime.BindStyledParameter("simple", false, "attribute_name", c.Param("attribute_name"), &attributeName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.DeleteV1ListenersListenerNameAttributesAttributeName(c, listenerName, attributeName)
+}
+
+// GetV1ListenersListenerNameAttributesAttributeName operation middleware
+func (siw *ServerInterfaceWrapper) GetV1ListenersListenerNameAttributesAttributeName(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "listener_name" -------------
+	var listenerName ListenerName
+
+	err = runtime.BindStyledParameter("simple", false, "listener_name", c.Param("listener_name"), &listenerName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter listener_name: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "attribute_name" -------------
+	var attributeName AttributeName
+
+	err = runtime.BindStyledParameter("simple", false, "attribute_name", c.Param("attribute_name"), &attributeName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.GetV1ListenersListenerNameAttributesAttributeName(c, listenerName, attributeName)
+}
+
+// PostV1ListenersListenerNameAttributesAttributeName operation middleware
+func (siw *ServerInterfaceWrapper) PostV1ListenersListenerNameAttributesAttributeName(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "listener_name" -------------
+	var listenerName ListenerName
+
+	err = runtime.BindStyledParameter("simple", false, "listener_name", c.Param("listener_name"), &listenerName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter listener_name: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "attribute_name" -------------
+	var attributeName AttributeName
+
+	err = runtime.BindStyledParameter("simple", false, "attribute_name", c.Param("attribute_name"), &attributeName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PostV1ListenersListenerNameAttributesAttributeName(c, listenerName, attributeName)
+}
 
 // GetV1OrganizationsOrganizationNameApiproducts operation middleware
 func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameApiproducts(c *gin.Context) {
@@ -1662,6 +2335,221 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 	siw.Handler.PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributesAttributeName(c, organizationName, developerEmailaddress, attributeName)
 }
 
+// GetV1Routes operation middleware
+func (siw *ServerInterfaceWrapper) GetV1Routes(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.GetV1Routes(c)
+}
+
+// PostV1Routes operation middleware
+func (siw *ServerInterfaceWrapper) PostV1Routes(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PostV1Routes(c)
+}
+
+// DeleteV1RoutesRouteName operation middleware
+func (siw *ServerInterfaceWrapper) DeleteV1RoutesRouteName(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "route_name" -------------
+	var routeName RouteName
+
+	err = runtime.BindStyledParameter("simple", false, "route_name", c.Param("route_name"), &routeName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter route_name: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.DeleteV1RoutesRouteName(c, routeName)
+}
+
+// GetV1RoutesRouteName operation middleware
+func (siw *ServerInterfaceWrapper) GetV1RoutesRouteName(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "route_name" -------------
+	var routeName RouteName
+
+	err = runtime.BindStyledParameter("simple", false, "route_name", c.Param("route_name"), &routeName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter route_name: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.GetV1RoutesRouteName(c, routeName)
+}
+
+// PostV1RoutesRouteName operation middleware
+func (siw *ServerInterfaceWrapper) PostV1RoutesRouteName(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "route_name" -------------
+	var routeName RouteName
+
+	err = runtime.BindStyledParameter("simple", false, "route_name", c.Param("route_name"), &routeName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter route_name: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PostV1RoutesRouteName(c, routeName)
+}
+
+// GetV1RoutesRouteNameAttributes operation middleware
+func (siw *ServerInterfaceWrapper) GetV1RoutesRouteNameAttributes(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "route_name" -------------
+	var routeName RouteName
+
+	err = runtime.BindStyledParameter("simple", false, "route_name", c.Param("route_name"), &routeName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter route_name: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.GetV1RoutesRouteNameAttributes(c, routeName)
+}
+
+// PostV1RoutesRouteNameAttributes operation middleware
+func (siw *ServerInterfaceWrapper) PostV1RoutesRouteNameAttributes(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "route_name" -------------
+	var routeName RouteName
+
+	err = runtime.BindStyledParameter("simple", false, "route_name", c.Param("route_name"), &routeName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter route_name: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PostV1RoutesRouteNameAttributes(c, routeName)
+}
+
+// DeleteV1RoutesRouteNameAttributesAttributeName operation middleware
+func (siw *ServerInterfaceWrapper) DeleteV1RoutesRouteNameAttributesAttributeName(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "route_name" -------------
+	var routeName RouteName
+
+	err = runtime.BindStyledParameter("simple", false, "route_name", c.Param("route_name"), &routeName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter route_name: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "attribute_name" -------------
+	var attributeName AttributeName
+
+	err = runtime.BindStyledParameter("simple", false, "attribute_name", c.Param("attribute_name"), &attributeName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.DeleteV1RoutesRouteNameAttributesAttributeName(c, routeName, attributeName)
+}
+
+// GetV1RoutesRouteNameAttributesAttributeName operation middleware
+func (siw *ServerInterfaceWrapper) GetV1RoutesRouteNameAttributesAttributeName(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "route_name" -------------
+	var routeName RouteName
+
+	err = runtime.BindStyledParameter("simple", false, "route_name", c.Param("route_name"), &routeName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter route_name: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "attribute_name" -------------
+	var attributeName AttributeName
+
+	err = runtime.BindStyledParameter("simple", false, "attribute_name", c.Param("attribute_name"), &attributeName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.GetV1RoutesRouteNameAttributesAttributeName(c, routeName, attributeName)
+}
+
+// PostV1RoutesRouteNameAttributesAttributeName operation middleware
+func (siw *ServerInterfaceWrapper) PostV1RoutesRouteNameAttributesAttributeName(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "route_name" -------------
+	var routeName RouteName
+
+	err = runtime.BindStyledParameter("simple", false, "route_name", c.Param("route_name"), &routeName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter route_name: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "attribute_name" -------------
+	var attributeName AttributeName
+
+	err = runtime.BindStyledParameter("simple", false, "attribute_name", c.Param("attribute_name"), &attributeName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PostV1RoutesRouteNameAttributesAttributeName(c, routeName, attributeName)
+}
+
 // GinServerOptions provides options for the Gin server.
 type GinServerOptions struct {
 	BaseURL     string
@@ -1679,6 +2567,46 @@ func RegisterHandlersWithOptions(router *gin.Engine, si ServerInterface, options
 		Handler:            si,
 		HandlerMiddlewares: options.Middlewares,
 	}
+
+	router.GET(options.BaseURL+"/v1/clusters", wrapper.GetV1Clusters)
+
+	router.POST(options.BaseURL+"/v1/clusters", wrapper.PostV1Clusters)
+
+	router.DELETE(options.BaseURL+"/v1/clusters/:cluster_name", wrapper.DeleteV1ClustersClusterName)
+
+	router.GET(options.BaseURL+"/v1/clusters/:cluster_name", wrapper.GetV1ClustersClusterName)
+
+	router.POST(options.BaseURL+"/v1/clusters/:cluster_name", wrapper.PostV1ClustersClusterName)
+
+	router.GET(options.BaseURL+"/v1/clusters/:cluster_name/attributes", wrapper.GetV1ClustersClusterNameAttributes)
+
+	router.POST(options.BaseURL+"/v1/clusters/:cluster_name/attributes", wrapper.PostV1ClustersClusterNameAttributes)
+
+	router.DELETE(options.BaseURL+"/v1/clusters/:cluster_name/attributes/:attribute_name", wrapper.DeleteV1ClustersClusterNameAttributesAttributeName)
+
+	router.GET(options.BaseURL+"/v1/clusters/:cluster_name/attributes/:attribute_name", wrapper.GetV1ClustersClusterNameAttributesAttributeName)
+
+	router.POST(options.BaseURL+"/v1/clusters/:cluster_name/attributes/:attribute_name", wrapper.PostV1ClustersClusterNameAttributesAttributeName)
+
+	router.GET(options.BaseURL+"/v1/listeners", wrapper.GetV1Listeners)
+
+	router.POST(options.BaseURL+"/v1/listeners", wrapper.PostV1Listeners)
+
+	router.DELETE(options.BaseURL+"/v1/listeners/:listener_name", wrapper.DeleteV1ListenersListenerName)
+
+	router.GET(options.BaseURL+"/v1/listeners/:listener_name", wrapper.GetV1ListenersListenerName)
+
+	router.POST(options.BaseURL+"/v1/listeners/:listener_name", wrapper.PostV1ListenersListenerName)
+
+	router.GET(options.BaseURL+"/v1/listeners/:listener_name/attributes", wrapper.GetV1ListenersListenerNameAttributes)
+
+	router.POST(options.BaseURL+"/v1/listeners/:listener_name/attributes", wrapper.PostV1ListenersListenerNameAttributes)
+
+	router.DELETE(options.BaseURL+"/v1/listeners/:listener_name/attributes/:attribute_name", wrapper.DeleteV1ListenersListenerNameAttributesAttributeName)
+
+	router.GET(options.BaseURL+"/v1/listeners/:listener_name/attributes/:attribute_name", wrapper.GetV1ListenersListenerNameAttributesAttributeName)
+
+	router.POST(options.BaseURL+"/v1/listeners/:listener_name/attributes/:attribute_name", wrapper.PostV1ListenersListenerNameAttributesAttributeName)
 
 	router.GET(options.BaseURL+"/v1/organizations/:organization_name/apiproducts", wrapper.GetV1OrganizationsOrganizationNameApiproducts)
 
@@ -1743,6 +2671,26 @@ func RegisterHandlersWithOptions(router *gin.Engine, si ServerInterface, options
 	router.GET(options.BaseURL+"/v1/organizations/:organization_name/developers/:developer_emailaddress/attributes/:attribute_name", wrapper.GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributesAttributeName)
 
 	router.POST(options.BaseURL+"/v1/organizations/:organization_name/developers/:developer_emailaddress/attributes/:attribute_name", wrapper.PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributesAttributeName)
+
+	router.GET(options.BaseURL+"/v1/routes", wrapper.GetV1Routes)
+
+	router.POST(options.BaseURL+"/v1/routes", wrapper.PostV1Routes)
+
+	router.DELETE(options.BaseURL+"/v1/routes/:route_name", wrapper.DeleteV1RoutesRouteName)
+
+	router.GET(options.BaseURL+"/v1/routes/:route_name", wrapper.GetV1RoutesRouteName)
+
+	router.POST(options.BaseURL+"/v1/routes/:route_name", wrapper.PostV1RoutesRouteName)
+
+	router.GET(options.BaseURL+"/v1/routes/:route_name/attributes", wrapper.GetV1RoutesRouteNameAttributes)
+
+	router.POST(options.BaseURL+"/v1/routes/:route_name/attributes", wrapper.PostV1RoutesRouteNameAttributes)
+
+	router.DELETE(options.BaseURL+"/v1/routes/:route_name/attributes/:attribute_name", wrapper.DeleteV1RoutesRouteNameAttributesAttributeName)
+
+	router.GET(options.BaseURL+"/v1/routes/:route_name/attributes/:attribute_name", wrapper.GetV1RoutesRouteNameAttributesAttributeName)
+
+	router.POST(options.BaseURL+"/v1/routes/:route_name/attributes/:attribute_name", wrapper.PostV1RoutesRouteNameAttributesAttributeName)
 
 	return router
 }

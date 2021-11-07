@@ -157,8 +157,8 @@ func (ls *ListenerService) DeleteAttribute(listenerName, attributeToDelete strin
 func (ls *ListenerService) updateListener(updatedListener *types.Listener, who Requester) types.Error {
 
 	updatedListener.Attributes.Tidy()
-	updatedListener.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
-	updatedListener.LastmodifiedBy = who.User
+	updatedListener.LastModifiedAt = shared.GetCurrentTimeMilliseconds()
+	updatedListener.LastModifiedBy = who.User
 	return ls.db.Listener.Update(updatedListener)
 }
 

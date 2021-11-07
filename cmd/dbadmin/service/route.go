@@ -158,8 +158,8 @@ func (rs *RouteService) DeleteAttribute(routeName, attributeToDelete string,
 func (rs *RouteService) updateRoute(updatedRoute *types.Route, who Requester) types.Error {
 
 	updatedRoute.Attributes.Tidy()
-	updatedRoute.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
-	updatedRoute.LastmodifiedBy = who.User
+	updatedRoute.LastModifiedAt = shared.GetCurrentTimeMilliseconds()
+	updatedRoute.LastModifiedBy = who.User
 	return rs.db.Route.Update(updatedRoute)
 }
 

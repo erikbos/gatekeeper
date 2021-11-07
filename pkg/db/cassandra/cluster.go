@@ -79,13 +79,13 @@ func (s *ClusterStore) runGetClusterQuery(query string, queryParameters ...inter
 	m := make(map[string]interface{})
 	for iter.MapScan(m) {
 		clusters = append(clusters, types.Cluster{
-			Name:           columnValueString(m, "name"),
-			DisplayName:    columnValueString(m, "display_name"),
 			Attributes:     AttributesUnmarshal(columnValueString(m, "attributes")),
 			CreatedAt:      columnValueInt64(m, "created_at"),
 			CreatedBy:      columnValueString(m, "created_by"),
-			LastmodifiedAt: columnValueInt64(m, "lastmodified_at"),
-			LastmodifiedBy: columnValueString(m, "lastmodified_by"),
+			DisplayName:    columnValueString(m, "display_name"),
+			Name:           columnValueString(m, "name"),
+			LastModifiedAt: columnValueInt64(m, "lastmodified_at"),
+			LastModifiedBy: columnValueString(m, "lastmodified_by"),
 		})
 		m = map[string]interface{}{}
 	}
@@ -106,8 +106,8 @@ func (s *ClusterStore) Update(c *types.Cluster) types.Error {
 		AttributesMarshal(c.Attributes),
 		c.CreatedAt,
 		c.CreatedBy,
-		c.LastmodifiedAt,
-		c.LastmodifiedBy).Exec(); err != nil {
+		c.LastModifiedAt,
+		c.LastModifiedBy).Exec(); err != nil {
 
 		s.db.metrics.QueryFailed(clusterMetricLabel)
 		return types.NewDatabaseError(
