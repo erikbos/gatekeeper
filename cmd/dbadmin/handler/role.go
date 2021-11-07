@@ -1,83 +1,154 @@
 package handler
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 
 	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
-// registerRoleRoutes registers all routes we handle
-func (h *Handler) registerRoleRoutes(r *gin.RouterGroup) {
-	r.GET("/roles", h.handler(h.getAllRoles))
-	r.POST("/roles", h.handler(h.createRole))
-
-	r.GET("/roles/:role", h.handler(h.getRole))
-	r.POST("/roles/:role", h.handler(h.updateRole))
-	r.DELETE("/roles/:role", h.handler(h.deleteRole))
-}
-
-const (
-	// Name of role parameter in the route definition
-	roleParameter = "role"
-)
-
-// getAllRoles returns all roles
-func (h *Handler) getAllRoles(c *gin.Context) handlerResponse {
+// returns all roles
+// (GET /v1/roles)
+func (h *Handler) GetV1Roles(c *gin.Context) {
 
 	roles, err := h.service.Role.GetAll()
 	if err != nil {
-		return handleError(err)
+		h.responseError(c, err)
+		return
 	}
-	return handleOK(StringMap{"roles": roles})
+	h.responseRoles(c, roles)
 }
 
-// getRole returns details of an role
-func (h *Handler) getRole(c *gin.Context) handlerResponse {
+//  creates an role
+// (POST /v1/roles)
+func (h *Handler) PostV1Roles(c *gin.Context) {
 
-	role, err := h.service.Role.Get(c.Param(roleParameter))
-	if err != nil {
-		return handleError(err)
+	var receivedRole Role
+	if err := c.ShouldBindJSON(&receivedRole); err != nil {
+		h.responseError(c, types.NewBadRequestError(err))
+		return
 	}
-	return handleOK(role)
-}
-
-// createRole creates an role
-func (h *Handler) createRole(c *gin.Context) handlerResponse {
-
-	var newRole types.Role
-	if err := c.ShouldBindJSON(&newRole); err != nil {
-		return handleBadRequest(err)
-	}
+	newRole := fromRole(receivedRole)
 	storedRole, err := h.service.Role.Create(newRole, h.who(c))
 	if err != nil {
-		return handleError(err)
+		h.responseError(c, err)
+		return
 	}
-	return handleCreated(storedRole)
+	h.responseRoleCreated(c, storedRole)
 }
 
-// updateRole updates an existing role
-func (h *Handler) updateRole(c *gin.Context) handlerResponse {
+// returns details of a role
+// (GET /v1/roles/{role_name})
+func (h *Handler) GetV1RolesRoleName(c *gin.Context, roleName RoleName) {
 
-	var updatedRole types.Role
-	if err := c.ShouldBindJSON(&updatedRole); err != nil {
-		return handleBadRequest(err)
+	role, err := h.service.Role.Get(string(roleName))
+	if err != nil {
+		h.responseError(c, err)
+		return
 	}
-	if updatedRole.Name != c.Param(roleParameter) {
-		return handleNameMismatch()
+	h.responseRole(c, role)
+}
+
+// updates an existing role
+// (POST /v1/roles/{role_name})
+func (h *Handler) PostV1RolesRoleName(c *gin.Context, roleName RoleName) {
+
+	var receivedRole Role
+	if err := c.ShouldBindJSON(&receivedRole); err != nil {
+		h.responseError(c, types.NewBadRequestError(err))
+		return
+	}
+	updatedRole := fromRole(receivedRole)
+	if updatedRole.Name != string(roleName) {
+		h.responseErrorNameValueMisMatch(c)
+		return
 	}
 	storedRole, err := h.service.Role.Update(updatedRole, h.who(c))
 	if err != nil {
-		return handleError(err)
+		h.responseError(c, err)
+		return
 	}
-	return handleOK(storedRole)
+	h.responseRoleUpdated(c, storedRole)
 }
 
-// deleteRole deletes an role
-func (h *Handler) deleteRole(c *gin.Context) handlerResponse {
+// deleteRole deletes a role
+// (DELETE /v1/roles/{role_name})
+func (h *Handler) DeleteV1RolesRoleName(c *gin.Context, roleName RoleName) {
 
-	deletedRole, err := h.service.Role.Delete(c.Param(roleParameter), h.who(c))
+	deletedRole, err := h.service.Role.Delete(string(roleName), h.who(c))
 	if err != nil {
-		return handleError(err)
+		h.responseError(c, err)
+		return
 	}
-	return handleOK(deletedRole)
+	h.responseRole(c, deletedRole)
+}
+
+// Returns API response all user details
+func (h *Handler) responseRoles(c *gin.Context, roles types.Roles) {
+
+	all_roles := make([]Role, len(roles))
+	for i := range roles {
+		all_roles[i] = h.ToRoleResponse(&roles[i])
+	}
+	c.IndentedJSON(http.StatusOK, Roles{
+		Role: &all_roles,
+	})
+}
+
+func (h *Handler) responseRole(c *gin.Context, user *types.Role) {
+
+	c.IndentedJSON(http.StatusOK, h.ToRoleResponse(user))
+}
+
+func (h *Handler) responseRoleCreated(c *gin.Context, role *types.Role) {
+
+	c.IndentedJSON(http.StatusCreated, h.ToRoleResponse(role))
+}
+
+func (h *Handler) responseRoleUpdated(c *gin.Context, role *types.Role) {
+
+	c.IndentedJSON(http.StatusOK, h.ToRoleResponse(role))
+}
+
+// type conversion
+
+func (h *Handler) ToRoleResponse(l *types.Role) Role {
+
+	role := Role{
+		CreatedAt:      &l.CreatedAt,
+		CreatedBy:      &l.CreatedBy,
+		DisplayName:    &l.DisplayName,
+		LastModifiedBy: &l.LastModifiedBy,
+		LastModifiedAt: &l.LastModifiedAt,
+		Name:           l.Name,
+	}
+	// if l.Allows != nil {
+	// 	role.Allows = l.Allows
+	// }
+	return role
+}
+
+func fromRole(u Role) types.Role {
+
+	role := types.Role{}
+	if u.CreatedAt != nil {
+		role.CreatedAt = *u.CreatedAt
+	}
+	if u.CreatedBy != nil {
+		role.CreatedBy = *u.CreatedBy
+	}
+	if u.DisplayName != nil {
+		role.DisplayName = *u.DisplayName
+	}
+	if u.LastModifiedBy != nil {
+		role.LastModifiedBy = *u.LastModifiedBy
+	}
+	if u.LastModifiedAt != nil {
+		role.LastModifiedAt = *u.LastModifiedAt
+	}
+	if u.Name != "" {
+		role.Name = u.Name
+	}
+	return role
 }

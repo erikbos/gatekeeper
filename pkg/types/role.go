@@ -1,7 +1,6 @@
 package types
 
 import (
-	"encoding/json"
 	"sort"
 	"strings"
 
@@ -14,25 +13,25 @@ import (
 type (
 	Role struct {
 		// Name of role (not changable)
-		Name string `json:"name" binding:"required,min=4"`
+		Name string `binding:"required,min=4"`
 
 		// Display name
-		DisplayName string `json:"displayName"`
+		DisplayName string
 
 		// Allowed methods & paths
-		Allows `json:"allows" binding:"required"`
+		Allows
 
 		// Created at timestamp in epoch milliseconds
-		CreatedAt int64 `json:"createdAt"`
+		CreatedAt int64
 
 		// Name of user who created this role
-		CreatedBy string `json:"createdBy"`
+		CreatedBy string
 
 		// Last modified at timestamp in epoch milliseconds
-		LastmodifiedAt int64 `json:"lastmodifiedAt"`
+		LastModifiedAt int64
 
 		// Name of user who last updated this role
-		LastmodifiedBy string `json:"lastmodifiedBy"`
+		LastModifiedBy string
 	}
 
 	// Roles holds one or more roles
@@ -100,27 +99,6 @@ func pathMatch(paths []string, requestPath string) bool {
 		}
 	}
 	return false
-}
-
-// Unmarshal unpacks JSON-encoded role allow into Allows
-func (a *Allows) Unmarshal(roleAllowsAsJSON string) Allows {
-
-	if roleAllowsAsJSON != "" {
-		var allows Allows
-		if err := json.Unmarshal([]byte(roleAllowsAsJSON), &allows); err == nil {
-			return allows
-		}
-	}
-	return NullAllows
-}
-
-// Marshal packs role Allow into JSON
-func (a *Allows) Marshal() string {
-
-	if json, err := json.Marshal(a); err == nil {
-		return string(json)
-	}
-	return "[]"
 }
 
 // Sort a slice of users

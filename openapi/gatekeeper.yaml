@@ -6,34 +6,34 @@ info:
 
 tags:
   - name: Intro
-    description: intro here
+    description: intro here.
 
   - name: Developer
-    description: Operations on developers
+    description: Operations on developers.
   - name: Application
-    description: Operations on applications
+    description: Operations on applications.
   - name: Key
-    description: Operations on keys
+    description: Operations on keys.
   - name: APIProduct
-    description: Operations on APIProducts
+    description: Operations on APIProducts.
 
   - name: HTTP
-    description: Explanation here
+    description: Explanation here.
 
   - name: Listener
-    description: Operations on listeners
+    description: Operations on listeners.
   - name: Route
-    description: Operations on routes
+    description: Operations on routes.
   - name: Cluster
-    description: Operations on clusters
+    description: Operations on clusters.
 
   - name: Admin
-    description: Explanation here
+    description: Explanation here.
 
   - name: User
-    description: Operations on users
+    description: Operations on users.
   - name: Roles
-    description: Operations on roles
+    description: Operations on roles.
 
 x-tagGroups:
   - name: HTTP forwarding
@@ -49,7 +49,7 @@ x-tagGroups:
       - Cluster
       - Admin
       - User
-      - Roles
+      - Role
 
 paths:
   /v1/organizations/{organization_name}/developers:
@@ -58,22 +58,22 @@ paths:
         - $ref: '#/components/parameters/organization_name'
         - name: expand
           in: query
-          description: Return full developer details
+          description: Return full developer details.
           required: false
           schema:
             type: boolean
         - name: count
           in: query
-          description: maximum number of developers to return
+          description: maximum number of developers to return.
           required: false
           schema:
             type: integer
-      description: Retrieve all developers
+      description: Retrieve all developers.
       tags:
         - Developer
       responses:
         '200':
-          description: Successfully retrieved all developers
+          description: Successfully retrieved all developers.
           content:
             application/json:
               schema:
@@ -85,18 +85,18 @@ paths:
     post:
       parameters:
         - $ref: '#/components/parameters/organization_name'
-      description: Create new developer
+      description: Create new developer.
       tags:
         - Developer
       requestBody:
-        description: Details of developer to create
+        description: Details of developer to create.
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/Developer'
       responses:
         '201':
-          description: Successfully created developer
+          description: Successfully created developer.
           content:
             application/json:
               schema:
@@ -108,12 +108,12 @@ paths:
       parameters:
         - $ref: '#/components/parameters/organization_name'
         - $ref: '#/components/parameters/developer_emailaddress'
-      description: Retrieve developer
+      description: Retrieve developer.
       tags:
         - Developer
       responses:
         '200':
-          description: Succesfully retrieved developer
+          description: Succesfully retrieved developer.
           content:
             application/json:
               schema:
@@ -121,7 +121,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
-          description: Developer to retrieve does not exist
+          description: Developer to retrieve does not exist.
           content:
             application/json:
               schema:
@@ -131,7 +131,7 @@ paths:
         - $ref: '#/components/parameters/organization_name'
         - $ref: '#/components/parameters/developer_emailaddress'
         - $ref: '#/components/parameters/action'
-      description: Update developer
+      description: Update developer.
       tags:
         - Developer
       requestBody:
@@ -145,7 +145,7 @@ paths:
               type: string
       responses:
         '200':
-          description: Succesfully updated developer
+          description: Succesfully updated developer.
           content:
             application/json:
               schema:
@@ -153,7 +153,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
-          description: Developer to update does not exist
+          description: Developer to update does not exist.
           content:
             application/json:
               schema:
@@ -162,12 +162,12 @@ paths:
       parameters:
         - $ref: '#/components/parameters/organization_name'
         - $ref: '#/components/parameters/developer_emailaddress'
-      description: Delete developer
+      description: Delete developer.
       tags:
         - Developer
       responses:
         '200':
-          description: Succesfully deleted developer
+          description: Succesfully deleted developer.
           content:
             application/json:
               schema:
@@ -175,14 +175,14 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
-          description: Developer to delete does not exist
+          description: Developer to delete does not exist.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorMessage'
   /v1/organizations/{organization_name}/developers/{developer_emailaddress}/attributes:
     get:
-      description: Replace all attributes of a developer
+      description: Replace all attributes of a developer.
       tags:
         - Developer
       parameters:
@@ -194,20 +194,20 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
-          description: developer to Replace all attributes from does not exist
+          description: developer to Replace all attributes from does not exist.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorMessage'
     post:
-      description: Replace all attributes of a developer
+      description: Replace all attributes of a developer.
       tags:
         - Developer
       parameters:
         - $ref: '#/components/parameters/organization_name'
         - $ref: '#/components/parameters/developer_emailaddress'
       requestBody:
-        description: Details of new attributes
+        description: Details of new attributes.
         content:
           application/json:
             schema:
@@ -218,14 +218,14 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
-          description: developer to update does not exist
+          description: developer to update does not exist.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorMessage'
   /v1/organizations/{organization_name}/developers/{developer_emailaddress}/attributes/{attribute_name}:
     get:
-      description: Retrieve attribute of a developer
+      description: Retrieve attribute of a developer.
       tags:
         - Developer
       parameters:
@@ -240,7 +240,7 @@ paths:
         '404':
           $ref: '#/components/responses/AttributeDoesNotExist'
     post:
-      description: Update attribute of a developer
+      description: Update attribute of a developer.
       tags:
         - Developer
       parameters:
@@ -263,7 +263,7 @@ paths:
         '404':
           $ref: '#/components/responses/AttributeDoesNotExist'
     delete:
-      description: Delete attribute of a developer
+      description: Delete attribute of a developer.
       tags:
         - Developer
       parameters:
@@ -283,22 +283,22 @@ paths:
         - $ref: '#/components/parameters/developer_emailaddress'
         - name: expand
           in: query
-          description: Return full details of each application
+          description: Return full details of each application.
           required: false
           schema:
             type: boolean
         - name: count
           in: query
-          description: Maximum number of applications to return
+          description: Maximum number of applications to return.
           required: false
           schema:
             type: integer
-      description: Retrieve all applications of developer
+      description: Retrieve all applications of developer.
       tags:
         - Application
       responses:
         '200':
-          description: Successfully retrieved all applictions
+          description: Successfully retrieved all applictions.
           content:
             application/json:
               schema:
@@ -311,18 +311,18 @@ paths:
       parameters:
         - $ref: '#/components/parameters/organization_name'
         - $ref: '#/components/parameters/developer_emailaddress'
-      description: Create new application
+      description: Create new application.
       tags:
         - Application
       requestBody:
-        description: Details of application to create
+        description: Details of application to create.
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/Application'
       responses:
         '201':
-          description: Successfully created application
+          description: Successfully created application.
           content:
             application/json:
               schema:
@@ -335,12 +335,12 @@ paths:
         - $ref: '#/components/parameters/organization_name'
         - $ref: '#/components/parameters/developer_emailaddress'
         - $ref: '#/components/parameters/app_name'
-      description: Retrieve application
+      description: Retrieve application.
       tags:
         - Application
       responses:
         '200':
-          description: Succesfully retrieved application
+          description: Succesfully retrieved application.
           content:
             application/json:
               schema:
@@ -348,7 +348,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
-          description: Application to retrieve does not exist
+          description: Application to retrieve does not exist.
           content:
             application/json:
               schema:
@@ -359,7 +359,7 @@ paths:
         - $ref: '#/components/parameters/developer_emailaddress'
         - $ref: '#/components/parameters/app_name'
         - $ref: '#/components/parameters/action'
-      description: Update application
+      description: Update application.
       tags:
         - Application
       requestBody:
@@ -373,7 +373,7 @@ paths:
               type: string
       responses:
         '200':
-          description: Succesfully updated application
+          description: Succesfully updated application.
           content:
             application/json:
               schema:
@@ -381,7 +381,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
-          description: Application to update does not exist
+          description: Application to update does not exist.
           content:
             application/json:
               schema:
@@ -391,12 +391,12 @@ paths:
         - $ref: '#/components/parameters/organization_name'
         - $ref: '#/components/parameters/developer_emailaddress'
         - $ref: '#/components/parameters/app_name'
-      description: Delete application
+      description: Delete application.
       tags:
         - Application
       responses:
         '200':
-          description: Succesfully deleted application
+          description: Succesfully deleted application.
           content:
             application/json:
               schema:
@@ -404,14 +404,14 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
-          description: Application to delete does not exist
+          description: Application to delete does not exist.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorMessage'
   /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/attributes:
     get:
-      description: Replace all attributes of an application
+      description: Replace all attributes of an application.
       tags:
         - Application
       parameters:
@@ -424,13 +424,13 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
-          description: application to replace all attributes from does not exist
+          description: application to replace all attributes from does not exist.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorMessage'
     post:
-      description: Replace all attributes of an application
+      description: Replace all attributes of an application.
       tags:
         - Application
       parameters:
@@ -438,7 +438,7 @@ paths:
         - $ref: '#/components/parameters/developer_emailaddress'
         - $ref: '#/components/parameters/app_name'
       requestBody:
-        description: Details of new attributes
+        description: Details of new attributes.
         content:
           application/json:
             schema:
@@ -449,14 +449,14 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
-          description: Application to update does not exist
+          description: Application to update does not exist.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorMessage'
   /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/attributes/{attribute_name}:
     get:
-      description: Retrieve attribute of an application
+      description: Retrieve attribute of an application.
       tags:
         - Application
       parameters:
@@ -472,7 +472,7 @@ paths:
         '404':
           $ref: '#/components/responses/AttributeDoesNotExist'
     post:
-      description: Update attribute of an application
+      description: Update attribute of an application.
       tags:
         - Application
       parameters:
@@ -496,7 +496,7 @@ paths:
         '404':
           $ref: '#/components/responses/AttributeDoesNotExist'
     delete:
-      description: Delete attribute of an application
+      description: Delete attribute of an application.
       tags:
         - Application
       parameters:
@@ -516,23 +516,23 @@ paths:
         - $ref: '#/components/parameters/organization_name'
         - name: expand
           in: query
-          description: Return full details of each application
+          description: Return full details of each application.
           required: false
           schema:
             type: boolean
         - name: rows
           in: query
-          description: Maximum number of applications to return
+          description: Maximum number of applications to return.
           required: false
           schema:
             type: integer
             format: int32
-      description: Retrieve all applications
+      description: Retrieve all applications.
       tags:
         - Application
       responses:
         '200':
-          description: Successfully retrieved all applictions
+          description: Successfully retrieved all applictions.
           content:
             application/json:
               schema:
@@ -546,12 +546,12 @@ paths:
       parameters:
         - $ref: '#/components/parameters/organization_name'
         - $ref: '#/components/parameters/app_id'
-      description: Retrieve application by appId
+      description: Retrieve application by appId.
       tags:
         - Application
       responses:
         '200':
-          description: Succesfully retrieved application
+          description: Succesfully retrieved application.
           content:
             application/json:
               schema:
@@ -559,7 +559,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
-          description: Application to retrieve does not exist
+          description: Application to retrieve does not exist.
           content:
             application/json:
               schema:
@@ -571,22 +571,22 @@ paths:
         - $ref: '#/components/parameters/organization_name'
         - name: expand
           in: query
-          description: Return full APIProducts details
+          description: Return full APIProducts details.
           required: false
           schema:
             type: boolean
         - name: count
           in: query
-          description: maximum number of APIProducts to return
+          description: maximum number of APIProducts to return.
           required: false
           schema:
             type: integer
-      description: Retrieve all APIProducts
+      description: Retrieve all APIProducts.
       tags:
         - APIProduct
       responses:
         '200':
-          description: Successfully retrieved all APIProducts
+          description: Successfully retrieved all APIProducts.
           content:
             application/json:
               schema:
@@ -596,18 +596,18 @@ paths:
     post:
       parameters:
         - $ref: '#/components/parameters/organization_name'
-      description: Create new APIProduct
+      description: Create new APIProduct.
       tags:
         - APIProduct
       requestBody:
-        description: Details of APIProduct to create
+        description: Details of APIProduct to create.
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/APIProduct'
       responses:
         '201':
-          description: Successfully created APIProduct
+          description: Successfully created APIProduct.
           content:
             application/json:
               schema:
@@ -619,12 +619,12 @@ paths:
       parameters:
         - $ref: '#/components/parameters/organization_name'
         - $ref: '#/components/parameters/apiproduct_name'
-      description: Retrieve APIProduct
+      description: Retrieve APIProduct.
       tags:
         - APIProduct
       responses:
         '200':
-          description: Succesfully retrieved APIProduct
+          description: Succesfully retrieved APIProduct.
           content:
             application/json:
               schema:
@@ -632,7 +632,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
-          description: APIProduct to retrieve does not exist
+          description: APIProduct to retrieve does not exist.
           content:
             application/json:
               schema:
@@ -642,7 +642,7 @@ paths:
         - $ref: '#/components/parameters/organization_name'
         - $ref: '#/components/parameters/apiproduct_name'
         - $ref: '#/components/parameters/action'
-      description: Update APIProduct
+      description: Update APIProduct.
       tags:
         - APIProduct
       requestBody:
@@ -673,7 +673,7 @@ paths:
       parameters:
         - $ref: '#/components/parameters/organization_name'
         - $ref: '#/components/parameters/apiproduct_name'
-      description: Delete APIProduct
+      description: Delete APIProduct.
       tags:
         - APIProduct
       responses:
@@ -705,7 +705,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
-          description: APIProduct to replace all attributes from does not exist
+          description: APIProduct to replace all attributes from does not exist.
           content:
             application/json:
               schema:
@@ -789,12 +789,12 @@ paths:
 
   /v1/listeners:
     get:
-      description: Retrieve all listeners
+      description: Retrieve all listeners.
       tags:
         - Listener
       responses:
         '200':
-          description: Successfully retrieved all listeners
+          description: Successfully retrieved all listeners.
           content:
             application/json:
               schema:
@@ -802,7 +802,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
     post:
-      description: Create a new listener
+      description: Create a new listener.
       tags:
         - Listener
       requestBody:
@@ -813,7 +813,7 @@ paths:
               $ref: '#/components/schemas/Listener'
       responses:
         '200':
-          description: Successfully created a new listener
+          description: Successfully created a new listener.
           content:
             application/json:
               schema:
@@ -823,14 +823,14 @@ paths:
 
   /v1/listeners/{listener_name}:
     get:
-      description: Retrieve listener
+      description: Retrieve listener.
       tags:
         - Listener
       parameters:
         - $ref: '#/components/parameters/listener_name'
       responses:
         '200':
-          description: Successfully retrieved listener
+          description: Successfully retrieved listener.
           content:
             application/json:
               schema:
@@ -838,13 +838,13 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
-          description: Listener to retrieve does not exist
+          description: Listener to retrieve does not exist.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorMessage'
     post:
-      description: Update a listener
+      description: Update a listener.
       tags:
         - Listener
       parameters:
@@ -857,7 +857,7 @@ paths:
               $ref: '#/components/schemas/Listener'
       responses:
         '200':
-          description: Successfully updated listener
+          description: Successfully updated listener.
           content:
             application/json:
               schema:
@@ -865,26 +865,26 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
-          description: Listener to update does not exist
+          description: Listener to update does not exist.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorMessage'
     delete:
-      description: Delete a listener
+      description: Delete a listener.
       tags:
         - Listener
       parameters:
         - $ref: '#/components/parameters/listener_name'
       responses:
         '200':
-          description: Successfully deleted a listener
+          description: Successfully deleted a listener.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Listener'
         '404':
-          description: Listener to delete does not exist
+          description: Listener to delete does not exist.
           content:
             application/json:
               schema:
@@ -892,7 +892,7 @@ paths:
 
   /v1/listeners/{listener_name}/attributes:
     get:
-      description: Retrieve all attributes of a listener
+      description: Retrieve all attributes of a listener.
       tags:
         - Listener
       parameters:
@@ -903,13 +903,13 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
-          description: Listener to Replace all attributes from does not exist
+          description: Listener to replace all attributes from does not exist.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorMessage'
     post:
-      description: Replace all attributes of a listener
+      description: Replace all attributes of a listener.
       tags:
         - Listener
       parameters:
@@ -920,7 +920,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
-          description: Listener to update does not exist
+          description: Listener to update does not exist.
           content:
             application/json:
               schema:
@@ -928,7 +928,7 @@ paths:
 
   /v1/listeners/{listener_name}/attributes/{attribute_name}:
     get:
-      description: Retrieve attribute of a listener
+      description: Retrieve attribute of a listener.
       tags:
         - Listener
       parameters:
@@ -942,7 +942,7 @@ paths:
         '404':
           $ref: '#/components/responses/AttributeDoesNotExist'
     post:
-      description: Update attribute of a listener
+      description: Update attribute of a listener.
       tags:
         - Listener
       parameters:
@@ -964,7 +964,7 @@ paths:
         '404':
           $ref: '#/components/responses/AttributeDoesNotExist'
     delete:
-      description: Delete attribute of a listener
+      description: Delete attribute of a listener.
       tags:
         - Listener
       parameters:
@@ -978,12 +978,12 @@ paths:
 
   /v1/routes:
     get:
-      description: Retrieve all routes
+      description: Retrieve all routes.
       tags:
         - Route
       responses:
         '200':
-          description: Successfully retrieved all routes
+          description: Successfully retrieved all routes.
           content:
             application/json:
               schema:
@@ -991,7 +991,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
     post:
-      description: Create a new route
+      description: Create a new route.
       tags:
         - Route
       requestBody:
@@ -1002,7 +1002,7 @@ paths:
               $ref: '#/components/schemas/Route'
       responses:
         '200':
-          description: Successfully created a new route
+          description: Successfully created a new route.
           content:
             application/json:
               schema:
@@ -1012,14 +1012,14 @@ paths:
 
   /v1/routes/{route_name}:
     get:
-      description: Retrieve route
+      description: Retrieve route.
       tags:
         - Route
       parameters:
         - $ref: '#/components/parameters/route_name'
       responses:
         '200':
-          description: Successfully retrieved route
+          description: Successfully retrieved route.
           content:
             application/json:
               schema:
@@ -1027,13 +1027,13 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
-          description: Route to retrieve does not exist
+          description: Route to retrieve does not exist.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorMessage'
     post:
-      description: Update a route
+      description: Update a route.
       tags:
         - Route
       parameters:
@@ -1046,7 +1046,7 @@ paths:
               $ref: '#/components/schemas/Route'
       responses:
         '200':
-          description: Successfully updated route
+          description: Successfully updated route.
           content:
             application/json:
               schema:
@@ -1054,26 +1054,26 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
-          description: Route to update does not exist
+          description: Route to update does not exist.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorMessage'
     delete:
-      description: Delete a route
+      description: Delete a route.
       tags:
         - Route
       parameters:
         - $ref: '#/components/parameters/route_name'
       responses:
         '200':
-          description: Successfully deleted a route
+          description: Successfully deleted a route.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Route'
         '404':
-          description: Route to delete does not exist
+          description: Route to delete does not exist.
           content:
             application/json:
               schema:
@@ -1081,7 +1081,7 @@ paths:
 
   /v1/routes/{route_name}/attributes:
     get:
-      description: Retrieve all attributes of a route
+      description: Retrieve all attributes of a route.
       tags:
         - Route
       parameters:
@@ -1092,19 +1092,19 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
-          description: Route to Replace all attributes from does not exist
+          description: Route to Replace all attributes from does not exist.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorMessage'
     post:
-      description: Replace all attributes of a route
+      description: Replace all attributes of a route.
       tags:
         - Route
       parameters:
         - $ref: '#/components/parameters/route_name'
       requestBody:
-        description: Details of new attributes
+        description: Details of new attributes.
         content:
           application/json:
             schema:
@@ -1115,7 +1115,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
-          description: Route to update does not exist
+          description: Route to update does not exist.
           content:
             application/json:
               schema:
@@ -1123,7 +1123,7 @@ paths:
 
   /v1/routes/{route_name}/attributes/{attribute_name}:
     get:
-      description: Retrieve attribute of a route
+      description: Retrieve attribute of a route.
       tags:
         - Route
       parameters:
@@ -1137,7 +1137,7 @@ paths:
         '404':
           $ref: '#/components/responses/AttributeDoesNotExist'
     post:
-      description: Update attribute of a route
+      description: Update attribute of a route.
       tags:
         - Route
       parameters:
@@ -1159,7 +1159,7 @@ paths:
         '404':
           $ref: '#/components/responses/AttributeDoesNotExist'
     delete:
-      description: Delete attribute of a route
+      description: Delete attribute of a route.
       tags:
         - Route
       parameters:
@@ -1173,12 +1173,12 @@ paths:
 
   /v1/clusters:
     get:
-      description: Retrieve all clusters
+      description: Retrieve all clusters.
       tags:
         - Cluster
       responses:
         '200':
-          description: Successfully retrieved all clusters
+          description: Successfully retrieved all clusters.
           content:
             application/json:
               schema:
@@ -1186,7 +1186,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
     post:
-      description: Create a new cluster
+      description: Create a new cluster.
       tags:
         - Cluster
       requestBody:
@@ -1197,7 +1197,7 @@ paths:
               $ref: '#/components/schemas/Cluster'
       responses:
         '200':
-          description: Successfully created a new cluster
+          description: Successfully created a new cluster.
           content:
             application/json:
               schema:
@@ -1207,14 +1207,14 @@ paths:
 
   /v1/clusters/{cluster_name}:
     get:
-      description: Retrieve cluster
+      description: Retrieve cluster.
       tags:
         - Cluster
       parameters:
         - $ref: '#/components/parameters/cluster_name'
       responses:
         '200':
-          description: Successfully retrieved cluster
+          description: Successfully retrieved cluster.
           content:
             application/json:
               schema:
@@ -1222,13 +1222,13 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
-          description: Cluster to retrieve does not exist
+          description: Cluster to retrieve does not exist.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorMessage'
     post:
-      description: Update a cluster
+      description: Update a cluster.
       tags:
         - Cluster
       parameters:
@@ -1241,7 +1241,7 @@ paths:
               $ref: '#/components/schemas/Cluster'
       responses:
         '200':
-          description: Successfully updated cluster
+          description: Successfully updated cluster.
           content:
             application/json:
               schema:
@@ -1249,26 +1249,26 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
-          description: Cluster to update does not exist
+          description: Cluster to update does not exist.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorMessage'
     delete:
-      description: Delete a cluster
+      description: Delete a cluster.
       tags:
         - Cluster
       parameters:
         - $ref: '#/components/parameters/cluster_name'
       responses:
         '200':
-          description: Successfully deleted a cluster
+          description: Successfully deleted a cluster.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Cluster'
         '404':
-          description: Cluster to delete does not exist
+          description: Cluster to delete does not exist.
           content:
             application/json:
               schema:
@@ -1276,7 +1276,7 @@ paths:
 
   /v1/clusters/{cluster_name}/attributes:
     get:
-      description: Retrieve all attributes of a cluster
+      description: Retrieve all attributes of a cluster.
       tags:
         - Cluster
       parameters:
@@ -1287,13 +1287,13 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
-          description: Cluster to Replace all attributes from does not exist
+          description: Cluster to Replace all attributes from does not exist.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorMessage'
     post:
-      description: Replace all attributes of a cluster
+      description: Replace all attributes of a cluster.
       tags:
         - Cluster
       parameters:
@@ -1304,7 +1304,7 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
-          description: Cluster to update does not exist
+          description: Cluster to update does not exist.
           content:
             application/json:
               schema:
@@ -1312,7 +1312,7 @@ paths:
 
   /v1/clusters/{cluster_name}/attributes/{attribute_name}:
     get:
-      description: Retrieve attribute of a cluster
+      description: Retrieve attribute of a cluster.
       tags:
         - Cluster
       parameters:
@@ -1326,7 +1326,7 @@ paths:
         '404':
           $ref: '#/components/responses/AttributeDoesNotExist'
     post:
-      description: Update attribute of a cluster
+      description: Update attribute of a cluster.
       tags:
         - Cluster
       parameters:
@@ -1348,7 +1348,7 @@ paths:
         '404':
           $ref: '#/components/responses/AttributeDoesNotExist'
     delete:
-      description: Delete attribute of a cluster
+      description: Delete attribute of a cluster.
       tags:
         - Cluster
       parameters:
@@ -1360,52 +1360,258 @@ paths:
         '404':
           $ref: '#/components/responses/AttributeDoesNotExist'
 
+  /v1/users:
+    get:
+      description: Retrieve all user.
+      tags:
+        - User
+      responses:
+        '200':
+          description: Successfully retrieved all users.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Users'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      description: Create a new use.
+      tags:
+        - User
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: Successfully created a new user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /v1/users/{user_name}:
+    get:
+      description: Retrieve user.
+      tags:
+        - User
+      parameters:
+        - $ref: '#/components/parameters/user_name'
+      responses:
+        '200':
+          description: Successfully retrieved user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: User to retrieve does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+    post:
+      description: Update a user.
+      tags:
+        - User
+      parameters:
+        - $ref: '#/components/parameters/user_name'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '200':
+          description: Successfully updated user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: User to update does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+    delete:
+      description: Delete a user.
+      tags:
+        - User
+      parameters:
+        - $ref: '#/components/parameters/user_name'
+      responses:
+        '200':
+          description: Successfully deleted a use.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          description: User to delete does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+
+  /v1/roles:
+    get:
+      description: Retrieve all roles.
+      tags:
+        - Role
+      responses:
+        '200':
+          description: Successfully retrieved all roles.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Roles'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      description: Create a new role.
+      tags:
+        - Role
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Role'
+      responses:
+        '200':
+          description: Successfully created a new role.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /v1/roles/{role_name}:
+    get:
+      description: Retrieve role.
+      tags:
+        - Role
+      parameters:
+        - $ref: '#/components/parameters/role_name'
+      responses:
+        '200':
+          description: Successfully retrieved role.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: Role to retrieve does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+    post:
+      description: Update a role.
+      tags:
+        - Role
+      parameters:
+        - $ref: '#/components/parameters/role_name'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Role'
+      responses:
+        '200':
+          description: Successfully updated role.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: Role to update does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+    delete:
+      description: Delete a role.
+      tags:
+        - Role
+      parameters:
+        - $ref: '#/components/parameters/role_name'
+      responses:
+        '200':
+          description: Successfully deleted a role.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+        '404':
+          description: Role to delete does not exist,.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+
 components:
   responses:
     BadRequest:
-      description: Bad request
+      description: Bad request.
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorMessage'
 
     AttributeRetrieved:
-      description: Successfully retrieved attribute
+      description: Successfully retrieved attribute.
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Attribute'
 
     AttributeCreated:
-      description: Successfully created attribute
+      description: Successfully created attribute.
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Attribute'
 
     AttributeUpdated:
-      description: Successfully updated attribute
+      description: Successfully updated attribute.
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Attribute'
 
     AttributeDoesNotExist:
-      description: Attribute does not exist
+      description: Attribute does not exist.
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorMessage'
 
     AttributeDeleted:
-      description: Successfully deleted attribute
+      description: Successfully deleted attribute.
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Attribute'
 
     AttributesRetrieved:
-      description: Successfully retrieved attributes
+      description: Successfully retrieved attributes.
       content:
         application/json:
           schema:
@@ -1417,7 +1623,7 @@ components:
                   $ref: "#/components/schemas/Attribute"
 
     AttributesUpdated:
-      description: Successfully replaced attributes
+      description: Successfully replaced attributes.
       content:
         application/json:
           schema:
@@ -1429,78 +1635,6 @@ components:
                   $ref: "#/components/schemas/Attribute"
 
   parameters:
-    organization_name:
-      name: organization_name
-      in: path
-      required: true
-      schema:
-        type: string
-      description: Name of organization
-
-    developer_emailaddress:
-      name: developer_emailaddress
-      in: path
-      required: true
-      schema:
-        type: string
-      description: Email address of developer
-
-    app_name:
-      name: app_name
-      in: path
-      required: true
-      schema:
-        type: string
-      description: Application name
-
-    app_id:
-      name: app_id
-      in: path
-      required: true
-      schema:
-        type: string
-      description: Application id
-
-    apiproduct_name:
-      name: apiproduct_name
-      in: path
-      required: true
-      schema:
-        type: string
-      description: Name of APIProduct
-
-    listener_name:
-      name: listener_name
-      in: path
-      required: true
-      schema:
-        type: string
-      description: Name of listener
-
-    route_name:
-      name: route_name
-      in: path
-      required: true
-      schema:
-        type: string
-      description: Name of route
-
-    cluster_name:
-      name: cluster_name
-      in: path
-      required: true
-      schema:
-        type: string
-      description: Name of cluster
-
-    attribute_name:
-      name: attribute_name
-      in: path
-      required: true
-      schema:
-        type: string
-      description: Name of attribute
-
     action:
       name: action
       in: query
@@ -1508,38 +1642,126 @@ components:
         type: string
       description: Optional, request status change of developer to 'active' or 'inactive', requires Content-type to be set to 'application/octet-stream'.
 
+    app_id:
+      name: app_id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Application id.
+
+    app_name:
+      name: app_name
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Application name.
+
+    apiproduct_name:
+      name: apiproduct_name
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Name of APIProduct.
+
+    attribute_name:
+      name: attribute_name
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Name of attribute.
+
+    cluster_name:
+      name: cluster_name
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Name of cluster.
+
+    developer_emailaddress:
+      name: developer_emailaddress
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Email address of developer.
+
+    listener_name:
+      name: listener_name
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Name of listener.
+
+    organization_name:
+      name: organization_name
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Name of organization.
+
+    role_name:
+      name: role_name
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Name of role.
+
+    route_name:
+      name: route_name
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Name of route.
+
+    user_name:
+      name: user_name
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Name of attribute.
+
   schemas:
     Developer:
       type: object
       properties:
         email:
           type: string
-          description: Email address of developer
+          description: Email address of developer.
         developerId:
           type: string
           readOnly: true
-          description: Internal id of developer
+          description: DeveloperID of developer. Cannot be updated.
         userName:
           type: string
-          description: Username
+          description: Username of developer.
         firstName:
           type: string
-          description: First name
+          description: First name of developer.
         lastName:
           type: string
-          description: Last name
+          description: Last name of developer.
         apps:
           type: array
           items:
             type: string
-          description: Name of developer applications
+          description: List of application names this developer has.
         attributes:
           type: array
           items:
             $ref: "#/components/schemas/Attribute"
         status:
           type: string
-          description: Status of develoepr
+          description: Status of developer. Can be 'active' or 'inactive'.
         createdAt:
           type: integer
           format: int64
@@ -1548,7 +1770,7 @@ components:
         createdBy:
           type: string
           readOnly: true
-          description: User who created this developer
+          description: User who created this developer.
         lastModifiedAt:
           type: integer
           format: int64
@@ -1557,7 +1779,7 @@ components:
         LastModifiedBy:
           type: string
           readOnly: true
-          description: User who last updated this developer
+          description: User who last updated this developer.
     Developers:
       type: object
       properties:
@@ -1565,43 +1787,43 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Developer"
-      description: All developer details
+      description: All developer details.
     DevelopersEmailAddresses:
       type: array
       items:
         type: string
-      description: All developer email addresses
+      description: All developer email addresses.
 
     Application:
       type: object
       properties:
         name:
           type: string
-          description: Application name
+          description: Application name. Can only be set at creation.
         displayName:
           type: string
           readOnly: true
-          description: Display name of application
+          description: Display name of application.
         appId:
           type: string
           readOnly: true
-          description: Application ID
+          description: ApplicationID of this application.
         developerId:
           type: string
           readOnly: true
-          description: Developer ID
+          description: DeveloperID of developer that owns this application.
         scopes:
           type: array
           items:
             type: string
-          description: OAuth scopes
+          description: OAuth scopes.
         attributes:
           type: array
           items:
             $ref: "#/components/schemas/Attribute"
         status:
           type: string
-          description: Status of application.
+          description: Status of application. Can be 'approved' or 'revoked'.
         callbackUrl:
           type: string
           description: OAuth callback URL.
@@ -1617,7 +1839,7 @@ components:
         createdBy:
           type: string
           readOnly: true
-          description: User who created this application
+          description: User who created this application.
         lastModifiedAt:
           type: integer
           format: int64
@@ -1634,7 +1856,7 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Application"
-      description: All application details
+      description: All application details.
     ApplicationNames:
       type: array
       items:
@@ -1644,6 +1866,33 @@ components:
     APIProduct:
       type: object
       properties:
+        name:
+          type: string
+          description: APIProduct name. Can only be set at creation.
+        displayName:
+          type: string
+          readOnly: true
+          description: Display name of APIProduct.
+        description:
+          type: string
+          readOnly: true
+          description: Description of APIProduct.
+        apiResources:
+          type: array
+          items:
+            type: string
+          description: List of paths belonging to this APIProduct.
+        policy:
+          type: string
+          description: List of policies to apply to APIProduct.
+        routeGroup:
+          type: string
+          description: Route group this product belongs to.
+        scopes:
+          type: array
+          items:
+            type: string
+          description: One or more scopes this APIProduct belongs to.
         approvalType:
           type: string
           readOnly: true
@@ -1661,14 +1910,6 @@ components:
           type: string
           readOnly: true
           description: User who created this APIProduct.
-        displayName:
-          type: string
-          readOnly: true
-          description: Display name of APIProduct.
-        description:
-          type: string
-          readOnly: true
-          description: Description of APIProduct.
         lastModifiedAt:
           type: integer
           format: int64
@@ -1678,25 +1919,6 @@ components:
           type: string
           readOnly: true
           description: User who last updated this APIProduct.
-        name:
-          type: string
-          description: APIProduct name.
-        apiResources:
-          type: array
-          items:
-            type: string
-          description: List of paths belonging to this APIProduct.
-        policy:
-          type: string
-          description: List of policies to apply to APIProduct.
-        routeGroup:
-          type: string
-          description: Route group this product belongs to.
-        scopes:
-          type: array
-          items:
-            type: string
-          description: List of scopes this APIProduct belongs to
     APIProducts:
       type: object
       properties:
@@ -1709,6 +1931,25 @@ components:
     Listener:
       type: object
       properties:
+        name:
+          type: string
+          readOnly: true
+          description: Name of listener. Can only be set at creation.
+        displayName:
+          type: string
+          description: Display name of lister.
+        port:
+          type: integer
+          description: Port number of this listener.
+        virtualHosts:
+          type: array
+          items:
+            type: string
+          description: One or more virtual hosts this listener should match on.
+        routeGroup:
+          type: string
+        policies:
+          type: string
         attributes:
           type: array
           items:
@@ -1721,9 +1962,7 @@ components:
         createdBy:
           type: string
           readOnly: true
-          description: User which created this listener
-        displayName:
-          type: string
+          description: User which created this listener.
         lastModifiedAt:
           type: integer
           format: int64
@@ -1732,21 +1971,7 @@ components:
         lastModifiedBy:
           type: string
           readOnly: true
-          description: User who last updated this listener
-        name:
-          type: string
-          readOnly: true
-          description: Name of listener
-        policies:
-          type: string
-        port:
-          type: integer
-        routeGroup:
-          type: string
-        virtualHosts:
-          type: array
-          items:
-            type: string
+          description: User who last updated this listener.
       required:
         - name
     Listeners:
@@ -1764,15 +1989,19 @@ components:
         name:
           type: string
           readOnly: true
-          description: Name of route
+          description: Name of route. Can only be set at creation.
         displayName:
           type: string
+          description: Display name of route.
         routeGroup:
           type: string
+          description: Route group this route belongs to, must match up with Listeners routegroup.
         path:
           type: string
+          description: Path to match on.
         pathType:
           type: string
+          description: Type of path matching to do, can be 'path' (exact match), 'prefix' or 'regexp'.
         attributes:
           type: array
           items:
@@ -1785,7 +2014,7 @@ components:
         createdBy:
           type: string
           readOnly: true
-          description: User which created this route
+          description: User which created this route.
         lastModifiedAt:
           type: integer
           format: int64
@@ -1794,7 +2023,7 @@ components:
         LastModifiedBy:
           type: string
           readOnly: true
-          description: User who last updated this route
+          description: User who last updated this route.
       required:
         - name
     Routes:
@@ -1812,10 +2041,11 @@ components:
         name:
           type: string
           readOnly: true
-          description: Name of cluster
+          description: Name of cluster. Can only be set at creation.
         displayName:
           type: string
-        Attributes:
+          description: Display name of cluster.
+        attributes:
           type: array
           items:
             $ref: "#/components/schemas/Attribute"
@@ -1827,7 +2057,7 @@ components:
         createdBy:
           type: string
           readOnly: true
-          description: User who created this cluster
+          description: User who created this cluster.
         lastModifiedAt:
           type: integer
           format: int64
@@ -1836,7 +2066,7 @@ components:
         LastModifiedBy:
           type: string
           readOnly: true
-          description: User who last updated this cluster
+          description: User who last updated this cluster.
       required:
         - name
     Clusters:
@@ -1848,15 +2078,118 @@ components:
             $ref: "#/components/schemas/Cluster"
       description: Details of all clusters.
 
+    User:
+      type: object
+      properties:
+        name:
+          type: string
+          readOnly: true
+          description: Name of user. Can only be set at creation.
+        displayName:
+          type: string
+          description: Display name of user.
+        password:
+          type: string
+          description: Password of user. Update only, can not be retrieved.
+        status:
+          type: string
+          description: Status of this user, can be 'active' or 'inactive'.
+        roles:
+          type: array
+          items:
+            type: string
+          description: Names of roles assigned to user.
+        createdAt:
+          type: integer
+          format: int64
+          readOnly: true
+          description: Create timestamp in milliseconds since epoch.
+        createdBy:
+          type: string
+          readOnly: true
+          description: User who created this user.
+        lastModifiedAt:
+          type: integer
+          format: int64
+          readOnly: true
+          description: Last modified timestamp in milliseconds since epoch.
+        lastModifiedBy:
+          type: string
+          readOnly: true
+          description: User who last updated this user.
+      required:
+        - name
+    Users:
+      type: object
+      properties:
+        user:
+          type: array
+          items:
+            $ref: "#/components/schemas/User"
+      description: Details of all users.
+
+    Role:
+      type: object
+      properties:
+        name:
+          type: string
+          readOnly: true
+          description: Name of role. Can only be set at creation.
+        displayName:
+          type: string
+          description: Display name of role.
+        allows:
+          type: array
+          items:
+            type: object
+            properties:
+              methods:
+                type: array
+                format: string
+                description: If specified request must match one of these methods.
+              paths:
+                type: array
+                format: string
+                description: If specified request must match one of these paths.
+          description: Methods and paths allowed by this role.
+        createdAt:
+          type: integer
+          format: int64
+          readOnly: true
+          description: Create timestamp in milliseconds since epoch.
+        createdBy:
+          type: string
+          readOnly: true
+          description: Role who created this role.
+        lastModifiedAt:
+          type: integer
+          format: int64
+          readOnly: true
+          description: Last modified timestamp in milliseconds since epoch.
+        lastModifiedBy:
+          type: string
+          readOnly: true
+          description: Role who last updated this role.
+      required:
+        - name
+    Roles:
+      type: object
+      properties:
+        role:
+          type: array
+          items:
+            $ref: "#/components/schemas/Role"
+      description: Details of all roles.
+
     Attribute:
       type: object
       properties:
         name:
           type: string
-          description: Name of attribute
+          description: Name of attribute.
         value:
           type: string
-          description: Value of attribute
+          description: Value of attribute.
 
     Attributes:
       type: object
@@ -1865,7 +2198,7 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Attribute"
-      description: All attributes
+      description: All attributes.
 
     ErrorMessage:
       type: object

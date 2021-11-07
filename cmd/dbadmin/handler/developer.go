@@ -227,14 +227,17 @@ func (h *Handler) responseDevelopers(c *gin.Context, developers types.Developers
 }
 
 func (h *Handler) responseDeveloper(c *gin.Context, developer *types.Developer) {
+
 	c.IndentedJSON(http.StatusOK, h.ToDeveloperResponse(developer))
 }
 
 func (h *Handler) responseDeveloperCreated(c *gin.Context, developer *types.Developer) {
+
 	c.IndentedJSON(http.StatusCreated, h.ToDeveloperResponse(developer))
 }
 
 func (h *Handler) responseDeveloperUpdated(c *gin.Context, developer *types.Developer) {
+
 	c.IndentedJSON(http.StatusOK, h.ToDeveloperResponse(developer))
 }
 

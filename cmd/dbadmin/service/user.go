@@ -94,8 +94,8 @@ func (us *UserService) Update(updatedUser types.User,
 // updateUser updates last-modified field(s) and updates user in database
 func (us *UserService) updateUser(updatedUser *types.User, who Requester) types.Error {
 
-	updatedUser.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
-	updatedUser.LastmodifiedBy = who.User
+	updatedUser.LastModifiedAt = shared.GetCurrentTimeMilliseconds()
+	updatedUser.LastModifiedBy = who.User
 	return us.db.User.Update(updatedUser)
 }
 

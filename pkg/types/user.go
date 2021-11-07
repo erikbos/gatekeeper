@@ -8,31 +8,31 @@ import "sort"
 type (
 	User struct {
 		// Name of user (not changable)
-		Name string `json:"name" binding:"required,min=4"`
+		Name string `binding:"required,min=4"`
 
 		// Display name
-		DisplayName string `json:"displayName"`
+		DisplayName string
 
 		// Password
-		Password string `json:"password,omitempty"`
+		Password string
 
 		// Status of this user
-		Status string `json:"status"`
+		Status string
 
 		// Role of this user
-		Roles []string `json:"roles"`
+		Roles []string
 
 		// Created at timestamp in epoch milliseconds
-		CreatedAt int64 `json:"createdAt"`
+		CreatedAt int64
 
 		// Name of user who created this user
-		CreatedBy string `json:"createdBy"`
+		CreatedBy string
 
 		// Last modified at timestamp in epoch milliseconds
-		LastmodifiedAt int64 `json:"lastmodifiedAt"`
+		LastModifiedAt int64
 
 		// Name of user who last updated this user
-		LastmodifiedBy string `json:"lastmodifiedBy"`
+		LastModifiedBy string
 	}
 
 	// Users holds one or more users

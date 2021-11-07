@@ -265,14 +265,17 @@ func (h *Handler) responseDeveloperAllApps(c *gin.Context, developerapps types.D
 }
 
 func (h *Handler) responseApplication(c *gin.Context, app *types.DeveloperApp) {
+
 	c.IndentedJSON(http.StatusOK, ToApplicationResponse(app))
 }
 
 func (h *Handler) responseApplicationCreated(c *gin.Context, app *types.DeveloperApp) {
+
 	c.IndentedJSON(http.StatusCreated, ToApplicationResponse(app))
 }
 
 func (h *Handler) responseApplicationUpdated(c *gin.Context, app *types.DeveloperApp) {
+
 	c.IndentedJSON(http.StatusOK, ToApplicationResponse(app))
 }
 

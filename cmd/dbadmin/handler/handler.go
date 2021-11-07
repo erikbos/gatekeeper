@@ -16,7 +16,6 @@ import (
 //go:generate oapi-codegen -package handler -generate types,gin -o dbadmin.gen.go ../../../openapi/gatekeeper.yaml
 
 // Handler has implements all methods of oapi-codegen's ServiceInterface
-// and contains our runtime parameters
 type Handler struct {
 	service *service.Service
 	logger  *zap.Logger
@@ -47,12 +46,9 @@ func NewHandler(g *gin.Engine, db *db.Database, s *service.Service, applicationN
 	g.GET(showDevelopersPath, handler.showDevelopersPage)
 	g.GET(showUserRolesPath, handler.showUserRolePage)
 
-	RegisterHandlers(g, handler)
-
 	// Register all API endpoint routes
-	handler.registerUserRoutes(apiRoutes)
-	handler.registerRoleRoutes(apiRoutes)
-
+	// TODO call right fucntion that adds middle ware
+	RegisterHandlers(g, handler)
 	handler.registerKeyRoutes(apiRoutes)
 
 	return handler
@@ -113,11 +109,6 @@ func handleOK(body interface{}) handlerResponse {
 	return handlerResponse{error: nil, responseBody: body}
 }
 
-// handleCreated returns 201 + json contents
-func handleCreated(body interface{}) handlerResponse {
-	return handlerResponse{error: nil, created: true, responseBody: body}
-}
-
 func handleError(e types.Error) handlerResponse {
 	return handlerResponse{error: e}
 }
@@ -171,7 +162,8 @@ func (h *Handler) responseErrorBadRequest(c *gin.Context, e error) {
 	h.responseError(c, types.NewBadRequestError(e))
 }
 
-// responseError returns formated error back to API client
+// responseErrorNameValueMisMatch when an entity update request has a name mismatch
+// between name of entity in url path vs name of entity in POSTed JSON name field
 func (h *Handler) responseErrorNameValueMisMatch(c *gin.Context) {
 
 	h.responseErrorBadRequest(c, errors.New("name field value mismatch"))

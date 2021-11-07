@@ -81,11 +81,11 @@ func (s *RoleStore) runGetRoleQuery(query string, queryParameters ...interface{}
 		roles = append(roles, types.Role{
 			Name:           columnValueString(m, "name"),
 			DisplayName:    columnValueString(m, "display_name"),
-			Allows:         types.NullAllows.Unmarshal(columnValueString(m, "allows")),
+			Allows:         AllowsUnmarshal(columnValueString(m, "allows")),
 			CreatedAt:      columnValueInt64(m, "created_at"),
 			CreatedBy:      columnValueString(m, "created_by"),
-			LastmodifiedAt: columnValueInt64(m, "lastmodified_at"),
-			LastmodifiedBy: columnValueString(m, "lastmodified_by"),
+			LastModifiedAt: columnValueInt64(m, "lastmodified_at"),
+			LastModifiedBy: columnValueString(m, "lastmodified_by"),
 		})
 		m = map[string]interface{}{}
 	}
@@ -103,11 +103,11 @@ func (s *RoleStore) Update(c *types.Role) types.Error {
 	if err := s.db.CassandraSession.Query(query,
 		c.Name,
 		c.DisplayName,
-		c.Allows.Marshal(),
+		AllowsMarshal(c.Allows),
 		c.CreatedAt,
 		c.CreatedBy,
-		c.LastmodifiedAt,
-		c.LastmodifiedBy).Exec(); err != nil {
+		c.LastModifiedAt,
+		c.LastModifiedBy).Exec(); err != nil {
 
 		s.db.metrics.QueryFailed(roleMetricLabel)
 		return types.NewDatabaseError(

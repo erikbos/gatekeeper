@@ -75,8 +75,8 @@ func (rs *RoleService) Update(updatedRole types.Role, who Requester) (*types.Rol
 // updateRole updates last-modified field(s) and updates role in database
 func (rs *RoleService) updateRole(updatedRole *types.Role, who Requester) types.Error {
 
-	updatedRole.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
-	updatedRole.LastmodifiedBy = who.User
+	updatedRole.LastModifiedAt = shared.GetCurrentTimeMilliseconds()
+	updatedRole.LastModifiedBy = who.User
 	return rs.db.Role.Update(updatedRole)
 }
 

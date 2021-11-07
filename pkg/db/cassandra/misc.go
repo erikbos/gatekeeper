@@ -58,3 +58,24 @@ func AttributesMarshal(attributes types.Attributes) string {
 	}
 	return "[]"
 }
+
+// AllowsUnmarshal unpacks JSON-encoded role allows into Allows
+func AllowsUnmarshal(roleAllowsAsJSON string) types.Allows {
+
+	if roleAllowsAsJSON != "" {
+		var allows types.Allows
+		if err := json.Unmarshal([]byte(roleAllowsAsJSON), &allows); err == nil {
+			return allows
+		}
+	}
+	return types.NullAllows
+}
+
+// AllowsMarshal packs role Allows into JSON
+func AllowsMarshal(a types.Allows) string {
+
+	if json, err := json.Marshal(a); err == nil {
+		return string(json)
+	}
+	return "[]"
+}

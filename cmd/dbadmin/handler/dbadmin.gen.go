@@ -38,7 +38,7 @@ type APIProduct struct {
 	// Last modified timestamp in milliseconds since epoch.
 	LastModifiedAt *int64 `json:"lastModifiedAt,omitempty"`
 
-	// APIProduct name.
+	// APIProduct name. Can only be set at creation.
 	Name *string `json:"name,omitempty"`
 
 	// List of policies to apply to APIProduct.
@@ -47,7 +47,7 @@ type APIProduct struct {
 	// Route group this product belongs to.
 	RouteGroup *string `json:"routeGroup,omitempty"`
 
-	// List of scopes this APIProduct belongs to
+	// One or more scopes this APIProduct belongs to.
 	Scopes *[]string `json:"scopes,omitempty"`
 }
 
@@ -61,7 +61,7 @@ type Application struct {
 	// User who last updated this application.
 	LastModifiedBy *string `json:"LastModifiedBy,omitempty"`
 
-	// Application ID
+	// ApplicationID of this application.
 	AppId      *string      `json:"appId,omitempty"`
 	Attributes *[]Attribute `json:"attributes,omitempty"`
 
@@ -71,13 +71,13 @@ type Application struct {
 	// Create timestamp in milliseconds since epoch.
 	CreatedAt *int64 `json:"createdAt,omitempty"`
 
-	// User who created this application
+	// User who created this application.
 	CreatedBy *string `json:"createdBy,omitempty"`
 
-	// Developer ID
+	// DeveloperID of developer that owns this application.
 	DeveloperId *string `json:"developerId,omitempty"`
 
-	// Display name of application
+	// Display name of application.
 	DisplayName *string `json:"displayName,omitempty"`
 
 	// Default time-to-live of new api keys.
@@ -86,56 +86,57 @@ type Application struct {
 	// Last modified timestamp in milliseconds since epoch.
 	LastModifiedAt *int64 `json:"lastModifiedAt,omitempty"`
 
-	// Application name
+	// Application name. Can only be set at creation.
 	Name *string `json:"name,omitempty"`
 
-	// OAuth scopes
+	// OAuth scopes.
 	Scopes *[]string `json:"scopes,omitempty"`
 
-	// Status of application.
+	// Status of application. Can be 'approved' or 'revoked'.
 	Status *string `json:"status,omitempty"`
 }
 
 // Application names.
 type ApplicationNames []string
 
-// All application details
+// All application details.
 type Applications struct {
 	Application *[]Application `json:"application,omitempty"`
 }
 
 // Attribute defines model for Attribute.
 type Attribute struct {
-	// Name of attribute
+	// Name of attribute.
 	Name *string `json:"name,omitempty"`
 
-	// Value of attribute
+	// Value of attribute.
 	Value *string `json:"value,omitempty"`
 }
 
-// All attributes
+// All attributes.
 type Attributes struct {
 	Attribute *[]Attribute `json:"attribute,omitempty"`
 }
 
 // Cluster defines model for Cluster.
 type Cluster struct {
-	Attributes *[]Attribute `json:"Attributes,omitempty"`
-
-	// User who last updated this cluster
-	LastModifiedBy *string `json:"LastModifiedBy,omitempty"`
+	// User who last updated this cluster.
+	LastModifiedBy *string      `json:"LastModifiedBy,omitempty"`
+	Attributes     *[]Attribute `json:"attributes,omitempty"`
 
 	// Create timestamp in milliseconds since epoch.
 	CreatedAt *int64 `json:"createdAt,omitempty"`
 
-	// User who created this cluster
-	CreatedBy   *string `json:"createdBy,omitempty"`
+	// User who created this cluster.
+	CreatedBy *string `json:"createdBy,omitempty"`
+
+	// Display name of cluster.
 	DisplayName *string `json:"displayName,omitempty"`
 
 	// Last modified timestamp in milliseconds since epoch.
 	LastModifiedAt *int64 `json:"lastModifiedAt,omitempty"`
 
-	// Name of cluster
+	// Name of cluster. Can only be set at creation.
 	Name string `json:"name"`
 }
 
@@ -146,47 +147,47 @@ type Clusters struct {
 
 // Developer defines model for Developer.
 type Developer struct {
-	// User who last updated this developer
+	// User who last updated this developer.
 	LastModifiedBy *string `json:"LastModifiedBy,omitempty"`
 
-	// Name of developer applications
+	// List of application names this developer has.
 	Apps       *[]string    `json:"apps,omitempty"`
 	Attributes *[]Attribute `json:"attributes,omitempty"`
 
 	// Create timestamp in milliseconds since epoch.
 	CreatedAt *int64 `json:"createdAt,omitempty"`
 
-	// User who created this developer
+	// User who created this developer.
 	CreatedBy *string `json:"createdBy,omitempty"`
 
-	// Internal id of developer
+	// DeveloperID of developer. Cannot be updated.
 	DeveloperId *string `json:"developerId,omitempty"`
 
-	// Email address of developer
+	// Email address of developer.
 	Email *string `json:"email,omitempty"`
 
-	// First name
+	// First name of developer.
 	FirstName *string `json:"firstName,omitempty"`
 
 	// Last modified timestamp in milliseconds since epoch.
 	LastModifiedAt *int64 `json:"lastModifiedAt,omitempty"`
 
-	// Last name
+	// Last name of developer.
 	LastName *string `json:"lastName,omitempty"`
 
-	// Status of develoepr
+	// Status of developer. Can be 'active' or 'inactive'.
 	Status *string `json:"status,omitempty"`
 
-	// Username
+	// Username of developer.
 	UserName *string `json:"userName,omitempty"`
 }
 
-// All developer details
+// All developer details.
 type Developers struct {
 	Developer *[]Developer `json:"developer,omitempty"`
 }
 
-// All developer email addresses
+// All developer email addresses.
 type DevelopersEmailAddresses []string
 
 // ErrorMessage defines model for ErrorMessage.
@@ -202,21 +203,27 @@ type Listener struct {
 	// Create timestamp in milliseconds since epoch.
 	CreatedAt *int64 `json:"createdAt,omitempty"`
 
-	// User which created this listener
-	CreatedBy   *string `json:"createdBy,omitempty"`
+	// User which created this listener.
+	CreatedBy *string `json:"createdBy,omitempty"`
+
+	// Display name of lister.
 	DisplayName *string `json:"displayName,omitempty"`
 
 	// Last modified timestamp in milliseconds since epoch.
 	LastModifiedAt *int64 `json:"lastModifiedAt,omitempty"`
 
-	// User who last updated this listener
+	// User who last updated this listener.
 	LastModifiedBy *string `json:"lastModifiedBy,omitempty"`
 
-	// Name of listener
-	Name         string    `json:"name"`
-	Policies     *string   `json:"policies,omitempty"`
-	Port         *int      `json:"port,omitempty"`
-	RouteGroup   *string   `json:"routeGroup,omitempty"`
+	// Name of listener. Can only be set at creation.
+	Name     string  `json:"name"`
+	Policies *string `json:"policies,omitempty"`
+
+	// Port number of this listener.
+	Port       *int    `json:"port,omitempty"`
+	RouteGroup *string `json:"routeGroup,omitempty"`
+
+	// One or more virtual hosts this listener should match on.
 	VirtualHosts *[]string `json:"virtualHosts,omitempty"`
 }
 
@@ -225,32 +232,110 @@ type Listeners struct {
 	Listeners *[]Listener `json:"listeners,omitempty"`
 }
 
+// Role defines model for Role.
+type Role struct {
+	// Methods and paths allowed by this role.
+	Allows *[]struct {
+		// If specified request must match one of these methods.
+		Methods *[]interface{} `json:"methods,omitempty"`
+
+		// If specified request must match one of these paths.
+		Paths *[]interface{} `json:"paths,omitempty"`
+	} `json:"allows,omitempty"`
+
+	// Create timestamp in milliseconds since epoch.
+	CreatedAt *int64 `json:"createdAt,omitempty"`
+
+	// Role who created this role.
+	CreatedBy *string `json:"createdBy,omitempty"`
+
+	// Display name of role.
+	DisplayName *string `json:"displayName,omitempty"`
+
+	// Last modified timestamp in milliseconds since epoch.
+	LastModifiedAt *int64 `json:"lastModifiedAt,omitempty"`
+
+	// Role who last updated this role.
+	LastModifiedBy *string `json:"lastModifiedBy,omitempty"`
+
+	// Name of role. Can only be set at creation.
+	Name string `json:"name"`
+}
+
+// Details of all roles.
+type Roles struct {
+	Role *[]Role `json:"role,omitempty"`
+}
+
 // Route defines model for Route.
 type Route struct {
-	// User who last updated this route
+	// User who last updated this route.
 	LastModifiedBy *string      `json:"LastModifiedBy,omitempty"`
 	Attributes     *[]Attribute `json:"attributes,omitempty"`
 
 	// Create timestamp in milliseconds since epoch.
 	CreatedAt *int64 `json:"createdAt,omitempty"`
 
-	// User which created this route
-	CreatedBy   *string `json:"createdBy,omitempty"`
+	// User which created this route.
+	CreatedBy *string `json:"createdBy,omitempty"`
+
+	// Display name of route.
 	DisplayName *string `json:"displayName,omitempty"`
 
 	// Last modified timestamp in milliseconds since epoch.
 	LastModifiedAt *int64 `json:"lastModifiedAt,omitempty"`
 
-	// Name of route
-	Name       string  `json:"name"`
-	Path       *string `json:"path,omitempty"`
-	PathType   *string `json:"pathType,omitempty"`
+	// Name of route. Can only be set at creation.
+	Name string `json:"name"`
+
+	// Path to match on.
+	Path *string `json:"path,omitempty"`
+
+	// Type of path matching to do, can be 'path' (exact match), 'prefix' or 'regexp'.
+	PathType *string `json:"pathType,omitempty"`
+
+	// Route group this route belongs to, must match up with Listeners routegroup.
 	RouteGroup *string `json:"routeGroup,omitempty"`
 }
 
 // Details of all routes.
 type Routes struct {
 	Routes *[]Route `json:"routes,omitempty"`
+}
+
+// User defines model for User.
+type User struct {
+	// Create timestamp in milliseconds since epoch.
+	CreatedAt *int64 `json:"createdAt,omitempty"`
+
+	// User who created this user.
+	CreatedBy *string `json:"createdBy,omitempty"`
+
+	// Display name of user.
+	DisplayName *string `json:"displayName,omitempty"`
+
+	// Last modified timestamp in milliseconds since epoch.
+	LastModifiedAt *int64 `json:"lastModifiedAt,omitempty"`
+
+	// User who last updated this user.
+	LastModifiedBy *string `json:"lastModifiedBy,omitempty"`
+
+	// Name of user. Can only be set at creation.
+	Name string `json:"name"`
+
+	// Password of user. Update only, can not be retrieved.
+	Password *string `json:"password,omitempty"`
+
+	// Names of roles assigned to user.
+	Roles *[]string `json:"roles,omitempty"`
+
+	// Status of this user, can be 'active' or 'inactive'.
+	Status *string `json:"status,omitempty"`
+}
+
+// Details of all users.
+type Users struct {
+	User *[]User `json:"user,omitempty"`
 }
 
 // Action defines model for action.
@@ -280,8 +365,14 @@ type ListenerName string
 // OrganizationName defines model for organization_name.
 type OrganizationName string
 
+// RoleName defines model for role_name.
+type RoleName string
+
 // RouteName defines model for route_name.
 type RouteName string
+
+// UserName defines model for user_name.
+type UserName string
 
 // AttributeCreated defines model for AttributeCreated.
 type AttributeCreated Attribute
@@ -331,10 +422,10 @@ type PostV1ListenersListenerNameAttributesAttributeNameJSONBody Attribute
 
 // GetV1OrganizationsOrganizationNameApiproductsParams defines parameters for GetV1OrganizationsOrganizationNameApiproducts.
 type GetV1OrganizationsOrganizationNameApiproductsParams struct {
-	// Return full APIProducts details
+	// Return full APIProducts details.
 	Expand *bool `json:"expand,omitempty"`
 
-	// maximum number of APIProducts to return
+	// maximum number of APIProducts to return.
 	Count *int `json:"count,omitempty"`
 }
 
@@ -358,19 +449,19 @@ type PostV1OrganizationsOrganizationNameApiproductsApiproductNameAttributesAttri
 
 // GetV1OrganizationsOrganizationNameAppsParams defines parameters for GetV1OrganizationsOrganizationNameApps.
 type GetV1OrganizationsOrganizationNameAppsParams struct {
-	// Return full details of each application
+	// Return full details of each application.
 	Expand *bool `json:"expand,omitempty"`
 
-	// Maximum number of applications to return
+	// Maximum number of applications to return.
 	Rows *int32 `json:"rows,omitempty"`
 }
 
 // GetV1OrganizationsOrganizationNameDevelopersParams defines parameters for GetV1OrganizationsOrganizationNameDevelopers.
 type GetV1OrganizationsOrganizationNameDevelopersParams struct {
-	// Return full developer details
+	// Return full developer details.
 	Expand *bool `json:"expand,omitempty"`
 
-	// maximum number of developers to return
+	// maximum number of developers to return.
 	Count *int `json:"count,omitempty"`
 }
 
@@ -388,10 +479,10 @@ type PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressParams st
 
 // GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsParams defines parameters for GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressApps.
 type GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsParams struct {
-	// Return full details of each application
+	// Return full details of each application.
 	Expand *bool `json:"expand,omitempty"`
 
-	// Maximum number of applications to return
+	// Maximum number of applications to return.
 	Count *int `json:"count,omitempty"`
 }
 
@@ -419,6 +510,12 @@ type PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttribute
 // PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributesAttributeNameJSONBody defines parameters for PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributesAttributeName.
 type PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributesAttributeNameJSONBody Attribute
 
+// PostV1RolesJSONBody defines parameters for PostV1Roles.
+type PostV1RolesJSONBody Role
+
+// PostV1RolesRoleNameJSONBody defines parameters for PostV1RolesRoleName.
+type PostV1RolesRoleNameJSONBody Role
+
 // PostV1RoutesJSONBody defines parameters for PostV1Routes.
 type PostV1RoutesJSONBody Route
 
@@ -430,6 +527,12 @@ type PostV1RoutesRouteNameAttributesJSONBody Attributes
 
 // PostV1RoutesRouteNameAttributesAttributeNameJSONBody defines parameters for PostV1RoutesRouteNameAttributesAttributeName.
 type PostV1RoutesRouteNameAttributesAttributeNameJSONBody Attribute
+
+// PostV1UsersJSONBody defines parameters for PostV1Users.
+type PostV1UsersJSONBody User
+
+// PostV1UsersUserNameJSONBody defines parameters for PostV1UsersUserName.
+type PostV1UsersUserNameJSONBody User
 
 // PostV1ClustersJSONRequestBody defines body for PostV1Clusters for application/json ContentType.
 type PostV1ClustersJSONRequestBody PostV1ClustersJSONBody
@@ -485,6 +588,12 @@ type PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttribute
 // PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributesAttributeNameJSONRequestBody defines body for PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributesAttributeName for application/json ContentType.
 type PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributesAttributeNameJSONRequestBody PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributesAttributeNameJSONBody
 
+// PostV1RolesJSONRequestBody defines body for PostV1Roles for application/json ContentType.
+type PostV1RolesJSONRequestBody PostV1RolesJSONBody
+
+// PostV1RolesRoleNameJSONRequestBody defines body for PostV1RolesRoleName for application/json ContentType.
+type PostV1RolesRoleNameJSONRequestBody PostV1RolesRoleNameJSONBody
+
 // PostV1RoutesJSONRequestBody defines body for PostV1Routes for application/json ContentType.
 type PostV1RoutesJSONRequestBody PostV1RoutesJSONBody
 
@@ -496,6 +605,12 @@ type PostV1RoutesRouteNameAttributesJSONRequestBody PostV1RoutesRouteNameAttribu
 
 // PostV1RoutesRouteNameAttributesAttributeNameJSONRequestBody defines body for PostV1RoutesRouteNameAttributesAttributeName for application/json ContentType.
 type PostV1RoutesRouteNameAttributesAttributeNameJSONRequestBody PostV1RoutesRouteNameAttributesAttributeNameJSONBody
+
+// PostV1UsersJSONRequestBody defines body for PostV1Users for application/json ContentType.
+type PostV1UsersJSONRequestBody PostV1UsersJSONBody
+
+// PostV1UsersUserNameJSONRequestBody defines body for PostV1UsersUserName for application/json ContentType.
+type PostV1UsersUserNameJSONRequestBody PostV1UsersUserNameJSONBody
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
@@ -656,6 +771,21 @@ type ServerInterface interface {
 	// (POST /v1/organizations/{organization_name}/developers/{developer_emailaddress}/attributes/{attribute_name})
 	PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributesAttributeName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, attributeName AttributeName)
 
+	// (GET /v1/roles)
+	GetV1Roles(c *gin.Context)
+
+	// (POST /v1/roles)
+	PostV1Roles(c *gin.Context)
+
+	// (DELETE /v1/roles/{role_name})
+	DeleteV1RolesRoleName(c *gin.Context, roleName RoleName)
+
+	// (GET /v1/roles/{role_name})
+	GetV1RolesRoleName(c *gin.Context, roleName RoleName)
+
+	// (POST /v1/roles/{role_name})
+	PostV1RolesRoleName(c *gin.Context, roleName RoleName)
+
 	// (GET /v1/routes)
 	GetV1Routes(c *gin.Context)
 
@@ -685,6 +815,21 @@ type ServerInterface interface {
 
 	// (POST /v1/routes/{route_name}/attributes/{attribute_name})
 	PostV1RoutesRouteNameAttributesAttributeName(c *gin.Context, routeName RouteName, attributeName AttributeName)
+
+	// (GET /v1/users)
+	GetV1Users(c *gin.Context)
+
+	// (POST /v1/users)
+	PostV1Users(c *gin.Context)
+
+	// (DELETE /v1/users/{user_name})
+	DeleteV1UsersUserName(c *gin.Context, userName UserName)
+
+	// (GET /v1/users/{user_name})
+	GetV1UsersUserName(c *gin.Context, userName UserName)
+
+	// (POST /v1/users/{user_name})
+	PostV1UsersUserName(c *gin.Context, userName UserName)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -2335,6 +2480,89 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 	siw.Handler.PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributesAttributeName(c, organizationName, developerEmailaddress, attributeName)
 }
 
+// GetV1Roles operation middleware
+func (siw *ServerInterfaceWrapper) GetV1Roles(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.GetV1Roles(c)
+}
+
+// PostV1Roles operation middleware
+func (siw *ServerInterfaceWrapper) PostV1Roles(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PostV1Roles(c)
+}
+
+// DeleteV1RolesRoleName operation middleware
+func (siw *ServerInterfaceWrapper) DeleteV1RolesRoleName(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "role_name" -------------
+	var roleName RoleName
+
+	err = runtime.BindStyledParameter("simple", false, "role_name", c.Param("role_name"), &roleName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter role_name: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.DeleteV1RolesRoleName(c, roleName)
+}
+
+// GetV1RolesRoleName operation middleware
+func (siw *ServerInterfaceWrapper) GetV1RolesRoleName(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "role_name" -------------
+	var roleName RoleName
+
+	err = runtime.BindStyledParameter("simple", false, "role_name", c.Param("role_name"), &roleName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter role_name: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.GetV1RolesRoleName(c, roleName)
+}
+
+// PostV1RolesRoleName operation middleware
+func (siw *ServerInterfaceWrapper) PostV1RolesRoleName(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "role_name" -------------
+	var roleName RoleName
+
+	err = runtime.BindStyledParameter("simple", false, "role_name", c.Param("role_name"), &roleName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter role_name: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PostV1RolesRoleName(c, roleName)
+}
+
 // GetV1Routes operation middleware
 func (siw *ServerInterfaceWrapper) GetV1Routes(c *gin.Context) {
 
@@ -2550,6 +2778,89 @@ func (siw *ServerInterfaceWrapper) PostV1RoutesRouteNameAttributesAttributeName(
 	siw.Handler.PostV1RoutesRouteNameAttributesAttributeName(c, routeName, attributeName)
 }
 
+// GetV1Users operation middleware
+func (siw *ServerInterfaceWrapper) GetV1Users(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.GetV1Users(c)
+}
+
+// PostV1Users operation middleware
+func (siw *ServerInterfaceWrapper) PostV1Users(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PostV1Users(c)
+}
+
+// DeleteV1UsersUserName operation middleware
+func (siw *ServerInterfaceWrapper) DeleteV1UsersUserName(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "user_name" -------------
+	var userName UserName
+
+	err = runtime.BindStyledParameter("simple", false, "user_name", c.Param("user_name"), &userName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter user_name: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.DeleteV1UsersUserName(c, userName)
+}
+
+// GetV1UsersUserName operation middleware
+func (siw *ServerInterfaceWrapper) GetV1UsersUserName(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "user_name" -------------
+	var userName UserName
+
+	err = runtime.BindStyledParameter("simple", false, "user_name", c.Param("user_name"), &userName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter user_name: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.GetV1UsersUserName(c, userName)
+}
+
+// PostV1UsersUserName operation middleware
+func (siw *ServerInterfaceWrapper) PostV1UsersUserName(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "user_name" -------------
+	var userName UserName
+
+	err = runtime.BindStyledParameter("simple", false, "user_name", c.Param("user_name"), &userName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter user_name: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PostV1UsersUserName(c, userName)
+}
+
 // GinServerOptions provides options for the Gin server.
 type GinServerOptions struct {
 	BaseURL     string
@@ -2672,6 +2983,16 @@ func RegisterHandlersWithOptions(router *gin.Engine, si ServerInterface, options
 
 	router.POST(options.BaseURL+"/v1/organizations/:organization_name/developers/:developer_emailaddress/attributes/:attribute_name", wrapper.PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributesAttributeName)
 
+	router.GET(options.BaseURL+"/v1/roles", wrapper.GetV1Roles)
+
+	router.POST(options.BaseURL+"/v1/roles", wrapper.PostV1Roles)
+
+	router.DELETE(options.BaseURL+"/v1/roles/:role_name", wrapper.DeleteV1RolesRoleName)
+
+	router.GET(options.BaseURL+"/v1/roles/:role_name", wrapper.GetV1RolesRoleName)
+
+	router.POST(options.BaseURL+"/v1/roles/:role_name", wrapper.PostV1RolesRoleName)
+
 	router.GET(options.BaseURL+"/v1/routes", wrapper.GetV1Routes)
 
 	router.POST(options.BaseURL+"/v1/routes", wrapper.PostV1Routes)
@@ -2691,6 +3012,16 @@ func RegisterHandlersWithOptions(router *gin.Engine, si ServerInterface, options
 	router.GET(options.BaseURL+"/v1/routes/:route_name/attributes/:attribute_name", wrapper.GetV1RoutesRouteNameAttributesAttributeName)
 
 	router.POST(options.BaseURL+"/v1/routes/:route_name/attributes/:attribute_name", wrapper.PostV1RoutesRouteNameAttributesAttributeName)
+
+	router.GET(options.BaseURL+"/v1/users", wrapper.GetV1Users)
+
+	router.POST(options.BaseURL+"/v1/users", wrapper.PostV1Users)
+
+	router.DELETE(options.BaseURL+"/v1/users/:user_name", wrapper.DeleteV1UsersUserName)
+
+	router.GET(options.BaseURL+"/v1/users/:user_name", wrapper.GetV1UsersUserName)
+
+	router.POST(options.BaseURL+"/v1/users/:user_name", wrapper.PostV1UsersUserName)
 
 	return router
 }
