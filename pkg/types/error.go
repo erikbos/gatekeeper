@@ -111,6 +111,9 @@ func HTTPStatusCode(e Error) int {
 		return http.StatusBadRequest
 
 	case errUnauthorized:
+		return http.StatusUnauthorized
+
+	case errForbidden:
 		return http.StatusForbidden
 
 	case errForbidden:
