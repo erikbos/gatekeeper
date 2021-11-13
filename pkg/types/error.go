@@ -100,8 +100,8 @@ func NewDatabaseError(details error) Error {
 	return newError(errDatabaseIssue, details)
 }
 
-// HTTPErrorStatusCode returns HTTP status code for Error type
-func HTTPErrorStatusCode(e Error) int {
+// HTTPStatusCode returns HTTP status code for Error type
+func HTTPStatusCode(e Error) int {
 
 	switch e.Type() {
 	case errUpdateFailure:

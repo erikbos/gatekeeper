@@ -8,25 +8,28 @@ import "encoding/json"
 type (
 	Key struct {
 		// ConsumerKey is the key required for authentication
-		ConsumerKey string `json:"consumerKey"`
+		ConsumerKey string
 
 		// ConsumerSecret is secretid of this key, needed to request OAuth2 access token
-		ConsumerSecret string `json:"consumerSecret"`
+		ConsumerSecret string
 
 		// List of apiproducts which can be accessed using this key
-		APIProducts APIProductStatuses `json:"apiProducts"`
+		APIProducts KeyAPIProductStatuses
 
 		// Expiry date in epoch milliseconds
-		ExpiresAt int64 `json:"expiresAt"`
+		ExpiresAt int64
 
 		// Issue date in epoch milliseconds
-		IssuedAt int64 `json:"issuesAt"`
+		IssuedAt int64
+
+		// Attributes of key
+		Attributes Attributes
 
 		// Developer app id this key belongs to
-		AppID string `json:"AppId"`
+		AppID string
 
 		// Status (should be "approved" to allow access)
-		Status string `json:"status"`
+		Status string
 	}
 
 	// Keys holds one or more apikeys
@@ -41,8 +44,8 @@ var (
 	NullDeveloperAppKeys = Keys{}
 )
 
-// APIProductStatus contains whether an apikey's assigned apiproduct has been approved
-type APIProductStatus struct {
+// KeyAPIProductStatus contains whether an apikey's assigned apiproduct has been approved
+type KeyAPIProductStatus struct {
 	// Name of apiproduct
 	Apiproduct string `json:"apiProduct"`
 
@@ -50,8 +53,8 @@ type APIProductStatus struct {
 	Status string `json:"status"`
 }
 
-// APIProductStatuses contains list of apiproducts
-type APIProductStatuses []APIProductStatus
+// KeyAPIProductStatuses contains list of apiproducts
+type KeyAPIProductStatuses []KeyAPIProductStatus
 
 // SetApproved marks this key as approved
 func (k *Key) SetApproved() {
@@ -78,13 +81,13 @@ func (k *Key) IsExpired(now int64) bool {
 }
 
 // SetApproved marks a key's apiproduct as approved
-func (p *APIProductStatus) SetApproved() {
+func (p *KeyAPIProductStatus) SetApproved() {
 
 	p.Status = "approved"
 }
 
 // IsApproved returns true in case key's apiproduct status is approved
-func (p *APIProductStatus) IsApproved() bool {
+func (p *KeyAPIProductStatus) IsApproved() bool {
 
 	return p.Status == "approved"
 }
@@ -92,21 +95,21 @@ func (p *APIProductStatus) IsApproved() bool {
 // Unmarshal unpacks JSON array of attribute bags
 // Example input: [{"name":"S","value":"erikbos teleporter"},{"name":"ErikbosTeleporterExtraAttribute","value":"42"}]
 //
-func (ps APIProductStatuses) Unmarshal(jsonProductStatuses string) []APIProductStatus {
+func (ps KeyAPIProductStatuses) Unmarshal(jsonProductStatuses string) []KeyAPIProductStatus {
 
 	if jsonProductStatuses != "" {
-		var productStatus = make([]APIProductStatus, 0)
+		var productStatus = make([]KeyAPIProductStatus, 0)
 		if err := json.Unmarshal([]byte(jsonProductStatuses), &productStatus); err == nil {
 			return productStatus
 		}
 	}
-	return []APIProductStatus{}
+	return []KeyAPIProductStatus{}
 }
 
 // Marshal packs array of attributes into JSON
 // Example input: [{"name":"DisplayName","value":"erikbos teleporter"},{"name":"ErikbosTeleporterExtraAttribute","value":"42"}]
 //
-func (ps APIProductStatuses) Marshal() string {
+func (ps KeyAPIProductStatuses) Marshal() string {
 
 	if len(ps) > 0 {
 		ArrayOfAttributesInJSON, err := json.Marshal(ps)

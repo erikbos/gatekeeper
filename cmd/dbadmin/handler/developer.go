@@ -15,7 +15,7 @@ func (h *Handler) GetV1OrganizationsOrganizationNameDevelopers(c *gin.Context, o
 
 	developers, err := h.service.Developer.GetAll()
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	// Do we have to return full developer details?
@@ -32,13 +32,13 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopers(c *gin.Context, 
 
 	var receivedDeveloper Developer
 	if err := c.ShouldBindJSON(&receivedDeveloper); err != nil {
-		h.responseError(c, types.NewBadRequestError(err))
+		responseError(c, types.NewBadRequestError(err))
 		return
 	}
 	newDeveloper := fromDeveloper(receivedDeveloper)
 	createdDeveloper, err := h.service.Developer.Create(newDeveloper, h.who(c))
 	if err != nil {
-		h.responseError(c, types.NewBadRequestError(err))
+		responseError(c, types.NewBadRequestError(err))
 		return
 	}
 	h.responseDeveloperCreated(c, &createdDeveloper)
@@ -50,7 +50,7 @@ func (h *Handler) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmaila
 
 	developer, err := h.service.Developer.Delete(string(developerEmailaddress), h.who(c))
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	h.responseDeveloper(c, &developer)
@@ -62,7 +62,7 @@ func (h *Handler) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddr
 
 	developer, err := h.service.Developer.Get(string(developerEmailaddress))
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	h.responseDeveloper(c, developer)
@@ -78,13 +78,13 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 	}
 	var receivedDeveloper Developer
 	if err := c.ShouldBindJSON(&receivedDeveloper); err != nil {
-		h.responseErrorBadRequest(c, err)
+		responseErrorBadRequest(c, err)
 		return
 	}
 	updatedDeveloper := fromDeveloper(receivedDeveloper)
 	storedDeveloper, err := h.service.Developer.Update(string(developerEmailaddress), updatedDeveloper, h.who(c))
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	h.responseDeveloperUpdated(c, &storedDeveloper)
@@ -95,7 +95,7 @@ func (h *Handler) changeDeveloperStatus(c *gin.Context, developerEmailaddress, r
 
 	developer, err := h.service.Developer.Get(string(developerEmailaddress))
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	switch requestedStatus {
@@ -104,12 +104,12 @@ func (h *Handler) changeDeveloperStatus(c *gin.Context, developerEmailaddress, r
 	case "inactive":
 		developer.Deactivate()
 	default:
-		h.responseErrorBadRequest(c, errors.New("unknown status requested"))
+		responseErrorBadRequest(c, errors.New("unknown status requested"))
 		return
 	}
 	_, err = h.service.Developer.Update(string(developerEmailaddress), *developer, h.who(c))
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	c.Status(http.StatusNoContent)
@@ -121,7 +121,7 @@ func (h *Handler) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddr
 
 	developer, err := h.service.Developer.Get(string(developerEmailaddress))
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	h.responseAttributes(c, developer.Attributes)
@@ -133,13 +133,13 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 
 	var receivedAttributes Attributes
 	if err := c.ShouldBindJSON(&receivedAttributes); err != nil {
-		h.responseErrorBadRequest(c, err)
+		responseErrorBadRequest(c, err)
 		return
 	}
 	attributes := fromAttributesRequest(receivedAttributes.Attribute)
 	if err := h.service.Developer.UpdateAttributes(
 		string(developerEmailaddress), attributes, h.who(c)); err != nil {
-		h.responseErrorBadRequest(c, err)
+		responseErrorBadRequest(c, err)
 		return
 	}
 	h.responseAttributes(c, attributes)
@@ -152,7 +152,7 @@ func (h *Handler) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmaila
 	oldValue, err := h.service.Developer.DeleteAttribute(
 		string(developerEmailaddress), string(attributeName), h.who(c))
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	h.responseAttributeDeleted(c, &types.Attribute{
@@ -167,12 +167,12 @@ func (h *Handler) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddr
 
 	developer, err := h.service.Developer.Get(string(developerEmailaddress))
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	attributeValue, err := developer.Attributes.Get(string(attributeName))
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	h.responseAttributeRetrieved(c, &types.Attribute{
@@ -187,7 +187,7 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 
 	var receivedValue Attribute
 	if err := c.ShouldBindJSON(&receivedValue); err != nil {
-		h.responseErrorBadRequest(c, err)
+		responseErrorBadRequest(c, err)
 		return
 	}
 	newAttribute := types.Attribute{
@@ -196,7 +196,7 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 	}
 	if err := h.service.Developer.UpdateAttribute(
 		string(developerEmailaddress), newAttribute, h.who(c)); err != nil {
-		h.responseErrorBadRequest(c, err)
+		responseErrorBadRequest(c, err)
 		return
 	}
 	h.responseAttributeUpdated(c, &newAttribute)

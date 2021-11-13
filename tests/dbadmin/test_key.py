@@ -156,7 +156,7 @@ def test_key_update_ignore_provided_fields():
                    "value" : "42"
               }
         ],
-        'issuedAt': 666,
+        'issuedAt': 4242,
     }
     updated_key = key_api.update_positive(app_first_key, key_changed)
 
@@ -308,6 +308,8 @@ def test_key_api_product_change_status():
 
 
 # test keyexpiresin from developerapp
+
+# test import same key twice
 
 # test key for product with approvalType manual
 

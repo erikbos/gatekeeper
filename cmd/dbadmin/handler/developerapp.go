@@ -15,7 +15,7 @@ func (h *Handler) GetV1OrganizationsOrganizationNameApps(c *gin.Context, organiz
 
 	apps, err := h.service.DeveloperApp.GetAll()
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	// Do we have to return full developer details?
@@ -31,7 +31,7 @@ func (h *Handler) GetV1OrganizationsOrganizationNameAppsAppId(c *gin.Context, or
 
 	app, err := h.service.DeveloperApp.GetByID(string(appId))
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	h.responseApplication(c, app)
@@ -43,7 +43,7 @@ func (h *Handler) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddr
 
 	apps, err := h.service.DeveloperApp.GetAllByEmail(string(developerEmailaddress))
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	h.responseDeveloperAppNames(c, apps)
@@ -55,18 +55,18 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 
 	var receivedApplication Application
 	if err := c.ShouldBindJSON(&receivedApplication); err != nil {
-		h.responseErrorBadRequest(c, err)
+		responseErrorBadRequest(c, err)
 		return
 	}
 	_, err := h.service.Developer.Get(string(developerEmailaddress))
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	newApp := fromApplication(receivedApplication)
 	createdApp, err := h.service.DeveloperApp.Create(string(developerEmailaddress), newApp, h.who(c))
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	h.responseApplicationCreated(c, &createdApp)
@@ -77,13 +77,13 @@ func (h *Handler) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmaila
 
 	developer, err := h.service.Developer.Get(string(developerEmailaddress))
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	app, err := h.service.DeveloperApp.Delete(
 		developer.DeveloperID, string(appName), h.who(c))
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	h.responseApplication(c, &app)
@@ -94,7 +94,7 @@ func (h *Handler) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddr
 
 	app, err := h.service.DeveloperApp.GetByName(string(appName))
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	h.responseApplication(c, app)
@@ -109,13 +109,13 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 	}
 	var receivedApplication Application
 	if err := c.ShouldBindJSON(&receivedApplication); err != nil {
-		h.responseErrorBadRequest(c, err)
+		responseErrorBadRequest(c, err)
 		return
 	}
 	updatedApp := fromApplication(receivedApplication)
 	storedApp, err := h.service.DeveloperApp.Update(updatedApp, h.who(c))
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	h.responseApplicationUpdated(c, &storedApp)
@@ -126,7 +126,7 @@ func (h *Handler) changeDeveloperAppStatus(c *gin.Context, developerEmailaddress
 
 	app, err := h.service.DeveloperApp.GetByName(string(appName))
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	switch requestedStatus {
@@ -135,12 +135,12 @@ func (h *Handler) changeDeveloperAppStatus(c *gin.Context, developerEmailaddress
 	case "revoke":
 		app.Revoke()
 	default:
-		h.responseErrorBadRequest(c, errors.New("unknown status requested"))
+		responseErrorBadRequest(c, errors.New("unknown status requested"))
 		return
 	}
 	_, err = h.service.DeveloperApp.Update(*app, h.who(c))
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	c.Status(http.StatusNoContent)
@@ -152,7 +152,7 @@ func (h *Handler) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddr
 
 	app, err := h.service.DeveloperApp.GetByName(string(appName))
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	h.responseAttributes(c, app.Attributes)
@@ -163,13 +163,13 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 
 	var receivedAttributes Attributes
 	if err := c.ShouldBindJSON(&receivedAttributes); err != nil {
-		h.responseErrorBadRequest(c, err)
+		responseErrorBadRequest(c, err)
 		return
 	}
 	attributes := fromAttributesRequest(receivedAttributes.Attribute)
 	if err := h.service.DeveloperApp.UpdateAttributes(
 		string(appName), attributes, h.who(c)); err != nil {
-		h.responseErrorBadRequest(c, err)
+		responseErrorBadRequest(c, err)
 		return
 	}
 	h.responseAttributes(c, attributes)
@@ -182,7 +182,7 @@ func (h *Handler) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmaila
 	oldValue, err := h.service.DeveloperApp.DeleteAttribute(
 		string(appName), string(attributeName), h.who(c))
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	h.responseAttributeDeleted(c, &types.Attribute{
@@ -197,12 +197,12 @@ func (h *Handler) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddr
 
 	app, err := h.service.DeveloperApp.GetByName(string(appName))
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	attributeValue, err := app.Attributes.Get(string(attributeName))
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	h.responseAttributeRetrieved(c, &types.Attribute{
@@ -217,7 +217,7 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 
 	var receivedValue Attribute
 	if err := c.ShouldBindJSON(&receivedValue); err != nil {
-		h.responseErrorBadRequest(c, err)
+		responseErrorBadRequest(c, err)
 		return
 	}
 	newAttribute := types.Attribute{
@@ -226,7 +226,7 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 	}
 	if err := h.service.DeveloperApp.UpdateAttribute(
 		string(appName), newAttribute, h.who(c)); err != nil {
-		h.responseErrorBadRequest(c, err)
+		responseErrorBadRequest(c, err)
 		return
 	}
 	h.responseAttributeUpdated(c, &newAttribute)

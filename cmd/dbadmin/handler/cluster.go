@@ -14,7 +14,7 @@ func (h *Handler) GetV1Clusters(c *gin.Context) {
 
 	clusters, err := h.service.Cluster.GetAll()
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	h.responseClusterss(c, clusters)
@@ -26,13 +26,13 @@ func (h *Handler) PostV1Clusters(c *gin.Context) {
 
 	var receivedCluster Cluster
 	if err := c.ShouldBindJSON(&receivedCluster); err != nil {
-		h.responseError(c, types.NewBadRequestError(err))
+		responseError(c, types.NewBadRequestError(err))
 		return
 	}
 	newCluster := fromCluster(receivedCluster)
 	createdDeveloper, err := h.service.Cluster.Create(newCluster, h.who(c))
 	if err != nil {
-		h.responseError(c, types.NewBadRequestError(err))
+		responseError(c, types.NewBadRequestError(err))
 		return
 	}
 	h.responseClusterCreated(c, &createdDeveloper)
@@ -44,7 +44,7 @@ func (h *Handler) DeleteV1ClustersClusterName(c *gin.Context, clusterName Cluste
 
 	cluster, err := h.service.Cluster.Delete(string(clusterName), h.who(c))
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	h.responseClusters(c, &cluster)
@@ -56,7 +56,7 @@ func (h *Handler) GetV1ClustersClusterName(c *gin.Context, clusterName ClusterNa
 
 	cluster, err := h.service.Cluster.Get(string(clusterName))
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	h.responseClusters(c, cluster)
@@ -67,13 +67,13 @@ func (h *Handler) PostV1ClustersClusterName(c *gin.Context, clusterName ClusterN
 
 	var receivedCluster Cluster
 	if err := c.ShouldBindJSON(&receivedCluster); err != nil {
-		h.responseErrorBadRequest(c, err)
+		responseErrorBadRequest(c, err)
 		return
 	}
 	updatedCluster := fromCluster(receivedCluster)
 	storedCluster, err := h.service.Cluster.Update(updatedCluster, h.who(c))
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	h.responseClustersUpdated(c, &storedCluster)
@@ -85,7 +85,7 @@ func (h *Handler) GetV1ClustersClusterNameAttributes(c *gin.Context, clusterName
 
 	cluster, err := h.service.Cluster.Get(string(clusterName))
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	h.responseAttributes(c, cluster.Attributes)
@@ -97,13 +97,13 @@ func (h *Handler) PostV1ClustersClusterNameAttributes(c *gin.Context, clusterNam
 
 	var receivedAttributes Attributes
 	if err := c.ShouldBindJSON(&receivedAttributes); err != nil {
-		h.responseErrorBadRequest(c, err)
+		responseErrorBadRequest(c, err)
 		return
 	}
 	attributes := fromAttributesRequest(receivedAttributes.Attribute)
 	if err := h.service.Cluster.UpdateAttributes(
 		string(clusterName), attributes, h.who(c)); err != nil {
-		h.responseErrorBadRequest(c, err)
+		responseErrorBadRequest(c, err)
 		return
 	}
 	h.responseAttributes(c, attributes)
@@ -116,7 +116,7 @@ func (h *Handler) DeleteV1ClustersClusterNameAttributesAttributeName(c *gin.Cont
 	oldValue, err := h.service.Cluster.DeleteAttribute(
 		string(clusterName), string(attributeName), h.who(c))
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	h.responseAttributeDeleted(c, &types.Attribute{
@@ -131,12 +131,12 @@ func (h *Handler) GetV1ClustersClusterNameAttributesAttributeName(c *gin.Context
 
 	cluster, err := h.service.Cluster.Get(string(clusterName))
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	attributeValue, err := cluster.Attributes.Get(string(attributeName))
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	h.responseAttributeRetrieved(c, &types.Attribute{
@@ -151,7 +151,7 @@ func (h *Handler) PostV1ClustersClusterNameAttributesAttributeName(c *gin.Contex
 
 	var receivedValue Attribute
 	if err := c.ShouldBindJSON(&receivedValue); err != nil {
-		h.responseErrorBadRequest(c, err)
+		responseErrorBadRequest(c, err)
 		return
 	}
 	newAttribute := types.Attribute{
@@ -160,7 +160,7 @@ func (h *Handler) PostV1ClustersClusterNameAttributesAttributeName(c *gin.Contex
 	}
 	if err := h.service.Cluster.UpdateAttribute(
 		string(clusterName), newAttribute, h.who(c)); err != nil {
-		h.responseErrorBadRequest(c, err)
+		responseErrorBadRequest(c, err)
 		return
 	}
 	h.responseAttributeUpdated(c, &newAttribute)

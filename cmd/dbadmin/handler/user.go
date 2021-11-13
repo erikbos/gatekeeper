@@ -14,7 +14,7 @@ func (h *Handler) GetV1Users(c *gin.Context) {
 
 	users, err := h.service.User.GetAll()
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	removePasswords(users)
@@ -35,13 +35,13 @@ func (h *Handler) PostV1Users(c *gin.Context) {
 
 	var receivedUser User
 	if err := c.ShouldBindJSON(&receivedUser); err != nil {
-		h.responseError(c, types.NewBadRequestError(err))
+		responseError(c, types.NewBadRequestError(err))
 		return
 	}
 	newUser := fromUser(receivedUser)
 	storedUser, err := h.service.User.Create(newUser, h.who(c))
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	// Remove password so we do not show in response
@@ -55,7 +55,7 @@ func (h *Handler) GetV1UsersUserName(c *gin.Context, userName UserName) {
 
 	user, err := h.service.User.Get(string(userName))
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	user.Password = ""
@@ -68,17 +68,17 @@ func (h *Handler) PostV1UsersUserName(c *gin.Context, userName UserName) {
 
 	var receivedUser User
 	if err := c.ShouldBindJSON(&receivedUser); err != nil {
-		h.responseError(c, types.NewBadRequestError(err))
+		responseError(c, types.NewBadRequestError(err))
 		return
 	}
 	updatedUser := fromUser(receivedUser)
 	if updatedUser.Name != string(userName) {
-		h.responseErrorNameValueMisMatch(c)
+		responseErrorNameValueMisMatch(c)
 		return
 	}
 	storedUser, err := h.service.User.Update(updatedUser, h.who(c))
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	// Remove password so we do not show in response
@@ -92,7 +92,7 @@ func (h *Handler) DeleteV1UsersUserName(c *gin.Context, userName UserName) {
 
 	deletedUser, err := h.service.User.Delete(string(userName), h.who(c))
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	// Remove password so we do not show in response

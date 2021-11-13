@@ -14,7 +14,7 @@ func (h *Handler) GetV1Routes(c *gin.Context) {
 
 	routes, err := h.service.Route.GetAll()
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	h.responseRoutess(c, routes)
@@ -26,13 +26,13 @@ func (h *Handler) PostV1Routes(c *gin.Context) {
 
 	var receivedRoute Route
 	if err := c.ShouldBindJSON(&receivedRoute); err != nil {
-		h.responseError(c, types.NewBadRequestError(err))
+		responseError(c, types.NewBadRequestError(err))
 		return
 	}
 	newRoute := fromRoute(receivedRoute)
 	createdDeveloper, err := h.service.Route.Create(newRoute, h.who(c))
 	if err != nil {
-		h.responseError(c, types.NewBadRequestError(err))
+		responseError(c, types.NewBadRequestError(err))
 		return
 	}
 	h.responseRouteCreated(c, &createdDeveloper)
@@ -44,7 +44,7 @@ func (h *Handler) DeleteV1RoutesRouteName(c *gin.Context, routeName RouteName) {
 
 	route, err := h.service.Route.Delete(string(routeName), h.who(c))
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	h.responseRoutes(c, &route)
@@ -56,7 +56,7 @@ func (h *Handler) GetV1RoutesRouteName(c *gin.Context, routeName RouteName) {
 
 	route, err := h.service.Route.Get(string(routeName))
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	h.responseRoutes(c, route)
@@ -67,13 +67,13 @@ func (h *Handler) PostV1RoutesRouteName(c *gin.Context, routeName RouteName) {
 
 	var receivedRoute Route
 	if err := c.ShouldBindJSON(&receivedRoute); err != nil {
-		h.responseErrorBadRequest(c, err)
+		responseErrorBadRequest(c, err)
 		return
 	}
 	updatedRoute := fromRoute(receivedRoute)
 	storedRoute, err := h.service.Route.Update(updatedRoute, h.who(c))
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	h.responseRoutesUpdated(c, &storedRoute)
@@ -85,7 +85,7 @@ func (h *Handler) GetV1RoutesRouteNameAttributes(c *gin.Context, routeName Route
 
 	route, err := h.service.Route.Get(string(routeName))
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	h.responseAttributes(c, route.Attributes)
@@ -97,13 +97,13 @@ func (h *Handler) PostV1RoutesRouteNameAttributes(c *gin.Context, routeName Rout
 
 	var receivedAttributes Attributes
 	if err := c.ShouldBindJSON(&receivedAttributes); err != nil {
-		h.responseErrorBadRequest(c, err)
+		responseErrorBadRequest(c, err)
 		return
 	}
 	attributes := fromAttributesRequest(receivedAttributes.Attribute)
 	if err := h.service.Route.UpdateAttributes(
 		string(routeName), attributes, h.who(c)); err != nil {
-		h.responseErrorBadRequest(c, err)
+		responseErrorBadRequest(c, err)
 		return
 	}
 	h.responseAttributes(c, attributes)
@@ -116,7 +116,7 @@ func (h *Handler) DeleteV1RoutesRouteNameAttributesAttributeName(c *gin.Context,
 	oldValue, err := h.service.Route.DeleteAttribute(
 		string(routeName), string(attributeName), h.who(c))
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	h.responseAttributeDeleted(c, &types.Attribute{
@@ -131,12 +131,12 @@ func (h *Handler) GetV1RoutesRouteNameAttributesAttributeName(c *gin.Context, ro
 
 	route, err := h.service.Route.Get(string(routeName))
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	attributeValue, err := route.Attributes.Get(string(attributeName))
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	h.responseAttributeRetrieved(c, &types.Attribute{
@@ -151,7 +151,7 @@ func (h *Handler) PostV1RoutesRouteNameAttributesAttributeName(c *gin.Context, r
 
 	var receivedValue Attribute
 	if err := c.ShouldBindJSON(&receivedValue); err != nil {
-		h.responseErrorBadRequest(c, err)
+		responseErrorBadRequest(c, err)
 		return
 	}
 	newAttribute := types.Attribute{
@@ -160,7 +160,7 @@ func (h *Handler) PostV1RoutesRouteNameAttributesAttributeName(c *gin.Context, r
 	}
 	if err := h.service.Route.UpdateAttribute(
 		string(routeName), newAttribute, h.who(c)); err != nil {
-		h.responseErrorBadRequest(c, err)
+		responseErrorBadRequest(c, err)
 		return
 	}
 	h.responseAttributeUpdated(c, &newAttribute)

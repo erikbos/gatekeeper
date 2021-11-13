@@ -14,7 +14,7 @@ func (h *Handler) GetV1Roles(c *gin.Context) {
 
 	roles, err := h.service.Role.GetAll()
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	h.responseRoles(c, roles)
@@ -26,13 +26,13 @@ func (h *Handler) PostV1Roles(c *gin.Context) {
 
 	var receivedRole Role
 	if err := c.ShouldBindJSON(&receivedRole); err != nil {
-		h.responseError(c, types.NewBadRequestError(err))
+		responseError(c, types.NewBadRequestError(err))
 		return
 	}
 	newRole := fromRole(receivedRole)
 	storedRole, err := h.service.Role.Create(newRole, h.who(c))
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	h.responseRoleCreated(c, storedRole)
@@ -44,7 +44,7 @@ func (h *Handler) GetV1RolesRoleName(c *gin.Context, roleName RoleName) {
 
 	role, err := h.service.Role.Get(string(roleName))
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	h.responseRole(c, role)
@@ -56,17 +56,17 @@ func (h *Handler) PostV1RolesRoleName(c *gin.Context, roleName RoleName) {
 
 	var receivedRole Role
 	if err := c.ShouldBindJSON(&receivedRole); err != nil {
-		h.responseError(c, types.NewBadRequestError(err))
+		responseError(c, types.NewBadRequestError(err))
 		return
 	}
 	updatedRole := fromRole(receivedRole)
 	if updatedRole.Name != string(roleName) {
-		h.responseErrorNameValueMisMatch(c)
+		responseErrorNameValueMisMatch(c)
 		return
 	}
 	storedRole, err := h.service.Role.Update(updatedRole, h.who(c))
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	h.responseRoleUpdated(c, storedRole)
@@ -78,7 +78,7 @@ func (h *Handler) DeleteV1RolesRoleName(c *gin.Context, roleName RoleName) {
 
 	deletedRole, err := h.service.Role.Delete(string(roleName), h.who(c))
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	h.responseRole(c, deletedRole)

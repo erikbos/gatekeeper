@@ -510,6 +510,135 @@ paths:
         '404':
           $ref: '#/components/responses/AttributeDoesNotExist'
 
+  /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/keys:
+    get:
+      description: Return all keys of application
+      tags:
+        - Key
+      parameters:
+        - $ref: '#/components/parameters/organization_name'
+        - $ref: '#/components/parameters/developer_emailaddress'
+        - $ref: '#/components/parameters/app_name'
+      responses:
+        '200':
+          description: Succesfully retrieved keys.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Keys'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: Application does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+
+  /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/keys/create:
+    post:
+      description: Import key to application.
+      tags:
+        - Key
+      parameters:
+        - $ref: '#/components/parameters/organization_name'
+        - $ref: '#/components/parameters/developer_emailaddress'
+        - $ref: '#/components/parameters/app_name'
+      requestBody:
+        description: Details of key to import. Required.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Key'
+      responses:
+        '200':
+          description: Succesfully imported key.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Key'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/keys/{consumer_key}:
+    get:
+      description: Retrieve details of key.
+      tags:
+        - Key
+      parameters:
+        - $ref: '#/components/parameters/organization_name'
+        - $ref: '#/components/parameters/developer_emailaddress'
+        - $ref: '#/components/parameters/app_name'
+        - $ref: '#/components/parameters/consumer_key'
+      responses:
+        '200':
+          description: Succesfully retrieved key.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Key'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: Key does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+    post:
+      description: Update key of application.
+      tags:
+        - Key
+      parameters:
+        - $ref: '#/components/parameters/organization_name'
+        - $ref: '#/components/parameters/developer_emailaddress'
+        - $ref: '#/components/parameters/app_name'
+        - $ref: '#/components/parameters/consumer_key'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Key'
+      responses:
+        '200':
+          description: Succesfully updated key.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Key'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: Key does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+    delete:
+      description: Delete key of application.
+      tags:
+        - Key
+      parameters:
+        - $ref: '#/components/parameters/organization_name'
+        - $ref: '#/components/parameters/developer_emailaddress'
+        - $ref: '#/components/parameters/app_name'
+        - $ref: '#/components/parameters/consumer_key'
+      responses:
+        '200':
+          description: Succesfully deleted key.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Key'
+        '404':
+          description: Key does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+
   /v1/organizations/{organization_name}/apps:
     get:
       parameters:
@@ -1674,6 +1803,14 @@ components:
         type: string
       description: Name of attribute.
 
+    consumer_key:
+      name: consumer_key
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Consumer key.
+
     cluster_name:
       name: cluster_name
       in: path
@@ -1862,6 +1999,52 @@ components:
       items:
         type: string
       description: Application names.
+
+    Key:
+      type: object
+      properties:
+        consumerKey:
+          type: string
+        consumerSecret:
+          type: string
+        apiProducts:
+          type: array
+          items:
+            $ref: "#/components/schemas/KeyProduct"
+        attributes:
+          type: array
+          items:
+            $ref: "#/components/schemas/Attribute"
+        ExpiresAt:
+          type: integer
+          format: int64
+          description: Expiry timestamp of key in milliseconds since epoch. (-1 means key does not expire.)
+        IssuedAt:
+           type: integer
+           format: int64
+           description: Issue timestamp of key in milliseconds since epoch.
+        AppID:
+           type: string
+           description: AppID of application linked to key.
+        Status:
+           type: string
+           description: Status of key. Can be 'approved' or 'revoked'
+    KeyProduct:
+      type: object
+      properties:
+        apiproduct:
+          type: string
+        status:
+          type: string
+      description: A product assigned to a key.
+    Keys:
+      type: object
+      properties:
+        key:
+          type: array
+          items:
+            $ref: "#/components/schemas/Key"
+      description: All keys of application.
 
     APIProduct:
       type: object

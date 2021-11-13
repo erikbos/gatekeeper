@@ -3,7 +3,6 @@ package handler
 import (
 	"encoding/base64"
 	"errors"
-	"net/http"
 	"strconv"
 	"strings"
 
@@ -131,7 +130,7 @@ func abortAuthorizationRequired(c *gin.Context, errorDetails types.Error) {
 
 	realm := "\"Authorization required\""
 	c.Header("WWW-Authenticate", "Basic realm="+strconv.Quote(realm))
-	showErrorMessageAndAbort(c, http.StatusUnauthorized, errorDetails)
+	responseError(c, types.NewUnauthorizedError(errorDetails))
 }
 
 // who returns name of authenticated user requesting this API call

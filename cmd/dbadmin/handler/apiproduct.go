@@ -14,7 +14,7 @@ func (h *Handler) GetV1OrganizationsOrganizationNameApiproducts(c *gin.Context, 
 
 	apiproducts, err := h.service.APIProduct.GetAll()
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	// Do we have to return full developer details?
@@ -31,13 +31,13 @@ func (h *Handler) PostV1OrganizationsOrganizationNameApiproducts(c *gin.Context,
 
 	var receivedAPIProduct APIProduct
 	if err := c.ShouldBindJSON(&receivedAPIProduct); err != nil {
-		h.responseError(c, types.NewBadRequestError(err))
+		responseError(c, types.NewBadRequestError(err))
 		return
 	}
 	newAPIProduct := fromAPIproduct(receivedAPIProduct)
 	createdDeveloper, err := h.service.APIProduct.Create(newAPIProduct, h.who(c))
 	if err != nil {
-		h.responseError(c, types.NewBadRequestError(err))
+		responseError(c, types.NewBadRequestError(err))
 		return
 	}
 	h.responseAPIProductCreated(c, &createdDeveloper)
@@ -49,7 +49,7 @@ func (h *Handler) DeleteV1OrganizationsOrganizationNameApiproductsApiproductName
 
 	apiproduct, err := h.service.APIProduct.Delete(string(apiproductName), h.who(c))
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	h.responseAPIproduct(c, &apiproduct)
@@ -61,7 +61,7 @@ func (h *Handler) GetV1OrganizationsOrganizationNameApiproductsApiproductName(c 
 
 	apiproduct, err := h.service.APIProduct.Get(string(apiproductName))
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	h.responseAPIproduct(c, apiproduct)
@@ -72,13 +72,13 @@ func (h *Handler) PostV1OrganizationsOrganizationNameApiproductsApiproductName(c
 
 	var receivedAPIProduct APIProduct
 	if err := c.ShouldBindJSON(&receivedAPIProduct); err != nil {
-		h.responseErrorBadRequest(c, err)
+		responseErrorBadRequest(c, err)
 		return
 	}
 	updatedAPIProduct := fromAPIproduct(receivedAPIProduct)
 	storedAPIProduct, err := h.service.APIProduct.Update(updatedAPIProduct, h.who(c))
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	h.responseAPIproductUpdated(c, &storedAPIProduct)
@@ -90,7 +90,7 @@ func (h *Handler) GetV1OrganizationsOrganizationNameApiproductsApiproductNameAtt
 
 	apiproduct, err := h.service.APIProduct.Get(string(apiproductName))
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	h.responseAttributes(c, apiproduct.Attributes)
@@ -102,13 +102,13 @@ func (h *Handler) PostV1OrganizationsOrganizationNameApiproductsApiproductNameAt
 
 	var receivedAttributes Attributes
 	if err := c.ShouldBindJSON(&receivedAttributes); err != nil {
-		h.responseErrorBadRequest(c, err)
+		responseErrorBadRequest(c, err)
 		return
 	}
 	attributes := fromAttributesRequest(receivedAttributes.Attribute)
 	if err := h.service.APIProduct.UpdateAttributes(
 		string(apiproductName), attributes, h.who(c)); err != nil {
-		h.responseErrorBadRequest(c, err)
+		responseErrorBadRequest(c, err)
 		return
 	}
 	h.responseAttributes(c, attributes)
@@ -121,7 +121,7 @@ func (h *Handler) DeleteV1OrganizationsOrganizationNameApiproductsApiproductName
 	oldValue, err := h.service.APIProduct.DeleteAttribute(
 		string(apiproductName), string(attributeName), h.who(c))
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	h.responseAttributeDeleted(c, &types.Attribute{
@@ -136,12 +136,12 @@ func (h *Handler) GetV1OrganizationsOrganizationNameApiproductsApiproductNameAtt
 
 	apiproduct, err := h.service.APIProduct.Get(string(apiproductName))
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	attributeValue, err := apiproduct.Attributes.Get(string(attributeName))
 	if err != nil {
-		h.responseError(c, err)
+		responseError(c, err)
 		return
 	}
 	h.responseAttributeRetrieved(c, &types.Attribute{
@@ -156,7 +156,7 @@ func (h *Handler) PostV1OrganizationsOrganizationNameApiproductsApiproductNameAt
 
 	var receivedValue Attribute
 	if err := c.ShouldBindJSON(&receivedValue); err != nil {
-		h.responseErrorBadRequest(c, err)
+		responseErrorBadRequest(c, err)
 		return
 	}
 	newAttribute := types.Attribute{
@@ -165,7 +165,7 @@ func (h *Handler) PostV1OrganizationsOrganizationNameApiproductsApiproductNameAt
 	}
 	if err := h.service.APIProduct.UpdateAttribute(
 		string(apiproductName), newAttribute, h.who(c)); err != nil {
-		h.responseErrorBadRequest(c, err)
+		responseErrorBadRequest(c, err)
 		return
 	}
 	h.responseAttributeUpdated(c, &newAttribute)

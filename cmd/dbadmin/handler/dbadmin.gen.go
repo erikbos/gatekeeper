@@ -196,6 +196,36 @@ type ErrorMessage struct {
 	Message *string `json:"message,omitempty"`
 }
 
+// Key defines model for Key.
+type Key struct {
+	// AppID of application linked to key.
+	AppID *string `json:"AppID,omitempty"`
+
+	// Expiry timestamp of key in milliseconds since epoch. (-1 means key does not expire.)
+	ExpiresAt *int64 `json:"ExpiresAt,omitempty"`
+
+	// Issue timestamp of key in milliseconds since epoch.
+	IssuedAt *int64 `json:"IssuedAt,omitempty"`
+
+	// Status of key. Can be 'approved' or 'revoked'
+	Status         *string       `json:"Status,omitempty"`
+	ApiProducts    *[]KeyProduct `json:"apiProducts,omitempty"`
+	Attributes     *[]Attribute  `json:"attributes,omitempty"`
+	ConsumerKey    *string       `json:"consumerKey,omitempty"`
+	ConsumerSecret *string       `json:"consumerSecret,omitempty"`
+}
+
+// A product assigned to a key.
+type KeyProduct struct {
+	Apiproduct *string `json:"apiproduct,omitempty"`
+	Status     *string `json:"status,omitempty"`
+}
+
+// All keys of application.
+type Keys struct {
+	Key *[]Key `json:"key,omitempty"`
+}
+
 // Listener defines model for Listener.
 type Listener struct {
 	Attributes *[]Attribute `json:"attributes,omitempty"`
@@ -358,6 +388,9 @@ type AttributeName string
 // ClusterName defines model for cluster_name.
 type ClusterName string
 
+// ConsumerKey defines model for consumer_key.
+type ConsumerKey string
+
 // DeveloperEmailaddress defines model for developer_emailaddress.
 type DeveloperEmailaddress string
 
@@ -506,6 +539,12 @@ type PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNa
 // PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesAttributeNameJSONBody defines parameters for PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesAttributeName.
 type PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesAttributeNameJSONBody Attribute
 
+// PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysCreateJSONBody defines parameters for PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysCreate.
+type PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysCreateJSONBody Key
+
+// PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKeyJSONBody defines parameters for PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKey.
+type PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKeyJSONBody Key
+
 // PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributesJSONBody defines parameters for PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributes.
 type PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributesJSONBody Attributes
 
@@ -583,6 +622,12 @@ type PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNa
 
 // PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesAttributeNameJSONRequestBody defines body for PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesAttributeName for application/json ContentType.
 type PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesAttributeNameJSONRequestBody PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesAttributeNameJSONBody
+
+// PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysCreateJSONRequestBody defines body for PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysCreate for application/json ContentType.
+type PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysCreateJSONRequestBody PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysCreateJSONBody
+
+// PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKeyJSONRequestBody defines body for PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKey for application/json ContentType.
+type PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKeyJSONRequestBody PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKeyJSONBody
 
 // PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributesJSONRequestBody defines body for PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributes for application/json ContentType.
 type PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributesJSONRequestBody PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributesJSONBody
@@ -757,6 +802,21 @@ type ServerInterface interface {
 
 	// (POST /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/attributes/{attribute_name})
 	PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesAttributeName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, attributeName AttributeName)
+
+	// (GET /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/keys)
+	GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeys(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName)
+
+	// (POST /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/keys/create)
+	PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysCreate(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName)
+
+	// (DELETE /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/keys/{consumer_key})
+	DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKey(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, consumerKey ConsumerKey)
+
+	// (GET /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/keys/{consumer_key})
+	GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKey(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, consumerKey ConsumerKey)
+
+	// (POST /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/keys/{consumer_key})
+	PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKey(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, consumerKey ConsumerKey)
 
 	// (GET /v1/organizations/{organization_name}/developers/{developer_emailaddress}/attributes)
 	GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributes(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress)
@@ -2305,6 +2365,228 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 	siw.Handler.PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesAttributeName(c, organizationName, developerEmailaddress, appName, attributeName)
 }
 
+// GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeys operation middleware
+func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeys(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "organization_name" -------------
+	var organizationName OrganizationName
+
+	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "developer_emailaddress" -------------
+	var developerEmailaddress DeveloperEmailaddress
+
+	err = runtime.BindStyledParameter("simple", false, "developer_emailaddress", c.Param("developer_emailaddress"), &developerEmailaddress)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "app_name" -------------
+	var appName AppName
+
+	err = runtime.BindStyledParameter("simple", false, "app_name", c.Param("app_name"), &appName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeys(c, organizationName, developerEmailaddress, appName)
+}
+
+// PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysCreate operation middleware
+func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysCreate(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "organization_name" -------------
+	var organizationName OrganizationName
+
+	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "developer_emailaddress" -------------
+	var developerEmailaddress DeveloperEmailaddress
+
+	err = runtime.BindStyledParameter("simple", false, "developer_emailaddress", c.Param("developer_emailaddress"), &developerEmailaddress)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "app_name" -------------
+	var appName AppName
+
+	err = runtime.BindStyledParameter("simple", false, "app_name", c.Param("app_name"), &appName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysCreate(c, organizationName, developerEmailaddress, appName)
+}
+
+// DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKey operation middleware
+func (siw *ServerInterfaceWrapper) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKey(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "organization_name" -------------
+	var organizationName OrganizationName
+
+	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "developer_emailaddress" -------------
+	var developerEmailaddress DeveloperEmailaddress
+
+	err = runtime.BindStyledParameter("simple", false, "developer_emailaddress", c.Param("developer_emailaddress"), &developerEmailaddress)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "app_name" -------------
+	var appName AppName
+
+	err = runtime.BindStyledParameter("simple", false, "app_name", c.Param("app_name"), &appName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "consumer_key" -------------
+	var consumerKey ConsumerKey
+
+	err = runtime.BindStyledParameter("simple", false, "consumer_key", c.Param("consumer_key"), &consumerKey)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter consumer_key: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKey(c, organizationName, developerEmailaddress, appName, consumerKey)
+}
+
+// GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKey operation middleware
+func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKey(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "organization_name" -------------
+	var organizationName OrganizationName
+
+	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "developer_emailaddress" -------------
+	var developerEmailaddress DeveloperEmailaddress
+
+	err = runtime.BindStyledParameter("simple", false, "developer_emailaddress", c.Param("developer_emailaddress"), &developerEmailaddress)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "app_name" -------------
+	var appName AppName
+
+	err = runtime.BindStyledParameter("simple", false, "app_name", c.Param("app_name"), &appName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "consumer_key" -------------
+	var consumerKey ConsumerKey
+
+	err = runtime.BindStyledParameter("simple", false, "consumer_key", c.Param("consumer_key"), &consumerKey)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter consumer_key: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKey(c, organizationName, developerEmailaddress, appName, consumerKey)
+}
+
+// PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKey operation middleware
+func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKey(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "organization_name" -------------
+	var organizationName OrganizationName
+
+	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "developer_emailaddress" -------------
+	var developerEmailaddress DeveloperEmailaddress
+
+	err = runtime.BindStyledParameter("simple", false, "developer_emailaddress", c.Param("developer_emailaddress"), &developerEmailaddress)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "app_name" -------------
+	var appName AppName
+
+	err = runtime.BindStyledParameter("simple", false, "app_name", c.Param("app_name"), &appName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "consumer_key" -------------
+	var consumerKey ConsumerKey
+
+	err = runtime.BindStyledParameter("simple", false, "consumer_key", c.Param("consumer_key"), &consumerKey)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter consumer_key: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKey(c, organizationName, developerEmailaddress, appName, consumerKey)
+}
+
 // GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributes operation middleware
 func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributes(c *gin.Context) {
 
@@ -2974,6 +3256,16 @@ func RegisterHandlersWithOptions(router *gin.Engine, si ServerInterface, options
 	router.GET(options.BaseURL+"/v1/organizations/:organization_name/developers/:developer_emailaddress/apps/:app_name/attributes/:attribute_name", wrapper.GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesAttributeName)
 
 	router.POST(options.BaseURL+"/v1/organizations/:organization_name/developers/:developer_emailaddress/apps/:app_name/attributes/:attribute_name", wrapper.PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesAttributeName)
+
+	router.GET(options.BaseURL+"/v1/organizations/:organization_name/developers/:developer_emailaddress/apps/:app_name/keys", wrapper.GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeys)
+
+	router.POST(options.BaseURL+"/v1/organizations/:organization_name/developers/:developer_emailaddress/apps/:app_name/keys/create", wrapper.PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysCreate)
+
+	router.DELETE(options.BaseURL+"/v1/organizations/:organization_name/developers/:developer_emailaddress/apps/:app_name/keys/:consumer_key", wrapper.DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKey)
+
+	router.GET(options.BaseURL+"/v1/organizations/:organization_name/developers/:developer_emailaddress/apps/:app_name/keys/:consumer_key", wrapper.GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKey)
+
+	router.POST(options.BaseURL+"/v1/organizations/:organization_name/developers/:developer_emailaddress/apps/:app_name/keys/:consumer_key", wrapper.PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKey)
 
 	router.GET(options.BaseURL+"/v1/organizations/:organization_name/developers/:developer_emailaddress/attributes", wrapper.GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributes)
 
