@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"net"
 	"net/http"
+	"sort"
 	"strings"
 	"time"
 
@@ -183,6 +184,11 @@ func ShowAllRoutes(e *gin.Engine, applicationName string) gin.HandlerFunc {
 
 	return func(c *gin.Context) {
 
+		routes := e.Routes()
+		sort.SliceStable(routes, func(i, j int) bool {
+			return routes[i].Path < routes[j].Path
+		})
+
 		t, err := template.New("indexpage").Parse(showAllRoutesPageTemplate)
 		if err != nil {
 			JSONMessage(c, http.StatusServiceUnavailable, err)
@@ -193,7 +199,7 @@ func ShowAllRoutes(e *gin.Engine, applicationName string) gin.HandlerFunc {
 			Routes gin.RoutesInfo
 		}{
 			applicationName,
-			e.Routes(),
+			routes,
 		}
 		c.Status(http.StatusOK)
 		c.Header(contentTypeHeader, contentTypeHTML)
