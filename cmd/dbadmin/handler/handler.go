@@ -21,8 +21,8 @@ type Handler struct {
 }
 
 // NewHandler sets up all API endpoint routes
-func NewHandler(router *gin.Engine, db *db.Database, s *service.Service, applicationName,
-	organizationName string, disableAPIAuthentication bool, logger *zap.Logger) *Handler {
+func NewHandler(router *gin.Engine, db *db.Database, s *service.Service,
+	applicationName string, disableAPIAuthentication bool, logger *zap.Logger) *Handler {
 
 	handler := &Handler{
 		service: s,
@@ -35,15 +35,13 @@ func NewHandler(router *gin.Engine, db *db.Database, s *service.Service, applica
 	router.GET(showDevelopersPath, handler.showDevelopersPage)
 	router.GET(showUserRolesPath, handler.showUserRolePage)
 
-	// Insert authentication middleware for endpoint we are registering next
+	// Register routes and add authentication middleware
 	auth := newAuth(s.User, s.Role, logger)
-
 	RegisterHandlersWithOptions(router, handler, GinServerOptions{
 		Middlewares: []MiddlewareFunc{
 			auth.AuthenticateAndAuthorize,
 		},
 	})
-
 	return handler
 }
 

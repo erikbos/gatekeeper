@@ -19,17 +19,15 @@ const (
 	defaultCacheSize           = 100 * 1024 * 1024
 	defaultCacheTTL            = 30
 	defaultCacheNegativeTTL    = 5
-	defaultOrganizationName    = "default"
 )
 
 // DBAdminConfig contains our startup configuration data
 type DBAdminConfig struct {
-	Logger       shared.Logger            `yaml:"logging"`      // log configuration of application
-	WebAdmin     webadmin.Config          `yaml:"webadmin"`     // Admin web interface configuration
-	Changelog    service.ChangelogConfig  `yaml:"changelog"`    // Changelog configuration
-	Database     cassandra.DatabaseConfig `yaml:"database"`     // Database configuration
-	Cache        cache.Config             `yaml:"cache"`        // Cache configuration
-	Organization string                   `yaml:"organization"` // Organization name
+	Logger    shared.Logger            `yaml:"logging"`   // log configuration of application
+	WebAdmin  webadmin.Config          `yaml:"webadmin"`  // Admin web interface configuration
+	Changelog service.ChangelogConfig  `yaml:"changelog"` // Changelog configuration
+	Database  cassandra.DatabaseConfig `yaml:"database"`  // Database configuration
+	Cache     cache.Config             `yaml:"cache"`     // Cache configuration
 }
 
 // String() return our startup configuration as YAML
@@ -71,7 +69,6 @@ func loadConfiguration(filename *string) (*DBAdminConfig, error) {
 			TTL:         defaultCacheTTL,
 			NegativeTTL: defaultCacheNegativeTTL,
 		},
-		Organization: defaultOrganizationName,
 	}
 
 	config, err := shared.LoadYAMLConfiguration(filename, defaultConfig)

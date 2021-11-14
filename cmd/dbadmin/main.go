@@ -116,7 +116,7 @@ func startWebAdmin(s *server, applicationName string, enableAPIAuthentication bo
 	changeLogLogger := shared.NewLogger(&s.config.Changelog.Logger)
 	service := service.New(s.db, changeLogLogger)
 	s.handler = handler.NewHandler(s.webadmin.Router, s.db, service,
-		applicationName, s.config.Organization, enableAPIAuthentication, webAdminLogger)
+		applicationName, enableAPIAuthentication, webAdminLogger)
 
 	s.webadmin.Start()
 }
