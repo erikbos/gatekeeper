@@ -11,6 +11,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const (
+	BasicAuthScopes = "BasicAuth.Scopes"
+)
+
 // APIProduct defines model for APIProduct.
 type APIProduct struct {
 	// User who last updated this APIProduct.
@@ -1048,6 +1052,8 @@ type MiddlewareFunc func(c *gin.Context)
 // GetV1Clusters operation middleware
 func (siw *ServerInterfaceWrapper) GetV1Clusters(c *gin.Context) {
 
+	c.Set(BasicAuthScopes, []string{""})
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
@@ -1057,6 +1063,8 @@ func (siw *ServerInterfaceWrapper) GetV1Clusters(c *gin.Context) {
 
 // PostV1Clusters operation middleware
 func (siw *ServerInterfaceWrapper) PostV1Clusters(c *gin.Context) {
+
+	c.Set(BasicAuthScopes, []string{""})
 
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
@@ -1079,6 +1087,8 @@ func (siw *ServerInterfaceWrapper) DeleteV1ClustersClusterName(c *gin.Context) {
 		return
 	}
 
+	c.Set(BasicAuthScopes, []string{""})
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
@@ -1099,6 +1109,8 @@ func (siw *ServerInterfaceWrapper) GetV1ClustersClusterName(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter cluster_name: %s", err)})
 		return
 	}
+
+	c.Set(BasicAuthScopes, []string{""})
 
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
@@ -1121,6 +1133,8 @@ func (siw *ServerInterfaceWrapper) PostV1ClustersClusterName(c *gin.Context) {
 		return
 	}
 
+	c.Set(BasicAuthScopes, []string{""})
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
@@ -1142,6 +1156,8 @@ func (siw *ServerInterfaceWrapper) GetV1ClustersClusterNameAttributes(c *gin.Con
 		return
 	}
 
+	c.Set(BasicAuthScopes, []string{""})
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
@@ -1162,6 +1178,8 @@ func (siw *ServerInterfaceWrapper) PostV1ClustersClusterNameAttributes(c *gin.Co
 		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter cluster_name: %s", err)})
 		return
 	}
+
+	c.Set(BasicAuthScopes, []string{""})
 
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
@@ -1193,6 +1211,8 @@ func (siw *ServerInterfaceWrapper) DeleteV1ClustersClusterNameAttributesAttribut
 		return
 	}
 
+	c.Set(BasicAuthScopes, []string{""})
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
@@ -1222,6 +1242,8 @@ func (siw *ServerInterfaceWrapper) GetV1ClustersClusterNameAttributesAttributeNa
 		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
 		return
 	}
+
+	c.Set(BasicAuthScopes, []string{""})
 
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
@@ -1253,6 +1275,8 @@ func (siw *ServerInterfaceWrapper) PostV1ClustersClusterNameAttributesAttributeN
 		return
 	}
 
+	c.Set(BasicAuthScopes, []string{""})
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
@@ -1263,6 +1287,8 @@ func (siw *ServerInterfaceWrapper) PostV1ClustersClusterNameAttributesAttributeN
 // GetV1Listeners operation middleware
 func (siw *ServerInterfaceWrapper) GetV1Listeners(c *gin.Context) {
 
+	c.Set(BasicAuthScopes, []string{""})
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
@@ -1272,6 +1298,8 @@ func (siw *ServerInterfaceWrapper) GetV1Listeners(c *gin.Context) {
 
 // PostV1Listeners operation middleware
 func (siw *ServerInterfaceWrapper) PostV1Listeners(c *gin.Context) {
+
+	c.Set(BasicAuthScopes, []string{""})
 
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
@@ -1294,6 +1322,8 @@ func (siw *ServerInterfaceWrapper) DeleteV1ListenersListenerName(c *gin.Context)
 		return
 	}
 
+	c.Set(BasicAuthScopes, []string{""})
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
@@ -1314,6 +1344,8 @@ func (siw *ServerInterfaceWrapper) GetV1ListenersListenerName(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter listener_name: %s", err)})
 		return
 	}
+
+	c.Set(BasicAuthScopes, []string{""})
 
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
@@ -1336,6 +1368,8 @@ func (siw *ServerInterfaceWrapper) PostV1ListenersListenerName(c *gin.Context) {
 		return
 	}
 
+	c.Set(BasicAuthScopes, []string{""})
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
@@ -1357,6 +1391,8 @@ func (siw *ServerInterfaceWrapper) GetV1ListenersListenerNameAttributes(c *gin.C
 		return
 	}
 
+	c.Set(BasicAuthScopes, []string{""})
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
@@ -1377,6 +1413,8 @@ func (siw *ServerInterfaceWrapper) PostV1ListenersListenerNameAttributes(c *gin.
 		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter listener_name: %s", err)})
 		return
 	}
+
+	c.Set(BasicAuthScopes, []string{""})
 
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
@@ -1408,6 +1446,8 @@ func (siw *ServerInterfaceWrapper) DeleteV1ListenersListenerNameAttributesAttrib
 		return
 	}
 
+	c.Set(BasicAuthScopes, []string{""})
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
@@ -1437,6 +1477,8 @@ func (siw *ServerInterfaceWrapper) GetV1ListenersListenerNameAttributesAttribute
 		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
 		return
 	}
+
+	c.Set(BasicAuthScopes, []string{""})
 
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
@@ -1468,6 +1510,8 @@ func (siw *ServerInterfaceWrapper) PostV1ListenersListenerNameAttributesAttribut
 		return
 	}
 
+	c.Set(BasicAuthScopes, []string{""})
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
@@ -1478,6 +1522,8 @@ func (siw *ServerInterfaceWrapper) PostV1ListenersListenerNameAttributesAttribut
 // GetV1Organizations operation middleware
 func (siw *ServerInterfaceWrapper) GetV1Organizations(c *gin.Context) {
 
+	c.Set(BasicAuthScopes, []string{""})
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
@@ -1487,6 +1533,8 @@ func (siw *ServerInterfaceWrapper) GetV1Organizations(c *gin.Context) {
 
 // PostV1Organizations operation middleware
 func (siw *ServerInterfaceWrapper) PostV1Organizations(c *gin.Context) {
+
+	c.Set(BasicAuthScopes, []string{""})
 
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
@@ -1509,6 +1557,8 @@ func (siw *ServerInterfaceWrapper) DeleteV1OrganizationsOrganizationName(c *gin.
 		return
 	}
 
+	c.Set(BasicAuthScopes, []string{""})
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
@@ -1529,6 +1579,8 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationName(c *gin.Con
 		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
+
+	c.Set(BasicAuthScopes, []string{""})
 
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
@@ -1551,6 +1603,8 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationName(c *gin.Co
 		return
 	}
 
+	c.Set(BasicAuthScopes, []string{""})
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
@@ -1571,6 +1625,8 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameApiproducts
 		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
+
+	c.Set(BasicAuthScopes, []string{""})
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params GetV1OrganizationsOrganizationNameApiproductsParams
@@ -1618,6 +1674,8 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameApiproduct
 		return
 	}
 
+	c.Set(BasicAuthScopes, []string{""})
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
@@ -1647,6 +1705,8 @@ func (siw *ServerInterfaceWrapper) DeleteV1OrganizationsOrganizationNameApiprodu
 		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter apiproduct_name: %s", err)})
 		return
 	}
+
+	c.Set(BasicAuthScopes, []string{""})
 
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
@@ -1678,6 +1738,8 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameApiproducts
 		return
 	}
 
+	c.Set(BasicAuthScopes, []string{""})
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
@@ -1707,6 +1769,8 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameApiproduct
 		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter apiproduct_name: %s", err)})
 		return
 	}
+
+	c.Set(BasicAuthScopes, []string{""})
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params PostV1OrganizationsOrganizationNameApiproductsApiproductNameParams
@@ -1752,6 +1816,8 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameApiproducts
 		return
 	}
 
+	c.Set(BasicAuthScopes, []string{""})
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
@@ -1781,6 +1847,8 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameApiproduct
 		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter apiproduct_name: %s", err)})
 		return
 	}
+
+	c.Set(BasicAuthScopes, []string{""})
 
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
@@ -1821,6 +1889,8 @@ func (siw *ServerInterfaceWrapper) DeleteV1OrganizationsOrganizationNameApiprodu
 		return
 	}
 
+	c.Set(BasicAuthScopes, []string{""})
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
@@ -1859,6 +1929,8 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameApiproducts
 		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
 		return
 	}
+
+	c.Set(BasicAuthScopes, []string{""})
 
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
@@ -1899,6 +1971,8 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameApiproduct
 		return
 	}
 
+	c.Set(BasicAuthScopes, []string{""})
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
@@ -1919,6 +1993,8 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameApps(c *gin
 		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
+
+	c.Set(BasicAuthScopes, []string{""})
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params GetV1OrganizationsOrganizationNameAppsParams
@@ -1975,6 +2051,8 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameAppsAppId(c
 		return
 	}
 
+	c.Set(BasicAuthScopes, []string{""})
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
@@ -1995,6 +2073,8 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopers(
 		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
+
+	c.Set(BasicAuthScopes, []string{""})
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params GetV1OrganizationsOrganizationNameDevelopersParams
@@ -2042,6 +2122,8 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 		return
 	}
 
+	c.Set(BasicAuthScopes, []string{""})
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
@@ -2071,6 +2153,8 @@ func (siw *ServerInterfaceWrapper) DeleteV1OrganizationsOrganizationNameDevelope
 		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
 		return
 	}
+
+	c.Set(BasicAuthScopes, []string{""})
 
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
@@ -2102,6 +2186,8 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersD
 		return
 	}
 
+	c.Set(BasicAuthScopes, []string{""})
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
@@ -2131,6 +2217,8 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
 		return
 	}
+
+	c.Set(BasicAuthScopes, []string{""})
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressParams
@@ -2175,6 +2263,8 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersD
 		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
 		return
 	}
+
+	c.Set(BasicAuthScopes, []string{""})
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsParams
@@ -2231,6 +2321,8 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 		return
 	}
 
+	c.Set(BasicAuthScopes, []string{""})
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
@@ -2269,6 +2361,8 @@ func (siw *ServerInterfaceWrapper) DeleteV1OrganizationsOrganizationNameDevelope
 		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
 		return
 	}
+
+	c.Set(BasicAuthScopes, []string{""})
 
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
@@ -2309,6 +2403,8 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersD
 		return
 	}
 
+	c.Set(BasicAuthScopes, []string{""})
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
@@ -2347,6 +2443,8 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
 		return
 	}
+
+	c.Set(BasicAuthScopes, []string{""})
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameParams
@@ -2401,6 +2499,8 @@ func (siw *ServerInterfaceWrapper) PutV1OrganizationsOrganizationNameDevelopersD
 		return
 	}
 
+	c.Set(BasicAuthScopes, []string{""})
+
 	// Parameter object where we will unmarshal all parameters from the context
 	var params PutV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameParams
 
@@ -2454,6 +2554,8 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersD
 		return
 	}
 
+	c.Set(BasicAuthScopes, []string{""})
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
@@ -2492,6 +2594,8 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
 		return
 	}
+
+	c.Set(BasicAuthScopes, []string{""})
 
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
@@ -2541,6 +2645,8 @@ func (siw *ServerInterfaceWrapper) DeleteV1OrganizationsOrganizationNameDevelope
 		return
 	}
 
+	c.Set(BasicAuthScopes, []string{""})
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
@@ -2588,6 +2694,8 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersD
 		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
 		return
 	}
+
+	c.Set(BasicAuthScopes, []string{""})
 
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
@@ -2637,6 +2745,8 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 		return
 	}
 
+	c.Set(BasicAuthScopes, []string{""})
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
@@ -2676,6 +2786,8 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersD
 		return
 	}
 
+	c.Set(BasicAuthScopes, []string{""})
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
@@ -2714,6 +2826,8 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
 		return
 	}
+
+	c.Set(BasicAuthScopes, []string{""})
 
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
@@ -2763,6 +2877,8 @@ func (siw *ServerInterfaceWrapper) DeleteV1OrganizationsOrganizationNameDevelope
 		return
 	}
 
+	c.Set(BasicAuthScopes, []string{""})
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
@@ -2811,6 +2927,8 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersD
 		return
 	}
 
+	c.Set(BasicAuthScopes, []string{""})
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
@@ -2858,6 +2976,8 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter consumer_key: %s", err)})
 		return
 	}
+
+	c.Set(BasicAuthScopes, []string{""})
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKeyParams
@@ -2930,6 +3050,8 @@ func (siw *ServerInterfaceWrapper) DeleteV1OrganizationsOrganizationNameDevelope
 		return
 	}
 
+	c.Set(BasicAuthScopes, []string{""})
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
@@ -2987,6 +3109,8 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 		return
 	}
 
+	c.Set(BasicAuthScopes, []string{""})
+
 	// Parameter object where we will unmarshal all parameters from the context
 	var params PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKeyApiproductsApiproductNameParams
 
@@ -3031,6 +3155,8 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersD
 		return
 	}
 
+	c.Set(BasicAuthScopes, []string{""})
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
@@ -3060,6 +3186,8 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
 		return
 	}
+
+	c.Set(BasicAuthScopes, []string{""})
 
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
@@ -3100,6 +3228,8 @@ func (siw *ServerInterfaceWrapper) DeleteV1OrganizationsOrganizationNameDevelope
 		return
 	}
 
+	c.Set(BasicAuthScopes, []string{""})
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
@@ -3138,6 +3268,8 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersD
 		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
 		return
 	}
+
+	c.Set(BasicAuthScopes, []string{""})
 
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
@@ -3178,6 +3310,8 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 		return
 	}
 
+	c.Set(BasicAuthScopes, []string{""})
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
@@ -3188,6 +3322,8 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 // GetV1Roles operation middleware
 func (siw *ServerInterfaceWrapper) GetV1Roles(c *gin.Context) {
 
+	c.Set(BasicAuthScopes, []string{""})
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
@@ -3197,6 +3333,8 @@ func (siw *ServerInterfaceWrapper) GetV1Roles(c *gin.Context) {
 
 // PostV1Roles operation middleware
 func (siw *ServerInterfaceWrapper) PostV1Roles(c *gin.Context) {
+
+	c.Set(BasicAuthScopes, []string{""})
 
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
@@ -3219,6 +3357,8 @@ func (siw *ServerInterfaceWrapper) DeleteV1RolesRoleName(c *gin.Context) {
 		return
 	}
 
+	c.Set(BasicAuthScopes, []string{""})
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
@@ -3239,6 +3379,8 @@ func (siw *ServerInterfaceWrapper) GetV1RolesRoleName(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter role_name: %s", err)})
 		return
 	}
+
+	c.Set(BasicAuthScopes, []string{""})
 
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
@@ -3261,6 +3403,8 @@ func (siw *ServerInterfaceWrapper) PostV1RolesRoleName(c *gin.Context) {
 		return
 	}
 
+	c.Set(BasicAuthScopes, []string{""})
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
@@ -3271,6 +3415,8 @@ func (siw *ServerInterfaceWrapper) PostV1RolesRoleName(c *gin.Context) {
 // GetV1Routes operation middleware
 func (siw *ServerInterfaceWrapper) GetV1Routes(c *gin.Context) {
 
+	c.Set(BasicAuthScopes, []string{""})
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
@@ -3280,6 +3426,8 @@ func (siw *ServerInterfaceWrapper) GetV1Routes(c *gin.Context) {
 
 // PostV1Routes operation middleware
 func (siw *ServerInterfaceWrapper) PostV1Routes(c *gin.Context) {
+
+	c.Set(BasicAuthScopes, []string{""})
 
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
@@ -3302,6 +3450,8 @@ func (siw *ServerInterfaceWrapper) DeleteV1RoutesRouteName(c *gin.Context) {
 		return
 	}
 
+	c.Set(BasicAuthScopes, []string{""})
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
@@ -3322,6 +3472,8 @@ func (siw *ServerInterfaceWrapper) GetV1RoutesRouteName(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter route_name: %s", err)})
 		return
 	}
+
+	c.Set(BasicAuthScopes, []string{""})
 
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
@@ -3344,6 +3496,8 @@ func (siw *ServerInterfaceWrapper) PostV1RoutesRouteName(c *gin.Context) {
 		return
 	}
 
+	c.Set(BasicAuthScopes, []string{""})
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
@@ -3365,6 +3519,8 @@ func (siw *ServerInterfaceWrapper) GetV1RoutesRouteNameAttributes(c *gin.Context
 		return
 	}
 
+	c.Set(BasicAuthScopes, []string{""})
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
@@ -3385,6 +3541,8 @@ func (siw *ServerInterfaceWrapper) PostV1RoutesRouteNameAttributes(c *gin.Contex
 		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter route_name: %s", err)})
 		return
 	}
+
+	c.Set(BasicAuthScopes, []string{""})
 
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
@@ -3416,6 +3574,8 @@ func (siw *ServerInterfaceWrapper) DeleteV1RoutesRouteNameAttributesAttributeNam
 		return
 	}
 
+	c.Set(BasicAuthScopes, []string{""})
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
@@ -3445,6 +3605,8 @@ func (siw *ServerInterfaceWrapper) GetV1RoutesRouteNameAttributesAttributeName(c
 		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
 		return
 	}
+
+	c.Set(BasicAuthScopes, []string{""})
 
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
@@ -3476,6 +3638,8 @@ func (siw *ServerInterfaceWrapper) PostV1RoutesRouteNameAttributesAttributeName(
 		return
 	}
 
+	c.Set(BasicAuthScopes, []string{""})
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
@@ -3486,6 +3650,8 @@ func (siw *ServerInterfaceWrapper) PostV1RoutesRouteNameAttributesAttributeName(
 // GetV1Users operation middleware
 func (siw *ServerInterfaceWrapper) GetV1Users(c *gin.Context) {
 
+	c.Set(BasicAuthScopes, []string{""})
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
@@ -3495,6 +3661,8 @@ func (siw *ServerInterfaceWrapper) GetV1Users(c *gin.Context) {
 
 // PostV1Users operation middleware
 func (siw *ServerInterfaceWrapper) PostV1Users(c *gin.Context) {
+
+	c.Set(BasicAuthScopes, []string{""})
 
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
@@ -3517,6 +3685,8 @@ func (siw *ServerInterfaceWrapper) DeleteV1UsersUserName(c *gin.Context) {
 		return
 	}
 
+	c.Set(BasicAuthScopes, []string{""})
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
@@ -3538,6 +3708,8 @@ func (siw *ServerInterfaceWrapper) GetV1UsersUserName(c *gin.Context) {
 		return
 	}
 
+	c.Set(BasicAuthScopes, []string{""})
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
@@ -3558,6 +3730,8 @@ func (siw *ServerInterfaceWrapper) PostV1UsersUserName(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter user_name: %s", err)})
 		return
 	}
+
+	c.Set(BasicAuthScopes, []string{""})
 
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)

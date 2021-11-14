@@ -4,6 +4,9 @@ info:
   title: Gatekeeper API
   description: 'Gatekepeer offers an HTTP-based RESTful API. It has predictable URLs for all resources. Payload is formatted as JSON and it returns HTTP status codes to indicate errors.'
 
+security:
+  - BasicAuth: []
+
 tags:
   - name: Intro
     description: intro here.
@@ -81,7 +84,7 @@ paths:
               $ref: '#/components/schemas/Organization'
       responses:
         '200':
-          description: Successfully created a new organization.
+          description: Successfully created new organization.
           content:
             application/json:
               schema:
@@ -146,7 +149,7 @@ paths:
         - $ref: '#/components/parameters/organization_name'
       responses:
         '200':
-          description: Successfully deleted a organization.
+          description: Successfully deleted organization.
           content:
             application/json:
               schema:
@@ -1139,7 +1142,7 @@ paths:
               $ref: '#/components/schemas/Listener'
       responses:
         '200':
-          description: Successfully created a new listener.
+          description: Successfully created new listener.
           content:
             application/json:
               schema:
@@ -1204,7 +1207,7 @@ paths:
         - $ref: '#/components/parameters/listener_name'
       responses:
         '200':
-          description: Successfully deleted a listener.
+          description: Successfully deleted listener.
           content:
             application/json:
               schema:
@@ -1328,7 +1331,7 @@ paths:
               $ref: '#/components/schemas/Route'
       responses:
         '200':
-          description: Successfully created a new route.
+          description: Successfully created new route.
           content:
             application/json:
               schema:
@@ -1393,7 +1396,7 @@ paths:
         - $ref: '#/components/parameters/route_name'
       responses:
         '200':
-          description: Successfully deleted a route.
+          description: Successfully deleted route.
           content:
             application/json:
               schema:
@@ -1523,7 +1526,7 @@ paths:
               $ref: '#/components/schemas/Cluster'
       responses:
         '200':
-          description: Successfully created a new cluster.
+          description: Successfully created new cluster.
           content:
             application/json:
               schema:
@@ -1588,7 +1591,7 @@ paths:
         - $ref: '#/components/parameters/cluster_name'
       responses:
         '200':
-          description: Successfully deleted a cluster.
+          description: Successfully deleted cluster.
           content:
             application/json:
               schema:
@@ -1712,7 +1715,7 @@ paths:
               $ref: '#/components/schemas/User'
       responses:
         '200':
-          description: Successfully created a new user.
+          description: Successfully created new user.
           content:
             application/json:
               schema:
@@ -1777,7 +1780,7 @@ paths:
         - $ref: '#/components/parameters/user_name'
       responses:
         '200':
-          description: Successfully deleted a use.
+          description: Successfully deleted use.
           content:
             application/json:
               schema:
@@ -1815,7 +1818,7 @@ paths:
               $ref: '#/components/schemas/Role'
       responses:
         '200':
-          description: Successfully created a new role.
+          description: Successfully created new role.
           content:
             application/json:
               schema:
@@ -1880,7 +1883,7 @@ paths:
         - $ref: '#/components/parameters/role_name'
       responses:
         '200':
-          description: Successfully deleted a role.
+          description: Successfully deleted role.
           content:
             application/json:
               schema:
@@ -1930,7 +1933,7 @@ components:
             $ref: '#/components/schemas/ErrorMessage'
 
     AttributeDeleted:
-      description: Successfully deleted attribute.
+      description: Successfully deletedttribute.
       content:
         application/json:
           schema:
@@ -2093,7 +2096,7 @@ components:
         createdBy:
           type: string
           readOnly: true
-          description: User who created this developer.
+          description: User who created this organization.
         lastModifiedAt:
           type: integer
           format: int64
@@ -2102,7 +2105,7 @@ components:
         lastModifiedBy:
           type: string
           readOnly: true
-          description: User who last updated this developer.
+          description: User who last updated this organization.
     Organizations:
       type: object
       properties:
