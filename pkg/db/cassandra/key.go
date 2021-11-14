@@ -17,6 +17,7 @@ const (
 	keysColumn = `consumer_key,
 consumer_secret,
 api_products,
+attributes,
 app_id,
 status,
 issued_at,
@@ -98,7 +99,8 @@ func (s *KeyStore) runGetKeyQuery(query string, queryParameters ...interface{}) 
 		keys = append(keys, types.Key{
 			ConsumerKey:    columnValueString(m, "consumer_key"),
 			ConsumerSecret: columnValueString(m, "consumer_secret"),
-			APIProducts:    types.Key{}.APIProducts.Unmarshal(m["api_products"].(string)),
+			APIProducts:    KeyAPIProductStatusesUnmarshal(m["api_products"].(string)),
+			Attributes:     AttributesUnmarshal(columnValueString(m, "attributes")),
 			AppID:          columnValueString(m, "app_id"),
 			Status:         columnValueString(m, "status"),
 			IssuedAt:       columnValueInt64(m, "issued_at"),
@@ -116,11 +118,12 @@ func (s *KeyStore) runGetKeyQuery(query string, queryParameters ...interface{}) 
 // UpdateByKey UPSERTs keys in database
 func (s *KeyStore) UpdateByKey(c *types.Key) types.Error {
 
-	query := "INSERT INTO keys (" + keysColumn + ") VALUES(?,?,?,?,?,?,?)"
+	query := "INSERT INTO keys (" + keysColumn + ") VALUES(?,?,?,?,?,?,?,?)"
 	if err := s.db.CassandraSession.Query(query,
 		c.ConsumerKey,
 		c.ConsumerSecret,
-		c.APIProducts.Marshal(),
+		KeyAPIProductStatusesMarshal(c.APIProducts),
+		AttributesMarshal(c.Attributes),
 		c.AppID,
 		c.Status,
 		c.IssuedAt,

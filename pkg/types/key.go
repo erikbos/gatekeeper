@@ -1,7 +1,5 @@
 package types
 
-import "encoding/json"
-
 // Key contains an apikey entitlement
 //
 // Field validation (binding) is done using https://godoc.org/github.com/go-playground/validator
@@ -96,32 +94,4 @@ func (p *KeyAPIProductStatus) SetApproved() {
 func (p *KeyAPIProductStatus) IsApproved() bool {
 
 	return p.Status == "approved"
-}
-
-// Unmarshal unpacks JSON array of attribute bags
-// Example input: [{"name":"S","value":"erikbos teleporter"},{"name":"ErikbosTeleporterExtraAttribute","value":"42"}]
-//
-func (ps KeyAPIProductStatuses) Unmarshal(jsonProductStatuses string) []KeyAPIProductStatus {
-
-	if jsonProductStatuses != "" {
-		var productStatus = make([]KeyAPIProductStatus, 0)
-		if err := json.Unmarshal([]byte(jsonProductStatuses), &productStatus); err == nil {
-			return productStatus
-		}
-	}
-	return []KeyAPIProductStatus{}
-}
-
-// Marshal packs array of attributes into JSON
-// Example input: [{"name":"DisplayName","value":"erikbos teleporter"},{"name":"ErikbosTeleporterExtraAttribute","value":"42"}]
-//
-func (ps KeyAPIProductStatuses) Marshal() string {
-
-	if len(ps) > 0 {
-		ArrayOfAttributesInJSON, err := json.Marshal(ps)
-		if err == nil {
-			return string(ArrayOfAttributesInJSON)
-		}
-	}
-	return "[]"
 }

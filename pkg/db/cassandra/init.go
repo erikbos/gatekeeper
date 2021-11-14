@@ -172,6 +172,7 @@ var createTablesCQL = [...]string{
 
 	`CREATE TABLE IF NOT EXISTS keys (
     api_products text,
+    attributes text,
     consumer_key text,
     consumer_secret text,
     app_id text,
