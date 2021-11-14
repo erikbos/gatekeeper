@@ -138,6 +138,10 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 		responseError(c, types.NewBadRequestError(err))
 		return
 	}
+	if receivedKey.ConsumerKey != nil && *receivedKey.ConsumerKey != string(consumerKey) {
+		responseErrorNameValueMisMatch(c)
+		return
+	}
 	_, err := h.service.Developer.Get(string(developerEmailaddress))
 	if err != nil {
 		responseError(c, err)
@@ -161,6 +165,9 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 	}
 	if receivedKey.ExpiresAt != nil {
 		key.ExpiresAt = *receivedKey.ExpiresAt
+	}
+	if receivedKey.IssuedAt != nil {
+		key.IssuedAt = *receivedKey.IssuedAt
 	}
 	storedKey, err := h.service.Key.Update(string(consumerKey), key, h.who(c))
 	if err != nil {

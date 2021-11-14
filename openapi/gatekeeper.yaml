@@ -2203,6 +2203,10 @@ components:
           type: integer
           format: int64
           description: Expiry timestamp of key in milliseconds since epoch. A value of -1 means key does not expire.
+        issuedAt:
+           type: integer
+           format: int64
+           description: Issue timestamp of key in milliseconds since epoch.
 
     APIProduct:
       type: object

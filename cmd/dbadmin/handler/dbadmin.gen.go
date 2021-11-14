@@ -262,6 +262,9 @@ type KeyUpdate struct {
 
 	// Expiry timestamp of key in milliseconds since epoch. A value of -1 means key does not expire.
 	ExpiresAt *int64 `json:"expiresAt,omitempty"`
+
+	// Issue timestamp of key in milliseconds since epoch.
+	IssuedAt *int64 `json:"issuedAt,omitempty"`
 }
 
 // All keys of application.
