@@ -340,6 +340,9 @@ def test_key_api_product_change_status():
 
 # test key for product with approvalType manual
 
+# test posting apiproducts against existing key
+
+
 # test posting full key details
 # test setting all fields
 # POST /v1/organizations/{organization}/developers/{developer_email_or_id}

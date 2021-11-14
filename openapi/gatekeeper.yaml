@@ -386,6 +386,39 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorMessage'
+    put:
+      parameters:
+        - $ref: '#/components/parameters/organization_name'
+        - $ref: '#/components/parameters/developer_emailaddress'
+        - $ref: '#/components/parameters/app_name'
+        - $ref: '#/components/parameters/action'
+      description: Update application and create new key
+      tags:
+        - Application
+      requestBody:
+        description: Details of application to update.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplicationUpdate'
+          application/octet-stream:
+            schema:
+              type: string
+      responses:
+        '200':
+          description: Succesfully updated application.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Application'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: Application to update does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
     delete:
       parameters:
         - $ref: '#/components/parameters/organization_name'
@@ -601,7 +634,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Key'
+              $ref: '#/components/schemas/KeyUpdate'
       responses:
         '200':
           description: Succesfully updated key.
@@ -635,6 +668,63 @@ paths:
                 $ref: '#/components/schemas/Key'
         '404':
           description: Key does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+
+  /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/keys/{consumer_key}/apiproducts/{apiproduct_name}:
+    post:
+      description: Update status of apiproduct assigned to key.
+      tags:
+        - Key
+      parameters:
+        - $ref: '#/components/parameters/organization_name'
+        - $ref: '#/components/parameters/developer_emailaddress'
+        - $ref: '#/components/parameters/app_name'
+        - $ref: '#/components/parameters/consumer_key'
+        - $ref: '#/components/parameters/apiproduct_name'
+        - $ref: '#/components/parameters/key_action'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KeyUpdate'
+      responses:
+        '200':
+          description: Succesfully updated apiproduct associated with key.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Key'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: Key does not have apiproduct assigned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+    delete:
+      description: Delete apiproduct from key.
+      tags:
+        - Key
+      parameters:
+        - $ref: '#/components/parameters/organization_name'
+        - $ref: '#/components/parameters/developer_emailaddress'
+        - $ref: '#/components/parameters/app_name'
+        - $ref: '#/components/parameters/consumer_key'
+        - $ref: '#/components/parameters/apiproduct_name'
+      responses:
+        '200':
+          description: Succesfully deleted apiproduct from key.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Key'
+        '404':
+          description: Key does not have apiproduct assigned.
           content:
             application/json:
               schema:
@@ -2012,7 +2102,40 @@ components:
       items:
         type: string
       description: Application names.
-
+    ApplicationUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Application name. Can only be set at creation.
+        displayName:
+          type: string
+          readOnly: true
+          description: Display name of application.
+        scopes:
+          type: array
+          items:
+            type: string
+          description: OAuth scopes.
+        attributes:
+          type: array
+          items:
+            $ref: "#/components/schemas/Attribute"
+        apiProducts:
+          type: array
+          items:
+            type: string
+          description: Names of API products to assign to newly created key.
+        status:
+          type: string
+          description: Status of application. Can be 'approved' or 'revoked'.
+        callbackUrl:
+          type: string
+          description: OAuth callback URL.
+        keyExpiresIn:
+          type: integer
+          format: int64
+          description: Default time-to-live of new api keys.
     Key:
       type: object
       properties:
@@ -2058,6 +2181,28 @@ components:
           items:
             $ref: "#/components/schemas/Key"
       description: All keys of application.
+    KeyUpdate:
+      type: object
+      properties:
+        consumerKey:
+          type: string
+          description: Consumer key, cannot be changed as part of update.
+        consumerSecret:
+          type: string
+          description: Consumer secret, cannot be changed as part of update.
+        apiProducts:
+          type: array
+          items:
+            type: string
+          description: Names of API products to assign to key.
+        attributes:
+          type: array
+          items:
+            $ref: "#/components/schemas/Attribute"
+        expiresAt:
+          type: integer
+          format: int64
+          description: Expiry timestamp of key in milliseconds since epoch. A value of -1 means key does not expire.
 
     APIProduct:
       type: object

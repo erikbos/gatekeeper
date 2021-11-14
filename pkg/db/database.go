@@ -131,6 +131,9 @@ type (
 		// GetByKey returns details of a single apikey
 		GetByKey(key *string) (*types.Key, types.Error)
 
+		// GetCountByAPIProductName returns number of keys that has apiproduct assigned
+		GetCountByAPIProductName(apiProductName string) (int, types.Error)
+
 		// GetByDeveloperAppID returns an array with apikey details of a developer app
 		GetByDeveloperAppID(developerAppID string) (types.Keys, types.Error)
 

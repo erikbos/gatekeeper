@@ -59,6 +59,19 @@ func (s *KeyCache) GetByDeveloperAppID(developerAppID string) (types.Keys, types
 	return retrievedKeys, nil
 }
 
+// GetCountByAPIProductName counts the number of times an apiproduct has been assigned to keys
+func (s *KeyCache) GetCountByAPIProductName(apiProductName string) (int, types.Error) {
+
+	getCountOfApiProduct := func() (interface{}, types.Error) {
+		return s.key.GetCountByAPIProductName(apiProductName)
+	}
+	var apiProductCount int
+	if err := s.cache.fetchEntity(types.TypeKeyName, apiProductName, &apiProductCount, getCountOfApiProduct); err != nil {
+		return 0, err
+	}
+	return apiProductCount, nil
+}
+
 // UpdateByKey UPSERTs keys in database
 func (s *KeyCache) UpdateByKey(c *types.Key) types.Error {
 

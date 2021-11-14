@@ -128,7 +128,7 @@ const templateHTTPForwarding string = `
 </td>
 <td>{{$listener.Policies | OrderedList}}</td>
 <td>{{$listener.RouteGroup}}</td>
-<td>{{$listener.LastmodifiedAt | ISO8601}} <br> {{$listener.LastmodifiedBy}}</td>
+<td>{{$listener.LastmodifiedAt | ISO8601}} <br> {{$listener.LastModifiedBy}}</td>
 </tr>
 {{end}}
 
@@ -170,7 +170,7 @@ const templateHTTPForwarding string = `
 {{end}}
 </ul>
 </td>
-<td>{{$r.LastmodifiedAt | ISO8601}} <br> {{$r.LastmodifiedBy}}</td>
+<td>{{$r.LastmodifiedAt | ISO8601}} <br> {{$r.LastModifiedBy}}</td>
 </tr>
 {{end}}
 </table>
@@ -197,7 +197,7 @@ const templateHTTPForwarding string = `
 {{end}}
 </ul>
 </td>
-<td>{{$c.LastmodifiedAt | ISO8601}} <br> {{$c.LastmodifiedBy}}</td>
+<td>{{$c.LastmodifiedAt | ISO8601}} <br> {{$c.LastModifiedBy}}</td>
 </tr>
 {{end}}
 </table>
@@ -238,7 +238,7 @@ const templateHTTPForwarding string = `
 {{end}}
 </ul>
 </td>
-<td>{{$a.LastmodifiedAt | ISO8601}} <br> {{$a.LastmodifiedBy}}</td>
+<td>{{$a.LastmodifiedAt | ISO8601}} <br> {{$a.LastModifiedBy}}</td>
 </tr>
 {{end}}
 </table>
@@ -367,7 +367,7 @@ const templateDeveloper string = `
 </td>
 {{end}}
 
-<td>{{$developer.LastmodifiedAt | ISO8601}} <br> {{$developer.LastmodifiedBy}}</td>
+<td>{{$developer.LastmodifiedAt | ISO8601}} <br> {{$developer.LastModifiedBy}}</td>
 </tr>
 {{end}}
 
@@ -431,8 +431,8 @@ const pageTemplateUsersAndRoles string = `
 <th>Roles</th>
 <th>CreatedBy</th>
 <th>CreatedAt</th>
-<th>LastmodifiedBy</th>
-<th>LastmodifiedAt</th>
+<th>LastModifiedBy</th>
+<th>LastModifiedAt</th>
 </tr>
 
 {{range $user := $users}}
@@ -443,8 +443,8 @@ const pageTemplateUsersAndRoles string = `
 <td><ul>{{range $role := $user.Roles}}<li><a href="/v1/roles/{{$role}}">{{$role}}</li>{{end}}</ul></td>
 <td>{{$user.CreatedBy}}</td>
 <td>{{$user.CreatedAt | ISO8601}}</td>
-<td>{{$user.LastmodifiedBy}}</td>
-<td>{{$user.LastmodifiedAt | ISO8601}}</td>
+<td>{{$user.LastModifiedBy}}</td>
+<td>{{$user.LastModifiedAt | ISO8601}}</td>
 </tr>
 {{end}}
 
@@ -459,8 +459,8 @@ const pageTemplateUsersAndRoles string = `
 <th>Allowed</th>
 <th>CreatedBy</th>
 <th>CreatedAt</th>
-<th>LastmodifiedBy</th>
-<th>LastmodifiedAt</th>
+<th>LastModifiedBy</th>
+<th>LastModifiedAt</th>
 </tr>
 
 {{range $role := $roles}}
@@ -481,8 +481,8 @@ const pageTemplateUsersAndRoles string = `
 
 <td>{{$role.CreatedBy}}</td>
 <td>{{$role.CreatedAt | ISO8601}}</td>
-<td>{{$role.LastmodifiedBy}}</td>
-<td>{{$role.LastmodifiedAt | ISO8601}}</td>
+<td>{{$role.LastModifiedBy}}</td>
+<td>{{$role.LastModifiedAt | ISO8601}}</td>
 </tr>
 {{end}}
 

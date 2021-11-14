@@ -95,3 +95,50 @@ func (p *KeyAPIProductStatus) IsApproved() bool {
 
 	return p.Status == "approved"
 }
+
+// AddProducts adds one or more apiproduct to a key's assigned products and returns an updated slice
+func (p KeyAPIProductStatuses) AddProducts(apiproductNames *[]string) KeyAPIProductStatuses {
+
+	for _, product := range *apiproductNames {
+		for _, v := range p {
+			if v.Apiproduct == product {
+				continue
+			}
+		}
+		p = append(p, KeyAPIProductStatus{
+			Apiproduct: product,
+			Status:     "approved",
+		})
+	}
+	return p
+}
+
+// RemoveProduct removes one apiproduct from a key's assigned products and returns an updated slice
+func (p KeyAPIProductStatuses) RemoveProduct(apiproductName string) KeyAPIProductStatuses {
+
+	for i, v := range p {
+		if v.Apiproduct == apiproductName {
+			// replace the element to delete with the one at the end of the slice, return n-1 first elements
+			p[i] = p[len(p)-1]
+			return p[:len(p)-1]
+		}
+	}
+	return p
+}
+
+// ChangeStatus changes the status of one apiproduct and returns an updated slice
+func (p KeyAPIProductStatuses) ChangeStatus(apiproductName, newProductStatus string) KeyAPIProductStatuses {
+
+	updatedKeyAPIProductStatuses := KeyAPIProductStatuses{}
+	for _, product := range p {
+		if product.Apiproduct == apiproductName {
+			updatedKeyAPIProductStatuses = append(updatedKeyAPIProductStatuses, KeyAPIProductStatus{
+				Apiproduct: product.Apiproduct,
+				Status:     newProductStatus,
+			})
+		} else {
+			updatedKeyAPIProductStatuses = append(updatedKeyAPIProductStatuses, product)
+		}
+	}
+	return updatedKeyAPIProductStatuses
+}

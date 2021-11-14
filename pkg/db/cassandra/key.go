@@ -85,6 +85,26 @@ func (s *KeyStore) GetByDeveloperAppID(developerAppID string) (types.Keys, types
 	return keys, nil
 }
 
+// GetCountByAPIProductName counts the number of times an apiproduct has been assigned to keys
+func (s *KeyStore) GetCountByAPIProductName(apiProductName string) (int, types.Error) {
+
+	query := "SELECT api_products FROM keys"
+	keys, err := s.runGetKeyQuery(query)
+	if err != nil {
+		s.db.metrics.QueryFailed(keysMetricLabel)
+		return 0, types.NewDatabaseError(err)
+	}
+	var count int
+	for _, key := range keys {
+		for _, product := range key.APIProducts {
+			if product.Apiproduct == apiProductName {
+				count++
+			}
+		}
+	}
+	return count, nil
+}
+
 // runGetKeyQuery executes CQL query and returns resultset
 func (s *KeyStore) runGetKeyQuery(query string, queryParameters ...interface{}) (types.Keys, error) {
 

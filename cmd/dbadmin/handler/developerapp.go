@@ -119,6 +119,7 @@ func (h *Handler) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddr
 	h.responseApplication(c, app, &keys)
 }
 
+// Updates an application
 // (POST /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name})
 func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, params PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameParams) {
 
@@ -163,6 +164,62 @@ func (h *Handler) changeDeveloperAppStatus(c *gin.Context, developerEmailaddress
 		return
 	}
 	c.Status(http.StatusNoContent)
+}
+
+// updates an application and creates a new key if apiproducts provided
+// (PUT /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name})
+func (h *Handler) PutV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, params PutV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameParams) {
+
+	var receivedApplicationUpdate ApplicationUpdate
+	if err := c.ShouldBindJSON(&receivedApplicationUpdate); err != nil {
+		responseErrorBadRequest(c, err)
+		return
+	}
+	app, err := h.service.DeveloperApp.GetByName(string(appName))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
+	// In case apiproduct(s) were provided we create a new key with all apiproducts assigned
+	if receivedApplicationUpdate.ApiProducts != nil {
+		createdKey, err := h.service.Key.Create(types.NullDeveloperAppKey, app, h.who(c))
+		if err != nil {
+			responseError(c, err)
+			return
+		}
+		createdKey.APIProducts = createdKey.APIProducts.AddProducts(receivedApplicationUpdate.ApiProducts)
+		_, err = h.service.Key.Update(string(createdKey.ConsumerKey), &createdKey, h.who(c))
+		if err != nil {
+			responseError(c, err)
+			return
+		}
+	}
+	var applicationChanged bool
+	if receivedApplicationUpdate.Attributes != nil {
+		app.Attributes = fromAttributesRequest(receivedApplicationUpdate.Attributes)
+		applicationChanged = true
+	}
+	if receivedApplicationUpdate.DisplayName != nil {
+		app.DisplayName = *receivedApplicationUpdate.DisplayName
+		applicationChanged = true
+	}
+	if receivedApplicationUpdate.CallbackUrl != nil {
+		app.DisplayName = *receivedApplicationUpdate.CallbackUrl
+		applicationChanged = true
+	}
+	if applicationChanged {
+		_, err = h.service.DeveloperApp.Update(*app, h.who(c))
+		if err != nil {
+			responseError(c, err)
+			return
+		}
+	}
+	keys, err := h.service.Key.GetByDeveloperAppID(app.AppID)
+	if err != nil {
+		responseError(c, err)
+		return
+	}
+	h.responseApplication(c, app, &keys)
 }
 
 // returns attributes of an application

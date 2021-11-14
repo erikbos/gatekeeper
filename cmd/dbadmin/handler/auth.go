@@ -16,7 +16,7 @@ var (
 	errBasicAuthRequired = types.NewUnauthorizedError(errors.New("basic authorization required"))
 	errUnknownUser       = types.NewUnauthorizedError(errors.New("unknown user"))
 	errPasswordMismatch  = types.NewUnauthorizedError(errors.New("password mismatch"))
-	errPathNotAllowed    = types.NewForbiddenError(errors.New("path not allowed"))
+	errPathNotAllowed    = types.NewForbiddenError(errors.New("method or path not allowed"))
 )
 
 //

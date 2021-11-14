@@ -2,6 +2,7 @@ package handler
 
 import (
 	"errors"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -132,19 +133,36 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 		h.changeKeyStatus(c, string(developerEmailaddress), string(appName), string(consumerKey), string(*params.Action))
 		return
 	}
-	var receivedKey types.Key
+	var receivedKey KeyUpdate
 	if err := c.ShouldBindJSON(&receivedKey); err != nil {
 		responseError(c, types.NewBadRequestError(err))
 		return
 	}
-	// if consumerKey is provided in body it must match with path consumerKey
-	if receivedKey.ConsumerKey != "" {
-		if receivedKey.ConsumerKey != string(consumerKey) {
-			responseErrorNameValueMisMatch(c)
-			return
-		}
+	_, err := h.service.Developer.Get(string(developerEmailaddress))
+	if err != nil {
+		responseError(c, err)
+		return
 	}
-	storedKey, err := h.service.Key.Update(string(consumerKey), &receivedKey, h.who(c))
+	_, err = h.service.DeveloperApp.GetByName(string(appName))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
+	key, err := h.service.Key.Get(string(consumerKey))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
+	if receivedKey.ApiProducts != nil {
+		key.APIProducts = key.APIProducts.AddProducts(receivedKey.ApiProducts)
+	}
+	if receivedKey.Attributes != nil {
+		key.Attributes = fromAttributesRequest(receivedKey.Attributes)
+	}
+	if receivedKey.ExpiresAt != nil {
+		key.ExpiresAt = *receivedKey.ExpiresAt
+	}
+	storedKey, err := h.service.Key.Update(string(consumerKey), key, h.who(c))
 	if err != nil {
 		responseError(c, err)
 		return
@@ -179,6 +197,103 @@ func (h *Handler) changeKeyStatus(c *gin.Context, developerEmailaddress, appName
 		responseError(c, errUnknownStatus)
 		return
 	}
+	_, err = h.service.Key.Update(key.ConsumerKey, key, h.who(c))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
+	c.Status(http.StatusNoContent)
+}
+
+// Removes apiproduct from key
+// (DELETE /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/keys/{consumer_key}/apiproducts/{apiproduct_name})
+func (h *Handler) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKeyApiproductsApiproductName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, consumerKey ConsumerKey, apiproductName ApiproductName) {
+
+	_, err := h.service.Developer.Get(string(developerEmailaddress))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
+	_, err = h.service.DeveloperApp.GetByName(string(appName))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
+	key, err := h.service.Key.Get(string(consumerKey))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
+	key.APIProducts = key.APIProducts.RemoveProduct(string(apiproductName))
+	storedKey, err := h.service.Key.Update(string(consumerKey), key, h.who(c))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
+	h.responseKeyUpdated(c, &storedKey)
+
+}
+
+// (POST /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/keys/{consumer_key}/apiproducts/{apiproduct_name})
+func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKeyApiproductsApiproductName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, consumerKey ConsumerKey, apiproductName ApiproductName, params PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKeyApiproductsApiproductNameParams) {
+
+	if params.Action != nil && c.ContentType() == "application/octet-stream" {
+		h.changeKeyApiProductStatus(c, string(developerEmailaddress), string(appName), string(consumerKey), string(apiproductName), string(*params.Action))
+		return
+	}
+	_, err := h.service.Developer.Get(string(developerEmailaddress))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
+	_, err = h.service.DeveloperApp.GetByName(string(appName))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
+	key, err := h.service.Key.Get(string(consumerKey))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
+	key.APIProducts = key.APIProducts.RemoveProduct(string(apiproductName))
+	storedKey, err := h.service.Key.Update(string(consumerKey), key, h.who(c))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
+	h.responseKeyUpdated(c, &storedKey)
+}
+
+// change status of apiproduct associated with key
+func (h *Handler) changeKeyApiProductStatus(c *gin.Context, developerEmailaddress, appName, consumerKey, apiproductName, requestedStatus string) {
+
+	_, err := h.service.Developer.Get(string(developerEmailaddress))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
+	_, err = h.service.DeveloperApp.GetByName(string(appName))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
+	key, err := h.service.Key.Get(consumerKey)
+	if err != nil {
+		responseError(c, err)
+		return
+	}
+	log.Printf("WHAT: %+v", requestedStatus)
+	switch requestedStatus {
+	case "approve":
+		key.APIProducts = key.APIProducts.ChangeStatus(apiproductName, "approved")
+	case "revoke":
+		key.APIProducts = key.APIProducts.ChangeStatus(apiproductName, "revoked")
+	default:
+		responseError(c, errUnknownStatus)
+		return
+	}
+	log.Printf("updated key: %+v", key)
 	_, err = h.service.Key.Update(key.ConsumerKey, key, h.who(c))
 	if err != nil {
 		responseError(c, err)
@@ -238,10 +353,10 @@ func ToKeyResponse(k *types.Key) Key {
 func toKeyAPIProductStatusesResponse(apiProductStatuses types.KeyAPIProductStatuses) *[]KeyProduct {
 
 	product_statuses := make([]KeyProduct, len(apiProductStatuses))
-	for i, v := range apiProductStatuses {
+	for i := range apiProductStatuses {
 		product_statuses[i] = KeyProduct{
-			Apiproduct: &v.Apiproduct,
-			Status:     &v.Status,
+			Apiproduct: &apiProductStatuses[i].Apiproduct,
+			Status:     &apiProductStatuses[i].Status,
 		}
 	}
 	return &product_statuses

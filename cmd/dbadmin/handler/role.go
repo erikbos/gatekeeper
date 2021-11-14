@@ -132,10 +132,10 @@ func (h *Handler) ToRoleResponse(l *types.Role) Role {
 func ToRoleAllowsResponse(allows types.Allows) *[]RoleAllow {
 
 	allowed_paths := make([]RoleAllow, len(allows))
-	for i, v := range allows {
+	for i := range allows {
 		allowed_paths[i] = RoleAllow{
-			Methods: &v.Methods,
-			Paths:   &v.Paths,
+			Methods: &allows[i].Methods,
+			Paths:   &allows[i].Paths,
 		}
 	}
 	return &allowed_paths
@@ -161,6 +161,9 @@ func fromRole(u Role) types.Role {
 	}
 	if u.LastModifiedAt != nil {
 		role.LastModifiedAt = *u.LastModifiedAt
+	}
+	if u.Name != "" {
+		role.Name = u.Name
 	}
 	return role
 }

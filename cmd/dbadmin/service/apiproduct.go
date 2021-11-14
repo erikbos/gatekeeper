@@ -174,8 +174,15 @@ func (ds *APIProductService) Delete(apiproductName string,
 	if err != nil {
 		return types.NullAPIProduct, err
 	}
-
-	// TODO we probably allow deletion only in case no apikey has the product assigned
+	keyWithAPIProduct, err := ds.db.Key.GetCountByAPIProductName(apiproductName)
+	if err != nil {
+		return types.NullAPIProduct, err
+	}
+	if keyWithAPIProduct > 0 {
+		return types.NullAPIProduct, types.NewBadRequestError(
+			fmt.Errorf("cannot delete api product '%s' assigned to %d keys",
+				apiproductName, keyWithAPIProduct))
+	}
 	if err := ds.db.APIProduct.Delete(apiproductName); err != nil {
 		return types.NullAPIProduct, err
 	}
