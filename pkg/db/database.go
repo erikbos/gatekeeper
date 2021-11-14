@@ -11,6 +11,7 @@ type (
 		Listener
 		Route
 		Cluster
+		Organization
 		Developer
 		DeveloperApp
 		APIProduct
@@ -66,6 +67,19 @@ type (
 		Delete(clusterToDelete string) types.Error
 	}
 
+	Organization interface {
+		// GetAll retrieves all users
+		GetAll() (types.Organizations, types.Error)
+
+		// Get retrieves a user from database
+		Get(userName string) (*types.Organization, types.Error)
+
+		// Update UPSERTs an user in database
+		Update(c *types.Organization) types.Error
+
+		// Update UPSERTs an user in database
+		Delete(organizationToDelete string) types.Error
+	}
 	// Developer the developer information storage interface
 	Developer interface {
 		// GetAll retrieves all developer

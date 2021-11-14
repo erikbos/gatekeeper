@@ -2,7 +2,6 @@ package handler
 
 import (
 	"errors"
-	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -290,7 +289,6 @@ func (h *Handler) changeKeyApiProductStatus(c *gin.Context, developerEmailaddres
 		responseError(c, err)
 		return
 	}
-	log.Printf("WHAT: %+v", requestedStatus)
 	switch requestedStatus {
 	case "approve":
 		key.APIProducts = key.APIProducts.ChangeStatus(apiproductName, "approved")
@@ -300,7 +298,6 @@ func (h *Handler) changeKeyApiProductStatus(c *gin.Context, developerEmailaddres
 		responseError(c, errUnknownStatus)
 		return
 	}
-	log.Printf("updated key: %+v", key)
 	_, err = h.service.Key.Update(key.ConsumerKey, key, h.who(c))
 	if err != nil {
 		responseError(c, err)

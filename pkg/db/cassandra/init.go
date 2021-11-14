@@ -128,6 +128,17 @@ var createTablesCQL = [...]string{
     PRIMARY KEY (name)
 	)`,
 
+	`CREATE TABLE IF NOT EXISTS organizations (
+        attributes text,
+        created_at bigint,
+        created_by text,
+        display_name text,
+        lastmodified_at bigint,
+        lastmodified_by text,
+        name text,
+        PRIMARY KEY (name)
+    )`,
+
 	`CREATE TABLE IF NOT EXISTS developers (
     apps text,
     attributes text,

@@ -54,6 +54,11 @@ func (h *Handler) GetV1RolesRoleName(c *gin.Context, roleName RoleName) {
 // (POST /v1/roles/{role_name})
 func (h *Handler) PostV1RolesRoleName(c *gin.Context, roleName RoleName) {
 
+	_, err := h.service.Role.Get(string(roleName))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
 	var receivedRole Role
 	if err := c.ShouldBindJSON(&receivedRole); err != nil {
 		responseError(c, types.NewBadRequestError(err))

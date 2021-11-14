@@ -113,7 +113,7 @@ func abortAuthorizationRequired(c *gin.Context, errorDetails types.Error) {
 // who returns name of authenticated user requesting this API call
 func (h *Handler) who(c *gin.Context) service.Requester {
 
-	// Store details, changelog will use these records
+	// Store details, changelog will use these values
 	return service.Requester{
 		RemoteAddr: c.ClientIP(),
 		Header:     c.Request.Header,

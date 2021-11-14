@@ -8,6 +8,8 @@ tags:
   - name: Intro
     description: intro here.
 
+  - name: Organization
+    description: Operations on organization.
   - name: Developer
     description: Operations on developers.
   - name: Application
@@ -39,6 +41,7 @@ x-tagGroups:
   - name: Gatekeeper
     tags:
       - Intro
+      - Organization
       - Developer
       - Application
       - Key
@@ -52,6 +55,109 @@ x-tagGroups:
       - Role
 
 paths:
+  /v1/organizations:
+    get:
+      description: Retrieve all organizations.
+      tags:
+        - Organization
+      responses:
+        '200':
+          description: Successfully retrieved all organizations.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organizations'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+    post:
+      description: Create a new organization.
+      tags:
+        - Organization
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Organization'
+      responses:
+        '200':
+          description: Successfully created a new organization.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /v1/organizations/{organization_name}:
+    get:
+      description: Retrieve organization.
+      tags:
+        - Organization
+      parameters:
+        - $ref: '#/components/parameters/organization_name'
+      responses:
+        '200':
+          description: Successfully retrieved organization.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: organization to retrieve does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+    post:
+      description: Update a organization.
+      tags:
+        - Organization
+      parameters:
+        - $ref: '#/components/parameters/organization_name'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Organization'
+      responses:
+        '200':
+          description: Successfully updated organization.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: organization to update does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+    delete:
+      description: Delete a organization.
+      tags:
+        - Organization
+      parameters:
+        - $ref: '#/components/parameters/organization_name'
+      responses:
+        '200':
+          description: Successfully deleted a organization.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+        '404':
+          description: organization to delete does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+
   /v1/organizations/{organization_name}/developers:
     get:
       parameters:
@@ -1966,6 +2072,46 @@ components:
       description: Name of attribute.
 
   schemas:
+    Organization:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of organization.
+        displayName:
+          type: string
+          description: Display name of organization.
+        attributes:
+          type: array
+          items:
+            $ref: "#/components/schemas/Attribute"
+        createdAt:
+          type: integer
+          format: int64
+          readOnly: true
+          description: Create timestamp in milliseconds since epoch.
+        createdBy:
+          type: string
+          readOnly: true
+          description: User who created this developer.
+        lastModifiedAt:
+          type: integer
+          format: int64
+          readOnly: true
+          description: Last modified timestamp in milliseconds since epoch.
+        lastModifiedBy:
+          type: string
+          readOnly: true
+          description: User who last updated this developer.
+    Organizations:
+      type: object
+      properties:
+        organization:
+          type: array
+          items:
+            $ref: "#/components/schemas/Organization"
+      description: All organization details.
+
     Developer:
       type: object
       properties:
@@ -2011,7 +2157,7 @@ components:
           format: int64
           readOnly: true
           description: Last modified timestamp in milliseconds since epoch.
-        LastModifiedBy:
+        lastModifiedBy:
           type: string
           readOnly: true
           description: User who last updated this developer.

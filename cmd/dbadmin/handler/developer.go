@@ -72,6 +72,11 @@ func (h *Handler) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddr
 // (POST /v1/organizations/{organization_name}/developers/{developer_emailaddress})
 func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddress(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, params PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressParams) {
 
+	_, err := h.service.Developer.Get(string(developerEmailaddress))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
 	if params.Action != nil && c.ContentType() == "application/octet-stream" {
 		h.changeDeveloperStatus(c, string(developerEmailaddress), string(*params.Action))
 		return

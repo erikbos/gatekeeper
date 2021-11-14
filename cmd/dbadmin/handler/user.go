@@ -66,6 +66,11 @@ func (h *Handler) GetV1UsersUserName(c *gin.Context, userName UserName) {
 // (POST /v1/users/{user_name})
 func (h *Handler) PostV1UsersUserName(c *gin.Context, userName UserName) {
 
+	_, err := h.service.User.Get(string(userName))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
 	var receivedUser User
 	if err := c.ShouldBindJSON(&receivedUser); err != nil {
 		responseError(c, types.NewBadRequestError(err))

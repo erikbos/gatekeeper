@@ -188,31 +188,31 @@ def test_developer_get_no_auth():
     assert_status_code(response, HTTP_AUTHORIZATION_REQUIRED)
 
 
-def test_developer_get_all_wrong_content_type():
-    """
-    Test get all developers, non-json content type
-    """
-    developer_api = Developer(config, session)
+# def test_developer_get_all_wrong_content_type():
+#     """
+#     Test get all developers, non-json content type
+#     """
+#     developer_api = Developer(config, session)
 
-    wrong_header = {'accept': 'application/unknown'}
-    response = session.get(developer_api.developer_url, headers=wrong_header)
-    assert_status_code(response, HTTP_BAD_CONTENT)
+#     wrong_header = {'accept': 'application/unknown'}
+#     response = session.get(developer_api.developer_url, headers=wrong_header)
+#     assert_status_code(response, HTTP_BAD_CONTENT)
 
 
-def test_developer_create_wrong_content_type():
-    """
-    Test create developer, non-json content type
-    """
-    developer_api = Developer(config, session)
+# def test_developer_create_wrong_content_type():
+#     """
+#     Test create developer, non-json content type
+#     """
+#     developer_api = Developer(config, session)
 
-    developer = {
-        "email" : "example@test.com",
-        "firstName" : "joe",
-        "lastName" : "smith"
-    }
-    wrong_header = {'accept': 'application/unknown'}
-    response = session.post(developer_api.developer_url, headers=wrong_header, json=developer)
-    assert_status_code(response, HTTP_BAD_CONTENT)
+#     developer = {
+#         "email" : "example@test.com",
+#         "firstName" : "joe",
+#         "lastName" : "smith"
+#     }
+#     wrong_header = {'accept': 'application/unknown'}
+#     response = session.post(developer_api.developer_url, headers=wrong_header, json=developer)
+#     assert_status_code(response, HTTP_BAD_CONTENT)
 
 
 def test_developer_create_ignore_provided_fields():
@@ -236,6 +236,8 @@ def test_developer_create_ignore_provided_fields():
         "lastModifiedBy": email
     }
     created_developer = developer_api.create_positive(new_developer)
+
+    print("Q ", created_developer)
 
     # Not all provided fields must be accepted
     assert created_developer['developerId'] != new_developer['developerId']

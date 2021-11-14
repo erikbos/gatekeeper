@@ -173,9 +173,6 @@ type Clusters struct {
 
 // Developer defines model for Developer.
 type Developer struct {
-	// User who last updated this developer.
-	LastModifiedBy *string `json:"LastModifiedBy,omitempty"`
-
 	// List of application names this developer has. (retrieve only)
 	Apps       *[]string    `json:"apps,omitempty"`
 	Attributes *[]Attribute `json:"attributes,omitempty"`
@@ -197,6 +194,9 @@ type Developer struct {
 
 	// Last modified timestamp in milliseconds since epoch.
 	LastModifiedAt *int64 `json:"lastModifiedAt,omitempty"`
+
+	// User who last updated this developer.
+	LastModifiedBy *string `json:"lastModifiedBy,omitempty"`
 
 	// Last name of developer.
 	LastName *string `json:"lastName,omitempty"`
@@ -306,6 +306,34 @@ type Listener struct {
 // All listener details.
 type Listeners struct {
 	Listeners *[]Listener `json:"listeners,omitempty"`
+}
+
+// Organization defines model for Organization.
+type Organization struct {
+	Attributes *[]Attribute `json:"attributes,omitempty"`
+
+	// Create timestamp in milliseconds since epoch.
+	CreatedAt *int64 `json:"createdAt,omitempty"`
+
+	// User who created this developer.
+	CreatedBy *string `json:"createdBy,omitempty"`
+
+	// Display name of organization.
+	DisplayName *string `json:"displayName,omitempty"`
+
+	// Last modified timestamp in milliseconds since epoch.
+	LastModifiedAt *int64 `json:"lastModifiedAt,omitempty"`
+
+	// User who last updated this developer.
+	LastModifiedBy *string `json:"lastModifiedBy,omitempty"`
+
+	// Name of organization.
+	Name *string `json:"name,omitempty"`
+}
+
+// All organization details.
+type Organizations struct {
+	Organization *[]Organization `json:"organization,omitempty"`
 }
 
 // Role defines model for Role.
@@ -504,6 +532,12 @@ type PostV1ListenersListenerNameJSONBody Listener
 // PostV1ListenersListenerNameAttributesAttributeNameJSONBody defines parameters for PostV1ListenersListenerNameAttributesAttributeName.
 type PostV1ListenersListenerNameAttributesAttributeNameJSONBody Attribute
 
+// PostV1OrganizationsJSONBody defines parameters for PostV1Organizations.
+type PostV1OrganizationsJSONBody Organization
+
+// PostV1OrganizationsOrganizationNameJSONBody defines parameters for PostV1OrganizationsOrganizationName.
+type PostV1OrganizationsOrganizationNameJSONBody Organization
+
 // GetV1OrganizationsOrganizationNameApiproductsParams defines parameters for GetV1OrganizationsOrganizationNameApiproducts.
 type GetV1OrganizationsOrganizationNameApiproductsParams struct {
 	// Return full APIProducts details.
@@ -666,6 +700,12 @@ type PostV1ListenersListenerNameJSONRequestBody PostV1ListenersListenerNameJSONB
 // PostV1ListenersListenerNameAttributesAttributeNameJSONRequestBody defines body for PostV1ListenersListenerNameAttributesAttributeName for application/json ContentType.
 type PostV1ListenersListenerNameAttributesAttributeNameJSONRequestBody PostV1ListenersListenerNameAttributesAttributeNameJSONBody
 
+// PostV1OrganizationsJSONRequestBody defines body for PostV1Organizations for application/json ContentType.
+type PostV1OrganizationsJSONRequestBody PostV1OrganizationsJSONBody
+
+// PostV1OrganizationsOrganizationNameJSONRequestBody defines body for PostV1OrganizationsOrganizationName for application/json ContentType.
+type PostV1OrganizationsOrganizationNameJSONRequestBody PostV1OrganizationsOrganizationNameJSONBody
+
 // PostV1OrganizationsOrganizationNameApiproductsJSONRequestBody defines body for PostV1OrganizationsOrganizationNameApiproducts for application/json ContentType.
 type PostV1OrganizationsOrganizationNameApiproductsJSONRequestBody PostV1OrganizationsOrganizationNameApiproductsJSONBody
 
@@ -800,6 +840,21 @@ type ServerInterface interface {
 
 	// (POST /v1/listeners/{listener_name}/attributes/{attribute_name})
 	PostV1ListenersListenerNameAttributesAttributeName(c *gin.Context, listenerName ListenerName, attributeName AttributeName)
+
+	// (GET /v1/organizations)
+	GetV1Organizations(c *gin.Context)
+
+	// (POST /v1/organizations)
+	PostV1Organizations(c *gin.Context)
+
+	// (DELETE /v1/organizations/{organization_name})
+	DeleteV1OrganizationsOrganizationName(c *gin.Context, organizationName OrganizationName)
+
+	// (GET /v1/organizations/{organization_name})
+	GetV1OrganizationsOrganizationName(c *gin.Context, organizationName OrganizationName)
+
+	// (POST /v1/organizations/{organization_name})
+	PostV1OrganizationsOrganizationName(c *gin.Context, organizationName OrganizationName)
 
 	// (GET /v1/organizations/{organization_name}/apiproducts)
 	GetV1OrganizationsOrganizationNameApiproducts(c *gin.Context, organizationName OrganizationName, params GetV1OrganizationsOrganizationNameApiproductsParams)
@@ -1418,6 +1473,89 @@ func (siw *ServerInterfaceWrapper) PostV1ListenersListenerNameAttributesAttribut
 	}
 
 	siw.Handler.PostV1ListenersListenerNameAttributesAttributeName(c, listenerName, attributeName)
+}
+
+// GetV1Organizations operation middleware
+func (siw *ServerInterfaceWrapper) GetV1Organizations(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.GetV1Organizations(c)
+}
+
+// PostV1Organizations operation middleware
+func (siw *ServerInterfaceWrapper) PostV1Organizations(c *gin.Context) {
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PostV1Organizations(c)
+}
+
+// DeleteV1OrganizationsOrganizationName operation middleware
+func (siw *ServerInterfaceWrapper) DeleteV1OrganizationsOrganizationName(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "organization_name" -------------
+	var organizationName OrganizationName
+
+	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.DeleteV1OrganizationsOrganizationName(c, organizationName)
+}
+
+// GetV1OrganizationsOrganizationName operation middleware
+func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationName(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "organization_name" -------------
+	var organizationName OrganizationName
+
+	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.GetV1OrganizationsOrganizationName(c, organizationName)
+}
+
+// PostV1OrganizationsOrganizationName operation middleware
+func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationName(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "organization_name" -------------
+	var organizationName OrganizationName
+
+	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PostV1OrganizationsOrganizationName(c, organizationName)
 }
 
 // GetV1OrganizationsOrganizationNameApiproducts operation middleware
@@ -3485,6 +3623,16 @@ func RegisterHandlersWithOptions(router *gin.Engine, si ServerInterface, options
 	router.GET(options.BaseURL+"/v1/listeners/:listener_name/attributes/:attribute_name", wrapper.GetV1ListenersListenerNameAttributesAttributeName)
 
 	router.POST(options.BaseURL+"/v1/listeners/:listener_name/attributes/:attribute_name", wrapper.PostV1ListenersListenerNameAttributesAttributeName)
+
+	router.GET(options.BaseURL+"/v1/organizations", wrapper.GetV1Organizations)
+
+	router.POST(options.BaseURL+"/v1/organizations", wrapper.PostV1Organizations)
+
+	router.DELETE(options.BaseURL+"/v1/organizations/:organization_name", wrapper.DeleteV1OrganizationsOrganizationName)
+
+	router.GET(options.BaseURL+"/v1/organizations/:organization_name", wrapper.GetV1OrganizationsOrganizationName)
+
+	router.POST(options.BaseURL+"/v1/organizations/:organization_name", wrapper.PostV1OrganizationsOrganizationName)
 
 	router.GET(options.BaseURL+"/v1/organizations/:organization_name/apiproducts", wrapper.GetV1OrganizationsOrganizationNameApiproducts)
 

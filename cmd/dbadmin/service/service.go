@@ -9,6 +9,7 @@ type Service struct {
 	Listener
 	Route
 	Cluster
+	Organization
 	Developer
 	DeveloperApp
 	Key
@@ -86,6 +87,18 @@ type (
 		DeleteAttribute(clusterName, attributeToDelete string, who Requester) (string, types.Error)
 
 		Delete(clusterName string, who Requester) (deletedCluster types.Cluster, e types.Error)
+	}
+
+	Organization interface {
+		GetAll() (listeners types.Organizations, err types.Error)
+
+		Get(organizationName string) (listener *types.Organization, err types.Error)
+
+		Create(newOrganization types.Organization, who Requester) (types.Organization, types.Error)
+
+		Update(updatedOrganization types.Organization, who Requester) (types.Organization, types.Error)
+
+		Delete(organizationName string, who Requester) (deletedListener types.Organization, e types.Error)
 	}
 
 	// Developer is the service interface to manipulate Developer entities

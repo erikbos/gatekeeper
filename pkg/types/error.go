@@ -22,6 +22,9 @@ var (
 	// errItemNotFound indicates the item cannot be found (404)
 	errItemNotFound = errors.New("entity cannot be found")
 
+	// errNotAcceptable indicates the request can not be processed (406)
+	errNotAcceptable = errors.New("not acceptable")
+
 	// errDatabaseIssue indicates a database error
 	errDatabaseIssue = errors.New("database issue")
 )
@@ -95,6 +98,11 @@ func NewItemNotFoundError(details error) Error {
 	return newError(errItemNotFound, details)
 }
 
+// NewNotAcceptable returns a not acceptable error
+func NewNotAcceptable(details error) Error {
+	return newError(errNotAcceptable, details)
+}
+
 // NewDatabaseError returns a database error
 func NewDatabaseError(details error) Error {
 	return newError(errDatabaseIssue, details)
@@ -121,6 +129,9 @@ func HTTPStatusCode(e Error) int {
 
 	case errItemNotFound:
 		return http.StatusNotFound
+
+	case errNotAcceptable:
+		return http.StatusNotAcceptable
 
 	case errDatabaseIssue:
 		return http.StatusServiceUnavailable

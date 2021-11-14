@@ -21,7 +21,7 @@ type Handler struct {
 }
 
 // NewHandler sets up all API endpoint routes
-func NewHandler(g *gin.Engine, db *db.Database, s *service.Service, applicationName,
+func NewHandler(router *gin.Engine, db *db.Database, s *service.Service, applicationName,
 	organizationName string, disableAPIAuthentication bool, logger *zap.Logger) *Handler {
 
 	handler := &Handler{
@@ -29,32 +29,30 @@ func NewHandler(g *gin.Engine, db *db.Database, s *service.Service, applicationN
 		logger:  logger,
 	}
 
-	registerMetricsRoute(g, applicationName)
+	registerMetricsRoute(router, applicationName)
 
-	g.GET(showHTTPForwardingPath, handler.showHTTPForwardingPage)
-	g.GET(showDevelopersPath, handler.showDevelopersPage)
-	g.GET(showUserRolesPath, handler.showUserRolePage)
+	router.GET(showHTTPForwardingPath, handler.showHTTPForwardingPage)
+	router.GET(showDevelopersPath, handler.showDevelopersPage)
+	router.GET(showUserRolesPath, handler.showUserRolePage)
 
 	// Insert authentication middleware for endpoint we are registering next
 	auth := newAuth(s.User, s.Role, logger)
-	g.Use(auth.AuthenticateAndAuthorize)
 
-	// Register all API endpoint routes
-	RegisterHandlers(g, handler)
+	RegisterHandlersWithOptions(router, handler, GinServerOptions{
+		Middlewares: []MiddlewareFunc{
+			auth.AuthenticateAndAuthorize,
+		},
+	})
 
 	return handler
 }
 
-// POSTwithoutContentTypeJSON returns boolean indicating whether
-// request has POST method without content-type = application/json
-// func P2OSTwithoutContentTypeJSON(c *gin.Context) bool {
+// func CheckAccept(c *gin.Context) {
 
-// 	if c.Request.Method == http.MethodPost {
-// 		if c.Request.Header.Get("content-type") != "application/json" {
-// 			return true
-// 		}
+// 	if c.Request.Method == http.MethodGet &&
+// 		!strings.HasPrefix(c.Request.Header.Get("content-type"), "application/json") {
+// 		responseError(c, types.NewNotAcceptable(errors.New(c.Request.Header.Get("content-type"))))
 // 	}
-// 	return false
 // }
 
 // responseError returns formated error back to API client

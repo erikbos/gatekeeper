@@ -128,7 +128,7 @@ const templateHTTPForwarding string = `
 </td>
 <td>{{$listener.Policies | OrderedList}}</td>
 <td>{{$listener.RouteGroup}}</td>
-<td>{{$listener.LastmodifiedAt | ISO8601}} <br> {{$listener.LastModifiedBy}}</td>
+<td>{{$listener.LastModifiedAt | ISO8601}} <br> {{$listener.LastModifiedBy}}</td>
 </tr>
 {{end}}
 
@@ -170,7 +170,7 @@ const templateHTTPForwarding string = `
 {{end}}
 </ul>
 </td>
-<td>{{$r.LastmodifiedAt | ISO8601}} <br> {{$r.LastModifiedBy}}</td>
+<td>{{$r.LastModifiedAt | ISO8601}} <br> {{$r.LastModifiedBy}}</td>
 </tr>
 {{end}}
 </table>
@@ -197,7 +197,7 @@ const templateHTTPForwarding string = `
 {{end}}
 </ul>
 </td>
-<td>{{$c.LastmodifiedAt | ISO8601}} <br> {{$c.LastModifiedBy}}</td>
+<td>{{$c.LastModifiedAt | ISO8601}} <br> {{$c.LastModifiedBy}}</td>
 </tr>
 {{end}}
 </table>
@@ -238,7 +238,7 @@ const templateHTTPForwarding string = `
 {{end}}
 </ul>
 </td>
-<td>{{$a.LastmodifiedAt | ISO8601}} <br> {{$a.LastModifiedBy}}</td>
+<td>{{$a.LastModifiedAt | ISO8601}} <br> {{$a.LastModifiedBy}}</td>
 </tr>
 {{end}}
 </table>
@@ -367,7 +367,7 @@ const templateDeveloper string = `
 </td>
 {{end}}
 
-<td>{{$developer.LastmodifiedAt | ISO8601}} <br> {{$developer.LastModifiedBy}}</td>
+<td>{{$developer.LastModifiedAt | ISO8601}} <br> {{$developer.LastModifiedBy}}</td>
 </tr>
 {{end}}
 

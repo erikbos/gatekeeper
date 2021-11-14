@@ -25,8 +25,10 @@ func metricsMiddleware(m *metrics.Metrics) gin.HandlerFunc {
 		c.Next()
 
 		m.IncRequestPathHit(webadmin.GetUser(c),
-			c.Request.Method,
-			c.FullPath(),
+			"X",
+			"Y",
+			// c.Request.Method,
+			// c.FullPath(),
 			strconv.Itoa(c.Writer.Status()))
 	}
 }
