@@ -3,7 +3,15 @@
     "type": "object",
     "properties": {
         "code": {
-            "type": "integer"
+            "anyOf": [{
+                    "type": "integer",
+                    "minimum": 100,
+                    "maximum": 599
+                },
+                {
+                    "type": "string"
+                }
+            ]
         },
         "message": {
             "type": "string"
