@@ -72,7 +72,8 @@ type Application struct {
 	CreatedAt *int64 `json:"createdAt,omitempty"`
 
 	// User who created this application.
-	CreatedBy *string `json:"createdBy,omitempty"`
+	CreatedBy   *string `json:"createdBy,omitempty"`
+	Credentials *[]Key  `json:"credentials,omitempty"`
 
 	// DeveloperID of developer that owns this application.
 	DeveloperId *string `json:"developerId,omitempty"`
@@ -150,7 +151,7 @@ type Developer struct {
 	// User who last updated this developer.
 	LastModifiedBy *string `json:"LastModifiedBy,omitempty"`
 
-	// List of application names this developer has.
+	// List of application names this developer has. (retrieve only)
 	Apps       *[]string    `json:"apps,omitempty"`
 	Attributes *[]Attribute `json:"attributes,omitempty"`
 
@@ -198,21 +199,22 @@ type ErrorMessage struct {
 
 // Key defines model for Key.
 type Key struct {
-	// AppID of application linked to key.
-	AppID *string `json:"AppID,omitempty"`
+	ApiProducts *[]KeyProduct `json:"apiProducts,omitempty"`
 
-	// Expiry timestamp of key in milliseconds since epoch. (-1 means key does not expire.)
-	ExpiresAt *int64 `json:"ExpiresAt,omitempty"`
+	// AppID of application linked to key.
+	AppID          *string      `json:"appID,omitempty"`
+	Attributes     *[]Attribute `json:"attributes,omitempty"`
+	ConsumerKey    *string      `json:"consumerKey,omitempty"`
+	ConsumerSecret *string      `json:"consumerSecret,omitempty"`
+
+	// Expiry timestamp of key in milliseconds since epoch. A value of -1 means key does not expire.
+	ExpiresAt *int64 `json:"expiresAt,omitempty"`
 
 	// Issue timestamp of key in milliseconds since epoch.
-	IssuedAt *int64 `json:"IssuedAt,omitempty"`
+	IssuedAt *int64 `json:"issuedAt,omitempty"`
 
 	// Status of key. Can be 'approved' or 'revoked'
-	Status         *string       `json:"Status,omitempty"`
-	ApiProducts    *[]KeyProduct `json:"apiProducts,omitempty"`
-	Attributes     *[]Attribute  `json:"attributes,omitempty"`
-	ConsumerKey    *string       `json:"consumerKey,omitempty"`
-	ConsumerSecret *string       `json:"consumerSecret,omitempty"`
+	Status *string `json:"status,omitempty"`
 }
 
 // A product assigned to a key.
@@ -394,6 +396,9 @@ type ConsumerKey string
 // DeveloperEmailaddress defines model for developer_emailaddress.
 type DeveloperEmailaddress string
 
+// KeyAction defines model for key_action.
+type KeyAction string
+
 // ListenerName defines model for listener_name.
 type ListenerName string
 
@@ -472,7 +477,7 @@ type PostV1OrganizationsOrganizationNameApiproductsApiproductNameJSONBody APIPro
 
 // PostV1OrganizationsOrganizationNameApiproductsApiproductNameParams defines parameters for PostV1OrganizationsOrganizationNameApiproductsApiproductName.
 type PostV1OrganizationsOrganizationNameApiproductsApiproductNameParams struct {
-	// Optional, request status change of developer to 'active' or 'inactive', requires Content-type to be set to 'application/octet-stream'.
+	// Optional, use 'action' or 'inactive' to status change. Requires Content-type to be set to 'application/octet-stream'.
 	Action *Action `json:"action,omitempty"`
 }
 
@@ -508,7 +513,7 @@ type PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressJSONBody 
 
 // PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressParams defines parameters for PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddress.
 type PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressParams struct {
-	// Optional, request status change of developer to 'active' or 'inactive', requires Content-type to be set to 'application/octet-stream'.
+	// Optional, use 'action' or 'inactive' to status change. Requires Content-type to be set to 'application/octet-stream'.
 	Action *Action `json:"action,omitempty"`
 }
 
@@ -529,7 +534,7 @@ type PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNa
 
 // PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameParams defines parameters for PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppName.
 type PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameParams struct {
-	// Optional, request status change of developer to 'active' or 'inactive', requires Content-type to be set to 'application/octet-stream'.
+	// Optional, use 'action' or 'inactive' to status change. Requires Content-type to be set to 'application/octet-stream'.
 	Action *Action `json:"action,omitempty"`
 }
 
@@ -544,6 +549,12 @@ type PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNa
 
 // PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKeyJSONBody defines parameters for PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKey.
 type PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKeyJSONBody Key
+
+// PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKeyParams defines parameters for PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKey.
+type PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKeyParams struct {
+	// Optional, use 'approve' or 'revoke' to update status of key. Requires Content-type to be set to 'application/octet-stream'.
+	Action *KeyAction `json:"action,omitempty"`
+}
 
 // PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributesJSONBody defines parameters for PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributes.
 type PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributesJSONBody Attributes
@@ -816,7 +827,7 @@ type ServerInterface interface {
 	GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKey(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, consumerKey ConsumerKey)
 
 	// (POST /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/keys/{consumer_key})
-	PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKey(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, consumerKey ConsumerKey)
+	PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKey(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, consumerKey ConsumerKey, params PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKeyParams)
 
 	// (GET /v1/organizations/{organization_name}/developers/{developer_emailaddress}/attributes)
 	GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributes(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress)
@@ -2580,11 +2591,25 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 		return
 	}
 
+	// Parameter object where we will unmarshal all parameters from the context
+	var params PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKeyParams
+
+	// ------------- Optional query parameter "action" -------------
+	if paramValue := c.Query("action"); paramValue != "" {
+
+	}
+
+	err = runtime.BindQueryParameter("form", true, false, "action", c.Request.URL.Query(), &params.Action)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter action: %s", err)})
+		return
+	}
+
 	for _, middleware := range siw.HandlerMiddlewares {
 		middleware(c)
 	}
 
-	siw.Handler.PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKey(c, organizationName, developerEmailaddress, appName, consumerKey)
+	siw.Handler.PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKey(c, organizationName, developerEmailaddress, appName, consumerKey, params)
 }
 
 // GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributes operation middleware

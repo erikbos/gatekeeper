@@ -148,7 +148,7 @@ type (
 
 		Create(newKey types.Key, developerApp *types.DeveloperApp, who Requester) (types.Key, types.Error)
 
-		Update(updateKey types.Key, who Requester) (types.Key, types.Error)
+		Update(consumerKey string, updateKey *types.Key, who Requester) (types.Key, types.Error)
 
 		Delete(consumerKey string, who Requester) (deletedKey types.Key, e types.Error)
 	}

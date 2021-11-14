@@ -26,6 +26,7 @@ func (h *Handler) GetV1OrganizationsOrganizationNameApps(c *gin.Context, organiz
 	h.responseDeveloperAppIDs(c, apps)
 }
 
+// returns one app identified by appId of a developer
 // (GET /v1/organizations/{organization_name}/apps/{app_id})
 func (h *Handler) GetV1OrganizationsOrganizationNameAppsAppId(c *gin.Context, organizationName OrganizationName, appId AppId) {
 
@@ -34,10 +35,15 @@ func (h *Handler) GetV1OrganizationsOrganizationNameAppsAppId(c *gin.Context, or
 		responseError(c, err)
 		return
 	}
-	h.responseApplication(c, app)
+	keys, err := h.service.Key.GetByDeveloperAppID(app.AppID)
+	if err != nil {
+		responseError(c, err)
+		return
+	}
+	h.responseApplication(c, app, &keys)
 }
 
-// returns one named app of a developer
+// returns names of all application of a developer
 // (GET /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps)
 func (h *Handler) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressApps(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, params GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsParams) {
 
@@ -69,7 +75,14 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 		responseError(c, err)
 		return
 	}
-	h.responseApplicationCreated(c, &createdApp)
+
+	createdKey, err := h.service.Key.Create(types.NullDeveloperAppKey, &createdApp, h.who(c))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
+	createdKeys := types.Keys{createdKey}
+	h.responseApplicationCreated(c, &createdApp, &createdKeys)
 }
 
 // (DELETE /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name})
@@ -86,9 +99,10 @@ func (h *Handler) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmaila
 		responseError(c, err)
 		return
 	}
-	h.responseApplication(c, &app)
+	h.responseApplication(c, &app, nil)
 }
 
+// returns one app identified by name of a developer
 // (GET /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name})
 func (h *Handler) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName) {
 
@@ -97,7 +111,12 @@ func (h *Handler) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddr
 		responseError(c, err)
 		return
 	}
-	h.responseApplication(c, app)
+	keys, err := h.service.Key.GetByDeveloperAppID(app.AppID)
+	if err != nil {
+		responseError(c, err)
+		return
+	}
+	h.responseApplication(c, app, &keys)
 }
 
 // (POST /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name})
@@ -257,31 +276,30 @@ func (h *Handler) responseDeveloperAllApps(c *gin.Context, developerapps types.D
 
 	all_apps := make([]Application, len(developerapps))
 	for i := range developerapps {
-		all_apps[i] = ToApplicationResponse(&developerapps[i])
+		all_apps[i] = ToApplicationResponse(&developerapps[i], nil)
 	}
 	c.IndentedJSON(http.StatusOK, Applications{
 		Application: &all_apps,
 	})
 }
 
-func (h *Handler) responseApplication(c *gin.Context, app *types.DeveloperApp) {
+func (h *Handler) responseApplication(c *gin.Context, app *types.DeveloperApp, keys *types.Keys) {
 
-	c.IndentedJSON(http.StatusOK, ToApplicationResponse(app))
+	c.IndentedJSON(http.StatusOK, ToApplicationResponse(app, keys))
 }
 
-func (h *Handler) responseApplicationCreated(c *gin.Context, app *types.DeveloperApp) {
+func (h *Handler) responseApplicationCreated(c *gin.Context, app *types.DeveloperApp, keys *types.Keys) {
 
-	c.IndentedJSON(http.StatusCreated, ToApplicationResponse(app))
+	c.IndentedJSON(http.StatusCreated, ToApplicationResponse(app, keys))
 }
 
 func (h *Handler) responseApplicationUpdated(c *gin.Context, app *types.DeveloperApp) {
 
-	c.IndentedJSON(http.StatusOK, ToApplicationResponse(app))
+	c.IndentedJSON(http.StatusOK, ToApplicationResponse(app, nil))
 }
 
 // type conversion
-
-func ToApplicationResponse(d *types.DeveloperApp) Application {
+func ToApplicationResponse(d *types.DeveloperApp, k *types.Keys) Application {
 
 	app := Application{
 		AppId:          &d.AppID,
@@ -300,6 +318,9 @@ func ToApplicationResponse(d *types.DeveloperApp) Application {
 		app.Scopes = &d.Scopes
 	} else {
 		app.Scopes = &[]string{}
+	}
+	if k != nil {
+		app.Credentials = ToKeySlice(*k)
 	}
 	return app
 }

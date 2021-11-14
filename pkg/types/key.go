@@ -56,10 +56,16 @@ type KeyAPIProductStatus struct {
 // KeyAPIProductStatuses contains list of apiproducts
 type KeyAPIProductStatuses []KeyAPIProductStatus
 
-// SetApproved marks this key as approved
-func (k *Key) SetApproved() {
+// Approve changes this key's status to approved
+func (k *Key) Approved() {
 
 	k.Status = "approved"
+}
+
+// Revoke change this key's status to revoked
+func (k *Key) Revoke() {
+
+	k.Status = "revoked"
 }
 
 // IsApproved returns true in case key's status is approved

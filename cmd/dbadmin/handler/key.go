@@ -1,11 +1,25 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 
 	"github.com/erikbos/gatekeeper/pkg/types"
+)
+
+const (
+	maxConsumerKeyLength = 2048
+	maxSecretKeyLength   = 2048
+)
+
+var (
+	errNoConsumerKey      = types.NewBadRequestError(errors.New("consumerKey must be provided"))
+	errNoSecretKey        = types.NewBadRequestError(errors.New("secretKey must be provided"))
+	errConsumerKeyTooLong = types.NewBadRequestError(errors.New("consumerKey too long"))
+	errSecretKeyTooLong   = types.NewBadRequestError(errors.New("secretKey too long"))
+	errUnknownStatus      = types.NewBadRequestError(errors.New("unknown status requested"))
 )
 
 // returns all keys of developer application
@@ -37,6 +51,24 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 	var receivedKey Key
 	if err := c.ShouldBindJSON(&receivedKey); err != nil {
 		responseError(c, types.NewBadRequestError(err))
+		return
+	}
+	if receivedKey.ConsumerKey == nil ||
+		(receivedKey.ConsumerKey != nil && *receivedKey.ConsumerKey == "") {
+		responseError(c, errNoConsumerKey)
+		return
+	}
+	if len(*receivedKey.ConsumerKey) >= maxConsumerKeyLength {
+		responseError(c, errConsumerKeyTooLong)
+		return
+	}
+	if receivedKey.ConsumerSecret == nil ||
+		(receivedKey.ConsumerSecret != nil && *receivedKey.ConsumerSecret == "") {
+		responseError(c, errNoSecretKey)
+		return
+	}
+	if len(*receivedKey.ConsumerSecret) >= maxSecretKeyLength {
+		responseError(c, errSecretKeyTooLong)
 		return
 	}
 	_, err := h.service.Developer.Get(string(developerEmailaddress))
@@ -92,20 +124,27 @@ func (h *Handler) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddr
 	h.responseKey(c, key)
 }
 
+// updates existing key
 // (POST /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/keys/{consumer_key})
-func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKey(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, consumerKey ConsumerKey) {
+func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKey(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, consumerKey ConsumerKey, params PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKeyParams) {
 
+	if params.Action != nil && c.ContentType() == "application/octet-stream" {
+		h.changeKeyStatus(c, string(developerEmailaddress), string(appName), string(consumerKey), string(*params.Action))
+		return
+	}
 	var receivedKey types.Key
 	if err := c.ShouldBindJSON(&receivedKey); err != nil {
 		responseError(c, types.NewBadRequestError(err))
 		return
 	}
-	// apikey in path must match consumer key in posted body
-	if receivedKey.ConsumerKey != string(consumerKey) {
-		responseErrorNameValueMisMatch(c)
-		return
+	// if consumerKey is provided in body it must match with path consumerKey
+	if receivedKey.ConsumerKey != "" {
+		if receivedKey.ConsumerKey != string(consumerKey) {
+			responseErrorNameValueMisMatch(c)
+			return
+		}
 	}
-	storedKey, err := h.service.Key.Update(receivedKey, h.who(c))
+	storedKey, err := h.service.Key.Update(string(consumerKey), &receivedKey, h.who(c))
 	if err != nil {
 		responseError(c, err)
 		return
@@ -113,53 +152,90 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 	h.responseKeyUpdated(c, &storedKey)
 }
 
+// change status of key
+func (h *Handler) changeKeyStatus(c *gin.Context, developerEmailaddress, appName, consumerKey, requestedStatus string) {
+
+	_, err := h.service.Developer.Get(string(developerEmailaddress))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
+	_, err = h.service.DeveloperApp.GetByName(string(appName))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
+	key, err := h.service.Key.Get(consumerKey)
+	if err != nil {
+		responseError(c, err)
+		return
+	}
+	switch requestedStatus {
+	case "approve":
+		key.Approved()
+	case "revoke":
+		key.Revoke()
+	default:
+		responseError(c, errUnknownStatus)
+		return
+	}
+	_, err = h.service.Key.Update(key.ConsumerKey, key, h.who(c))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
+	c.Status(http.StatusNoContent)
+}
+
 // Returns API response all user details
 func (h *Handler) responseKeys(c *gin.Context, keys types.Keys) {
 
-	all_keys := make([]Key, len(keys))
-	for i := range keys {
-		all_keys[i] = h.ToKeyResponse(&keys[i])
-	}
 	c.IndentedJSON(http.StatusOK, Keys{
-		Key: &all_keys,
+		Key: ToKeySlice(keys),
 	})
 }
 
 func (h *Handler) responseKey(c *gin.Context, key *types.Key) {
 
-	c.IndentedJSON(http.StatusOK, h.ToKeyResponse(key))
+	c.IndentedJSON(http.StatusOK, ToKeyResponse(key))
 }
 
 func (h *Handler) responseKeyCreated(c *gin.Context, key *types.Key) {
 
-	c.IndentedJSON(http.StatusCreated, h.ToKeyResponse(key))
+	c.IndentedJSON(http.StatusCreated, ToKeyResponse(key))
 }
 
 func (h *Handler) responseKeyUpdated(c *gin.Context, key *types.Key) {
 
-	c.IndentedJSON(http.StatusOK, h.ToKeyResponse(key))
+	c.IndentedJSON(http.StatusOK, ToKeyResponse(key))
 }
 
 // type conversion
 
-func (h *Handler) ToKeyResponse(l *types.Key) Key {
+func ToKeySlice(keys types.Keys) *[]Key {
 
-	key := Key{
-		ConsumerKey:    &l.ConsumerKey,
-		ConsumerSecret: &l.ConsumerSecret,
-		ExpiresAt:      &l.ExpiresAt,
-		IssuedAt:       &l.IssuedAt,
-		AppID:          &l.AppID,
-		Status:         &l.Status,
-		Attributes:     toAttributesResponse(l.Attributes),
+	all_keys := make([]Key, len(keys))
+	for i := range keys {
+		all_keys[i] = ToKeyResponse(&keys[i])
 	}
-	if l.APIProducts != nil {
-		key.ApiProducts = ToKeyAPIProductStatusesResponse(l.APIProducts)
-	}
-	return key
+	return &all_keys
 }
 
-func ToKeyAPIProductStatusesResponse(apiProductStatuses types.KeyAPIProductStatuses) *[]KeyProduct {
+func ToKeyResponse(k *types.Key) Key {
+
+	return Key{
+		ConsumerKey:    &k.ConsumerKey,
+		ConsumerSecret: &k.ConsumerSecret,
+		ExpiresAt:      &k.ExpiresAt,
+		IssuedAt:       &k.IssuedAt,
+		AppID:          &k.AppID,
+		Status:         &k.Status,
+		Attributes:     toAttributesResponse(k.Attributes),
+		ApiProducts:    toKeyAPIProductStatusesResponse(k.APIProducts),
+	}
+}
+
+func toKeyAPIProductStatusesResponse(apiProductStatuses types.KeyAPIProductStatuses) *[]KeyProduct {
 
 	product_statuses := make([]KeyProduct, len(apiProductStatuses))
 	for i, v := range apiProductStatuses {
@@ -197,18 +273,3 @@ func fromKey(k Key) types.Key {
 	}
 	return key
 }
-
-// func fromRoleAllow(a *[]RoleAllow) types.Allows {
-
-// 	if a == nil {
-// 		return types.NullAllows
-// 	}
-// 	all_attributes := make([]types.Allow, len(*a))
-// 	for i, a := range *a {
-// 		all_attributes[i] = types.Allow{
-// 			Methods: *a.Methods,
-// 			Paths:   *a.Paths,
-// 		}
-// 	}
-// 	return all_attributes
-// }

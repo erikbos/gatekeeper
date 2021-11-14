@@ -43,7 +43,7 @@ x-tagGroups:
       - Application
       - Key
       - APIProduct
-      - HTTP forwarding
+      - HTTP
       - Listener
       - Route
       - Cluster
@@ -595,6 +595,7 @@ paths:
         - $ref: '#/components/parameters/developer_emailaddress'
         - $ref: '#/components/parameters/app_name'
         - $ref: '#/components/parameters/consumer_key'
+        - $ref: '#/components/parameters/key_action'
       requestBody:
         required: true
         content:
@@ -1769,7 +1770,14 @@ components:
       in: query
       schema:
         type: string
-      description: Optional, request status change of developer to 'active' or 'inactive', requires Content-type to be set to 'application/octet-stream'.
+      description: Optional, use 'action' or 'inactive' to status change. Requires Content-type to be set to 'application/octet-stream'.
+
+    key_action:
+      name: action
+      in: query
+      schema:
+        type: string
+      description: Optional, use 'approve' or 'revoke' to update status of key. Requires Content-type to be set to 'application/octet-stream'.
 
     app_id:
       name: app_id
@@ -1891,7 +1899,7 @@ components:
           type: array
           items:
             type: string
-          description: List of application names this developer has.
+          description: List of application names this developer has. (retrieve only)
         attributes:
           type: array
           items:
@@ -1964,6 +1972,11 @@ components:
         callbackUrl:
           type: string
           description: OAuth callback URL.
+        credentials:
+          type: array
+          items:
+            $ref: "#/components/schemas/Key"
+            description: Application credentials (retrieve only)
         keyExpiresIn:
           type: integer
           format: int64
@@ -2015,18 +2028,18 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Attribute"
-        ExpiresAt:
+        expiresAt:
           type: integer
           format: int64
-          description: Expiry timestamp of key in milliseconds since epoch. (-1 means key does not expire.)
-        IssuedAt:
+          description: Expiry timestamp of key in milliseconds since epoch. A value of -1 means key does not expire.
+        issuedAt:
            type: integer
            format: int64
            description: Issue timestamp of key in milliseconds since epoch.
-        AppID:
+        appID:
            type: string
            description: AppID of application linked to key.
-        Status:
+        status:
            type: string
            description: Status of key. Can be 'approved' or 'revoked'
     KeyProduct:

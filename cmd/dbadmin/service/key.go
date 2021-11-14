@@ -68,7 +68,7 @@ func (ks *KeyService) Create(newKey types.Key, developerApp *types.DeveloperApp,
 	if newKey.ExpiresAt == 0 {
 		newKey.ExpiresAt = -1
 	}
-	newKey.SetApproved()
+	newKey.Approved()
 
 	// Populate fields we do not allow to be updated
 	newKey.AppID = developerApp.AppID
@@ -81,7 +81,7 @@ func (ks *KeyService) Create(newKey types.Key, developerApp *types.DeveloperApp,
 }
 
 // Update updates an existing key
-func (ks *KeyService) Update(updatedKey types.Key,
+func (ks *KeyService) Update(consumerKey string, updatedKey *types.Key,
 	who Requester) (types.Key, types.Error) {
 
 	currentKey, err := ks.db.Key.GetByKey(&updatedKey.ConsumerKey)
@@ -93,12 +93,16 @@ func (ks *KeyService) Update(updatedKey types.Key,
 	updatedKey.ConsumerKey = currentKey.ConsumerKey
 	updatedKey.ConsumerSecret = currentKey.ConsumerSecret
 	updatedKey.AppID = currentKey.AppID
+	// If no status provided we will use existing status
+	if updatedKey.Status == "" {
+		updatedKey.Status = currentKey.Status
+	}
 
-	if err = ks.db.Key.UpdateByKey(&updatedKey); err != nil {
+	if err = ks.db.Key.UpdateByKey(updatedKey); err != nil {
 		return types.NullDeveloperAppKey, err
 	}
 	ks.changelog.Update(currentKey, updatedKey, who)
-	return updatedKey, nil
+	return *updatedKey, nil
 }
 
 // Delete deletes a key

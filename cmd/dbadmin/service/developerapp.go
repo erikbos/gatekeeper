@@ -222,12 +222,13 @@ func (das *DeveloperAppService) Delete(developerID, developerAppName string,
 		}
 	}
 
-	developerAppKeyCount := len(developerAppKeys)
-	if developerAppKeyCount > 0 {
-		return types.NullDeveloperApp, types.NewBadRequestError(
-			fmt.Errorf("cannot delete developer app '%s' with %d apikeys",
-				developerApp.Name, developerAppKeyCount))
-	}
+	// developerAppKeyCount := len(developerAppKeys)
+	// for
+	// if developerAppKeyCount > 0 {
+	// 	return types.NullDeveloperApp, types.NewBadRequestError(
+	// 		fmt.Errorf("cannot delete developer app '%s' with %d apikeys",
+	// 			developerApp.Name, developerAppKeyCount))
+	// }
 
 	err = das.db.DeveloperApp.DeleteByID(developerApp.AppID)
 	if err != nil {

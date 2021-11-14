@@ -42,10 +42,10 @@ type (
 type Allow struct {
 	// Request methods which are allowed
 	// FIXME these bindings settings do not get used...
-	Methods []string `json:"methods" binding:"required,dive,oneof=GET POST PUT PATCH DELETE"`
+	Methods []string `binding:"required,dive,oneof=GET POST PUT PATCH DELETE"`
 
 	// Request paths (regexp) which are allowed
-	Paths []string `json:"paths" binding:"required,dive,startswith=/"`
+	Paths []string `binding:"required,dive,startswith=/"`
 }
 
 // Allows holds one or more allow
