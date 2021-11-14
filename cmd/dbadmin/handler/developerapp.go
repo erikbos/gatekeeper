@@ -333,7 +333,8 @@ func (h *Handler) responseDeveloperAppNames(c *gin.Context, developerapps types.
 	c.IndentedJSON(http.StatusOK, ApplicationNames)
 }
 
-// Returns API response list ALL applcations
+// API responses
+
 func (h *Handler) responseDeveloperAllApps(c *gin.Context, developerapps types.DeveloperApps) {
 
 	all_apps := make([]Application, len(developerapps))

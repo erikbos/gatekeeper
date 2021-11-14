@@ -89,7 +89,8 @@ func (h *Handler) DeleteV1RolesRoleName(c *gin.Context, roleName RoleName) {
 	h.responseRole(c, deletedRole)
 }
 
-// Returns API response all user details
+// API responses
+
 func (h *Handler) responseRoles(c *gin.Context, roles types.Roles) {
 
 	all_roles := make([]Role, len(roles))

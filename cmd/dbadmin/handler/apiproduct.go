@@ -183,7 +183,8 @@ func (h *Handler) responseAPIproductNames(c *gin.Context, apiproducts types.APIP
 	c.IndentedJSON(http.StatusOK, APIproductNames)
 }
 
-// Returns API response all developer details
+// API responses
+
 func (h *Handler) responseAPIproducts(c *gin.Context, apiproducts types.APIProducts) {
 
 	all_apiproducts := make([]APIProduct, len(apiproducts))

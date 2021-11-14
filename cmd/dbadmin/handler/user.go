@@ -105,7 +105,8 @@ func (h *Handler) DeleteV1UsersUserName(c *gin.Context, userName UserName) {
 	h.responseUser(c, deletedUser)
 }
 
-// Returns API response all user details
+// API responses
+
 func (h *Handler) responseUsers(c *gin.Context, users types.Users) {
 
 	all_users := make([]User, len(users))

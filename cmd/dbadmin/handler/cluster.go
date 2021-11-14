@@ -166,9 +166,8 @@ func (h *Handler) PostV1ClustersClusterNameAttributesAttributeName(c *gin.Contex
 	h.responseAttributeUpdated(c, &newAttribute)
 }
 
-// Responses
+// API responses
 
-// Returns API response all developer details
 func (h *Handler) responseClusterss(c *gin.Context, clusters types.Clusters) {
 
 	all_clusters := make([]Cluster, len(clusters))

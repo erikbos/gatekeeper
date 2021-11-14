@@ -219,7 +219,8 @@ func (h *Handler) responseDeveloperEmailAddresses(c *gin.Context, developers typ
 	c.IndentedJSON(http.StatusOK, DevelopersEmailAddresses)
 }
 
-// Returns API response all developer details
+// API responses
+
 func (h *Handler) responseDevelopers(c *gin.Context, developers types.Developers) {
 
 	all_developers := make([]Developer, len(developers))

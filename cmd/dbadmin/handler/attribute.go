@@ -8,6 +8,8 @@ import (
 	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
+// API responses
+
 func (h *Handler) responseAttributes(c *gin.Context, attributes types.Attributes) {
 
 	c.IndentedJSON(http.StatusOK, Attributes{

@@ -166,9 +166,8 @@ func (h *Handler) PostV1ListenersListenerNameAttributesAttributeName(c *gin.Cont
 	h.responseAttributeUpdated(c, &newAttribute)
 }
 
-// Responses
+// API responses
 
-// Returns API response all developer details
 func (h *Handler) responseListenerss(c *gin.Context, listeners types.Listeners) {
 
 	all_listeners := make([]Listener, len(listeners))

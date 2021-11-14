@@ -166,9 +166,8 @@ func (h *Handler) PostV1RoutesRouteNameAttributesAttributeName(c *gin.Context, r
 	h.responseAttributeUpdated(c, &newAttribute)
 }
 
-// Responses
+// API responses
 
-// Returns API response all developer details
 func (h *Handler) responseRoutess(c *gin.Context, routes types.Routes) {
 
 	all_routes := make([]Route, len(routes))

@@ -89,7 +89,8 @@ func (h *Handler) DeleteV1OrganizationsOrganizationName(c *gin.Context, organiza
 	h.responseOrganization(c, &deletedOrganization)
 }
 
-// Returns API response all organization details
+// API responses
+
 func (h *Handler) responseOrganizations(c *gin.Context, organizations types.Organizations) {
 
 	all_organizations := make([]Organization, len(organizations))

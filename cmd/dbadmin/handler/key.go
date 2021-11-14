@@ -306,7 +306,8 @@ func (h *Handler) changeKeyApiProductStatus(c *gin.Context, developerEmailaddres
 	c.Status(http.StatusNoContent)
 }
 
-// Returns API response all user details
+// API responses
+
 func (h *Handler) responseKeys(c *gin.Context, keys types.Keys) {
 
 	c.IndentedJSON(http.StatusOK, Keys{
