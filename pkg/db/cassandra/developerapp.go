@@ -171,7 +171,7 @@ func (s *DeveloperAppStore) Update(app *types.DeveloperApp) types.Error {
 
 		s.db.metrics.QueryFailed(developerAppsMetricLabel)
 		return types.NewDatabaseError(
-			fmt.Errorf("cannot update developer app '%s'", app.AppID))
+			fmt.Errorf("cannot update developer app '%s' (%s)", app.AppID, err))
 	}
 	return nil
 }

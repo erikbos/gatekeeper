@@ -117,7 +117,7 @@ func (s *UserStore) Update(c *types.User) types.Error {
 
 		s.db.metrics.QueryFailed(userMetricLabel)
 		return types.NewDatabaseError(
-			fmt.Errorf("cannot update user '%s'", c.Name))
+			fmt.Errorf("cannot update user '%s' (%s)", c.Name, err))
 	}
 	return nil
 }

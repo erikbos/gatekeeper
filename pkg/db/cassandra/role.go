@@ -111,7 +111,7 @@ func (s *RoleStore) Update(c *types.Role) types.Error {
 
 		s.db.metrics.QueryFailed(roleMetricLabel)
 		return types.NewDatabaseError(
-			fmt.Errorf("cannot update role '%s'", c.Name))
+			fmt.Errorf("cannot update role '%s' (%s)", c.Name, err))
 	}
 	return nil
 }

@@ -127,7 +127,7 @@ func (s *ListenerStore) Update(l *types.Listener) types.Error {
 
 		s.db.metrics.QueryFailed(listenerMetricLabel)
 		return types.NewDatabaseError(
-			fmt.Errorf("cannot update listener '%s'", l.Name))
+			fmt.Errorf("cannot update listener '%s' (%s)", l.Name, err))
 	}
 	return nil
 }

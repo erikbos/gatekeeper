@@ -111,7 +111,7 @@ func (s *ClusterStore) Update(c *types.Cluster) types.Error {
 
 		s.db.metrics.QueryFailed(clusterMetricLabel)
 		return types.NewDatabaseError(
-			fmt.Errorf("cannot update cluster '%s'", c.Name))
+			fmt.Errorf("cannot update cluster '%s' (%s)", c.Name, err))
 	}
 	return nil
 }

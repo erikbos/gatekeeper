@@ -147,7 +147,7 @@ func (s *DeveloperStore) Update(d *types.Developer) types.Error {
 
 		s.db.metrics.QueryFailed(developerMetricLabel)
 		return types.NewDatabaseError(
-			fmt.Errorf("cannot update developer '%s'", d.DeveloperID))
+			fmt.Errorf("cannot update developer '%s' (%s)", d.DeveloperID, err))
 	}
 	return nil
 }

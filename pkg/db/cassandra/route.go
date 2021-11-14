@@ -121,7 +121,7 @@ func (s *RouteStore) Update(r *types.Route) types.Error {
 
 		s.db.metrics.QueryFailed(routeMetricLabel)
 		return types.NewDatabaseError(
-			fmt.Errorf("cannot update route '%s'", r.Name))
+			fmt.Errorf("cannot update route '%s' (%s)", r.Name, err))
 	}
 	return nil
 }
