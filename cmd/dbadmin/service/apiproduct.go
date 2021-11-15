@@ -24,21 +24,21 @@ func NewAPIProduct(database *db.Database, c *Changelog) *APIProductService {
 }
 
 // GetAll returns all apiproducts
-func (ds *APIProductService) GetAll() (apiproducts types.APIProducts, err types.Error) {
+func (ds *APIProductService) GetAll(organizationName string) (apiproducts types.APIProducts, err types.Error) {
 
 	return ds.db.APIProduct.GetAll()
 }
 
 // Get returns details of an apiproduct
-func (ds *APIProductService) Get(apiproductName string) (apiproduct *types.APIProduct, err types.Error) {
+func (ds *APIProductService) Get(organizationName, apiproductName string) (apiproduct *types.APIProduct, err types.Error) {
 
 	return ds.db.APIProduct.Get(apiproductName)
 }
 
 // GetAttributes returns attributes of an apiproduct
-func (ds *APIProductService) GetAttributes(apiproductName string) (attributes *types.Attributes, err types.Error) {
+func (ds *APIProductService) GetAttributes(organizationName, apiproductName string) (attributes *types.Attributes, err types.Error) {
 
-	apiproduct, err := ds.Get(apiproductName)
+	apiproduct, err := ds.Get(organizationName, apiproductName)
 	if err != nil {
 		return nil, err
 	}
@@ -46,9 +46,9 @@ func (ds *APIProductService) GetAttributes(apiproductName string) (attributes *t
 }
 
 // GetAttribute returns one particular attribute of an apiproduct
-func (ds *APIProductService) GetAttribute(apiproductName, attributeName string) (value string, err types.Error) {
+func (ds *APIProductService) GetAttribute(organizationName, apiproductName, attributeName string) (value string, err types.Error) {
 
-	apiproduct, err := ds.Get(apiproductName)
+	apiproduct, err := ds.Get(organizationName, apiproductName)
 	if err != nil {
 		return "", err
 	}
@@ -56,10 +56,10 @@ func (ds *APIProductService) GetAttribute(apiproductName, attributeName string) 
 }
 
 // Create creates a new apiproduct
-func (ds *APIProductService) Create(newAPIProduct types.APIProduct,
+func (ds *APIProductService) Create(organizationName string, newAPIProduct types.APIProduct,
 	who Requester) (types.APIProduct, types.Error) {
 
-	if _, err := ds.Get(newAPIProduct.Name); err == nil {
+	if _, err := ds.Get(organizationName, newAPIProduct.Name); err == nil {
 		return types.NullAPIProduct, types.NewBadRequestError(
 			fmt.Errorf("apiproduct '%s' already exists", newAPIProduct.Name))
 	}
@@ -79,7 +79,7 @@ func (ds *APIProductService) Create(newAPIProduct types.APIProduct,
 }
 
 // Update updates an existing apiproduct
-func (ds *APIProductService) Update(updatedAPIProduct types.APIProduct,
+func (ds *APIProductService) Update(organizationName string, updatedAPIProduct types.APIProduct,
 	who Requester) (types.APIProduct, types.Error) {
 
 	currentAPIProduct, err := ds.db.APIProduct.Get(updatedAPIProduct.Name)
@@ -100,10 +100,10 @@ func (ds *APIProductService) Update(updatedAPIProduct types.APIProduct,
 }
 
 // UpdateAttributes updates attributes of an apiproduct
-func (ds *APIProductService) UpdateAttributes(apiproductName string,
+func (ds *APIProductService) UpdateAttributes(organizationName, apiproductName string,
 	receivedAttributes types.Attributes, who Requester) types.Error {
 
-	currentAPIProduct, err := ds.Get(apiproductName)
+	currentAPIProduct, err := ds.Get(organizationName, apiproductName)
 	if err != nil {
 		return err
 	}
@@ -117,10 +117,10 @@ func (ds *APIProductService) UpdateAttributes(apiproductName string,
 }
 
 // UpdateAttribute update an attribute of apiproduct
-func (ds *APIProductService) UpdateAttribute(apiproductName string,
+func (ds *APIProductService) UpdateAttribute(organizationName, apiproductName string,
 	attributeValue types.Attribute, who Requester) types.Error {
 
-	currentAPIProduct, err := ds.Get(apiproductName)
+	currentAPIProduct, err := ds.Get(organizationName, apiproductName)
 	if err != nil {
 		return err
 	}
@@ -137,10 +137,10 @@ func (ds *APIProductService) UpdateAttribute(apiproductName string,
 }
 
 // DeleteAttribute removes an attribute of an apiproduct
-func (ds *APIProductService) DeleteAttribute(apiproductName,
+func (ds *APIProductService) DeleteAttribute(organizationName, apiproductName,
 	attributeToDelete string, who Requester) (string, types.Error) {
 
-	currentAPIProduct, err := ds.Get(apiproductName)
+	currentAPIProduct, err := ds.Get(organizationName, apiproductName)
 	if err != nil {
 		return "", err
 	}
@@ -167,10 +167,10 @@ func (ds *APIProductService) updateAPIProduct(updatedAPIProduct *types.APIProduc
 }
 
 // Delete deletes an apiproduct
-func (ds *APIProductService) Delete(apiproductName string,
+func (ds *APIProductService) Delete(organizationName, apiproductName string,
 	who Requester) (deletedAPIProduct *types.APIProduct, e types.Error) {
 
-	apiproduct, err := ds.Get(apiproductName)
+	apiproduct, err := ds.Get(organizationName, apiproductName)
 	if err != nil {
 		return nil, err
 	}

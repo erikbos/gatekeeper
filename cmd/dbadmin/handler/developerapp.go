@@ -68,7 +68,7 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 		responseErrorBadRequest(c, err)
 		return
 	}
-	_, err := h.service.Developer.Get(string(developerEmailaddress))
+	_, err := h.service.Developer.Get(string(organizationName), string(developerEmailaddress))
 	if err != nil {
 		responseError(c, err)
 		return
@@ -92,7 +92,7 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 // (DELETE /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name})
 func (h *Handler) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName) {
 
-	developer, err := h.service.Developer.Get(string(developerEmailaddress))
+	developer, err := h.service.Developer.Get(string(organizationName), string(developerEmailaddress))
 	if err != nil {
 		responseError(c, err)
 		return

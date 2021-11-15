@@ -103,25 +103,25 @@ type (
 
 	// Developer is the service interface to manipulate Developer entities
 	Developer interface {
-		GetAll() (developers types.Developers, err types.Error)
+		GetAll(organizationName string) (developers types.Developers, err types.Error)
 
-		Get(developerName string) (developer *types.Developer, err types.Error)
+		Get(organizationName, developerName string) (developer *types.Developer, err types.Error)
 
-		GetAttributes(developerName string) (attributes *types.Attributes, err types.Error)
+		GetAttributes(organizationName, developerName string) (attributes *types.Attributes, err types.Error)
 
-		GetAttribute(developerName, attributeName string) (value string, err types.Error)
+		GetAttribute(organizationName, developerName, attributeName string) (value string, err types.Error)
 
-		Create(newDeveloper types.Developer, who Requester) (types.Developer, types.Error)
+		Create(organizationName string, newDeveloper types.Developer, who Requester) (types.Developer, types.Error)
 
-		Update(developerName string, updatedDeveloper types.Developer, who Requester) (types.Developer, types.Error)
+		Update(organizationName, developerName string, updatedDeveloper types.Developer, who Requester) (types.Developer, types.Error)
 
-		UpdateAttributes(developerName string, receivedAttributes types.Attributes, who Requester) types.Error
+		UpdateAttributes(organizationName, developerName string, receivedAttributes types.Attributes, who Requester) types.Error
 
-		UpdateAttribute(developerName string, attributeValue types.Attribute, who Requester) types.Error
+		UpdateAttribute(organizationName, developerName string, attributeValue types.Attribute, who Requester) types.Error
 
-		DeleteAttribute(developerName, attributeToDelete string, who Requester) (string, types.Error)
+		DeleteAttribute(organizationName, developerName, attributeToDelete string, who Requester) (string, types.Error)
 
-		Delete(developerName string, who Requester) (deletedDeveloper *types.Developer, e types.Error)
+		Delete(organizationName, developerName string, who Requester) (deletedDeveloper *types.Developer, e types.Error)
 	}
 
 	// DeveloperApp is the service interface to manipulate DeveloperApp entities
@@ -168,25 +168,25 @@ type (
 
 	// APIProduct is the service interface to manipulate APIProduct entities
 	APIProduct interface {
-		GetAll() (apiproducts types.APIProducts, err types.Error)
+		GetAll(organizationName string) (apiproducts types.APIProducts, err types.Error)
 
-		Get(apiproductName string) (apiproduct *types.APIProduct, err types.Error)
+		Get(organizationName, apiproductName string) (apiproduct *types.APIProduct, err types.Error)
 
-		GetAttributes(apiproductName string) (attributes *types.Attributes, err types.Error)
+		GetAttributes(organizationName, apiproductName string) (attributes *types.Attributes, err types.Error)
 
-		GetAttribute(apiproductName, attributeName string) (value string, err types.Error)
+		GetAttribute(organizationName, apiproductName, attributeName string) (value string, err types.Error)
 
-		Create(newAPIProduct types.APIProduct, who Requester) (types.APIProduct, types.Error)
+		Create(organizationName string, newAPIProduct types.APIProduct, who Requester) (types.APIProduct, types.Error)
 
-		Update(updatedAPIProduct types.APIProduct, who Requester) (types.APIProduct, types.Error)
+		Update(organizationName string, updatedAPIProduct types.APIProduct, who Requester) (types.APIProduct, types.Error)
 
-		UpdateAttributes(apiproductName string, receivedAttributes types.Attributes, who Requester) types.Error
+		UpdateAttributes(organizationName string, apiproductName string, receivedAttributes types.Attributes, who Requester) types.Error
 
-		UpdateAttribute(apiproductName string, attributeValue types.Attribute, who Requester) types.Error
+		UpdateAttribute(organizationName string, apiproductName string, attributeValue types.Attribute, who Requester) types.Error
 
-		DeleteAttribute(apiproductName, attributeToDelete string, who Requester) (string, types.Error)
+		DeleteAttribute(organizationName string, apiproductName, attributeToDelete string, who Requester) (string, types.Error)
 
-		Delete(apiproductName string, who Requester) (deletedAPIProduct *types.APIProduct, e types.Error)
+		Delete(organizationName string, apiproductName string, who Requester) (deletedAPIProduct *types.APIProduct, e types.Error)
 	}
 
 	// User is the service interface to manipulate User entities

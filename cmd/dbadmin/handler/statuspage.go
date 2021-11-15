@@ -28,6 +28,9 @@ const (
 // showHTTPForwardingPage pretty prints the current forwarding table from database
 func (h *Handler) showHTTPForwardingPage(c *gin.Context) {
 
+	// TODO
+	organization := "FIXME"
+
 	// Retrieve all configuration entities
 	listeners, err := h.service.Listener.GetAll()
 	if err != nil {
@@ -44,7 +47,7 @@ func (h *Handler) showHTTPForwardingPage(c *gin.Context) {
 		webadmin.JSONMessage(c, http.StatusServiceUnavailable, err)
 		return
 	}
-	apiproducts, err := h.service.APIProduct.GetAll()
+	apiproducts, err := h.service.APIProduct.GetAll(organization)
 	if err != nil {
 		webadmin.JSONMessage(c, http.StatusServiceUnavailable, err)
 		return
@@ -248,7 +251,8 @@ const templateHTTPForwarding string = `
 // showDevelopersPage pretty prints all developers and developer apps
 func (h *Handler) showDevelopersPage(c *gin.Context) {
 
-	developers, err := h.service.Developer.GetAll()
+	// TODO
+	developers, err := h.service.Developer.GetAll("FIXME")
 	if err != nil {
 		webadmin.JSONMessage(c, http.StatusServiceUnavailable, err)
 		return

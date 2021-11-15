@@ -26,7 +26,7 @@ var (
 // (GET /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/keys)
 func (h *Handler) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeys(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName) {
 
-	_, err := h.service.Developer.Get(string(developerEmailaddress))
+	_, err := h.service.Developer.Get(string(organizationName), string(developerEmailaddress))
 	if err != nil {
 		responseError(c, err)
 		return
@@ -71,7 +71,7 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 		responseError(c, errSecretKeyTooLong)
 		return
 	}
-	_, err := h.service.Developer.Get(string(developerEmailaddress))
+	_, err := h.service.Developer.Get(string(organizationName), string(developerEmailaddress))
 	if err != nil {
 		responseError(c, err)
 		return
@@ -106,7 +106,7 @@ func (h *Handler) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmaila
 // (GET /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/keys/{consumer_key})
 func (h *Handler) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKey(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, consumerKey ConsumerKey) {
 
-	_, err := h.service.Developer.Get(string(developerEmailaddress))
+	_, err := h.service.Developer.Get(string(organizationName), string(developerEmailaddress))
 	if err != nil {
 		responseError(c, err)
 		return
@@ -129,7 +129,7 @@ func (h *Handler) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddr
 func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKey(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, consumerKey ConsumerKey, params PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKeyParams) {
 
 	if params.Action != nil && c.ContentType() == "application/octet-stream" {
-		h.changeKeyStatus(c, string(developerEmailaddress), string(appName), string(consumerKey), string(*params.Action))
+		h.changeKeyStatus(c, string(organizationName), string(developerEmailaddress), string(appName), string(consumerKey), string(*params.Action))
 		return
 	}
 	var receivedKey KeyUpdate
@@ -141,7 +141,7 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 		responseErrorNameValueMisMatch(c)
 		return
 	}
-	_, err := h.service.Developer.Get(string(developerEmailaddress))
+	_, err := h.service.Developer.Get(string(organizationName), string(developerEmailaddress))
 	if err != nil {
 		responseError(c, err)
 		return
@@ -177,9 +177,10 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 }
 
 // change status of key
-func (h *Handler) changeKeyStatus(c *gin.Context, developerEmailaddress, appName, consumerKey, requestedStatus string) {
+func (h *Handler) changeKeyStatus(c *gin.Context, organizationName,
+	developerEmailaddress, appName, consumerKey, requestedStatus string) {
 
-	_, err := h.service.Developer.Get(string(developerEmailaddress))
+	_, err := h.service.Developer.Get(string(organizationName), string(developerEmailaddress))
 	if err != nil {
 		responseError(c, err)
 		return
@@ -215,7 +216,7 @@ func (h *Handler) changeKeyStatus(c *gin.Context, developerEmailaddress, appName
 // (DELETE /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/keys/{consumer_key}/apiproducts/{apiproduct_name})
 func (h *Handler) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKeyApiproductsApiproductName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, consumerKey ConsumerKey, apiproductName ApiproductName) {
 
-	_, err := h.service.Developer.Get(string(developerEmailaddress))
+	_, err := h.service.Developer.Get(string(organizationName), string(developerEmailaddress))
 	if err != nil {
 		responseError(c, err)
 		return
@@ -244,10 +245,11 @@ func (h *Handler) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmaila
 func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKeyApiproductsApiproductName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, consumerKey ConsumerKey, apiproductName ApiproductName, params PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKeyApiproductsApiproductNameParams) {
 
 	if params.Action != nil && c.ContentType() == "application/octet-stream" {
-		h.changeKeyApiProductStatus(c, string(developerEmailaddress), string(appName), string(consumerKey), string(apiproductName), string(*params.Action))
+		h.changeKeyApiProductStatus(c, string(organizationName), string(developerEmailaddress),
+			string(appName), string(consumerKey), string(apiproductName), string(*params.Action))
 		return
 	}
-	_, err := h.service.Developer.Get(string(developerEmailaddress))
+	_, err := h.service.Developer.Get(string(organizationName), string(developerEmailaddress))
 	if err != nil {
 		responseError(c, err)
 		return
@@ -272,9 +274,10 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 }
 
 // change status of apiproduct associated with key
-func (h *Handler) changeKeyApiProductStatus(c *gin.Context, developerEmailaddress, appName, consumerKey, apiproductName, requestedStatus string) {
+func (h *Handler) changeKeyApiProductStatus(c *gin.Context, organizationName,
+	developerEmailaddress, appName, consumerKey, apiproductName, requestedStatus string) {
 
-	_, err := h.service.Developer.Get(string(developerEmailaddress))
+	_, err := h.service.Developer.Get(string(organizationName), string(developerEmailaddress))
 	if err != nil {
 		responseError(c, err)
 		return

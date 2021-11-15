@@ -17,7 +17,7 @@ var (
 // (GET /v1/organizations/{organization_name}/developers)
 func (h *Handler) GetV1OrganizationsOrganizationNameDevelopers(c *gin.Context, organizationName OrganizationName, params GetV1OrganizationsOrganizationNameDevelopersParams) {
 
-	developers, err := h.service.Developer.GetAll()
+	developers, err := h.service.Developer.GetAll(string(organizationName))
 	if err != nil {
 		responseError(c, err)
 		return
@@ -40,7 +40,7 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopers(c *gin.Context, 
 		return
 	}
 	newDeveloper := fromDeveloper(receivedDeveloper)
-	createdDeveloper, err := h.service.Developer.Create(newDeveloper, h.who(c))
+	createdDeveloper, err := h.service.Developer.Create(string(organizationName), newDeveloper, h.who(c))
 	if err != nil {
 		responseErrorBadRequest(c, err)
 		return
@@ -52,7 +52,8 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopers(c *gin.Context, 
 // (DELETE /v1/organizations/{organization_name}/developers/{developer_emailaddress})
 func (h *Handler) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddress(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress) {
 
-	developer, err := h.service.Developer.Delete(string(developerEmailaddress), h.who(c))
+	developer, err := h.service.Developer.Delete(
+		string(organizationName), string(developerEmailaddress), h.who(c))
 	if err != nil {
 		responseError(c, err)
 		return
@@ -64,7 +65,8 @@ func (h *Handler) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmaila
 // (GET /v1/organizations/{organization_name}/developers/{developer_emailaddress})
 func (h *Handler) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddress(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress) {
 
-	developer, err := h.service.Developer.Get(string(developerEmailaddress))
+	developer, err := h.service.Developer.Get(
+		string(organizationName), string(developerEmailaddress))
 	if err != nil {
 		responseError(c, err)
 		return
@@ -76,13 +78,13 @@ func (h *Handler) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddr
 // (POST /v1/organizations/{organization_name}/developers/{developer_emailaddress})
 func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddress(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, params PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressParams) {
 
-	_, err := h.service.Developer.Get(string(developerEmailaddress))
+	_, err := h.service.Developer.Get(string(organizationName), string(developerEmailaddress))
 	if err != nil {
 		responseError(c, err)
 		return
 	}
 	if params.Action != nil && c.ContentType() == "application/octet-stream" {
-		h.changeDeveloperStatus(c, string(developerEmailaddress), string(*params.Action))
+		h.changeDeveloperStatus(c, string(organizationName), string(developerEmailaddress), string(*params.Action))
 		return
 	}
 	var receivedDeveloper Developer
@@ -91,7 +93,7 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 		return
 	}
 	updatedDeveloper := fromDeveloper(receivedDeveloper)
-	storedDeveloper, err := h.service.Developer.Update(string(developerEmailaddress), updatedDeveloper, h.who(c))
+	storedDeveloper, err := h.service.Developer.Update(string(organizationName), string(developerEmailaddress), updatedDeveloper, h.who(c))
 	if err != nil {
 		responseError(c, err)
 		return
@@ -100,9 +102,9 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 }
 
 // change status of developer
-func (h *Handler) changeDeveloperStatus(c *gin.Context, developerEmailaddress, requestedStatus string) {
+func (h *Handler) changeDeveloperStatus(c *gin.Context, organizationName, developerEmailaddress, requestedStatus string) {
 
-	developer, err := h.service.Developer.Get(string(developerEmailaddress))
+	developer, err := h.service.Developer.Get(organizationName, developerEmailaddress)
 	if err != nil {
 		responseError(c, err)
 		return
@@ -116,7 +118,7 @@ func (h *Handler) changeDeveloperStatus(c *gin.Context, developerEmailaddress, r
 		responseErrorBadRequest(c, errUnknownDeveloperStatus)
 		return
 	}
-	_, err = h.service.Developer.Update(string(developerEmailaddress), *developer, h.who(c))
+	_, err = h.service.Developer.Update(organizationName, developerEmailaddress, *developer, h.who(c))
 	if err != nil {
 		responseError(c, err)
 		return
@@ -128,7 +130,7 @@ func (h *Handler) changeDeveloperStatus(c *gin.Context, developerEmailaddress, r
 // (GET /v1/organizations/{organization_name}/developers/{developer_emailaddress}/attributes)
 func (h *Handler) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributes(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress) {
 
-	developer, err := h.service.Developer.Get(string(developerEmailaddress))
+	developer, err := h.service.Developer.Get(string(organizationName), string(developerEmailaddress))
 	if err != nil {
 		responseError(c, err)
 		return
@@ -147,7 +149,7 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 	}
 	attributes := fromAttributesRequest(receivedAttributes.Attribute)
 	if err := h.service.Developer.UpdateAttributes(
-		string(developerEmailaddress), attributes, h.who(c)); err != nil {
+		string(organizationName), string(developerEmailaddress), attributes, h.who(c)); err != nil {
 		responseErrorBadRequest(c, err)
 		return
 	}
@@ -159,7 +161,7 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 func (h *Handler) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributesAttributeName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, attributeName AttributeName) {
 
 	oldValue, err := h.service.Developer.DeleteAttribute(
-		string(developerEmailaddress), string(attributeName), h.who(c))
+		string(organizationName), string(developerEmailaddress), string(attributeName), h.who(c))
 	if err != nil {
 		responseError(c, err)
 		return
@@ -171,7 +173,7 @@ func (h *Handler) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmaila
 // (GET /v1/organizations/{organization_name}/developers/{developer_emailaddress}/attributes/{attribute_name})
 func (h *Handler) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributesAttributeName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, attributeName AttributeName) {
 
-	developer, err := h.service.Developer.Get(string(developerEmailaddress))
+	developer, err := h.service.Developer.Get(string(organizationName), string(developerEmailaddress))
 	if err != nil {
 		responseError(c, err)
 		return
@@ -195,6 +197,7 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 	}
 	newAttribute := types.NewAttribute(string(attributeName), *receivedValue.Value)
 	if err := h.service.Developer.UpdateAttribute(
+		string(organizationName),
 		string(developerEmailaddress), *newAttribute, h.who(c)); err != nil {
 		responseErrorBadRequest(c, err)
 		return

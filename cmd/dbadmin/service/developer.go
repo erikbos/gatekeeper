@@ -27,13 +27,13 @@ func NewDeveloper(database *db.Database, c *Changelog) *DeveloperService {
 }
 
 // GetAll returns all developers
-func (ds *DeveloperService) GetAll() (developers types.Developers, err types.Error) {
+func (ds *DeveloperService) GetAll(organizationName string) (developers types.Developers, err types.Error) {
 
 	return ds.db.Developer.GetAll()
 }
 
 // Get returns details of an developer, in case name contains a @ assumption is developerId was provided
-func (ds *DeveloperService) Get(developerName string) (developer *types.Developer, err types.Error) {
+func (ds *DeveloperService) Get(organizationName, developerName string) (developer *types.Developer, err types.Error) {
 
 	if strings.Contains(developerName, "@") {
 		return ds.db.Developer.GetByEmail(developerName)
@@ -42,9 +42,9 @@ func (ds *DeveloperService) Get(developerName string) (developer *types.Develope
 }
 
 // GetAttributes returns attributes of an developer
-func (ds *DeveloperService) GetAttributes(developerName string) (attributes *types.Attributes, err types.Error) {
+func (ds *DeveloperService) GetAttributes(organizationName, developerName string) (attributes *types.Attributes, err types.Error) {
 
-	developer, err := ds.Get(developerName)
+	developer, err := ds.Get(organizationName, developerName)
 	if err != nil {
 		return nil, err
 	}
@@ -52,9 +52,9 @@ func (ds *DeveloperService) GetAttributes(developerName string) (attributes *typ
 }
 
 // GetAttribute returns one particular attribute of an developer
-func (ds *DeveloperService) GetAttribute(developerName, attributeName string) (value string, err types.Error) {
+func (ds *DeveloperService) GetAttribute(organizationName, developerName, attributeName string) (value string, err types.Error) {
 
-	developer, err := ds.Get(developerName)
+	developer, err := ds.Get(organizationName, developerName)
 	if err != nil {
 		return "", err
 	}
@@ -62,10 +62,10 @@ func (ds *DeveloperService) GetAttribute(developerName, attributeName string) (v
 }
 
 // Create creates a new developer
-func (ds *DeveloperService) Create(newDeveloper types.Developer,
+func (ds *DeveloperService) Create(organizationName string, newDeveloper types.Developer,
 	who Requester) (types.Developer, types.Error) {
 
-	if _, err := ds.Get(newDeveloper.Email); err == nil {
+	if _, err := ds.Get(organizationName, newDeveloper.Email); err == nil {
 		return types.NullDeveloper, types.NewBadRequestError(
 			fmt.Errorf("developer '%s' already exists", newDeveloper.Email))
 	}
@@ -83,7 +83,7 @@ func (ds *DeveloperService) Create(newDeveloper types.Developer,
 }
 
 // Update updates an existing developer
-func (ds *DeveloperService) Update(developerEmail string, updatedDeveloper types.Developer, who Requester) (
+func (ds *DeveloperService) Update(organizationName, developerEmail string, updatedDeveloper types.Developer, who Requester) (
 	types.Developer, types.Error) {
 
 	currentDeveloper, err := ds.db.Developer.GetByEmail(developerEmail)
@@ -105,10 +105,10 @@ func (ds *DeveloperService) Update(developerEmail string, updatedDeveloper types
 }
 
 // UpdateAttributes updates attributes of an developer
-func (ds *DeveloperService) UpdateAttributes(developerName string,
+func (ds *DeveloperService) UpdateAttributes(organizationName, developerName string,
 	receivedAttributes types.Attributes, who Requester) types.Error {
 
-	currentDeveloper, err := ds.Get(developerName)
+	currentDeveloper, err := ds.Get(organizationName, developerName)
 	if err != nil {
 		return err
 	}
@@ -122,10 +122,10 @@ func (ds *DeveloperService) UpdateAttributes(developerName string,
 }
 
 // UpdateAttribute update an attribute of developer
-func (ds *DeveloperService) UpdateAttribute(developerName string,
+func (ds *DeveloperService) UpdateAttribute(organizationName, developerName string,
 	attributeValue types.Attribute, who Requester) types.Error {
 
-	currentDeveloper, err := ds.Get(developerName)
+	currentDeveloper, err := ds.Get(organizationName, developerName)
 	if err != nil {
 		return err
 	}
@@ -142,10 +142,10 @@ func (ds *DeveloperService) UpdateAttribute(developerName string,
 }
 
 // DeleteAttribute removes an attribute of an developer
-func (ds *DeveloperService) DeleteAttribute(developerName,
-	attributeToDelete string, who Requester) (string, types.Error) {
+func (ds *DeveloperService) DeleteAttribute(
+	organizationName, developerName, attributeToDelete string, who Requester) (string, types.Error) {
 
-	currentDeveloper, err := ds.Get(developerName)
+	currentDeveloper, err := ds.Get(organizationName, developerName)
 	if err != nil {
 		return "", err
 	}
@@ -172,10 +172,10 @@ func (ds *DeveloperService) updateDeveloper(updatedDeveloper *types.Developer, w
 }
 
 // Delete deletes an developer
-func (ds *DeveloperService) Delete(developerName string,
+func (ds *DeveloperService) Delete(organizationName, developerName string,
 	who Requester) (deletedDeveloper *types.Developer, e types.Error) {
 
-	developer, err := ds.Get(developerName)
+	developer, err := ds.Get(organizationName, developerName)
 	if err != nil {
 		return nil, err
 	}
