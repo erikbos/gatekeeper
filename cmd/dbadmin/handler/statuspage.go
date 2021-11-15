@@ -404,8 +404,8 @@ func (h *Handler) showUserRolePage(c *gin.Context) {
 		Users types.Users
 		Roles types.Roles
 	}{
-		Users: users,
-		Roles: roles,
+		Users: *users,
+		Roles: *roles,
 	}
 	c.Header(contentType, contentTypeHTML)
 	c.Status(http.StatusOK)

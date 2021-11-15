@@ -26,13 +26,13 @@ func (h *Handler) PostV1Clusters(c *gin.Context) {
 
 	var receivedCluster Cluster
 	if err := c.ShouldBindJSON(&receivedCluster); err != nil {
-		responseError(c, types.NewBadRequestError(err))
+		responseErrorBadRequest(c, err)
 		return
 	}
 	newCluster := fromCluster(receivedCluster)
 	createdDeveloper, err := h.service.Cluster.Create(newCluster, h.who(c))
 	if err != nil {
-		responseError(c, types.NewBadRequestError(err))
+		responseError(c, err)
 		return
 	}
 	h.responseClusterCreated(c, &createdDeveloper)
@@ -103,7 +103,7 @@ func (h *Handler) PostV1ClustersClusterNameAttributes(c *gin.Context, clusterNam
 	attributes := fromAttributesRequest(receivedAttributes.Attribute)
 	if err := h.service.Cluster.UpdateAttributes(
 		string(clusterName), attributes, h.who(c)); err != nil {
-		responseErrorBadRequest(c, err)
+		responseError(c, err)
 		return
 	}
 	h.responseAttributes(c, attributes)
@@ -119,10 +119,7 @@ func (h *Handler) DeleteV1ClustersClusterNameAttributesAttributeName(c *gin.Cont
 		responseError(c, err)
 		return
 	}
-	h.responseAttributeDeleted(c, &types.Attribute{
-		Name:  string(attributeName),
-		Value: oldValue,
-	})
+	h.responseAttributeDeleted(c, types.NewAttribute(string(attributeName), oldValue))
 }
 
 // returns one attribute of an cluster
@@ -139,10 +136,7 @@ func (h *Handler) GetV1ClustersClusterNameAttributesAttributeName(c *gin.Context
 		responseError(c, err)
 		return
 	}
-	h.responseAttributeRetrieved(c, &types.Attribute{
-		Name:  string(attributeName),
-		Value: attributeValue,
-	})
+	h.responseAttributeRetrieved(c, types.NewAttribute(string(attributeName), attributeValue))
 }
 
 // updates an attribute of an cluster
@@ -154,16 +148,13 @@ func (h *Handler) PostV1ClustersClusterNameAttributesAttributeName(c *gin.Contex
 		responseErrorBadRequest(c, err)
 		return
 	}
-	newAttribute := types.Attribute{
-		Name:  string(attributeName),
-		Value: *receivedValue.Value,
-	}
+	newAttribute := types.NewAttribute(string(attributeName), *receivedValue.Value)
 	if err := h.service.Cluster.UpdateAttribute(
-		string(clusterName), newAttribute, h.who(c)); err != nil {
+		string(clusterName), *newAttribute, h.who(c)); err != nil {
 		responseErrorBadRequest(c, err)
 		return
 	}
-	h.responseAttributeUpdated(c, &newAttribute)
+	h.responseAttributeUpdated(c, newAttribute)
 }
 
 // API responses

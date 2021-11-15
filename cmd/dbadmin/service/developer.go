@@ -173,26 +173,26 @@ func (ds *DeveloperService) updateDeveloper(updatedDeveloper *types.Developer, w
 
 // Delete deletes an developer
 func (ds *DeveloperService) Delete(developerName string,
-	who Requester) (deletedDeveloper types.Developer, e types.Error) {
+	who Requester) (deletedDeveloper *types.Developer, e types.Error) {
 
 	developer, err := ds.Get(developerName)
 	if err != nil {
-		return types.NullDeveloper, err
+		return nil, err
 	}
 	appCountOfDeveloper, err := ds.db.DeveloperApp.GetCountByDeveloperID(developer.DeveloperID)
 	if err != nil {
-		return types.NullDeveloper, err
+		return nil, err
 	}
 	if appCountOfDeveloper > 0 {
-		return types.NullDeveloper, types.NewBadRequestError(
-			fmt.Errorf("cannot delete developer '%s' with %d active developer apps",
+		return &types.NullDeveloper, types.NewBadRequestError(
+			fmt.Errorf("cannot delete developer '%s' with %d active applications",
 				developer.Email, appCountOfDeveloper))
 	}
 	if err := ds.db.Developer.DeleteByID(developer.DeveloperID); err != nil {
-		return types.NullDeveloper, err
+		return nil, err
 	}
 	ds.changelog.Delete(developer, who)
-	return *developer, nil
+	return developer, nil
 }
 
 // generateDeveloperID generates a DeveloperID

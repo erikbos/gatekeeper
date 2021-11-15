@@ -168,26 +168,26 @@ func (ds *APIProductService) updateAPIProduct(updatedAPIProduct *types.APIProduc
 
 // Delete deletes an apiproduct
 func (ds *APIProductService) Delete(apiproductName string,
-	who Requester) (deletedAPIProduct types.APIProduct, e types.Error) {
+	who Requester) (deletedAPIProduct *types.APIProduct, e types.Error) {
 
 	apiproduct, err := ds.Get(apiproductName)
 	if err != nil {
-		return types.NullAPIProduct, err
+		return nil, err
 	}
 	keyWithAPIProduct, err := ds.db.Key.GetCountByAPIProductName(apiproductName)
 	if err != nil {
-		return types.NullAPIProduct, err
+		return nil, err
 	}
 	if keyWithAPIProduct > 0 {
-		return types.NullAPIProduct, types.NewBadRequestError(
+		return nil, types.NewBadRequestError(
 			fmt.Errorf("cannot delete api product '%s' assigned to %d keys",
 				apiproductName, keyWithAPIProduct))
 	}
 	if err := ds.db.APIProduct.Delete(apiproductName); err != nil {
-		return types.NullAPIProduct, err
+		return nil, err
 	}
 	ds.changelog.Delete(apiproduct, who)
-	return *apiproduct, nil
+	return apiproduct, nil
 }
 
 func copyAPIProduct(d types.APIProduct) *types.APIProduct {

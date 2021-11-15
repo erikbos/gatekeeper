@@ -26,13 +26,13 @@ func (h *Handler) PostV1Listeners(c *gin.Context) {
 
 	var receivedListener Listener
 	if err := c.ShouldBindJSON(&receivedListener); err != nil {
-		responseError(c, types.NewBadRequestError(err))
+		responseErrorBadRequest(c, err)
 		return
 	}
 	newListener := fromListener(receivedListener)
 	createdDeveloper, err := h.service.Listener.Create(newListener, h.who(c))
 	if err != nil {
-		responseError(c, types.NewBadRequestError(err))
+		responseErrorBadRequest(c, err)
 		return
 	}
 	h.responseListenerCreated(c, &createdDeveloper)
@@ -119,10 +119,7 @@ func (h *Handler) DeleteV1ListenersListenerNameAttributesAttributeName(c *gin.Co
 		responseError(c, err)
 		return
 	}
-	h.responseAttributeDeleted(c, &types.Attribute{
-		Name:  string(attributeName),
-		Value: oldValue,
-	})
+	h.responseAttributeDeleted(c, types.NewAttribute(string(attributeName), oldValue))
 }
 
 // returns one attribute of an listener
@@ -139,10 +136,7 @@ func (h *Handler) GetV1ListenersListenerNameAttributesAttributeName(c *gin.Conte
 		responseError(c, err)
 		return
 	}
-	h.responseAttributeRetrieved(c, &types.Attribute{
-		Name:  string(attributeName),
-		Value: attributeValue,
-	})
+	h.responseAttributeRetrieved(c, types.NewAttribute(string(attributeName), attributeValue))
 }
 
 // updates an attribute of an listener
@@ -154,16 +148,14 @@ func (h *Handler) PostV1ListenersListenerNameAttributesAttributeName(c *gin.Cont
 		responseErrorBadRequest(c, err)
 		return
 	}
-	newAttribute := types.Attribute{
-		Name:  string(attributeName),
-		Value: *receivedValue.Value,
-	}
+	newAttribute := types.NewAttribute(string(attributeName), *receivedValue.Value)
+
 	if err := h.service.Listener.UpdateAttribute(
-		string(listenerName), newAttribute, h.who(c)); err != nil {
+		string(listenerName), *newAttribute, h.who(c)); err != nil {
 		responseErrorBadRequest(c, err)
 		return
 	}
-	h.responseAttributeUpdated(c, &newAttribute)
+	h.responseAttributeUpdated(c, newAttribute)
 }
 
 // API responses

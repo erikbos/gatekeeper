@@ -41,6 +41,12 @@ var (
 	errTooManyAttributes = NewUpdateFailureError(errors.New("cannot add more than 100 attributes"))
 )
 
+// NewAttribute creates a new attribute
+func NewAttribute(name, value string) *Attribute {
+
+	return &Attribute{Name: name, Value: value}
+}
+
 // Get return one named attribute from attributes
 func (attributes *Attributes) Get(name string) (string, Error) {
 

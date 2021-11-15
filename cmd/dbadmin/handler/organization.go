@@ -20,13 +20,13 @@ func (h *Handler) GetV1Organizations(c *gin.Context) {
 	h.responseOrganizations(c, organizations)
 }
 
-// createOrganization creates an organization
+// creates an organization
 // (POST /v1/organizations)
 func (h *Handler) PostV1Organizations(c *gin.Context) {
 
 	var receivedOrganization Organization
 	if err := c.ShouldBindJSON(&receivedOrganization); err != nil {
-		responseError(c, types.NewBadRequestError(err))
+		responseErrorBadRequest(c, err)
 		return
 	}
 	newOrganization := fromOrganization(receivedOrganization)
@@ -61,7 +61,7 @@ func (h *Handler) PostV1OrganizationsOrganizationName(c *gin.Context, organizati
 	}
 	var receivedOrganization Organization
 	if err := c.ShouldBindJSON(&receivedOrganization); err != nil {
-		responseError(c, types.NewBadRequestError(err))
+		responseErrorBadRequest(c, err)
 		return
 	}
 	updatedOrganization := fromOrganization(receivedOrganization)

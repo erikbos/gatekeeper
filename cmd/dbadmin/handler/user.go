@@ -17,16 +17,7 @@ func (h *Handler) GetV1Users(c *gin.Context) {
 		responseError(c, err)
 		return
 	}
-	removePasswords(users)
 	h.responseUsers(c, users)
-}
-
-// removePasswords set passwords of all users in slice to empty string
-func removePasswords(users types.Users) {
-
-	for index := range users {
-		users[index].Password = ""
-	}
 }
 
 // createUser creates an user
@@ -35,7 +26,7 @@ func (h *Handler) PostV1Users(c *gin.Context) {
 
 	var receivedUser User
 	if err := c.ShouldBindJSON(&receivedUser); err != nil {
-		responseError(c, types.NewBadRequestError(err))
+		responseErrorBadRequest(c, err)
 		return
 	}
 	newUser := fromUser(receivedUser)
@@ -44,8 +35,6 @@ func (h *Handler) PostV1Users(c *gin.Context) {
 		responseError(c, err)
 		return
 	}
-	// Remove password so we do not show in response
-	storedUser.Password = ""
 	h.responseUserCreated(c, storedUser)
 }
 
@@ -58,7 +47,6 @@ func (h *Handler) GetV1UsersUserName(c *gin.Context, userName UserName) {
 		responseError(c, err)
 		return
 	}
-	user.Password = ""
 	h.responseUser(c, user)
 }
 
@@ -73,7 +61,7 @@ func (h *Handler) PostV1UsersUserName(c *gin.Context, userName UserName) {
 	}
 	var receivedUser User
 	if err := c.ShouldBindJSON(&receivedUser); err != nil {
-		responseError(c, types.NewBadRequestError(err))
+		responseErrorBadRequest(c, err)
 		return
 	}
 	updatedUser := fromUser(receivedUser)
@@ -86,8 +74,6 @@ func (h *Handler) PostV1UsersUserName(c *gin.Context, userName UserName) {
 		responseError(c, err)
 		return
 	}
-	// Remove password so we do not show in response
-	storedUser.Password = ""
 	h.responseUserUpdated(c, storedUser)
 }
 
@@ -100,18 +86,16 @@ func (h *Handler) DeleteV1UsersUserName(c *gin.Context, userName UserName) {
 		responseError(c, err)
 		return
 	}
-	// Remove password so we do not show in response
-	deletedUser.Password = ""
 	h.responseUser(c, deletedUser)
 }
 
 // API responses
 
-func (h *Handler) responseUsers(c *gin.Context, users types.Users) {
+func (h *Handler) responseUsers(c *gin.Context, users *types.Users) {
 
-	all_users := make([]User, len(users))
-	for i := range users {
-		all_users[i] = h.ToUserResponse(&users[i])
+	all_users := make([]User, len(*users))
+	for i, v := range *users {
+		all_users[i] = h.ToUserResponse(&v)
 	}
 	c.IndentedJSON(http.StatusOK, Users{
 		User: &all_users,
@@ -137,7 +121,6 @@ func (h *Handler) responseUserUpdated(c *gin.Context, user *types.User) {
 
 func (h *Handler) ToUserResponse(l *types.User) User {
 
-	emptyPassword := ""
 	user := User{
 		CreatedAt:      &l.CreatedAt,
 		CreatedBy:      &l.CreatedBy,
@@ -145,8 +128,9 @@ func (h *Handler) ToUserResponse(l *types.User) User {
 		LastModifiedBy: &l.LastModifiedBy,
 		LastModifiedAt: &l.LastModifiedAt,
 		Name:           l.Name,
-		Password:       &emptyPassword,
-		Status:         &l.Status,
+		// We never return password
+		Password: nil,
+		Status:   &l.Status,
 	}
 	if l.Roles != nil {
 		user.Roles = &l.Roles
@@ -156,9 +140,9 @@ func (h *Handler) ToUserResponse(l *types.User) User {
 	return user
 }
 
-func fromUser(u User) types.User {
+func fromUser(u User) *types.User {
 
-	user := types.User{}
+	user := &types.User{}
 	if u.CreatedAt != nil {
 		user.CreatedAt = *u.CreatedAt
 	}

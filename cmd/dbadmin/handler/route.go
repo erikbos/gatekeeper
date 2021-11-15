@@ -26,13 +26,13 @@ func (h *Handler) PostV1Routes(c *gin.Context) {
 
 	var receivedRoute Route
 	if err := c.ShouldBindJSON(&receivedRoute); err != nil {
-		responseError(c, types.NewBadRequestError(err))
+		responseErrorBadRequest(c, err)
 		return
 	}
 	newRoute := fromRoute(receivedRoute)
 	createdDeveloper, err := h.service.Route.Create(newRoute, h.who(c))
 	if err != nil {
-		responseError(c, types.NewBadRequestError(err))
+		responseErrorBadRequest(c, err)
 		return
 	}
 	h.responseRouteCreated(c, &createdDeveloper)
@@ -119,10 +119,7 @@ func (h *Handler) DeleteV1RoutesRouteNameAttributesAttributeName(c *gin.Context,
 		responseError(c, err)
 		return
 	}
-	h.responseAttributeDeleted(c, &types.Attribute{
-		Name:  string(attributeName),
-		Value: oldValue,
-	})
+	h.responseAttributeDeleted(c, types.NewAttribute(string(attributeName), oldValue))
 }
 
 // returns one attribute of an route
@@ -139,10 +136,7 @@ func (h *Handler) GetV1RoutesRouteNameAttributesAttributeName(c *gin.Context, ro
 		responseError(c, err)
 		return
 	}
-	h.responseAttributeRetrieved(c, &types.Attribute{
-		Name:  string(attributeName),
-		Value: attributeValue,
-	})
+	h.responseAttributeRetrieved(c, types.NewAttribute(string(attributeName), attributeValue))
 }
 
 // updates an attribute of an route
@@ -154,16 +148,13 @@ func (h *Handler) PostV1RoutesRouteNameAttributesAttributeName(c *gin.Context, r
 		responseErrorBadRequest(c, err)
 		return
 	}
-	newAttribute := types.Attribute{
-		Name:  string(attributeName),
-		Value: *receivedValue.Value,
-	}
+	newAttribute := types.NewAttribute(string(attributeName), *receivedValue.Value)
 	if err := h.service.Route.UpdateAttribute(
-		string(routeName), newAttribute, h.who(c)); err != nil {
+		string(routeName), *newAttribute, h.who(c)); err != nil {
 		responseErrorBadRequest(c, err)
 		return
 	}
-	h.responseAttributeUpdated(c, &newAttribute)
+	h.responseAttributeUpdated(c, newAttribute)
 }
 
 // API responses

@@ -26,7 +26,7 @@ func (h *Handler) PostV1Roles(c *gin.Context) {
 
 	var receivedRole Role
 	if err := c.ShouldBindJSON(&receivedRole); err != nil {
-		responseError(c, types.NewBadRequestError(err))
+		responseErrorBadRequest(c, err)
 		return
 	}
 	newRole := fromRole(receivedRole)
@@ -61,7 +61,7 @@ func (h *Handler) PostV1RolesRoleName(c *gin.Context, roleName RoleName) {
 	}
 	var receivedRole Role
 	if err := c.ShouldBindJSON(&receivedRole); err != nil {
-		responseError(c, types.NewBadRequestError(err))
+		responseErrorBadRequest(c, err)
 		return
 	}
 	updatedRole := fromRole(receivedRole)
@@ -91,11 +91,11 @@ func (h *Handler) DeleteV1RolesRoleName(c *gin.Context, roleName RoleName) {
 
 // API responses
 
-func (h *Handler) responseRoles(c *gin.Context, roles types.Roles) {
+func (h *Handler) responseRoles(c *gin.Context, roles *types.Roles) {
 
-	all_roles := make([]Role, len(roles))
-	for i := range roles {
-		all_roles[i] = h.ToRoleResponse(&roles[i])
+	all_roles := make([]Role, len(*roles))
+	for i, v := range *roles {
+		all_roles[i] = h.ToRoleResponse(&v)
 	}
 	c.IndentedJSON(http.StatusOK, Roles{
 		Role: &all_roles,
@@ -147,9 +147,9 @@ func ToRoleAllowsResponse(allows types.Allows) *[]RoleAllow {
 	return &allowed_paths
 }
 
-func fromRole(u Role) types.Role {
+func fromRole(u Role) *types.Role {
 
-	role := types.Role{}
+	role := &types.Role{}
 	if u.Allow != nil {
 		role.Allows = fromRoleAllow(u.Allow)
 	}

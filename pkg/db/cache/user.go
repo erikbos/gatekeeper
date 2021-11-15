@@ -20,7 +20,7 @@ func NewUserCache(cache *Cache, user db.User) *UserCache {
 }
 
 // GetAll retrieves all users
-func (s *UserCache) GetAll() (types.Users, types.Error) {
+func (s *UserCache) GetAll() (*types.Users, types.Error) {
 
 	getAll := func() (interface{}, types.Error) {
 		return s.user.GetAll()
@@ -29,7 +29,7 @@ func (s *UserCache) GetAll() (types.Users, types.Error) {
 	if err := s.cache.fetchEntity(types.TypeUserName, "", &users, getAll); err != nil {
 		return nil, err
 	}
-	return users, nil
+	return &users, nil
 }
 
 // Get retrieves a user from database

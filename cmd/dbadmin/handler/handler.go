@@ -20,6 +20,10 @@ type Handler struct {
 	logger  *zap.Logger
 }
 
+var (
+	errFieldMisMatch = errors.New("name field value mismatch")
+)
+
 // NewHandler sets up all API endpoint routes
 func NewHandler(router *gin.Engine, db *db.Database, s *service.Service,
 	applicationName string, disableAPIAuthentication bool, logger *zap.Logger) *Handler {
@@ -69,7 +73,7 @@ func responseError(c *gin.Context, e types.Error) {
 	c.Abort()
 }
 
-// responseError returns formated error back to API client
+// responseErrorBadRequest returns BadRequest error back to API client
 func responseErrorBadRequest(c *gin.Context, e error) {
 
 	responseError(c, types.NewBadRequestError(e))
@@ -79,5 +83,5 @@ func responseErrorBadRequest(c *gin.Context, e error) {
 // between name of entity in url path vs name of entity in POSTed JSON name field
 func responseErrorNameValueMisMatch(c *gin.Context) {
 
-	responseErrorBadRequest(c, errors.New("name field value mismatch"))
+	responseErrorBadRequest(c, errFieldMisMatch)
 }

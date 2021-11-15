@@ -31,13 +31,13 @@ func (h *Handler) PostV1OrganizationsOrganizationNameApiproducts(c *gin.Context,
 
 	var receivedAPIProduct APIProduct
 	if err := c.ShouldBindJSON(&receivedAPIProduct); err != nil {
-		responseError(c, types.NewBadRequestError(err))
+		responseErrorBadRequest(c, err)
 		return
 	}
 	newAPIProduct := fromAPIproduct(receivedAPIProduct)
 	createdDeveloper, err := h.service.APIProduct.Create(newAPIProduct, h.who(c))
 	if err != nil {
-		responseError(c, types.NewBadRequestError(err))
+		responseError(c, err)
 		return
 	}
 	h.responseAPIProductCreated(c, &createdDeveloper)
@@ -52,7 +52,7 @@ func (h *Handler) DeleteV1OrganizationsOrganizationNameApiproductsApiproductName
 		responseError(c, err)
 		return
 	}
-	h.responseAPIproduct(c, &apiproduct)
+	h.responseAPIproduct(c, apiproduct)
 }
 
 // returns full details of one apiproduct
@@ -108,7 +108,7 @@ func (h *Handler) PostV1OrganizationsOrganizationNameApiproductsApiproductNameAt
 	attributes := fromAttributesRequest(receivedAttributes.Attribute)
 	if err := h.service.APIProduct.UpdateAttributes(
 		string(apiproductName), attributes, h.who(c)); err != nil {
-		responseErrorBadRequest(c, err)
+		responseError(c, err)
 		return
 	}
 	h.responseAttributes(c, attributes)
@@ -124,10 +124,7 @@ func (h *Handler) DeleteV1OrganizationsOrganizationNameApiproductsApiproductName
 		responseError(c, err)
 		return
 	}
-	h.responseAttributeDeleted(c, &types.Attribute{
-		Name:  string(attributeName),
-		Value: oldValue,
-	})
+	h.responseAttributeDeleted(c, types.NewAttribute(string(attributeName), oldValue))
 }
 
 // returns one attribute of an apiproduct
@@ -144,10 +141,7 @@ func (h *Handler) GetV1OrganizationsOrganizationNameApiproductsApiproductNameAtt
 		responseError(c, err)
 		return
 	}
-	h.responseAttributeRetrieved(c, &types.Attribute{
-		Name:  string(attributeName),
-		Value: attributeValue,
-	})
+	h.responseAttributeRetrieved(c, types.NewAttribute(string(attributeName), attributeValue))
 }
 
 // updates an attribute of an apiproduct
@@ -159,21 +153,17 @@ func (h *Handler) PostV1OrganizationsOrganizationNameApiproductsApiproductNameAt
 		responseErrorBadRequest(c, err)
 		return
 	}
-	newAttribute := types.Attribute{
-		Name:  string(attributeName),
-		Value: *receivedValue.Value,
-	}
+	newAttribute := types.NewAttribute(string(attributeName), *receivedValue.Value)
 	if err := h.service.APIProduct.UpdateAttribute(
-		string(apiproductName), newAttribute, h.who(c)); err != nil {
+		string(apiproductName), *newAttribute, h.who(c)); err != nil {
 		responseErrorBadRequest(c, err)
 		return
 	}
-	h.responseAttributeUpdated(c, &newAttribute)
+	h.responseAttributeUpdated(c, newAttribute)
 }
 
-// Responses
+// API responses
 
-// Returns API response list of developer email addresses
 func (h *Handler) responseAPIproductNames(c *gin.Context, apiproducts types.APIProducts) {
 
 	APIproductNames := make([]string, len(apiproducts))
@@ -182,8 +172,6 @@ func (h *Handler) responseAPIproductNames(c *gin.Context, apiproducts types.APIP
 	}
 	c.IndentedJSON(http.StatusOK, APIproductNames)
 }
-
-// API responses
 
 func (h *Handler) responseAPIproducts(c *gin.Context, apiproducts types.APIProducts) {
 

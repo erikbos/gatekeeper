@@ -9,6 +9,10 @@ import (
 	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
+var (
+	errUnknownApplicationStatus = errors.New("unknown status requested")
+)
+
 // returns all developer apps
 // (GET /v1/organizations/{organization_name}/apps)
 func (h *Handler) GetV1OrganizationsOrganizationNameApps(c *gin.Context, organizationName OrganizationName, params GetV1OrganizationsOrganizationNameAppsParams) {
@@ -99,7 +103,7 @@ func (h *Handler) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmaila
 		responseError(c, err)
 		return
 	}
-	h.responseApplication(c, &app, nil)
+	h.responseApplication(c, app, nil)
 }
 
 // returns one app identified by name of a developer
@@ -160,7 +164,7 @@ func (h *Handler) changeDeveloperAppStatus(c *gin.Context, developerEmailaddress
 	case "revoke":
 		app.Revoke()
 	default:
-		responseErrorBadRequest(c, errors.New("unknown status requested"))
+		responseErrorBadRequest(c, errUnknownApplicationStatus)
 		return
 	}
 	_, err = h.service.DeveloperApp.Update(*app, h.who(c))
@@ -266,10 +270,7 @@ func (h *Handler) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmaila
 		responseError(c, err)
 		return
 	}
-	h.responseAttributeDeleted(c, &types.Attribute{
-		Name:  string(attributeName),
-		Value: oldValue,
-	})
+	h.responseAttributeDeleted(c, types.NewAttribute(string(attributeName), oldValue))
 }
 
 // returns one attribute of an application
@@ -286,10 +287,7 @@ func (h *Handler) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddr
 		responseError(c, err)
 		return
 	}
-	h.responseAttributeRetrieved(c, &types.Attribute{
-		Name:  string(attributeName),
-		Value: attributeValue,
-	})
+	h.responseAttributeRetrieved(c, types.NewAttribute(string(attributeName), attributeValue))
 }
 
 // updates an attribute of an application
@@ -301,16 +299,13 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 		responseErrorBadRequest(c, err)
 		return
 	}
-	newAttribute := types.Attribute{
-		Name:  string(attributeName),
-		Value: *receivedValue.Value,
-	}
+	newAttribute := types.NewAttribute(string(attributeName), *receivedValue.Value)
 	if err := h.service.DeveloperApp.UpdateAttribute(
-		string(appName), newAttribute, h.who(c)); err != nil {
+		string(appName), *newAttribute, h.who(c)); err != nil {
 		responseErrorBadRequest(c, err)
 		return
 	}
-	h.responseAttributeUpdated(c, &newAttribute)
+	h.responseAttributeUpdated(c, newAttribute)
 }
 
 // Returns API response list ALL developer application ids

@@ -9,6 +9,10 @@ import (
 	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
+var (
+	errUnknownDeveloperStatus = errors.New("unknown status requested")
+)
+
 // return all developers
 // (GET /v1/organizations/{organization_name}/developers)
 func (h *Handler) GetV1OrganizationsOrganizationNameDevelopers(c *gin.Context, organizationName OrganizationName, params GetV1OrganizationsOrganizationNameDevelopersParams) {
@@ -32,13 +36,13 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopers(c *gin.Context, 
 
 	var receivedDeveloper Developer
 	if err := c.ShouldBindJSON(&receivedDeveloper); err != nil {
-		responseError(c, types.NewBadRequestError(err))
+		responseErrorBadRequest(c, err)
 		return
 	}
 	newDeveloper := fromDeveloper(receivedDeveloper)
 	createdDeveloper, err := h.service.Developer.Create(newDeveloper, h.who(c))
 	if err != nil {
-		responseError(c, types.NewBadRequestError(err))
+		responseErrorBadRequest(c, err)
 		return
 	}
 	h.responseDeveloperCreated(c, &createdDeveloper)
@@ -53,7 +57,7 @@ func (h *Handler) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmaila
 		responseError(c, err)
 		return
 	}
-	h.responseDeveloper(c, &developer)
+	h.responseDeveloper(c, developer)
 }
 
 // returns full details of one developer
@@ -109,7 +113,7 @@ func (h *Handler) changeDeveloperStatus(c *gin.Context, developerEmailaddress, r
 	case "inactive":
 		developer.Deactivate()
 	default:
-		responseErrorBadRequest(c, errors.New("unknown status requested"))
+		responseErrorBadRequest(c, errUnknownDeveloperStatus)
 		return
 	}
 	_, err = h.service.Developer.Update(string(developerEmailaddress), *developer, h.who(c))
@@ -160,10 +164,7 @@ func (h *Handler) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmaila
 		responseError(c, err)
 		return
 	}
-	h.responseAttributeDeleted(c, &types.Attribute{
-		Name:  string(attributeName),
-		Value: oldValue,
-	})
+	h.responseAttributeDeleted(c, types.NewAttribute(string(attributeName), oldValue))
 }
 
 // returns one attribute of a developer
@@ -180,10 +181,7 @@ func (h *Handler) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddr
 		responseError(c, err)
 		return
 	}
-	h.responseAttributeRetrieved(c, &types.Attribute{
-		Name:  string(attributeName),
-		Value: attributeValue,
-	})
+	h.responseAttributeRetrieved(c, types.NewAttribute(string(attributeName), attributeValue))
 }
 
 // updates an attribute of a developer
@@ -195,16 +193,13 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 		responseErrorBadRequest(c, err)
 		return
 	}
-	newAttribute := types.Attribute{
-		Name:  string(attributeName),
-		Value: *receivedValue.Value,
-	}
+	newAttribute := types.NewAttribute(string(attributeName), *receivedValue.Value)
 	if err := h.service.Developer.UpdateAttribute(
-		string(developerEmailaddress), newAttribute, h.who(c)); err != nil {
+		string(developerEmailaddress), *newAttribute, h.who(c)); err != nil {
 		responseErrorBadRequest(c, err)
 		return
 	}
-	h.responseAttributeUpdated(c, &newAttribute)
+	h.responseAttributeUpdated(c, newAttribute)
 }
 
 // Responses

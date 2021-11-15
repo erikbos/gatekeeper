@@ -204,16 +204,16 @@ func (das *DeveloperAppService) updateDeveloperApp(updatedDeveloperApp *types.De
 
 // Delete deletes an developerApp
 func (das *DeveloperAppService) Delete(developerID, developerAppName string,
-	who Requester) (deletedDeveloperApp types.DeveloperApp, e types.Error) {
+	who Requester) (deletedDeveloperApp *types.DeveloperApp, e types.Error) {
 
 	developer, err := das.db.Developer.GetByID(developerID)
 	if err != nil {
-		return types.NullDeveloperApp, err
+		return nil, err
 	}
 
 	developerApp, err := das.GetByName(developerAppName)
 	if err != nil {
-		return types.NullDeveloperApp, err
+		return nil, err
 	}
 	developerAppKeys, _ := das.db.Key.GetByDeveloperAppID(developerApp.AppID)
 	if len(developerAppKeys) != 0 {
@@ -222,17 +222,9 @@ func (das *DeveloperAppService) Delete(developerID, developerAppName string,
 		}
 	}
 
-	// developerAppKeyCount := len(developerAppKeys)
-	// for
-	// if developerAppKeyCount > 0 {
-	// 	return types.NullDeveloperApp, types.NewBadRequestError(
-	// 		fmt.Errorf("cannot delete developer app '%s' with %d apikeys",
-	// 			developerApp.Name, developerAppKeyCount))
-	// }
-
 	err = das.db.DeveloperApp.DeleteByID(developerApp.AppID)
 	if err != nil {
-		return types.NullDeveloperApp, err
+		return nil, err
 	}
 	// Remove app from the apps field in developer entity as well
 	for i := 0; i < len(developer.Apps); i++ {
@@ -243,10 +235,10 @@ func (das *DeveloperAppService) Delete(developerID, developerAppName string,
 	}
 	// FIXME	developer.LastmodifiedBy = h.GetSessionUser(c)
 	if err := das.db.Developer.Update(developer); err != nil {
-		return types.NullDeveloperApp, err
+		return nil, err
 	}
 	das.changelog.Delete(developerApp, who)
-	return *developerApp, nil
+	return developerApp, nil
 }
 
 // generateAppID creates unique primary key for developer app row

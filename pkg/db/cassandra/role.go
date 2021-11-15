@@ -35,17 +35,17 @@ func NewRoleStore(database *Database) *RoleStore {
 }
 
 // GetAll retrieves all roles
-func (s *RoleStore) GetAll() (types.Roles, types.Error) {
+func (s *RoleStore) GetAll() (*types.Roles, types.Error) {
 
 	query := "SELECT " + roleColumns + " FROM roles"
 	roles, err := s.runGetRoleQuery(query)
 	if err != nil {
 		s.db.metrics.QueryFailed(roleMetricLabel)
-		return types.NullRoles, types.NewDatabaseError(err)
+		return nil, types.NewDatabaseError(err)
 	}
 
 	s.db.metrics.QueryHit(roleMetricLabel)
-	return roles, nil
+	return &roles, nil
 }
 
 // Get retrieves a role from database

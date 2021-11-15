@@ -185,7 +185,7 @@ type (
 	// User the user information storage interface
 	User interface {
 		// GetAll retrieves all users
-		GetAll() (types.Users, types.Error)
+		GetAll() (*types.Users, types.Error)
 
 		// Get retrieves a user from database
 		Get(userName string) (*types.User, types.Error)
@@ -200,7 +200,7 @@ type (
 	// Role the role information storage interface
 	Role interface {
 		// GetAll retrieves all roles
-		GetAll() (types.Roles, types.Error)
+		GetAll() (*types.Roles, types.Error)
 
 		// Get retrieves a role from database
 		Get(roleName string) (*types.Role, types.Error)

@@ -26,7 +26,7 @@ func NewUser(database *db.Database, c *Changelog) *UserService {
 }
 
 // GetAll returns all users
-func (us *UserService) GetAll() (users types.Users, err types.Error) {
+func (us *UserService) GetAll() (users *types.Users, err types.Error) {
 
 	return us.db.User.GetAll()
 }
@@ -38,7 +38,7 @@ func (us *UserService) Get(userName string) (user *types.User, err types.Error) 
 }
 
 // Create creates an user
-func (us *UserService) Create(newUser types.User, who Requester) (*types.User, types.Error) {
+func (us *UserService) Create(newUser *types.User, who Requester) (*types.User, types.Error) {
 
 	if _, err := us.db.User.Get(newUser.Name); err == nil {
 		return nil, types.NewBadRequestError(
@@ -55,15 +55,15 @@ func (us *UserService) Create(newUser types.User, who Requester) (*types.User, t
 	}
 	newUser.Password = encryptedPassword
 
-	if err := us.updateUser(&newUser, who); err != nil {
+	if err := us.updateUser(newUser, who); err != nil {
 		return nil, err
 	}
 	us.changelog.Create(newUser, who)
-	return &newUser, nil
+	return newUser, nil
 }
 
 // Update updates an existing user
-func (us *UserService) Update(updatedUser types.User,
+func (us *UserService) Update(updatedUser *types.User,
 	who Requester) (*types.User, types.Error) {
 
 	currentUser, err := us.db.User.Get(updatedUser.Name)
@@ -84,11 +84,11 @@ func (us *UserService) Update(updatedUser types.User,
 		updatedUser.Password = encryptedPasswd
 	}
 
-	if err = us.updateUser(&updatedUser, who); err != nil {
+	if err = us.updateUser(updatedUser, who); err != nil {
 		return nil, err
 	}
 	us.changelog.Update(currentUser, updatedUser, who)
-	return &updatedUser, nil
+	return updatedUser, nil
 }
 
 // updateUser updates last-modified field(s) and updates user in database

@@ -121,7 +121,7 @@ type (
 
 		DeleteAttribute(developerName, attributeToDelete string, who Requester) (string, types.Error)
 
-		Delete(developerName string, who Requester) (deletedDeveloper types.Developer, e types.Error)
+		Delete(developerName string, who Requester) (deletedDeveloper *types.Developer, e types.Error)
 	}
 
 	// DeveloperApp is the service interface to manipulate DeveloperApp entities
@@ -148,7 +148,7 @@ type (
 
 		DeleteAttribute(developerAppName, attributeToDelete string, who Requester) (string, types.Error)
 
-		Delete(developerID, developerAppName string, who Requester) (deletedDeveloperApp types.DeveloperApp, e types.Error)
+		Delete(developerID, developerAppName string, who Requester) (deletedDeveloperApp *types.DeveloperApp, e types.Error)
 	}
 
 	// Key is the service interface to manipulate Key entities
@@ -186,31 +186,31 @@ type (
 
 		DeleteAttribute(apiproductName, attributeToDelete string, who Requester) (string, types.Error)
 
-		Delete(apiproductName string, who Requester) (deletedAPIProduct types.APIProduct, e types.Error)
+		Delete(apiproductName string, who Requester) (deletedAPIProduct *types.APIProduct, e types.Error)
 	}
 
 	// User is the service interface to manipulate User entities
 	User interface {
-		GetAll() (users types.Users, err types.Error)
+		GetAll() (users *types.Users, err types.Error)
 
 		Get(userName string) (user *types.User, err types.Error)
 
-		Create(newUser types.User, who Requester) (*types.User, types.Error)
+		Create(newUser *types.User, who Requester) (*types.User, types.Error)
 
-		Update(updatedUser types.User, who Requester) (*types.User, types.Error)
+		Update(updatedUser *types.User, who Requester) (*types.User, types.Error)
 
 		Delete(userName string, who Requester) (deletedUser *types.User, e types.Error)
 	}
 
 	// Role is the service interface to manipulate Role entities
 	Role interface {
-		GetAll() (roles types.Roles, err types.Error)
+		GetAll() (roles *types.Roles, err types.Error)
 
 		Get(roleName string) (role *types.Role, err types.Error)
 
-		Create(newRole types.Role, who Requester) (*types.Role, types.Error)
+		Create(newRole *types.Role, who Requester) (*types.Role, types.Error)
 
-		Update(updatedRole types.Role, who Requester) (*types.Role, types.Error)
+		Update(updatedRole *types.Role, who Requester) (*types.Role, types.Error)
 
 		Delete(roleName string, who Requester) (deletedRole *types.Role, e types.Error)
 	}

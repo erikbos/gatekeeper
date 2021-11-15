@@ -24,7 +24,7 @@ func NewRole(database *db.Database, c *Changelog) *RoleService {
 }
 
 // GetAll returns all roles
-func (rs *RoleService) GetAll() (roles types.Roles, err types.Error) {
+func (rs *RoleService) GetAll() (roles *types.Roles, err types.Error) {
 
 	return rs.db.Role.GetAll()
 }
@@ -36,7 +36,7 @@ func (rs *RoleService) Get(roleName string) (role *types.Role, err types.Error) 
 }
 
 // Create creates an role
-func (rs *RoleService) Create(newRole types.Role, who Requester) (*types.Role, types.Error) {
+func (rs *RoleService) Create(newRole *types.Role, who Requester) (*types.Role, types.Error) {
 
 	if _, err := rs.db.Role.Get(newRole.Name); err == nil {
 		return nil, types.NewBadRequestError(
@@ -46,15 +46,15 @@ func (rs *RoleService) Create(newRole types.Role, who Requester) (*types.Role, t
 	newRole.CreatedAt = shared.GetCurrentTimeMilliseconds()
 	newRole.CreatedBy = who.User
 
-	if err := rs.updateRole(&newRole, who); err != nil {
+	if err := rs.updateRole(newRole, who); err != nil {
 		return nil, err
 	}
 	rs.Changelog.Create(newRole, who)
-	return &newRole, nil
+	return newRole, nil
 }
 
 // Update updates an existing role
-func (rs *RoleService) Update(updatedRole types.Role, who Requester) (*types.Role, types.Error) {
+func (rs *RoleService) Update(updatedRole *types.Role, who Requester) (*types.Role, types.Error) {
 
 	currentRole, err := rs.db.Role.Get(updatedRole.Name)
 	if err != nil {
@@ -65,11 +65,11 @@ func (rs *RoleService) Update(updatedRole types.Role, who Requester) (*types.Rol
 	updatedRole.CreatedAt = currentRole.CreatedAt
 	updatedRole.CreatedBy = currentRole.CreatedBy
 
-	if err = rs.updateRole(&updatedRole, who); err != nil {
+	if err = rs.updateRole(updatedRole, who); err != nil {
 		return nil, err
 	}
 	rs.Changelog.Update(currentRole, updatedRole, who)
-	return &updatedRole, nil
+	return updatedRole, nil
 }
 
 // updateRole updates last-modified field(s) and updates role in database
@@ -108,7 +108,7 @@ func (rs *RoleService) countUserWithRole(role string) int {
 		return 0
 	}
 	var count int
-	for _, user := range users {
+	for _, user := range *users {
 		for _, userRole := range user.Roles {
 			if role == userRole {
 				count++

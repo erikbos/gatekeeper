@@ -15,47 +15,47 @@ const (
 	BasicAuthScopes = "BasicAuth.Scopes"
 )
 
-// APIProduct defines model for APIProduct.
+// APIProduct defines model for API product.
 type APIProduct struct {
-	// User who last updated this APIProduct.
+	// User who last updated this API product.
 	LastModifiedBy *string `json:"LastModifiedBy,omitempty"`
 
-	// List of paths belonging to this APIProduct.
+	// List of paths belonging to this API product.
 	ApiResources *[]string `json:"apiResources,omitempty"`
 
-	// Description of APIProduct.
+	// Description of API product.
 	ApprovalType *string      `json:"approvalType,omitempty"`
 	Attributes   *[]Attribute `json:"attributes,omitempty"`
 
 	// Create timestamp in milliseconds since epoch.
 	CreatedAt *int64 `json:"createdAt,omitempty"`
 
-	// User who created this APIProduct.
+	// User who created this API product.
 	CreatedBy *string `json:"createdBy,omitempty"`
 
-	// Description of APIProduct.
+	// Description of API product.
 	Description *string `json:"description,omitempty"`
 
-	// Display name of APIProduct.
+	// Display name of API product.
 	DisplayName *string `json:"displayName,omitempty"`
 
 	// Last modified timestamp in milliseconds since epoch.
 	LastModifiedAt *int64 `json:"lastModifiedAt,omitempty"`
 
-	// APIProduct name. Can only be set at creation.
+	// API product name. Can only be set when apiproduct is created
 	Name *string `json:"name,omitempty"`
 
-	// List of policies to apply to APIProduct.
+	// List of policies to apply to API product.
 	Policy *string `json:"policy,omitempty"`
 
 	// Route group this product belongs to.
 	RouteGroup *string `json:"routeGroup,omitempty"`
 
-	// One or more scopes this APIProduct belongs to.
+	// One or more scopes this API product belongs to.
 	Scopes *[]string `json:"scopes,omitempty"`
 }
 
-// All APIProduct details.
+// All API product details.
 type APIProducts struct {
 	ApiProduct *[]APIProduct `json:"apiProduct,omitempty"`
 }
@@ -91,7 +91,7 @@ type Application struct {
 	// Last modified timestamp in milliseconds since epoch.
 	LastModifiedAt *int64 `json:"lastModifiedAt,omitempty"`
 
-	// Application name. Can only be set at creation.
+	// Application name. Can only be set when application is created.
 	Name *string `json:"name,omitempty"`
 
 	// OAuth scopes.
@@ -119,7 +119,7 @@ type ApplicationUpdate struct {
 	// Default time-to-live of new api keys.
 	KeyExpiresIn *int64 `json:"keyExpiresIn,omitempty"`
 
-	// Application name. Can only be set at creation.
+	// Application name. Can only be set when application is created.
 	Name *string `json:"name,omitempty"`
 
 	// OAuth scopes.
@@ -166,7 +166,7 @@ type Cluster struct {
 	// Last modified timestamp in milliseconds since epoch.
 	LastModifiedAt *int64 `json:"lastModifiedAt,omitempty"`
 
-	// Name of cluster. Can only be set at creation.
+	// Name of cluster. Can only be set when cluster is created.
 	Name string `json:"name"`
 }
 
@@ -295,7 +295,7 @@ type Listener struct {
 	// User who last updated this listener.
 	LastModifiedBy *string `json:"lastModifiedBy,omitempty"`
 
-	// Name of listener. Can only be set at creation.
+	// Name of listener. Can only be set when listener is created.
 	Name     string  `json:"name"`
 	Policies *string `json:"policies,omitempty"`
 
@@ -319,7 +319,7 @@ type Organization struct {
 	// Create timestamp in milliseconds since epoch.
 	CreatedAt *int64 `json:"createdAt,omitempty"`
 
-	// User who created this developer.
+	// User who created this organization.
 	CreatedBy *string `json:"createdBy,omitempty"`
 
 	// Display name of organization.
@@ -328,7 +328,7 @@ type Organization struct {
 	// Last modified timestamp in milliseconds since epoch.
 	LastModifiedAt *int64 `json:"lastModifiedAt,omitempty"`
 
-	// User who last updated this developer.
+	// User who last updated this organization.
 	LastModifiedBy *string `json:"lastModifiedBy,omitempty"`
 
 	// Name of organization.
@@ -395,7 +395,7 @@ type Route struct {
 	// Last modified timestamp in milliseconds since epoch.
 	LastModifiedAt *int64 `json:"lastModifiedAt,omitempty"`
 
-	// Name of route. Can only be set at creation.
+	// Name of route. Can only be set when route is created.
 	Name string `json:"name"`
 
 	// Path to match on.
@@ -544,10 +544,10 @@ type PostV1OrganizationsOrganizationNameJSONBody Organization
 
 // GetV1OrganizationsOrganizationNameApiproductsParams defines parameters for GetV1OrganizationsOrganizationNameApiproducts.
 type GetV1OrganizationsOrganizationNameApiproductsParams struct {
-	// Return full APIProducts details.
+	// Return full API products details.
 	Expand *bool `json:"expand,omitempty"`
 
-	// maximum number of APIProducts to return.
+	// maximum number of API products to return.
 	Count *int `json:"count,omitempty"`
 }
 
@@ -571,7 +571,7 @@ type PostV1OrganizationsOrganizationNameApiproductsApiproductNameAttributesAttri
 
 // GetV1OrganizationsOrganizationNameAppsParams defines parameters for GetV1OrganizationsOrganizationNameApps.
 type GetV1OrganizationsOrganizationNameAppsParams struct {
-	// Return full details of each application.
+	// If true, return full details of each application.
 	Expand *bool `json:"expand,omitempty"`
 
 	// Maximum number of applications to return.
@@ -601,7 +601,7 @@ type PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressParams st
 
 // GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsParams defines parameters for GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressApps.
 type GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsParams struct {
-	// Return full details of each application.
+	// If true, return full details of each application.
 	Expand *bool `json:"expand,omitempty"`
 
 	// Maximum number of applications to return.
@@ -784,259 +784,259 @@ type PostV1UsersUserNameJSONRequestBody PostV1UsersUserNameJSONBody
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
-
+	// Retrieve clusters
 	// (GET /v1/clusters)
 	GetV1Clusters(c *gin.Context)
-
+	// Create cluster
 	// (POST /v1/clusters)
 	PostV1Clusters(c *gin.Context)
-
+	// Delete cluster
 	// (DELETE /v1/clusters/{cluster_name})
 	DeleteV1ClustersClusterName(c *gin.Context, clusterName ClusterName)
-
+	// Retrieve cluster
 	// (GET /v1/clusters/{cluster_name})
 	GetV1ClustersClusterName(c *gin.Context, clusterName ClusterName)
-
+	// Update cluster
 	// (POST /v1/clusters/{cluster_name})
 	PostV1ClustersClusterName(c *gin.Context, clusterName ClusterName)
-
+	// Retrieve cluster attributes
 	// (GET /v1/clusters/{cluster_name}/attributes)
 	GetV1ClustersClusterNameAttributes(c *gin.Context, clusterName ClusterName)
-
+	// Replace cluster attributes
 	// (POST /v1/clusters/{cluster_name}/attributes)
 	PostV1ClustersClusterNameAttributes(c *gin.Context, clusterName ClusterName)
-
+	// Delete cluster attribute
 	// (DELETE /v1/clusters/{cluster_name}/attributes/{attribute_name})
 	DeleteV1ClustersClusterNameAttributesAttributeName(c *gin.Context, clusterName ClusterName, attributeName AttributeName)
-
+	// Retrieve cluster attribute
 	// (GET /v1/clusters/{cluster_name}/attributes/{attribute_name})
 	GetV1ClustersClusterNameAttributesAttributeName(c *gin.Context, clusterName ClusterName, attributeName AttributeName)
-
+	// Update cluster attribute
 	// (POST /v1/clusters/{cluster_name}/attributes/{attribute_name})
 	PostV1ClustersClusterNameAttributesAttributeName(c *gin.Context, clusterName ClusterName, attributeName AttributeName)
-
+	// Retrieve listeners
 	// (GET /v1/listeners)
 	GetV1Listeners(c *gin.Context)
-
+	// Create listener
 	// (POST /v1/listeners)
 	PostV1Listeners(c *gin.Context)
-
+	// Delete listener
 	// (DELETE /v1/listeners/{listener_name})
 	DeleteV1ListenersListenerName(c *gin.Context, listenerName ListenerName)
-
+	// Retrieve listener
 	// (GET /v1/listeners/{listener_name})
 	GetV1ListenersListenerName(c *gin.Context, listenerName ListenerName)
-
+	// Update listener
 	// (POST /v1/listeners/{listener_name})
 	PostV1ListenersListenerName(c *gin.Context, listenerName ListenerName)
-
+	// Retrieve listener attributes
 	// (GET /v1/listeners/{listener_name}/attributes)
 	GetV1ListenersListenerNameAttributes(c *gin.Context, listenerName ListenerName)
-
+	// Replace listener attributes
 	// (POST /v1/listeners/{listener_name}/attributes)
 	PostV1ListenersListenerNameAttributes(c *gin.Context, listenerName ListenerName)
-
+	// Delete listener attribute
 	// (DELETE /v1/listeners/{listener_name}/attributes/{attribute_name})
 	DeleteV1ListenersListenerNameAttributesAttributeName(c *gin.Context, listenerName ListenerName, attributeName AttributeName)
-
+	// Retrieve listener attribute
 	// (GET /v1/listeners/{listener_name}/attributes/{attribute_name})
 	GetV1ListenersListenerNameAttributesAttributeName(c *gin.Context, listenerName ListenerName, attributeName AttributeName)
-
+	// Update listener attribute
 	// (POST /v1/listeners/{listener_name}/attributes/{attribute_name})
 	PostV1ListenersListenerNameAttributesAttributeName(c *gin.Context, listenerName ListenerName, attributeName AttributeName)
-
+	// Retrieve organizations
 	// (GET /v1/organizations)
 	GetV1Organizations(c *gin.Context)
-
+	// Create organization
 	// (POST /v1/organizations)
 	PostV1Organizations(c *gin.Context)
-
+	// Delete organization
 	// (DELETE /v1/organizations/{organization_name})
 	DeleteV1OrganizationsOrganizationName(c *gin.Context, organizationName OrganizationName)
-
+	// Retrieve organization
 	// (GET /v1/organizations/{organization_name})
 	GetV1OrganizationsOrganizationName(c *gin.Context, organizationName OrganizationName)
-
+	// Update organization
 	// (POST /v1/organizations/{organization_name})
 	PostV1OrganizationsOrganizationName(c *gin.Context, organizationName OrganizationName)
-
+	// Retrieve API products
 	// (GET /v1/organizations/{organization_name}/apiproducts)
 	GetV1OrganizationsOrganizationNameApiproducts(c *gin.Context, organizationName OrganizationName, params GetV1OrganizationsOrganizationNameApiproductsParams)
-
+	// Create API product
 	// (POST /v1/organizations/{organization_name}/apiproducts)
 	PostV1OrganizationsOrganizationNameApiproducts(c *gin.Context, organizationName OrganizationName)
-
+	// Delete API product
 	// (DELETE /v1/organizations/{organization_name}/apiproducts/{apiproduct_name})
 	DeleteV1OrganizationsOrganizationNameApiproductsApiproductName(c *gin.Context, organizationName OrganizationName, apiproductName ApiproductName)
-
+	// Retrieve API product
 	// (GET /v1/organizations/{organization_name}/apiproducts/{apiproduct_name})
 	GetV1OrganizationsOrganizationNameApiproductsApiproductName(c *gin.Context, organizationName OrganizationName, apiproductName ApiproductName)
-
+	// Update API product
 	// (POST /v1/organizations/{organization_name}/apiproducts/{apiproduct_name})
 	PostV1OrganizationsOrganizationNameApiproductsApiproductName(c *gin.Context, organizationName OrganizationName, apiproductName ApiproductName, params PostV1OrganizationsOrganizationNameApiproductsApiproductNameParams)
-
+	// Retrieve API product attributes
 	// (GET /v1/organizations/{organization_name}/apiproducts/{apiproduct_name}/attributes)
 	GetV1OrganizationsOrganizationNameApiproductsApiproductNameAttributes(c *gin.Context, organizationName OrganizationName, apiproductName ApiproductName)
-
+	// Replace API product attributes
 	// (POST /v1/organizations/{organization_name}/apiproducts/{apiproduct_name}/attributes)
 	PostV1OrganizationsOrganizationNameApiproductsApiproductNameAttributes(c *gin.Context, organizationName OrganizationName, apiproductName ApiproductName)
-
+	// Delete API product attribute
 	// (DELETE /v1/organizations/{organization_name}/apiproducts/{apiproduct_name}/attributes/{attribute_name})
 	DeleteV1OrganizationsOrganizationNameApiproductsApiproductNameAttributesAttributeName(c *gin.Context, organizationName OrganizationName, apiproductName ApiproductName, attributeName AttributeName)
-
+	// Retrieve API product attribute
 	// (GET /v1/organizations/{organization_name}/apiproducts/{apiproduct_name}/attributes/{attribute_name})
 	GetV1OrganizationsOrganizationNameApiproductsApiproductNameAttributesAttributeName(c *gin.Context, organizationName OrganizationName, apiproductName ApiproductName, attributeName AttributeName)
-
+	// Update API product attribute
 	// (POST /v1/organizations/{organization_name}/apiproducts/{apiproduct_name}/attributes/{attribute_name})
 	PostV1OrganizationsOrganizationNameApiproductsApiproductNameAttributesAttributeName(c *gin.Context, organizationName OrganizationName, apiproductName ApiproductName, attributeName AttributeName)
-
+	// Retrieve applications
 	// (GET /v1/organizations/{organization_name}/apps)
 	GetV1OrganizationsOrganizationNameApps(c *gin.Context, organizationName OrganizationName, params GetV1OrganizationsOrganizationNameAppsParams)
-
+	// Retrieve application
 	// (GET /v1/organizations/{organization_name}/apps/{app_id})
 	GetV1OrganizationsOrganizationNameAppsAppId(c *gin.Context, organizationName OrganizationName, appId AppId)
-
+	// Retrieve developers
 	// (GET /v1/organizations/{organization_name}/developers)
 	GetV1OrganizationsOrganizationNameDevelopers(c *gin.Context, organizationName OrganizationName, params GetV1OrganizationsOrganizationNameDevelopersParams)
-
+	// Create developer
 	// (POST /v1/organizations/{organization_name}/developers)
 	PostV1OrganizationsOrganizationNameDevelopers(c *gin.Context, organizationName OrganizationName)
-
+	// Delete developer
 	// (DELETE /v1/organizations/{organization_name}/developers/{developer_emailaddress})
 	DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddress(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress)
-
+	// Retrieve developer
 	// (GET /v1/organizations/{organization_name}/developers/{developer_emailaddress})
 	GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddress(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress)
-
+	// Update developer
 	// (POST /v1/organizations/{organization_name}/developers/{developer_emailaddress})
 	PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddress(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, params PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressParams)
-
+	// Retrieve applications
 	// (GET /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps)
 	GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressApps(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, params GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsParams)
-
+	// Create application
 	// (POST /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps)
 	PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressApps(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress)
-
+	// Delete application
 	// (DELETE /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name})
 	DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName)
-
+	// Retrieve application
 	// (GET /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name})
 	GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName)
-
+	// Update application
 	// (POST /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name})
 	PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, params PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameParams)
-
+	// Update application and keys
 	// (PUT /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name})
 	PutV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, params PutV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameParams)
-
+	// Replace application attributes
 	// (GET /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/attributes)
 	GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributes(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName)
-
+	// Replace application attributes
 	// (POST /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/attributes)
 	PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributes(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName)
-
+	// Delete application attribute
 	// (DELETE /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/attributes/{attribute_name})
 	DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesAttributeName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, attributeName AttributeName)
-
+	// Retrieve application attribute
 	// (GET /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/attributes/{attribute_name})
 	GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesAttributeName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, attributeName AttributeName)
-
+	// Update application attribute
 	// (POST /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/attributes/{attribute_name})
 	PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesAttributeName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, attributeName AttributeName)
-
+	// Retrieve keys
 	// (GET /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/keys)
 	GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeys(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName)
-
+	// Create key
 	// (POST /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/keys/create)
 	PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysCreate(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName)
-
+	// Delete key
 	// (DELETE /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/keys/{consumer_key})
 	DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKey(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, consumerKey ConsumerKey)
-
+	// Retrieve key
 	// (GET /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/keys/{consumer_key})
 	GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKey(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, consumerKey ConsumerKey)
-
+	// Update key
 	// (POST /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/keys/{consumer_key})
 	PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKey(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, consumerKey ConsumerKey, params PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKeyParams)
-
+	// Delete apiproduct remove key
 	// (DELETE /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/keys/{consumer_key}/apiproducts/{apiproduct_name})
 	DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKeyApiproductsApiproductName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, consumerKey ConsumerKey, apiproductName ApiproductName)
-
+	// Update key apiproduct
 	// (POST /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/keys/{consumer_key}/apiproducts/{apiproduct_name})
 	PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKeyApiproductsApiproductName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, consumerKey ConsumerKey, apiproductName ApiproductName, params PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKeyApiproductsApiproductNameParams)
-
+	// Retrieve developer attributes
 	// (GET /v1/organizations/{organization_name}/developers/{developer_emailaddress}/attributes)
 	GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributes(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress)
-
+	// Replace developer attributes
 	// (POST /v1/organizations/{organization_name}/developers/{developer_emailaddress}/attributes)
 	PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributes(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress)
-
+	// Delete developer attribute
 	// (DELETE /v1/organizations/{organization_name}/developers/{developer_emailaddress}/attributes/{attribute_name})
 	DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributesAttributeName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, attributeName AttributeName)
-
+	// Retrieve developer attribute
 	// (GET /v1/organizations/{organization_name}/developers/{developer_emailaddress}/attributes/{attribute_name})
 	GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributesAttributeName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, attributeName AttributeName)
-
+	// Update developer attribute
 	// (POST /v1/organizations/{organization_name}/developers/{developer_emailaddress}/attributes/{attribute_name})
 	PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAttributesAttributeName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, attributeName AttributeName)
-
+	// Retrieve role
 	// (GET /v1/roles)
 	GetV1Roles(c *gin.Context)
-
+	// Create role
 	// (POST /v1/roles)
 	PostV1Roles(c *gin.Context)
-
+	// Delete role
 	// (DELETE /v1/roles/{role_name})
 	DeleteV1RolesRoleName(c *gin.Context, roleName RoleName)
-
+	// Retrieve role
 	// (GET /v1/roles/{role_name})
 	GetV1RolesRoleName(c *gin.Context, roleName RoleName)
-
+	// Update role
 	// (POST /v1/roles/{role_name})
 	PostV1RolesRoleName(c *gin.Context, roleName RoleName)
-
+	// Retrieve route
 	// (GET /v1/routes)
 	GetV1Routes(c *gin.Context)
-
+	// Create route
 	// (POST /v1/routes)
 	PostV1Routes(c *gin.Context)
-
+	// Delete route
 	// (DELETE /v1/routes/{route_name})
 	DeleteV1RoutesRouteName(c *gin.Context, routeName RouteName)
-
+	// Retrieve route
 	// (GET /v1/routes/{route_name})
 	GetV1RoutesRouteName(c *gin.Context, routeName RouteName)
-
+	// Update route
 	// (POST /v1/routes/{route_name})
 	PostV1RoutesRouteName(c *gin.Context, routeName RouteName)
-
+	// Retrieve route attributes
 	// (GET /v1/routes/{route_name}/attributes)
 	GetV1RoutesRouteNameAttributes(c *gin.Context, routeName RouteName)
-
+	// Replace route attributes
 	// (POST /v1/routes/{route_name}/attributes)
 	PostV1RoutesRouteNameAttributes(c *gin.Context, routeName RouteName)
-
+	// Delete route attribute
 	// (DELETE /v1/routes/{route_name}/attributes/{attribute_name})
 	DeleteV1RoutesRouteNameAttributesAttributeName(c *gin.Context, routeName RouteName, attributeName AttributeName)
-
+	// Retrieve route attribute
 	// (GET /v1/routes/{route_name}/attributes/{attribute_name})
 	GetV1RoutesRouteNameAttributesAttributeName(c *gin.Context, routeName RouteName, attributeName AttributeName)
-
+	// Update route attribute
 	// (POST /v1/routes/{route_name}/attributes/{attribute_name})
 	PostV1RoutesRouteNameAttributesAttributeName(c *gin.Context, routeName RouteName, attributeName AttributeName)
-
+	// Retrieve user
 	// (GET /v1/users)
 	GetV1Users(c *gin.Context)
-
+	// Create user
 	// (POST /v1/users)
 	PostV1Users(c *gin.Context)
-
+	// Delete user
 	// (DELETE /v1/users/{user_name})
 	DeleteV1UsersUserName(c *gin.Context, userName UserName)
-
+	// Retrieve user
 	// (GET /v1/users/{user_name})
 	GetV1UsersUserName(c *gin.Context, userName UserName)
-
+	// Update user
 	// (POST /v1/users/{user_name})
 	PostV1UsersUserName(c *gin.Context, userName UserName)
 }

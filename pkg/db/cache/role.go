@@ -20,7 +20,7 @@ func NewRoleCache(cache *Cache, role db.Role) *RoleCache {
 }
 
 // GetAll retrieves all roles
-func (s *RoleCache) GetAll() (types.Roles, types.Error) {
+func (s *RoleCache) GetAll() (*types.Roles, types.Error) {
 
 	getAll := func() (interface{}, types.Error) {
 		return s.role.GetAll()
@@ -29,7 +29,7 @@ func (s *RoleCache) GetAll() (types.Roles, types.Error) {
 	if err := s.cache.fetchEntity(types.TypeRoleName, "", &roles, getAll); err != nil {
 		return nil, err
 	}
-	return roles, nil
+	return &roles, nil
 }
 
 // Get retrieves a role from database

@@ -50,7 +50,7 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 
 	var receivedKey Key
 	if err := c.ShouldBindJSON(&receivedKey); err != nil {
-		responseError(c, types.NewBadRequestError(err))
+		responseErrorBadRequest(c, err)
 		return
 	}
 	if receivedKey.ConsumerKey == nil ||
@@ -134,7 +134,7 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 	}
 	var receivedKey KeyUpdate
 	if err := c.ShouldBindJSON(&receivedKey); err != nil {
-		responseError(c, types.NewBadRequestError(err))
+		responseErrorBadRequest(c, err)
 		return
 	}
 	if receivedKey.ConsumerKey != nil && *receivedKey.ConsumerKey != string(consumerKey) {
