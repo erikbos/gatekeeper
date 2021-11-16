@@ -81,12 +81,16 @@ func (h *Handler) PostV1OrganizationsOrganizationName(c *gin.Context, organizati
 // (DELETE /v1/organizations/{organization_name})
 func (h *Handler) DeleteV1OrganizationsOrganizationName(c *gin.Context, organizationName OrganizationName) {
 
-	deletedOrganization, err := h.service.Organization.Delete(string(organizationName), h.who(c))
+	organization, err := h.service.Organization.Get(string(organizationName))
 	if err != nil {
 		responseError(c, err)
 		return
 	}
-	h.responseOrganization(c, &deletedOrganization)
+	if err := h.service.Organization.Delete(string(organizationName), h.who(c)); err != nil {
+		responseError(c, err)
+		return
+	}
+	h.responseOrganization(c, organization)
 }
 
 // API responses

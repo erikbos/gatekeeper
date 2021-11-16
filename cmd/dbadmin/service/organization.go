@@ -82,16 +82,15 @@ func (os *OrganizationService) updateOrganization(updatedOrganization *types.Org
 }
 
 // Delete deletes an organization
-func (os *OrganizationService) Delete(organizationName string, who Requester) (
-	deletedOrganization types.Organization, e types.Error) {
+func (os *OrganizationService) Delete(organizationName string, who Requester) (e types.Error) {
 
 	organization, err := os.db.Organization.Get(organizationName)
 	if err != nil {
-		return types.NullOrganization, err
+		return err
 	}
 	if err = os.db.Organization.Delete(organizationName); err != nil {
-		return types.NullOrganization, err
+		return err
 	}
 	os.changelog.Delete(organization, who)
-	return *organization, nil
+	return nil
 }

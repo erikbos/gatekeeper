@@ -81,8 +81,12 @@ func (h *Handler) PostV1RolesRoleName(c *gin.Context, roleName RoleName) {
 // (DELETE /v1/roles/{role_name})
 func (h *Handler) DeleteV1RolesRoleName(c *gin.Context, roleName RoleName) {
 
-	deletedRole, err := h.service.Role.Delete(string(roleName), h.who(c))
+	deletedRole, err := h.service.Role.Get(string(roleName))
 	if err != nil {
+		responseError(c, err)
+		return
+	}
+	if err := h.service.Role.Delete(string(roleName), h.who(c)); err != nil {
 		responseError(c, err)
 		return
 	}

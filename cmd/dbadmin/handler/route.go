@@ -42,12 +42,16 @@ func (h *Handler) PostV1Routes(c *gin.Context) {
 // (DELETE /v1/routes/{route_name})
 func (h *Handler) DeleteV1RoutesRouteName(c *gin.Context, routeName RouteName) {
 
-	route, err := h.service.Route.Delete(string(routeName), h.who(c))
+	route, err := h.service.Route.Get(string(routeName))
 	if err != nil {
 		responseError(c, err)
 		return
 	}
-	h.responseRoutes(c, &route)
+	if err := h.service.Route.Delete(string(routeName), h.who(c)); err != nil {
+		responseError(c, err)
+		return
+	}
+	h.responseRoutes(c, route)
 }
 
 // returns full details of one route
@@ -100,21 +104,35 @@ func (h *Handler) PostV1RoutesRouteNameAttributes(c *gin.Context, routeName Rout
 		responseErrorBadRequest(c, err)
 		return
 	}
-	attributes := fromAttributesRequest(receivedAttributes.Attribute)
-	if err := h.service.Route.UpdateAttributes(
-		string(routeName), attributes, h.who(c)); err != nil {
-		responseErrorBadRequest(c, err)
+	route, err := h.service.Route.Get(string(routeName))
+	if err != nil {
+		responseError(c, err)
 		return
 	}
-	h.responseAttributes(c, attributes)
+	route.Attributes = fromAttributesRequest(receivedAttributes.Attribute)
+	storedRoute, err := h.service.Route.Update(*route, h.who(c))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
+	h.responseAttributes(c, storedRoute.Attributes)
 }
 
 // deletes one attribute of an route
 // (DELETE /v1/routes/{route_name}/attributes/{attribute_name})
-func (h *Handler) DeleteV1RoutesRouteNameAttributesAttributeName(c *gin.Context, routeName RouteName, attributeName AttributeName) {
+func (h *Handler) DeleteV1RoutesRouteNameAttributesAttributeName(
+	c *gin.Context, routeName RouteName, attributeName AttributeName) {
 
-	oldValue, err := h.service.Route.DeleteAttribute(
-		string(routeName), string(attributeName), h.who(c))
+	route, err := h.service.Route.Get(string(routeName))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
+	oldValue, err := route.Attributes.Delete(string(attributeName))
+	if err != nil {
+		responseError(c, err)
+	}
+	_, err = h.service.Route.Update(*route, h.who(c))
 	if err != nil {
 		responseError(c, err)
 		return
@@ -124,7 +142,8 @@ func (h *Handler) DeleteV1RoutesRouteNameAttributesAttributeName(c *gin.Context,
 
 // returns one attribute of an route
 // (GET /v1/routes/{route_name}/attributes/{attribute_name})
-func (h *Handler) GetV1RoutesRouteNameAttributesAttributeName(c *gin.Context, routeName RouteName, attributeName AttributeName) {
+func (h *Handler) GetV1RoutesRouteNameAttributesAttributeName(
+	c *gin.Context, routeName RouteName, attributeName AttributeName) {
 
 	route, err := h.service.Route.Get(string(routeName))
 	if err != nil {
@@ -141,17 +160,26 @@ func (h *Handler) GetV1RoutesRouteNameAttributesAttributeName(c *gin.Context, ro
 
 // updates an attribute of an route
 // (POST /v1/routes/{route_name}/attributes/{attribute_name})
-func (h *Handler) PostV1RoutesRouteNameAttributesAttributeName(c *gin.Context, routeName RouteName, attributeName AttributeName) {
+func (h *Handler) PostV1RoutesRouteNameAttributesAttributeName(
+	c *gin.Context, routeName RouteName, attributeName AttributeName) {
 
 	var receivedValue Attribute
 	if err := c.ShouldBindJSON(&receivedValue); err != nil {
 		responseErrorBadRequest(c, err)
 		return
 	}
+	route, err := h.service.Route.Get(string(routeName))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
 	newAttribute := types.NewAttribute(string(attributeName), *receivedValue.Value)
-	if err := h.service.Route.UpdateAttribute(
-		string(routeName), *newAttribute, h.who(c)); err != nil {
-		responseErrorBadRequest(c, err)
+	if err := route.Attributes.Set(newAttribute); err != nil {
+		responseError(c, err)
+	}
+	_, err = h.service.Route.Update(*route, h.who(c))
+	if err != nil {
+		responseError(c, err)
 		return
 	}
 	h.responseAttributeUpdated(c, newAttribute)

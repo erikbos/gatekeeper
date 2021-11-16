@@ -26,13 +26,13 @@ func NewDeveloperApp(database *db.Database, c *Changelog) *DeveloperAppService {
 }
 
 // GetAll returns all developerApp apps
-func (das *DeveloperAppService) GetAll() (developerApps types.DeveloperApps, err types.Error) {
+func (das *DeveloperAppService) GetAll(organizationName string) (developerApps types.DeveloperApps, err types.Error) {
 
 	return das.db.DeveloperApp.GetAll()
 }
 
 // GetAll returns all developer apps of one develoepr
-func (das *DeveloperAppService) GetAllByEmail(developerEmail string) (developerApps types.DeveloperApps, err types.Error) {
+func (das *DeveloperAppService) GetAllByEmail(organizationName, developerEmail string) (developerApps types.DeveloperApps, err types.Error) {
 
 	developer, err := das.db.Developer.GetByEmail(developerEmail)
 	if err != nil {
@@ -43,39 +43,22 @@ func (das *DeveloperAppService) GetAllByEmail(developerEmail string) (developerA
 }
 
 // GetByName returns details of an developerApp
-func (das *DeveloperAppService) GetByName(developerAppName string) (developerApp *types.DeveloperApp, err types.Error) {
+func (das *DeveloperAppService) GetByName(organizationName, developerEmail, developerAppName string) (developerApp *types.DeveloperApp, err types.Error) {
 
+	if _, err := das.db.Developer.GetByEmail(developerEmail); err != nil {
+		return nil, err
+	}
 	return das.db.DeveloperApp.GetByName(developerAppName)
 }
 
 // GetByID returns details of an developerApp
-func (das *DeveloperAppService) GetByID(developerAppID string) (developerApp *types.DeveloperApp, err types.Error) {
+func (das *DeveloperAppService) GetByID(organizationName, developerAppID string) (developerApp *types.DeveloperApp, err types.Error) {
 
 	return das.db.DeveloperApp.GetByID(developerAppID)
 }
 
-// GetAttributes returns attributes of an developerApp
-func (das *DeveloperAppService) GetAttributes(developerAppName string) (attributes *types.Attributes, err types.Error) {
-
-	developerApp, err := das.GetByName(developerAppName)
-	if err != nil {
-		return nil, err
-	}
-	return &developerApp.Attributes, nil
-}
-
-// GetAttribute returns one particular attribute of an developerApp
-func (das *DeveloperAppService) GetAttribute(developerAppName, attributeName string) (value string, err types.Error) {
-
-	developerApp, err := das.GetByName(developerAppName)
-	if err != nil {
-		return "", err
-	}
-	return developerApp.Attributes.Get(attributeName)
-}
-
 // Create creates a new developerApp
-func (das *DeveloperAppService) Create(developerEmail string,
+func (das *DeveloperAppService) Create(organizationName, developerEmail string,
 	newDeveloperApp types.DeveloperApp, who Requester) (types.DeveloperApp, types.Error) {
 
 	developer, err := das.db.Developer.GetByEmail(developerEmail)
@@ -83,7 +66,7 @@ func (das *DeveloperAppService) Create(developerEmail string,
 		return types.NullDeveloperApp, err
 	}
 
-	existingDeveloperApp, err := das.GetByName(newDeveloperApp.Name)
+	existingDeveloperApp, err := das.GetByName(organizationName, developerEmail, newDeveloperApp.Name)
 	if err == nil {
 		return types.NullDeveloperApp, types.NewBadRequestError(
 			fmt.Errorf("developerApp '%s' already exists", existingDeveloperApp.Name))
@@ -113,7 +96,7 @@ func (das *DeveloperAppService) Create(developerEmail string,
 }
 
 // Update updates an existing developerApp
-func (das *DeveloperAppService) Update(updatedDeveloperApp types.DeveloperApp,
+func (das *DeveloperAppService) Update(organizationName, developerEmail string, updatedDeveloperApp types.DeveloperApp,
 	who Requester) (types.DeveloperApp, types.Error) {
 
 	currentDeveloperApp, err := das.db.DeveloperApp.GetByName(updatedDeveloperApp.Name)
@@ -135,64 +118,6 @@ func (das *DeveloperAppService) Update(updatedDeveloperApp types.DeveloperApp,
 	return updatedDeveloperApp, nil
 }
 
-// UpdateAttributes updates attributes of an developerApp
-func (das *DeveloperAppService) UpdateAttributes(developerAppName string,
-	receivedAttributes types.Attributes, who Requester) types.Error {
-
-	currentDeveloperApp, err := das.GetByName(developerAppName)
-	if err != nil {
-		return err
-	}
-	updatedDeveloperApp := copyDeveloperApp(*currentDeveloperApp)
-	updatedDeveloperApp.Attributes = receivedAttributes
-
-	if err = das.updateDeveloperApp(updatedDeveloperApp, who); err != nil {
-		return err
-	}
-	das.changelog.Update(currentDeveloperApp, updatedDeveloperApp, who)
-	return err
-}
-
-// UpdateAttribute update an attribute of developerApp
-func (das *DeveloperAppService) UpdateAttribute(developerAppName string,
-	attributeValue types.Attribute, who Requester) types.Error {
-
-	currentDeveloperApp, err := das.GetByName(developerAppName)
-	if err != nil {
-		return err
-	}
-	updatedDeveloperApp := copyDeveloperApp(*currentDeveloperApp)
-	if err := updatedDeveloperApp.Attributes.Set(attributeValue); err != nil {
-		return err
-	}
-
-	if err = das.updateDeveloperApp(updatedDeveloperApp, who); err != nil {
-		return err
-	}
-	das.changelog.Update(currentDeveloperApp, updatedDeveloperApp, who)
-	return err
-}
-
-// DeleteAttribute removes an attribute of an developerApp
-func (das *DeveloperAppService) DeleteAttribute(developerAppName,
-	attributeToDelete string, who Requester) (string, types.Error) {
-
-	currentDeveloperApp, err := das.GetByName(developerAppName)
-	if err != nil {
-		return "", err
-	}
-	updatedDeveloperApp := currentDeveloperApp
-	oldValue, err := updatedDeveloperApp.Attributes.Delete(attributeToDelete)
-	if err != nil {
-		return "", err
-	}
-	if err = das.updateDeveloperApp(updatedDeveloperApp, who); err != nil {
-		return "", err
-	}
-	das.changelog.Update(currentDeveloperApp, updatedDeveloperApp, who)
-	return oldValue, err
-}
-
 // updateDeveloperApp updates last-modified field(s) and updates developer app in database
 func (das *DeveloperAppService) updateDeveloperApp(updatedDeveloperApp *types.DeveloperApp, who Requester) types.Error {
 
@@ -203,17 +128,16 @@ func (das *DeveloperAppService) updateDeveloperApp(updatedDeveloperApp *types.De
 }
 
 // Delete deletes an developerApp
-func (das *DeveloperAppService) Delete(developerID, developerAppName string,
-	who Requester) (deletedDeveloperApp *types.DeveloperApp, e types.Error) {
+func (das *DeveloperAppService) Delete(organizationName, developerEmail, developerAppName string,
+	who Requester) (e types.Error) {
 
-	developer, err := das.db.Developer.GetByID(developerID)
+	developer, err := das.db.Developer.GetByEmail(developerEmail)
 	if err != nil {
-		return nil, err
+		return err
 	}
-
-	developerApp, err := das.GetByName(developerAppName)
+	developerApp, err := das.GetByName(organizationName, developerEmail, developerAppName)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	developerAppKeys, _ := das.db.Key.GetByDeveloperAppID(developerApp.AppID)
 	if len(developerAppKeys) != 0 {
@@ -221,10 +145,11 @@ func (das *DeveloperAppService) Delete(developerID, developerAppName string,
 			das.db.Key.DeleteByKey(k.ConsumerKey)
 		}
 	}
-
+	// TODO
+	// FIXME, this needs to move to db layer
 	err = das.db.DeveloperApp.DeleteByID(developerApp.AppID)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	// Remove app from the apps field in developer entity as well
 	for i := 0; i < len(developer.Apps); i++ {
@@ -235,29 +160,13 @@ func (das *DeveloperAppService) Delete(developerID, developerAppName string,
 	}
 	// FIXME	developer.LastmodifiedBy = h.GetSessionUser(c)
 	if err := das.db.Developer.Update(developer); err != nil {
-		return nil, err
+		return err
 	}
 	das.changelog.Delete(developerApp, who)
-	return developerApp, nil
+	return nil
 }
 
 // generateAppID creates unique primary key for developer app row
 func generateAppID() string {
 	return (uuid.New().String())
-}
-
-func copyDeveloperApp(d types.DeveloperApp) *types.DeveloperApp {
-
-	return &types.DeveloperApp{
-		AppID:          d.AppID,
-		Attributes:     d.Attributes,
-		CreatedAt:      d.CreatedAt,
-		CreatedBy:      d.CreatedBy,
-		DeveloperID:    d.DeveloperID,
-		DisplayName:    d.DisplayName,
-		LastModifiedBy: d.LastModifiedBy,
-		LastModifiedAt: d.LastModifiedAt,
-		Name:           d.Name,
-		Status:         d.Status,
-	}
 }

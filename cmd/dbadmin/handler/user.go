@@ -81,8 +81,12 @@ func (h *Handler) PostV1UsersUserName(c *gin.Context, userName UserName) {
 // (DELETE /v1/users/{user_name})
 func (h *Handler) DeleteV1UsersUserName(c *gin.Context, userName UserName) {
 
-	deletedUser, err := h.service.User.Delete(string(userName), h.who(c))
+	deletedUser, err := h.service.User.Get(string(userName))
 	if err != nil {
+		responseError(c, err)
+		return
+	}
+	if err := h.service.User.Delete(string(userName), h.who(c)); err != nil {
 		responseError(c, err)
 		return
 	}

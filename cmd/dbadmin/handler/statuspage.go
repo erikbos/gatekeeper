@@ -252,7 +252,9 @@ const templateHTTPForwarding string = `
 func (h *Handler) showDevelopersPage(c *gin.Context) {
 
 	// TODO
-	developers, err := h.service.Developer.GetAll("FIXME")
+	// FIXME
+	organizationName := "default"
+	developers, err := h.service.Developer.GetAll(organizationName)
 	if err != nil {
 		webadmin.JSONMessage(c, http.StatusServiceUnavailable, err)
 		return
@@ -269,7 +271,7 @@ func (h *Handler) showDevelopersPage(c *gin.Context) {
 		appDetails := make([]AppEntry, 0, 10)
 
 		for _, appName := range developer.Apps {
-			app, err := h.service.DeveloperApp.GetByName(appName)
+			app, err := h.service.DeveloperApp.GetByName(string(organizationName), developer.Email, appName)
 			if err != nil {
 				webadmin.JSONMessage(c, http.StatusServiceUnavailable, err)
 				return

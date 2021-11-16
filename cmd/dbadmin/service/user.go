@@ -100,17 +100,17 @@ func (us *UserService) updateUser(updatedUser *types.User, who Requester) types.
 }
 
 // Delete deletes an user
-func (us *UserService) Delete(userName string, who Requester) (deletedUser *types.User, e types.Error) {
+func (us *UserService) Delete(userName string, who Requester) (e types.Error) {
 
 	user, err := us.db.User.Get(userName)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if err = us.db.User.Delete(userName); err != nil {
-		return nil, err
+		return err
 	}
 	us.changelog.Delete(user, who)
-	return user, nil
+	return nil
 }
 
 // cryptPassword returns a bcrypt()ed password

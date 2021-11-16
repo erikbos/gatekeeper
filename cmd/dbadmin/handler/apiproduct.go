@@ -10,7 +10,8 @@ import (
 
 // returns all apiproducts
 // (GET /v1/organizations/{organization_name}/apiproducts)
-func (h *Handler) GetV1OrganizationsOrganizationNameApiproducts(c *gin.Context, organizationName OrganizationName, params GetV1OrganizationsOrganizationNameApiproductsParams) {
+func (h *Handler) GetV1OrganizationsOrganizationNameApiproducts(c *gin.Context,
+	organizationName OrganizationName, params GetV1OrganizationsOrganizationNameApiproductsParams) {
 
 	apiproducts, err := h.service.APIProduct.GetAll(string(organizationName))
 	if err != nil {
@@ -27,7 +28,8 @@ func (h *Handler) GetV1OrganizationsOrganizationNameApiproducts(c *gin.Context, 
 
 // creates a new apiproduct
 // (POST /v1/organizations/{organization_name}/apiproducts)
-func (h *Handler) PostV1OrganizationsOrganizationNameApiproducts(c *gin.Context, organizationName OrganizationName) {
+func (h *Handler) PostV1OrganizationsOrganizationNameApiproducts(c *gin.Context,
+	organizationName OrganizationName) {
 
 	var receivedAPIProduct APIProduct
 	if err := c.ShouldBindJSON(&receivedAPIProduct); err != nil {
@@ -45,19 +47,26 @@ func (h *Handler) PostV1OrganizationsOrganizationNameApiproducts(c *gin.Context,
 
 // deletes an apiproduct
 // (DELETE /v1/organizations/{organization_name}/apiproducts/{apiproduct_name})
-func (h *Handler) DeleteV1OrganizationsOrganizationNameApiproductsApiproductName(c *gin.Context, organizationName OrganizationName, apiproductName ApiproductName) {
+func (h *Handler) DeleteV1OrganizationsOrganizationNameApiproductsApiproductName(
+	c *gin.Context, organizationName OrganizationName, apiproductName ApiproductName) {
 
-	apiproduct, err := h.service.APIProduct.Delete(string(organizationName), string(apiproductName), h.who(c))
+	deletedApiproduct, err := h.service.APIProduct.Get(string(organizationName), string(apiproductName))
 	if err != nil {
 		responseError(c, err)
 		return
 	}
-	h.responseAPIproduct(c, apiproduct)
+	if err := h.service.APIProduct.Delete(
+		string(organizationName), string(apiproductName), h.who(c)); err != nil {
+		responseError(c, err)
+		return
+	}
+	h.responseAPIproduct(c, deletedApiproduct)
 }
 
 // returns full details of one apiproduct
 // (GET /v1/organizations/{organization_name}/apiproducts/{apiproduct_name})
-func (h *Handler) GetV1OrganizationsOrganizationNameApiproductsApiproductName(c *gin.Context, organizationName OrganizationName, apiproductName ApiproductName) {
+func (h *Handler) GetV1OrganizationsOrganizationNameApiproductsApiproductName(
+	c *gin.Context, organizationName OrganizationName, apiproductName ApiproductName) {
 
 	apiproduct, err := h.service.APIProduct.Get(string(organizationName), string(apiproductName))
 	if err != nil {
@@ -67,8 +76,11 @@ func (h *Handler) GetV1OrganizationsOrganizationNameApiproductsApiproductName(c 
 	h.responseAPIproduct(c, apiproduct)
 }
 
+// updates existing apiproduct
 // (POST /v1/organizations/{organization_name}/apiproducts/{apiproduct_name})
-func (h *Handler) PostV1OrganizationsOrganizationNameApiproductsApiproductName(c *gin.Context, organizationName OrganizationName, apiproductName ApiproductName, params PostV1OrganizationsOrganizationNameApiproductsApiproductNameParams) {
+func (h *Handler) PostV1OrganizationsOrganizationNameApiproductsApiproductName(
+	c *gin.Context, organizationName OrganizationName, apiproductName ApiproductName,
+	params PostV1OrganizationsOrganizationNameApiproductsApiproductNameParams) {
 
 	var receivedAPIProduct APIProduct
 	if err := c.ShouldBindJSON(&receivedAPIProduct); err != nil {
@@ -86,7 +98,8 @@ func (h *Handler) PostV1OrganizationsOrganizationNameApiproductsApiproductName(c
 
 // returns attributes of a apiproduct
 // (GET /v1/organizations/{organization_name}/apiproducts/{apiproduct_name}/attributes)
-func (h *Handler) GetV1OrganizationsOrganizationNameApiproductsApiproductNameAttributes(c *gin.Context, organizationName OrganizationName, apiproductName ApiproductName) {
+func (h *Handler) GetV1OrganizationsOrganizationNameApiproductsApiproductNameAttributes(
+	c *gin.Context, organizationName OrganizationName, apiproductName ApiproductName) {
 
 	apiproduct, err := h.service.APIProduct.Get(string(organizationName), string(apiproductName))
 	if err != nil {
@@ -98,28 +111,43 @@ func (h *Handler) GetV1OrganizationsOrganizationNameApiproductsApiproductNameAtt
 
 // replaces attributes of an apiproduct
 // (POST /v1/organizations/{organization_name}/apiproducts/{apiproduct_name}/attributes)
-func (h *Handler) PostV1OrganizationsOrganizationNameApiproductsApiproductNameAttributes(c *gin.Context, organizationName OrganizationName, apiproductName ApiproductName) {
+func (h *Handler) PostV1OrganizationsOrganizationNameApiproductsApiproductNameAttributes(
+	c *gin.Context, organizationName OrganizationName, apiproductName ApiproductName) {
 
 	var receivedAttributes Attributes
 	if err := c.ShouldBindJSON(&receivedAttributes); err != nil {
 		responseErrorBadRequest(c, err)
 		return
 	}
-	attributes := fromAttributesRequest(receivedAttributes.Attribute)
-	if err := h.service.APIProduct.UpdateAttributes(
-		string(organizationName), string(apiproductName), attributes, h.who(c)); err != nil {
+	apiproduct, err := h.service.APIProduct.Get(string(organizationName), string(apiproductName))
+	if err != nil {
 		responseError(c, err)
 		return
 	}
-	h.responseAttributes(c, attributes)
+	apiproduct.Attributes = fromAttributesRequest(receivedAttributes.Attribute)
+	storedAPIProduct, err := h.service.APIProduct.Update(string(organizationName), *apiproduct, h.who(c))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
+	h.responseAttributes(c, storedAPIProduct.Attributes)
 }
 
 // deletes one attribute of an apiproduct
 // (DELETE /v1/organizations/{organization_name}/apiproducts/{apiproduct_name}/attributes/{attribute_name})
-func (h *Handler) DeleteV1OrganizationsOrganizationNameApiproductsApiproductNameAttributesAttributeName(c *gin.Context, organizationName OrganizationName, apiproductName ApiproductName, attributeName AttributeName) {
+func (h *Handler) DeleteV1OrganizationsOrganizationNameApiproductsApiproductNameAttributesAttributeName(
+	c *gin.Context, organizationName OrganizationName, apiproductName ApiproductName, attributeName AttributeName) {
 
-	oldValue, err := h.service.APIProduct.DeleteAttribute(
-		string(organizationName), string(apiproductName), string(attributeName), h.who(c))
+	apiproduct, err := h.service.APIProduct.Get(string(organizationName), string(apiproductName))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
+	oldValue, err := apiproduct.Attributes.Delete(string(attributeName))
+	if err != nil {
+		responseError(c, err)
+	}
+	_, err = h.service.APIProduct.Update(string(organizationName), *apiproduct, h.who(c))
 	if err != nil {
 		responseError(c, err)
 		return
@@ -129,7 +157,8 @@ func (h *Handler) DeleteV1OrganizationsOrganizationNameApiproductsApiproductName
 
 // returns one attribute of an apiproduct
 // (GET /v1/organizations/{organization_name}/apiproducts/{apiproduct_name}/attributes/{attribute_name})
-func (h *Handler) GetV1OrganizationsOrganizationNameApiproductsApiproductNameAttributesAttributeName(c *gin.Context, organizationName OrganizationName, apiproductName ApiproductName, attributeName AttributeName) {
+func (h *Handler) GetV1OrganizationsOrganizationNameApiproductsApiproductNameAttributesAttributeName(
+	c *gin.Context, organizationName OrganizationName, apiproductName ApiproductName, attributeName AttributeName) {
 
 	apiproduct, err := h.service.APIProduct.Get(string(organizationName), string(apiproductName))
 	if err != nil {
@@ -146,17 +175,26 @@ func (h *Handler) GetV1OrganizationsOrganizationNameApiproductsApiproductNameAtt
 
 // updates an attribute of an apiproduct
 // (POST /v1/organizations/{organization_name}/apiproducts/{apiproduct_name}/attributes/{attribute_name})
-func (h *Handler) PostV1OrganizationsOrganizationNameApiproductsApiproductNameAttributesAttributeName(c *gin.Context, organizationName OrganizationName, apiproductName ApiproductName, attributeName AttributeName) {
+func (h *Handler) PostV1OrganizationsOrganizationNameApiproductsApiproductNameAttributesAttributeName(
+	c *gin.Context, organizationName OrganizationName, apiproductName ApiproductName, attributeName AttributeName) {
 
 	var receivedValue Attribute
 	if err := c.ShouldBindJSON(&receivedValue); err != nil {
 		responseErrorBadRequest(c, err)
 		return
 	}
+	apiproduct, err := h.service.APIProduct.Get(string(organizationName), string(apiproductName))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
 	newAttribute := types.NewAttribute(string(attributeName), *receivedValue.Value)
-	if err := h.service.APIProduct.UpdateAttribute(
-		string(organizationName), string(apiproductName), *newAttribute, h.who(c)); err != nil {
-		responseErrorBadRequest(c, err)
+	if err := apiproduct.Attributes.Set(newAttribute); err != nil {
+		responseError(c, err)
+	}
+	_, err = h.service.APIProduct.Update(string(organizationName), *apiproduct, h.who(c))
+	if err != nil {
+		responseError(c, err)
 		return
 	}
 	h.responseAttributeUpdated(c, newAttribute)

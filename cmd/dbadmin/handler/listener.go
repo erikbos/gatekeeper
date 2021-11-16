@@ -42,12 +42,16 @@ func (h *Handler) PostV1Listeners(c *gin.Context) {
 // (DELETE /v1/listeners/{listener_name})
 func (h *Handler) DeleteV1ListenersListenerName(c *gin.Context, listenerName ListenerName) {
 
-	listener, err := h.service.Listener.Delete(string(listenerName), h.who(c))
+	listener, err := h.service.Listener.Get(string(listenerName))
 	if err != nil {
 		responseError(c, err)
 		return
 	}
-	h.responseListeners(c, &listener)
+	if err := h.service.Listener.Delete(string(listenerName), h.who(c)); err != nil {
+		responseError(c, err)
+		return
+	}
+	h.responseListeners(c, listener)
 }
 
 // returns full details of one listener
@@ -62,6 +66,7 @@ func (h *Handler) GetV1ListenersListenerName(c *gin.Context, listenerName Listen
 	h.responseListeners(c, listener)
 }
 
+// Updates existing listener
 // (POST /v1/listeners/{listener_name})
 func (h *Handler) PostV1ListenersListenerName(c *gin.Context, listenerName ListenerName) {
 
@@ -100,21 +105,35 @@ func (h *Handler) PostV1ListenersListenerNameAttributes(c *gin.Context, listener
 		responseErrorBadRequest(c, err)
 		return
 	}
-	attributes := fromAttributesRequest(receivedAttributes.Attribute)
-	if err := h.service.Listener.UpdateAttributes(
-		string(listenerName), attributes, h.who(c)); err != nil {
-		responseErrorBadRequest(c, err)
+	listener, err := h.service.Listener.Get(string(listenerName))
+	if err != nil {
+		responseError(c, err)
 		return
 	}
-	h.responseAttributes(c, attributes)
+	listener.Attributes = fromAttributesRequest(receivedAttributes.Attribute)
+	storedListener, err := h.service.Listener.Update(*listener, h.who(c))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
+	h.responseAttributes(c, storedListener.Attributes)
 }
 
 // deletes one attribute of an listener
 // (DELETE /v1/listeners/{listener_name}/attributes/{attribute_name})
-func (h *Handler) DeleteV1ListenersListenerNameAttributesAttributeName(c *gin.Context, listenerName ListenerName, attributeName AttributeName) {
+func (h *Handler) DeleteV1ListenersListenerNameAttributesAttributeName(c *gin.Context,
+	listenerName ListenerName, attributeName AttributeName) {
 
-	oldValue, err := h.service.Listener.DeleteAttribute(
-		string(listenerName), string(attributeName), h.who(c))
+	listener, err := h.service.Listener.Get(string(listenerName))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
+	oldValue, err := listener.Attributes.Delete(string(attributeName))
+	if err != nil {
+		responseError(c, err)
+	}
+	_, err = h.service.Listener.Update(*listener, h.who(c))
 	if err != nil {
 		responseError(c, err)
 		return
@@ -124,7 +143,8 @@ func (h *Handler) DeleteV1ListenersListenerNameAttributesAttributeName(c *gin.Co
 
 // returns one attribute of an listener
 // (GET /v1/listeners/{listener_name}/attributes/{attribute_name})
-func (h *Handler) GetV1ListenersListenerNameAttributesAttributeName(c *gin.Context, listenerName ListenerName, attributeName AttributeName) {
+func (h *Handler) GetV1ListenersListenerNameAttributesAttributeName(c *gin.Context,
+	listenerName ListenerName, attributeName AttributeName) {
 
 	listener, err := h.service.Listener.Get(string(listenerName))
 	if err != nil {
@@ -141,18 +161,26 @@ func (h *Handler) GetV1ListenersListenerNameAttributesAttributeName(c *gin.Conte
 
 // updates an attribute of an listener
 // (POST /v1/listeners/{listener_name}/attributes/{attribute_name})
-func (h *Handler) PostV1ListenersListenerNameAttributesAttributeName(c *gin.Context, listenerName ListenerName, attributeName AttributeName) {
+func (h *Handler) PostV1ListenersListenerNameAttributesAttributeName(c *gin.Context,
+	listenerName ListenerName, attributeName AttributeName) {
 
 	var receivedValue Attribute
 	if err := c.ShouldBindJSON(&receivedValue); err != nil {
 		responseErrorBadRequest(c, err)
 		return
 	}
+	listener, err := h.service.Listener.Get(string(listenerName))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
 	newAttribute := types.NewAttribute(string(attributeName), *receivedValue.Value)
-
-	if err := h.service.Listener.UpdateAttribute(
-		string(listenerName), *newAttribute, h.who(c)); err != nil {
-		responseErrorBadRequest(c, err)
+	if err := listener.Attributes.Set(newAttribute); err != nil {
+		responseError(c, err)
+	}
+	_, err = h.service.Listener.Update(*listener, h.who(c))
+	if err != nil {
+		responseError(c, err)
 		return
 	}
 	h.responseAttributeUpdated(c, newAttribute)

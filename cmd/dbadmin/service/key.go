@@ -32,8 +32,17 @@ func (ks *KeyService) GetAll() (keys types.Keys, err types.Error) {
 }
 
 // Get returns details of an key
-func (ks *KeyService) Get(key string) (*types.Key, types.Error) {
+func (ks *KeyService) Get(organizationName, developerEmail, appName, key string) (*types.Key, types.Error) {
 
+	// TODO
+	// _, err := h.service.Developer.Get(organizationName, developerEmail)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// _, err = h.service.DeveloperApp.GetByName(organizationName, developerEmail, appName)
+	// if err != nil {
+	// 	return nil, err
+	// }
 	return ks.db.Key.GetByKey(&key)
 }
 
@@ -106,19 +115,17 @@ func (ks *KeyService) Update(consumerKey string, updatedKey *types.Key,
 }
 
 // Delete deletes a key
-func (ks *KeyService) Delete(consumerKey string,
-	who Requester) (deletedKey types.Key, e types.Error) {
+func (ks *KeyService) Delete(consumerKey string, who Requester) (e types.Error) {
 
 	key, err := ks.db.Key.GetByKey(&consumerKey)
 	if err != nil {
-		return types.NullDeveloperAppKey, err
+		return err
 	}
 	if err = ks.db.Key.DeleteByKey(consumerKey); err != nil {
-		return types.NullDeveloperAppKey, err
+		return err
 	}
 	ks.changelog.Delete(key, who)
-	return *key, nil
-
+	return nil
 }
 
 // generateConsumerKey returns a random string to be used as apikey (32 character base62)

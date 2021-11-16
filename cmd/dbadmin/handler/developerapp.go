@@ -15,9 +15,10 @@ var (
 
 // returns all developer apps
 // (GET /v1/organizations/{organization_name}/apps)
-func (h *Handler) GetV1OrganizationsOrganizationNameApps(c *gin.Context, organizationName OrganizationName, params GetV1OrganizationsOrganizationNameAppsParams) {
+func (h *Handler) GetV1OrganizationsOrganizationNameApps(c *gin.Context,
+	organizationName OrganizationName, params GetV1OrganizationsOrganizationNameAppsParams) {
 
-	apps, err := h.service.DeveloperApp.GetAll()
+	apps, err := h.service.DeveloperApp.GetAll(string(organizationName))
 	if err != nil {
 		responseError(c, err)
 		return
@@ -32,9 +33,10 @@ func (h *Handler) GetV1OrganizationsOrganizationNameApps(c *gin.Context, organiz
 
 // returns one app identified by appId of a developer
 // (GET /v1/organizations/{organization_name}/apps/{app_id})
-func (h *Handler) GetV1OrganizationsOrganizationNameAppsAppId(c *gin.Context, organizationName OrganizationName, appId AppId) {
+func (h *Handler) GetV1OrganizationsOrganizationNameAppsAppId(c *gin.Context,
+	organizationName OrganizationName, appId AppId) {
 
-	app, err := h.service.DeveloperApp.GetByID(string(appId))
+	app, err := h.service.DeveloperApp.GetByID(string(organizationName), string(appId))
 	if err != nil {
 		responseError(c, err)
 		return
@@ -49,9 +51,10 @@ func (h *Handler) GetV1OrganizationsOrganizationNameAppsAppId(c *gin.Context, or
 
 // returns names of all application of a developer
 // (GET /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps)
-func (h *Handler) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressApps(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, params GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsParams) {
+func (h *Handler) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressApps(c *gin.Context,
+	organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, params GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsParams) {
 
-	apps, err := h.service.DeveloperApp.GetAllByEmail(string(developerEmailaddress))
+	apps, err := h.service.DeveloperApp.GetAllByEmail(string(organizationName), string(developerEmailaddress))
 	if err != nil {
 		responseError(c, err)
 		return
@@ -61,20 +64,16 @@ func (h *Handler) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddr
 
 // creates a developer application
 // (POST /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps)
-func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressApps(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress) {
+func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressApps(c *gin.Context,
+	organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress) {
 
 	var receivedApplication Application
 	if err := c.ShouldBindJSON(&receivedApplication); err != nil {
 		responseErrorBadRequest(c, err)
 		return
 	}
-	_, err := h.service.Developer.Get(string(organizationName), string(developerEmailaddress))
-	if err != nil {
-		responseError(c, err)
-		return
-	}
 	newApp := fromApplication(receivedApplication)
-	createdApp, err := h.service.DeveloperApp.Create(string(developerEmailaddress), newApp, h.who(c))
+	createdApp, err := h.service.DeveloperApp.Create(string(organizationName), string(developerEmailaddress), newApp, h.who(c))
 	if err != nil {
 		responseError(c, err)
 		return
@@ -90,16 +89,16 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 }
 
 // (DELETE /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name})
-func (h *Handler) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName) {
+func (h *Handler) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppName(
+	c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName) {
 
-	developer, err := h.service.Developer.Get(string(organizationName), string(developerEmailaddress))
+	app, err := h.service.DeveloperApp.GetByName(string(organizationName), string(developerEmailaddress), string(appName))
 	if err != nil {
 		responseError(c, err)
 		return
 	}
-	app, err := h.service.DeveloperApp.Delete(
-		developer.DeveloperID, string(appName), h.who(c))
-	if err != nil {
+	if err := h.service.DeveloperApp.Delete(
+		string(organizationName), string(developerEmailaddress), string(appName), h.who(c)); err != nil {
 		responseError(c, err)
 		return
 	}
@@ -108,9 +107,10 @@ func (h *Handler) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmaila
 
 // returns one app identified by name of a developer
 // (GET /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name})
-func (h *Handler) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName) {
+func (h *Handler) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppName(
+	c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName) {
 
-	app, err := h.service.DeveloperApp.GetByName(string(appName))
+	app, err := h.service.DeveloperApp.GetByName(string(organizationName), string(developerEmailaddress), string(appName))
 	if err != nil {
 		responseError(c, err)
 		return
@@ -125,15 +125,18 @@ func (h *Handler) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddr
 
 // Updates an application
 // (POST /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name})
-func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, params PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameParams) {
+func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppName(
+	c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, params PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameParams) {
 
-	_, err := h.service.DeveloperApp.GetByName(string(appName))
+	_, err := h.service.DeveloperApp.GetByName(string(organizationName), string(developerEmailaddress), string(appName))
 	if err != nil {
 		responseError(c, err)
 		return
 	}
 	if params.Action != nil && c.ContentType() == "application/octet-stream" {
-		h.changeDeveloperAppStatus(c, string(developerEmailaddress), string(appName), string(*params.Action))
+		h.changeDeveloperAppStatus(c,
+			string(organizationName), string(developerEmailaddress), string(appName),
+			string(*params.Action))
 		return
 	}
 	var receivedApplication Application
@@ -142,7 +145,7 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 		return
 	}
 	updatedApp := fromApplication(receivedApplication)
-	storedApp, err := h.service.DeveloperApp.Update(updatedApp, h.who(c))
+	storedApp, err := h.service.DeveloperApp.Update(string(organizationName), string(developerEmailaddress), updatedApp, h.who(c))
 	if err != nil {
 		responseError(c, err)
 		return
@@ -151,9 +154,9 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 }
 
 // change status of application
-func (h *Handler) changeDeveloperAppStatus(c *gin.Context, developerEmailaddress, appName, requestedStatus string) {
+func (h *Handler) changeDeveloperAppStatus(c *gin.Context, organizationName, developerEmailaddress, appName, requestedStatus string) {
 
-	app, err := h.service.DeveloperApp.GetByName(string(appName))
+	app, err := h.service.DeveloperApp.GetByName(organizationName, developerEmailaddress, appName)
 	if err != nil {
 		responseError(c, err)
 		return
@@ -167,7 +170,7 @@ func (h *Handler) changeDeveloperAppStatus(c *gin.Context, developerEmailaddress
 		responseErrorBadRequest(c, errUnknownApplicationStatus)
 		return
 	}
-	_, err = h.service.DeveloperApp.Update(*app, h.who(c))
+	_, err = h.service.DeveloperApp.Update(organizationName, developerEmailaddress, *app, h.who(c))
 	if err != nil {
 		responseError(c, err)
 		return
@@ -177,14 +180,15 @@ func (h *Handler) changeDeveloperAppStatus(c *gin.Context, developerEmailaddress
 
 // updates an application and creates a new key if apiproducts provided
 // (PUT /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name})
-func (h *Handler) PutV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, params PutV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameParams) {
+func (h *Handler) PutV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppName(
+	c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, params PutV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameParams) {
 
 	var receivedApplicationUpdate ApplicationUpdate
 	if err := c.ShouldBindJSON(&receivedApplicationUpdate); err != nil {
 		responseErrorBadRequest(c, err)
 		return
 	}
-	app, err := h.service.DeveloperApp.GetByName(string(appName))
+	app, err := h.service.DeveloperApp.GetByName(string(organizationName), string(developerEmailaddress), string(appName))
 	if err != nil {
 		responseError(c, err)
 		return
@@ -217,7 +221,7 @@ func (h *Handler) PutV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddr
 		applicationChanged = true
 	}
 	if applicationChanged {
-		_, err = h.service.DeveloperApp.Update(*app, h.who(c))
+		_, err = h.service.DeveloperApp.Update(string(organizationName), string(developerEmailaddress), *app, h.who(c))
 		if err != nil {
 			responseError(c, err)
 			return
@@ -233,9 +237,10 @@ func (h *Handler) PutV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddr
 
 // returns attributes of an application
 // (GET /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/attributes)
-func (h *Handler) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributes(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName) {
+func (h *Handler) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributes(
+	c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName) {
 
-	app, err := h.service.DeveloperApp.GetByName(string(appName))
+	app, err := h.service.DeveloperApp.GetByName(string(organizationName), string(developerEmailaddress), string(appName))
 	if err != nil {
 		responseError(c, err)
 		return
@@ -243,29 +248,45 @@ func (h *Handler) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddr
 	h.responseAttributes(c, app.Attributes)
 }
 
+// replaces attributes of an application
 // (POST /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/attributes)
-func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributes(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName) {
+func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributes(
+	c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName) {
 
 	var receivedAttributes Attributes
 	if err := c.ShouldBindJSON(&receivedAttributes); err != nil {
 		responseErrorBadRequest(c, err)
 		return
 	}
-	attributes := fromAttributesRequest(receivedAttributes.Attribute)
-	if err := h.service.DeveloperApp.UpdateAttributes(
-		string(appName), attributes, h.who(c)); err != nil {
-		responseErrorBadRequest(c, err)
+	app, err := h.service.DeveloperApp.GetByName(string(organizationName), string(developerEmailaddress), string(appName))
+	if err != nil {
+		responseError(c, err)
 		return
 	}
-	h.responseAttributes(c, attributes)
+	app.Attributes = fromAttributesRequest(receivedAttributes.Attribute)
+	storedDeveloper, err := h.service.DeveloperApp.Update(string(organizationName), string(developerEmailaddress), *app, h.who(c))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
+	h.responseAttributes(c, storedDeveloper.Attributes)
 }
 
 // deletes one attriubte of an application
 // (DELETE /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/attributes/{attribute_name})´
-func (h *Handler) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesAttributeName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, attributeName AttributeName) {
+func (h *Handler) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesAttributeName(
+	c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, attributeName AttributeName) {
 
-	oldValue, err := h.service.DeveloperApp.DeleteAttribute(
-		string(appName), string(attributeName), h.who(c))
+	app, err := h.service.DeveloperApp.GetByName(string(organizationName), string(developerEmailaddress), string(appName))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
+	oldValue, err := app.Attributes.Delete(string(attributeName))
+	if err != nil {
+		responseError(c, err)
+	}
+	_, err = h.service.DeveloperApp.Update(string(organizationName), string(developerEmailaddress), *app, h.who(c))
 	if err != nil {
 		responseError(c, err)
 		return
@@ -275,9 +296,10 @@ func (h *Handler) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmaila
 
 // returns one attribute of an application
 // (GET /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/attributes/{attribute_name})
-func (h *Handler) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesAttributeName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, attributeName AttributeName) {
+func (h *Handler) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesAttributeName(
+	c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, attributeName AttributeName) {
 
-	app, err := h.service.DeveloperApp.GetByName(string(appName))
+	app, err := h.service.DeveloperApp.GetByName(string(organizationName), string(developerEmailaddress), string(appName))
 	if err != nil {
 		responseError(c, err)
 		return
@@ -292,17 +314,26 @@ func (h *Handler) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddr
 
 // updates an attribute of an application
 // (POST /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/attributes/{attribute_name})
-func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesAttributeName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, attributeName AttributeName) {
+func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameAttributesAttributeName(
+	c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, attributeName AttributeName) {
 
 	var receivedValue Attribute
 	if err := c.ShouldBindJSON(&receivedValue); err != nil {
 		responseErrorBadRequest(c, err)
 		return
 	}
+	app, err := h.service.DeveloperApp.GetByName(string(organizationName), string(developerEmailaddress), string(appName))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
 	newAttribute := types.NewAttribute(string(attributeName), *receivedValue.Value)
-	if err := h.service.DeveloperApp.UpdateAttribute(
-		string(appName), *newAttribute, h.who(c)); err != nil {
-		responseErrorBadRequest(c, err)
+	if err := app.Attributes.Set(newAttribute); err != nil {
+		responseError(c, err)
+	}
+	_, err = h.service.DeveloperApp.Update(string(organizationName), string(developerEmailaddress), *app, h.who(c))
+	if err != nil {
+		responseError(c, err)
 		return
 	}
 	h.responseAttributeUpdated(c, newAttribute)

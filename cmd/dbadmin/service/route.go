@@ -93,67 +93,6 @@ func (rs *RouteService) Update(updatedRoute types.Route,
 	return updatedRoute, nil
 }
 
-// UpdateAttributes updates attributes of an route
-func (rs *RouteService) UpdateAttributes(routeName string,
-	receivedAttributes types.Attributes, who Requester) types.Error {
-
-	currentRoute, err := rs.db.Route.Get(routeName)
-	if err != nil {
-		return types.NewItemNotFoundError(err)
-	}
-	updatedRoute := currentRoute
-	if err = updatedRoute.Attributes.SetMultiple(receivedAttributes); err != nil {
-		return err
-	}
-
-	if err = rs.updateRoute(updatedRoute, who); err != nil {
-		return err
-	}
-	rs.changelog.Update(currentRoute, updatedRoute, who)
-	return nil
-}
-
-// UpdateAttribute update an attribute of developer
-func (rs *RouteService) UpdateAttribute(routeName string,
-	attributeValue types.Attribute, who Requester) types.Error {
-
-	currentRoute, err := rs.db.Route.Get(routeName)
-	if err != nil {
-		return err
-	}
-	updatedRoute := currentRoute
-	if err := updatedRoute.Attributes.Set(attributeValue); err != nil {
-		return err
-	}
-
-	if err = rs.updateRoute(updatedRoute, who); err != nil {
-		return err
-	}
-	rs.changelog.Update(currentRoute, updatedRoute, who)
-	return nil
-}
-
-// DeleteAttribute removes an attribute of an route
-func (rs *RouteService) DeleteAttribute(routeName, attributeToDelete string,
-	who Requester) (string, types.Error) {
-
-	currentRoute, err := rs.db.Route.Get(routeName)
-	if err != nil {
-		return "", err
-	}
-	updatedRoute := currentRoute
-	oldValue, err := updatedRoute.Attributes.Delete(attributeToDelete)
-	if err != nil {
-		return "", err
-	}
-
-	if err = rs.updateRoute(updatedRoute, who); err != nil {
-		return "", err
-	}
-	rs.changelog.Update(currentRoute, updatedRoute, who)
-	return oldValue, nil
-}
-
 // updateRoute updates last-modified field(s) and updates route in database
 func (rs *RouteService) updateRoute(updatedRoute *types.Route, who Requester) types.Error {
 
@@ -164,17 +103,16 @@ func (rs *RouteService) updateRoute(updatedRoute *types.Route, who Requester) ty
 }
 
 // Delete deletes an route
-func (rs *RouteService) Delete(routeName string, who Requester) (
-	deletedRoute types.Route, e types.Error) {
+func (rs *RouteService) Delete(routeName string, who Requester) (e types.Error) {
 
 	route, err := rs.db.Route.Get(routeName)
 	if err != nil {
-		return types.NullRoute, err
+		return err
 	}
 	err = rs.db.Route.Delete(routeName)
 	if err != nil {
-		return types.NullRoute, err
+		return err
 	}
 	rs.changelog.Delete(route, who)
-	return *route, nil
+	return nil
 }

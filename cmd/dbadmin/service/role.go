@@ -81,23 +81,23 @@ func (rs *RoleService) updateRole(updatedRole *types.Role, who Requester) types.
 }
 
 // Delete deletes an role
-func (rs *RoleService) Delete(roleName string, who Requester) (deletedRole *types.Role, e types.Error) {
+func (rs *RoleService) Delete(roleName string, who Requester) (e types.Error) {
 
 	role, err := rs.db.Role.Get(roleName)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	userWithRoleCount := rs.countUserWithRole(roleName)
 	if userWithRoleCount > 0 {
-		return nil, types.NewForbiddenError(
+		return types.NewForbiddenError(
 			fmt.Errorf("cannot delete role '%s' still assigned to %d users",
 				roleName, userWithRoleCount))
 	}
 	if err = rs.db.Role.Delete(roleName); err != nil {
-		return nil, err
+		return err
 	}
 	rs.Changelog.Delete(role, who)
-	return role, nil
+	return nil
 }
 
 // counts number of users with a specific role

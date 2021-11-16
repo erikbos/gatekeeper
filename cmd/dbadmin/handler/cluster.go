@@ -42,12 +42,16 @@ func (h *Handler) PostV1Clusters(c *gin.Context) {
 // (DELETE /v1/clusters/{cluster_name})
 func (h *Handler) DeleteV1ClustersClusterName(c *gin.Context, clusterName ClusterName) {
 
-	cluster, err := h.service.Cluster.Delete(string(clusterName), h.who(c))
+	cluster, err := h.service.Cluster.Get(string(clusterName))
 	if err != nil {
 		responseError(c, err)
 		return
 	}
-	h.responseClusters(c, &cluster)
+	if err := h.service.Cluster.Delete(string(clusterName), h.who(c)); err != nil {
+		responseError(c, err)
+		return
+	}
+	h.responseClusters(c, cluster)
 }
 
 // returns full details of one cluster
@@ -100,21 +104,35 @@ func (h *Handler) PostV1ClustersClusterNameAttributes(c *gin.Context, clusterNam
 		responseErrorBadRequest(c, err)
 		return
 	}
-	attributes := fromAttributesRequest(receivedAttributes.Attribute)
-	if err := h.service.Cluster.UpdateAttributes(
-		string(clusterName), attributes, h.who(c)); err != nil {
+	cluster, err := h.service.Cluster.Get(string(clusterName))
+	if err != nil {
 		responseError(c, err)
 		return
 	}
-	h.responseAttributes(c, attributes)
+	cluster.Attributes = fromAttributesRequest(receivedAttributes.Attribute)
+	storedCluster, err := h.service.Cluster.Update(*cluster, h.who(c))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
+	h.responseAttributes(c, storedCluster.Attributes)
 }
 
 // deletes one attribute of an cluster
 // (DELETE /v1/clusters/{cluster_name}/attributes/{attribute_name})
-func (h *Handler) DeleteV1ClustersClusterNameAttributesAttributeName(c *gin.Context, clusterName ClusterName, attributeName AttributeName) {
+func (h *Handler) DeleteV1ClustersClusterNameAttributesAttributeName(
+	c *gin.Context, clusterName ClusterName, attributeName AttributeName) {
 
-	oldValue, err := h.service.Cluster.DeleteAttribute(
-		string(clusterName), string(attributeName), h.who(c))
+	cluster, err := h.service.Cluster.Get(string(clusterName))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
+	oldValue, err := cluster.Attributes.Delete(string(attributeName))
+	if err != nil {
+		responseError(c, err)
+	}
+	_, err = h.service.Cluster.Update(*cluster, h.who(c))
 	if err != nil {
 		responseError(c, err)
 		return
@@ -124,7 +142,8 @@ func (h *Handler) DeleteV1ClustersClusterNameAttributesAttributeName(c *gin.Cont
 
 // returns one attribute of an cluster
 // (GET /v1/clusters/{cluster_name}/attributes/{attribute_name})
-func (h *Handler) GetV1ClustersClusterNameAttributesAttributeName(c *gin.Context, clusterName ClusterName, attributeName AttributeName) {
+func (h *Handler) GetV1ClustersClusterNameAttributesAttributeName(
+	c *gin.Context, clusterName ClusterName, attributeName AttributeName) {
 
 	cluster, err := h.service.Cluster.Get(string(clusterName))
 	if err != nil {
@@ -141,17 +160,26 @@ func (h *Handler) GetV1ClustersClusterNameAttributesAttributeName(c *gin.Context
 
 // updates an attribute of an cluster
 // (POST /v1/clusters/{cluster_name}/attributes/{attribute_name})
-func (h *Handler) PostV1ClustersClusterNameAttributesAttributeName(c *gin.Context, clusterName ClusterName, attributeName AttributeName) {
+func (h *Handler) PostV1ClustersClusterNameAttributesAttributeName(
+	c *gin.Context, clusterName ClusterName, attributeName AttributeName) {
 
 	var receivedValue Attribute
 	if err := c.ShouldBindJSON(&receivedValue); err != nil {
 		responseErrorBadRequest(c, err)
 		return
 	}
+	cluster, err := h.service.Cluster.Get(string(clusterName))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
 	newAttribute := types.NewAttribute(string(attributeName), *receivedValue.Value)
-	if err := h.service.Cluster.UpdateAttribute(
-		string(clusterName), *newAttribute, h.who(c)); err != nil {
-		responseErrorBadRequest(c, err)
+	if err := cluster.Attributes.Set(newAttribute); err != nil {
+		responseError(c, err)
+	}
+	_, err = h.service.Cluster.Update(*cluster, h.who(c))
+	if err != nil {
+		responseError(c, err)
 		return
 	}
 	h.responseAttributeUpdated(c, newAttribute)

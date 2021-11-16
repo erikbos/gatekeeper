@@ -95,7 +95,7 @@ func (attributes *Attributes) GetAsDuration(name string, defaultDuration time.Du
 }
 
 // Set updates or adds attribute in slice. Returns old value if attribute already existed.
-func (attributes *Attributes) Set(attributeValue Attribute) Error {
+func (attributes *Attributes) Set(attributeValue *Attribute) Error {
 
 	if len(*attributes) > MaximumNumberofAttributesAllowed {
 		return errTooManyAttributes
@@ -108,14 +108,14 @@ func (attributes *Attributes) Set(attributeValue Attribute) Error {
 		// In case attribute exists append new value
 		if oldAttribute.Name == attributeValue.Name {
 			attributePresent = true
-			updatedAttributes = append(updatedAttributes, attributeValue)
+			updatedAttributes = append(updatedAttributes, *attributeValue)
 		} else {
 			updatedAttributes = append(updatedAttributes, oldAttribute)
 		}
 	}
 	// In case it is a new attribute append it
 	if !attributePresent {
-		updatedAttributes = append(updatedAttributes, attributeValue)
+		updatedAttributes = append(updatedAttributes, *attributeValue)
 	}
 	// Overwrite existing slice with new slice
 	*attributes = updatedAttributes
@@ -127,7 +127,7 @@ func (attributes *Attributes) Set(attributeValue Attribute) Error {
 func (attributes *Attributes) SetMultiple(attributeValues Attributes) Error {
 
 	for _, attribute := range attributeValues {
-		if err := attributes.Set(attribute); err != nil {
+		if err := attributes.Set(&attribute); err != nil {
 			return err
 		}
 	}

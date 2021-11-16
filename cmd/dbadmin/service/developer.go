@@ -41,26 +41,6 @@ func (ds *DeveloperService) Get(organizationName, developerName string) (develop
 	return ds.db.Developer.GetByID(developerName)
 }
 
-// GetAttributes returns attributes of an developer
-func (ds *DeveloperService) GetAttributes(organizationName, developerName string) (attributes *types.Attributes, err types.Error) {
-
-	developer, err := ds.Get(organizationName, developerName)
-	if err != nil {
-		return nil, err
-	}
-	return &developer.Attributes, nil
-}
-
-// GetAttribute returns one particular attribute of an developer
-func (ds *DeveloperService) GetAttribute(organizationName, developerName, attributeName string) (value string, err types.Error) {
-
-	developer, err := ds.Get(organizationName, developerName)
-	if err != nil {
-		return "", err
-	}
-	return developer.Attributes.Get(attributeName)
-}
-
 // Create creates a new developer
 func (ds *DeveloperService) Create(organizationName string, newDeveloper types.Developer,
 	who Requester) (types.Developer, types.Error) {
@@ -104,64 +84,6 @@ func (ds *DeveloperService) Update(organizationName, developerEmail string, upda
 	return updatedDeveloper, nil
 }
 
-// UpdateAttributes updates attributes of an developer
-func (ds *DeveloperService) UpdateAttributes(organizationName, developerName string,
-	receivedAttributes types.Attributes, who Requester) types.Error {
-
-	currentDeveloper, err := ds.Get(organizationName, developerName)
-	if err != nil {
-		return err
-	}
-	updatedDeveloper := copyDeveloper(*currentDeveloper)
-	updatedDeveloper.Attributes = receivedAttributes
-	if err = ds.updateDeveloper(updatedDeveloper, who); err != nil {
-		return err
-	}
-	ds.changelog.Update(currentDeveloper, updatedDeveloper, who)
-	return nil
-}
-
-// UpdateAttribute update an attribute of developer
-func (ds *DeveloperService) UpdateAttribute(organizationName, developerName string,
-	attributeValue types.Attribute, who Requester) types.Error {
-
-	currentDeveloper, err := ds.Get(organizationName, developerName)
-	if err != nil {
-		return err
-	}
-	updatedDeveloper := copyDeveloper(*currentDeveloper)
-	if err := updatedDeveloper.Attributes.Set(attributeValue); err != nil {
-		return err
-	}
-
-	if err = ds.updateDeveloper(updatedDeveloper, who); err != nil {
-		return err
-	}
-	ds.changelog.Update(currentDeveloper, updatedDeveloper, who)
-	return err
-}
-
-// DeleteAttribute removes an attribute of an developer
-func (ds *DeveloperService) DeleteAttribute(
-	organizationName, developerName, attributeToDelete string, who Requester) (string, types.Error) {
-
-	currentDeveloper, err := ds.Get(organizationName, developerName)
-	if err != nil {
-		return "", err
-	}
-	updatedDeveloper := copyDeveloper(*currentDeveloper)
-	oldValue, err := updatedDeveloper.Attributes.Delete(attributeToDelete)
-	if err != nil {
-		return "", err
-	}
-
-	if err = ds.updateDeveloper(updatedDeveloper, who); err != nil {
-		return "", err
-	}
-	ds.changelog.Update(currentDeveloper, updatedDeveloper, who)
-	return oldValue, nil
-}
-
 // updateDeveloper updates last-modified field(s) and updates developer in database
 func (ds *DeveloperService) updateDeveloper(updatedDeveloper *types.Developer, who Requester) types.Error {
 
@@ -172,48 +94,29 @@ func (ds *DeveloperService) updateDeveloper(updatedDeveloper *types.Developer, w
 }
 
 // Delete deletes an developer
-func (ds *DeveloperService) Delete(organizationName, developerName string,
-	who Requester) (deletedDeveloper *types.Developer, e types.Error) {
+func (ds *DeveloperService) Delete(organizationName, developerName string, who Requester) (e types.Error) {
 
 	developer, err := ds.Get(organizationName, developerName)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	appCountOfDeveloper, err := ds.db.DeveloperApp.GetCountByDeveloperID(developer.DeveloperID)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if appCountOfDeveloper > 0 {
-		return &types.NullDeveloper, types.NewBadRequestError(
+		return types.NewBadRequestError(
 			fmt.Errorf("cannot delete developer '%s' with %d active applications",
 				developer.Email, appCountOfDeveloper))
 	}
 	if err := ds.db.Developer.DeleteByID(developer.DeveloperID); err != nil {
-		return nil, err
+		return err
 	}
 	ds.changelog.Delete(developer, who)
-	return developer, nil
+	return nil
 }
 
 // generateDeveloperID generates a DeveloperID
 func generateDeveloperID(developer string) string {
 	return uniuri.New()
-}
-
-func copyDeveloper(d types.Developer) *types.Developer {
-
-	return &types.Developer{
-		Apps:           d.Apps,
-		Attributes:     d.Attributes,
-		CreatedAt:      d.CreatedAt,
-		CreatedBy:      d.CreatedBy,
-		DeveloperID:    d.DeveloperID,
-		Email:          d.Email,
-		FirstName:      d.FirstName,
-		LastModifiedBy: d.LastModifiedBy,
-		LastModifiedAt: d.LastModifiedAt,
-		LastName:       d.LastName,
-		Status:         d.Status,
-		UserName:       d.UserName,
-	}
 }
