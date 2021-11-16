@@ -842,6 +842,112 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorMessage'
 
+  /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/keys/{consumer_key}/attributes:
+    get:
+      summary: Retrieve key attributes
+      tags:
+        - Key
+      parameters:
+        - $ref: '#/components/parameters/organization_name'
+        - $ref: '#/components/parameters/developer_emailaddress'
+        - $ref: '#/components/parameters/app_name'
+        - $ref: '#/components/parameters/consumer_key'
+      responses:
+        '200':
+          $ref: '#/components/responses/AttributesRetrieved'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: key to replace all attributes from does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+    post:
+      summary: Replace key attributes
+      tags:
+        - Key
+      parameters:
+        - $ref: '#/components/parameters/organization_name'
+        - $ref: '#/components/parameters/developer_emailaddress'
+        - $ref: '#/components/parameters/app_name'
+        - $ref: '#/components/parameters/consumer_key'
+      requestBody:
+        description: Details of new attributes.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Attributes'
+      responses:
+        '200':
+          $ref: '#/components/responses/AttributesUpdated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: Key to update does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+  /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/keys/{consumer_key}/attributes/{attribute_name}:
+    get:
+      summary: Retrieve key attribute
+      tags:
+        - Key
+      parameters:
+        - $ref: '#/components/parameters/organization_name'
+        - $ref: '#/components/parameters/developer_emailaddress'
+        - $ref: '#/components/parameters/app_name'
+        - $ref: '#/components/parameters/consumer_key'
+        - $ref: '#/components/parameters/attribute_name'
+      responses:
+        '200':
+          $ref: '#/components/responses/AttributeRetrieved'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/AttributeDoesNotExist'
+    post:
+      summary: Update key attribute
+      tags:
+        - Key
+      parameters:
+        - $ref: '#/components/parameters/organization_name'
+        - $ref: '#/components/parameters/developer_emailaddress'
+        - $ref: '#/components/parameters/app_name'
+        - $ref: '#/components/parameters/consumer_key'
+        - $ref: '#/components/parameters/attribute_name'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Attribute'
+      responses:
+        '200':
+          $ref: '#/components/responses/AttributeUpdated'
+        '201':
+          $ref: '#/components/responses/AttributeCreated'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/AttributeDoesNotExist'
+    delete:
+      summary: Delete key attribute
+      tags:
+        - Key
+      parameters:
+        - $ref: '#/components/parameters/organization_name'
+        - $ref: '#/components/parameters/developer_emailaddress'
+        - $ref: '#/components/parameters/app_name'
+        - $ref: '#/components/parameters/consumer_key'
+        - $ref: '#/components/parameters/attribute_name'
+      responses:
+        '200':
+          $ref: '#/components/responses/AttributeDeleted'
+        '404':
+          $ref: '#/components/responses/AttributeDoesNotExist'
+
   /v1/organizations/{organization_name}/apps:
     get:
       summary: Retrieve applications

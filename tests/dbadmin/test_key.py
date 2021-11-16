@@ -8,6 +8,7 @@ from developer import Developer
 from developerapp import Application
 from key import Key
 from apiproduct import APIproduct
+from attribute import run_attribute_tests
 
 config = get_config()
 session = get_http_session(config)
@@ -332,6 +333,31 @@ def test_key_api_product_change_status():
     application_api.delete_positive(created_application['name'])
     developer_api.delete_positive(created_developer['email'])
 
+
+def test_key_attributes():
+    """
+    Test create, read, update, delete attributes of key
+    """
+    developer_api = Developer(config, session)
+    created_developer = developer_api.create_positive()
+
+    application_api = Application(config, session, created_developer['email'])
+    created_application = application_api.create_new()
+
+    key_api = Key(config, session, created_developer['email'], created_application['name'])
+
+    consumer_key = created_application['credentials'][0]['consumerKey']
+
+    application_attributes_url = (application_api.application_url
+                                  + '/' + created_application['name']
+                                  + '/keys/' + consumer_key
+                                  + '/attributes')
+
+    run_attribute_tests(config, session, application_attributes_url)
+
+    # clean up
+    application_api.delete_positive(created_application['name'])
+    developer_api.delete_positive(created_developer['email'])
 
 
 # test keyexpiresin from developerapp

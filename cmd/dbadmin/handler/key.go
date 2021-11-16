@@ -203,6 +203,7 @@ func (h *Handler) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmaila
 
 }
 
+// Update key apiproduct
 // (POST /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/keys/{consumer_key}/apiproducts/{apiproduct_name})
 func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKeyApiproductsApiproductName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, consumerKey ConsumerKey, apiproductName ApiproductName, params PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKeyApiproductsApiproductNameParams) {
 
@@ -249,6 +250,105 @@ func (h *Handler) changeKeyApiProductStatus(c *gin.Context, organizationName,
 		return
 	}
 	c.Status(http.StatusNoContent)
+}
+
+// Retrieve key attributes
+// (GET /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/keys/{consumer_key}/attributes)
+func (h *Handler) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKeyAttributes(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, consumerKey ConsumerKey) {
+
+	key, err := h.service.Key.Get(string(organizationName), string(developerEmailaddress), string(appName), string(consumerKey))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
+	h.responseAttributes(c, key.Attributes)
+}
+
+// Replace key attributes
+// (POST /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/keys/{consumer_key}/attributes)
+func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKeyAttributes(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, consumerKey ConsumerKey) {
+
+	var receivedAttributes Attributes
+	if err := c.ShouldBindJSON(&receivedAttributes); err != nil {
+		responseErrorBadRequest(c, err)
+		return
+	}
+	key, err := h.service.Key.Get(string(organizationName), string(developerEmailaddress), string(appName), string(consumerKey))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
+	key.Attributes = fromAttributesRequest(receivedAttributes.Attribute)
+	storedKey, err := h.service.Key.Update(key.ConsumerKey, key, h.who(c))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
+	h.responseAttributes(c, storedKey.Attributes)
+}
+
+// Delete key attribute
+// (DELETE /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/keys/{consumer_key}/attributes/{attribute_name})
+func (h *Handler) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKeyAttributesAttributeName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, consumerKey ConsumerKey, attributeName AttributeName) {
+
+	key, err := h.service.Key.Get(string(organizationName), string(developerEmailaddress), string(appName), string(consumerKey))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
+	oldValue, err := key.Attributes.Delete(string(attributeName))
+	if err != nil {
+		responseError(c, err)
+	}
+	_, err = h.service.Key.Update(key.ConsumerKey, key, h.who(c))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
+	h.responseAttributeDeleted(c, types.NewAttribute(string(attributeName), oldValue))
+}
+
+// Retrieve key attribute
+// (GET /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/keys/{consumer_key}/attributes/{attribute_name})
+func (h *Handler) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKeyAttributesAttributeName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, consumerKey ConsumerKey, attributeName AttributeName) {
+
+	key, err := h.service.Key.Get(string(organizationName), string(developerEmailaddress), string(appName), string(consumerKey))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
+	attributeValue, err := key.Attributes.Get(string(attributeName))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
+	h.responseAttributeRetrieved(c, types.NewAttribute(string(attributeName), attributeValue))
+}
+
+// Update key attribute
+// (POST /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/keys/{consumer_key}/attributes/{attribute_name})
+func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKeyAttributesAttributeName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, consumerKey ConsumerKey, attributeName AttributeName) {
+
+	var receivedValue Attribute
+	if err := c.ShouldBindJSON(&receivedValue); err != nil {
+		responseErrorBadRequest(c, err)
+		return
+	}
+	key, err := h.service.Key.Get(string(organizationName), string(developerEmailaddress), string(appName), string(consumerKey))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
+	newAttribute := types.NewAttribute(string(attributeName), *receivedValue.Value)
+	if err := key.Attributes.Set(newAttribute); err != nil {
+		responseError(c, err)
+	}
+	_, err = h.service.Key.Update(key.ConsumerKey, key, h.who(c))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
+	h.responseAttributeUpdated(c, newAttribute)
 }
 
 // API responses
