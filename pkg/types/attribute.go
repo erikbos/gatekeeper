@@ -15,8 +15,8 @@ import (
 // https://godoc.org/github.com/go-playground/validator
 type (
 	Attribute struct {
-		// Attribute name, minimum required length is 4
-		Name string `binding:"required,min=4"`
+		// Attribute name, minimum required length is 1
+		Name string `binding:"required,min=1"`
 
 		// Attribute value, minimum required length is 1 as we do not want empty values
 		Value string `binding:"required,min=1"`

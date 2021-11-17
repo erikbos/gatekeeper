@@ -26,7 +26,7 @@ func NewUser(database *db.Database, c *Changelog) *UserService {
 }
 
 // GetAll returns all users
-func (us *UserService) GetAll() (users *types.Users, err types.Error) {
+func (us *UserService) GetAll() (users types.Users, err types.Error) {
 
 	return us.db.User.GetAll()
 }

@@ -24,7 +24,7 @@ func NewRole(database *db.Database, c *Changelog) *RoleService {
 }
 
 // GetAll returns all roles
-func (rs *RoleService) GetAll() (roles *types.Roles, err types.Error) {
+func (rs *RoleService) GetAll() (roles types.Roles, err types.Error) {
 
 	return rs.db.Role.GetAll()
 }
@@ -108,7 +108,7 @@ func (rs *RoleService) countUserWithRole(role string) int {
 		return 0
 	}
 	var count int
-	for _, user := range *users {
+	for _, user := range users {
 		for _, userRole := range user.Roles {
 			if role == userRole {
 				count++

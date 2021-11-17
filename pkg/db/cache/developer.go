@@ -20,10 +20,10 @@ func NewDeveloperCache(cache *Cache, developer db.Developer) *DeveloperCache {
 }
 
 // GetAll retrieves all developer
-func (s *DeveloperCache) GetAll() (types.Developers, types.Error) {
+func (s *DeveloperCache) GetAll(organizationName string) (types.Developers, types.Error) {
 
 	getDevelopers := func() (interface{}, types.Error) {
-		return s.developer.GetAll()
+		return s.developer.GetAll(organizationName)
 	}
 	var developers types.Developers
 	// TODO/FIXME
@@ -34,10 +34,10 @@ func (s *DeveloperCache) GetAll() (types.Developers, types.Error) {
 }
 
 // GetByEmail retrieves a developer from database
-func (s *DeveloperCache) GetByEmail(developerEmail string) (*types.Developer, types.Error) {
+func (s *DeveloperCache) GetByEmail(organizationName, developerEmail string) (*types.Developer, types.Error) {
 
 	getDeveloperByEmail := func() (interface{}, types.Error) {
-		return s.developer.GetByEmail(developerEmail)
+		return s.developer.GetByEmail(organizationName, developerEmail)
 	}
 	var developer types.Developer
 	if err := s.cache.fetchEntity(types.TypeDeveloperName, developerEmail, &developer, getDeveloperByEmail); err != nil {
@@ -47,10 +47,10 @@ func (s *DeveloperCache) GetByEmail(developerEmail string) (*types.Developer, ty
 }
 
 // GetByID retrieves a developer from database
-func (s *DeveloperCache) GetByID(developerID string) (*types.Developer, types.Error) {
+func (s *DeveloperCache) GetByID(organizationName, developerID string) (*types.Developer, types.Error) {
 
 	getDeveloperByID := func() (interface{}, types.Error) {
-		return s.developer.GetByID(developerID)
+		return s.developer.GetByID(organizationName, developerID)
 	}
 	var developer types.Developer
 	if err := s.cache.fetchEntity(types.TypeDeveloperName, developerID, &developer, getDeveloperByID); err != nil {
@@ -60,16 +60,16 @@ func (s *DeveloperCache) GetByID(developerID string) (*types.Developer, types.Er
 }
 
 // Update UPSERTs a developer in database
-func (s *DeveloperCache) Update(d *types.Developer) types.Error {
+func (s *DeveloperCache) Update(organizationName string, d *types.Developer) types.Error {
 
 	s.cache.deleteEntry(types.TypeDeveloperName, d.DeveloperID)
 	s.cache.deleteEntry(types.TypeDeveloperName, d.Email)
-	return s.developer.Update(d)
+	return s.developer.Update(organizationName, d)
 }
 
 // DeleteByID deletes a developer
-func (s *DeveloperCache) DeleteByID(developerID string) types.Error {
+func (s *DeveloperCache) DeleteByID(organizationName, developerID string) types.Error {
 
 	s.cache.deleteEntry(types.TypeDeveloperName, developerID)
-	return s.developer.DeleteByID(developerID)
+	return s.developer.DeleteByID(organizationName, developerID)
 }

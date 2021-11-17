@@ -41,7 +41,7 @@ func NewAPIProductStore(database *Database) *APIProductStore {
 }
 
 // GetAll retrieves all api products
-func (s *APIProductStore) GetAll() (types.APIProducts, types.Error) {
+func (s *APIProductStore) GetAll(organizationName string) (types.APIProducts, types.Error) {
 
 	query := "SELECT " + apiProductsColumns + " FROM api_products"
 
@@ -56,7 +56,7 @@ func (s *APIProductStore) GetAll() (types.APIProducts, types.Error) {
 }
 
 // Get returns an apiproduct
-func (s *APIProductStore) Get(apiproductName string) (*types.APIProduct, types.Error) {
+func (s *APIProductStore) Get(organizationName, apiproductName string) (*types.APIProduct, types.Error) {
 
 	query := "SELECT " + apiProductsColumns + " FROM api_products WHERE name = ? LIMIT 1"
 
@@ -121,7 +121,7 @@ func (s *APIProductStore) runGetAPIProductQuery(query string, queryParameters ..
 }
 
 // Update UPSERTs an apiproduct in database
-func (s *APIProductStore) Update(p *types.APIProduct) types.Error {
+func (s *APIProductStore) Update(organizationName string, p *types.APIProduct) types.Error {
 
 	query := "INSERT INTO api_products (" + apiProductsColumns + ") VALUES(?,?,?,?,?,?,?,?,?,?,?,?)"
 	if err := s.db.CassandraSession.Query(query,
@@ -146,7 +146,7 @@ func (s *APIProductStore) Update(p *types.APIProduct) types.Error {
 }
 
 // Delete deletes an apiproduct
-func (s *APIProductStore) Delete(apiProduct string) types.Error {
+func (s *APIProductStore) Delete(organizationName, apiProduct string) types.Error {
 
 	// apiproduct, err := s.Get(apiProduct)
 	// if err != nil {

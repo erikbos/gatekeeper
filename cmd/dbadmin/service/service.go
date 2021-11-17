@@ -103,17 +103,15 @@ type (
 
 	// Key is the service interface to manipulate Key entities
 	Key interface {
-		GetAll() (keys types.Keys, err types.Error)
-
 		Get(organizationName, developerEmail, appName, consumerKey string) (key *types.Key, err types.Error)
 
-		GetByDeveloperAppID(developerAppID string) (keys types.Keys, err types.Error)
+		GetByDeveloperAppID(organizationName, developerAppID string) (keys types.Keys, err types.Error)
 
-		Create(newKey types.Key, developerApp *types.DeveloperApp, who Requester) (types.Key, types.Error)
+		Create(organizationName string, newKey types.Key, developerApp *types.DeveloperApp, who Requester) (types.Key, types.Error)
 
-		Update(consumerKey string, updateKey *types.Key, who Requester) (types.Key, types.Error)
+		Update(organizationName, consumerKey string, updateKey *types.Key, who Requester) (types.Key, types.Error)
 
-		Delete(consumerKey string, who Requester) (e types.Error)
+		Delete(organizationName, consumerKey string, who Requester) (e types.Error)
 	}
 
 	// APIProduct is the service interface to manipulate APIProduct entities
@@ -131,7 +129,7 @@ type (
 
 	// User is the service interface to manipulate User entities
 	User interface {
-		GetAll() (users *types.Users, err types.Error)
+		GetAll() (users types.Users, err types.Error)
 
 		Get(userName string) (user *types.User, err types.Error)
 
@@ -144,7 +142,7 @@ type (
 
 	// Role is the service interface to manipulate Role entities
 	Role interface {
-		GetAll() (roles *types.Roles, err types.Error)
+		GetAll() (roles types.Roles, err types.Error)
 
 		Get(roleName string) (role *types.Role, err types.Error)
 

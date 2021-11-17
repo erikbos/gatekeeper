@@ -31,7 +31,7 @@ func (h *Handler) GetV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddr
 		responseError(c, err)
 		return
 	}
-	keys, err := h.service.Key.GetByDeveloperAppID(application.AppID)
+	keys, err := h.service.Key.GetByDeveloperAppID(string(organizationName), application.AppID)
 	if err != nil {
 		responseError(c, err)
 		return
@@ -77,7 +77,7 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 		return
 	}
 	newKey := fromKey(receivedKey)
-	storedKey, err := h.service.Key.Create(newKey, application, h.who(c))
+	storedKey, err := h.service.Key.Create(string(organizationName), newKey, application, h.who(c))
 	if err != nil {
 		responseError(c, err)
 		return
@@ -94,7 +94,7 @@ func (h *Handler) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmaila
 		responseError(c, err)
 		return
 	}
-	if err := h.service.Key.Delete(string(consumerKey), h.who(c)); err != nil {
+	if err := h.service.Key.Delete(string(organizationName), string(consumerKey), h.who(c)); err != nil {
 		responseError(c, err)
 		return
 	}
@@ -149,7 +149,7 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 	if receivedKey.IssuedAt != nil {
 		key.IssuedAt = *receivedKey.IssuedAt
 	}
-	storedKey, err := h.service.Key.Update(string(consumerKey), key, h.who(c))
+	storedKey, err := h.service.Key.Update(string(organizationName), string(consumerKey), key, h.who(c))
 	if err != nil {
 		responseError(c, err)
 		return
@@ -175,7 +175,7 @@ func (h *Handler) changeKeyStatus(c *gin.Context, organizationName,
 		responseError(c, errUnknownStatus)
 		return
 	}
-	_, err = h.service.Key.Update(key.ConsumerKey, key, h.who(c))
+	_, err = h.service.Key.Update(string(organizationName), key.ConsumerKey, key, h.who(c))
 	if err != nil {
 		responseError(c, err)
 		return
@@ -194,7 +194,7 @@ func (h *Handler) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmaila
 		return
 	}
 	key.APIProducts = key.APIProducts.RemoveProduct(string(apiproductName))
-	storedKey, err := h.service.Key.Update(string(consumerKey), key, h.who(c))
+	storedKey, err := h.service.Key.Update(string(organizationName), string(consumerKey), key, h.who(c))
 	if err != nil {
 		responseError(c, err)
 		return
@@ -218,7 +218,7 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 		return
 	}
 	key.APIProducts = key.APIProducts.RemoveProduct(string(apiproductName))
-	storedKey, err := h.service.Key.Update(string(consumerKey), key, h.who(c))
+	storedKey, err := h.service.Key.Update(string(organizationName), string(consumerKey), key, h.who(c))
 	if err != nil {
 		responseError(c, err)
 		return
@@ -244,7 +244,7 @@ func (h *Handler) changeKeyApiProductStatus(c *gin.Context, organizationName,
 		responseError(c, errUnknownStatus)
 		return
 	}
-	_, err = h.service.Key.Update(key.ConsumerKey, key, h.who(c))
+	_, err = h.service.Key.Update(string(organizationName), key.ConsumerKey, key, h.who(c))
 	if err != nil {
 		responseError(c, err)
 		return
@@ -279,7 +279,7 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 		return
 	}
 	key.Attributes = fromAttributesRequest(receivedAttributes.Attribute)
-	storedKey, err := h.service.Key.Update(key.ConsumerKey, key, h.who(c))
+	storedKey, err := h.service.Key.Update(string(organizationName), key.ConsumerKey, key, h.who(c))
 	if err != nil {
 		responseError(c, err)
 		return
@@ -300,7 +300,7 @@ func (h *Handler) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmaila
 	if err != nil {
 		responseError(c, err)
 	}
-	_, err = h.service.Key.Update(key.ConsumerKey, key, h.who(c))
+	_, err = h.service.Key.Update(string(organizationName), key.ConsumerKey, key, h.who(c))
 	if err != nil {
 		responseError(c, err)
 		return
@@ -343,7 +343,7 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 	if err := key.Attributes.Set(newAttribute); err != nil {
 		responseError(c, err)
 	}
-	_, err = h.service.Key.Update(key.ConsumerKey, key, h.who(c))
+	_, err = h.service.Key.Update(string(organizationName), key.ConsumerKey, key, h.who(c))
 	if err != nil {
 		responseError(c, err)
 		return

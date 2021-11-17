@@ -83,79 +83,76 @@ type (
 	// Developer the developer information storage interface
 	Developer interface {
 		// GetAll retrieves all developer
-		GetAll() (types.Developers, types.Error)
+		GetAll(organizationName string) (types.Developers, types.Error)
 
 		// GetByEmail retrieves a developer
-		GetByEmail(developerEmail string) (*types.Developer, types.Error)
+		GetByEmail(organizationName, developerEmail string) (*types.Developer, types.Error)
 
 		// GetByID retrieves a developer
-		GetByID(developerID string) (*types.Developer, types.Error)
+		GetByID(organizationName, developerID string) (*types.Developer, types.Error)
 
 		// Update UPSERTs a developer
-		Update(dev *types.Developer) types.Error
+		Update(organizationName string, dev *types.Developer) types.Error
 
 		// DeleteByID deletes a developer
-		DeleteByID(developerID string) types.Error
+		DeleteByID(organizationName, developerID string) types.Error
 	}
 
 	// DeveloperApp the developer app information storage interface
 	DeveloperApp interface {
 		// GetAll retrieves all developer apps
-		GetAll() (types.DeveloperApps, types.Error)
+		GetAll(organizationName string) (types.DeveloperApps, types.Error)
 
 		// GetAllByDeveloperID retrieves all developer apps from one developer
-		GetAllByDeveloperID(developerID string) (types.DeveloperApps, types.Error)
+		GetAllByDeveloperID(organizationName, developerID string) (types.DeveloperApps, types.Error)
 
 		// GetByName returns a developer app
-		GetByName(developerAppName string) (*types.DeveloperApp, types.Error)
+		GetByName(organizationName, developerEmail, developerAppName string) (*types.DeveloperApp, types.Error)
 
 		// GetByID returns a developer app
-		GetByID(developerAppID string) (*types.DeveloperApp, types.Error)
+		GetByID(organizationName, developerAppID string) (*types.DeveloperApp, types.Error)
 
 		// GetCountByDeveloperID retrieves number of apps belonging to a developer
-		GetCountByDeveloperID(developerID string) (int, types.Error)
+		GetCountByDeveloperID(organizationName, developerID string) (int, types.Error)
 
 		// UpdateByName UPSERTs a developer app
-		Update(app *types.DeveloperApp) types.Error
+		Update(organizationName string, app *types.DeveloperApp) types.Error
 
 		// DeleteByID deletes a developer app
-		DeleteByID(developerAppID string) types.Error
+		DeleteByID(organizationName, developerAppID string) types.Error
 	}
 
 	// APIProduct the apiproduct information storage interface
 	APIProduct interface {
 		// GetAll retrieves all api products
-		GetAll() (types.APIProducts, types.Error)
+		GetAll(organizationName string) (types.APIProducts, types.Error)
 
 		// Get returns an apiproduct
-		Get(apiproductName string) (*types.APIProduct, types.Error)
+		Get(organizationName, apiproductName string) (*types.APIProduct, types.Error)
 
 		// Update UPSERTs an apiproduct in database
-		Update(p *types.APIProduct) types.Error
+		Update(organizationName string, p *types.APIProduct) types.Error
 
 		// Delete deletes an apiproduct
-		Delete(apiProduct string) types.Error
+		Delete(organizationName, apiProduct string) types.Error
 	}
 
 	// Key the cluster information storage interface
 	Key interface {
-		// GetAll retrieves all listeners
-		GetAll() (types.Keys, types.Error)
-
 		// GetByKey returns details of a single apikey
-		GetByKey(key *string) (*types.Key, types.Error)
+		GetByKey(organizationName, key *string) (*types.Key, types.Error)
 
 		// GetCountByAPIProductName returns number of keys that has apiproduct assigned
-		GetCountByAPIProductName(apiProductName string) (int, types.Error)
+		GetCountByAPIProductName(organizationName, apiProductName string) (int, types.Error)
 
 		// GetByDeveloperAppID returns an array with apikey details of a developer app
-		GetByDeveloperAppID(developerAppID string) (types.Keys, types.Error)
+		GetByDeveloperAppID(organizationName, developerAppID string) (types.Keys, types.Error)
 
 		// UpdateByKey UPSERTs key
-		UpdateByKey(c *types.Key) types.Error
+		UpdateByKey(organizationName string, c *types.Key) types.Error
 
 		// DeleteByKey deletes key
-		DeleteByKey(consumerKey string) types.Error
+		DeleteByKey(organizationName, consumerKey string) types.Error
 	}
 
 	// OAuth the oauth information storage interface
@@ -185,7 +182,7 @@ type (
 	// User the user information storage interface
 	User interface {
 		// GetAll retrieves all users
-		GetAll() (*types.Users, types.Error)
+		GetAll() (types.Users, types.Error)
 
 		// Get retrieves a user from database
 		Get(userName string) (*types.User, types.Error)
@@ -200,7 +197,7 @@ type (
 	// Role the role information storage interface
 	Role interface {
 		// GetAll retrieves all roles
-		GetAll() (*types.Roles, types.Error)
+		GetAll() (types.Roles, types.Error)
 
 		// Get retrieves a role from database
 		Get(roleName string) (*types.Role, types.Error)

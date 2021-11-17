@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
+	"github.com/erikbos/gatekeeper/cmd/dbadmin/handler/status"
 	"github.com/erikbos/gatekeeper/cmd/dbadmin/service"
 	"github.com/erikbos/gatekeeper/pkg/db"
 	"github.com/erikbos/gatekeeper/pkg/types"
@@ -35,9 +36,8 @@ func NewHandler(router *gin.Engine, db *db.Database, s *service.Service,
 
 	registerMetricsRoute(router, applicationName)
 
-	router.GET(showHTTPForwardingPath, handler.showHTTPForwardingPage)
-	router.GET(showDevelopersPath, handler.showDevelopersPage)
-	router.GET(showUserRolesPath, handler.showUserRolePage)
+	status := status.New(s)
+	status.RegisterRoutes(router)
 
 	// Register routes and add authentication middleware
 	auth := newAuth(s.User, s.Role, logger)

@@ -95,10 +95,10 @@ func (h *Handler) DeleteV1UsersUserName(c *gin.Context, userName UserName) {
 
 // API responses
 
-func (h *Handler) responseUsers(c *gin.Context, users *types.Users) {
+func (h *Handler) responseUsers(c *gin.Context, users types.Users) {
 
-	all_users := make([]User, len(*users))
-	for i, v := range *users {
+	all_users := make([]User, len(users))
+	for i, v := range users {
 		all_users[i] = h.ToUserResponse(&v)
 	}
 	c.IndentedJSON(http.StatusOK, Users{

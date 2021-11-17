@@ -22,7 +22,7 @@ func (p *Policy) CheckProductEntitlement(request *request.State) error {
 		return err
 	}
 	var err error
-	request.APIProduct, err = p.IsPathAllowed(request.URL.Path, request.Key)
+	request.APIProduct, err = p.IsPathAllowed(request.Organization.Name, request.URL.Path, request.Key)
 	return err
 }
 
@@ -34,19 +34,19 @@ func (p *Policy) getAPIKeyDevDevAppDetails(request *request.State) error {
 	}
 
 	var err error
-	request.Key, err = p.config.db.Key.GetByKey(request.ConsumerKey)
+	request.Key, err = p.config.db.Key.GetByKey(&request.Organization.Name, request.ConsumerKey)
 	if err != nil {
 		p.config.metrics.IncUnknownAPIKey(request)
 		return errors.New("cannot find apikey")
 	}
 
-	request.DeveloperApp, err = p.config.db.DeveloperApp.GetByID(request.Key.AppID)
+	request.DeveloperApp, err = p.config.db.DeveloperApp.GetByID(request.Organization.Name, request.Key.AppID)
 	if err != nil {
 		p.config.metrics.IncDatabaseFetchFailure(request)
 		return errors.New("cannot find developer app of this apikey")
 	}
 
-	request.Developer, err = p.config.db.Developer.GetByID(request.DeveloperApp.DeveloperID)
+	request.Developer, err = p.config.db.Developer.GetByID(request.Organization.Name, request.DeveloperApp.DeveloperID)
 	if err != nil {
 		p.config.metrics.IncDatabaseFetchFailure(request)
 		return errors.New("cannot find developer of developer app")
@@ -79,8 +79,8 @@ func (p *Policy) checkDevAndKeyValidity(request *request.State) error {
 
 // IsPathAllowed checks whether paths is allowed by apikey,
 // this means the apikey needs to contain a product that matchs the request path
-func (p *Policy) IsPathAllowed(requestPath string,
-	key *types.Key) (*types.APIProduct, error) {
+func (p *Policy) IsPathAllowed(
+	organizationName, requestPath string, key *types.Key) (*types.APIProduct, error) {
 
 	// Does this apikey have any products assigned?
 	if len(key.APIProducts) == 0 {
@@ -90,7 +90,7 @@ func (p *Policy) IsPathAllowed(requestPath string,
 	// Iterate over this key's apiproducts
 	for _, apiproduct := range key.APIProducts {
 		if apiproduct.IsApproved() {
-			apiproductDetails, err := p.config.db.APIProduct.Get(apiproduct.Apiproduct)
+			apiproductDetails, err := p.config.db.APIProduct.Get(organizationName, apiproduct.Apiproduct)
 			if err != nil {
 				// apikey has product in it which we cannot find:
 				// FIXME increase "unknown product in apikey" counter (not an error state)

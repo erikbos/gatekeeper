@@ -95,10 +95,10 @@ func (h *Handler) DeleteV1RolesRoleName(c *gin.Context, roleName RoleName) {
 
 // API responses
 
-func (h *Handler) responseRoles(c *gin.Context, roles *types.Roles) {
+func (h *Handler) responseRoles(c *gin.Context, roles types.Roles) {
 
-	all_roles := make([]Role, len(*roles))
-	for i, v := range *roles {
+	all_roles := make([]Role, len(roles))
+	for i, v := range roles {
 		all_roles[i] = h.ToRoleResponse(&v)
 	}
 	c.IndentedJSON(http.StatusOK, Roles{

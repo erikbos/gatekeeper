@@ -40,7 +40,7 @@ func NewDeveloperStore(database *Database) *DeveloperStore {
 }
 
 // GetAll retrieves all developer
-func (s *DeveloperStore) GetAll() (types.Developers, types.Error) {
+func (s *DeveloperStore) GetAll(organizationName string) (types.Developers, types.Error) {
 
 	query := "SELECT " + developerColumns + " FROM developers"
 	developers, err := s.runGetDeveloperQuery(query)
@@ -54,7 +54,7 @@ func (s *DeveloperStore) GetAll() (types.Developers, types.Error) {
 }
 
 // GetByEmail retrieves a developer from database
-func (s *DeveloperStore) GetByEmail(developerEmail string) (*types.Developer, types.Error) {
+func (s *DeveloperStore) GetByEmail(organizationName, developerEmail string) (*types.Developer, types.Error) {
 
 	query := "SELECT " + developerColumns + " FROM developers WHERE email = ? LIMIT 1 ALLOW FILTERING"
 	developers, err := s.runGetDeveloperQuery(query, developerEmail)
@@ -74,7 +74,7 @@ func (s *DeveloperStore) GetByEmail(developerEmail string) (*types.Developer, ty
 }
 
 // GetByID retrieves a developer from database
-func (s *DeveloperStore) GetByID(developerID string) (*types.Developer, types.Error) {
+func (s *DeveloperStore) GetByID(organizationName, developerID string) (*types.Developer, types.Error) {
 
 	query := "SELECT " + developerColumns + " FROM developers WHERE developer_id = ? LIMIT 1"
 	developers, err := s.runGetDeveloperQuery(query, developerID)
@@ -128,7 +128,7 @@ func (s *DeveloperStore) runGetDeveloperQuery(query string, queryParameters ...i
 }
 
 // Update UPSERTs a developer in database
-func (s *DeveloperStore) Update(d *types.Developer) types.Error {
+func (s *DeveloperStore) Update(organizationName string, d *types.Developer) types.Error {
 
 	query := "INSERT INTO developers (" + developerColumns + ") VALUES(?,?,?,?,?,?,?,?,?,?,?,?)"
 	if err := s.db.CassandraSession.Query(query,
@@ -153,7 +153,7 @@ func (s *DeveloperStore) Update(d *types.Developer) types.Error {
 }
 
 // DeleteByID deletes a developer
-func (s *DeveloperStore) DeleteByID(developerID string) types.Error {
+func (s *DeveloperStore) DeleteByID(organizationName, developerID string) types.Error {
 
 	query := "DELETE FROM developers WHERE developer_id = ?"
 	if err := s.db.CassandraSession.Query(query, developerID).Exec(); err != nil {

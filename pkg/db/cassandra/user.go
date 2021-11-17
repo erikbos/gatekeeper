@@ -37,7 +37,7 @@ func NewUserStore(database *Database) *UserStore {
 }
 
 // GetAll retrieves all users
-func (s *UserStore) GetAll() (*types.Users, types.Error) {
+func (s *UserStore) GetAll() (types.Users, types.Error) {
 
 	query := "SELECT " + userColumns + " FROM users"
 	users, err := s.runGetUserQuery(query)
@@ -47,7 +47,7 @@ func (s *UserStore) GetAll() (*types.Users, types.Error) {
 	}
 
 	s.db.metrics.QueryHit(userMetricLabel)
-	return &users, nil
+	return users, nil
 }
 
 // Get retrieves a user from database

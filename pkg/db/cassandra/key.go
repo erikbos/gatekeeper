@@ -36,21 +36,8 @@ func NewKeyStore(database *Database) *KeyStore {
 	}
 }
 
-// GetAll retrieves all keys
-func (s *KeyStore) GetAll() (types.Keys, types.Error) {
-
-	query := "SELECT " + keysColumn + " FROM keys"
-	keys, err := s.runGetKeyQuery(query)
-	if err != nil {
-		s.db.metrics.QueryFailed(keysMetricLabel)
-		return nil, types.NewDatabaseError(err)
-	}
-	s.db.metrics.QueryHit(keysMetricLabel)
-	return keys, nil
-}
-
 // GetByKey returns details of a single apikey
-func (s *KeyStore) GetByKey(key *string) (*types.Key, types.Error) {
+func (s *KeyStore) GetByKey(organization, key *string) (*types.Key, types.Error) {
 
 	var keys types.Keys
 	var err error
@@ -73,7 +60,7 @@ func (s *KeyStore) GetByKey(key *string) (*types.Key, types.Error) {
 }
 
 // GetByDeveloperAppID returns an array with apikey details of a developer app
-func (s *KeyStore) GetByDeveloperAppID(developerAppID string) (types.Keys, types.Error) {
+func (s *KeyStore) GetByDeveloperAppID(organization, developerAppID string) (types.Keys, types.Error) {
 
 	query := "SELECT " + keysColumn + " FROM keys WHERE app_id = ?"
 	keys, err := s.runGetKeyQuery(query, developerAppID)
@@ -86,7 +73,7 @@ func (s *KeyStore) GetByDeveloperAppID(developerAppID string) (types.Keys, types
 }
 
 // GetCountByAPIProductName counts the number of times an apiproduct has been assigned to keys
-func (s *KeyStore) GetCountByAPIProductName(apiProductName string) (int, types.Error) {
+func (s *KeyStore) GetCountByAPIProductName(organization, apiProductName string) (int, types.Error) {
 
 	query := "SELECT api_products FROM keys"
 	keys, err := s.runGetKeyQuery(query)
@@ -136,7 +123,7 @@ func (s *KeyStore) runGetKeyQuery(query string, queryParameters ...interface{}) 
 }
 
 // UpdateByKey UPSERTs keys in database
-func (s *KeyStore) UpdateByKey(c *types.Key) types.Error {
+func (s *KeyStore) UpdateByKey(organization string, c *types.Key) types.Error {
 
 	query := "INSERT INTO keys (" + keysColumn + ") VALUES(?,?,?,?,?,?,?,?)"
 	if err := s.db.CassandraSession.Query(query,
@@ -157,7 +144,7 @@ func (s *KeyStore) UpdateByKey(c *types.Key) types.Error {
 }
 
 // DeleteByKey deletes keys
-func (s *KeyStore) DeleteByKey(consumerKey string) types.Error {
+func (s *KeyStore) DeleteByKey(organization, consumerKey string) types.Error {
 
 	query := "DELETE FROM keys WHERE consumer_key = ?"
 	if err := s.db.CassandraSession.Query(query, consumerKey).Exec(); err != nil {

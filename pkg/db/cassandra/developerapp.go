@@ -39,7 +39,7 @@ func NewDeveloperAppStore(database *Database) *DeveloperAppStore {
 }
 
 // GetAll retrieves all developer apps
-func (s *DeveloperAppStore) GetAll() (types.DeveloperApps, types.Error) {
+func (s *DeveloperAppStore) GetAll(organizationName string) (types.DeveloperApps, types.Error) {
 
 	query := "SELECT " + developerAppColumns + " FROM developer_apps"
 	developerapps, err := s.runGetDeveloperAppQuery(query)
@@ -53,7 +53,7 @@ func (s *DeveloperAppStore) GetAll() (types.DeveloperApps, types.Error) {
 }
 
 // GetAllByDeveloperID retrieves all developer apps from a developer
-func (s *DeveloperAppStore) GetAllByDeveloperID(developerID string) (types.DeveloperApps, types.Error) {
+func (s *DeveloperAppStore) GetAllByDeveloperID(organizationName, developerID string) (types.DeveloperApps, types.Error) {
 
 	query := "SELECT " + developerAppColumns + " FROM developer_apps WHERE developer_id = ?"
 	developerapps, err := s.runGetDeveloperAppQuery(query, developerID)
@@ -67,7 +67,7 @@ func (s *DeveloperAppStore) GetAllByDeveloperID(developerID string) (types.Devel
 }
 
 // GetByName returns a developer app
-func (s *DeveloperAppStore) GetByName(developerAppName string) (*types.DeveloperApp, types.Error) {
+func (s *DeveloperAppStore) GetByName(organizationName, developerEmail, developerAppName string) (*types.DeveloperApp, types.Error) {
 
 	query := "SELECT " + developerAppColumns + " FROM developer_apps WHERE name = ? LIMIT 1"
 	developerapps, err := s.runGetDeveloperAppQuery(query, developerAppName)
@@ -87,7 +87,7 @@ func (s *DeveloperAppStore) GetByName(developerAppName string) (*types.Developer
 }
 
 // GetByID returns a developer app
-func (s *DeveloperAppStore) GetByID(developerAppID string) (*types.DeveloperApp, types.Error) {
+func (s *DeveloperAppStore) GetByID(organizationName, developerAppID string) (*types.DeveloperApp, types.Error) {
 
 	query := "SELECT " + developerAppColumns + " FROM developer_apps WHERE app_id = ? LIMIT 1"
 	developerapps, err := s.runGetDeveloperAppQuery(query, developerAppID)
@@ -106,7 +106,7 @@ func (s *DeveloperAppStore) GetByID(developerAppID string) (*types.DeveloperApp,
 }
 
 // GetCountByDeveloperID retrieves number of apps belonging to a developer
-func (s *DeveloperAppStore) GetCountByDeveloperID(developerID string) (int, types.Error) {
+func (s *DeveloperAppStore) GetCountByDeveloperID(organizationName, developerID string) (int, types.Error) {
 
 	var developerAppCount int
 	query := "SELECT count(*) FROM developer_apps WHERE developer_id = ?"
@@ -153,7 +153,7 @@ func (s *DeveloperAppStore) runGetDeveloperAppQuery(query string, queryParameter
 }
 
 // Update UPSERTs a developer app
-func (s *DeveloperAppStore) Update(app *types.DeveloperApp) types.Error {
+func (s *DeveloperAppStore) Update(organizationName string, app *types.DeveloperApp) types.Error {
 
 	query := "INSERT INTO developer_apps (" + developerAppColumns + ") VALUES(?,?,?,?,?,?,?,?,?,?,?)"
 	if err := s.db.CassandraSession.Query(query,
@@ -177,7 +177,7 @@ func (s *DeveloperAppStore) Update(app *types.DeveloperApp) types.Error {
 }
 
 // DeleteByID deletes a developer app
-func (s *DeveloperAppStore) DeleteByID(developerAppID string) types.Error {
+func (s *DeveloperAppStore) DeleteByID(organizationName, developerAppID string) types.Error {
 
 	query := "DELETE FROM developer_apps WHERE app_id = ?"
 	if err := s.db.CassandraSession.Query(query, developerAppID).Exec(); err != nil {
