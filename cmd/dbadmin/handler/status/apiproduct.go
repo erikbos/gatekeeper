@@ -24,15 +24,15 @@ func (s *Status) ShowAPIProducts(c *gin.Context) {
 	fmt.Fprint(c.Writer, pageHeading("API Products"))
 
 	for _, organization := range organizations {
-		s.ShowAPIProductsOrganization(c, organization.Name)
+		s.ShowAPIProductsOrganization(c, organization)
 	}
 }
 
-func (s *Status) ShowAPIProductsOrganization(c *gin.Context, organization string) {
+func (s *Status) ShowAPIProductsOrganization(c *gin.Context, organization types.Organization) {
 
-	fmt.Fprintf(c.Writer, "<h1>Organization: %s</h1>\n", organization)
+	fmt.Fprintf(c.Writer, "<h1>Organization: %s</h1>\n", organization.Name)
 
-	apiproducts, err := s.service.APIProduct.GetAll(organization)
+	apiproducts, err := s.service.APIProduct.GetAll(organization.Name)
 	if err != nil {
 		webadmin.JSONMessage(c, http.StatusServiceUnavailable, err)
 		return
@@ -45,9 +45,11 @@ func (s *Status) ShowAPIProductsOrganization(c *gin.Context, organization string
 		return
 	}
 	templateVariables := struct {
-		APIProducts types.APIProducts
+		Organization types.Organization
+		APIProducts  types.APIProducts
 	}{
-		APIProducts: apiproducts,
+		Organization: organization,
+		APIProducts:  apiproducts,
 	}
 	if err := templateEngine.Execute(c.Writer, templateVariables); err != nil {
 		_ = c.Error(err)
@@ -56,6 +58,7 @@ func (s *Status) ShowAPIProductsOrganization(c *gin.Context, organization string
 
 const templateAPIProducts string = `
 {{/* We put these in vars to be able to do nested ranges */}}
+{{$organization := .Organization}}
 {{$apiproducts := .APIProducts}}
 
 <h1>API Products</h1>
@@ -73,7 +76,7 @@ const templateAPIProducts string = `
 
 {{range $a := $apiproducts}}
 <tr>
-<td><a href="/v1/apiproducts/{{$a.Name}}">{{$a.Name}}</a>
+<td><a href="/v1/organizations/{{$organization.Name}}/apiproducts/{{$a.Name}}">{{$a.Name}}</a>
 <td>{{$a.DisplayName}}</td>
 <td>{{$a.Description}}</td>
 <td>{{$a.RouteGroup}}</td>

@@ -25,15 +25,15 @@ func (s *Status) ShowDevelopers(c *gin.Context) {
 	fmt.Fprint(c.Writer, pageHeading("Developers"))
 
 	for _, organization := range organizations {
-		s.ShowDevelopersInOrganization(c, organization.Name)
+		s.ShowDevelopersInOrganization(c, organization)
 	}
 }
 
-func (s *Status) ShowDevelopersInOrganization(c *gin.Context, organizationName string) {
+func (s *Status) ShowDevelopersInOrganization(c *gin.Context, organization types.Organization) {
 
-	fmt.Fprintf(c.Writer, "<h1>Organization: %s</h1>\n", organizationName)
+	fmt.Fprintf(c.Writer, "<h1>Organization: %s</h1>\n", organization.Name)
 
-	developers, err := s.service.Developer.GetAll(organizationName)
+	developers, err := s.service.Developer.GetAll(organization.Name)
 	if err != nil {
 		webadmin.JSONMessage(c, http.StatusServiceUnavailable, err)
 		return
@@ -47,15 +47,15 @@ func (s *Status) ShowDevelopersInOrganization(c *gin.Context, organizationName s
 	apps := make(AllApps)
 
 	for _, developer := range developers {
-		appDetails := make([]AppEntry, 0, 10)
+		appDetails := make([]AppEntry, 0, len(developer.Apps))
 
 		for _, appName := range developer.Apps {
-			app, err := s.service.DeveloperApp.GetByName(string(organizationName), developer.Email, appName)
+			app, err := s.service.DeveloperApp.GetByName(string(organization.Name), developer.Email, appName)
 			if err != nil {
 				webadmin.JSONMessage(c, http.StatusServiceUnavailable, err)
 				return
 			}
-			keys, err := s.service.Key.GetByDeveloperAppID(string(organizationName), app.AppID)
+			keys, err := s.service.Key.GetByDeveloperAppID(string(organization.Name), app.AppID)
 			if err != nil {
 				webadmin.JSONMessage(c, http.StatusServiceUnavailable, err)
 				return
@@ -76,11 +76,13 @@ func (s *Status) ShowDevelopersInOrganization(c *gin.Context, organizationName s
 		return
 	}
 	templateVariables := struct {
-		Developers types.Developers
-		Apps       AllApps
+		Organization types.Organization
+		Developers   types.Developers
+		Apps         AllApps
 	}{
-		Developers: developers,
-		Apps:       apps,
+		Organization: organization,
+		Developers:   developers,
+		Apps:         apps,
 	}
 	c.Header(contentType, contentTypeHTML)
 	c.Status(http.StatusOK)
@@ -93,6 +95,7 @@ const templateDeveloper string = `
 <body>
 
 {{/* We put these in vars to be able to do nested ranges */}}
+{{$organization := .Organization}}
 {{$developers := .Developers}}
 {{$apps := .Apps}}
 
@@ -107,7 +110,7 @@ const templateDeveloper string = `
 
 {{range $developer := $developers}}
 <tr>
-<td><a href="/v1/developers/{{$developer.Email}}">{{$developer.Email}}</a>
+<td><a href="/v1/organizations/{{$organization.Name}}/developers/{{$developer.Email}}">{{$developer.Email}}</a>
 
 <ul>
 {{range $attribute := $developer.Attributes}}
@@ -118,7 +121,7 @@ const templateDeveloper string = `
 </td>
 {{range $app := index $apps $developer.Email}}
 <td>
-<a href="/v1/developers/{{$developer.Email}}/apps/{{$app.App.Name}}">{{$app.App.Name}}</a>
+<a href="/v1/organizations/{{$organization.Name}}/developers/{{$developer.Email}}/apps/{{$app.App.Name}}">{{$app.App.Name}}</a>
 
 <ul>
 {{range $attribute := $app.App.Attributes}}
@@ -136,12 +139,12 @@ const templateDeveloper string = `
 </tr>
 {{range $key := index $app.Keys}}
 <tr>
-<td><a href="/v1/developers/{{$developer.Email}}/apps/{{$app.App.Name}}/keys/{{$key.ConsumerKey}}">{{$key.ConsumerKey}}</a>
+<td><a href="/v1/organizations/{{$organization.Name}}/developers/{{$developer.Email}}/apps/{{$app.App.Name}}/keys/{{$key.ConsumerKey}}">{{$key.ConsumerKey}}</a>
 <td>{{$key.ConsumerSecret}}</td>
 <td>
 <ul>
 {{range $product := $key.APIProducts}}
-<li><a href="/v1/apiproducts/{{$product.Apiproduct}}">{{$product.Apiproduct}}</a> ({{$product.Status}})
+<li><a href="/v1/organizations/{{$organization.Name}}/apiproducts/{{$product.Apiproduct}}">{{$product.Apiproduct}}</a> ({{$product.Status}})
 {{end}}
 </ul>
 </td>
