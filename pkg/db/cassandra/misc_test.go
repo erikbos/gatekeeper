@@ -59,7 +59,7 @@ func Test_Attribute_Marshall(t *testing.T) {
 					Value: types.AttributeValueHTTPProtocol2,
 				},
 			},
-			attributesJson: "[{\"name\":\"SNIHostName\",\"value\":\"www.test.com\"},{\"name\":\"HTTPProtocol\",\"value\":\"HTTP/2\"}]",
+			attributesJson: "[{\"Name\":\"SNIHostName\",\"Value\":\"www.test.com\"},{\"Name\":\"HTTPProtocol\",\"Value\":\"HTTP/2\"}]",
 		},
 		{
 			name:           "2 - no attributes",

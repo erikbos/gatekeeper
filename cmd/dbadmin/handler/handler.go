@@ -41,10 +41,13 @@ func NewHandler(router *gin.Engine, db *db.Database, s *service.Service,
 
 	// Register routes and add authentication middleware
 	auth := newAuth(s.User, s.Role, logger)
+	router.Use(auth.AuthenticateAndAuthorize)
+
 	RegisterHandlersWithOptions(router, handler, GinServerOptions{
-		Middlewares: []MiddlewareFunc{
-			auth.AuthenticateAndAuthorize,
-		},
+		// TODO specifying auth.AuthenticateAndAuthorize as middleware here does not work
+		// Middlewares: []MiddlewareFunc{
+		// 	auth.AuthenticateAndAuthorize,
+		// },
 	})
 	return handler
 }

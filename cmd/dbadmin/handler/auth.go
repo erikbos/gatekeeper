@@ -108,6 +108,7 @@ func abortAuthorizationRequired(c *gin.Context, errorDetails types.Error) {
 	realm := "Authorization required"
 	c.Header("WWW-Authenticate", "Basic realm="+strconv.Quote(realm))
 	responseError(c, types.NewUnauthorizedError(errorDetails))
+	c.Abort()
 }
 
 // who returns name of authenticated user requesting this API call

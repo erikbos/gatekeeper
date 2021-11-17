@@ -19,7 +19,7 @@ type (
 		Name string `binding:"required,min=1"`
 
 		// Attribute value, minimum required length is 1 as we do not want empty values
-		Value string `binding:"required,min=1"`
+		Value string `binding:"required"`
 	}
 
 	// Attributes holds one or more attributes
