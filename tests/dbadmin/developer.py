@@ -115,7 +115,7 @@ class Developer:
         """
         Get existing developer
         """
-        developer_url = self.developer_url + '/' + developer_email
+        developer_url = self.developer_url + '/' + urllib.parse.quote(developer_email)
         response = self.session.get(developer_url)
         assert_status_code(response, HTTP_OK)
         assert_content_type_json(response)
@@ -129,7 +129,7 @@ class Developer:
         """
         Update existing developer
         """
-        developer_url = self.developer_url + '/' + developer_email
+        developer_url = self.developer_url + '/' + urllib.parse.quote(developer_email)
         response = self.session.post(developer_url, json=developer)
         assert_status_code(response, HTTP_OK)
         assert_content_type_json(response)
@@ -146,7 +146,7 @@ class Developer:
         """
         headers = self.session.headers
         headers['content-type'] = 'application/octet-stream'
-        developer_url = self.developer_url + '/' + developer_email + '?action=' + status
+        developer_url = self.developer_url + '/' + urllib.parse.quote(developer_email) + '?action=' + status
         response = self.session.post(developer_url, headers=headers)
 
         if expect_success:
@@ -215,7 +215,7 @@ class Developer:
         """
         for i in range(self.config['entity_count']):
             email = self.generate_email_address(i)
-            developer_url = self.developer_url + '/' + email
+            developer_url = self.developer_url + '/' + urllib.parse.quote(email)
             self.session.delete(developer_url)
 
 

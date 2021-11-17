@@ -1,6 +1,7 @@
 """
 Key module does all REST API operations on key endpoint
 """
+import urllib
 from common import assert_status_code, assert_status_codes, assert_content_type_json, \
     assert_valid_schema, assert_valid_schema_error, load_json_schema
 from httpstatus import HTTP_OK, HTTP_NOT_FOUND, HTTP_CREATED, \
@@ -17,8 +18,8 @@ class Key:
         self.session = session
         if developer_email is not None:
             self.key_url = (config['api_url'] +
-                                    '/developers/' + developer_email +
-                                    '/apps/' + app_name + '/keys')
+                                    '/developers/' + urllib.parse.quote(developer_email) +
+                                    '/apps/' + urllib.parse.quote(app_name) + '/keys')
         self.schemas = {
             'key': load_json_schema('key.json'),
             'error': load_json_schema('error.json'),
@@ -65,7 +66,7 @@ class Key:
         """
         Get existing key
         """
-        response = self.session.get(self.key_url + '/' + consumer_key)
+        response = self.session.get(self.key_url + '/' + urllib.parse.quote(consumer_key))
         assert_status_code(response, HTTP_OK)
         assert_content_type_json(response)
         retrieved_key = response.json()
@@ -82,7 +83,7 @@ class Key:
 
         headers = self.session.headers
         headers['content-type'] = 'application/json'
-        key_url = self.key_url + '/' + consumer_key
+        key_url = self.key_url + '/' + urllib.parse.quote(consumer_key)
         response = self.session.post(key_url, headers=headers, json=updated_key)
 
         print ("res", response.text)
@@ -122,7 +123,7 @@ class Key:
         """
         headers = self.session.headers
         headers['content-type'] = 'application/octet-stream'
-        key_url = self.key_url + '/' + consumer_key + '?action=' + status
+        key_url = self.key_url + '/' + urllib.parse.quote(consumer_key) + '?action=' + status
 
         response = self.session.post(key_url, headers=headers)
 
@@ -152,7 +153,7 @@ class Key:
         """
         Delete existing key
         """
-        response = self.session.delete(self.key_url + '/' + consumer_key)
+        response = self.session.delete(self.key_url + '/' + urllib.parse.quote(consumer_key))
         if expect_success:
             assert_status_code(response, HTTP_OK)
             assert_content_type_json(response)
@@ -192,8 +193,8 @@ class Key:
         """
         headers = self.session.headers
         headers['content-type'] = 'application/octet-stream'
-        key_url = (self.key_url + '/' + consumer_key
-                                + '/apiproducts/' + api_product_name + '?action=' + status)
+        key_url = (self.key_url + '/' + urllib.parse.quote(consumer_key)
+                                + '/apiproducts/' + urllib.parse.quote(api_product_name) + '?action=' + status)
         response = self.session.post(key_url, headers=headers)
 
         if expect_success:
@@ -208,8 +209,8 @@ class Key:
         """
         Delete apiproduct from key
         """
-        key_api_product_url = (self.key_url + '/' + consumer_key
-                                            + '/apiproducts/' + api_product_name)
+        key_api_product_url = (self.key_url + '/' + urllib.parse.quote(consumer_key)
+                                            + '/apiproducts/' + urllib.parse.quote(api_product_name))
         response = self.session.delete(key_api_product_url)
         if expect_success:
             assert_content_type_json(response)

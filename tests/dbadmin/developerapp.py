@@ -17,7 +17,7 @@ class Application:
         self.session = session
         self.global_application_url = self.config['api_url'] + '/apps'
         if developer_email is not None:
-            self.application_url = config['api_url'] + '/developers/' + developer_email + '/apps'
+            self.application_url = config['api_url'] + '/developers/' + urllib.parse.quote(developer_email) + '/apps'
         self.schemas = {
             'application': load_json_schema('application.json'),
             'applications': load_json_schema('applications.json'),
@@ -156,7 +156,7 @@ class Application:
         """
         Get existing application by uuid
         """
-        application_url = self.global_application_url + '/' + app_uuid
+        application_url = self.global_application_url + '/' + urllib.parse.quote(app_uuid)
         response = self.session.get(application_url)
         assert_status_code(response, HTTP_OK)
         assert_content_type_json(response)

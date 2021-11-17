@@ -114,7 +114,7 @@ class APIproduct:
         """
         Get existing api product
         """
-        api_product_url = self.api_product_url + '/' + api_product
+        api_product_url = self.api_product_url + '/' + urllib.parse.quote(api_product)
         response = self.session.get(api_product_url)
         assert_status_code(response, HTTP_OK)
         assert_content_type_json(response)
@@ -128,7 +128,7 @@ class APIproduct:
         """
         Update existing api product
         """
-        api_product_url = self.api_product_url + '/' + api_product
+        api_product_url = self.api_product_url + '/' + urllib.parse.quote(api_product)
         response = self.session.post(api_product_url, json=updated_api_product)
         assert_status_code(response, HTTP_OK)
         assert_content_type_json(response)

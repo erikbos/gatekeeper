@@ -1,6 +1,7 @@
 """
 Attribute module does all REST API operations on an attribute endpoint
 """
+import urllib
 from common import assert_status_code, assert_content_type_json, \
                     load_json_schema, assert_valid_schema
 from httpstatus import HTTP_OK, HTTP_NOT_FOUND
@@ -49,7 +50,7 @@ class Attribute:
         """
         Retrieve an existing attribute
         """
-        response = self.session.get(self.attribute_url + '/' + attribute_name)
+        response = self.session.get(self.attribute_url + '/' + urllib.parse.quote(attribute_name))
         assert_status_code(response, HTTP_OK)
         assert_content_type_json(response)
 
@@ -63,7 +64,7 @@ class Attribute:
         """
         Attempt to retrieve a non-existing attribute
         """
-        response = self.session.get(self.attribute_url + '/' + attribute_name)
+        response = self.session.get(self.attribute_url + '/' + urllib.parse.quote(attribute_name))
         assert_status_code(response, HTTP_NOT_FOUND)
         assert_content_type_json(response)
 
@@ -72,7 +73,7 @@ class Attribute:
         """
         Delete an existing attribute
         """
-        response = self.session.delete(self.attribute_url + '/' + attribute_name)
+        response = self.session.delete(self.attribute_url + '/' + urllib.parse.quote(attribute_name))
         assert_status_code(response, HTTP_OK)
         assert_content_type_json(response)
 
@@ -86,7 +87,7 @@ class Attribute:
         """
         Attempt to delete a non-existing attribute
         """
-        response = self.session.delete(self.attribute_url + '/' + attribute_name)
+        response = self.session.delete(self.attribute_url + '/' + urllib.parse.quote(attribute_name))
         assert_status_code(response, HTTP_NOT_FOUND)
         assert_content_type_json(response)
 
