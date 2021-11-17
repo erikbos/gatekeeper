@@ -19,25 +19,11 @@ func NewKeyCache(cache *Cache, key db.Key) *KeyCache {
 	}
 }
 
-// GetAll retrieves all keys
-func (s *KeyCache) GetAll() (types.Keys, types.Error) {
-
-	getKeys := func() (interface{}, types.Error) {
-		return s.key.GetAll()
-	}
-	var keys types.Keys
-	// TODO/FIXME
-	if err := s.cache.fetchEntity(types.TypeKeyName, "--all-keys--", &keys, getKeys); err != nil {
-		return nil, err
-	}
-	return keys, nil
-}
-
 // GetByKey returns details of a single apikey
-func (s *KeyCache) GetByKey(key *string) (*types.Key, types.Error) {
+func (s *KeyCache) GetByKey(organizationName, key *string) (*types.Key, types.Error) {
 
 	getByKey := func() (interface{}, types.Error) {
-		return s.key.GetByKey(key)
+		return s.key.GetByKey(organizationName, key)
 	}
 	var retrievedKey types.Key
 	if err := s.cache.fetchEntity(types.TypeKeyName, *key, &retrievedKey, getByKey); err != nil {
@@ -47,10 +33,10 @@ func (s *KeyCache) GetByKey(key *string) (*types.Key, types.Error) {
 }
 
 // GetByDeveloperAppID returns an array with apikey details of a developer app
-func (s *KeyCache) GetByDeveloperAppID(developerAppID string) (types.Keys, types.Error) {
+func (s *KeyCache) GetByDeveloperAppID(organizationName, developerAppID string) (types.Keys, types.Error) {
 
 	getByAppID := func() (interface{}, types.Error) {
-		return s.key.GetByDeveloperAppID(developerAppID)
+		return s.key.GetByDeveloperAppID(organizationName, developerAppID)
 	}
 	var retrievedKeys types.Keys
 	if err := s.cache.fetchEntity(types.TypeKeyName, developerAppID, &retrievedKeys, getByAppID); err != nil {
@@ -59,16 +45,29 @@ func (s *KeyCache) GetByDeveloperAppID(developerAppID string) (types.Keys, types
 	return retrievedKeys, nil
 }
 
+// GetCountByAPIProductName counts the number of times an apiproduct has been assigned to keys
+func (s *KeyCache) GetCountByAPIProductName(organizationName, apiProductName string) (int, types.Error) {
+
+	getCountOfApiProduct := func() (interface{}, types.Error) {
+		return s.key.GetCountByAPIProductName(organizationName, apiProductName)
+	}
+	var apiProductCount int
+	if err := s.cache.fetchEntity(types.TypeKeyName, apiProductName, &apiProductCount, getCountOfApiProduct); err != nil {
+		return 0, err
+	}
+	return apiProductCount, nil
+}
+
 // UpdateByKey UPSERTs keys in database
-func (s *KeyCache) UpdateByKey(c *types.Key) types.Error {
+func (s *KeyCache) UpdateByKey(organizationName string, c *types.Key) types.Error {
 
 	s.cache.deleteEntry(types.TypeKeyName, c.ConsumerKey)
-	return s.key.UpdateByKey(c)
+	return s.key.UpdateByKey(organizationName, c)
 }
 
 // DeleteByKey deletes keys
-func (s *KeyCache) DeleteByKey(consumerKey string) types.Error {
+func (s *KeyCache) DeleteByKey(organizationName, consumerKey string) types.Error {
 
 	s.cache.deleteEntry(types.TypeKeyName, consumerKey)
-	return s.key.DeleteByKey(consumerKey)
+	return s.key.DeleteByKey(organizationName, consumerKey)
 }

@@ -32,16 +32,6 @@ func (cs *ClusterService) Get(clusterName string) (cluster *types.Cluster, err t
 	return cs.db.Cluster.Get(clusterName)
 }
 
-// GetAttributes returns attributes of an cluster
-func (cs *ClusterService) GetAttributes(clusterName string) (attributes *types.Attributes, err types.Error) {
-
-	cluster, err := cs.db.Cluster.Get(clusterName)
-	if err != nil {
-		return nil, err
-	}
-	return &cluster.Attributes, nil
-}
-
 // GetAttribute returns one particular attribute of an cluster
 func (cs *ClusterService) GetAttribute(clusterName, attributeName string) (value string, err types.Error) {
 
@@ -91,87 +81,25 @@ func (cs *ClusterService) Update(updatedCluster types.Cluster,
 	return updatedCluster, nil
 }
 
-// UpdateAttributes updates attributes of an cluster
-func (cs *ClusterService) UpdateAttributes(clusterName string,
-	receivedAttributes types.Attributes, who Requester) types.Error {
-
-	currentCluster, err := cs.db.Cluster.Get(clusterName)
-	if err != nil {
-		return err
-	}
-	updatedCluster := currentCluster
-	if err = updatedCluster.Attributes.SetMultiple(receivedAttributes); err != nil {
-		return err
-	}
-
-	if err = cs.updateCluster(updatedCluster, who); err != nil {
-		return err
-	}
-	cs.changelog.Update(currentCluster, updatedCluster, who)
-	return nil
-}
-
-// UpdateAttribute update an attribute of developer
-func (cs *ClusterService) UpdateAttribute(clusterName string,
-	attributeValue types.Attribute, who Requester) types.Error {
-
-	currentCluster, err := cs.db.Cluster.Get(clusterName)
-	if err != nil {
-		return err
-	}
-	updatedCluster := currentCluster
-	if err := updatedCluster.Attributes.Set(attributeValue); err != nil {
-		return err
-	}
-
-	if err := cs.updateCluster(updatedCluster, who); err != nil {
-		return err
-	}
-	cs.changelog.Update(currentCluster, updatedCluster, who)
-	return nil
-}
-
-// DeleteAttribute removes an attribute of an cluster and return its former value
-func (cs *ClusterService) DeleteAttribute(clusterName, attributeToDelete string,
-	who Requester) (string, types.Error) {
-
-	currentCluster, err := cs.db.Cluster.Get(clusterName)
-	if err != nil {
-		return "", err
-	}
-	updatedCluster := currentCluster
-	oldValue, err := updatedCluster.Attributes.Delete(attributeToDelete)
-	if err != nil {
-		return "", err
-	}
-
-	if err := cs.updateCluster(updatedCluster, who); err != nil {
-		return "", err
-	}
-	cs.changelog.Update(currentCluster, updatedCluster, who)
-	return oldValue, nil
-}
-
 // updateCluster updates last-modified field(s) and updates cluster in database
 func (cs *ClusterService) updateCluster(updatedCluster *types.Cluster, who Requester) types.Error {
 
 	updatedCluster.Attributes.Tidy()
-	updatedCluster.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
-	updatedCluster.LastmodifiedBy = who.User
+	updatedCluster.LastModifiedAt = shared.GetCurrentTimeMilliseconds()
+	updatedCluster.LastModifiedBy = who.User
 	return cs.db.Cluster.Update(updatedCluster)
 }
 
 // Delete deletes an cluster
-func (cs *ClusterService) Delete(clusterName string, who Requester) (
-	deletedCluster types.Cluster, e types.Error) {
+func (cs *ClusterService) Delete(clusterName string, who Requester) (e types.Error) {
 
 	cluster, err := cs.db.Cluster.Get(clusterName)
 	if err != nil {
-		return types.NullCluster, err
+		return err
 	}
 	if err := cs.db.Cluster.Delete(clusterName); err != nil {
-		return types.NullCluster, err
+		return err
 	}
 	cs.changelog.Delete(cluster, who)
-	return *cluster, nil
+	return nil
 }

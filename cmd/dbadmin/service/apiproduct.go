@@ -24,42 +24,22 @@ func NewAPIProduct(database *db.Database, c *Changelog) *APIProductService {
 }
 
 // GetAll returns all apiproducts
-func (ds *APIProductService) GetAll() (apiproducts types.APIProducts, err types.Error) {
+func (ds *APIProductService) GetAll(organizationName string) (apiproducts types.APIProducts, err types.Error) {
 
-	return ds.db.APIProduct.GetAll()
+	return ds.db.APIProduct.GetAll(organizationName)
 }
 
 // Get returns details of an apiproduct
-func (ds *APIProductService) Get(apiproductName string) (apiproduct *types.APIProduct, err types.Error) {
+func (ds *APIProductService) Get(organizationName, apiproductName string) (apiproduct *types.APIProduct, err types.Error) {
 
-	return ds.db.APIProduct.Get(apiproductName)
-}
-
-// GetAttributes returns attributes of an apiproduct
-func (ds *APIProductService) GetAttributes(apiproductName string) (attributes *types.Attributes, err types.Error) {
-
-	apiproduct, err := ds.Get(apiproductName)
-	if err != nil {
-		return nil, err
-	}
-	return &apiproduct.Attributes, nil
-}
-
-// GetAttribute returns one particular attribute of an apiproduct
-func (ds *APIProductService) GetAttribute(apiproductName, attributeName string) (value string, err types.Error) {
-
-	apiproduct, err := ds.Get(apiproductName)
-	if err != nil {
-		return "", err
-	}
-	return apiproduct.Attributes.Get(attributeName)
+	return ds.db.APIProduct.Get(organizationName, apiproductName)
 }
 
 // Create creates a new apiproduct
-func (ds *APIProductService) Create(newAPIProduct types.APIProduct,
+func (ds *APIProductService) Create(organizationName string, newAPIProduct types.APIProduct,
 	who Requester) (types.APIProduct, types.Error) {
 
-	if _, err := ds.Get(newAPIProduct.Name); err == nil {
+	if _, err := ds.Get(organizationName, newAPIProduct.Name); err == nil {
 		return types.NullAPIProduct, types.NewBadRequestError(
 			fmt.Errorf("apiproduct '%s' already exists", newAPIProduct.Name))
 	}
@@ -67,7 +47,11 @@ func (ds *APIProductService) Create(newAPIProduct types.APIProduct,
 	newAPIProduct.CreatedAt = shared.GetCurrentTimeMilliseconds()
 	newAPIProduct.CreatedBy = who.User
 
-	if err := ds.updateAPIProduct(&newAPIProduct, who); err != nil {
+	if newAPIProduct.ApprovalType == "" {
+		newAPIProduct.ApprovalType = "auto"
+	}
+
+	if err := ds.updateAPIProduct(organizationName, &newAPIProduct, who); err != nil {
 		return types.NullAPIProduct, err
 	}
 	ds.changelog.Create(newAPIProduct, who)
@@ -75,10 +59,10 @@ func (ds *APIProductService) Create(newAPIProduct types.APIProduct,
 }
 
 // Update updates an existing apiproduct
-func (ds *APIProductService) Update(updatedAPIProduct types.APIProduct,
+func (ds *APIProductService) Update(organizationName string, updatedAPIProduct types.APIProduct,
 	who Requester) (types.APIProduct, types.Error) {
 
-	currentAPIProduct, err := ds.db.APIProduct.Get(updatedAPIProduct.Name)
+	currentAPIProduct, err := ds.db.APIProduct.Get(organizationName, updatedAPIProduct.Name)
 	if err != nil {
 		return types.NullAPIProduct, err
 	}
@@ -88,93 +72,43 @@ func (ds *APIProductService) Update(updatedAPIProduct types.APIProduct,
 	updatedAPIProduct.CreatedAt = currentAPIProduct.CreatedAt
 	updatedAPIProduct.CreatedBy = currentAPIProduct.CreatedBy
 
-	if err = ds.updateAPIProduct(&updatedAPIProduct, who); err != nil {
+	if err = ds.updateAPIProduct(organizationName, &updatedAPIProduct, who); err != nil {
 		return types.NullAPIProduct, err
 	}
 	ds.changelog.Update(currentAPIProduct, updatedAPIProduct, who)
 	return updatedAPIProduct, nil
 }
 
-// UpdateAttributes updates attributes of an apiproduct
-func (ds *APIProductService) UpdateAttributes(apiproductName string,
-	receivedAttributes types.Attributes, who Requester) types.Error {
-
-	currentAPIProduct, err := ds.Get(apiproductName)
-	if err != nil {
-		return err
-	}
-	updatedAPIProduct := currentAPIProduct
-	if err = updatedAPIProduct.Attributes.SetMultiple(receivedAttributes); err != nil {
-		return err
-	}
-
-	if err = ds.updateAPIProduct(updatedAPIProduct, who); err != nil {
-		return err
-	}
-	ds.changelog.Update(currentAPIProduct, updatedAPIProduct, who)
-	return nil
-}
-
-// UpdateAttribute update an attribute of apiproduct
-func (ds *APIProductService) UpdateAttribute(apiproductName string,
-	attributeValue types.Attribute, who Requester) types.Error {
-
-	currentAPIProduct, err := ds.Get(apiproductName)
-	if err != nil {
-		return err
-	}
-	updatedAPIProduct := currentAPIProduct
-	if err := updatedAPIProduct.Attributes.Set(attributeValue); err != nil {
-		return err
-	}
-
-	if err := ds.updateAPIProduct(updatedAPIProduct, who); err != nil {
-		return err
-	}
-	ds.changelog.Update(currentAPIProduct, updatedAPIProduct, who)
-	return nil
-}
-
-// DeleteAttribute removes an attribute of an apiproduct
-func (ds *APIProductService) DeleteAttribute(apiproductName,
-	attributeToDelete string, who Requester) (string, types.Error) {
-
-	currentAPIProduct, err := ds.Get(apiproductName)
-	if err != nil {
-		return "", err
-	}
-	updatedAPIProduct := currentAPIProduct
-	oldValue, err := updatedAPIProduct.Attributes.Delete(attributeToDelete)
-	if err != nil {
-		return "", err
-	}
-
-	if err = ds.updateAPIProduct(updatedAPIProduct, who); err != nil {
-		return "", err
-	}
-	ds.changelog.Update(currentAPIProduct, updatedAPIProduct, who)
-	return oldValue, nil
-}
-
 // updateAPIProduct updates last-modified field(s) and updates apiproduct in database
-func (ds *APIProductService) updateAPIProduct(updatedAPIProduct *types.APIProduct, who Requester) types.Error {
+func (ds *APIProductService) updateAPIProduct(organizationName string,
+	updatedAPIProduct *types.APIProduct, who Requester) types.Error {
 
 	updatedAPIProduct.Attributes.Tidy()
-	updatedAPIProduct.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
-	updatedAPIProduct.LastmodifiedBy = who.User
-	return ds.db.APIProduct.Update(updatedAPIProduct)
+	updatedAPIProduct.LastModifiedAt = shared.GetCurrentTimeMilliseconds()
+	updatedAPIProduct.LastModifiedBy = who.User
+	return ds.db.APIProduct.Update(organizationName, updatedAPIProduct)
 }
 
 // Delete deletes an apiproduct
-func (ds *APIProductService) Delete(apiproductName string,
-	who Requester) (deletedAPIProduct types.APIProduct, e types.Error) {
+func (ds *APIProductService) Delete(organizationName, apiproductName string,
+	who Requester) (e types.Error) {
 
-	apiproduct, err := ds.Get(apiproductName)
+	apiproduct, err := ds.Get(organizationName, apiproductName)
 	if err != nil {
-		return types.NullAPIProduct, err
+		return err
 	}
-
-	// FIX ME (we probably allow deletion only in case no dev app uses the product)
+	keyWithAPIProduct, err := ds.db.Key.GetCountByAPIProductName(organizationName, apiproductName)
+	if err != nil {
+		return err
+	}
+	if keyWithAPIProduct > 0 {
+		return types.NewBadRequestError(
+			fmt.Errorf("cannot delete api product '%s' assigned to %d keys",
+				apiproductName, keyWithAPIProduct))
+	}
+	if err := ds.db.APIProduct.Delete(organizationName, apiproductName); err != nil {
+		return err
+	}
 	ds.changelog.Delete(apiproduct, who)
-	return *apiproduct, nil
+	return nil
 }

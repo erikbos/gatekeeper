@@ -43,7 +43,7 @@ func (s *UserStore) GetAll() (types.Users, types.Error) {
 	users, err := s.runGetUserQuery(query)
 	if err != nil {
 		s.db.metrics.QueryFailed(userMetricLabel)
-		return types.NullUsers, types.NewDatabaseError(err)
+		return nil, types.NewDatabaseError(err)
 	}
 
 	s.db.metrics.QueryHit(userMetricLabel)
@@ -85,11 +85,11 @@ func (s *UserStore) runGetUserQuery(query string, queryParameters ...interface{}
 			DisplayName:    columnValueString(m, "display_name"),
 			Password:       columnValueString(m, "password"),
 			Status:         columnValueString(m, "status"),
-			Roles:          types.NullUser.Roles.Unmarshal(columnValueString(m, "roles")),
+			Roles:          stringSliceUnmarshal(columnValueString(m, "roles")),
 			CreatedAt:      columnValueInt64(m, "created_at"),
 			CreatedBy:      columnValueString(m, "created_by"),
-			LastmodifiedAt: columnValueInt64(m, "lastmodified_at"),
-			LastmodifiedBy: columnValueString(m, "lastmodified_by"),
+			LastModifiedAt: columnValueInt64(m, "lastmodified_at"),
+			LastModifiedBy: columnValueString(m, "lastmodified_by"),
 		})
 		m = map[string]interface{}{}
 	}
@@ -109,15 +109,15 @@ func (s *UserStore) Update(c *types.User) types.Error {
 		c.DisplayName,
 		c.Password,
 		c.Status,
-		c.Roles.Marshal(),
+		stringSliceMarshal(c.Roles),
 		c.CreatedAt,
 		c.CreatedBy,
-		c.LastmodifiedAt,
-		c.LastmodifiedBy).Exec(); err != nil {
+		c.LastModifiedAt,
+		c.LastModifiedBy).Exec(); err != nil {
 
 		s.db.metrics.QueryFailed(userMetricLabel)
 		return types.NewDatabaseError(
-			fmt.Errorf("cannot update user '%s'", c.Name))
+			fmt.Errorf("cannot update user '%s' (%s)", c.Name, err))
 	}
 	return nil
 }

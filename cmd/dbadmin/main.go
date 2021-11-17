@@ -13,7 +13,6 @@ import (
 	"github.com/erikbos/gatekeeper/cmd/dbadmin/handler"
 	"github.com/erikbos/gatekeeper/cmd/dbadmin/service"
 	"github.com/erikbos/gatekeeper/pkg/db"
-	"github.com/erikbos/gatekeeper/pkg/db/cache"
 	"github.com/erikbos/gatekeeper/pkg/db/cassandra"
 	"github.com/erikbos/gatekeeper/pkg/shared"
 	"github.com/erikbos/gatekeeper/pkg/webadmin"
@@ -23,6 +22,8 @@ var (
 	version   string // Git version of build, set by Makefile
 	buildTime string // Build time, set by Makefile
 )
+
+// go generate oapi-codegen
 
 // Copy openapi spec file from root so Go can embed it
 //go:generate cp ../../openapi/gatekeeper.yaml apidocs/
@@ -43,7 +44,6 @@ func main() {
 
 	filename := flag.String("config", "dbadmin-config.yaml", "Configuration filename")
 	disableAPIAuthentication := flag.Bool("disableapiauthentication", false, "Disable REST API authentication")
-	organization := flag.String("organization", "", "Include organization in API path")
 	createSchema := flag.Bool("createschema", false, "Create database schema if it does not exist")
 	replicaCount := flag.Int("replicacount", 3, "Replica count to set for database keyspace")
 	showCreateSchema := flag.Bool("showcreateschema", false, "Show CQL statements to create database")
@@ -79,25 +79,26 @@ func main() {
 	if err != nil {
 		s.logger.Fatal("Database connect failed", zap.Error(err))
 	}
+	s.db = db
 
 	// Wrap database access with cache layer
-	s.db, err = cache.New(&s.config.Cache, db, applicationName, s.logger)
-	if err != nil {
-		s.logger.Fatal("Database cache setup failed", zap.Error(err))
-	}
+	// s.db, err = cache.New(&s.config.Cache, db, applicationName, s.logger)
+	// if err != nil {
+	// 	s.logger.Fatal("Database cache setup failed", zap.Error(err))
+	// }
 
 	// Start readiness subsystem
 	s.readiness = shared.NewReadiness(applicationName, s.logger)
 	s.readiness.Start()
 
 	// Start db health check and notify readiness subsystem
-	go s.db.RunReadinessCheck(s.readiness.GetChannel())
+	// go s.db.RunReadinessCheck(s.readiness.GetChannel())
 
-	startWebAdmin(&s, applicationName, *organization, *disableAPIAuthentication)
+	startWebAdmin(&s, applicationName, *disableAPIAuthentication)
 }
 
 // startWebAdmin starts the admin web UI
-func startWebAdmin(s *server, applicationName, organization string, enableAPIAuthentication bool) {
+func startWebAdmin(s *server, applicationName string, enableAPIAuthentication bool) {
 
 	webAdminLogger := shared.NewLogger(&s.config.WebAdmin.Logger)
 	s.webadmin = webadmin.New(s.config.WebAdmin, applicationName, webAdminLogger)
@@ -115,7 +116,7 @@ func startWebAdmin(s *server, applicationName, organization string, enableAPIAut
 	changeLogLogger := shared.NewLogger(&s.config.Changelog.Logger)
 	service := service.New(s.db, changeLogLogger)
 	s.handler = handler.NewHandler(s.webadmin.Router, s.db, service,
-		applicationName, organization, enableAPIAuthentication, webAdminLogger)
+		applicationName, enableAPIAuthentication, webAdminLogger)
 
 	s.webadmin.Start()
 }

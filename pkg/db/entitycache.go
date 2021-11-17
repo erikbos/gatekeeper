@@ -78,7 +78,7 @@ func (ec *EntityCache) checkForChangedListeners() {
 		ec.updateListeners(loadedListeners)
 	}
 	for _, listener := range loadedListeners {
-		if ec.listenersLastUpdate == 0 || listener.LastmodifiedAt > ec.listenersLastUpdate {
+		if ec.listenersLastUpdate == 0 || listener.LastModifiedAt > ec.listenersLastUpdate {
 			ec.updateListeners(loadedListeners)
 		}
 	}
@@ -111,7 +111,7 @@ func (ec *EntityCache) checkForChangedRoutes() {
 		ec.updateRoutes(loadedRoutes)
 	}
 	for _, route := range loadedRoutes {
-		if ec.routesLastUpdate == 0 || route.LastmodifiedAt > ec.routesLastUpdate {
+		if ec.routesLastUpdate == 0 || route.LastModifiedAt > ec.routesLastUpdate {
 			ec.updateRoutes(loadedRoutes)
 		}
 	}
@@ -144,7 +144,7 @@ func (ec *EntityCache) checkForChangedClusters() {
 		ec.updateClusters(loadedClusters)
 	}
 	for _, cluster := range loadedClusters {
-		if ec.clustersLastUpdate == 0 || cluster.LastmodifiedAt > ec.clustersLastUpdate {
+		if ec.clustersLastUpdate == 0 || cluster.LastModifiedAt > ec.clustersLastUpdate {
 			ec.updateClusters(loadedClusters)
 		}
 	}

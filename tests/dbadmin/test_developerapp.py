@@ -28,7 +28,7 @@ def test_application_get_all_detailed():
     application_api.get_all_global()
 
 
-def test_application_crud():
+def test_application_crud_one():
     """
     Test create, read, update, delete one application of one developer
     """
@@ -51,12 +51,14 @@ def test_application_crud():
     updated_application['attributes'] = [
               {
                    "name" : "Test",
+                   "value" : ""
               },
               {
                    "name" : "Status",
                    "value" : "Royal"
               }
          ]
+    updated_application['callbackUrl'] = ''
     application_api.update_positive(updated_application)
 
     # Read updated application by name
@@ -205,3 +207,5 @@ def test_application_field_lengths():
     """
     # We want to test that we cannot send zero-length, too long fields etc
     # TODO test wrong field lengths
+
+## TODO two developer each "My First App"

@@ -1,166 +1,280 @@
 package handler
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 
 	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
-// registerListenerRoutes registers all routes we handle
-func (h *Handler) registerListenerRoutes(r *gin.RouterGroup) {
-	r.GET("/listeners", h.handler(h.getAllListeners))
-	r.POST("/listeners", h.handler(h.createListener))
-
-	r.GET("/listeners/:listener", h.handler(h.getListener))
-	r.POST("/listeners/:listener", h.handler(h.updateListener))
-	r.DELETE("/listeners/:listener", h.handler(h.deleteListener))
-
-	r.GET("/listeners/:listener/attributes", h.handler(h.getListenerAttributes))
-	r.POST("/listeners/:listener/attributes", h.handler(h.updateListenerAttributes))
-
-	r.GET("/listeners/:listener/attributes/:attribute", h.handler(h.getListenerAttribute))
-	r.POST("/listeners/:listener/attributes/:attribute", h.handler(h.updateListenerAttribute))
-	r.DELETE("/listeners/:listener/attributes/:attribute", h.handler(h.deleteListenerAttribute))
-}
-
-const (
-	// attributeParameter = "attribute"
-
-	// Name of listener parameter in the route definition
-	listenerParameter = "listener"
-)
-
-// getAllListeners returns all listeners
-func (h *Handler) getAllListeners(c *gin.Context) handlerResponse {
+// returns all listeners
+// (GET /v1/listeners)
+func (h *Handler) GetV1Listeners(c *gin.Context) {
 
 	listeners, err := h.service.Listener.GetAll()
 	if err != nil {
-		return handleError(err)
+		responseError(c, err)
+		return
 	}
-	return handleOK(StringMap{"listeners": listeners})
+	h.responseListenerss(c, listeners)
 }
 
-// getListener returns details of an listener
-func (h *Handler) getListener(c *gin.Context) handlerResponse {
+// creates a new listener
+// (POST /v1/listeners)
+func (h *Handler) PostV1Listeners(c *gin.Context) {
 
-	listener, err := h.service.Listener.Get(c.Param(listenerParameter))
-	if err != nil {
-		return handleError(err)
+	var receivedListener Listener
+	if err := c.ShouldBindJSON(&receivedListener); err != nil {
+		responseErrorBadRequest(c, err)
+		return
 	}
-	return handleOK(listener)
+	newListener := fromListener(receivedListener)
+	createdDeveloper, err := h.service.Listener.Create(newListener, h.who(c))
+	if err != nil {
+		responseErrorBadRequest(c, err)
+		return
+	}
+	h.responseListenerCreated(c, &createdDeveloper)
 }
 
-// getListenerAttributes returns attributes of an listener
-func (h *Handler) getListenerAttributes(c *gin.Context) handlerResponse {
+// deletes an listener
+// (DELETE /v1/listeners/{listener_name})
+func (h *Handler) DeleteV1ListenersListenerName(c *gin.Context, listenerName ListenerName) {
 
-	listener, err := h.service.Listener.Get(c.Param(listenerParameter))
+	listener, err := h.service.Listener.Get(string(listenerName))
 	if err != nil {
-		return handleError(err)
+		responseError(c, err)
+		return
 	}
-	return handleOKAttributes(listener.Attributes)
+	if err := h.service.Listener.Delete(string(listenerName), h.who(c)); err != nil {
+		responseError(c, err)
+		return
+	}
+	h.responseListeners(c, listener)
 }
 
-// getListenerAttribute returns one particular attribute of an listener
-func (h *Handler) getListenerAttribute(c *gin.Context) handlerResponse {
+// returns full details of one listener
+// (GET /v1/listeners/{listener_name})
+func (h *Handler) GetV1ListenersListenerName(c *gin.Context, listenerName ListenerName) {
 
-	listener, err := h.service.Listener.Get(c.Param(listenerParameter))
+	listener, err := h.service.Listener.Get(string(listenerName))
 	if err != nil {
-		return handleError(err)
+		responseError(c, err)
+		return
 	}
-	value, err := listener.Attributes.Get(c.Param(attributeParameter))
-	if err != nil {
-		return handleError(err)
-	}
-	return handleOK(value)
+	h.responseListeners(c, listener)
 }
 
-// createListener creates an listener
-func (h *Handler) createListener(c *gin.Context) handlerResponse {
+// Updates existing listener
+// (POST /v1/listeners/{listener_name})
+func (h *Handler) PostV1ListenersListenerName(c *gin.Context, listenerName ListenerName) {
 
-	var newListener types.Listener
-	if err := c.ShouldBindJSON(&newListener); err != nil {
-		return handleBadRequest(err)
+	var receivedListener Listener
+	if err := c.ShouldBindJSON(&receivedListener); err != nil {
+		responseErrorBadRequest(c, err)
+		return
 	}
-	storedListener, err := h.service.Listener.Create(newListener, h.who(c))
-	if err != nil {
-		return handleError(err)
-	}
-	return handleCreated(storedListener)
-}
-
-// updateListener updates an existing listener
-func (h *Handler) updateListener(c *gin.Context) handlerResponse {
-
-	var updatedListener types.Listener
-	if err := c.ShouldBindJSON(&updatedListener); err != nil {
-		return handleBadRequest(err)
-	}
-	// listername in path must match listername in posted body
-	if updatedListener.Name != c.Param(listenerParameter) {
-		return handleNameMismatch()
-	}
+	updatedListener := fromListener(receivedListener)
 	storedListener, err := h.service.Listener.Update(updatedListener, h.who(c))
 	if err != nil {
-		return handleError(err)
+		responseError(c, err)
+		return
 	}
-	return handleOK(storedListener)
+	h.responseListenersUpdated(c, &storedListener)
 }
 
-// updateListenerAttributes updates attributes of an listener
-func (h *Handler) updateListenerAttributes(c *gin.Context) handlerResponse {
+// returns attributes of a listener
+// (GET /v1/listeners/{listener_name}/attributes)
+func (h *Handler) GetV1ListenersListenerNameAttributes(c *gin.Context, listenerName ListenerName) {
 
-	var receivedAttributes struct {
-		Attributes types.Attributes `json:"attribute"`
-	}
-	if err := c.ShouldBindJSON(&receivedAttributes); err != nil {
-		return handleBadRequest(err)
-	}
-	if err := h.service.Listener.UpdateAttributes(c.Param(listenerParameter),
-		receivedAttributes.Attributes, h.who(c)); err != nil {
-		return handleError(err)
-	}
-	return handleOKAttributes(receivedAttributes.Attributes)
-}
-
-// updateListenerAttribute update an attribute of developer
-func (h *Handler) updateListenerAttribute(c *gin.Context) handlerResponse {
-
-	var receivedValue types.AttributeValue
-	if err := c.ShouldBindJSON(&receivedValue); err != nil {
-		return handleBadRequest(err)
-	}
-	newAttribute := types.Attribute{
-		Name:  c.Param(attributeParameter),
-		Value: receivedValue.Value,
-	}
-	if err := h.service.Listener.UpdateAttribute(c.Param(listenerParameter),
-		newAttribute, h.who(c)); err != nil {
-		return handleError(err)
-	}
-	return handleOKAttribute(newAttribute)
-}
-
-// deleteListenerAttribute removes an attribute of an listener
-func (h *Handler) deleteListenerAttribute(c *gin.Context) handlerResponse {
-
-	attributeToDelete := c.Param(attributeParameter)
-	oldValue, err := h.service.Listener.DeleteAttribute(c.Param(listenerParameter),
-		attributeToDelete, h.who(c))
+	listener, err := h.service.Listener.Get(string(listenerName))
 	if err != nil {
-		return handleBadRequest(err)
+		responseError(c, err)
+		return
 	}
-	return handleOKAttribute(types.Attribute{
-		Name:  attributeToDelete,
-		Value: oldValue,
+	h.responseAttributes(c, listener.Attributes)
+}
+
+// replaces attributes of an listener
+// (POST /v1/listeners/{listener_name}/attributes)
+func (h *Handler) PostV1ListenersListenerNameAttributes(c *gin.Context, listenerName ListenerName) {
+
+	var receivedAttributes Attributes
+	if err := c.ShouldBindJSON(&receivedAttributes); err != nil {
+		responseErrorBadRequest(c, err)
+		return
+	}
+	listener, err := h.service.Listener.Get(string(listenerName))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
+	listener.Attributes = fromAttributesRequest(receivedAttributes.Attribute)
+	storedListener, err := h.service.Listener.Update(*listener, h.who(c))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
+	h.responseAttributes(c, storedListener.Attributes)
+}
+
+// deletes one attribute of an listener
+// (DELETE /v1/listeners/{listener_name}/attributes/{attribute_name})
+func (h *Handler) DeleteV1ListenersListenerNameAttributesAttributeName(c *gin.Context,
+	listenerName ListenerName, attributeName AttributeName) {
+
+	listener, err := h.service.Listener.Get(string(listenerName))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
+	oldValue, err := listener.Attributes.Delete(string(attributeName))
+	if err != nil {
+		responseError(c, err)
+	}
+	_, err = h.service.Listener.Update(*listener, h.who(c))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
+	h.responseAttributeDeleted(c, types.NewAttribute(string(attributeName), oldValue))
+}
+
+// returns one attribute of an listener
+// (GET /v1/listeners/{listener_name}/attributes/{attribute_name})
+func (h *Handler) GetV1ListenersListenerNameAttributesAttributeName(c *gin.Context,
+	listenerName ListenerName, attributeName AttributeName) {
+
+	listener, err := h.service.Listener.Get(string(listenerName))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
+	attributeValue, err := listener.Attributes.Get(string(attributeName))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
+	h.responseAttributeRetrieved(c, types.NewAttribute(string(attributeName), attributeValue))
+}
+
+// updates an attribute of an listener
+// (POST /v1/listeners/{listener_name}/attributes/{attribute_name})
+func (h *Handler) PostV1ListenersListenerNameAttributesAttributeName(c *gin.Context,
+	listenerName ListenerName, attributeName AttributeName) {
+
+	var receivedValue Attribute
+	if err := c.ShouldBindJSON(&receivedValue); err != nil {
+		responseErrorBadRequest(c, err)
+		return
+	}
+	listener, err := h.service.Listener.Get(string(listenerName))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
+	newAttribute := types.NewAttribute(string(attributeName), *receivedValue.Value)
+	if err := listener.Attributes.Set(newAttribute); err != nil {
+		responseError(c, err)
+	}
+	_, err = h.service.Listener.Update(*listener, h.who(c))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
+	h.responseAttributeUpdated(c, newAttribute)
+}
+
+// API responses
+
+func (h *Handler) responseListenerss(c *gin.Context, listeners types.Listeners) {
+
+	all_listeners := make([]Listener, len(listeners))
+	for i := range listeners {
+		all_listeners[i] = h.ToListenerResponse(&listeners[i])
+	}
+	c.IndentedJSON(http.StatusOK, Listeners{
+		Listeners: &all_listeners,
 	})
 }
 
-// deleteListener deletes an listener
-func (h *Handler) deleteListener(c *gin.Context) handlerResponse {
+func (h *Handler) responseListeners(c *gin.Context, listener *types.Listener) {
 
-	deletedListener, err := h.service.Listener.Delete(c.Param(listenerParameter), h.who(c))
-	if err != nil {
-		return handleError(err)
+	c.IndentedJSON(http.StatusOK, h.ToListenerResponse(listener))
+}
+
+func (h *Handler) responseListenerCreated(c *gin.Context, listener *types.Listener) {
+
+	c.IndentedJSON(http.StatusCreated, h.ToListenerResponse(listener))
+}
+
+func (h *Handler) responseListenersUpdated(c *gin.Context, listener *types.Listener) {
+
+	c.IndentedJSON(http.StatusOK, h.ToListenerResponse(listener))
+}
+
+// type conversion
+
+func (h *Handler) ToListenerResponse(l *types.Listener) Listener {
+
+	lis := Listener{
+		Attributes:     toAttributesResponse(l.Attributes),
+		CreatedAt:      &l.CreatedAt,
+		CreatedBy:      &l.CreatedBy,
+		DisplayName:    &l.DisplayName,
+		LastModifiedBy: &l.LastModifiedBy,
+		LastModifiedAt: &l.LastModifiedAt,
+		Name:           l.Name,
+		Policies:       &l.Policies,
+		Port:           &l.Port,
+		RouteGroup:     &l.RouteGroup,
 	}
-	return handleOK(deletedListener)
+	if l.VirtualHosts != nil {
+		lis.VirtualHosts = &l.VirtualHosts
+	} else {
+		lis.VirtualHosts = &[]string{}
+	}
+	return lis
+}
+
+func fromListener(l Listener) types.Listener {
+
+	listener := types.Listener{}
+	if l.Attributes != nil {
+		listener.Attributes = fromAttributesRequest(l.Attributes)
+	}
+	if l.CreatedAt != nil {
+		listener.CreatedAt = *l.CreatedAt
+	}
+	if l.CreatedBy != nil {
+		listener.CreatedBy = *l.CreatedBy
+	}
+	if l.DisplayName != nil {
+		listener.DisplayName = *l.DisplayName
+	}
+	if l.LastModifiedBy != nil {
+		listener.LastModifiedBy = *l.LastModifiedBy
+	}
+	if l.LastModifiedAt != nil {
+		listener.LastModifiedAt = *l.LastModifiedAt
+	}
+	if l.Name != "" {
+		listener.Name = l.Name
+	}
+	if l.Policies != nil {
+		listener.Policies = *l.Policies
+	}
+	if l.Port != nil {
+		listener.Port = *l.Port
+	}
+	if l.RouteGroup != nil {
+		listener.RouteGroup = *l.RouteGroup
+	}
+	if l.VirtualHosts != nil {
+		listener.VirtualHosts = *l.VirtualHosts
+	} else {
+		listener.VirtualHosts = []string{}
+	}
+	return listener
 }

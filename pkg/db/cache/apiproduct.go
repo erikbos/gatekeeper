@@ -20,10 +20,10 @@ func NewAPIProductCache(cache *Cache, apiproduct db.APIProduct) *APIProductCache
 }
 
 // GetAll retrieves all api products
-func (s *APIProductCache) GetAll() (types.APIProducts, types.Error) {
+func (s *APIProductCache) GetAll(organizationName string) (types.APIProducts, types.Error) {
 
 	getAll := func() (interface{}, types.Error) {
-		return s.apiproduct.GetAll()
+		return s.apiproduct.GetAll(organizationName)
 	}
 	var apiproducts types.APIProducts
 	if err := s.cache.fetchEntity(types.TypeAPIProductName, "", &apiproducts, getAll); err != nil {
@@ -33,10 +33,10 @@ func (s *APIProductCache) GetAll() (types.APIProducts, types.Error) {
 }
 
 // Get returns an apiproduct
-func (s *APIProductCache) Get(apiproductName string) (*types.APIProduct, types.Error) {
+func (s *APIProductCache) Get(organizationName, apiproductName string) (*types.APIProduct, types.Error) {
 
 	getAPIProduct := func() (interface{}, types.Error) {
-		return s.apiproduct.Get(apiproductName)
+		return s.apiproduct.Get(organizationName, apiproductName)
 	}
 	var apiproduct types.APIProduct
 	if err := s.cache.fetchEntity(types.TypeAPIProductName, apiproductName, &apiproduct, getAPIProduct); err != nil {
@@ -46,15 +46,15 @@ func (s *APIProductCache) Get(apiproductName string) (*types.APIProduct, types.E
 }
 
 // Update UPSERTs an apiproduct in database
-func (s *APIProductCache) Update(p *types.APIProduct) types.Error {
+func (s *APIProductCache) Update(organizationName string, p *types.APIProduct) types.Error {
 
 	s.cache.deleteEntry(types.TypeAPIProductName, p.Name)
-	return s.apiproduct.Update(p)
+	return s.apiproduct.Update(organizationName, p)
 }
 
 // Delete deletes an apiproduct
-func (s *APIProductCache) Delete(apiProduct string) types.Error {
+func (s *APIProductCache) Delete(organizationName, apiProduct string) types.Error {
 
 	s.cache.deleteEntry(types.TypeAPIProductName, apiProduct)
-	return s.apiproduct.Delete(apiProduct)
+	return s.apiproduct.Delete(organizationName, apiProduct)
 }

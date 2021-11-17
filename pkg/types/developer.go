@@ -1,51 +1,48 @@
 package types
 
 // Developer contains everything about a Developer
-//
-// Field validation (binding) is done using https://godoc.org/github.com/go-playground/validator
-type Developer struct {
-	// Id of developer (not changable)
-	DeveloperID string `json:"developerId"`
+type (
+	Developer struct {
+		// Id of developer (not changable)
+		DeveloperID string
 
-	// Status of developer (should be "approved" to allow access)
-	Status string `json:"status"`
+		// Status of developer (should be "approved" to allow access)
+		Status string
 
-	// Name of developer applications of this developer
-	Apps StringSlice `json:"apps"`
+		// Name of developer applications of this developer
+		Apps []string
 
-	// Attributes of developer
-	Attributes Attributes `json:"attributes"`
+		// Attributes of developer
+		Attributes Attributes
 
-	// Email address
-	Email string `json:"email" binding:"required"`
+		// Email address
+		Email string
 
-	// Username
-	UserName string `json:"userName" binding:"required"`
+		// Username
+		UserName string
 
-	// First name
-	FirstName string `json:"firstName" binding:"required"`
+		// First name
+		FirstName string
 
-	// Last name
-	LastName string `json:"lastName" binding:"required"`
+		// Last name
+		LastName string
 
-	// Created at timestamp in epoch milliseconds
-	CreatedAt int64 `json:"createdAt"`
+		// Created at timestamp in epoch milliseconds
+		CreatedAt int64
 
-	// Name of user who created this organiz
-	CreatedBy string `json:"createdBy"`
+		// Name of user who created this organiz
+		CreatedBy string
 
-	// if set developer is suspend till this time, epoch milliseconds
-	SuspendedTill int64 `json:"suspendedTill"`
+		// Last modified at timestamp in epoch milliseconds
+		LastModifiedAt int64
 
-	// Last modified at timestamp in epoch milliseconds
-	LastmodifiedAt int64 `json:"lastmodifiedAt"`
+		// Name of user who last updated this developer
+		LastModifiedBy string
+	}
 
-	// Name of user who last updated this developer
-	LastmodifiedBy string `json:"lastmodifiedBy"`
-}
-
-// Developers holds one or more developers
-type Developers []Developer
+	// Developers holds one or more developers
+	Developers []Developer
+)
 
 var (
 	// NullDeveloper is an empty developer type
@@ -55,32 +52,22 @@ var (
 	NullDevelopers = Developers{}
 )
 
+const (
+	developerStatusActive   = "active"
+	developerInStatusActive = "inactive"
+)
+
 // Activate marks a developer as approved
 func (d *Developer) Activate() {
-
-	d.Status = "active"
+	d.Status = developerStatusActive
 }
 
 // Deactivate marks a developer as inactive
 func (d *Developer) Deactivate() {
-
-	d.Status = "inactive"
+	d.Status = developerInStatusActive
 }
 
 // IsActive returns true in case developer's status is active
 func (d *Developer) IsActive() bool {
-
-	return d.Status == "active"
-}
-
-// IsSuspended returns true in case developer is suspended
-func (d *Developer) IsSuspended(now int64) bool {
-
-	if d.SuspendedTill == 0 || d.SuspendedTill == -1 {
-		return false
-	}
-	if now < d.SuspendedTill {
-		return true
-	}
-	return false
+	return d.Status == developerStatusActive
 }

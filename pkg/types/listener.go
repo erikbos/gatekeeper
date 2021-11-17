@@ -8,43 +8,45 @@ import (
 // Listener contains everything about downstream configuration of listener and http virtual hosts
 //
 // Field validation (binding) is done using https://godoc.org/github.com/go-playground/validator
-type Listener struct {
-	// Name of listener (not changable)
-	Name string `json:"name" binding:"required,min=4"`
+type (
+	Listener struct {
+		// Name of listener (not changable)
+		Name string `binding:"required,min=4"`
 
-	// Friendly display name of listener
-	DisplayName string `json:"displayName"`
+		// Friendly display name of listener
+		DisplayName string
 
-	// Virtual hosts of this listener (at least one, each value must be a fqdn)
-	VirtualHosts StringSlice `json:"virtualHosts" binding:"required,min=1,dive,fqdn"`
+		// Virtual hosts of this listener (at least one, each value must be a fqdn)
+		VirtualHosts []string `binding:"required,min=1,dive,fqdn"`
 
-	// tcp port to listen on
-	Port int `json:"port" binding:"required,min=1,max=65535"`
+		// tcp port to listen on
+		Port int `binding:"required,min=1,max=65535"`
 
-	// Routegroup to forward traffic to
-	RouteGroup string `json:"routeGroup" binding:"required"`
+		// Routegroup to forward traffic to
+		RouteGroup string `binding:"required"`
 
-	// Comma separated list of policynames, to apply to requests
-	Policies string `json:"policies"`
+		// Comma separated list of policynames, to apply to requests
+		Policies string
 
-	// Attributes of this listener
-	Attributes Attributes `json:"attributes"`
+		// Attributes of this listener
+		Attributes Attributes
 
-	// Created at timestamp in epoch milliseconds
-	CreatedAt int64 `json:"createdAt"`
-	// Name of user who created this listener
+		// Created at timestamp in epoch milliseconds
+		CreatedAt int64
 
-	CreatedBy string `json:"createdBy"`
+		// Name of user who created this listener
+		CreatedBy string
 
-	// Last modified at timestamp in epoch milliseconds
-	LastmodifiedAt int64 `json:"lastmodifiedAt"`
+		// Last modified at timestamp in epoch milliseconds
+		LastModifiedAt int64
 
-	// Name of user who last updated this listener
-	LastmodifiedBy string `json:"lastmodifiedBy"`
-}
+		// Name of user who last updated this listener
+		LastModifiedBy string
+	}
 
-// Listeners holds one or more Listeners
-type Listeners []Listener
+	// Listeners holds one or more Listeners
+	Listeners []Listener
+)
 
 var (
 	// NullListener is an empty listener type

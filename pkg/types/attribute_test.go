@@ -209,14 +209,14 @@ func Test_Attribute_Set(t *testing.T) {
 	tests := []struct {
 		name            string
 		attributes      Attributes
-		attributeToSet  Attribute
+		attributeToSet  *Attribute
 		attributesAfter Attributes
 		err             Error
 	}{
 		{
 			name:       "1 - add one attribute to empty set",
 			attributes: NullAttributes,
-			attributeToSet: Attribute{
+			attributeToSet: &Attribute{
 				Name:  AttributeSNIHostName,
 				Value: "www.test.com",
 			},
@@ -236,7 +236,7 @@ func Test_Attribute_Set(t *testing.T) {
 					Value: "www.test.com",
 				},
 			},
-			attributeToSet: Attribute{
+			attributeToSet: &Attribute{
 				Name:  AttributeHTTPProtocol,
 				Value: AttributeValueHTTPProtocol2,
 			},
@@ -264,7 +264,7 @@ func Test_Attribute_Set(t *testing.T) {
 					Value: AttributeValueHTTPProtocol2,
 				},
 			},
-			attributeToSet: Attribute{
+			attributeToSet: &Attribute{
 				Name:  AttributeSNIHostName,
 				Value: "www.example.com",
 			},
@@ -291,12 +291,12 @@ func Test_Attribute_Set(t *testing.T) {
 	testName := "MaximumNumberofAttributesAllowed"
 	a := Attributes{}
 	for i := 0; i <= MaximumNumberofAttributesAllowed; i++ {
-		require.Equalf(t, nil, a.Set(Attribute{
+		require.Equalf(t, nil, a.Set(&Attribute{
 			Name:  fmt.Sprintf("attribute%d", i),
 			Value: fmt.Sprintf("value%d", i),
 		}), testName)
 	}
-	require.Equalf(t, errTooManyAttributes, a.Set(Attribute{
+	require.Equalf(t, errTooManyAttributes, a.Set(&Attribute{
 		Name:  "ShouldNotFitAnymore",
 		Value: "WeAreFull",
 	}), testName)
@@ -411,7 +411,7 @@ func Test_Attribute_SetMultiple(t *testing.T) {
 	testName := "MaximumNumberofAttributesAllowed"
 	a := Attributes{}
 	for i := 0; i <= MaximumNumberofAttributesAllowed; i++ {
-		require.Equalf(t, nil, a.Set(Attribute{
+		require.Equalf(t, nil, a.Set(&Attribute{
 			Name:  fmt.Sprintf("attribute%d", i),
 			Value: fmt.Sprintf("value%d", i),
 		}), testName)
@@ -554,69 +554,5 @@ func Test_Attribute_Delete(t *testing.T) {
 		require.Equalf(t, test.err, err, test.name)
 		require.Equalf(t, test.valueOfDeletedAttribute, valueOfDeletedAttribute, test.name)
 		require.Equalf(t, test.attributesAfter, test.attributes, test.name)
-	}
-}
-
-func Test_Attribute_Unmarshall(t *testing.T) {
-
-	tests := []struct {
-		name           string
-		attributesJson string
-		attributes     Attributes
-	}{
-		{
-			name:           "1 - attributes in json",
-			attributesJson: "[{\"name\":\"SNIHostName\",\"value\":\"www.example.com\"},{\"name\":\"HTTPProtocol\",\"value\":\"HTTP/2\"}]",
-			attributes: Attributes{
-				Attribute{
-					Name:  AttributeSNIHostName,
-					Value: "www.example.com",
-				},
-				Attribute{
-					Name:  AttributeHTTPProtocol,
-					Value: AttributeValueHTTPProtocol2,
-				},
-			},
-		},
-		{
-			name:           "1 - attributes in json",
-			attributesJson: "",
-			attributes:     NullAttributes,
-		},
-	}
-	for _, test := range tests {
-		require.Equalf(t, test.attributes, test.attributes.Unmarshal(test.attributesJson), test.name)
-	}
-}
-
-func Test_Attribute_Marshall(t *testing.T) {
-
-	tests := []struct {
-		name           string
-		attributesJson string
-		attributes     Attributes
-	}{
-		{
-			name: "1 - two attributes",
-			attributes: Attributes{
-				Attribute{
-					Name:  AttributeSNIHostName,
-					Value: "www.test.com",
-				},
-				Attribute{
-					Name:  AttributeHTTPProtocol,
-					Value: AttributeValueHTTPProtocol2,
-				},
-			},
-			attributesJson: "[{\"name\":\"SNIHostName\",\"value\":\"www.test.com\"},{\"name\":\"HTTPProtocol\",\"value\":\"HTTP/2\"}]",
-		},
-		{
-			name:           "2 - no attributes",
-			attributes:     NullAttributes,
-			attributesJson: "[]",
-		},
-	}
-	for _, test := range tests {
-		require.Equalf(t, test.attributesJson, test.attributes.Marshal(), test.name)
 	}
 }

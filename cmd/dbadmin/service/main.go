@@ -14,6 +14,7 @@ func New(database *db.Database, changelogLogger *zap.Logger) *Service {
 		Listener:     NewListener(database, changelog),
 		Route:        NewRoute(database, changelog),
 		Cluster:      NewCluster(database, changelog),
+		Organization: NewOrganization(database, changelog),
 		Developer:    NewDeveloper(database, changelog),
 		DeveloperApp: NewDeveloperApp(database, changelog),
 		Key:          NewKey(database, changelog),

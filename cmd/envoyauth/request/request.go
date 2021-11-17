@@ -20,6 +20,7 @@ type State struct {
 	ConsumerKey     *string
 	OauthToken      *string
 	Listener        *types.Listener
+	Organization    *types.Organization
 	Developer       *types.Developer
 	DeveloperApp    *types.DeveloperApp
 	Key             *types.Key

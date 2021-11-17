@@ -19,6 +19,7 @@ name,
 display_name,
 attributes,
 status,
+callback_url,
 created_at,
 created_by,
 lastmodified_at,
@@ -38,7 +39,7 @@ func NewDeveloperAppStore(database *Database) *DeveloperAppStore {
 }
 
 // GetAll retrieves all developer apps
-func (s *DeveloperAppStore) GetAll() (types.DeveloperApps, types.Error) {
+func (s *DeveloperAppStore) GetAll(organizationName string) (types.DeveloperApps, types.Error) {
 
 	query := "SELECT " + developerAppColumns + " FROM developer_apps"
 	developerapps, err := s.runGetDeveloperAppQuery(query)
@@ -52,7 +53,7 @@ func (s *DeveloperAppStore) GetAll() (types.DeveloperApps, types.Error) {
 }
 
 // GetAllByDeveloperID retrieves all developer apps from a developer
-func (s *DeveloperAppStore) GetAllByDeveloperID(developerID string) (types.DeveloperApps, types.Error) {
+func (s *DeveloperAppStore) GetAllByDeveloperID(organizationName, developerID string) (types.DeveloperApps, types.Error) {
 
 	query := "SELECT " + developerAppColumns + " FROM developer_apps WHERE developer_id = ?"
 	developerapps, err := s.runGetDeveloperAppQuery(query, developerID)
@@ -66,7 +67,7 @@ func (s *DeveloperAppStore) GetAllByDeveloperID(developerID string) (types.Devel
 }
 
 // GetByName returns a developer app
-func (s *DeveloperAppStore) GetByName(developerAppName string) (*types.DeveloperApp, types.Error) {
+func (s *DeveloperAppStore) GetByName(organizationName, developerEmail, developerAppName string) (*types.DeveloperApp, types.Error) {
 
 	query := "SELECT " + developerAppColumns + " FROM developer_apps WHERE name = ? LIMIT 1"
 	developerapps, err := s.runGetDeveloperAppQuery(query, developerAppName)
@@ -86,7 +87,7 @@ func (s *DeveloperAppStore) GetByName(developerAppName string) (*types.Developer
 }
 
 // GetByID returns a developer app
-func (s *DeveloperAppStore) GetByID(developerAppID string) (*types.DeveloperApp, types.Error) {
+func (s *DeveloperAppStore) GetByID(organizationName, developerAppID string) (*types.DeveloperApp, types.Error) {
 
 	query := "SELECT " + developerAppColumns + " FROM developer_apps WHERE app_id = ? LIMIT 1"
 	developerapps, err := s.runGetDeveloperAppQuery(query, developerAppID)
@@ -105,7 +106,7 @@ func (s *DeveloperAppStore) GetByID(developerAppID string) (*types.DeveloperApp,
 }
 
 // GetCountByDeveloperID retrieves number of apps belonging to a developer
-func (s *DeveloperAppStore) GetCountByDeveloperID(developerID string) (int, types.Error) {
+func (s *DeveloperAppStore) GetCountByDeveloperID(organizationName, developerID string) (int, types.Error) {
 
 	var developerAppCount int
 	query := "SELECT count(*) FROM developer_apps WHERE developer_id = ?"
@@ -130,50 +131,53 @@ func (s *DeveloperAppStore) runGetDeveloperAppQuery(query string, queryParameter
 	for iterable.MapScan(m) {
 		developerapps = append(developerapps, types.DeveloperApp{
 			AppID:          columnValueString(m, "app_id"),
-			DeveloperID:    columnValueString(m, "developer_id"),
-			Name:           columnValueString(m, "name"),
-			DisplayName:    columnValueString(m, "display_name"),
-			Attributes:     types.DeveloperApp{}.Attributes.Unmarshal(m["attributes"].(string)),
-			Status:         columnValueString(m, "status"),
+			Attributes:     AttributesUnmarshal(m["attributes"].(string)),
+			CallbackUrl:    columnValueString(m, "callback_url"),
 			CreatedAt:      columnValueInt64(m, "created_at"),
 			CreatedBy:      columnValueString(m, "created_by"),
-			LastmodifiedAt: columnValueInt64(m, "lastmodified_at"),
-			LastmodifiedBy: columnValueString(m, "lastmodified_by"),
+			DeveloperID:    columnValueString(m, "developer_id"),
+			DisplayName:    columnValueString(m, "display_name"),
+			LastModifiedAt: columnValueInt64(m, "lastmodified_at"),
+			LastModifiedBy: columnValueString(m, "lastmodified_by"),
+			Scopes:         stringSliceUnmarshal(columnValueString(m, "scopes")),
+			Status:         columnValueString(m, "status"),
+			Name:           columnValueString(m, "name"),
 		})
 		m = map[string]interface{}{}
 	}
 	// In case query failed we return query error
 	if err := iterable.Close(); err != nil {
-		return types.DeveloperApps{}, err
+		return types.NullDeveloperApps, err
 	}
 	return developerapps, nil
 }
 
 // Update UPSERTs a developer app
-func (s *DeveloperAppStore) Update(app *types.DeveloperApp) types.Error {
+func (s *DeveloperAppStore) Update(organizationName string, app *types.DeveloperApp) types.Error {
 
-	query := "INSERT INTO developer_apps (" + developerAppColumns + ") VALUES(?,?,?,?,?,?,?,?,?,?)"
+	query := "INSERT INTO developer_apps (" + developerAppColumns + ") VALUES(?,?,?,?,?,?,?,?,?,?,?)"
 	if err := s.db.CassandraSession.Query(query,
 		app.AppID,
 		app.DeveloperID,
 		app.Name,
 		app.DisplayName,
-		app.Attributes.Marshal(),
+		AttributesMarshal(app.Attributes),
 		app.Status,
+		app.CallbackUrl,
 		app.CreatedAt,
 		app.CreatedBy,
-		app.LastmodifiedAt,
-		app.LastmodifiedBy).Exec(); err != nil {
+		app.LastModifiedAt,
+		app.LastModifiedBy).Exec(); err != nil {
 
 		s.db.metrics.QueryFailed(developerAppsMetricLabel)
 		return types.NewDatabaseError(
-			fmt.Errorf("cannot update developer app '%s'", app.AppID))
+			fmt.Errorf("cannot update developer app '%s' (%s)", app.AppID, err))
 	}
 	return nil
 }
 
 // DeleteByID deletes a developer app
-func (s *DeveloperAppStore) DeleteByID(developerAppID string) types.Error {
+func (s *DeveloperAppStore) DeleteByID(organizationName, developerAppID string) types.Error {
 
 	query := "DELETE FROM developer_apps WHERE app_id = ?"
 	if err := s.db.CassandraSession.Query(query, developerAppID).Exec(); err != nil {

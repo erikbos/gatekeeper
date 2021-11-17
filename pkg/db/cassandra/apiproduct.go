@@ -14,17 +14,18 @@ const (
 	apiProductsMetricLabel = "apiproducts"
 
 	// List of apiproduct columns we use
-	apiProductsColumns = `name,
-display_name,
-description,
+	apiProductsColumns = `approval_type,
+api_resources,
 attributes,
-route_group,
-paths,
-policies,
 created_at,
 created_by,
+description,
+display_name,
 lastmodified_at,
-lastmodified_by`
+lastmodified_by,
+name,
+route_group,
+policies`
 )
 
 // APIProductStore holds our database config
@@ -40,14 +41,14 @@ func NewAPIProductStore(database *Database) *APIProductStore {
 }
 
 // GetAll retrieves all api products
-func (s *APIProductStore) GetAll() (types.APIProducts, types.Error) {
+func (s *APIProductStore) GetAll(organizationName string) (types.APIProducts, types.Error) {
 
 	query := "SELECT " + apiProductsColumns + " FROM api_products"
 
 	apiproducts, err := s.runGetAPIProductQuery(query)
 	if err != nil {
 		s.db.metrics.QueryFailed(apiProductsMetricLabel)
-		return types.APIProducts{}, types.NewDatabaseError(err)
+		return types.NullAPIProducts, types.NewDatabaseError(err)
 	}
 
 	s.db.metrics.QueryHit(apiProductsMetricLabel)
@@ -55,7 +56,7 @@ func (s *APIProductStore) GetAll() (types.APIProducts, types.Error) {
 }
 
 // Get returns an apiproduct
-func (s *APIProductStore) Get(apiproductName string) (*types.APIProduct, types.Error) {
+func (s *APIProductStore) Get(organizationName, apiproductName string) (*types.APIProduct, types.Error) {
 
 	query := "SELECT " + apiProductsColumns + " FROM api_products WHERE name = ? LIMIT 1"
 
@@ -90,50 +91,52 @@ func (s *APIProductStore) runGetAPIProductQuery(query string, queryParameters ..
 	}
 	if iter.NumRows() == 0 {
 		_ = iter.Close()
-		return types.APIProducts{}, nil
+		return types.NullAPIProducts, nil
 	}
 
 	m := make(map[string]interface{})
 	for iter.MapScan(m) {
 		apiproducts = append(apiproducts, types.APIProduct{
-			Name:           columnValueString(m, "name"),
-			DisplayName:    columnValueString(m, "display_name"),
-			Description:    m["description"].(string),
-			Attributes:     types.APIProduct{}.Attributes.Unmarshal(columnValueString(m, "attributes")),
-			RouteGroup:     m["route_group"].(string),
-			Paths:          types.APIProduct{}.Paths.Unmarshal(columnValueString(m, "paths")),
-			Policies:       m["policies"].(string),
+			ApprovalType:   columnValueString(m, "approval_type"),
+			Attributes:     AttributesUnmarshal(columnValueString(m, "attributes")),
 			CreatedAt:      columnValueInt64(m, "created_at"),
 			CreatedBy:      columnValueString(m, "created_by"),
-			LastmodifiedAt: columnValueInt64(m, "lastmodified_at"),
-			LastmodifiedBy: columnValueString(m, "lastmodified_by"),
+			Description:    columnValueString(m, "description"),
+			DisplayName:    columnValueString(m, "display_name"),
+			LastModifiedAt: columnValueInt64(m, "lastmodified_at"),
+			LastModifiedBy: columnValueString(m, "lastmodified_by"),
+			Name:           columnValueString(m, "name"),
+			APIResources:   stringSliceUnmarshal(columnValueString(m, "api_resources")),
+			Policies:       columnValueString(m, "policies"),
+			RouteGroup:     columnValueString(m, "route_group"),
 		})
 		m = map[string]interface{}{}
 	}
 
 	if err := iter.Close(); err != nil {
-		return types.APIProducts{}, err
+		return types.NullAPIProducts, err
 	}
 
 	return apiproducts, nil
 }
 
 // Update UPSERTs an apiproduct in database
-func (s *APIProductStore) Update(p *types.APIProduct) types.Error {
+func (s *APIProductStore) Update(organizationName string, p *types.APIProduct) types.Error {
 
-	query := "INSERT INTO api_products (" + apiProductsColumns + ") VALUES(?,?,?,?,?,?,?,?,?,?,?)"
+	query := "INSERT INTO api_products (" + apiProductsColumns + ") VALUES(?,?,?,?,?,?,?,?,?,?,?,?)"
 	if err := s.db.CassandraSession.Query(query,
-		p.Name,
-		p.DisplayName,
-		p.Description,
-		p.Attributes.Marshal(),
-		p.RouteGroup,
-		p.Paths.Marshal(),
-		p.Policies,
+		p.ApprovalType,
+		stringSliceMarshal(p.APIResources),
+		AttributesMarshal(p.Attributes),
 		p.CreatedAt,
 		p.CreatedBy,
-		p.LastmodifiedAt,
-		p.LastmodifiedBy).Exec(); err != nil {
+		p.Description,
+		p.DisplayName,
+		p.LastModifiedAt,
+		p.LastModifiedBy,
+		p.Name,
+		p.Policies,
+		p.RouteGroup).Exec(); err != nil {
 
 		s.db.metrics.QueryFailed(apiProductsMetricLabel)
 		return types.NewDatabaseError(
@@ -143,16 +146,16 @@ func (s *APIProductStore) Update(p *types.APIProduct) types.Error {
 }
 
 // Delete deletes an apiproduct
-func (s *APIProductStore) Delete(apiProduct string) types.Error {
+func (s *APIProductStore) Delete(organizationName, apiProduct string) types.Error {
 
-	apiproduct, err := s.Get(apiProduct)
-	if err != nil {
-		s.db.metrics.QueryFailed(apiProductsMetricLabel)
-		return err
-	}
+	// apiproduct, err := s.Get(apiProduct)
+	// if err != nil {
+	// 	s.db.metrics.QueryFailed(apiProductsMetricLabel)
+	// 	return err
+	// }
 
 	query := "DELETE FROM api_products WHERE name = ?"
-	if err := s.db.CassandraSession.Query(query, apiproduct.Name).Exec(); err != nil {
+	if err := s.db.CassandraSession.Query(query, apiProduct).Exec(); err != nil {
 		s.db.metrics.QueryFailed(apiProductsMetricLabel)
 		return types.NewDatabaseError(err)
 	}

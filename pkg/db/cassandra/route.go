@@ -83,16 +83,16 @@ func (s *RouteStore) runGetRouteQuery(query string, queryParameters ...interface
 	m := make(map[string]interface{})
 	for iter.MapScan(m) {
 		routes = append(routes, types.Route{
-			Name:           columnValueString(m, "name"),
-			DisplayName:    columnValueString(m, "display_name"),
-			RouteGroup:     columnValueString(m, "route_group"),
-			Path:           columnValueString(m, "path"),
-			PathType:       columnValueString(m, "path_type"),
-			Attributes:     types.Route{}.Attributes.Unmarshal(columnValueString(m, "attributes")),
+			Attributes:     AttributesUnmarshal(columnValueString(m, "attributes")),
 			CreatedAt:      columnValueInt64(m, "created_at"),
 			CreatedBy:      columnValueString(m, "created_by"),
-			LastmodifiedAt: columnValueInt64(m, "lastmodified_at"),
-			LastmodifiedBy: columnValueString(m, "lastmodified_by"),
+			DisplayName:    columnValueString(m, "display_name"),
+			LastModifiedAt: columnValueInt64(m, "lastmodified_at"),
+			LastModifiedBy: columnValueString(m, "lastmodified_by"),
+			Name:           columnValueString(m, "name"),
+			Path:           columnValueString(m, "path"),
+			PathType:       columnValueString(m, "path_type"),
+			RouteGroup:     columnValueString(m, "route_group"),
 		})
 		m = map[string]interface{}{}
 	}
@@ -113,15 +113,15 @@ func (s *RouteStore) Update(r *types.Route) types.Error {
 		r.RouteGroup,
 		r.Path,
 		r.PathType,
-		r.Attributes.Marshal(),
+		AttributesMarshal(r.Attributes),
 		r.CreatedAt,
 		r.CreatedBy,
-		r.LastmodifiedAt,
-		r.LastmodifiedBy).Exec(); err != nil {
+		r.LastModifiedAt,
+		r.LastModifiedBy).Exec(); err != nil {
 
 		s.db.metrics.QueryFailed(routeMetricLabel)
 		return types.NewDatabaseError(
-			fmt.Errorf("cannot update route '%s'", r.Name))
+			fmt.Errorf("cannot update route '%s' (%s)", r.Name, err))
 	}
 	return nil
 }

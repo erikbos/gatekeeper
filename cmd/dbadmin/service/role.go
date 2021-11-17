@@ -36,7 +36,7 @@ func (rs *RoleService) Get(roleName string) (role *types.Role, err types.Error) 
 }
 
 // Create creates an role
-func (rs *RoleService) Create(newRole types.Role, who Requester) (*types.Role, types.Error) {
+func (rs *RoleService) Create(newRole *types.Role, who Requester) (*types.Role, types.Error) {
 
 	if _, err := rs.db.Role.Get(newRole.Name); err == nil {
 		return nil, types.NewBadRequestError(
@@ -46,15 +46,15 @@ func (rs *RoleService) Create(newRole types.Role, who Requester) (*types.Role, t
 	newRole.CreatedAt = shared.GetCurrentTimeMilliseconds()
 	newRole.CreatedBy = who.User
 
-	if err := rs.updateRole(&newRole, who); err != nil {
+	if err := rs.updateRole(newRole, who); err != nil {
 		return nil, err
 	}
 	rs.Changelog.Create(newRole, who)
-	return &newRole, nil
+	return newRole, nil
 }
 
 // Update updates an existing role
-func (rs *RoleService) Update(updatedRole types.Role, who Requester) (*types.Role, types.Error) {
+func (rs *RoleService) Update(updatedRole *types.Role, who Requester) (*types.Role, types.Error) {
 
 	currentRole, err := rs.db.Role.Get(updatedRole.Name)
 	if err != nil {
@@ -65,39 +65,39 @@ func (rs *RoleService) Update(updatedRole types.Role, who Requester) (*types.Rol
 	updatedRole.CreatedAt = currentRole.CreatedAt
 	updatedRole.CreatedBy = currentRole.CreatedBy
 
-	if err = rs.updateRole(&updatedRole, who); err != nil {
+	if err = rs.updateRole(updatedRole, who); err != nil {
 		return nil, err
 	}
 	rs.Changelog.Update(currentRole, updatedRole, who)
-	return &updatedRole, nil
+	return updatedRole, nil
 }
 
 // updateRole updates last-modified field(s) and updates role in database
 func (rs *RoleService) updateRole(updatedRole *types.Role, who Requester) types.Error {
 
-	updatedRole.LastmodifiedAt = shared.GetCurrentTimeMilliseconds()
-	updatedRole.LastmodifiedBy = who.User
+	updatedRole.LastModifiedAt = shared.GetCurrentTimeMilliseconds()
+	updatedRole.LastModifiedBy = who.User
 	return rs.db.Role.Update(updatedRole)
 }
 
 // Delete deletes an role
-func (rs *RoleService) Delete(roleName string, who Requester) (deletedRole *types.Role, e types.Error) {
+func (rs *RoleService) Delete(roleName string, who Requester) (e types.Error) {
 
 	role, err := rs.db.Role.Get(roleName)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	userWithRoleCount := rs.countUserWithRole(roleName)
 	if userWithRoleCount > 0 {
-		return nil, types.NewForbiddenError(
+		return types.NewForbiddenError(
 			fmt.Errorf("cannot delete role '%s' still assigned to %d users",
 				roleName, userWithRoleCount))
 	}
 	if err = rs.db.Role.Delete(roleName); err != nil {
-		return nil, err
+		return err
 	}
 	rs.Changelog.Delete(role, who)
-	return role, nil
+	return nil
 }
 
 // counts number of users with a specific role

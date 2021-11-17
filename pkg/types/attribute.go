@@ -1,7 +1,6 @@
 package types
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"sort"
@@ -14,16 +13,18 @@ import (
 //
 // Field validation settings (binding) are validated with
 // https://godoc.org/github.com/go-playground/validator
-type Attribute struct {
-	// Attribute name, minimum required length is 4
-	Name string `json:"name" binding:"required,min=4"`
+type (
+	Attribute struct {
+		// Attribute name, minimum required length is 1
+		Name string `binding:"required,min=1"`
 
-	// Attribute value, minimum required length is 1 as we do not want empty values
-	Value string `json:"value" binding:"required,min=1"`
-}
+		// Attribute value, minimum required length is 1 as we do not want empty values
+		Value string `binding:"required"`
+	}
 
-// Attributes holds one or more attributes
-type Attributes []Attribute
+	// Attributes holds one or more attributes
+	Attributes []Attribute
+)
 
 var (
 	// NullAttribute is an empty attribute type
@@ -40,10 +41,10 @@ var (
 	errTooManyAttributes = NewUpdateFailureError(errors.New("cannot add more than 100 attributes"))
 )
 
-// AttributeValue is the single attribute type we receive from API
-type AttributeValue struct {
-	// Attribute value, minimum required length is 1
-	Value string `json:"value" binding:"required,min=1"`
+// NewAttribute creates a new attribute
+func NewAttribute(name, value string) *Attribute {
+
+	return &Attribute{Name: name, Value: value}
 }
 
 // Get return one named attribute from attributes
@@ -94,7 +95,7 @@ func (attributes *Attributes) GetAsDuration(name string, defaultDuration time.Du
 }
 
 // Set updates or adds attribute in slice. Returns old value if attribute already existed.
-func (attributes *Attributes) Set(attributeValue Attribute) Error {
+func (attributes *Attributes) Set(attributeValue *Attribute) Error {
 
 	if len(*attributes) > MaximumNumberofAttributesAllowed {
 		return errTooManyAttributes
@@ -107,14 +108,14 @@ func (attributes *Attributes) Set(attributeValue Attribute) Error {
 		// In case attribute exists append new value
 		if oldAttribute.Name == attributeValue.Name {
 			attributePresent = true
-			updatedAttributes = append(updatedAttributes, attributeValue)
+			updatedAttributes = append(updatedAttributes, *attributeValue)
 		} else {
 			updatedAttributes = append(updatedAttributes, oldAttribute)
 		}
 	}
 	// In case it is a new attribute append it
 	if !attributePresent {
-		updatedAttributes = append(updatedAttributes, attributeValue)
+		updatedAttributes = append(updatedAttributes, *attributeValue)
 	}
 	// Overwrite existing slice with new slice
 	*attributes = updatedAttributes
@@ -126,7 +127,7 @@ func (attributes *Attributes) Set(attributeValue Attribute) Error {
 func (attributes *Attributes) SetMultiple(attributeValues Attributes) Error {
 
 	for _, attribute := range attributeValues {
-		if err := attributes.Set(attribute); err != nil {
+		if err := attributes.Set(&attribute); err != nil {
 			return err
 		}
 	}
@@ -184,30 +185,4 @@ func (attributes *Attributes) Delete(name string) (valueOfDeletedAttribute strin
 		return valueOfDeletedAttribute, nil
 	}
 	return "", errAttributeNotFound
-}
-
-// Unmarshal unpacks JSON array of attributes
-// Example input: [{"name":"Shoesize","value":"42"}, {"name":"Destination","value":"Mars"}]
-func (attributes Attributes) Unmarshal(jsonArrayOfAttributes string) Attributes {
-
-	if jsonArrayOfAttributes != "" {
-		var attributes = make(Attributes, 0)
-		if err := json.Unmarshal([]byte(jsonArrayOfAttributes), &attributes); err == nil {
-			return attributes
-		}
-	}
-	return NullAttributes
-}
-
-// Marshal packs slice of attributes into JSON
-// Example output: [{"name":"Shoesize","value":"42"}, {"name":"Destination","value":"Mars"}]
-func (attributes Attributes) Marshal() string {
-
-	if len(attributes) > 0 {
-		json, err := json.Marshal(attributes)
-		if err == nil {
-			return string(json)
-		}
-	}
-	return "[]"
 }

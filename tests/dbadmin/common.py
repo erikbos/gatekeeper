@@ -3,6 +3,11 @@ Provides common functions
 """
 import os
 import requests
+from openapi_core import create_spec
+from openapi_spec_validator.schemas import read_yaml_file
+from openapi_core.contrib.requests import RequestsOpenAPIRequest, RequestsOpenAPIResponse
+from openapi_core.validation.request.validators import RequestValidator
+from openapi_core.validation.response.validators import ResponseValidator
 import jsonref
 import jsonschema
 
@@ -84,3 +89,43 @@ def load_json_schema(filename):
 
     with open(absolute_path, encoding='utf-8') as schema_file:
         return jsonref.loads(schema_file.read(), base_uri=base_uri, jsonschema=True)
+
+class API:
+    def __init__(self, config, filename):
+        self.config = config
+        self.session = requests.Session()
+
+        self.session.auth = (config['api_username'], config['api_password'])
+        self.session.headers = {
+            'accept': 'application/json',
+            'user-agent': 'Gatekeeper testsuite'
+        }
+
+        spec = create_spec(read_yaml_file(filename))
+        self.request_validator = RequestValidator(spec)
+        self.response_validator = ResponseValidator(spec)
+
+
+    def _request(self, method, url, *args, **kwargs):
+        request = requests.Request(method, url, *args, **kwargs)
+        result = self.request_validator.validate(RequestsOpenAPIRequest(request))
+        result.raise_for_errors()
+
+        response = self.session.send(self.session.prepare_request(request))
+        responseOpenAPI = RequestsOpenAPIResponse(response)
+
+        # Workaround for https://github.com/p1c2u/openapi-core/issues/378
+        if responseOpenAPI.mimetype == 'application/json; charset=utf-8':
+            responseOpenAPI.mimetype = 'application/json'
+
+        result = self.response_validator.validate(RequestsOpenAPIRequest(request), responseOpenAPI)
+
+        result.raise_for_errors()
+
+        return response
+
+    def get(self, url, *args, **kwargs):
+        return self._request("GET", url, args, kwargs)
+
+    def post(self, url, *args, **kwargs):
+        return self._request("POST", url, args, kwargs)

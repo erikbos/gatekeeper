@@ -17,7 +17,7 @@ class Application:
         self.session = session
         self.global_application_url = self.config['api_url'] + '/apps'
         if developer_email is not None:
-            self.application_url = config['api_url'] + '/developers/' + developer_email + '/apps'
+            self.application_url = config['api_url'] + '/developers/' + urllib.parse.quote(developer_email) + '/apps'
         self.schemas = {
             'application': load_json_schema('application.json'),
             'applications': load_json_schema('applications.json'),
@@ -42,6 +42,8 @@ class Application:
             random_int = random.randint(0,99999)
             new_application = {
                 "name" : self.generate_app_name(random_int),
+                # "displayName": "Testsuite app",
+                "callbackUrl": "1",
                 "attributes" : [
                     {
                         "name" : f"name{random_int}",
@@ -154,7 +156,7 @@ class Application:
         """
         Get existing application by uuid
         """
-        application_url = self.global_application_url + '/' + app_uuid
+        application_url = self.global_application_url + '/' + urllib.parse.quote(app_uuid)
         response = self.session.get(application_url)
         assert_status_code(response, HTTP_OK)
         assert_content_type_json(response)
@@ -253,7 +255,10 @@ class Application:
 
     def assert_compare(self, application_a, application_b):
         """
-        Compares minimum required fields that can be set of two applications
+        Compares minimum required fields that can be freely, as is, on applications
         """
         assert application_a['name'] == application_b['name']
-        assert application_a['attributes'] == application_b['attributes']
+        # assert application_a['displayName'] == application_b['displayName']
+        assert application_a['callbackUrl'] == application_b['callbackUrl']
+        assert (application_a['attributes'].sort(key=lambda x: x['name'])
+            == application_b['attributes'].sort(key=lambda x: x['name']))

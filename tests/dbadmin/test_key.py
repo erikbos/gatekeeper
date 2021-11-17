@@ -8,6 +8,7 @@ from developer import Developer
 from developerapp import Application
 from key import Key
 from apiproduct import APIproduct
+from attribute import run_attribute_tests
 
 config = get_config()
 session = get_http_session(config)
@@ -76,16 +77,13 @@ def test_key_import_various_lengths():
 
     key_api = Key(config, session, created_developer['email'], created_application['name'])
 
-    # Validate retrieve first key that is auto-generated when app is created
-    app_first_key = created_application['credentials'][0]
-    first_key = key_api.get_positive(app_first_key['consumerKey'])
-    key_api.assert_compare(first_key, app_first_key)
-
     # try various key sizes
-    for key_size in [1, 10, 100, 500, 1000, 2000]:
+    created_keys = []
+    for key_size in [2, 10, 100, 500, 1000, 2000]:
+        key_in_hex_length = int(key_size / 2)
         new_key = {
-            'consumerKey': secrets.token_hex(key_size),
-            'consumerSecret': secrets.token_hex(key_size),
+            'consumerKey': secrets.token_hex(key_in_hex_length),
+            'consumerSecret': secrets.token_hex(key_in_hex_length),
         }
         created_key = key_api.create_positive(new_key)
         retrieved_key = key_api.get_positive(created_key['consumerKey'])
@@ -94,15 +92,43 @@ def test_key_import_various_lengths():
         # Attempt to creating same, already existing key, must not be possible
         key_api.create_negative(created_key)
 
-        # Validate just imported key is part of app response set
-        retrieved_application = application_api.get_positive(created_application['name'])
-        key_present = False
-        for i in range(len(retrieved_application['credentials'])):
-            if retrieved_application['credentials'][i]['consumerKey'] == new_key['consumerKey']:
-                key_present = True
-        assert key_present
+        created_keys.append(created_key['consumerKey'])
+
+    # Check each imported key is in listed in retrieved app
+    retrieved_application = application_api.get_positive(created_application['name'])
+    all_retrieved_keys = [retrieved_application['credentials'][i]['consumerKey'] for i in range(len(retrieved_application['credentials']))]
+    if not all(consumer_key in all_retrieved_keys for consumer_key in created_keys):
+        assert()
 
     # clean up
+    for i in range(len(retrieved_application['credentials'])):
+        key_api.delete_positive(retrieved_application['credentials'][i]['consumerKey'])
+
+    application_api.delete_positive(created_application['name'])
+    developer_api.delete_positive(created_developer['email'])
+
+
+def test_key_after_add_application_one_key_present():
+    """
+    Test if creation of application also adds one key
+    """
+    developer_api = Developer(config, session)
+    created_developer = developer_api.create_positive()
+
+    application_api = Application(config, session, created_developer['email'])
+    created_application = application_api.create_new()
+
+    key_api = Key(config, session, created_developer['email'], created_application['name'])
+
+    # Application should have 1 key created together with application
+    assert (len(created_application['credentials']) == 1)
+
+    # compare
+    retrieved_key = key_api.get_positive(created_application['credentials'][0]['consumerKey'])
+    assert (created_application['credentials'][0] == retrieved_key)
+
+    # clean up
+    key_api.delete_positive(created_application['credentials'][0]['consumerKey'])
     application_api.delete_positive(created_application['name'])
     developer_api.delete_positive(created_developer['email'])
 
@@ -119,7 +145,9 @@ def test_key_import_incomplete_key():
 
     key_api = Key(config, session, created_developer['email'], created_application['name'])
 
-    # try importing incomplete keys (should have both consumerKey, consumerSecret)
+    # try importing empty or incomplete keys, should have both consumerKey and consumerSecret
+    key_api.create_negative({ 'consumerKey': '' })
+    key_api.create_negative({ 'consumerSecret': '' })
     key_api.create_negative({ 'consumerKey': secrets.token_hex(10) })
     key_api.create_negative({ 'consumerSecret': secrets.token_hex(10) })
 
@@ -156,7 +184,7 @@ def test_key_update_ignore_provided_fields():
                    "value" : "42"
               }
         ],
-        'issuedAt': 666,
+        'issuedAt': 4242,
     }
     updated_key = key_api.update_positive(app_first_key, key_changed)
 
@@ -183,16 +211,16 @@ def test_key_change_status():
 
     key_api = Key(config, session, created_developer['email'], created_application['name'])
 
-    # After application creation status of first key is approved
+    # After application creation status of first key should be approved
     assert created_application['credentials'][0]['status'] == 'approved'
 
     # Change status to revoke and back to approve
-    first_key = created_application['credentials'][0]['consumerKey']
-    key_api.change_status_revoke_positive(first_key)
-    assert key_api.get_positive(first_key)['status'] == 'revoked'
+    consumer_key = created_application['credentials'][0]['consumerKey']
+    key_api.change_status_revoke_positive(consumer_key)
+    assert key_api.get_positive(consumer_key)['status'] == 'revoked'
 
-    key_api.change_status_approve_positive(first_key)
-    assert key_api.get_positive(first_key)['status'] == 'approved'
+    key_api.change_status_approve_positive(consumer_key)
+    assert key_api.get_positive(consumer_key)['status'] == 'approved'
 
     # clean up
     application_api.delete_positive(created_application['name'])
@@ -304,6 +332,41 @@ def test_key_api_product_change_status():
     # clean up
     application_api.delete_positive(created_application['name'])
     developer_api.delete_positive(created_developer['email'])
+
+
+def test_key_attributes():
+    """
+    Test create, read, update, delete attributes of key
+    """
+    developer_api = Developer(config, session)
+    created_developer = developer_api.create_positive()
+
+    application_api = Application(config, session, created_developer['email'])
+    created_application = application_api.create_new()
+
+    key_api = Key(config, session, created_developer['email'], created_application['name'])
+
+    consumer_key = created_application['credentials'][0]['consumerKey']
+
+    application_attributes_url = (application_api.application_url
+                                  + '/' + created_application['name']
+                                  + '/keys/' + consumer_key
+                                  + '/attributes')
+
+    run_attribute_tests(config, session, application_attributes_url)
+
+    # clean up
+    application_api.delete_positive(created_application['name'])
+    developer_api.delete_positive(created_developer['email'])
+
+
+# test keyexpiresin from developerapp
+
+# test import same key twice
+
+# test key for product with approvalType manual
+
+# test posting apiproducts against existing key
 
 
 # test posting full key details

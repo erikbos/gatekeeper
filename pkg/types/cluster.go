@@ -9,31 +9,33 @@ import (
 // Cluster holds configuration of an upstream cluster
 //
 // Field validation (binding) is done using https://godoc.org/github.com/go-playground/validator
-type Cluster struct {
-	// Name of cluster (not changable)
-	Name string `json:"name" binding:"required,min=4"`
+type (
+	Cluster struct {
+		// Name of cluster (not changable)
+		Name string `binding:"required,min=4"`
 
-	// Friendly display name of cluster
-	DisplayName string `json:"displayName"`
+		// Friendly display name of cluster
+		DisplayName string
 
-	// Attributes of this cluster
-	Attributes Attributes `json:"attributes"`
+		// Attributes of this cluster
+		Attributes Attributes
 
-	// Created at timestamp in epoch milliseconds
-	CreatedAt int64 `json:"createdAt"`
+		// Created at timestamp in epoch milliseconds
+		CreatedAt int64
 
-	// Name of user who created this cluster
-	CreatedBy string `json:"createdBy"`
+		// Name of user who created this cluster
+		CreatedBy string
 
-	// Last modified at timestamp in epoch milliseconds
-	LastmodifiedAt int64 `json:"lastmodifiedAt"`
+		// Last modified at timestamp in epoch milliseconds
+		LastModifiedAt int64
 
-	// Name of user who last updated this cluster
-	LastmodifiedBy string `json:"lastmodifiedBy"`
-}
+		// Name of user who last updated this cluster
+		LastModifiedBy string
+	}
 
-// Clusters holds one or more clusters
-type Clusters []Cluster
+	// Clusters holds one or more clusters
+	Clusters []Cluster
+)
 
 var (
 	// NullCluster is an empty cluster type

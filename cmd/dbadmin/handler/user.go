@@ -1,99 +1,177 @@
 package handler
 
 import (
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 
 	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
-// registerUserRoutes registers all routes we handle
-func (h *Handler) registerUserRoutes(r *gin.RouterGroup) {
-	r.GET("/users", h.handler(h.getAllUsers))
-	r.POST("/users", h.handler(h.createUser))
-
-	r.GET("/users/:user", h.handler(h.getUser))
-	r.POST("/users/:user", h.handler(h.updateUser))
-	r.DELETE("/users/:user", h.handler(h.deleteUser))
-}
-
-const (
-	// Name of user parameter in the route definition
-	userParameter = "user"
-)
-
-// getAllUsers returns all users
-func (h *Handler) getAllUsers(c *gin.Context) handlerResponse {
+// returns all users
+// (GET /v1/users)
+func (h *Handler) GetV1Users(c *gin.Context) {
 
 	users, err := h.service.User.GetAll()
 	if err != nil {
-		return handleError(err)
+		responseError(c, err)
+		return
 	}
-	removePasswords(users)
-	return handleOK(StringMap{"users": users})
-}
-
-// removePasswords set passwords of all users in slice to empty string
-func removePasswords(users types.Users) {
-
-	for index := range users {
-		users[index].Password = ""
-	}
-}
-
-// getUser returns details of an user
-func (h *Handler) getUser(c *gin.Context) handlerResponse {
-
-	user, err := h.service.User.Get(c.Param(userParameter))
-	if err != nil {
-		return handleError(err)
-	}
-	user.Password = ""
-	return handleOK(user)
+	h.responseUsers(c, users)
 }
 
 // createUser creates an user
-func (h *Handler) createUser(c *gin.Context) handlerResponse {
+// (POST /v1/users)
+func (h *Handler) PostV1Users(c *gin.Context) {
 
-	var newUser types.User
-	if err := c.ShouldBindJSON(&newUser); err != nil {
-		return handleBadRequest(err)
+	var receivedUser User
+	if err := c.ShouldBindJSON(&receivedUser); err != nil {
+		responseErrorBadRequest(c, err)
+		return
 	}
+	newUser := fromUser(receivedUser)
 	storedUser, err := h.service.User.Create(newUser, h.who(c))
 	if err != nil {
-		return handleError(err)
+		responseError(c, err)
+		return
 	}
-	// Remove password so we do not show in response
-	storedUser.Password = ""
-	return handleCreated(storedUser)
+	h.responseUserCreated(c, storedUser)
 }
 
-// updateUser updates an existing user
-func (h *Handler) updateUser(c *gin.Context) handlerResponse {
+// returns a user
+// (GET /v1/users/{user_name})
+func (h *Handler) GetV1UsersUserName(c *gin.Context, userName UserName) {
 
-	var updatedUser types.User
-	if err := c.ShouldBindJSON(&updatedUser); err != nil {
-		return handleBadRequest(err)
+	user, err := h.service.User.Get(string(userName))
+	if err != nil {
+		responseError(c, err)
+		return
 	}
-	if updatedUser.Name != c.Param(userParameter) {
-		return handleNameMismatch()
+	h.responseUser(c, user)
+}
+
+// updates an existing user
+// (POST /v1/users/{user_name})
+func (h *Handler) PostV1UsersUserName(c *gin.Context, userName UserName) {
+
+	_, err := h.service.User.Get(string(userName))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
+	var receivedUser User
+	if err := c.ShouldBindJSON(&receivedUser); err != nil {
+		responseErrorBadRequest(c, err)
+		return
+	}
+	updatedUser := fromUser(receivedUser)
+	if updatedUser.Name != string(userName) {
+		responseErrorNameValueMisMatch(c)
+		return
 	}
 	storedUser, err := h.service.User.Update(updatedUser, h.who(c))
 	if err != nil {
-		return handleError(err)
+		responseError(c, err)
+		return
 	}
-	// Remove password so we do not show in response
-	storedUser.Password = ""
-	return handleOK(storedUser)
+	h.responseUserUpdated(c, storedUser)
 }
 
-// deleteUser deletes an user
-func (h *Handler) deleteUser(c *gin.Context) handlerResponse {
+// deletes an user
+// (DELETE /v1/users/{user_name})
+func (h *Handler) DeleteV1UsersUserName(c *gin.Context, userName UserName) {
 
-	deletedUser, err := h.service.User.Delete(c.Param(userParameter), h.who(c))
+	deletedUser, err := h.service.User.Get(string(userName))
 	if err != nil {
-		return handleError(err)
+		responseError(c, err)
+		return
 	}
-	// Remove password so we do not show in response
-	deletedUser.Password = ""
-	return handleOK(deletedUser)
+	if err := h.service.User.Delete(string(userName), h.who(c)); err != nil {
+		responseError(c, err)
+		return
+	}
+	h.responseUser(c, deletedUser)
+}
+
+// API responses
+
+func (h *Handler) responseUsers(c *gin.Context, users types.Users) {
+
+	all_users := make([]User, len(users))
+	for i, v := range users {
+		all_users[i] = h.ToUserResponse(&v)
+	}
+	c.IndentedJSON(http.StatusOK, Users{
+		User: &all_users,
+	})
+}
+
+func (h *Handler) responseUser(c *gin.Context, user *types.User) {
+
+	c.IndentedJSON(http.StatusOK, h.ToUserResponse(user))
+}
+
+func (h *Handler) responseUserCreated(c *gin.Context, user *types.User) {
+
+	c.IndentedJSON(http.StatusCreated, h.ToUserResponse(user))
+}
+
+func (h *Handler) responseUserUpdated(c *gin.Context, user *types.User) {
+
+	c.IndentedJSON(http.StatusOK, h.ToUserResponse(user))
+}
+
+// type conversion
+
+func (h *Handler) ToUserResponse(l *types.User) User {
+
+	user := User{
+		CreatedAt:      &l.CreatedAt,
+		CreatedBy:      &l.CreatedBy,
+		DisplayName:    &l.DisplayName,
+		LastModifiedBy: &l.LastModifiedBy,
+		LastModifiedAt: &l.LastModifiedAt,
+		Name:           l.Name,
+		// We never return password
+		Password: nil,
+		Status:   &l.Status,
+	}
+	if l.Roles != nil {
+		user.Roles = &l.Roles
+	} else {
+		user.Roles = &[]string{}
+	}
+	return user
+}
+
+func fromUser(u User) *types.User {
+
+	user := &types.User{}
+	if u.CreatedAt != nil {
+		user.CreatedAt = *u.CreatedAt
+	}
+	if u.CreatedBy != nil {
+		user.CreatedBy = *u.CreatedBy
+	}
+	if u.DisplayName != nil {
+		user.DisplayName = *u.DisplayName
+	}
+	if u.LastModifiedBy != nil {
+		user.LastModifiedBy = *u.LastModifiedBy
+	}
+	if u.LastModifiedAt != nil {
+		user.LastModifiedAt = *u.LastModifiedAt
+	}
+	if u.Name != "" {
+		user.Name = u.Name
+	}
+	if u.Password != nil {
+		user.Password = *u.Password
+	}
+	if u.Roles != nil {
+		user.Roles = *u.Roles
+	} else {
+		user.Roles = []string{}
+	}
+	return user
 }

@@ -17,6 +17,7 @@ const (
 	keysColumn = `consumer_key,
 consumer_secret,
 api_products,
+attributes,
 app_id,
 status,
 issued_at,
@@ -35,21 +36,8 @@ func NewKeyStore(database *Database) *KeyStore {
 	}
 }
 
-// GetAll retrieves all keys
-func (s *KeyStore) GetAll() (types.Keys, types.Error) {
-
-	query := "SELECT " + keysColumn + " FROM keys"
-	keys, err := s.runGetKeyQuery(query)
-	if err != nil {
-		s.db.metrics.QueryFailed(keysMetricLabel)
-		return nil, types.NewDatabaseError(err)
-	}
-	s.db.metrics.QueryHit(keysMetricLabel)
-	return keys, nil
-}
-
 // GetByKey returns details of a single apikey
-func (s *KeyStore) GetByKey(key *string) (*types.Key, types.Error) {
+func (s *KeyStore) GetByKey(organization, key *string) (*types.Key, types.Error) {
 
 	var keys types.Keys
 	var err error
@@ -72,7 +60,7 @@ func (s *KeyStore) GetByKey(key *string) (*types.Key, types.Error) {
 }
 
 // GetByDeveloperAppID returns an array with apikey details of a developer app
-func (s *KeyStore) GetByDeveloperAppID(developerAppID string) (types.Keys, types.Error) {
+func (s *KeyStore) GetByDeveloperAppID(organization, developerAppID string) (types.Keys, types.Error) {
 
 	query := "SELECT " + keysColumn + " FROM keys WHERE app_id = ?"
 	keys, err := s.runGetKeyQuery(query, developerAppID)
@@ -80,16 +68,28 @@ func (s *KeyStore) GetByDeveloperAppID(developerAppID string) (types.Keys, types
 		s.db.metrics.QueryFailed(keysMetricLabel)
 		return nil, types.NewDatabaseError(err)
 	}
-
-	if len(keys) == 0 {
-		s.db.metrics.QueryMiss(keysMetricLabel)
-		// Not being able to find a developer is not an error
-		return keys, types.NewItemNotFoundError(
-			fmt.Errorf("can not find api keys of developer app id '%s'", developerAppID))
-	}
-
 	s.db.metrics.QueryHit(keysMetricLabel)
 	return keys, nil
+}
+
+// GetCountByAPIProductName counts the number of times an apiproduct has been assigned to keys
+func (s *KeyStore) GetCountByAPIProductName(organization, apiProductName string) (int, types.Error) {
+
+	query := "SELECT api_products FROM keys"
+	keys, err := s.runGetKeyQuery(query)
+	if err != nil {
+		s.db.metrics.QueryFailed(keysMetricLabel)
+		return 0, types.NewDatabaseError(err)
+	}
+	var count int
+	for _, key := range keys {
+		for _, product := range key.APIProducts {
+			if product.Apiproduct == apiProductName {
+				count++
+			}
+		}
+	}
+	return count, nil
 }
 
 // runGetKeyQuery executes CQL query and returns resultset
@@ -106,7 +106,8 @@ func (s *KeyStore) runGetKeyQuery(query string, queryParameters ...interface{}) 
 		keys = append(keys, types.Key{
 			ConsumerKey:    columnValueString(m, "consumer_key"),
 			ConsumerSecret: columnValueString(m, "consumer_secret"),
-			APIProducts:    types.Key{}.APIProducts.Unmarshal(m["api_products"].(string)),
+			APIProducts:    KeyAPIProductStatusesUnmarshal(m["api_products"].(string)),
+			Attributes:     AttributesUnmarshal(columnValueString(m, "attributes")),
 			AppID:          columnValueString(m, "app_id"),
 			Status:         columnValueString(m, "status"),
 			IssuedAt:       columnValueInt64(m, "issued_at"),
@@ -122,13 +123,14 @@ func (s *KeyStore) runGetKeyQuery(query string, queryParameters ...interface{}) 
 }
 
 // UpdateByKey UPSERTs keys in database
-func (s *KeyStore) UpdateByKey(c *types.Key) types.Error {
+func (s *KeyStore) UpdateByKey(organization string, c *types.Key) types.Error {
 
-	query := "INSERT INTO keys (" + keysColumn + ") VALUES(?,?,?,?,?,?,?)"
+	query := "INSERT INTO keys (" + keysColumn + ") VALUES(?,?,?,?,?,?,?,?)"
 	if err := s.db.CassandraSession.Query(query,
 		c.ConsumerKey,
 		c.ConsumerSecret,
-		c.APIProducts.Marshal(),
+		KeyAPIProductStatusesMarshal(c.APIProducts),
+		AttributesMarshal(c.Attributes),
 		c.AppID,
 		c.Status,
 		c.IssuedAt,
@@ -136,13 +138,13 @@ func (s *KeyStore) UpdateByKey(c *types.Key) types.Error {
 
 		s.db.metrics.QueryFailed(keysMetricLabel)
 		return types.NewDatabaseError(
-			fmt.Errorf("cannot update key '%s'", c.ConsumerKey))
+			fmt.Errorf("cannot update key '%s' (%s)", c.ConsumerKey, err))
 	}
 	return nil
 }
 
 // DeleteByKey deletes keys
-func (s *KeyStore) DeleteByKey(consumerKey string) types.Error {
+func (s *KeyStore) DeleteByKey(organization, consumerKey string) types.Error {
 
 	query := "DELETE FROM keys WHERE consumer_key = ?"
 	if err := s.db.CassandraSession.Query(query, consumerKey).Exec(); err != nil {

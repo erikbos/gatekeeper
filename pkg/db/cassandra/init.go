@@ -128,6 +128,17 @@ var createTablesCQL = [...]string{
     PRIMARY KEY (name)
 	)`,
 
+	`CREATE TABLE IF NOT EXISTS organizations (
+        attributes text,
+        created_at bigint,
+        created_by text,
+        display_name text,
+        lastmodified_at bigint,
+        lastmodified_by text,
+        name text,
+        PRIMARY KEY (name)
+    )`,
+
 	`CREATE TABLE IF NOT EXISTS developers (
     apps text,
     attributes text,
@@ -172,6 +183,7 @@ var createTablesCQL = [...]string{
 
 	`CREATE TABLE IF NOT EXISTS keys (
     api_products text,
+    attributes text,
     consumer_key text,
     consumer_secret text,
     app_id text,
@@ -206,6 +218,8 @@ var createTablesCQL = [...]string{
 	`CREATE INDEX IF NOT EXISTS ON oauth_access_token (code)`,
 
 	`CREATE TABLE IF NOT EXISTS api_products (
+    approval_type text,
+    api_resources text,
     attributes text,
     created_at bigint,
     created_by text,
@@ -214,7 +228,6 @@ var createTablesCQL = [...]string{
     lastmodified_at bigint,
     lastmodified_by text,
     name text,
-    paths text,
     policies text,
     route_group text,
 	PRIMARY KEY (name)

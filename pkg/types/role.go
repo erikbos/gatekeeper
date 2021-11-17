@@ -1,7 +1,6 @@
 package types
 
 import (
-	"encoding/json"
 	"sort"
 	"strings"
 
@@ -11,40 +10,42 @@ import (
 // Role holds an role
 //
 // Field validation (binding) is done using https://godoc.org/github.com/go-playground/validator
-type Role struct {
-	// Name of role (not changable)
-	Name string `json:"name" binding:"required,min=4"`
+type (
+	Role struct {
+		// Name of role (not changable)
+		Name string `binding:"required,min=4"`
 
-	// Display name
-	DisplayName string `json:"displayName"`
+		// Display name
+		DisplayName string
 
-	// Allowed methods & paths
-	Allows `json:"allows" binding:"required"`
+		// Allowed methods & paths
+		Allows
 
-	// Created at timestamp in epoch milliseconds
-	CreatedAt int64 `json:"createdAt"`
+		// Created at timestamp in epoch milliseconds
+		CreatedAt int64
 
-	// Name of user who created this role
-	CreatedBy string `json:"createdBy"`
+		// Name of user who created this role
+		CreatedBy string
 
-	// Last modified at timestamp in epoch milliseconds
-	LastmodifiedAt int64 `json:"lastmodifiedAt"`
+		// Last modified at timestamp in epoch milliseconds
+		LastModifiedAt int64
 
-	// Name of user who last updated this role
-	LastmodifiedBy string `json:"lastmodifiedBy"`
-}
+		// Name of user who last updated this role
+		LastModifiedBy string
+	}
 
-// Roles holds one or more roles
-type Roles []Role
+	// Roles holds one or more roles
+	Roles []Role
+)
 
 // Allow holds the criteria a role will allow request
 type Allow struct {
 	// Request methods which are allowed
 	// FIXME these bindings settings do not get used...
-	Methods StringSlice `json:"methods" binding:"required,dive,oneof=GET POST PUT PATCH DELETE"`
+	Methods []string `binding:"required,dive,oneof=GET POST PUT PATCH DELETE"`
 
 	// Request paths (regexp) which are allowed
-	Paths StringSlice `json:"paths" binding:"required,dive,startswith=/"`
+	Paths []string `binding:"required,dive,startswith=/"`
 }
 
 // Allows holds one or more allow
@@ -98,27 +99,6 @@ func pathMatch(paths []string, requestPath string) bool {
 		}
 	}
 	return false
-}
-
-// Unmarshal unpacks JSON-encoded role allow into Allows
-func (a *Allows) Unmarshal(roleAllowsAsJSON string) Allows {
-
-	if roleAllowsAsJSON != "" {
-		var allows Allows
-		if err := json.Unmarshal([]byte(roleAllowsAsJSON), &allows); err == nil {
-			return allows
-		}
-	}
-	return NullAllows
-}
-
-// Marshal packs role Allow into JSON
-func (a *Allows) Marshal() string {
-
-	if json, err := json.Marshal(a); err == nil {
-		return string(json)
-	}
-	return "[]"
 }
 
 // Sort a slice of users

@@ -3,43 +3,51 @@ package types
 // APIProduct type contains everything about an API product
 //
 // Field validation (binding) is done using https://godoc.org/github.com/go-playground/validator
-type APIProduct struct {
-	// Name of apiproduct (not changable)
-	Name string `json:"name" binding:"required,min=5"`
+type (
+	APIProduct struct {
+		// Name of apiproduct (not changable)
+		Name string `binding:"required,min=3"`
 
-	// Friendly display name of route
-	DisplayName string `json:"displayName"`
+		// Routegroup this apiproduct should match to
+		RouteGroup string
 
-	// Full description of this api product
-	Description string `json:"description"`
+		// List of paths this apiproduct applies to
+		APIResources []string `binding:"required,min=1"`
 
-	// Routegroup this apiproduct should match to
-	RouteGroup string `json:"RouteGroup"`
+		// List of scopes that apply to this product
+		Scopes []string
 
-	// List of paths this apiproduct applies to
-	Paths StringSlice `json:"paths" binding:"required,min=1"`
+		// Approval type of this apiproduct
+		ApprovalType string
 
-	// Attributes of this apiproduct
-	Attributes Attributes `json:"attributes"`
+		// Attributes of this apiproduct
+		Attributes Attributes
 
-	// Comma separated list of policynames, to apply to requests
-	Policies string `json:"policies"`
+		// Friendly display name of route
+		DisplayName string
 
-	// Created at timestamp in epoch milliseconds
-	CreatedAt int64 `json:"createdAt"`
+		// Full description of this api product
+		Description string
 
-	// Name of user who created this apiproduct
-	CreatedBy string `json:"createdBy"`
+		// Comma separated list of policynames, to apply to requests
+		Policies string
 
-	// Last modified at timestamp in epoch milliseconds
-	LastmodifiedAt int64 `json:"lastmodifiedAt"`
+		// Created at timestamp in epoch milliseconds
+		CreatedAt int64
 
-	// Name of user who last updated this apiproduct
-	LastmodifiedBy string `json:"lastmodifiedBy"`
-}
+		// Name of user who created this apiproduct
+		CreatedBy string
 
-// APIProducts holds one or more apiproducts
-type APIProducts []APIProduct
+		// Last modified at timestamp in epoch milliseconds
+		LastModifiedAt int64
+
+		// Name of user who last updated this apiproduct
+		LastModifiedBy string
+	}
+
+	// APIProducts holds one or more apiproducts
+	APIProducts []APIProduct
+)
 
 var (
 	// NullAPIProduct is an empty apiproduct type

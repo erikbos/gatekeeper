@@ -87,17 +87,17 @@ func (s *ListenerStore) runGetListenerQuery(query string,
 	m := make(map[string]interface{})
 	for iter.MapScan(m) {
 		listeners = append(listeners, types.Listener{
-			Name:           columnValueString(m, "name"),
-			DisplayName:    columnValueString(m, "display_name"),
-			VirtualHosts:   types.Listener{}.VirtualHosts.Unmarshal(columnValueString(m, "virtual_hosts")),
-			Port:           columnValueInt(m, "port"),
-			RouteGroup:     columnValueString(m, "route_group"),
-			Policies:       columnValueString(m, "policies"),
-			Attributes:     types.Listener{}.Attributes.Unmarshal(columnValueString(m, "attributes")),
+			Attributes:     AttributesUnmarshal(columnValueString(m, "attributes")),
 			CreatedAt:      columnValueInt64(m, "created_at"),
 			CreatedBy:      columnValueString(m, "created_by"),
-			LastmodifiedAt: columnValueInt64(m, "lastmodified_at"),
-			LastmodifiedBy: columnValueString(m, "lastmodified_by"),
+			Name:           columnValueString(m, "name"),
+			DisplayName:    columnValueString(m, "display_name"),
+			LastModifiedAt: columnValueInt64(m, "lastmodified_at"),
+			LastModifiedBy: columnValueString(m, "lastmodified_by"),
+			Policies:       columnValueString(m, "policies"),
+			Port:           columnValueInt(m, "port"),
+			RouteGroup:     columnValueString(m, "route_group"),
+			VirtualHosts:   stringSliceUnmarshal(columnValueString(m, "virtual_hosts")),
 		})
 		m = map[string]interface{}{}
 	}
@@ -115,19 +115,19 @@ func (s *ListenerStore) Update(l *types.Listener) types.Error {
 	if err := s.db.CassandraSession.Query(query,
 		l.Name,
 		l.DisplayName,
-		l.VirtualHosts.Marshal(),
+		stringSliceMarshal(l.VirtualHosts),
 		l.Port,
 		l.RouteGroup,
 		l.Policies,
-		l.Attributes.Marshal(),
+		AttributesMarshal(l.Attributes),
 		l.CreatedAt,
 		l.CreatedBy,
-		l.LastmodifiedAt,
-		l.LastmodifiedBy).Exec(); err != nil {
+		l.LastModifiedAt,
+		l.LastModifiedBy).Exec(); err != nil {
 
 		s.db.metrics.QueryFailed(listenerMetricLabel)
 		return types.NewDatabaseError(
-			fmt.Errorf("cannot update listener '%s'", l.Name))
+			fmt.Errorf("cannot update listener '%s' (%s)", l.Name, err))
 	}
 	return nil
 }

@@ -125,7 +125,7 @@ func (s *OAuthStore) OAuthAccessTokenCreate(t *types.OAuthAccessToken) error {
 		t.RefreshCreatedAt,
 		t.RefreshExpiresIn).Exec(); err != nil {
 
-		return fmt.Errorf("cannot update access token '%s' (%v)", t.Access, err)
+		return fmt.Errorf("cannot update access token '%s' (%s)", t.Access, err)
 	}
 	return nil
 }

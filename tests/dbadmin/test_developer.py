@@ -3,13 +3,14 @@ Test suite to validate developer endpoints operations
 """
 import copy
 import random
-from common import get_config, get_http_session, assert_status_code
+from common import get_config, get_http_session, API, assert_status_code
 from httpstatus import  HTTP_AUTHORIZATION_REQUIRED, HTTP_BAD_CONTENT
 from developer import Developer
 from attribute import run_attribute_tests
 
 config = get_config()
 session = get_http_session(config)
+# session = API(config, '../../openapi/gatekeeper.yaml')
 
 
 def test_developer_get_all():
@@ -28,7 +29,7 @@ def test_developer_get_all_detailed():
     developer_api.get_all_detailed()
 
 
-def test_developer_crud():
+def test_developer_crud_one():
     """
     Test create, read, update, delete one developer
     """
@@ -56,7 +57,8 @@ def test_developer_crud():
     updated_developer['email'] = f'newemailaddress{random_int}@test.com'
     updated_developer['attributes'] = [
               {
-                   "name" : "Status"
+                   "name" : "Status",
+                   "value" : ""
               },
               {
                    "name" : "Shoesize",
@@ -186,31 +188,31 @@ def test_developer_get_no_auth():
     assert_status_code(response, HTTP_AUTHORIZATION_REQUIRED)
 
 
-def test_developer_get_all_wrong_content_type():
-    """
-    Test get all developers, non-json content type
-    """
-    developer_api = Developer(config, session)
+# def test_developer_get_all_wrong_content_type():
+#     """
+#     Test get all developers, non-json content type
+#     """
+#     developer_api = Developer(config, session)
 
-    wrong_header = {'accept': 'application/unknown'}
-    response = session.get(developer_api.developer_url, headers=wrong_header)
-    assert_status_code(response, HTTP_BAD_CONTENT)
+#     wrong_header = {'accept': 'application/unknown'}
+#     response = session.get(developer_api.developer_url, headers=wrong_header)
+#     assert_status_code(response, HTTP_BAD_CONTENT)
 
 
-def test_developer_create_wrong_content_type():
-    """
-    Test create developer, non-json content type
-    """
-    developer_api = Developer(config, session)
+# def test_developer_create_wrong_content_type():
+#     """
+#     Test create developer, non-json content type
+#     """
+#     developer_api = Developer(config, session)
 
-    developer = {
-        "email" : "example@test.com",
-        "firstName" : "joe",
-        "lastName" : "smith"
-    }
-    wrong_header = {'accept': 'application/unknown'}
-    response = session.post(developer_api.developer_url, headers=wrong_header, json=developer)
-    assert_status_code(response, HTTP_BAD_CONTENT)
+#     developer = {
+#         "email" : "example@test.com",
+#         "firstName" : "joe",
+#         "lastName" : "smith"
+#     }
+#     wrong_header = {'accept': 'application/unknown'}
+#     response = session.post(developer_api.developer_url, headers=wrong_header, json=developer)
+#     assert_status_code(response, HTTP_BAD_CONTENT)
 
 
 def test_developer_create_ignore_provided_fields():
@@ -234,6 +236,8 @@ def test_developer_create_ignore_provided_fields():
         "lastModifiedBy": email
     }
     created_developer = developer_api.create_positive(new_developer)
+
+    print("Q ", created_developer)
 
     # Not all provided fields must be accepted
     assert created_developer['developerId'] != new_developer['developerId']
