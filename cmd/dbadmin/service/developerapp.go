@@ -143,7 +143,9 @@ func (das *DeveloperAppService) Delete(organizationName, developerEmail, develop
 	developerAppKeys, _ := das.db.Key.GetByDeveloperAppID(organizationName, developerApp.AppID)
 	if len(developerAppKeys) != 0 {
 		for _, k := range developerAppKeys {
-			das.db.Key.DeleteByKey(organizationName, k.ConsumerKey)
+			if err := das.db.Key.DeleteByKey(organizationName, k.ConsumerKey); err != nil {
+				return err
+			}
 		}
 	}
 	// TODO
