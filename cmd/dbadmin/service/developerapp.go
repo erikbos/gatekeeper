@@ -125,6 +125,10 @@ func (das *DeveloperAppService) updateDeveloperApp(organizationName string,
 	updatedDeveloperApp.Attributes.Tidy()
 	updatedDeveloperApp.LastModifiedAt = shared.GetCurrentTimeMilliseconds()
 	updatedDeveloperApp.LastModifiedBy = who.User
+
+	if err := updatedDeveloperApp.Validate(); err != nil {
+		return types.NewBadRequestError(err)
+	}
 	return das.db.DeveloperApp.Update(organizationName, updatedDeveloperApp)
 }
 

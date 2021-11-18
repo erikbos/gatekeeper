@@ -96,6 +96,10 @@ func (us *UserService) updateUser(updatedUser *types.User, who Requester) types.
 
 	updatedUser.LastModifiedAt = shared.GetCurrentTimeMilliseconds()
 	updatedUser.LastModifiedBy = who.User
+
+	if err := updatedUser.Validate(); err != nil {
+		return types.NewBadRequestError(err)
+	}
 	return us.db.User.Update(updatedUser)
 }
 

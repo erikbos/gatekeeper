@@ -13,11 +13,12 @@ import (
 	envoy_type "github.com/envoyproxy/go-control-plane/envoy/type/v3"
 	cache "github.com/envoyproxy/go-control-plane/pkg/cache/types"
 	"github.com/envoyproxy/go-control-plane/pkg/wellknown"
-	"github.com/erikbos/gatekeeper/pkg/types"
 	"github.com/golang/protobuf/ptypes/any"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/durationpb"
+
+	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
 // getEnvoyRouteConfig returns array of all envoy routes
@@ -65,7 +66,7 @@ func (s *server) buildEnvoyRoutes(RouteGroup string, routes types.Routes) []*env
 	var envoyRoutes []*envoy_route.Route
 
 	for _, route := range routes {
-		if err := route.ConfigCheck(); err != nil {
+		if err := route.Validate(); err != nil {
 			s.logger.Warn("Unsupported configuration", zap.String("route", route.Name), zap.Error(err))
 		}
 

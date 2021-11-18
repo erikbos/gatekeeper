@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/go-playground/validator/v10"
 )
 
 // Attribute is an array with attributes
@@ -16,10 +18,10 @@ import (
 type (
 	Attribute struct {
 		// Attribute name, minimum required length is 1
-		Name string `binding:"required,min=1"`
+		Name string `validate:"required,min=1"`
 
-		// Attribute value, minimum required length is 1 as we do not want empty values
-		Value string `binding:"required"`
+		// Attribute value
+		Value string `validate:"required"`
 	}
 
 	// Attributes holds one or more attributes
@@ -185,4 +187,18 @@ func (attributes *Attributes) Delete(name string) (valueOfDeletedAttribute strin
 		return valueOfDeletedAttribute, nil
 	}
 	return "", errAttributeNotFound
+}
+
+// Validate checks if field values are set correct and are allowed
+func (a *Attribute) Validate() error {
+
+	validate := validator.New()
+	return validate.Struct(a)
+}
+
+// Validate checks if field values are set correct and are allowed
+func (a *Attributes) Validate() error {
+
+	validate := validator.New()
+	return validate.Struct(a)
 }

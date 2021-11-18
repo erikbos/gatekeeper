@@ -86,6 +86,10 @@ func (ds *APIProductService) updateAPIProduct(organizationName string,
 	updatedAPIProduct.Attributes.Tidy()
 	updatedAPIProduct.LastModifiedAt = shared.GetCurrentTimeMilliseconds()
 	updatedAPIProduct.LastModifiedBy = who.User
+
+	if err := updatedAPIProduct.Validate(); err != nil {
+		return types.NewBadRequestError(err)
+	}
 	return ds.db.APIProduct.Update(organizationName, updatedAPIProduct)
 }
 

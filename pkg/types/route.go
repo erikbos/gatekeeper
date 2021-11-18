@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"sort"
 	"time"
+
+	"github.com/go-playground/validator/v10"
 )
 
 // Route holds configuration of a route
@@ -188,9 +190,13 @@ func (routes Routes) Sort() {
 	})
 }
 
-// ConfigCheck checks if a route's configuration is correct
-func (r *Route) ConfigCheck() error {
+// Validate checks if a route's configuration is correct
+func (r *Route) Validate() error {
 
+	validate := validator.New()
+	if err := validate.Struct(r); err != nil {
+		return err
+	}
 	for _, attribute := range r.Attributes {
 		if !validRouteAttributes[attribute.Name] {
 			return fmt.Errorf("unknown attribute '%s'", attribute.Name)

@@ -1,15 +1,17 @@
 package types
 
+import "github.com/go-playground/validator/v10"
+
 // Key contains an apikey entitlement
 //
 // Field validation (binding) is done using https://godoc.org/github.com/go-playground/validator
 type (
 	Key struct {
 		// ConsumerKey is the key required for authentication
-		ConsumerKey string
+		ConsumerKey string `validate:"required,min=1"`
 
 		// ConsumerSecret is secretid of this key, needed to request OAuth2 access token
-		ConsumerSecret string
+		ConsumerSecret string `validate:"required,min=1"`
 
 		// List of apiproducts which can be accessed using this key
 		APIProducts KeyAPIProductStatuses
@@ -41,6 +43,13 @@ var (
 	// NullDeveloperAppKeys is an empty key slice
 	NullDeveloperAppKeys = Keys{}
 )
+
+// Validate checks if field values are set correct and are allowed
+func (k *Key) Validate() error {
+
+	validate := validator.New()
+	return validate.Struct(k)
+}
 
 // KeyAPIProductStatus contains whether an apikey's assigned apiproduct has been approved
 type KeyAPIProductStatus struct {

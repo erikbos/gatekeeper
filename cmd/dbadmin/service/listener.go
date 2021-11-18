@@ -78,6 +78,10 @@ func (ls *ListenerService) updateListener(updatedListener *types.Listener, who R
 	updatedListener.Attributes.Tidy()
 	updatedListener.LastModifiedAt = shared.GetCurrentTimeMilliseconds()
 	updatedListener.LastModifiedBy = who.User
+
+	if err := updatedListener.Validate(); err != nil {
+		return types.NewBadRequestError(err)
+	}
 	return ls.db.Listener.Update(updatedListener)
 }
 
