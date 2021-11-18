@@ -1,5 +1,7 @@
 package types
 
+import "github.com/go-playground/validator/v10"
+
 // Developer contains everything about a Developer
 type (
 	Developer struct {
@@ -16,7 +18,7 @@ type (
 		Attributes Attributes
 
 		// Email address
-		Email string
+		Email string `validate:"required,email"`
 
 		// Username
 		UserName string
@@ -51,6 +53,13 @@ var (
 	// NullDevelopers is an empty developer slice
 	NullDevelopers = Developers{}
 )
+
+// Validate checks if field values are set correct and are allowed
+func (d *Developer) Validate() error {
+
+	validate := validator.New()
+	return validate.Struct(d)
+}
 
 const (
 	developerStatusActive   = "active"

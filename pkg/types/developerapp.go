@@ -1,5 +1,7 @@
 package types
 
+import "github.com/go-playground/validator/v10"
+
 // DeveloperApp contains everything about a Developer Application
 type (
 	DeveloperApp struct {
@@ -16,7 +18,7 @@ type (
 		Attributes Attributes
 
 		// Name of developer application
-		Name string
+		Name string `validate:"required,min=1"`
 
 		// Friendly name of developer app
 		DisplayName string
@@ -51,6 +53,13 @@ var (
 	// NullDeveloperApps is an empty developer app slice
 	NullDeveloperApps = DeveloperApps{}
 )
+
+// Validate checks if field values are set correct and are allowed
+func (d *DeveloperApp) Validate() error {
+
+	validate := validator.New()
+	return validate.Struct(d)
+}
 
 const (
 	applicationStatusApproved = "approved"

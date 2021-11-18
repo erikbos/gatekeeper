@@ -5,15 +5,14 @@ import (
 	"strings"
 
 	"github.com/bmatcuk/doublestar"
+	"github.com/go-playground/validator/v10"
 )
 
 // Role holds an role
-//
-// Field validation (binding) is done using https://godoc.org/github.com/go-playground/validator
 type (
 	Role struct {
 		// Name of role (not changable)
-		Name string `binding:"required,min=4"`
+		Name string `validate:"required,min=1,max=100"`
 
 		// Display name
 		DisplayName string
@@ -64,6 +63,13 @@ var (
 	// NullAllows is an allows type
 	NullAllows = Allows{}
 )
+
+// Validate checks if field values are set correct and are allowed
+func (r *Role) Validate() error {
+
+	validate := validator.New()
+	return validate.Struct(r)
+}
 
 // IsPathAllowed checks whether role is allowed to access a path
 func (role *Role) IsPathAllowed(requestMethod, requestPath string) bool {

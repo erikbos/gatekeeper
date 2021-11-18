@@ -1,11 +1,13 @@
 package types
 
+import "github.com/go-playground/validator/v10"
+
 // Organization
 // Field validation (binding) is done using https://godoc.org/github.com/go-playground/validator
 type (
 	Organization struct {
 		// Name of organization (not changable)
-		Name string `binding:"required,min=1"`
+		Name string `validate:"required,min=1,max=100"`
 
 		// Friendly display name of organization
 		DisplayName string
@@ -37,3 +39,10 @@ var (
 	// NullOrganizations is an empty organization slice
 	NullOrganizations = Organizations{}
 )
+
+// Validate checks if field values are set correct and are allowed
+func (o *Organization) Validate() error {
+
+	validate := validator.New()
+	return validate.Struct(o)
+}

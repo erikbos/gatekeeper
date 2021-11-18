@@ -9,6 +9,7 @@ require (
 	github.com/deepmap/oapi-codegen v1.9.0
 	github.com/envoyproxy/go-control-plane v0.9.9-0.20210512163311-63b5d3c536b0
 	github.com/gin-gonic/gin v1.7.4
+	github.com/go-playground/validator/v10 v10.9.0
 	github.com/gocql/gocql v0.0.0-20210504150947-558dfae50b5d
 	github.com/gogo/googleapis v1.4.1
 	github.com/golang/protobuf v1.5.2

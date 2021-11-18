@@ -77,6 +77,10 @@ func (rs *RoleService) updateRole(updatedRole *types.Role, who Requester) types.
 
 	updatedRole.LastModifiedAt = shared.GetCurrentTimeMilliseconds()
 	updatedRole.LastModifiedBy = who.User
+
+	if err := updatedRole.Validate(); err != nil {
+		return types.NewBadRequestError(err)
+	}
 	return rs.db.Role.Update(updatedRole)
 }
 

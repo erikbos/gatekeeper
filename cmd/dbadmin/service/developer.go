@@ -91,6 +91,10 @@ func (ds *DeveloperService) updateDeveloper(organizationName string,
 	updatedDeveloper.Attributes.Tidy()
 	updatedDeveloper.LastModifiedAt = shared.GetCurrentTimeMilliseconds()
 	updatedDeveloper.LastModifiedBy = who.User
+
+	if err := updatedDeveloper.Validate(); err != nil {
+		return types.NewBadRequestError(err)
+	}
 	return ds.db.Developer.Update(organizationName, updatedDeveloper)
 }
 

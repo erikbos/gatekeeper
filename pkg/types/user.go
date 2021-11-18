@@ -1,14 +1,16 @@
 package types
 
-import "sort"
+import (
+	"sort"
+
+	"github.com/go-playground/validator/v10"
+)
 
 // User holds an user
-//
-// Field validation (binding) is done using https://godoc.org/github.com/go-playground/validator
 type (
 	User struct {
 		// Name of user (not changable)
-		Name string `binding:"required,min=4"`
+		Name string `validate:"required,min=1,max=100"`
 
 		// Display name
 		DisplayName string
@@ -46,6 +48,13 @@ var (
 	// NullUsers is an empty user slice
 	NullUsers = Users{}
 )
+
+// Validate checks if field values are set correct and are allowed
+func (u *User) Validate() error {
+
+	validate := validator.New()
+	return validate.Struct(u)
+}
 
 // Sort a slice of users
 func (users Users) Sort() {

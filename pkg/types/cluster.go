@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"sort"
 	"time"
+
+	"github.com/go-playground/validator/v10"
 )
 
 // Cluster holds configuration of an upstream cluster
@@ -12,7 +14,7 @@ import (
 type (
 	Cluster struct {
 		// Name of cluster (not changable)
-		Name string `binding:"required,min=4"`
+		Name string `validate:"required,min=1"`
 
 		// Friendly display name of cluster
 		DisplayName string
@@ -156,9 +158,13 @@ func (clusters Clusters) Sort() {
 	})
 }
 
-// ConfigCheck checks if a cluster's configuration is correct
-func (c *Cluster) ConfigCheck() error {
+// Validate checks if a cluster's configuration is correct
+func (c *Cluster) Validate() error {
 
+	validate := validator.New()
+	if err := validate.Struct(c); err != nil {
+		return err
+	}
 	for _, attribute := range c.Attributes {
 		if !validClusterAttributes[attribute.Name] {
 			return fmt.Errorf("unknown attribute '%s'", attribute.Name)

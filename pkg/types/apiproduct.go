@@ -1,12 +1,14 @@
 package types
 
+import "github.com/go-playground/validator/v10"
+
 // APIProduct type contains everything about an API product
 //
 // Field validation (binding) is done using https://godoc.org/github.com/go-playground/validator
 type (
 	APIProduct struct {
 		// Name of apiproduct (not changable)
-		Name string `binding:"required,min=3"`
+		Name string `validate:"required,min=1"`
 
 		// Routegroup this apiproduct should match to
 		RouteGroup string
@@ -56,3 +58,10 @@ var (
 	// NullAPIProducts is an empty apiproduct slice
 	NullAPIProducts = APIProducts{}
 )
+
+// Validate checks if field values are set correct and are allowed
+func (a *APIProduct) Validate() error {
+
+	validate := validator.New()
+	return validate.Struct(a)
+}

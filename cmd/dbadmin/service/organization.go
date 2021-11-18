@@ -78,6 +78,10 @@ func (os *OrganizationService) updateOrganization(updatedOrganization *types.Org
 	updatedOrganization.Attributes.Tidy()
 	updatedOrganization.LastModifiedAt = shared.GetCurrentTimeMilliseconds()
 	updatedOrganization.LastModifiedBy = who.User
+
+	if err := updatedOrganization.Validate(); err != nil {
+		return types.NewBadRequestError(err)
+	}
 	return os.db.Organization.Update(updatedOrganization)
 }
 

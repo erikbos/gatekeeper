@@ -29,7 +29,7 @@ func (s *server) getEnvoyClusterConfig() ([]cache.Resource, error) {
 	envoyClusters := []cache.Resource{}
 
 	for _, cluster := range s.dbentities.GetClusters() {
-		if err := cluster.ConfigCheck(); err != nil {
+		if err := cluster.Validate(); err != nil {
 			s.logger.Warn("Cluster has unsupported configuration",
 				zap.String("cluster", cluster.Name), zap.Error(err))
 		}

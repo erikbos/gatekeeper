@@ -87,6 +87,10 @@ func (cs *ClusterService) updateCluster(updatedCluster *types.Cluster, who Reque
 	updatedCluster.Attributes.Tidy()
 	updatedCluster.LastModifiedAt = shared.GetCurrentTimeMilliseconds()
 	updatedCluster.LastModifiedBy = who.User
+
+	if err := updatedCluster.Validate(); err != nil {
+		return types.NewBadRequestError(err)
+	}
 	return cs.db.Cluster.Update(updatedCluster)
 }
 

@@ -99,6 +99,10 @@ func (rs *RouteService) updateRoute(updatedRoute *types.Route, who Requester) ty
 	updatedRoute.Attributes.Tidy()
 	updatedRoute.LastModifiedAt = shared.GetCurrentTimeMilliseconds()
 	updatedRoute.LastModifiedBy = who.User
+
+	if err := updatedRoute.Validate(); err != nil {
+		return types.NewBadRequestError(err)
+	}
 	return rs.db.Route.Update(updatedRoute)
 }
 

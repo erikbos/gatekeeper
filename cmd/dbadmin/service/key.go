@@ -92,6 +92,9 @@ func (ks *KeyService) Update(organizationName, consumerKey string, updatedKey *t
 		updatedKey.Status = currentKey.Status
 	}
 
+	if err := updatedKey.Validate(); err != nil {
+		return types.NullDeveloperAppKey, types.NewBadRequestError(err)
+	}
 	if err = ks.db.Key.UpdateByKey(organizationName, updatedKey); err != nil {
 		return types.NullDeveloperAppKey, err
 	}

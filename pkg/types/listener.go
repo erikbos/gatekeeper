@@ -3,27 +3,27 @@ package types
 import (
 	"fmt"
 	"sort"
+
+	"github.com/go-playground/validator/v10"
 )
 
 // Listener contains everything about downstream configuration of listener and http virtual hosts
-//
-// Field validation (binding) is done using https://godoc.org/github.com/go-playground/validator
 type (
 	Listener struct {
 		// Name of listener (not changable)
-		Name string `binding:"required,min=4"`
+		Name string `validate:"required,min=1"`
 
 		// Friendly display name of listener
 		DisplayName string
 
 		// Virtual hosts of this listener (at least one, each value must be a fqdn)
-		VirtualHosts []string `binding:"required,min=1,dive,fqdn"`
+		VirtualHosts []string `validate:"required,min=1,dive,fqdn"`
 
 		// tcp port to listen on
-		Port int `binding:"required,min=1,max=65535"`
+		Port int `validate:"required,min=1,max=65535"`
 
 		// Routegroup to forward traffic to
-		RouteGroup string `binding:"required"`
+		RouteGroup string `validate:"required"`
 
 		// Comma separated list of policynames, to apply to requests
 		Policies string
@@ -158,9 +158,13 @@ func (listeners Listeners) Sort() {
 	})
 }
 
-// ConfigCheck checks if a listener's configuration is correct
-func (l *Listener) ConfigCheck() error {
+// Validate checks if a listener's configuration is correct
+func (l *Listener) Validate() error {
 
+	validate := validator.New()
+	if err := validate.Struct(l); err != nil {
+		return err
+	}
 	for _, attribute := range l.Attributes {
 		if !validListenerAttributes[attribute.Name] {
 			return fmt.Errorf("unknown attribute '%s'", attribute.Name)
