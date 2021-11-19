@@ -9,9 +9,6 @@ import (
 )
 
 const (
-	// Prometheus label for metrics of db interactions
-	roleMetricLabel = "roles"
-
 	// List of role columns we use
 	roleColumns = `name,
 display_name,
@@ -20,6 +17,9 @@ created_at,
 created_by,
 lastmodified_at,
 lastmodified_by`
+
+	// Prometheus label for metrics of db interactions
+	roleMetricLabel = "roles"
 )
 
 // RoleStore holds our database config

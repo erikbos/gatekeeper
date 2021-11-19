@@ -8,11 +8,7 @@ import (
 	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
-const (
-	// Prometheus label for metrics of db interactions
-	userMetricLabel = "users"
-
-	// List of user columns we use
+const ( // List of user columns we use
 	userColumns = `name,
 display_name,
 password,
@@ -22,6 +18,9 @@ created_at,
 created_by,
 lastmodified_at,
 lastmodified_by`
+
+	// Prometheus label for metrics of db interactions
+	userMetricLabel = "users"
 )
 
 // UserStore holds our database config

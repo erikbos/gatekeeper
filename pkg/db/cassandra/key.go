@@ -153,3 +153,7 @@ func (s *KeyStore) DeleteByKey(organization, consumerKey string) types.Error {
 	}
 	return nil
 }
+
+func (s *KeyStore) Metric(what string) {
+	s.db.metrics.QueryFailed(keysMetricLabel)
+}

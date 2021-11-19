@@ -9,9 +9,6 @@ import (
 )
 
 const (
-	// Prometheus label for metrics of db interactions
-	developerAppsMetricLabel = "developerapps"
-
 	// List of developer app columns we use
 	developerAppColumns = `app_id,
 developer_id,
@@ -24,6 +21,9 @@ created_at,
 created_by,
 lastmodified_at,
 lastmodified_by`
+
+	// Prometheus label for metrics of db interactions
+	developerAppsMetricLabel = "developerapps"
 )
 
 // DeveloperAppStore holds our database config

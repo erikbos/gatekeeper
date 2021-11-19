@@ -10,9 +10,6 @@ import (
 )
 
 const (
-	// Prometheus label for metrics of db interactions
-	apiProductsMetricLabel = "apiproducts"
-
 	// List of apiproduct columns we use
 	apiProductsColumns = `approval_type,
 api_resources,
@@ -26,6 +23,9 @@ lastmodified_by,
 name,
 route_group,
 policies`
+
+	// Prometheus label for metrics of db interactions
+	apiProductsMetricLabel = "apiproducts"
 )
 
 // APIProductStore holds our database config

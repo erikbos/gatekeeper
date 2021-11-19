@@ -9,9 +9,6 @@ import (
 )
 
 const (
-	// Prometheus label for metrics of db interactions
-	developerMetricLabel = "developers"
-
 	// List of developer columns we use
 	developerColumns = `developer_id,
 apps,
@@ -21,10 +18,14 @@ user_name,
 email,
 first_name,
 last_name,
+organization_name,
 created_at,
 created_by,
 lastmodified_at,
 lastmodified_by`
+
+	// Prometheus label for metrics of db interactions
+	developerMetricLabel = "developers"
 )
 
 // DeveloperStore holds our database config
@@ -42,8 +43,8 @@ func NewDeveloperStore(database *Database) *DeveloperStore {
 // GetAll retrieves all developer
 func (s *DeveloperStore) GetAll(organizationName string) (types.Developers, types.Error) {
 
-	query := "SELECT " + developerColumns + " FROM developers"
-	developers, err := s.runGetDeveloperQuery(query)
+	query := "SELECT " + developerColumns + " FROM developers WHERE organization_name = ?"
+	developers, err := s.runGetDeveloperQuery(query, organizationName)
 	if err != nil {
 		s.db.metrics.QueryMiss(developerMetricLabel)
 		return types.NullDevelopers, types.NewDatabaseError(err)
@@ -56,8 +57,8 @@ func (s *DeveloperStore) GetAll(organizationName string) (types.Developers, type
 // GetByEmail retrieves a developer from database
 func (s *DeveloperStore) GetByEmail(organizationName, developerEmail string) (*types.Developer, types.Error) {
 
-	query := "SELECT " + developerColumns + " FROM developers WHERE email = ? LIMIT 1 ALLOW FILTERING"
-	developers, err := s.runGetDeveloperQuery(query, developerEmail)
+	query := "SELECT " + developerColumns + " FROM developers WHERE organization_name = ? AND email = ? LIMIT 1 ALLOW FILTERING"
+	developers, err := s.runGetDeveloperQuery(query, organizationName, developerEmail)
 	if err != nil {
 		s.db.metrics.QueryFailed(developerMetricLabel)
 		return &types.NullDeveloper, types.NewDatabaseError(err)
@@ -76,8 +77,8 @@ func (s *DeveloperStore) GetByEmail(organizationName, developerEmail string) (*t
 // GetByID retrieves a developer from database
 func (s *DeveloperStore) GetByID(organizationName, developerID string) (*types.Developer, types.Error) {
 
-	query := "SELECT " + developerColumns + " FROM developers WHERE developer_id = ? LIMIT 1"
-	developers, err := s.runGetDeveloperQuery(query, developerID)
+	query := "SELECT " + developerColumns + " FROM developers WHERE organization_name = ? AND developer_id = ? LIMIT 1"
+	developers, err := s.runGetDeveloperQuery(query, organizationName, developerID)
 	if err != nil {
 		s.db.metrics.QueryFailed(developerMetricLabel)
 		return nil, types.NewDatabaseError(err)
@@ -130,7 +131,7 @@ func (s *DeveloperStore) runGetDeveloperQuery(query string, queryParameters ...i
 // Update UPSERTs a developer in database
 func (s *DeveloperStore) Update(organizationName string, d *types.Developer) types.Error {
 
-	query := "INSERT INTO developers (" + developerColumns + ") VALUES(?,?,?,?,?,?,?,?,?,?,?,?)"
+	query := "INSERT INTO developers (" + developerColumns + ") VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)"
 	if err := s.db.CassandraSession.Query(query,
 		d.DeveloperID,
 		stringSliceMarshal(d.Apps),
@@ -140,6 +141,7 @@ func (s *DeveloperStore) Update(organizationName string, d *types.Developer) typ
 		d.Email,
 		d.FirstName,
 		d.LastName,
+		organizationName,
 		d.CreatedAt,
 		d.CreatedBy,
 		d.LastModifiedAt,
@@ -155,8 +157,8 @@ func (s *DeveloperStore) Update(organizationName string, d *types.Developer) typ
 // DeleteByID deletes a developer
 func (s *DeveloperStore) DeleteByID(organizationName, developerID string) types.Error {
 
-	query := "DELETE FROM developers WHERE developer_id = ?"
-	if err := s.db.CassandraSession.Query(query, developerID).Exec(); err != nil {
+	query := "DELETE FROM developers WHERE WHERE organization_name = ? AND developer_id = ?"
+	if err := s.db.CassandraSession.Query(query, organizationName, developerID).Exec(); err != nil {
 		s.db.metrics.QueryFailed(developerMetricLabel)
 		return types.NewDatabaseError(err)
 	}

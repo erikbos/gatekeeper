@@ -9,9 +9,6 @@ import (
 )
 
 const (
-	// Prometheus label for metrics of db interactions
-	listenerMetricLabel = "listeners"
-
 	// List of listener columns we use
 	listenerColumns = `name,
 display_name,
@@ -24,6 +21,9 @@ created_at,
 created_by,
 lastmodified_at,
 lastmodified_by`
+
+	// Prometheus label for metrics of db interactions
+	listenerMetricLabel = "listeners"
 )
 
 // ListenerStore holds our ListenerStore config

@@ -150,6 +150,7 @@ var createTablesCQL = [...]string{
     last_name text,
     lastmodified_at bigint,
     lastmodified_by text,
+    organization_name text,
     suspended_till bigint,
     status text,
     user_name text,
@@ -162,6 +163,7 @@ var createTablesCQL = [...]string{
 	`CREATE INDEX IF NOT EXISTS ON developers (lastmodified_at)`,
 	`CREATE INDEX IF NOT EXISTS ON developers (status)`,
 	`CREATE INDEX IF NOT EXISTS ON developers (user_name)`,
+	`CREATE INDEX IF NOT EXISTS ON developers (organization_name)`,
 
 	`CREATE TABLE IF NOT EXISTS developer_apps (
     app_id text,

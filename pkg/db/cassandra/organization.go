@@ -9,9 +9,6 @@ import (
 )
 
 const (
-	// Prometheus label for metrics of db interactions
-	organizationMetricLabel = "organizations"
-
 	// List of organization columns we use
 	organizationColumns = `name,
 display_name,
@@ -20,6 +17,8 @@ created_at,
 created_by,
 lastmodified_at,
 lastmodified_by`
+	// Prometheus label for metrics of db interactions
+	organizationMetricLabel = "organizations"
 )
 
 // OrganizationStore holds our database config

@@ -9,10 +9,6 @@ import (
 )
 
 const (
-
-	// Prometheus label for metrics of db interactions
-	routeMetricLabel = "routes"
-
 	// List of route columns we use
 	routeColumns = `name,
 display_name,
@@ -24,6 +20,9 @@ created_at,
 created_by,
 lastmodified_at,
 lastmodified_by`
+
+	// Prometheus label for metrics of db interactions
+	routeMetricLabel = "routes"
 )
 
 // RouteStore holds our route config
