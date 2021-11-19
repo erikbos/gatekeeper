@@ -74,6 +74,10 @@ func (h *Handler) PostV1ClustersClusterName(c *gin.Context, clusterName ClusterN
 		responseErrorBadRequest(c, err)
 		return
 	}
+	if receivedCluster.Name != "" && receivedCluster.Name != string(clusterName) {
+		responseErrorNameValueMisMatch(c)
+		return
+	}
 	updatedCluster := fromCluster(receivedCluster)
 	storedCluster, err := h.service.Cluster.Update(updatedCluster, h.who(c))
 	if err != nil {

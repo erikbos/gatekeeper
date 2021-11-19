@@ -22,7 +22,7 @@ type Handler struct {
 }
 
 var (
-	errFieldMisMatch = errors.New("name field value mismatch")
+	errFieldMisMatch = errors.New("path and name field value mismatch")
 )
 
 // NewHandler sets up all API endpoint routes

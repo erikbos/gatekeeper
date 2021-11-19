@@ -74,6 +74,10 @@ func (h *Handler) PostV1RoutesRouteName(c *gin.Context, routeName RouteName) {
 		responseErrorBadRequest(c, err)
 		return
 	}
+	if receivedRoute.Name != "" && receivedRoute.Name != string(routeName) {
+		responseErrorNameValueMisMatch(c)
+		return
+	}
 	updatedRoute := fromRoute(receivedRoute)
 	storedRoute, err := h.service.Route.Update(updatedRoute, h.who(c))
 	if err != nil {

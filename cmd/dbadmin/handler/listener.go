@@ -75,6 +75,10 @@ func (h *Handler) PostV1ListenersListenerName(c *gin.Context, listenerName Liste
 		responseErrorBadRequest(c, err)
 		return
 	}
+	if receivedListener.Name != "" && receivedListener.Name != string(listenerName) {
+		responseErrorNameValueMisMatch(c)
+		return
+	}
 	updatedListener := fromListener(receivedListener)
 	storedListener, err := h.service.Listener.Update(updatedListener, h.who(c))
 	if err != nil {
