@@ -188,6 +188,9 @@ func (routes Routes) Sort() {
 		}
 		return routes[i].RouteGroup < routes[j].RouteGroup
 	})
+	for _, r := range routes {
+		r.Attributes.Sort()
+	}
 }
 
 // Validate checks if a route's configuration is correct

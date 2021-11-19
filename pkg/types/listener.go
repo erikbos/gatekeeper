@@ -156,6 +156,9 @@ func (listeners Listeners) Sort() {
 		}
 		return listeners[i].Port < listeners[j].Port
 	})
+	for _, l := range listeners {
+		l.Attributes.Sort()
+	}
 }
 
 // Validate checks if a listener's configuration is correct
@@ -179,6 +182,7 @@ var validListenerAttributes = map[string]bool{
 	AttributeAccessLogFile:               true,
 	AttributeAccessLogCluster:            true,
 	AttributeAccessLogClusterBufferSize:  true,
+	AttributeAccessLogFileFields:         true,
 	AttributeHTTPProtocol:                true,
 	AttributeTLS:                         true,
 	AttributeTLSMinimumVersion:           true,
@@ -192,4 +196,5 @@ var validListenerAttributes = map[string]bool{
 	AttributeMaxConcurrentStreams:        true,
 	AttributeInitialConnectionWindowSize: true,
 	AttributeInitialStreamWindowSize:     true,
+	AttributeIdleTimeout:                 true,
 }
