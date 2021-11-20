@@ -10,9 +10,6 @@ import (
 )
 
 const (
-	// Prometheus label for metrics of db interactions
-	apiProductsMetricLabel = "apiproducts"
-
 	// List of apiproduct columns we use
 	apiProductsColumns = `approval_type,
 api_resources,
@@ -26,6 +23,9 @@ lastmodified_by,
 name,
 route_group,
 policies`
+
+	// Prometheus label for metrics of db interactions
+	apiProductsMetricLabel = "apiproducts"
 )
 
 // APIProductStore holds our database config
@@ -51,7 +51,7 @@ func (s *APIProductStore) GetAll(organizationName string) (types.APIProducts, ty
 		return types.NullAPIProducts, types.NewDatabaseError(err)
 	}
 
-	s.db.metrics.QueryHit(apiProductsMetricLabel)
+	s.db.metrics.QuerySuccessful(apiProductsMetricLabel)
 	return apiproducts, nil
 }
 
@@ -67,12 +67,12 @@ func (s *APIProductStore) Get(organizationName, apiproductName string) (*types.A
 	}
 
 	if len(apiproducts) == 0 {
-		s.db.metrics.QueryMiss(apiProductsMetricLabel)
+		s.db.metrics.QueryNotFound(apiProductsMetricLabel)
 		return nil, types.NewItemNotFoundError(
 			fmt.Errorf("cannot find apiproduct '%s'", apiproductName))
 	}
 
-	s.db.metrics.QueryHit(apiProductsMetricLabel)
+	s.db.metrics.QuerySuccessful(apiProductsMetricLabel)
 	return &apiproducts[0], nil
 }
 
@@ -80,7 +80,7 @@ func (s *APIProductStore) Get(organizationName, apiproductName string) (*types.A
 func (s *APIProductStore) runGetAPIProductQuery(query string, queryParameters ...interface{}) (types.APIProducts, error) {
 	var apiproducts types.APIProducts
 
-	timer := prometheus.NewTimer(s.db.metrics.LookupHistogram)
+	timer := prometheus.NewTimer(s.db.metrics.queryHistogram)
 	defer timer.ObserveDuration()
 
 	var iter *gocql.Iter
@@ -97,18 +97,18 @@ func (s *APIProductStore) runGetAPIProductQuery(query string, queryParameters ..
 	m := make(map[string]interface{})
 	for iter.MapScan(m) {
 		apiproducts = append(apiproducts, types.APIProduct{
-			ApprovalType:   columnValueString(m, "approval_type"),
-			Attributes:     AttributesUnmarshal(columnValueString(m, "attributes")),
-			CreatedAt:      columnValueInt64(m, "created_at"),
-			CreatedBy:      columnValueString(m, "created_by"),
-			Description:    columnValueString(m, "description"),
-			DisplayName:    columnValueString(m, "display_name"),
-			LastModifiedAt: columnValueInt64(m, "lastmodified_at"),
-			LastModifiedBy: columnValueString(m, "lastmodified_by"),
-			Name:           columnValueString(m, "name"),
-			APIResources:   stringSliceUnmarshal(columnValueString(m, "api_resources")),
-			Policies:       columnValueString(m, "policies"),
-			RouteGroup:     columnValueString(m, "route_group"),
+			ApprovalType:   columnToString(m, "approval_type"),
+			Attributes:     columnToAttributes(m, "attributes"),
+			CreatedAt:      columnToInt64(m, "created_at"),
+			CreatedBy:      columnToString(m, "created_by"),
+			Description:    columnToString(m, "description"),
+			DisplayName:    columnToString(m, "display_name"),
+			LastModifiedAt: columnToInt64(m, "lastmodified_at"),
+			LastModifiedBy: columnToString(m, "lastmodified_by"),
+			Name:           columnToString(m, "name"),
+			APIResources:   columnToStringSlice(m, "api_resources"),
+			Policies:       columnToString(m, "policies"),
+			RouteGroup:     columnToString(m, "route_group"),
 		})
 		m = map[string]interface{}{}
 	}
@@ -126,8 +126,8 @@ func (s *APIProductStore) Update(organizationName string, p *types.APIProduct) t
 	query := "INSERT INTO api_products (" + apiProductsColumns + ") VALUES(?,?,?,?,?,?,?,?,?,?,?,?)"
 	if err := s.db.CassandraSession.Query(query,
 		p.ApprovalType,
-		stringSliceMarshal(p.APIResources),
-		AttributesMarshal(p.Attributes),
+		p.APIResources,
+		attributesToColumn(p.Attributes),
 		p.CreatedAt,
 		p.CreatedBy,
 		p.Description,

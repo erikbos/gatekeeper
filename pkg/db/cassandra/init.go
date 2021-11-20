@@ -63,7 +63,7 @@ var createTablesCQL = [...]string{
         display_name text,
         password text,
         status text,
-        roles text,
+        roles set<text>,
         created_at bigint,
         created_by text,
         lastmodified_at bigint,
@@ -89,7 +89,7 @@ var createTablesCQL = [...]string{
 	`INSERT INTO roles (name,allows,created_by,created_at,lastmodified_at) VALUES('admin','[{"methods":["GET","POST","DELETE"],"paths":["/v1/**"]}]','initdb',toUnixTimestamp(now()),toUnixTimestamp(now())) IF NOT EXISTS`,
 
 	`CREATE TABLE IF NOT EXISTS listeners (
-    attributes text,
+    attributes map<text, text>,
     created_at bigint,
     created_by text,
     display_name text,
@@ -99,12 +99,12 @@ var createTablesCQL = [...]string{
     policies text,
     port int,
     route_group text,
-    virtual_hosts text,
+    virtual_hosts set<text>,
     PRIMARY KEY (name)
 	)`,
 
 	`CREATE TABLE IF NOT EXISTS routes (
-    attributes text,
+    attributes map<text, text>,
     created_at bigint,
     created_by text,
     display_name text,
@@ -118,7 +118,7 @@ var createTablesCQL = [...]string{
 	)`,
 
 	`CREATE TABLE IF NOT EXISTS clusters (
-    attributes text,
+    attributes map<text, text>,
     created_at bigint,
     created_by text,
     display_name text,
@@ -129,7 +129,7 @@ var createTablesCQL = [...]string{
 	)`,
 
 	`CREATE TABLE IF NOT EXISTS organizations (
-        attributes text,
+        attributes map<text, text>,
         created_at bigint,
         created_by text,
         display_name text,
@@ -140,23 +140,25 @@ var createTablesCQL = [...]string{
     )`,
 
 	`CREATE TABLE IF NOT EXISTS developers (
-    apps text,
-    attributes text,
+    apps set<text>,
+    attributes map<text, text>,
     created_at bigint,
     created_by text,
     developer_id text,
     email text,
     first_name text,
+    key text,
     last_name text,
     lastmodified_at bigint,
     lastmodified_by text,
-    suspended_till bigint,
+    organization_name text,
     status text,
     user_name text,
-    PRIMARY KEY (developer_id)
+    PRIMARY KEY (key)
 	)`,
 
 	`CREATE INDEX IF NOT EXISTS ON developers (email)`,
+	`CREATE INDEX IF NOT EXISTS ON developers (developer_id)`,
 	`CREATE INDEX IF NOT EXISTS ON developers (first_name)`,
 	`CREATE INDEX IF NOT EXISTS ON developers (last_name)`,
 	`CREATE INDEX IF NOT EXISTS ON developers (lastmodified_at)`,
@@ -165,7 +167,7 @@ var createTablesCQL = [...]string{
 
 	`CREATE TABLE IF NOT EXISTS developer_apps (
     app_id text,
-    attributes text,
+    attributes map<text, text>,
     created_at bigint,
     created_by text,
     developer_id text,
@@ -174,6 +176,7 @@ var createTablesCQL = [...]string{
     lastmodified_by text,
     name text,
     status text,
+    scopes set<text>,
     PRIMARY KEY (app_id)
 	)`,
 
@@ -183,9 +186,10 @@ var createTablesCQL = [...]string{
 
 	`CREATE TABLE IF NOT EXISTS keys (
     api_products text,
-    attributes text,
+    attributes map<text, text>,
     consumer_key text,
     consumer_secret text,
+    scopes set<text>,
     app_id text,
     expires_at bigint,
     issued_at bigint,
@@ -219,8 +223,8 @@ var createTablesCQL = [...]string{
 
 	`CREATE TABLE IF NOT EXISTS api_products (
     approval_type text,
-    api_resources text,
-    attributes text,
+    api_resources set<text>,
+    attributes map<text, text>,
     created_at bigint,
     created_by text,
     description text,

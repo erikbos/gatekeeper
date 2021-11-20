@@ -151,9 +151,9 @@ func ToRoleAllowsResponse(allows types.Allows) *[]RoleAllow {
 	return &allowed_paths
 }
 
-func fromRole(u Role) *types.Role {
+func fromRole(u Role) types.Role {
 
-	role := &types.Role{}
+	role := types.Role{}
 	if u.Allow != nil {
 		role.Allows = fromRoleAllow(u.Allow)
 	}

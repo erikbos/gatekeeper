@@ -2263,6 +2263,9 @@ components:
         status:
           type: string
           description: Status of developer. Can be 'active' or 'inactive'.
+        organizationName:
+          type: string
+          description: Name of organization.
         createdAt:
           type: integer
           format: int64

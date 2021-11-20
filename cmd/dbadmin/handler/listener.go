@@ -30,12 +30,12 @@ func (h *Handler) PostV1Listeners(c *gin.Context) {
 		return
 	}
 	newListener := fromListener(receivedListener)
-	createdDeveloper, err := h.service.Listener.Create(newListener, h.who(c))
+	createdListener, err := h.service.Listener.Create(newListener, h.who(c))
 	if err != nil {
 		responseErrorBadRequest(c, err)
 		return
 	}
-	h.responseListenerCreated(c, &createdDeveloper)
+	h.responseListenerCreated(c, createdListener)
 }
 
 // deletes an listener
@@ -75,13 +75,17 @@ func (h *Handler) PostV1ListenersListenerName(c *gin.Context, listenerName Liste
 		responseErrorBadRequest(c, err)
 		return
 	}
+	if receivedListener.Name != "" && receivedListener.Name != string(listenerName) {
+		responseErrorNameValueMisMatch(c)
+		return
+	}
 	updatedListener := fromListener(receivedListener)
 	storedListener, err := h.service.Listener.Update(updatedListener, h.who(c))
 	if err != nil {
 		responseError(c, err)
 		return
 	}
-	h.responseListenersUpdated(c, &storedListener)
+	h.responseListenersUpdated(c, storedListener)
 }
 
 // returns attributes of a listener

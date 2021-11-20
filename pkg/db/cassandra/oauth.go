@@ -68,33 +68,33 @@ func (s *OAuthStore) runGetOAuthAccessTokenQuery(query, queryParameter string) (
 
 	var accessToken types.OAuthAccessToken
 
-	timer := prometheus.NewTimer(s.db.metrics.LookupHistogram)
+	timer := prometheus.NewTimer(s.db.metrics.queryHistogram)
 	defer timer.ObserveDuration()
 
 	iterable := s.db.CassandraSession.Query(query, queryParameter).Iter()
 	m := make(map[string]interface{})
 	for iterable.MapScan(m) {
 		accessToken = types.OAuthAccessToken{
-			ClientID:         columnValueString(m, "client_id"),
-			UserID:           columnValueString(m, "user_id"),
-			RedirectURI:      columnValueString(m, "redirect_uri"),
-			Scope:            columnValueString(m, "scope"),
-			Code:             columnValueString(m, "code"),
-			CodeCreatedAt:    columnValueInt64(m, "code_created_at"),
-			CodeExpiresIn:    columnValueInt64(m, "code_expires_in"),
-			Access:           columnValueString(m, "access"),
-			AccessCreatedAt:  columnValueInt64(m, "access_created_at"),
-			AccessExpiresIn:  columnValueInt64(m, "access_expires_in"),
-			Refresh:          columnValueString(m, "refresh"),
-			RefreshCreatedAt: columnValueInt64(m, "refresh_created_at"),
-			RefreshExpiresIn: columnValueInt64(m, "refresh_expires_in"),
+			ClientID:         columnToString(m, "client_id"),
+			UserID:           columnToString(m, "user_id"),
+			RedirectURI:      columnToString(m, "redirect_uri"),
+			Scope:            columnToString(m, "scope"),
+			Code:             columnToString(m, "code"),
+			CodeCreatedAt:    columnToInt64(m, "code_created_at"),
+			CodeExpiresIn:    columnToInt64(m, "code_expires_in"),
+			Access:           columnToString(m, "access"),
+			AccessCreatedAt:  columnToInt64(m, "access_created_at"),
+			AccessExpiresIn:  columnToInt64(m, "access_expires_in"),
+			Refresh:          columnToString(m, "refresh"),
+			RefreshCreatedAt: columnToInt64(m, "refresh_created_at"),
+			RefreshExpiresIn: columnToInt64(m, "refresh_expires_in"),
 		}
 	}
 	if err := iterable.Close(); err != nil {
-		s.db.metrics.QueryMiss(oauthMetricLabel)
+		s.db.metrics.QueryNotFound(oauthMetricLabel)
 		return nil, err
 	}
-	s.db.metrics.QueryHit(oauthMetricLabel)
+	s.db.metrics.QuerySuccessful(oauthMetricLabel)
 
 	// log.Printf("runGetOAuthAccessTokenQuery: %+v", accessToken)
 	return &accessToken, nil

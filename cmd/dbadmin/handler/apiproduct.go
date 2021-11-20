@@ -42,7 +42,7 @@ func (h *Handler) PostV1OrganizationsOrganizationNameApiproducts(c *gin.Context,
 		responseError(c, err)
 		return
 	}
-	h.responseAPIProductCreated(c, &createdDeveloper)
+	h.responseAPIProductCreated(c, createdDeveloper)
 }
 
 // deletes an apiproduct
@@ -93,7 +93,7 @@ func (h *Handler) PostV1OrganizationsOrganizationNameApiproductsApiproductName(
 		responseError(c, err)
 		return
 	}
-	h.responseAPIproductUpdated(c, &storedAPIProduct)
+	h.responseAPIproductUpdated(c, storedAPIProduct)
 }
 
 // returns attributes of a apiproduct

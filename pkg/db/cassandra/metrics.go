@@ -5,39 +5,39 @@ import (
 )
 
 type metricsCollection struct {
-	hostname            string
-	LookupHitsCounter   *prometheus.CounterVec
-	LookupMissesCounter *prometheus.CounterVec
-	LookupFailedCounter *prometheus.CounterVec
-	LookupHistogram     prometheus.Summary
+	hostname       string
+	querySuccesful *prometheus.CounterVec
+	queryNotFound  *prometheus.CounterVec
+	queryFailed    *prometheus.CounterVec
+	queryHistogram prometheus.Summary
 }
 
 func (m *metricsCollection) register(serviceName, hostName string) {
 
 	m.hostname = hostName
 
-	m.LookupHitsCounter = prometheus.NewCounterVec(
+	m.querySuccesful = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: serviceName,
 			Name:      "database_lookup_hits_total",
 			Help:      "Number of successful database lookups.",
 		}, []string{"hostname", "table"})
 
-	m.LookupMissesCounter = prometheus.NewCounterVec(
+	m.queryNotFound = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: serviceName,
 			Name:      "database_lookup_misses_total",
 			Help:      "Number of unsuccessful database lookups.",
 		}, []string{"hostname", "table"})
 
-	m.LookupFailedCounter = prometheus.NewCounterVec(
+	m.queryFailed = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
 			Namespace: serviceName,
 			Name:      "database_lookup_failed_total",
 			Help:      "Number of failed database lookups.",
 		}, []string{"hostname", "table"})
 
-	m.LookupHistogram = prometheus.NewSummary(
+	m.queryHistogram = prometheus.NewSummary(
 		prometheus.SummaryOpts{
 			Name: serviceName + "_database_lookup_latency",
 			Help: "Database lookup latency in seconds.",
@@ -46,23 +46,23 @@ func (m *metricsCollection) register(serviceName, hostName string) {
 			},
 		})
 
-	prometheus.MustRegister(m.LookupHitsCounter)
-	prometheus.MustRegister(m.LookupMissesCounter)
-	prometheus.MustRegister(m.LookupFailedCounter)
-	prometheus.MustRegister(m.LookupHistogram)
+	prometheus.MustRegister(m.querySuccesful)
+	prometheus.MustRegister(m.queryNotFound)
+	prometheus.MustRegister(m.queryFailed)
+	prometheus.MustRegister(m.queryHistogram)
 }
 
-// QueryHit increase positive metric counter
-func (m *metricsCollection) QueryHit(tableName string) {
-	m.LookupHitsCounter.WithLabelValues(m.hostname, tableName).Inc()
+// QuerySuccessful increase sucessful query counter
+func (m *metricsCollection) QuerySuccessful(tableName string) {
+	m.querySuccesful.WithLabelValues(m.hostname, tableName).Inc()
 }
 
-// QueryMiss increases negative metric counter
-func (m *metricsCollection) QueryMiss(tableName string) {
-	m.LookupMissesCounter.WithLabelValues(m.hostname, tableName).Inc()
+// QueryNotFound increases failed query counter
+func (m *metricsCollection) QueryNotFound(tableName string) {
+	m.queryNotFound.WithLabelValues(m.hostname, tableName).Inc()
 }
 
 // QueryFailed increases failed metric counter
 func (m *metricsCollection) QueryFailed(tableName string) {
-	m.LookupFailedCounter.WithLabelValues(m.hostname, tableName).Inc()
+	m.queryFailed.WithLabelValues(m.hostname, tableName).Inc()
 }

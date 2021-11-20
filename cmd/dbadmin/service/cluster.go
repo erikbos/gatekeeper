@@ -44,10 +44,10 @@ func (cs *ClusterService) GetAttribute(clusterName, attributeName string) (value
 
 // Create creates an cluster
 func (cs *ClusterService) Create(newCluster types.Cluster, who Requester) (
-	types.Cluster, types.Error) {
+	*types.Cluster, types.Error) {
 
 	if _, err := cs.db.Cluster.Get(newCluster.Name); err == nil {
-		return types.NullCluster, types.NewBadRequestError(
+		return nil, types.NewBadRequestError(
 			fmt.Errorf("cluster '%s' already exists", newCluster.Name))
 	}
 	// Automatically set default fields
@@ -55,19 +55,19 @@ func (cs *ClusterService) Create(newCluster types.Cluster, who Requester) (
 	newCluster.CreatedBy = who.User
 
 	if err := cs.updateCluster(&newCluster, who); err != nil {
-		return types.NullCluster, err
+		return nil, err
 	}
 	cs.changelog.Create(newCluster, who)
-	return newCluster, nil
+	return &newCluster, nil
 }
 
 // Update updates an existing cluster
 func (cs *ClusterService) Update(updatedCluster types.Cluster,
-	who Requester) (types.Cluster, types.Error) {
+	who Requester) (*types.Cluster, types.Error) {
 
 	currentCluster, err := cs.db.Cluster.Get(updatedCluster.Name)
 	if err != nil {
-		return types.NullCluster, err
+		return nil, err
 	}
 	// Copy over fields we do not allow to be updated
 	updatedCluster.Name = currentCluster.Name
@@ -75,10 +75,10 @@ func (cs *ClusterService) Update(updatedCluster types.Cluster,
 	updatedCluster.CreatedBy = currentCluster.CreatedBy
 
 	if err = cs.updateCluster(&updatedCluster, who); err != nil {
-		return types.NullCluster, err
+		return nil, err
 	}
 	cs.changelog.Update(currentCluster, updatedCluster, who)
-	return updatedCluster, nil
+	return &updatedCluster, nil
 }
 
 // updateCluster updates last-modified field(s) and updates cluster in database

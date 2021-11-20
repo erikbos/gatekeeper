@@ -156,6 +156,9 @@ func (clusters Clusters) Sort() {
 	sort.SliceStable(clusters, func(i, j int) bool {
 		return clusters[i].Name < clusters[j].Name
 	})
+	for _, c := range clusters {
+		c.Attributes.Sort()
+	}
 }
 
 // Validate checks if a cluster's configuration is correct

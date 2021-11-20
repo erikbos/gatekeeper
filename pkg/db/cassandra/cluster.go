@@ -9,9 +9,6 @@ import (
 )
 
 const (
-	// Prometheus label for metrics of db interactions
-	clusterMetricLabel = "clusters"
-
 	// List of cluster columns we use
 	clusterColumns = `name,
 display_name,
@@ -20,6 +17,9 @@ created_at,
 created_by,
 lastmodified_at,
 lastmodified_by`
+
+	// Prometheus label for metrics of db interactions
+	clusterMetricLabel = "clusters"
 )
 
 // ClusterStore holds our database config
@@ -44,7 +44,7 @@ func (s *ClusterStore) GetAll() (types.Clusters, types.Error) {
 		return types.NullClusters, types.NewDatabaseError(err)
 	}
 
-	s.db.metrics.QueryHit(clusterMetricLabel)
+	s.db.metrics.QuerySuccessful(clusterMetricLabel)
 	return clusters, nil
 }
 
@@ -59,12 +59,12 @@ func (s *ClusterStore) Get(clusterName string) (*types.Cluster, types.Error) {
 	}
 
 	if len(clusters) == 0 {
-		s.db.metrics.QueryMiss(clusterMetricLabel)
+		s.db.metrics.QueryNotFound(clusterMetricLabel)
 		return nil, types.NewItemNotFoundError(
 			fmt.Errorf("can not find cluster (%s)", clusterName))
 	}
 
-	s.db.metrics.QueryHit(clusterMetricLabel)
+	s.db.metrics.QuerySuccessful(clusterMetricLabel)
 	return &clusters[0], nil
 }
 
@@ -72,20 +72,20 @@ func (s *ClusterStore) Get(clusterName string) (*types.Cluster, types.Error) {
 func (s *ClusterStore) runGetClusterQuery(query string, queryParameters ...interface{}) (types.Clusters, error) {
 	var clusters types.Clusters
 
-	timer := prometheus.NewTimer(s.db.metrics.LookupHistogram)
+	timer := prometheus.NewTimer(s.db.metrics.queryHistogram)
 	defer timer.ObserveDuration()
 
 	iter := s.db.CassandraSession.Query(query, queryParameters...).Iter()
 	m := make(map[string]interface{})
 	for iter.MapScan(m) {
 		clusters = append(clusters, types.Cluster{
-			Attributes:     AttributesUnmarshal(columnValueString(m, "attributes")),
-			CreatedAt:      columnValueInt64(m, "created_at"),
-			CreatedBy:      columnValueString(m, "created_by"),
-			DisplayName:    columnValueString(m, "display_name"),
-			Name:           columnValueString(m, "name"),
-			LastModifiedAt: columnValueInt64(m, "lastmodified_at"),
-			LastModifiedBy: columnValueString(m, "lastmodified_by"),
+			Attributes:     columnToAttributes(m, "attributes"),
+			CreatedAt:      columnToInt64(m, "created_at"),
+			CreatedBy:      columnToString(m, "created_by"),
+			DisplayName:    columnToString(m, "display_name"),
+			Name:           columnToString(m, "name"),
+			LastModifiedAt: columnToInt64(m, "lastmodified_at"),
+			LastModifiedBy: columnToString(m, "lastmodified_by"),
 		})
 		m = map[string]interface{}{}
 	}
@@ -103,7 +103,7 @@ func (s *ClusterStore) Update(c *types.Cluster) types.Error {
 	if err := s.db.CassandraSession.Query(query,
 		c.Name,
 		c.DisplayName,
-		AttributesMarshal(c.Attributes),
+		attributesToColumn(c.Attributes),
 		c.CreatedAt,
 		c.CreatedBy,
 		c.LastModifiedAt,

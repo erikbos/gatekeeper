@@ -42,12 +42,13 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopers(c *gin.Context,
 		return
 	}
 	newDeveloper := fromDeveloper(receivedDeveloper)
+	newDeveloper.OrganizationName = string(organizationName)
 	createdDeveloper, err := h.service.Developer.Create(string(organizationName), newDeveloper, h.who(c))
 	if err != nil {
 		responseErrorBadRequest(c, err)
 		return
 	}
-	h.responseDeveloperCreated(c, &createdDeveloper)
+	h.responseDeveloperCreated(c, createdDeveloper)
 }
 
 // deletes a developer
@@ -102,12 +103,13 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 		return
 	}
 	updatedDeveloper := fromDeveloper(receivedDeveloper)
+	updatedDeveloper.OrganizationName = string(organizationName)
 	storedDeveloper, err := h.service.Developer.Update(string(organizationName), string(developerEmailaddress), updatedDeveloper, h.who(c))
 	if err != nil {
 		responseError(c, err)
 		return
 	}
-	h.responseDeveloperUpdated(c, &storedDeveloper)
+	h.responseDeveloperUpdated(c, storedDeveloper)
 }
 
 // change status of developer
@@ -284,17 +286,18 @@ func (h *Handler) responseDeveloperUpdated(c *gin.Context, developer *types.Deve
 func (h *Handler) ToDeveloperResponse(d *types.Developer) Developer {
 
 	dev := Developer{
-		Attributes:     toAttributesResponse(d.Attributes),
-		CreatedAt:      &d.CreatedAt,
-		CreatedBy:      &d.CreatedBy,
-		DeveloperId:    &d.DeveloperID,
-		Email:          &d.Email,
-		FirstName:      &d.FirstName,
-		LastModifiedBy: &d.LastModifiedBy,
-		LastModifiedAt: &d.LastModifiedAt,
-		LastName:       &d.LastName,
-		Status:         &d.Status,
-		UserName:       &d.UserName,
+		Attributes:       toAttributesResponse(d.Attributes),
+		CreatedAt:        &d.CreatedAt,
+		CreatedBy:        &d.CreatedBy,
+		DeveloperId:      &d.DeveloperID,
+		Email:            &d.Email,
+		FirstName:        &d.FirstName,
+		LastModifiedBy:   &d.LastModifiedBy,
+		LastModifiedAt:   &d.LastModifiedAt,
+		LastName:         &d.LastName,
+		OrganizationName: &d.OrganizationName,
+		Status:           &d.Status,
+		UserName:         &d.UserName,
 	}
 	if d.Apps != nil {
 		dev.Apps = &d.Apps

@@ -37,10 +37,10 @@ func (ds *APIProductService) Get(organizationName, apiproductName string) (apipr
 
 // Create creates a new apiproduct
 func (ds *APIProductService) Create(organizationName string, newAPIProduct types.APIProduct,
-	who Requester) (types.APIProduct, types.Error) {
+	who Requester) (*types.APIProduct, types.Error) {
 
 	if _, err := ds.Get(organizationName, newAPIProduct.Name); err == nil {
-		return types.NullAPIProduct, types.NewBadRequestError(
+		return nil, types.NewBadRequestError(
 			fmt.Errorf("apiproduct '%s' already exists", newAPIProduct.Name))
 	}
 	// Automatically set default fields
@@ -52,19 +52,19 @@ func (ds *APIProductService) Create(organizationName string, newAPIProduct types
 	}
 
 	if err := ds.updateAPIProduct(organizationName, &newAPIProduct, who); err != nil {
-		return types.NullAPIProduct, err
+		return nil, err
 	}
 	ds.changelog.Create(newAPIProduct, who)
-	return newAPIProduct, nil
+	return &newAPIProduct, nil
 }
 
 // Update updates an existing apiproduct
 func (ds *APIProductService) Update(organizationName string, updatedAPIProduct types.APIProduct,
-	who Requester) (types.APIProduct, types.Error) {
+	who Requester) (*types.APIProduct, types.Error) {
 
 	currentAPIProduct, err := ds.db.APIProduct.Get(organizationName, updatedAPIProduct.Name)
 	if err != nil {
-		return types.NullAPIProduct, err
+		return nil, err
 	}
 
 	// Copy over fields we do not allow to be updated
@@ -73,10 +73,10 @@ func (ds *APIProductService) Update(organizationName string, updatedAPIProduct t
 	updatedAPIProduct.CreatedBy = currentAPIProduct.CreatedBy
 
 	if err = ds.updateAPIProduct(organizationName, &updatedAPIProduct, who); err != nil {
-		return types.NullAPIProduct, err
+		return nil, err
 	}
 	ds.changelog.Update(currentAPIProduct, updatedAPIProduct, who)
-	return updatedAPIProduct, nil
+	return &updatedAPIProduct, nil
 }
 
 // updateAPIProduct updates last-modified field(s) and updates apiproduct in database

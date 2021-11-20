@@ -205,6 +205,9 @@ type Developer struct {
 	// Last name of developer.
 	LastName *string `json:"lastName,omitempty"`
 
+	// Name of organization.
+	OrganizationName *string `json:"organizationName,omitempty"`
+
 	// Status of developer. Can be 'active' or 'inactive'.
 	Status *string `json:"status,omitempty"`
 

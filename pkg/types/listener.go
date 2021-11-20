@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/go-playground/validator/v10"
 )
@@ -156,6 +157,9 @@ func (listeners Listeners) Sort() {
 		}
 		return listeners[i].Port < listeners[j].Port
 	})
+	for _, l := range listeners {
+		l.Attributes.Sort()
+	}
 }
 
 // Validate checks if a listener's configuration is correct
@@ -170,6 +174,16 @@ func (l *Listener) Validate() error {
 			return fmt.Errorf("unknown attribute '%s'", attribute.Name)
 		}
 	}
+	// scan for duplicate vhosts
+	hostsSeen := make(map[string]bool, len(l.VirtualHosts))
+	for _, host := range l.VirtualHosts {
+		hostLower := strings.ToLower(host)
+		if found := hostsSeen[hostLower]; !found {
+			hostsSeen[hostLower] = true
+		} else {
+			return fmt.Errorf("no duplicate virtual hosts allowed (%s)", host)
+		}
+	}
 	return nil
 }
 
@@ -179,6 +193,7 @@ var validListenerAttributes = map[string]bool{
 	AttributeAccessLogFile:               true,
 	AttributeAccessLogCluster:            true,
 	AttributeAccessLogClusterBufferSize:  true,
+	AttributeAccessLogFileFields:         true,
 	AttributeHTTPProtocol:                true,
 	AttributeTLS:                         true,
 	AttributeTLSMinimumVersion:           true,
@@ -192,4 +207,5 @@ var validListenerAttributes = map[string]bool{
 	AttributeMaxConcurrentStreams:        true,
 	AttributeInitialConnectionWindowSize: true,
 	AttributeInitialStreamWindowSize:     true,
+	AttributeIdleTimeout:                 true,
 }

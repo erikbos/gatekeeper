@@ -9,9 +9,6 @@ import (
 )
 
 const (
-	// Prometheus label for metrics of db interactions
-	developerAppsMetricLabel = "developerapps"
-
 	// List of developer app columns we use
 	developerAppColumns = `app_id,
 developer_id,
@@ -20,10 +17,14 @@ display_name,
 attributes,
 status,
 callback_url,
+scopes,
 created_at,
 created_by,
 lastmodified_at,
 lastmodified_by`
+
+	// Prometheus label for metrics of db interactions
+	developerAppsMetricLabel = "developerapps"
 )
 
 // DeveloperAppStore holds our database config
@@ -44,11 +45,11 @@ func (s *DeveloperAppStore) GetAll(organizationName string) (types.DeveloperApps
 	query := "SELECT " + developerAppColumns + " FROM developer_apps"
 	developerapps, err := s.runGetDeveloperAppQuery(query)
 	if err != nil {
-		s.db.metrics.QueryMiss(developerAppsMetricLabel)
+		s.db.metrics.QueryNotFound(developerAppsMetricLabel)
 		return types.NullDeveloperApps, types.NewDatabaseError(err)
 	}
 
-	s.db.metrics.QueryHit(developerAppsMetricLabel)
+	s.db.metrics.QuerySuccessful(developerAppsMetricLabel)
 	return developerapps, nil
 }
 
@@ -58,11 +59,11 @@ func (s *DeveloperAppStore) GetAllByDeveloperID(organizationName, developerID st
 	query := "SELECT " + developerAppColumns + " FROM developer_apps WHERE developer_id = ?"
 	developerapps, err := s.runGetDeveloperAppQuery(query, developerID)
 	if err != nil {
-		s.db.metrics.QueryMiss(developerAppsMetricLabel)
+		s.db.metrics.QueryNotFound(developerAppsMetricLabel)
 		return types.NullDeveloperApps, types.NewDatabaseError(err)
 	}
 
-	s.db.metrics.QueryHit(developerAppsMetricLabel)
+	s.db.metrics.QuerySuccessful(developerAppsMetricLabel)
 	return developerapps, nil
 }
 
@@ -72,17 +73,17 @@ func (s *DeveloperAppStore) GetByName(organizationName, developerEmail, develope
 	query := "SELECT " + developerAppColumns + " FROM developer_apps WHERE name = ? LIMIT 1"
 	developerapps, err := s.runGetDeveloperAppQuery(query, developerAppName)
 	if err != nil {
-		s.db.metrics.QueryMiss(developerAppsMetricLabel)
+		s.db.metrics.QueryNotFound(developerAppsMetricLabel)
 		return nil, types.NewDatabaseError(err)
 	}
 
 	if len(developerapps) == 0 {
-		s.db.metrics.QueryMiss(developerAppsMetricLabel)
+		s.db.metrics.QueryNotFound(developerAppsMetricLabel)
 		return nil, types.NewItemNotFoundError(
 			fmt.Errorf("can not find developer app '%s'", developerAppName))
 	}
 
-	s.db.metrics.QueryHit(developerAppsMetricLabel)
+	s.db.metrics.QuerySuccessful(developerAppsMetricLabel)
 	return &developerapps[0], nil
 }
 
@@ -96,12 +97,12 @@ func (s *DeveloperAppStore) GetByID(organizationName, developerAppID string) (*t
 	}
 
 	if len(developerapps) == 0 {
-		s.db.metrics.QueryMiss(developerAppsMetricLabel)
+		s.db.metrics.QueryNotFound(developerAppsMetricLabel)
 		return nil, types.NewItemNotFoundError(
 			fmt.Errorf("can not find developer app id '%s'", developerAppID))
 	}
 
-	s.db.metrics.QueryHit(developerAppsMetricLabel)
+	s.db.metrics.QuerySuccessful(developerAppsMetricLabel)
 	return &developerapps[0], nil
 }
 
@@ -111,11 +112,11 @@ func (s *DeveloperAppStore) GetCountByDeveloperID(organizationName, developerID 
 	var developerAppCount int
 	query := "SELECT count(*) FROM developer_apps WHERE developer_id = ?"
 	if err := s.db.CassandraSession.Query(query, developerID).Scan(&developerAppCount); err != nil {
-		s.db.metrics.QueryMiss(developerAppsMetricLabel)
+		s.db.metrics.QueryNotFound(developerAppsMetricLabel)
 		return -1, types.NewDatabaseError(err)
 	}
 
-	s.db.metrics.QueryHit(developerAppsMetricLabel)
+	s.db.metrics.QuerySuccessful(developerAppsMetricLabel)
 	return developerAppCount, nil
 }
 
@@ -123,25 +124,25 @@ func (s *DeveloperAppStore) GetCountByDeveloperID(organizationName, developerID 
 func (s *DeveloperAppStore) runGetDeveloperAppQuery(query string, queryParameters ...interface{}) (types.DeveloperApps, error) {
 	var developerapps types.DeveloperApps
 
-	timer := prometheus.NewTimer(s.db.metrics.LookupHistogram)
+	timer := prometheus.NewTimer(s.db.metrics.queryHistogram)
 	defer timer.ObserveDuration()
 
 	iterable := s.db.CassandraSession.Query(query, queryParameters...).Iter()
 	m := make(map[string]interface{})
 	for iterable.MapScan(m) {
 		developerapps = append(developerapps, types.DeveloperApp{
-			AppID:          columnValueString(m, "app_id"),
-			Attributes:     AttributesUnmarshal(m["attributes"].(string)),
-			CallbackUrl:    columnValueString(m, "callback_url"),
-			CreatedAt:      columnValueInt64(m, "created_at"),
-			CreatedBy:      columnValueString(m, "created_by"),
-			DeveloperID:    columnValueString(m, "developer_id"),
-			DisplayName:    columnValueString(m, "display_name"),
-			LastModifiedAt: columnValueInt64(m, "lastmodified_at"),
-			LastModifiedBy: columnValueString(m, "lastmodified_by"),
-			Scopes:         stringSliceUnmarshal(columnValueString(m, "scopes")),
-			Status:         columnValueString(m, "status"),
-			Name:           columnValueString(m, "name"),
+			AppID:          columnToString(m, "app_id"),
+			Attributes:     columnToAttributes(m, "attributes"),
+			CallbackUrl:    columnToString(m, "callback_url"),
+			CreatedAt:      columnToInt64(m, "created_at"),
+			CreatedBy:      columnToString(m, "created_by"),
+			DeveloperID:    columnToString(m, "developer_id"),
+			DisplayName:    columnToString(m, "display_name"),
+			LastModifiedAt: columnToInt64(m, "lastmodified_at"),
+			LastModifiedBy: columnToString(m, "lastmodified_by"),
+			Scopes:         columnToStringSlice(m, "scopes"),
+			Status:         columnToString(m, "status"),
+			Name:           columnToString(m, "name"),
 		})
 		m = map[string]interface{}{}
 	}
@@ -155,15 +156,16 @@ func (s *DeveloperAppStore) runGetDeveloperAppQuery(query string, queryParameter
 // Update UPSERTs a developer app
 func (s *DeveloperAppStore) Update(organizationName string, app *types.DeveloperApp) types.Error {
 
-	query := "INSERT INTO developer_apps (" + developerAppColumns + ") VALUES(?,?,?,?,?,?,?,?,?,?,?)"
+	query := "INSERT INTO developer_apps (" + developerAppColumns + ") VALUES(?,?,?,?,?,?,?,?,?,?,?,?)"
 	if err := s.db.CassandraSession.Query(query,
 		app.AppID,
 		app.DeveloperID,
 		app.Name,
 		app.DisplayName,
-		AttributesMarshal(app.Attributes),
+		attributesToColumn(app.Attributes),
 		app.Status,
 		app.CallbackUrl,
+		app.Scopes,
 		app.CreatedAt,
 		app.CreatedBy,
 		app.LastModifiedAt,

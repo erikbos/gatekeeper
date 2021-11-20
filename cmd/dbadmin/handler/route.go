@@ -35,7 +35,7 @@ func (h *Handler) PostV1Routes(c *gin.Context) {
 		responseErrorBadRequest(c, err)
 		return
 	}
-	h.responseRouteCreated(c, &createdDeveloper)
+	h.responseRouteCreated(c, createdDeveloper)
 }
 
 // deletes an route
@@ -74,13 +74,17 @@ func (h *Handler) PostV1RoutesRouteName(c *gin.Context, routeName RouteName) {
 		responseErrorBadRequest(c, err)
 		return
 	}
+	if receivedRoute.Name != "" && receivedRoute.Name != string(routeName) {
+		responseErrorNameValueMisMatch(c)
+		return
+	}
 	updatedRoute := fromRoute(receivedRoute)
 	storedRoute, err := h.service.Route.Update(updatedRoute, h.who(c))
 	if err != nil {
 		responseError(c, err)
 		return
 	}
-	h.responseRoutesUpdated(c, &storedRoute)
+	h.responseRoutesUpdated(c, storedRoute)
 }
 
 // returns attributes of a route

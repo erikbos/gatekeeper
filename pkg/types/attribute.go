@@ -150,18 +150,13 @@ func (attributes *Attributes) Tidy() {
 			// Trim whitespace we like tidy
 			attribute.Name = strings.TrimSpace(attribute.Name)
 			attribute.Value = strings.TrimSpace(attribute.Value)
-			// Record this element as an encountered element.
+			// Record this attribute as an encountered attribute.
 			encountered[attribute.Name] = true
 			// Append to result slice.
 			updatedAttributes = append(updatedAttributes, attribute)
 		}
 	}
-
-	// Sort slice by attribute name
-	sort.SliceStable(updatedAttributes, func(i, j int) bool {
-		return updatedAttributes[i].Name < updatedAttributes[j].Name
-	})
-
+	updatedAttributes.Sort()
 	*attributes = updatedAttributes
 }
 
@@ -187,6 +182,15 @@ func (attributes *Attributes) Delete(name string) (valueOfDeletedAttribute strin
 		return valueOfDeletedAttribute, nil
 	}
 	return "", errAttributeNotFound
+}
+
+// Sort slice by attribute name
+func (attributes Attributes) Sort() {
+
+	// Sort slice by attribute name
+	sort.SliceStable(attributes, func(i, j int) bool {
+		return attributes[i].Name < attributes[j].Name
+	})
 }
 
 // Validate checks if field values are set correct and are allowed

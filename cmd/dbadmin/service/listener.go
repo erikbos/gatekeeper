@@ -36,10 +36,10 @@ func (ls *ListenerService) Get(listenerName string) (listener *types.Listener, e
 }
 
 // Create creates an listener
-func (ls *ListenerService) Create(newListener types.Listener, who Requester) (types.Listener, types.Error) {
+func (ls *ListenerService) Create(newListener types.Listener, who Requester) (*types.Listener, types.Error) {
 
 	if _, err := ls.db.Listener.Get(newListener.Name); err == nil {
-		return types.NullListener, types.NewBadRequestError(
+		return nil, types.NewBadRequestError(
 			fmt.Errorf("listener '%s' already exists", newListener.Name))
 	}
 	// Automatically set default fields
@@ -47,18 +47,18 @@ func (ls *ListenerService) Create(newListener types.Listener, who Requester) (ty
 	newListener.CreatedBy = who.User
 
 	if err := ls.updateListener(&newListener, who); err != nil {
-		return types.NullListener, err
+		return nil, err
 	}
 	ls.changelog.Create(newListener, who)
-	return newListener, nil
+	return &newListener, nil
 }
 
 // Update updates an existing listener
-func (ls *ListenerService) Update(updatedListener types.Listener, who Requester) (types.Listener, types.Error) {
+func (ls *ListenerService) Update(updatedListener types.Listener, who Requester) (*types.Listener, types.Error) {
 
 	currentListener, err := ls.db.Listener.Get(updatedListener.Name)
 	if err != nil {
-		return types.NullListener, err
+		return nil, err
 	}
 	// Copy over fields we do not allow to be updated
 	updatedListener.Name = currentListener.Name
@@ -66,10 +66,10 @@ func (ls *ListenerService) Update(updatedListener types.Listener, who Requester)
 	updatedListener.CreatedBy = currentListener.CreatedBy
 
 	if err = ls.updateListener(&updatedListener, who); err != nil {
-		return types.NullListener, err
+		return nil, err
 	}
 	ls.changelog.Update(currentListener, updatedListener, who)
-	return updatedListener, nil
+	return &updatedListener, nil
 }
 
 // updateListener updates last-modified field(s) and updates cluster in database

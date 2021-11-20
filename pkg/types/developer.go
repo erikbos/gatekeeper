@@ -29,6 +29,9 @@ type (
 		// Last name
 		LastName string
 
+		// Organization name
+		OrganizationName string
+
 		// Created at timestamp in epoch milliseconds
 		CreatedAt int64
 

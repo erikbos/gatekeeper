@@ -159,36 +159,3 @@ func connect(cluster *gocql.ClusterConfig, config DatabaseConfig,
 	}
 	return nil, err
 }
-
-// columnValueString returns key in map as string, if key exists
-func columnValueString(m map[string]interface{}, columnName string) string {
-
-	if m != nil {
-		if val, ok := m[columnName]; ok {
-			return val.(string)
-		}
-	}
-	return ""
-}
-
-// columnValueInt returns key in map as int, if key exists
-func columnValueInt(m map[string]interface{}, columnName string) int {
-
-	if m != nil {
-		if val, ok := m[columnName]; ok {
-			return val.(int)
-		}
-	}
-	return -1
-}
-
-// columnValueInt64 returns key in map as int64, if key exists
-func columnValueInt64(m map[string]interface{}, columnName string) int64 {
-
-	if m != nil {
-		if val, ok := m[columnName]; ok {
-			return val.(int64)
-		}
-	}
-	return -1
-}

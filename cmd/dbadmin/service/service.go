@@ -26,9 +26,9 @@ type (
 
 		Get(listenerName string) (listener *types.Listener, err types.Error)
 
-		Create(newListener types.Listener, who Requester) (types.Listener, types.Error)
+		Create(newListener types.Listener, who Requester) (*types.Listener, types.Error)
 
-		Update(updatedListener types.Listener, who Requester) (types.Listener, types.Error)
+		Update(updatedListener types.Listener, who Requester) (*types.Listener, types.Error)
 
 		Delete(listenerName string, who Requester) (e types.Error)
 	}
@@ -39,9 +39,9 @@ type (
 
 		Get(routeName string) (route *types.Route, err types.Error)
 
-		Create(newRoute types.Route, who Requester) (types.Route, types.Error)
+		Create(newRoute types.Route, who Requester) (*types.Route, types.Error)
 
-		Update(updatedRoute types.Route, who Requester) (types.Route, types.Error)
+		Update(updatedRoute types.Route, who Requester) (*types.Route, types.Error)
 
 		Delete(routeName string, who Requester) (e types.Error)
 	}
@@ -52,9 +52,9 @@ type (
 
 		Get(clusterName string) (cluster *types.Cluster, err types.Error)
 
-		Create(newCluster types.Cluster, who Requester) (types.Cluster, types.Error)
+		Create(newCluster types.Cluster, who Requester) (*types.Cluster, types.Error)
 
-		Update(updatedCluster types.Cluster, who Requester) (types.Cluster, types.Error)
+		Update(updatedCluster types.Cluster, who Requester) (*types.Cluster, types.Error)
 
 		Delete(clusterName string, who Requester) (e types.Error)
 	}
@@ -64,9 +64,9 @@ type (
 
 		Get(organizationName string) (organization *types.Organization, err types.Error)
 
-		Create(newOrganization types.Organization, who Requester) (types.Organization, types.Error)
+		Create(newOrganization types.Organization, who Requester) (*types.Organization, types.Error)
 
-		Update(updatedOrganization types.Organization, who Requester) (types.Organization, types.Error)
+		Update(updatedOrganization types.Organization, who Requester) (*types.Organization, types.Error)
 
 		Delete(organizationName string, who Requester) (e types.Error)
 	}
@@ -77,9 +77,9 @@ type (
 
 		Get(organizationName, developerEmail string) (developer *types.Developer, err types.Error)
 
-		Create(organizationName string, newDeveloper types.Developer, who Requester) (types.Developer, types.Error)
+		Create(organizationName string, newDeveloper types.Developer, who Requester) (*types.Developer, types.Error)
 
-		Update(organizationName, developerEmail string, updatedDeveloper types.Developer, who Requester) (types.Developer, types.Error)
+		Update(organizationName, developerEmail string, updatedDeveloper types.Developer, who Requester) (*types.Developer, types.Error)
 
 		Delete(organizationName, developerEmail string, who Requester) (e types.Error)
 	}
@@ -94,9 +94,9 @@ type (
 
 		GetByID(organizationName, developerAppName string) (developerApp *types.DeveloperApp, err types.Error)
 
-		Create(organizationName, developerEmail string, newDeveloperApp types.DeveloperApp, who Requester) (types.DeveloperApp, types.Error)
+		Create(organizationName, developerEmail string, newDeveloperApp types.DeveloperApp, who Requester) (*types.DeveloperApp, types.Error)
 
-		Update(organizationName, developerEmail string, updatedDeveloperApp types.DeveloperApp, who Requester) (types.DeveloperApp, types.Error)
+		Update(organizationName, developerEmail string, updatedDeveloperApp types.DeveloperApp, who Requester) (*types.DeveloperApp, types.Error)
 
 		Delete(organizationName, developerEmail, developerAppName string, who Requester) (e types.Error)
 	}
@@ -107,9 +107,9 @@ type (
 
 		GetByDeveloperAppID(organizationName, developerAppID string) (keys types.Keys, err types.Error)
 
-		Create(organizationName string, newKey types.Key, developerApp *types.DeveloperApp, who Requester) (types.Key, types.Error)
+		Create(organizationName string, newKey types.Key, developerApp *types.DeveloperApp, who Requester) (*types.Key, types.Error)
 
-		Update(organizationName, consumerKey string, updateKey *types.Key, who Requester) (types.Key, types.Error)
+		Update(organizationName, consumerKey string, updateKey types.Key, who Requester) (*types.Key, types.Error)
 
 		Delete(organizationName, consumerKey string, who Requester) (e types.Error)
 	}
@@ -120,9 +120,9 @@ type (
 
 		Get(organizationName, apiproductName string) (apiproduct *types.APIProduct, err types.Error)
 
-		Create(organizationName string, newAPIProduct types.APIProduct, who Requester) (types.APIProduct, types.Error)
+		Create(organizationName string, newAPIProduct types.APIProduct, who Requester) (*types.APIProduct, types.Error)
 
-		Update(organizationName string, updatedAPIProduct types.APIProduct, who Requester) (types.APIProduct, types.Error)
+		Update(organizationName string, updatedAPIProduct types.APIProduct, who Requester) (*types.APIProduct, types.Error)
 
 		Delete(organizationName string, apiproductName string, who Requester) (e types.Error)
 	}
@@ -133,9 +133,9 @@ type (
 
 		Get(userName string) (user *types.User, err types.Error)
 
-		Create(newUser *types.User, who Requester) (*types.User, types.Error)
+		Create(newUser types.User, who Requester) (*types.User, types.Error)
 
-		Update(updatedUser *types.User, who Requester) (*types.User, types.Error)
+		Update(updatedUser types.User, who Requester) (*types.User, types.Error)
 
 		Delete(userName string, who Requester) (e types.Error)
 	}
@@ -146,9 +146,9 @@ type (
 
 		Get(roleName string) (role *types.Role, err types.Error)
 
-		Create(newRole *types.Role, who Requester) (*types.Role, types.Error)
+		Create(newRole types.Role, who Requester) (*types.Role, types.Error)
 
-		Update(updatedRole *types.Role, who Requester) (*types.Role, types.Error)
+		Update(updatedRole types.Role, who Requester) (*types.Role, types.Error)
 
 		Delete(roleName string, who Requester) (e types.Error)
 	}

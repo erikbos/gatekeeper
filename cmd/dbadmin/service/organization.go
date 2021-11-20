@@ -36,10 +36,10 @@ func (os *OrganizationService) Get(organizationName string) (organization *types
 }
 
 // Create creates an organization
-func (os *OrganizationService) Create(newOrganization types.Organization, who Requester) (types.Organization, types.Error) {
+func (os *OrganizationService) Create(newOrganization types.Organization, who Requester) (*types.Organization, types.Error) {
 
 	if _, err := os.db.Organization.Get(newOrganization.Name); err == nil {
-		return types.NullOrganization, types.NewBadRequestError(
+		return nil, types.NewBadRequestError(
 			fmt.Errorf("organization '%s' already exists", newOrganization.Name))
 	}
 	// Automatically set default fields
@@ -47,18 +47,18 @@ func (os *OrganizationService) Create(newOrganization types.Organization, who Re
 	newOrganization.CreatedBy = who.User
 
 	if err := os.updateOrganization(&newOrganization, who); err != nil {
-		return types.NullOrganization, err
+		return nil, err
 	}
 	os.changelog.Create(newOrganization, who)
-	return newOrganization, nil
+	return &newOrganization, nil
 }
 
 // Update updates an existing organization
-func (os *OrganizationService) Update(updatedOrganization types.Organization, who Requester) (types.Organization, types.Error) {
+func (os *OrganizationService) Update(updatedOrganization types.Organization, who Requester) (*types.Organization, types.Error) {
 
 	currentOrganization, err := os.db.Organization.Get(updatedOrganization.Name)
 	if err != nil {
-		return types.NullOrganization, err
+		return nil, err
 	}
 	// Copy over fields we do not allow to be updated
 	updatedOrganization.Name = currentOrganization.Name
@@ -66,10 +66,10 @@ func (os *OrganizationService) Update(updatedOrganization types.Organization, wh
 	updatedOrganization.CreatedBy = currentOrganization.CreatedBy
 
 	if err = os.updateOrganization(&updatedOrganization, who); err != nil {
-		return types.NullOrganization, err
+		return nil, err
 	}
 	os.changelog.Update(currentOrganization, updatedOrganization, who)
-	return updatedOrganization, nil
+	return &updatedOrganization, nil
 }
 
 // updateOrganization updates last-modified field(s) and updates cluster in database

@@ -35,7 +35,7 @@ func (h *Handler) PostV1Organizations(c *gin.Context) {
 		responseError(c, err)
 		return
 	}
-	h.responseOrganizationCreated(c, &storedOrganization)
+	h.responseOrganizationCreated(c, storedOrganization)
 }
 
 // returns a organization
@@ -74,7 +74,7 @@ func (h *Handler) PostV1OrganizationsOrganizationName(c *gin.Context, organizati
 		responseError(c, err)
 		return
 	}
-	h.responseOrganizationUpdated(c, &storedOrganization)
+	h.responseOrganizationUpdated(c, storedOrganization)
 }
 
 // deletes an organization

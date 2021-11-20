@@ -9,9 +9,6 @@ import (
 )
 
 const (
-	// Prometheus label for metrics of db interactions
-	roleMetricLabel = "roles"
-
 	// List of role columns we use
 	roleColumns = `name,
 display_name,
@@ -20,6 +17,9 @@ created_at,
 created_by,
 lastmodified_at,
 lastmodified_by`
+
+	// Prometheus label for metrics of db interactions
+	roleMetricLabel = "roles"
 )
 
 // RoleStore holds our database config
@@ -44,7 +44,7 @@ func (s *RoleStore) GetAll() (types.Roles, types.Error) {
 		return nil, types.NewDatabaseError(err)
 	}
 
-	s.db.metrics.QueryHit(roleMetricLabel)
+	s.db.metrics.QuerySuccessful(roleMetricLabel)
 	return roles, nil
 }
 
@@ -59,12 +59,12 @@ func (s *RoleStore) Get(roleName string) (*types.Role, types.Error) {
 	}
 
 	if len(roles) == 0 {
-		s.db.metrics.QueryMiss(roleMetricLabel)
+		s.db.metrics.QueryNotFound(roleMetricLabel)
 		return nil, types.NewItemNotFoundError(
 			fmt.Errorf("can not find role '%s'", roleName))
 	}
 
-	s.db.metrics.QueryHit(roleMetricLabel)
+	s.db.metrics.QuerySuccessful(roleMetricLabel)
 	return &roles[0], nil
 }
 
@@ -72,20 +72,20 @@ func (s *RoleStore) Get(roleName string) (*types.Role, types.Error) {
 func (s *RoleStore) runGetRoleQuery(query string, queryParameters ...interface{}) (types.Roles, error) {
 	var roles types.Roles
 
-	timer := prometheus.NewTimer(s.db.metrics.LookupHistogram)
+	timer := prometheus.NewTimer(s.db.metrics.queryHistogram)
 	defer timer.ObserveDuration()
 
 	iter := s.db.CassandraSession.Query(query, queryParameters...).Iter()
 	m := make(map[string]interface{})
 	for iter.MapScan(m) {
 		roles = append(roles, types.Role{
-			Name:           columnValueString(m, "name"),
-			DisplayName:    columnValueString(m, "display_name"),
-			Allows:         AllowsUnmarshal(columnValueString(m, "allows")),
-			CreatedAt:      columnValueInt64(m, "created_at"),
-			CreatedBy:      columnValueString(m, "created_by"),
-			LastModifiedAt: columnValueInt64(m, "lastmodified_at"),
-			LastModifiedBy: columnValueString(m, "lastmodified_by"),
+			Name:           columnToString(m, "name"),
+			DisplayName:    columnToString(m, "display_name"),
+			Allows:         AllowsUnmarshal(columnToString(m, "allows")),
+			CreatedAt:      columnToInt64(m, "created_at"),
+			CreatedBy:      columnToString(m, "created_by"),
+			LastModifiedAt: columnToInt64(m, "lastmodified_at"),
+			LastModifiedBy: columnToString(m, "lastmodified_by"),
 		})
 		m = map[string]interface{}{}
 	}

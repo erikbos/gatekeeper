@@ -9,10 +9,6 @@ import (
 )
 
 const (
-
-	// Prometheus label for metrics of db interactions
-	routeMetricLabel = "routes"
-
 	// List of route columns we use
 	routeColumns = `name,
 display_name,
@@ -24,6 +20,9 @@ created_at,
 created_by,
 lastmodified_at,
 lastmodified_by`
+
+	// Prometheus label for metrics of db interactions
+	routeMetricLabel = "routes"
 )
 
 // RouteStore holds our route config
@@ -48,7 +47,7 @@ func (s *RouteStore) GetAll() (types.Routes, types.Error) {
 		return types.NullRoutes, types.NewDatabaseError(err)
 	}
 
-	s.db.metrics.QueryHit(routeMetricLabel)
+	s.db.metrics.QuerySuccessful(routeMetricLabel)
 	return routes, nil
 }
 
@@ -63,12 +62,12 @@ func (s *RouteStore) Get(routeName string) (*types.Route, types.Error) {
 	}
 
 	if len(routes) == 0 {
-		s.db.metrics.QueryMiss(routeMetricLabel)
+		s.db.metrics.QueryNotFound(routeMetricLabel)
 		return nil, types.NewItemNotFoundError(
 			fmt.Errorf("can not find route '%s'", routeName))
 	}
 
-	s.db.metrics.QueryHit(routeMetricLabel)
+	s.db.metrics.QuerySuccessful(routeMetricLabel)
 	return &routes[0], nil
 }
 
@@ -76,23 +75,23 @@ func (s *RouteStore) Get(routeName string) (*types.Route, types.Error) {
 func (s *RouteStore) runGetRouteQuery(query string, queryParameters ...interface{}) (types.Routes, error) {
 	var routes types.Routes
 
-	timer := prometheus.NewTimer(s.db.metrics.LookupHistogram)
+	timer := prometheus.NewTimer(s.db.metrics.queryHistogram)
 	defer timer.ObserveDuration()
 
 	iter := s.db.CassandraSession.Query(query, queryParameters...).Iter()
 	m := make(map[string]interface{})
 	for iter.MapScan(m) {
 		routes = append(routes, types.Route{
-			Attributes:     AttributesUnmarshal(columnValueString(m, "attributes")),
-			CreatedAt:      columnValueInt64(m, "created_at"),
-			CreatedBy:      columnValueString(m, "created_by"),
-			DisplayName:    columnValueString(m, "display_name"),
-			LastModifiedAt: columnValueInt64(m, "lastmodified_at"),
-			LastModifiedBy: columnValueString(m, "lastmodified_by"),
-			Name:           columnValueString(m, "name"),
-			Path:           columnValueString(m, "path"),
-			PathType:       columnValueString(m, "path_type"),
-			RouteGroup:     columnValueString(m, "route_group"),
+			Attributes:     columnToAttributes(m, "attributes"),
+			CreatedAt:      columnToInt64(m, "created_at"),
+			CreatedBy:      columnToString(m, "created_by"),
+			DisplayName:    columnToString(m, "display_name"),
+			LastModifiedAt: columnToInt64(m, "lastmodified_at"),
+			LastModifiedBy: columnToString(m, "lastmodified_by"),
+			Name:           columnToString(m, "name"),
+			Path:           columnToString(m, "path"),
+			PathType:       columnToString(m, "path_type"),
+			RouteGroup:     columnToString(m, "route_group"),
 		})
 		m = map[string]interface{}{}
 	}
@@ -113,7 +112,7 @@ func (s *RouteStore) Update(r *types.Route) types.Error {
 		r.RouteGroup,
 		r.Path,
 		r.PathType,
-		AttributesMarshal(r.Attributes),
+		attributesToColumn(r.Attributes),
 		r.CreatedAt,
 		r.CreatedBy,
 		r.LastModifiedAt,

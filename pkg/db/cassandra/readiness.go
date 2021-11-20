@@ -74,10 +74,10 @@ func (d *Database) healthCheckQuery() (*cassandraSystemInfo, error) {
 	}
 
 	if err := iter.Close(); err != nil {
-		d.metrics.QueryHit(systemLocalTable)
+		d.metrics.QuerySuccessful(systemLocalTable)
 		return nil, err
 	}
 
-	d.metrics.QueryHit(systemLocalTable)
+	d.metrics.QuerySuccessful(systemLocalTable)
 	return &peers, nil
 }

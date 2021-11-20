@@ -35,7 +35,7 @@ func (h *Handler) PostV1Clusters(c *gin.Context) {
 		responseError(c, err)
 		return
 	}
-	h.responseClusterCreated(c, &createdDeveloper)
+	h.responseClusterCreated(c, createdDeveloper)
 }
 
 // deletes an cluster
@@ -74,13 +74,17 @@ func (h *Handler) PostV1ClustersClusterName(c *gin.Context, clusterName ClusterN
 		responseErrorBadRequest(c, err)
 		return
 	}
+	if receivedCluster.Name != "" && receivedCluster.Name != string(clusterName) {
+		responseErrorNameValueMisMatch(c)
+		return
+	}
 	updatedCluster := fromCluster(receivedCluster)
 	storedCluster, err := h.service.Cluster.Update(updatedCluster, h.who(c))
 	if err != nil {
 		responseError(c, err)
 		return
 	}
-	h.responseClustersUpdated(c, &storedCluster)
+	h.responseClustersUpdated(c, storedCluster)
 }
 
 // returns attributes of a cluster

@@ -82,7 +82,7 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 		responseError(c, err)
 		return
 	}
-	h.responseKeyCreated(c, &storedKey)
+	h.responseKeyCreated(c, storedKey)
 }
 
 // Removes key from application
@@ -149,12 +149,12 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 	if receivedKey.IssuedAt != nil {
 		key.IssuedAt = *receivedKey.IssuedAt
 	}
-	storedKey, err := h.service.Key.Update(string(organizationName), string(consumerKey), key, h.who(c))
+	storedKey, err := h.service.Key.Update(string(organizationName), string(consumerKey), *key, h.who(c))
 	if err != nil {
 		responseError(c, err)
 		return
 	}
-	h.responseKeyUpdated(c, &storedKey)
+	h.responseKeyUpdated(c, storedKey)
 }
 
 // change status of key
@@ -175,7 +175,7 @@ func (h *Handler) changeKeyStatus(c *gin.Context, organizationName,
 		responseError(c, errUnknownStatus)
 		return
 	}
-	_, err = h.service.Key.Update(string(organizationName), key.ConsumerKey, key, h.who(c))
+	_, err = h.service.Key.Update(string(organizationName), key.ConsumerKey, *key, h.who(c))
 	if err != nil {
 		responseError(c, err)
 		return
@@ -194,12 +194,12 @@ func (h *Handler) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmaila
 		return
 	}
 	key.APIProducts = key.APIProducts.RemoveProduct(string(apiproductName))
-	storedKey, err := h.service.Key.Update(string(organizationName), string(consumerKey), key, h.who(c))
+	storedKey, err := h.service.Key.Update(string(organizationName), string(consumerKey), *key, h.who(c))
 	if err != nil {
 		responseError(c, err)
 		return
 	}
-	h.responseKeyUpdated(c, &storedKey)
+	h.responseKeyUpdated(c, storedKey)
 
 }
 
@@ -218,12 +218,12 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 		return
 	}
 	key.APIProducts = key.APIProducts.RemoveProduct(string(apiproductName))
-	storedKey, err := h.service.Key.Update(string(organizationName), string(consumerKey), key, h.who(c))
+	storedKey, err := h.service.Key.Update(string(organizationName), string(consumerKey), *key, h.who(c))
 	if err != nil {
 		responseError(c, err)
 		return
 	}
-	h.responseKeyUpdated(c, &storedKey)
+	h.responseKeyUpdated(c, storedKey)
 }
 
 // change status of apiproduct associated with key
@@ -244,7 +244,7 @@ func (h *Handler) changeKeyApiProductStatus(c *gin.Context, organizationName,
 		responseError(c, errUnknownStatus)
 		return
 	}
-	_, err = h.service.Key.Update(string(organizationName), key.ConsumerKey, key, h.who(c))
+	_, err = h.service.Key.Update(string(organizationName), key.ConsumerKey, *key, h.who(c))
 	if err != nil {
 		responseError(c, err)
 		return
@@ -279,7 +279,7 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 		return
 	}
 	key.Attributes = fromAttributesRequest(receivedAttributes.Attribute)
-	storedKey, err := h.service.Key.Update(string(organizationName), key.ConsumerKey, key, h.who(c))
+	storedKey, err := h.service.Key.Update(string(organizationName), key.ConsumerKey, *key, h.who(c))
 	if err != nil {
 		responseError(c, err)
 		return
@@ -300,7 +300,7 @@ func (h *Handler) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmaila
 	if err != nil {
 		responseError(c, err)
 	}
-	_, err = h.service.Key.Update(string(organizationName), key.ConsumerKey, key, h.who(c))
+	_, err = h.service.Key.Update(string(organizationName), key.ConsumerKey, *key, h.who(c))
 	if err != nil {
 		responseError(c, err)
 		return
@@ -343,7 +343,7 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 	if err := key.Attributes.Set(newAttribute); err != nil {
 		responseError(c, err)
 	}
-	_, err = h.service.Key.Update(string(organizationName), key.ConsumerKey, key, h.who(c))
+	_, err = h.service.Key.Update(string(organizationName), key.ConsumerKey, *key, h.who(c))
 	if err != nil {
 		responseError(c, err)
 		return
