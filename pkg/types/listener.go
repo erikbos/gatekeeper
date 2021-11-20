@@ -1,8 +1,10 @@
 package types
 
 import (
+	"errors"
 	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/go-playground/validator/v10"
 )
@@ -171,6 +173,15 @@ func (l *Listener) Validate() error {
 	for _, attribute := range l.Attributes {
 		if !validListenerAttributes[attribute.Name] {
 			return fmt.Errorf("unknown attribute '%s'", attribute.Name)
+		}
+	}
+	// scan for duplicate vhosts
+	hostsSeen := make(map[string]bool, len(l.VirtualHosts))
+	for _, host := range l.VirtualHosts {
+		if found := hostsSeen[strings.ToLower(host)]; !found {
+			hostsSeen[host] = true
+		} else {
+			return errors.New("no duplicate virtual hosts allowed")
 		}
 	}
 	return nil
