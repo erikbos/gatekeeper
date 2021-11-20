@@ -49,7 +49,7 @@ func (s *ListenerStore) GetAll() (types.Listeners, types.Error) {
 
 	}
 
-	s.db.metrics.QueryHit(listenerMetricLabel)
+	s.db.metrics.QuerySuccessful(listenerMetricLabel)
 	return listeners, nil
 }
 
@@ -65,12 +65,12 @@ func (s *ListenerStore) Get(listenerName string) (*types.Listener, types.Error) 
 	}
 
 	if len(listeners) == 0 {
-		s.db.metrics.QueryMiss(listenerMetricLabel)
+		s.db.metrics.QueryNotFound(listenerMetricLabel)
 		return nil, types.NewItemNotFoundError(
 			fmt.Errorf("can not find listener '%s'", listenerName))
 	}
 
-	s.db.metrics.QueryHit(listenerMetricLabel)
+	s.db.metrics.QuerySuccessful(listenerMetricLabel)
 	return &listeners[0], nil
 }
 
@@ -78,7 +78,7 @@ func (s *ListenerStore) Get(listenerName string) (*types.Listener, types.Error) 
 func (s *ListenerStore) runGetListenerQuery(query string,
 	queryParameters ...interface{}) (types.Listeners, error) {
 
-	timer := prometheus.NewTimer(s.db.metrics.LookupHistogram)
+	timer := prometheus.NewTimer(s.db.metrics.queryHistogram)
 	defer timer.ObserveDuration()
 
 	var listeners types.Listeners
@@ -87,17 +87,17 @@ func (s *ListenerStore) runGetListenerQuery(query string,
 	m := make(map[string]interface{})
 	for iter.MapScan(m) {
 		listeners = append(listeners, types.Listener{
-			Attributes:     AttributesUnmarshal(columnValueString(m, "attributes")),
-			CreatedAt:      columnValueInt64(m, "created_at"),
-			CreatedBy:      columnValueString(m, "created_by"),
-			Name:           columnValueString(m, "name"),
-			DisplayName:    columnValueString(m, "display_name"),
-			LastModifiedAt: columnValueInt64(m, "lastmodified_at"),
-			LastModifiedBy: columnValueString(m, "lastmodified_by"),
-			Policies:       columnValueString(m, "policies"),
-			Port:           columnValueInt(m, "port"),
-			RouteGroup:     columnValueString(m, "route_group"),
-			VirtualHosts:   stringSliceUnmarshal(columnValueString(m, "virtual_hosts")),
+			Attributes:     columnToAttributes(m, "attributes"),
+			CreatedAt:      columnToInt64(m, "created_at"),
+			CreatedBy:      columnToString(m, "created_by"),
+			Name:           columnToString(m, "name"),
+			DisplayName:    columnToString(m, "display_name"),
+			LastModifiedAt: columnToInt64(m, "lastmodified_at"),
+			LastModifiedBy: columnToString(m, "lastmodified_by"),
+			Policies:       columnToString(m, "policies"),
+			Port:           columnToInt(m, "port"),
+			RouteGroup:     columnToString(m, "route_group"),
+			VirtualHosts:   columnToStringSlice(m, "virtual_hosts"),
 		})
 		m = map[string]interface{}{}
 	}
@@ -115,11 +115,11 @@ func (s *ListenerStore) Update(l *types.Listener) types.Error {
 	if err := s.db.CassandraSession.Query(query,
 		l.Name,
 		l.DisplayName,
-		stringSliceMarshal(l.VirtualHosts),
+		l.VirtualHosts,
 		l.Port,
 		l.RouteGroup,
 		l.Policies,
-		AttributesMarshal(l.Attributes),
+		attributesToColumn(l.Attributes),
 		l.CreatedAt,
 		l.CreatedBy,
 		l.LastModifiedAt,

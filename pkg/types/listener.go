@@ -1,7 +1,6 @@
 package types
 
 import (
-	"errors"
 	"fmt"
 	"sort"
 	"strings"
@@ -178,10 +177,11 @@ func (l *Listener) Validate() error {
 	// scan for duplicate vhosts
 	hostsSeen := make(map[string]bool, len(l.VirtualHosts))
 	for _, host := range l.VirtualHosts {
-		if found := hostsSeen[strings.ToLower(host)]; !found {
-			hostsSeen[host] = true
+		hostLower := strings.ToLower(host)
+		if found := hostsSeen[hostLower]; !found {
+			hostsSeen[hostLower] = true
 		} else {
-			return errors.New("no duplicate virtual hosts allowed")
+			return fmt.Errorf("no duplicate virtual hosts allowed (%s)", host)
 		}
 	}
 	return nil

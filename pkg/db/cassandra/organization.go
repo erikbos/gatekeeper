@@ -43,7 +43,7 @@ func (s *OrganizationStore) GetAll() (types.Organizations, types.Error) {
 		return types.NullOrganizations, types.NewDatabaseError(err)
 	}
 
-	s.db.metrics.QueryHit(organizationMetricLabel)
+	s.db.metrics.QuerySuccessful(organizationMetricLabel)
 	return organizations, nil
 }
 
@@ -58,12 +58,12 @@ func (s *OrganizationStore) Get(organizationName string) (*types.Organization, t
 	}
 
 	if len(organizations) == 0 {
-		s.db.metrics.QueryMiss(organizationMetricLabel)
+		s.db.metrics.QueryNotFound(organizationMetricLabel)
 		return nil, types.NewItemNotFoundError(
 			fmt.Errorf("can not find organization '%s'", organizationName))
 	}
 
-	s.db.metrics.QueryHit(organizationMetricLabel)
+	s.db.metrics.QuerySuccessful(organizationMetricLabel)
 	return &organizations[0], nil
 }
 
@@ -71,20 +71,20 @@ func (s *OrganizationStore) Get(organizationName string) (*types.Organization, t
 func (s *OrganizationStore) runGetOrganizationQuery(query string, queryParameters ...interface{}) (types.Organizations, error) {
 	var organizations types.Organizations
 
-	timer := prometheus.NewTimer(s.db.metrics.LookupHistogram)
+	timer := prometheus.NewTimer(s.db.metrics.queryHistogram)
 	defer timer.ObserveDuration()
 
 	iter := s.db.CassandraSession.Query(query, queryParameters...).Iter()
 	m := make(map[string]interface{})
 	for iter.MapScan(m) {
 		organizations = append(organizations, types.Organization{
-			Name:           columnValueString(m, "name"),
-			DisplayName:    columnValueString(m, "display_name"),
-			Attributes:     AttributesUnmarshal(columnValueString(m, "attributes")),
-			CreatedAt:      columnValueInt64(m, "created_at"),
-			CreatedBy:      columnValueString(m, "created_by"),
-			LastModifiedAt: columnValueInt64(m, "lastmodified_at"),
-			LastModifiedBy: columnValueString(m, "lastmodified_by"),
+			Name:           columnToString(m, "name"),
+			DisplayName:    columnToString(m, "display_name"),
+			Attributes:     columnToAttributes(m, "attributes"),
+			CreatedAt:      columnToInt64(m, "created_at"),
+			CreatedBy:      columnToString(m, "created_by"),
+			LastModifiedAt: columnToInt64(m, "lastmodified_at"),
+			LastModifiedBy: columnToString(m, "lastmodified_by"),
 		})
 		m = map[string]interface{}{}
 	}
@@ -102,7 +102,7 @@ func (s *OrganizationStore) Update(o *types.Organization) types.Error {
 	if err := s.db.CassandraSession.Query(query,
 		o.Name,
 		o.DisplayName,
-		AttributesMarshal(o.Attributes),
+		attributesToColumn(o.Attributes),
 		o.CreatedAt,
 		o.CreatedBy,
 		o.LastModifiedAt,

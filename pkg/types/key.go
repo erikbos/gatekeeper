@@ -16,6 +16,9 @@ type (
 		// List of apiproducts which can be accessed using this key
 		APIProducts KeyAPIProductStatuses
 
+		// List of scopes this key has
+		Scopes []string
+
 		// Expiry date in epoch milliseconds
 		ExpiresAt int64
 

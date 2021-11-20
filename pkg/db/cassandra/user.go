@@ -45,7 +45,7 @@ func (s *UserStore) GetAll() (types.Users, types.Error) {
 		return nil, types.NewDatabaseError(err)
 	}
 
-	s.db.metrics.QueryHit(userMetricLabel)
+	s.db.metrics.QuerySuccessful(userMetricLabel)
 	return users, nil
 }
 
@@ -60,12 +60,12 @@ func (s *UserStore) Get(userName string) (*types.User, types.Error) {
 	}
 
 	if len(users) == 0 {
-		s.db.metrics.QueryMiss(userMetricLabel)
+		s.db.metrics.QueryNotFound(userMetricLabel)
 		return nil, types.NewItemNotFoundError(
 			fmt.Errorf("can not find user '%s'", userName))
 	}
 
-	s.db.metrics.QueryHit(userMetricLabel)
+	s.db.metrics.QuerySuccessful(userMetricLabel)
 	return &users[0], nil
 }
 
@@ -73,22 +73,22 @@ func (s *UserStore) Get(userName string) (*types.User, types.Error) {
 func (s *UserStore) runGetUserQuery(query string, queryParameters ...interface{}) (types.Users, error) {
 	var users types.Users
 
-	timer := prometheus.NewTimer(s.db.metrics.LookupHistogram)
+	timer := prometheus.NewTimer(s.db.metrics.queryHistogram)
 	defer timer.ObserveDuration()
 
 	iter := s.db.CassandraSession.Query(query, queryParameters...).Iter()
 	m := make(map[string]interface{})
 	for iter.MapScan(m) {
 		users = append(users, types.User{
-			Name:           columnValueString(m, "name"),
-			DisplayName:    columnValueString(m, "display_name"),
-			Password:       columnValueString(m, "password"),
-			Status:         columnValueString(m, "status"),
-			Roles:          stringSliceUnmarshal(columnValueString(m, "roles")),
-			CreatedAt:      columnValueInt64(m, "created_at"),
-			CreatedBy:      columnValueString(m, "created_by"),
-			LastModifiedAt: columnValueInt64(m, "lastmodified_at"),
-			LastModifiedBy: columnValueString(m, "lastmodified_by"),
+			Name:           columnToString(m, "name"),
+			DisplayName:    columnToString(m, "display_name"),
+			Password:       columnToString(m, "password"),
+			Status:         columnToString(m, "status"),
+			Roles:          columnToStringSlice(m, "roles"),
+			CreatedAt:      columnToInt64(m, "created_at"),
+			CreatedBy:      columnToString(m, "created_by"),
+			LastModifiedAt: columnToInt64(m, "lastmodified_at"),
+			LastModifiedBy: columnToString(m, "lastmodified_by"),
 		})
 		m = map[string]interface{}{}
 	}
@@ -108,7 +108,7 @@ func (s *UserStore) Update(c *types.User) types.Error {
 		c.DisplayName,
 		c.Password,
 		c.Status,
-		stringSliceMarshal(c.Roles),
+		c.Roles,
 		c.CreatedAt,
 		c.CreatedBy,
 		c.LastModifiedAt,

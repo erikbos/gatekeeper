@@ -16,6 +16,7 @@ const (
 	// List of key columns we use
 	keysColumn = `consumer_key,
 consumer_secret,
+scopes,
 api_products,
 attributes,
 app_id,
@@ -50,12 +51,12 @@ func (s *KeyStore) GetByKey(organization, key *string) (*types.Key, types.Error)
 	}
 
 	if len(keys) == 0 {
-		s.db.metrics.QueryMiss(keysMetricLabel)
+		s.db.metrics.QueryNotFound(keysMetricLabel)
 		return nil, types.NewItemNotFoundError(
 			fmt.Errorf("can not find apikey '%s'", *key))
 	}
 
-	s.db.metrics.QueryHit(keysMetricLabel)
+	s.db.metrics.QuerySuccessful(keysMetricLabel)
 	return &keys[0], nil
 }
 
@@ -68,7 +69,7 @@ func (s *KeyStore) GetByDeveloperAppID(organization, developerAppID string) (typ
 		s.db.metrics.QueryFailed(keysMetricLabel)
 		return nil, types.NewDatabaseError(err)
 	}
-	s.db.metrics.QueryHit(keysMetricLabel)
+	s.db.metrics.QuerySuccessful(keysMetricLabel)
 	return keys, nil
 }
 
@@ -97,21 +98,22 @@ func (s *KeyStore) runGetKeyQuery(query string, queryParameters ...interface{}) 
 
 	var keys types.Keys
 
-	timer := prometheus.NewTimer(s.db.metrics.LookupHistogram)
+	timer := prometheus.NewTimer(s.db.metrics.queryHistogram)
 	defer timer.ObserveDuration()
 
 	iterable := s.db.CassandraSession.Query(query, queryParameters...).Iter()
 	m := make(map[string]interface{})
 	for iterable.MapScan(m) {
 		keys = append(keys, types.Key{
-			ConsumerKey:    columnValueString(m, "consumer_key"),
-			ConsumerSecret: columnValueString(m, "consumer_secret"),
+			ConsumerKey:    columnToString(m, "consumer_key"),
+			ConsumerSecret: columnToString(m, "consumer_secret"),
+			Scopes:         columnToStringSlice(m, "scopes"),
 			APIProducts:    KeyAPIProductStatusesUnmarshal(m["api_products"].(string)),
-			Attributes:     AttributesUnmarshal(columnValueString(m, "attributes")),
-			AppID:          columnValueString(m, "app_id"),
-			Status:         columnValueString(m, "status"),
-			IssuedAt:       columnValueInt64(m, "issued_at"),
-			ExpiresAt:      columnValueInt64(m, "expires_at"),
+			Attributes:     columnToAttributes(m, "attributes"),
+			AppID:          columnToString(m, "app_id"),
+			Status:         columnToString(m, "status"),
+			IssuedAt:       columnToInt64(m, "issued_at"),
+			ExpiresAt:      columnToInt64(m, "expires_at"),
 		})
 		m = map[string]interface{}{}
 	}
@@ -123,22 +125,23 @@ func (s *KeyStore) runGetKeyQuery(query string, queryParameters ...interface{}) 
 }
 
 // UpdateByKey UPSERTs keys in database
-func (s *KeyStore) UpdateByKey(organization string, c *types.Key) types.Error {
+func (s *KeyStore) UpdateByKey(organization string, k *types.Key) types.Error {
 
-	query := "INSERT INTO keys (" + keysColumn + ") VALUES(?,?,?,?,?,?,?,?)"
+	query := "INSERT INTO keys (" + keysColumn + ") VALUES(?,?,?,?,?,?,?,?,?)"
 	if err := s.db.CassandraSession.Query(query,
-		c.ConsumerKey,
-		c.ConsumerSecret,
-		KeyAPIProductStatusesMarshal(c.APIProducts),
-		AttributesMarshal(c.Attributes),
-		c.AppID,
-		c.Status,
-		c.IssuedAt,
-		c.ExpiresAt).Exec(); err != nil {
+		k.ConsumerKey,
+		k.ConsumerSecret,
+		k.Scopes,
+		KeyAPIProductStatusesMarshal(k.APIProducts),
+		attributesToColumn(k.Attributes),
+		k.AppID,
+		k.Status,
+		k.IssuedAt,
+		k.ExpiresAt).Exec(); err != nil {
 
 		s.db.metrics.QueryFailed(keysMetricLabel)
 		return types.NewDatabaseError(
-			fmt.Errorf("cannot update key '%s' (%s)", c.ConsumerKey, err))
+			fmt.Errorf("cannot update key '%s' (%s)", k.ConsumerKey, err))
 	}
 	return nil
 }
