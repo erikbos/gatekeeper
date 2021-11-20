@@ -79,13 +79,13 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 		return
 	}
 
-	createdKey, err := h.service.Key.Create(string(organizationName), types.NullDeveloperAppKey, &createdApp, h.who(c))
+	createdKey, err := h.service.Key.Create(string(organizationName), types.NullDeveloperAppKey, createdApp, h.who(c))
 	if err != nil {
 		responseError(c, err)
 		return
 	}
-	createdKeys := types.Keys{createdKey}
-	h.responseApplicationCreated(c, &createdApp, &createdKeys)
+	createdKeys := types.Keys{*createdKey}
+	h.responseApplicationCreated(c, createdApp, &createdKeys)
 }
 
 // (DELETE /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name})
@@ -150,7 +150,7 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 		responseError(c, err)
 		return
 	}
-	h.responseApplicationUpdated(c, &storedApp)
+	h.responseApplicationUpdated(c, storedApp)
 }
 
 // change status of application
@@ -202,7 +202,7 @@ func (h *Handler) PutV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddr
 		}
 		createdKey.APIProducts = createdKey.APIProducts.AddProducts(receivedApplicationUpdate.ApiProducts)
 		_, err = h.service.Key.Update(
-			string(organizationName), string(createdKey.ConsumerKey), &createdKey, h.who(c))
+			string(organizationName), string(createdKey.ConsumerKey), *createdKey, h.who(c))
 		if err != nil {
 			responseError(c, err)
 			return

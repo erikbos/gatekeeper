@@ -56,10 +56,10 @@ func (rs *RouteService) GetAttribute(routeName, attributeName string) (value str
 }
 
 // Create creates an route
-func (rs *RouteService) Create(newRoute types.Route, who Requester) (types.Route, types.Error) {
+func (rs *RouteService) Create(newRoute types.Route, who Requester) (*types.Route, types.Error) {
 
 	if _, err := rs.db.Route.Get(newRoute.Name); err == nil {
-		return types.NullRoute, types.NewBadRequestError(
+		return nil, types.NewBadRequestError(
 			fmt.Errorf("route '%s' already exists", newRoute.Name))
 	}
 	// Automatically set default fields
@@ -67,19 +67,19 @@ func (rs *RouteService) Create(newRoute types.Route, who Requester) (types.Route
 	newRoute.CreatedBy = who.User
 
 	if err := rs.updateRoute(&newRoute, who); err != nil {
-		return types.NullRoute, err
+		return nil, err
 	}
 	rs.changelog.Create(newRoute, who)
-	return newRoute, nil
+	return &newRoute, nil
 }
 
 // Update updates an existing route
 func (rs *RouteService) Update(updatedRoute types.Route,
-	who Requester) (types.Route, types.Error) {
+	who Requester) (*types.Route, types.Error) {
 
 	currentRoute, err := rs.db.Route.Get(updatedRoute.Name)
 	if err != nil {
-		return types.NullRoute, err
+		return nil, err
 	}
 	// Copy over fields we do not allow to be updated
 	updatedRoute.Name = currentRoute.Name
@@ -87,10 +87,10 @@ func (rs *RouteService) Update(updatedRoute types.Route,
 	updatedRoute.CreatedBy = currentRoute.CreatedBy
 
 	if err = rs.updateRoute(&updatedRoute, who); err != nil {
-		return types.NullRoute, err
+		return nil, err
 	}
 	rs.changelog.Update(currentRoute, updatedRoute, who)
-	return updatedRoute, nil
+	return &updatedRoute, nil
 }
 
 // updateRoute updates last-modified field(s) and updates route in database

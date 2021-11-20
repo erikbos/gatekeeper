@@ -48,7 +48,7 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopers(c *gin.Context,
 		responseErrorBadRequest(c, err)
 		return
 	}
-	h.responseDeveloperCreated(c, &createdDeveloper)
+	h.responseDeveloperCreated(c, createdDeveloper)
 }
 
 // deletes a developer
@@ -109,7 +109,7 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 		responseError(c, err)
 		return
 	}
-	h.responseDeveloperUpdated(c, &storedDeveloper)
+	h.responseDeveloperUpdated(c, storedDeveloper)
 }
 
 // change status of developer

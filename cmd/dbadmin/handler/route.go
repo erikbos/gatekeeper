@@ -35,7 +35,7 @@ func (h *Handler) PostV1Routes(c *gin.Context) {
 		responseErrorBadRequest(c, err)
 		return
 	}
-	h.responseRouteCreated(c, &createdDeveloper)
+	h.responseRouteCreated(c, createdDeveloper)
 }
 
 // deletes an route
@@ -84,7 +84,7 @@ func (h *Handler) PostV1RoutesRouteName(c *gin.Context, routeName RouteName) {
 		responseError(c, err)
 		return
 	}
-	h.responseRoutesUpdated(c, &storedRoute)
+	h.responseRoutesUpdated(c, storedRoute)
 }
 
 // returns attributes of a route

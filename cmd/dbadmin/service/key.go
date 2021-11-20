@@ -39,10 +39,10 @@ func (ks *KeyService) GetByDeveloperAppID(organizationName, developerAppID strin
 
 // Create creates a key
 func (ks *KeyService) Create(organizationName string, newKey types.Key, developerApp *types.DeveloperApp,
-	who Requester) (types.Key, types.Error) {
+	who Requester) (*types.Key, types.Error) {
 
 	if _, err := ks.db.Key.GetByKey(&organizationName, &newKey.ConsumerKey); err == nil {
-		return types.NullDeveloperAppKey, types.NewBadRequestError(
+		return nil, types.NewBadRequestError(
 			fmt.Errorf("consumerKey '%s' already exists", newKey.ConsumerKey))
 	}
 
@@ -68,19 +68,19 @@ func (ks *KeyService) Create(organizationName string, newKey types.Key, develope
 	newKey.AppID = developerApp.AppID
 
 	if err := ks.db.Key.UpdateByKey(organizationName, &newKey); err != nil {
-		return types.NullDeveloperAppKey, err
+		return nil, err
 	}
 	ks.changelog.Create(newKey, who)
-	return newKey, nil
+	return &newKey, nil
 }
 
 // Update updates an existing key
-func (ks *KeyService) Update(organizationName, consumerKey string, updatedKey *types.Key,
-	who Requester) (types.Key, types.Error) {
+func (ks *KeyService) Update(organizationName, consumerKey string, updatedKey types.Key,
+	who Requester) (*types.Key, types.Error) {
 
 	currentKey, err := ks.db.Key.GetByKey(&organizationName, &updatedKey.ConsumerKey)
 	if err != nil {
-		return types.NullDeveloperAppKey, err
+		return nil, err
 	}
 	// Copy over fields we do not allow to be updated
 	updatedKey.IssuedAt = currentKey.IssuedAt
@@ -93,13 +93,13 @@ func (ks *KeyService) Update(organizationName, consumerKey string, updatedKey *t
 	}
 
 	if err := updatedKey.Validate(); err != nil {
-		return types.NullDeveloperAppKey, types.NewBadRequestError(err)
+		return nil, types.NewBadRequestError(err)
 	}
-	if err = ks.db.Key.UpdateByKey(organizationName, updatedKey); err != nil {
-		return types.NullDeveloperAppKey, err
+	if err = ks.db.Key.UpdateByKey(organizationName, &updatedKey); err != nil {
+		return nil, err
 	}
 	ks.changelog.Update(currentKey, updatedKey, who)
-	return *updatedKey, nil
+	return &updatedKey, nil
 }
 
 // Delete deletes a key

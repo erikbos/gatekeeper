@@ -144,9 +144,9 @@ func (h *Handler) ToUserResponse(l *types.User) User {
 	return user
 }
 
-func fromUser(u User) *types.User {
+func fromUser(u User) types.User {
 
-	user := &types.User{}
+	user := types.User{}
 	if u.CreatedAt != nil {
 		user.CreatedAt = *u.CreatedAt
 	}

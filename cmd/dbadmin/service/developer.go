@@ -43,10 +43,10 @@ func (ds *DeveloperService) Get(organizationName, developerName string) (develop
 
 // Create creates a new developer
 func (ds *DeveloperService) Create(organizationName string, newDeveloper types.Developer,
-	who Requester) (types.Developer, types.Error) {
+	who Requester) (*types.Developer, types.Error) {
 
 	if _, err := ds.Get(organizationName, newDeveloper.Email); err == nil {
-		return types.NullDeveloper, types.NewBadRequestError(
+		return nil, types.NewBadRequestError(
 			fmt.Errorf("developer '%s' already exists", newDeveloper.Email))
 	}
 	// Automatically set default fields
@@ -56,19 +56,19 @@ func (ds *DeveloperService) Create(organizationName string, newDeveloper types.D
 	newDeveloper.Activate()
 
 	if err := ds.updateDeveloper(organizationName, &newDeveloper, who); err != nil {
-		return types.NullDeveloper, err
+		return nil, err
 	}
 	ds.changelog.Create(newDeveloper, who)
-	return newDeveloper, nil
+	return &newDeveloper, nil
 }
 
 // Update updates an existing developer
 func (ds *DeveloperService) Update(organizationName, developerEmail string, updatedDeveloper types.Developer, who Requester) (
-	types.Developer, types.Error) {
+	*types.Developer, types.Error) {
 
 	currentDeveloper, err := ds.db.Developer.GetByEmail(organizationName, developerEmail)
 	if err != nil {
-		return types.NullDeveloper, err
+		return nil, err
 	}
 
 	// Copy over fields we do not allow to be updated
@@ -78,10 +78,10 @@ func (ds *DeveloperService) Update(organizationName, developerEmail string, upda
 	updatedDeveloper.CreatedBy = currentDeveloper.CreatedBy
 
 	if err = ds.updateDeveloper(organizationName, &updatedDeveloper, who); err != nil {
-		return types.NullDeveloper, err
+		return nil, err
 	}
 	ds.changelog.Update(currentDeveloper, updatedDeveloper, who)
-	return updatedDeveloper, nil
+	return &updatedDeveloper, nil
 }
 
 // updateDeveloper updates last-modified field(s) and updates developer in database

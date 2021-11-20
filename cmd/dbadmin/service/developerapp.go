@@ -59,16 +59,16 @@ func (das *DeveloperAppService) GetByID(organizationName, developerAppID string)
 
 // Create creates a new developerApp
 func (das *DeveloperAppService) Create(organizationName, developerEmail string,
-	newDeveloperApp types.DeveloperApp, who Requester) (types.DeveloperApp, types.Error) {
+	newDeveloperApp types.DeveloperApp, who Requester) (*types.DeveloperApp, types.Error) {
 
 	developer, err := das.db.Developer.GetByEmail(organizationName, developerEmail)
 	if err != nil {
-		return types.NullDeveloperApp, err
+		return nil, err
 	}
 
 	existingDeveloperApp, err := das.GetByName(organizationName, developerEmail, newDeveloperApp.Name)
 	if err == nil {
-		return types.NullDeveloperApp, types.NewBadRequestError(
+		return nil, types.NewBadRequestError(
 			fmt.Errorf("developerApp '%s' already exists", existingDeveloperApp.Name))
 	}
 
@@ -82,26 +82,26 @@ func (das *DeveloperAppService) Create(organizationName, developerEmail string,
 	newDeveloperApp.Approve()
 
 	if err = das.updateDeveloperApp(organizationName, &newDeveloperApp, who); err != nil {
-		return types.NullDeveloperApp, err
+		return nil, err
 	}
 	das.changelog.Create(newDeveloperApp, who)
 
 	// Add app to the apps field in developer entity
 	developer.Apps = append(developer.Apps, newDeveloperApp.Name)
 	if err := das.db.Developer.Update(organizationName, developer); err != nil {
-		return newDeveloperApp, err
+		return &newDeveloperApp, err
 	}
 
-	return newDeveloperApp, nil
+	return &newDeveloperApp, nil
 }
 
 // Update updates an existing developerApp
 func (das *DeveloperAppService) Update(organizationName, developerEmail string, updatedDeveloperApp types.DeveloperApp,
-	who Requester) (types.DeveloperApp, types.Error) {
+	who Requester) (*types.DeveloperApp, types.Error) {
 
 	currentDeveloperApp, err := das.db.DeveloperApp.GetByName(organizationName, developerEmail, updatedDeveloperApp.Name)
 	if err != nil {
-		return types.NullDeveloperApp, err
+		return nil, err
 	}
 
 	// Copy over the fields we do not allow to be updated
@@ -112,10 +112,10 @@ func (das *DeveloperAppService) Update(organizationName, developerEmail string, 
 	updatedDeveloperApp.CreatedBy = currentDeveloperApp.CreatedBy
 
 	if err = das.updateDeveloperApp(organizationName, &updatedDeveloperApp, who); err != nil {
-		return types.NullDeveloperApp, err
+		return nil, err
 	}
 	das.changelog.Update(currentDeveloperApp, updatedDeveloperApp, who)
-	return updatedDeveloperApp, nil
+	return &updatedDeveloperApp, nil
 }
 
 // updateDeveloperApp updates last-modified field(s) and updates developer app in database
