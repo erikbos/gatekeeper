@@ -133,6 +133,8 @@ type (
 
 		Get(userName string) (user *types.User, err types.Error)
 
+		GetUsersByRole(roleName string) (users []string, err types.Error)
+
 		Create(newUser types.User, who Requester) (*types.User, types.Error)
 
 		Update(updatedUser types.User, who Requester) (*types.User, types.Error)

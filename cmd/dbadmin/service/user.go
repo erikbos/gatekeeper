@@ -37,6 +37,28 @@ func (us *UserService) Get(userName string) (user *types.User, err types.Error) 
 	return us.db.User.Get(userName)
 }
 
+// returns all users with a specific role
+func (us *UserService) GetUsersByRole(roleName string) ([]string, types.Error) {
+
+	_, err := us.db.Role.Get(roleName)
+	if err != nil {
+		return nil, err
+	}
+	users, err := us.db.User.GetAll()
+	if err != nil {
+		return []string{}, err
+	}
+	var usersWithRole []string
+	for _, user := range users {
+		for _, userRole := range user.Roles {
+			if roleName == userRole {
+				usersWithRole = append(usersWithRole, user.Name)
+			}
+		}
+	}
+	return usersWithRole, nil
+}
+
 // Create creates an user
 func (us *UserService) Create(newUser types.User, who Requester) (*types.User, types.Error) {
 

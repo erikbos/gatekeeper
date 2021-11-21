@@ -93,6 +93,18 @@ func (h *Handler) DeleteV1RolesRoleName(c *gin.Context, roleName RoleName) {
 	h.responseRole(c, deletedRole)
 }
 
+// Retrieve users assigned to role
+// (GET /v1/roles/{role_name}/users)
+func (h *Handler) GetV1RolesRoleNameUsers(c *gin.Context, roleName RoleName) {
+
+	usersWithRole, err := h.service.GetUsersByRole(string(roleName))
+	if err != nil {
+		responseError(c, err)
+		return
+	}
+	c.JSON(http.StatusOK, usersWithRole)
+}
+
 // API responses
 
 func (h *Handler) responseRoles(c *gin.Context, roles types.Roles) {
