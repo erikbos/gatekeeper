@@ -2752,10 +2752,10 @@ components:
         displayName:
           type: string
           description: Display name of role.
-        allow:
+        permissions:
           type: array
           items:
-            $ref: "#/components/schemas/RoleAllow"
+            $ref: "#/components/schemas/RolePermissions"
         createdAt:
           type: integer
           format: int64
@@ -2776,7 +2776,7 @@ components:
           description: Role who last updated this role.
       required:
         - name
-    RoleAllow:
+    RolePermissions:
       type: object
       properties:
         methods:

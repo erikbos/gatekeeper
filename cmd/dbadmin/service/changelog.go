@@ -3,10 +3,11 @@ package service
 import (
 	"net/http"
 
+	"go.uber.org/zap"
+
 	"github.com/erikbos/gatekeeper/pkg/db"
 	"github.com/erikbos/gatekeeper/pkg/shared"
 	"github.com/erikbos/gatekeeper/pkg/types"
-	"go.uber.org/zap"
 )
 
 type (

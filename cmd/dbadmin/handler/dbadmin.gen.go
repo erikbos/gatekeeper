@@ -345,8 +345,6 @@ type Organizations struct {
 
 // Role defines model for Role.
 type Role struct {
-	Allow *[]RoleAllow `json:"allow,omitempty"`
-
 	// Create timestamp in milliseconds since epoch.
 	CreatedAt *int64 `json:"createdAt,omitempty"`
 
@@ -363,11 +361,12 @@ type Role struct {
 	LastModifiedBy *string `json:"lastModifiedBy,omitempty"`
 
 	// Name of role. Can only be set at creation.
-	Name string `json:"name"`
+	Name        string             `json:"name"`
+	Permissions *[]RolePermissions `json:"permissions,omitempty"`
 }
 
 // Methods and paths allowed by this role.
-type RoleAllow struct {
+type RolePermissions struct {
 	// If specified request must match one of these methods.
 	Methods *[]string `json:"methods,omitempty"`
 

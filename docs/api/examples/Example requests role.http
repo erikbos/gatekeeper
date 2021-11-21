@@ -13,7 +13,7 @@ Authorization: Basic admin passwd
 
 {
     "name": "administrator",
-    "allows": [
+    "permissions": [
         {
             "methods": [
                 "GET",
@@ -34,7 +34,7 @@ Authorization: Basic admin passwd
 {
     "name": "administrator",
     "displayName": "Administrator role",
-    "allows": [
+    "permissions": [
         {
             "methods": [
                 "GET",
@@ -63,7 +63,7 @@ Authorization: Basic admin passwd
 
 {
     "name": "clusteradmin",
-    "allows": [
+    "permissions": [
         {
             "methods": [
                 "get",

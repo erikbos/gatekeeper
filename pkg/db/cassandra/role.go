@@ -1,6 +1,7 @@
 package cassandra
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -12,7 +13,7 @@ const (
 	// List of role columns we use
 	roleColumns = `name,
 display_name,
-allows,
+permissions,
 created_at,
 created_by,
 lastmodified_at,
@@ -81,7 +82,7 @@ func (s *RoleStore) runGetRoleQuery(query string, queryParameters ...interface{}
 		roles = append(roles, types.Role{
 			Name:           columnToString(m, "name"),
 			DisplayName:    columnToString(m, "display_name"),
-			Allows:         AllowsUnmarshal(columnToString(m, "allows")),
+			Permissions:    PermissionsUnmarshal(columnToString(m, "permissions")),
 			CreatedAt:      columnToInt64(m, "created_at"),
 			CreatedBy:      columnToString(m, "created_by"),
 			LastModifiedAt: columnToInt64(m, "lastmodified_at"),
@@ -103,7 +104,7 @@ func (s *RoleStore) Update(c *types.Role) types.Error {
 	if err := s.db.CassandraSession.Query(query,
 		c.Name,
 		c.DisplayName,
-		AllowsMarshal(c.Allows),
+		PermissionsMarshal(c.Permissions),
 		c.CreatedAt,
 		c.CreatedBy,
 		c.LastModifiedAt,
@@ -125,4 +126,25 @@ func (s *RoleStore) Delete(roleToDelete string) types.Error {
 		return types.NewDatabaseError(err)
 	}
 	return nil
+}
+
+// PermissionsUnmarshal unpacks JSON-encoded role permissions into Permissions
+func PermissionsUnmarshal(rolePermissionsAsJSON string) types.Permissions {
+
+	if rolePermissionsAsJSON != "" {
+		var permissions types.Permissions
+		if err := json.Unmarshal([]byte(rolePermissionsAsJSON), &permissions); err == nil {
+			return permissions
+		}
+	}
+	return types.NullPermissions
+}
+
+// PermissionsMarshal packs role Permissions into JSON
+func PermissionsMarshal(a types.Permissions) string {
+
+	if json, err := json.Marshal(a); err == nil {
+		return string(json)
+	}
+	return "[]"
 }

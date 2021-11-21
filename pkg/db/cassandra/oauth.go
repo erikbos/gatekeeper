@@ -96,7 +96,6 @@ func (s *OAuthStore) runGetOAuthAccessTokenQuery(query, queryParameter string) (
 	}
 	s.db.metrics.QuerySuccessful(oauthMetricLabel)
 
-	// log.Printf("runGetOAuthAccessTokenQuery: %+v", accessToken)
 	return &accessToken, nil
 }
 

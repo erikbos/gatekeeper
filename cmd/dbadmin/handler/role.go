@@ -133,19 +133,19 @@ func (h *Handler) ToRoleResponse(l *types.Role) Role {
 		LastModifiedAt: &l.LastModifiedAt,
 		Name:           l.Name,
 	}
-	if l.Allows != nil {
-		role.Allow = ToRoleAllowsResponse(l.Allows)
+	if l.Permissions != nil {
+		role.Permissions = ToRolePermissionsResponse(l.Permissions)
 	}
 	return role
 }
 
-func ToRoleAllowsResponse(allows types.Allows) *[]RoleAllow {
+func ToRolePermissionsResponse(permissions types.Permissions) *[]RolePermissions {
 
-	allowed_paths := make([]RoleAllow, len(allows))
-	for i := range allows {
-		allowed_paths[i] = RoleAllow{
-			Methods: &allows[i].Methods,
-			Paths:   &allows[i].Paths,
+	allowed_paths := make([]RolePermissions, len(permissions))
+	for i := range permissions {
+		allowed_paths[i] = RolePermissions{
+			Methods: &permissions[i].Methods,
+			Paths:   &permissions[i].Paths,
 		}
 	}
 	return &allowed_paths
@@ -154,8 +154,8 @@ func ToRoleAllowsResponse(allows types.Allows) *[]RoleAllow {
 func fromRole(u Role) types.Role {
 
 	role := types.Role{}
-	if u.Allow != nil {
-		role.Allows = fromRoleAllow(u.Allow)
+	if u.Permissions != nil {
+		role.Permissions = fromRolePermissions(u.Permissions)
 	}
 	if u.CreatedAt != nil {
 		role.CreatedAt = *u.CreatedAt
@@ -178,14 +178,14 @@ func fromRole(u Role) types.Role {
 	return role
 }
 
-func fromRoleAllow(a *[]RoleAllow) types.Allows {
+func fromRolePermissions(a *[]RolePermissions) types.Permissions {
 
 	if a == nil {
-		return types.NullAllows
+		return types.NullPermissions
 	}
-	all_attributes := make([]types.Allow, len(*a))
+	all_attributes := make([]types.Permission, len(*a))
 	for i, a := range *a {
-		all_attributes[i] = types.Allow{
+		all_attributes[i] = types.Permission{
 			Methods: *a.Methods,
 			Paths:   *a.Paths,
 		}

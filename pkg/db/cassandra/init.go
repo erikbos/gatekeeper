@@ -71,13 +71,15 @@ var createTablesCQL = [...]string{
         PRIMARY KEY (name)
         )`,
 
+	`CREATE INDEX IF NOT EXISTS ON users (roles)`,
+
 	// Default database user 'admin', password 'passwd', role 'admin'
 	`INSERT INTO users (name,password,status,roles,created_by,created_at,lastmodified_at) VALUES('admin','$2a$07$zWlw6WvswAFGZzNpBJg5qelwyg87NM/w4ypXP.NhfpuYmmv.WPyJO','active','["admin"]','initdb',toUnixTimestamp(now()),toUnixTimestamp(now())) IF NOT EXISTS`,
 
 	`CREATE TABLE IF NOT EXISTS roles (
         name text,
         display_name text,
-        allows text,
+        permissions text,
         created_at bigint,
         created_by text,
         lastmodified_at bigint,
@@ -86,7 +88,7 @@ var createTablesCQL = [...]string{
         )`,
 
 	// Default database role 'admin', allowing GET, POST, DELETE on /v1/* path
-	`INSERT INTO roles (name,allows,created_by,created_at,lastmodified_at) VALUES('admin','[{"methods":["GET","POST","DELETE"],"paths":["/v1/**"]}]','initdb',toUnixTimestamp(now()),toUnixTimestamp(now())) IF NOT EXISTS`,
+	`INSERT INTO roles (name,permissions,created_by,created_at,lastmodified_at) VALUES('admin','[{"methods":["GET","POST","DELETE"],"paths":["/v1/**"]}]','initdb',toUnixTimestamp(now()),toUnixTimestamp(now())) IF NOT EXISTS`,
 
 	`CREATE TABLE IF NOT EXISTS listeners (
     attributes map<text, text>,

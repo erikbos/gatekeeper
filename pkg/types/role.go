@@ -18,7 +18,7 @@ type (
 		DisplayName string
 
 		// Allowed methods & paths
-		Allows
+		Permissions `validate:"required"`
 
 		// Created at timestamp in epoch milliseconds
 		CreatedAt int64
@@ -37,18 +37,18 @@ type (
 	Roles []Role
 )
 
-// Allow holds the criteria a role will allow request
-type Allow struct {
+// Permission holds the criteria a role will allow request
+type Permission struct {
 	// Request methods which are allowed
 	// FIXME these bindings settings do not get used...
-	Methods []string `binding:"required,dive,oneof=GET POST PUT PATCH DELETE"`
+	Methods []string `validate:"dive,oneof=GET POST PUT PATCH DELETE,required"`
 
 	// Request paths (regexp) which are allowed
-	Paths []string `binding:"required,dive,startswith=/"`
+	Paths []string `validate:"dive,startswith=/,required"`
 }
 
-// Allows holds one or more allow
-type Allows []Allow
+// Permissions holds one or more allow
+type Permissions []Permission
 
 var (
 	// NullRole is an empty role type
@@ -57,11 +57,11 @@ var (
 	// NullRoles is an empty role slice
 	NullRoles = Roles{}
 
-	// NullAllow is an allow type
-	NullAllow = Allow{}
+	// NullPermission is an allow type
+	NullPermission = Permission{}
 
-	// NullAllows is an allows type
-	NullAllows = Allows{}
+	// NullPermissions is an allows type
+	NullPermissions = Permissions{}
 )
 
 // Validate checks if field values are set correct and are allowed
@@ -74,7 +74,7 @@ func (r *Role) Validate() error {
 // IsPathAllowed checks whether role is allowed to access a path
 func (role *Role) IsPathAllowed(requestMethod, requestPath string) bool {
 
-	for _, allow := range role.Allows {
+	for _, allow := range role.Permissions {
 		if methodMatch(allow.Methods, requestMethod) &&
 			pathMatch(allow.Paths, requestPath) {
 			return true
