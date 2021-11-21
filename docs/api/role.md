@@ -22,7 +22,7 @@ Role `admin` that allows HTTP method GET, POST or DELETE for all (`**`) paths un
 {
     "name": "admin",
     "displayName": "Administrator",
-    "allows": [
+    "permissions": [
         {
             "methods": [
                 "GET",
@@ -47,9 +47,9 @@ The above role `admin` is created when `dbadmin` is invoked with `createschema`.
 | -------------- | --------- | ------------------------------------------------------------------------------------ |
 | name           | mandatory | Name (cannot be updated afterwards)                                                  |
 | displayName    | optional  | Friendly name                                                                        |
-| allows         | mandatory | Array with allowed methods & paths                                                   |
-| allows.methods | optional  | Allowed methods                                                                      |
-| allows.paths   | optional  | Allowed paths, supports [doublestar](https://github.com/bmatcuk/doublestar#patterns) |
+| permissions    | mandatory | Array with allowed methods & paths                                                   |
+| permissions.methods | optional  | Allowed methods                                                                      |
+| permissions.paths   | optional  | Allowed paths, supports [doublestar](https://github.com/bmatcuk/doublestar#patterns) |
 |                |           | `*` matches any sequence of non-path-separators                                      |
 |                |           | `**` matches any sequence of characters, including path separators                   |
 
@@ -61,7 +61,7 @@ Role `infra_readonly` allowing reading (GET) all listeners, routes and clusters 
 {
     "name": "infra_readonly",
     "displayName": "Infra read only role",
-    "allows": [
+    "permissions": [
         {
             "methods": [
                 "GET",
@@ -83,7 +83,7 @@ This allows this role to update just the destination cluster of the this route:
 {
     "name": "route_update",
     "displayName": "",
-    "allows": [
+    "permissions": [
         {
             "methods": [
                 "GET",

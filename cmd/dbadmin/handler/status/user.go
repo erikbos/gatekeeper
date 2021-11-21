@@ -91,7 +91,7 @@ const pageTemplateUsersAndRoles string = `
 <tr>
 <th>Name</th>
 <th>DisplayName</th>
-<th>Allowed</th>
+<th>Permissions</th>
 <th>CreatedBy</th>
 <th>CreatedAt</th>
 <th>LastModifiedBy</th>
@@ -106,7 +106,7 @@ const pageTemplateUsersAndRoles string = `
 <td>
 <table>
 <tr><th>Methods</th><th>Paths</th></tr>
-{{range $allow := $role.Allows}}
+{{range $allow := $role.Permissions}}
 <tr>
 <td><ul>{{range $methods := $allow.Methods}}<li>{{$methods}}</li>{{end}}</ul></td>
 <td><ul>{{range $paths := $allow.Paths}}<li>{{$paths}}</li>{{end}}</ul></td>

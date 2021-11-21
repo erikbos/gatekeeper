@@ -1,6 +1,7 @@
 package cassandra
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/gocql/gocql"
@@ -160,4 +161,30 @@ func (s *APIProductStore) Delete(organizationName, apiProduct string) types.Erro
 		return types.NewDatabaseError(err)
 	}
 	return nil
+}
+
+// Unmarshal unpacks a key's product statuses
+// Example input: [{"name":"S","value":"erikbos teleporter"},{"name":"ErikbosTeleporterExtraAttribute","value":"42"}]
+func KeyAPIProductStatusesUnmarshal(jsonProductStatuses string) types.KeyAPIProductStatuses {
+
+	if jsonProductStatuses != "" {
+		var productStatus = make([]types.KeyAPIProductStatus, 0)
+		if err := json.Unmarshal([]byte(jsonProductStatuses), &productStatus); err == nil {
+			return productStatus
+		}
+	}
+	return types.KeyAPIProductStatuses{}
+}
+
+// Marshal packs a key's product statuses into JSON
+// Example input: [{"name":"DisplayName","value":"erikbos teleporter"},{"name":"ErikbosTeleporterExtraAttribute","value":"42"}]
+func KeyAPIProductStatusesMarshal(ps types.KeyAPIProductStatuses) string {
+
+	if len(ps) > 0 {
+		ArrayOfAttributesInJSON, err := json.Marshal(ps)
+		if err == nil {
+			return string(ArrayOfAttributesInJSON)
+		}
+	}
+	return "[]"
 }

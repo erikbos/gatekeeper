@@ -345,8 +345,6 @@ type Organizations struct {
 
 // Role defines model for Role.
 type Role struct {
-	Allow *[]RoleAllow `json:"allow,omitempty"`
-
 	// Create timestamp in milliseconds since epoch.
 	CreatedAt *int64 `json:"createdAt,omitempty"`
 
@@ -363,16 +361,22 @@ type Role struct {
 	LastModifiedBy *string `json:"lastModifiedBy,omitempty"`
 
 	// Name of role. Can only be set at creation.
-	Name string `json:"name"`
+	Name        string             `json:"name"`
+	Permissions *[]RolePermissions `json:"permissions,omitempty"`
 }
 
 // Methods and paths allowed by this role.
-type RoleAllow struct {
+type RolePermissions struct {
 	// If specified request must match one of these methods.
 	Methods *[]string `json:"methods,omitempty"`
 
 	// If specified request must match one of these paths.
 	Paths *[]string `json:"paths,omitempty"`
+}
+
+// Array of users assigned to role.
+type RoleUsers struct {
+	User *string `json:"user,omitempty"`
 }
 
 // Roles defines model for Roles.
@@ -1024,6 +1028,9 @@ type ServerInterface interface {
 	// Update role
 	// (POST /v1/roles/{role_name})
 	PostV1RolesRoleName(c *gin.Context, roleName RoleName)
+	// Retrieve users assigned to role
+	// (GET /v1/roles/{role_name}/users)
+	GetV1RolesRoleNameUsers(c *gin.Context, roleName RoleName)
 	// Retrieve route
 	// (GET /v1/routes)
 	GetV1Routes(c *gin.Context)
@@ -3719,6 +3726,29 @@ func (siw *ServerInterfaceWrapper) PostV1RolesRoleName(c *gin.Context) {
 	siw.Handler.PostV1RolesRoleName(c, roleName)
 }
 
+// GetV1RolesRoleNameUsers operation middleware
+func (siw *ServerInterfaceWrapper) GetV1RolesRoleNameUsers(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "role_name" -------------
+	var roleName RoleName
+
+	err = runtime.BindStyledParameter("simple", false, "role_name", c.Param("role_name"), &roleName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter role_name: %s", err)})
+		return
+	}
+
+	c.Set(BasicAuthScopes, []string{""})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.GetV1RolesRoleNameUsers(c, roleName)
+}
+
 // GetV1Routes operation middleware
 func (siw *ServerInterfaceWrapper) GetV1Routes(c *gin.Context) {
 
@@ -4214,6 +4244,8 @@ func RegisterHandlersWithOptions(router *gin.Engine, si ServerInterface, options
 	router.GET(options.BaseURL+"/v1/roles/:role_name", wrapper.GetV1RolesRoleName)
 
 	router.POST(options.BaseURL+"/v1/roles/:role_name", wrapper.PostV1RolesRoleName)
+
+	router.GET(options.BaseURL+"/v1/roles/:role_name/users", wrapper.GetV1RolesRoleNameUsers)
 
 	router.GET(options.BaseURL+"/v1/routes", wrapper.GetV1Routes)
 

@@ -13,7 +13,7 @@ import (
 )
 
 // Generate REST API handlers from OpenAPI specification
-//go:generate oapi-codegen -package handler -generate types,gin -o dbadmin.gen.go ../../../openapi/gatekeeper.yaml
+//go:generate oapi-codegen -package handler -generate types,gin -o handler.gen.go ../../../openapi/gatekeeper.yaml
 
 // Handler has implements all methods of oapi-codegen's ServiceInterface
 type Handler struct {
