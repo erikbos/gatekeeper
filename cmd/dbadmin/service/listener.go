@@ -10,16 +10,16 @@ import (
 
 // ListenerService is
 type ListenerService struct {
-	db        *db.Database
-	changelog *Changelog
+	db    *db.Database
+	audit *Auditlog
 }
 
 // NewListener returns a new listener instance
-func NewListener(database *db.Database, c *Changelog) *ListenerService {
+func NewListener(database *db.Database, a *Auditlog) *ListenerService {
 
 	return &ListenerService{
-		db:        database,
-		changelog: c,
+		db:    database,
+		audit: a,
 	}
 }
 
@@ -49,7 +49,7 @@ func (ls *ListenerService) Create(newListener types.Listener, who Requester) (*t
 	if err := ls.updateListener(&newListener, who); err != nil {
 		return nil, err
 	}
-	ls.changelog.Create(newListener, who)
+	ls.audit.Create(newListener, who)
 	return &newListener, nil
 }
 
@@ -68,7 +68,7 @@ func (ls *ListenerService) Update(updatedListener types.Listener, who Requester)
 	if err = ls.updateListener(&updatedListener, who); err != nil {
 		return nil, err
 	}
-	ls.changelog.Update(currentListener, updatedListener, who)
+	ls.audit.Update(currentListener, updatedListener, who)
 	return &updatedListener, nil
 }
 
@@ -95,6 +95,6 @@ func (ls *ListenerService) Delete(listenerName string, who Requester) (e types.E
 	if err = ls.db.Listener.Delete(listenerName); err != nil {
 		return err
 	}
-	ls.changelog.Delete(listener, who)
+	ls.audit.Delete(listener, who)
 	return nil
 }

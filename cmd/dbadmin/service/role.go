@@ -10,16 +10,16 @@ import (
 
 // RoleService is
 type RoleService struct {
-	db        *db.Database
-	Changelog *Changelog
+	db    *db.Database
+	audit *Auditlog
 }
 
 // NewRole returns a new role instance
-func NewRole(database *db.Database, c *Changelog) *RoleService {
+func NewRole(database *db.Database, a *Auditlog) *RoleService {
 
 	return &RoleService{
-		db:        database,
-		Changelog: c,
+		db:    database,
+		audit: a,
 	}
 }
 
@@ -49,7 +49,7 @@ func (rs *RoleService) Create(newRole types.Role, who Requester) (*types.Role, t
 	if err := rs.updateRole(&newRole, who); err != nil {
 		return nil, err
 	}
-	rs.Changelog.Create(newRole, who)
+	rs.audit.Create(newRole, who)
 	return &newRole, nil
 }
 
@@ -68,7 +68,7 @@ func (rs *RoleService) Update(updatedRole types.Role, who Requester) (*types.Rol
 	if err = rs.updateRole(&updatedRole, who); err != nil {
 		return nil, err
 	}
-	rs.Changelog.Update(currentRole, updatedRole, who)
+	rs.audit.Update(currentRole, updatedRole, who)
 	return &updatedRole, nil
 }
 
@@ -84,7 +84,7 @@ func (rs *RoleService) updateRole(updatedRole *types.Role, who Requester) types.
 	return rs.db.Role.Update(updatedRole)
 }
 
-// Delete deletes an role
+// Delete deletes a role
 func (rs *RoleService) Delete(roleName string, who Requester) (e types.Error) {
 
 	role, err := rs.db.Role.Get(roleName)
@@ -100,12 +100,12 @@ func (rs *RoleService) Delete(roleName string, who Requester) (e types.Error) {
 	if err = rs.db.Role.Delete(roleName); err != nil {
 		return err
 	}
-	rs.Changelog.Delete(role, who)
+	rs.audit.Delete(role, who)
 	return nil
 }
 
 // counts number of users with a specific role
-func (rs *RoleService) countUserWithRole(role string) int {
+func (rs *RoleService) countUserWithRole(roleName string) int {
 
 	users, err := rs.db.User.GetAll()
 	if err != nil {
@@ -114,7 +114,7 @@ func (rs *RoleService) countUserWithRole(role string) int {
 	var count int
 	for _, user := range users {
 		for _, userRole := range user.Roles {
-			if role == userRole {
+			if roleName == userRole {
 				count++
 			}
 		}

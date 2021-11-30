@@ -7,19 +7,19 @@ import (
 )
 
 // New sets up services for all entities
-func New(database *db.Database, changelogLogger *zap.Logger) *Service {
+func New(database *db.Database, auditlogLogger *zap.Logger) *Service {
 
-	changelog := NewChangelog(database, changelogLogger)
+	auditlog := NewAuditlog(database, auditlogLogger)
 	return &Service{
-		Listener:     NewListener(database, changelog),
-		Route:        NewRoute(database, changelog),
-		Cluster:      NewCluster(database, changelog),
-		Organization: NewOrganization(database, changelog),
-		Developer:    NewDeveloper(database, changelog),
-		DeveloperApp: NewDeveloperApp(database, changelog),
-		Key:          NewKey(database, changelog),
-		APIProduct:   NewAPIProduct(database, changelog),
-		User:         NewUser(database, changelog),
-		Role:         NewRole(database, changelog),
+		Listener:     NewListener(database, auditlog),
+		Route:        NewRoute(database, auditlog),
+		Cluster:      NewCluster(database, auditlog),
+		Organization: NewOrganization(database, auditlog),
+		Developer:    NewDeveloper(database, auditlog),
+		DeveloperApp: NewDeveloperApp(database, auditlog),
+		Key:          NewKey(database, auditlog),
+		APIProduct:   NewAPIProduct(database, auditlog),
+		User:         NewUser(database, auditlog),
+		Role:         NewRole(database, auditlog),
 	}
 }

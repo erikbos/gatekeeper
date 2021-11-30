@@ -15,7 +15,7 @@ const (
 	defaultLogFileName         = "/dev/stdout"
 	defaultWebAdminListen      = "0.0.0.0:7777"
 	defaultWebAdminLogFileName = "dbadmin-access.log"
-	defaultChangeLogFileName   = "dbadmin-changelog.log"
+	defaultAuditLogFileName    = "dbadmin-audit.log"
 	defaultCacheSize           = 100 * 1024 * 1024
 	defaultCacheTTL            = 30
 	defaultCacheNegativeTTL    = 5
@@ -23,11 +23,11 @@ const (
 
 // DBAdminConfig contains our startup configuration data
 type DBAdminConfig struct {
-	Logger    shared.Logger            `yaml:"logging"`   // log configuration of application
-	WebAdmin  webadmin.Config          `yaml:"webadmin"`  // Admin web interface configuration
-	Changelog service.ChangelogConfig  `yaml:"changelog"` // Changelog configuration
-	Database  cassandra.DatabaseConfig `yaml:"database"`  // Database configuration
-	Cache     cache.Config             `yaml:"cache"`     // Cache configuration
+	Logger   shared.Logger            `yaml:"logging"`   // log configuration of application
+	WebAdmin webadmin.Config          `yaml:"webadmin"`  // Admin web interface configuration
+	Audit    service.AuditConfig      `yaml:"changelog"` // Audit configuration
+	Database cassandra.DatabaseConfig `yaml:"database"`  // Database configuration
+	Cache    cache.Config             `yaml:"cache"`     // Cache configuration
 }
 
 // String() return our startup configuration as YAML
@@ -58,10 +58,10 @@ func loadConfiguration(filename *string) (*DBAdminConfig, error) {
 				Filename: defaultWebAdminLogFileName,
 			},
 		},
-		Changelog: service.ChangelogConfig{
+		Audit: service.AuditConfig{
 			Logger: shared.Logger{
 				Level:    defaultLogLevel,
-				Filename: defaultChangeLogFileName,
+				Filename: defaultAuditLogFileName,
 			},
 		},
 		Cache: cache.Config{

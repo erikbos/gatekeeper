@@ -10,16 +10,16 @@ import (
 
 // OrganizationService is
 type OrganizationService struct {
-	db        *db.Database
-	changelog *Changelog
+	db    *db.Database
+	audit *Auditlog
 }
 
 // NewOrganization returns a new organization instance
-func NewOrganization(database *db.Database, c *Changelog) *OrganizationService {
+func NewOrganization(database *db.Database, a *Auditlog) *OrganizationService {
 
 	return &OrganizationService{
-		db:        database,
-		changelog: c,
+		db:    database,
+		audit: a,
 	}
 }
 
@@ -49,7 +49,7 @@ func (os *OrganizationService) Create(newOrganization types.Organization, who Re
 	if err := os.updateOrganization(&newOrganization, who); err != nil {
 		return nil, err
 	}
-	os.changelog.Create(newOrganization, who)
+	os.audit.Create(newOrganization, who)
 	return &newOrganization, nil
 }
 
@@ -68,7 +68,7 @@ func (os *OrganizationService) Update(updatedOrganization types.Organization, wh
 	if err = os.updateOrganization(&updatedOrganization, who); err != nil {
 		return nil, err
 	}
-	os.changelog.Update(currentOrganization, updatedOrganization, who)
+	os.audit.Update(currentOrganization, updatedOrganization, who)
 	return &updatedOrganization, nil
 }
 
@@ -95,6 +95,6 @@ func (os *OrganizationService) Delete(organizationName string, who Requester) (e
 	if err = os.db.Organization.Delete(organizationName); err != nil {
 		return err
 	}
-	os.changelog.Delete(organization, who)
+	os.audit.Delete(organization, who)
 	return nil
 }

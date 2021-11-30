@@ -12,16 +12,16 @@ import (
 
 // DeveloperAppService is
 type DeveloperAppService struct {
-	db        *db.Database
-	changelog *Changelog
+	db    *db.Database
+	audit *Auditlog
 }
 
 // NewDeveloperApp returns a new developerApp instance
-func NewDeveloperApp(database *db.Database, c *Changelog) *DeveloperAppService {
+func NewDeveloperApp(database *db.Database, a *Auditlog) *DeveloperAppService {
 
 	return &DeveloperAppService{
-		db:        database,
-		changelog: c,
+		db:    database,
+		audit: a,
 	}
 }
 
@@ -84,7 +84,7 @@ func (das *DeveloperAppService) Create(organizationName, developerEmail string,
 	if err = das.updateDeveloperApp(organizationName, &newDeveloperApp, who); err != nil {
 		return nil, err
 	}
-	das.changelog.Create(newDeveloperApp, who)
+	das.audit.Create(newDeveloperApp, who)
 
 	// Add app to the apps field in developer entity
 	developer.Apps = append(developer.Apps, newDeveloperApp.Name)
@@ -114,7 +114,7 @@ func (das *DeveloperAppService) Update(organizationName, developerEmail string, 
 	if err = das.updateDeveloperApp(organizationName, &updatedDeveloperApp, who); err != nil {
 		return nil, err
 	}
-	das.changelog.Update(currentDeveloperApp, updatedDeveloperApp, who)
+	das.audit.Update(currentDeveloperApp, updatedDeveloperApp, who)
 	return &updatedDeveloperApp, nil
 }
 
@@ -169,7 +169,7 @@ func (das *DeveloperAppService) Delete(organizationName, developerEmail, develop
 	if err := das.db.Developer.Update(organizationName, developer); err != nil {
 		return err
 	}
-	das.changelog.Delete(developerApp, who)
+	das.audit.Delete(developerApp, who)
 	return nil
 }
 

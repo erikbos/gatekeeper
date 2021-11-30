@@ -13,16 +13,16 @@ import (
 
 // DeveloperService is
 type DeveloperService struct {
-	db        *db.Database
-	changelog *Changelog
+	db    *db.Database
+	audit *Auditlog
 }
 
 // NewDeveloper returns a new developer instance
-func NewDeveloper(database *db.Database, c *Changelog) *DeveloperService {
+func NewDeveloper(database *db.Database, a *Auditlog) *DeveloperService {
 
 	return &DeveloperService{
-		db:        database,
-		changelog: c,
+		db:    database,
+		audit: a,
 	}
 }
 
@@ -58,7 +58,7 @@ func (ds *DeveloperService) Create(organizationName string, newDeveloper types.D
 	if err := ds.updateDeveloper(organizationName, &newDeveloper, who); err != nil {
 		return nil, err
 	}
-	ds.changelog.Create(newDeveloper, who)
+	ds.audit.Create(newDeveloper, who)
 	return &newDeveloper, nil
 }
 
@@ -80,7 +80,7 @@ func (ds *DeveloperService) Update(organizationName, developerEmail string, upda
 	if err = ds.updateDeveloper(organizationName, &updatedDeveloper, who); err != nil {
 		return nil, err
 	}
-	ds.changelog.Update(currentDeveloper, updatedDeveloper, who)
+	ds.audit.Update(currentDeveloper, updatedDeveloper, who)
 	return &updatedDeveloper, nil
 }
 
@@ -117,7 +117,7 @@ func (ds *DeveloperService) Delete(organizationName, developerName string, who R
 	if err := ds.db.Developer.DeleteByID(organizationName, developer.DeveloperID); err != nil {
 		return err
 	}
-	ds.changelog.Delete(developer, who)
+	ds.audit.Delete(developer, who)
 	return nil
 }
 

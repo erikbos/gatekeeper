@@ -113,8 +113,8 @@ func startWebAdmin(s *server, applicationName string, enableAPIAuthentication bo
 	s.webadmin.Router.GET("/docs/", shared.ServeEmbedFile(apiDocFiles, "apidocs/index.htm"))
 	s.webadmin.Router.GET("/docs/:path", shared.ServeEmbedDirectory(apiDocFiles, "apidocs"))
 
-	changeLogLogger := shared.NewLogger(&s.config.Changelog.Logger)
-	service := service.New(s.db, changeLogLogger)
+	auditLogLogger := shared.NewLogger(&s.config.Audit.Logger)
+	service := service.New(s.db, auditLogLogger)
 	s.handler = handler.NewHandler(s.webadmin.Router, s.db, service,
 		applicationName, enableAPIAuthentication, webAdminLogger)
 

@@ -12,16 +12,16 @@ import (
 
 // KeyService is
 type KeyService struct {
-	db        *db.Database
-	changelog *Changelog
+	db    *db.Database
+	audit *Auditlog
 }
 
 // NewKey returns a new key instance
-func NewKey(database *db.Database, c *Changelog) *KeyService {
+func NewKey(database *db.Database, a *Auditlog) *KeyService {
 
 	return &KeyService{
-		db:        database,
-		changelog: c,
+		db:    database,
+		audit: a,
 	}
 }
 
@@ -70,7 +70,7 @@ func (ks *KeyService) Create(organizationName string, newKey types.Key, develope
 	if err := ks.db.Key.UpdateByKey(organizationName, &newKey); err != nil {
 		return nil, err
 	}
-	ks.changelog.Create(newKey, who)
+	ks.audit.Create(newKey, who)
 	return &newKey, nil
 }
 
@@ -98,7 +98,7 @@ func (ks *KeyService) Update(organizationName, consumerKey string, updatedKey ty
 	if err = ks.db.Key.UpdateByKey(organizationName, &updatedKey); err != nil {
 		return nil, err
 	}
-	ks.changelog.Update(currentKey, updatedKey, who)
+	ks.audit.Update(currentKey, updatedKey, who)
 	return &updatedKey, nil
 }
 
@@ -112,7 +112,7 @@ func (ks *KeyService) Delete(organizationName, consumerKey string, who Requester
 	if err = ks.db.Key.DeleteByKey(organizationName, consumerKey); err != nil {
 		return err
 	}
-	ks.changelog.Delete(key, who)
+	ks.audit.Delete(key, who)
 	return nil
 }
 

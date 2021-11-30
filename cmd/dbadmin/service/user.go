@@ -12,16 +12,16 @@ import (
 
 // UserService is
 type UserService struct {
-	db        *db.Database
-	changelog *Changelog
+	db    *db.Database
+	audit *Auditlog
 }
 
 // NewUser returns a new user instance
-func NewUser(database *db.Database, c *Changelog) *UserService {
+func NewUser(database *db.Database, a *Auditlog) *UserService {
 
 	return &UserService{
-		db:        database,
-		changelog: c,
+		db:    database,
+		audit: a,
 	}
 }
 
@@ -80,7 +80,7 @@ func (us *UserService) Create(newUser types.User, who Requester) (*types.User, t
 	if err := us.updateUser(&newUser, who); err != nil {
 		return nil, err
 	}
-	us.changelog.Create(newUser, who)
+	us.audit.Create(newUser, who)
 	return &newUser, nil
 }
 
@@ -109,7 +109,7 @@ func (us *UserService) Update(updatedUser types.User,
 	if err = us.updateUser(&updatedUser, who); err != nil {
 		return nil, err
 	}
-	us.changelog.Update(currentUser, updatedUser, who)
+	us.audit.Update(currentUser, updatedUser, who)
 	return &updatedUser, nil
 }
 
@@ -135,7 +135,7 @@ func (us *UserService) Delete(userName string, who Requester) (e types.Error) {
 	if err = us.db.User.Delete(userName); err != nil {
 		return err
 	}
-	us.changelog.Delete(user, who)
+	us.audit.Delete(user, who)
 	return nil
 }
 

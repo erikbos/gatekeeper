@@ -10,14 +10,14 @@ import (
 
 // ClusterService is
 type ClusterService struct {
-	db        *db.Database
-	changelog *Changelog
+	db    *db.Database
+	audit *Auditlog
 }
 
 // NewCluster returns a new cluster instance
-func NewCluster(database *db.Database, c *Changelog) *ClusterService {
+func NewCluster(database *db.Database, a *Auditlog) *ClusterService {
 
-	return &ClusterService{db: database, changelog: c}
+	return &ClusterService{db: database, audit: a}
 }
 
 // GetAll returns all clusters
@@ -57,7 +57,7 @@ func (cs *ClusterService) Create(newCluster types.Cluster, who Requester) (
 	if err := cs.updateCluster(&newCluster, who); err != nil {
 		return nil, err
 	}
-	cs.changelog.Create(newCluster, who)
+	cs.audit.Create(newCluster, who)
 	return &newCluster, nil
 }
 
@@ -77,7 +77,7 @@ func (cs *ClusterService) Update(updatedCluster types.Cluster,
 	if err = cs.updateCluster(&updatedCluster, who); err != nil {
 		return nil, err
 	}
-	cs.changelog.Update(currentCluster, updatedCluster, who)
+	cs.audit.Update(currentCluster, updatedCluster, who)
 	return &updatedCluster, nil
 }
 
@@ -104,6 +104,6 @@ func (cs *ClusterService) Delete(clusterName string, who Requester) (e types.Err
 	if err := cs.db.Cluster.Delete(clusterName); err != nil {
 		return err
 	}
-	cs.changelog.Delete(cluster, who)
+	cs.audit.Delete(cluster, who)
 	return nil
 }

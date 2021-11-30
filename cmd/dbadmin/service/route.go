@@ -10,16 +10,16 @@ import (
 
 // RouteService is
 type RouteService struct {
-	db        *db.Database
-	changelog *Changelog
+	db    *db.Database
+	audit *Auditlog
 }
 
 // NewRoute returns a new route instance
-func NewRoute(database *db.Database, c *Changelog) *RouteService {
+func NewRoute(database *db.Database, a *Auditlog) *RouteService {
 
 	return &RouteService{
-		db:        database,
-		changelog: c,
+		db:    database,
+		audit: a,
 	}
 }
 
@@ -69,7 +69,7 @@ func (rs *RouteService) Create(newRoute types.Route, who Requester) (*types.Rout
 	if err := rs.updateRoute(&newRoute, who); err != nil {
 		return nil, err
 	}
-	rs.changelog.Create(newRoute, who)
+	rs.audit.Create(newRoute, who)
 	return &newRoute, nil
 }
 
@@ -89,7 +89,7 @@ func (rs *RouteService) Update(updatedRoute types.Route,
 	if err = rs.updateRoute(&updatedRoute, who); err != nil {
 		return nil, err
 	}
-	rs.changelog.Update(currentRoute, updatedRoute, who)
+	rs.audit.Update(currentRoute, updatedRoute, who)
 	return &updatedRoute, nil
 }
 
@@ -117,6 +117,6 @@ func (rs *RouteService) Delete(routeName string, who Requester) (e types.Error) 
 	if err != nil {
 		return err
 	}
-	rs.changelog.Delete(route, who)
+	rs.audit.Delete(route, who)
 	return nil
 }

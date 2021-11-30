@@ -10,16 +10,16 @@ import (
 
 // APIProductService is
 type APIProductService struct {
-	db        *db.Database
-	changelog *Changelog
+	db    *db.Database
+	audit *Auditlog
 }
 
 // NewAPIProduct returns a new apiproduct instance
-func NewAPIProduct(database *db.Database, c *Changelog) *APIProductService {
+func NewAPIProduct(database *db.Database, a *Auditlog) *APIProductService {
 
 	return &APIProductService{
-		db:        database,
-		changelog: c,
+		db:    database,
+		audit: a,
 	}
 }
 
@@ -54,7 +54,7 @@ func (ds *APIProductService) Create(organizationName string, newAPIProduct types
 	if err := ds.updateAPIProduct(organizationName, &newAPIProduct, who); err != nil {
 		return nil, err
 	}
-	ds.changelog.Create(newAPIProduct, who)
+	ds.audit.Create(newAPIProduct, who)
 	return &newAPIProduct, nil
 }
 
@@ -75,7 +75,7 @@ func (ds *APIProductService) Update(organizationName string, updatedAPIProduct t
 	if err = ds.updateAPIProduct(organizationName, &updatedAPIProduct, who); err != nil {
 		return nil, err
 	}
-	ds.changelog.Update(currentAPIProduct, updatedAPIProduct, who)
+	ds.audit.Update(currentAPIProduct, updatedAPIProduct, who)
 	return &updatedAPIProduct, nil
 }
 
@@ -113,6 +113,6 @@ func (ds *APIProductService) Delete(organizationName, apiproductName string,
 	if err := ds.db.APIProduct.Delete(organizationName, apiproductName); err != nil {
 		return err
 	}
-	ds.changelog.Delete(apiproduct, who)
+	ds.audit.Delete(apiproduct, who)
 	return nil
 }
