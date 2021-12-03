@@ -211,6 +211,7 @@ paths:
                 $ref: '#/components/schemas/Developer'
         '400':
           $ref: '#/components/responses/BadRequest'
+
   /v1/organizations/{organization_name}/developers/{developer_emailaddress}:
     get:
       summary: Retrieve developer
@@ -2030,6 +2031,65 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorMessage'
 
+  /v1/audit/{organization_name}:
+    get:
+      summary: Retrieve audit records of organization.
+      tags:
+        - Audit
+      parameters:
+        - $ref: '#/components/parameters/organization_name'
+      responses:
+        '200':
+          description: Successfully retrieved audit records.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Audits'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: organization does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+
+  /v1/audit/{organization_name}/developers/{developer_emailaddress}:
+    get:
+      summary: Retrieve audit records of developer.
+      tags:
+        - Audit
+      parameters:
+        - $ref: '#/components/parameters/organization_name'
+        - $ref: '#/components/parameters/developer_emailaddress'
+      responses:
+        '200':
+          description: Successfully retrieved audit records.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Audits'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /v1/audit/{organization_name}/users/{user_name}:
+    get:
+      summary: Retrieve audit records of user
+      tags:
+        - Audit
+      parameters:
+        - $ref: '#/components/parameters/organization_name'
+        - $ref: '#/components/parameters/user_name'
+      responses:
+        '200':
+          description: Successfully retrieved audit records.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Audits'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
 components:
   securitySchemes:
     BasicAuth:
@@ -2827,6 +2887,22 @@ components:
           type: string
       description: Array of users assigned to role.
 
+    Audit:
+      type: object
+      properties:
+        timestamp:
+          type: integer
+          format: int64
+          readOnly: true
+          description: Timestamp of audit record in milliseconds since epoch.
+    Audits:
+      type: object
+      properties:
+        audit:
+          type: array
+          items:
+            $ref: "#/components/schemas/Audits"
+      description: Array of audit records.
 
     Attribute:
       type: object
