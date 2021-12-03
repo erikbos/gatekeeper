@@ -1,5 +1,5 @@
 // showDevelopersPage pretty prints all developers and developer apps
-package status
+package statuspage
 
 import (
 	"fmt"
