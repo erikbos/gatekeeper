@@ -90,6 +90,7 @@ func New(config DatabaseConfig, serviceName string, logger *zap.Logger,
 		OAuth:        NewOAuthStore(&dbConfig),
 		User:         NewUserStore(&dbConfig),
 		Role:         NewRoleStore(&dbConfig),
+		Audit:        NewAuditStore(&dbConfig),
 		Readiness:    NewReadiness(&dbConfig),
 	}
 	return &database, nil

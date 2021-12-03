@@ -6,6 +6,7 @@ import (
 )
 
 type (
+
 	// Database is our overall database interface
 	Database struct {
 		Listener
@@ -19,6 +20,7 @@ type (
 		OAuth
 		User
 		Role
+		Audit
 		Readiness
 	}
 
@@ -207,6 +209,14 @@ type (
 
 		// Update UPSERTs a role in database
 		Delete(roleToDelete string) types.Error
+	}
+
+	Audit interface {
+		// Get retrieves a audit log
+		Get(auditName string) (types.Audits, types.Error)
+
+		// Write an entry in audit log
+		Write(l *types.Audit) types.Error
 	}
 
 	// Readiness the readiness storage interface

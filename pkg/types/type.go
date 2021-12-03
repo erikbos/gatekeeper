@@ -14,7 +14,7 @@ const (
 	TypeRoleName         = "role"
 )
 
-// NameOf returns the type name of an object
+// NameOf returns the name of an object
 func NameOf(entity interface{}) string {
 
 	switch entity.(type) {
@@ -62,6 +62,60 @@ func NameOf(entity interface{}) string {
 		return TypeRoleName
 	case *Role:
 		return TypeRoleName
+
+	default:
+		return "unknown"
+	}
+}
+
+// IDOf returns the id of an object (e.g. developer.Email in case of Developer)
+func IDOf(entity interface{}) string {
+
+	switch v := entity.(type) {
+	case Listener:
+		return v.Name
+	case *Listener:
+		return v.Name
+
+	case Route:
+		return v.Name
+	case *Route:
+		return v.Name
+
+	case Cluster:
+		return v.Name
+	case *Cluster:
+		return v.Name
+
+	case Developer:
+		return v.Email
+	case *Developer:
+		return v.Email
+
+	case DeveloperApp:
+		return v.Name
+	case *DeveloperApp:
+		return v.Name
+
+	case Key:
+		return v.ConsumerKey
+	case *Key:
+		return v.ConsumerKey
+
+	case APIProduct:
+		return v.Name
+	case *APIProduct:
+		return v.Name
+
+	case User:
+		return v.Name
+	case *User:
+		return v.Name
+
+	case Role:
+		return v.Name
+	case *Role:
+		return v.Name
 
 	default:
 		return "unknown"
