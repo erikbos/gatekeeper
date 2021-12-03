@@ -1,17 +1,16 @@
 package main
 
 import (
-	"embed"
 	"flag"
 	"fmt"
 	"os"
 
-	"github.com/gin-gonic/gin"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 
 	"github.com/erikbos/gatekeeper/cmd/dbadmin/handler"
+	"github.com/erikbos/gatekeeper/cmd/dbadmin/metrics"
 	"github.com/erikbos/gatekeeper/cmd/dbadmin/service"
+	"github.com/erikbos/gatekeeper/pkg/audit"
 	"github.com/erikbos/gatekeeper/pkg/db"
 	"github.com/erikbos/gatekeeper/pkg/db/cassandra"
 	"github.com/erikbos/gatekeeper/pkg/shared"
@@ -25,18 +24,13 @@ var (
 
 // go generate oapi-codegen
 
-// Copy openapi spec file from root so Go can embed it
-//go:generate cp ../../openapi/gatekeeper.yaml apidocs/
-//go:embed apidocs/*
-var apiDocFiles embed.FS
-
 type server struct {
-	config    *DBAdminConfig
-	webadmin  *webadmin.Webadmin
-	db        *db.Database
-	handler   *handler.Handler
-	readiness *shared.Readiness
-	logger    *zap.Logger
+	config   *DBAdminConfig
+	webadmin *webadmin.Webadmin
+	db       *db.Database
+	handler  *handler.Handler
+	metrics  *metrics.Metrics // Metrics store
+	logger   *zap.Logger
 }
 
 func main() {
@@ -58,7 +52,7 @@ func main() {
 	var err error
 	if s.config, err = loadConfiguration(filename); err != nil {
 		fmt.Print("Cannot parse configuration file:")
-		panic(err)
+		os.Exit(1)
 	}
 
 	logConfig := &shared.Logger{
@@ -71,7 +65,7 @@ func main() {
 		zap.String("version", version),
 		zap.String("buildtime", buildTime))
 
-	// s.readiness.RegisterMetrics(applicationName)
+	s.metrics = metrics.New(applicationName)
 
 	// Connect to db
 	db, err := cassandra.New(s.config.Database, applicationName,
@@ -87,36 +81,21 @@ func main() {
 	// 	s.logger.Fatal("Database cache setup failed", zap.Error(err))
 	// }
 
-	// Start readiness subsystem
-	s.readiness = shared.NewReadiness(applicationName, s.logger)
-	s.readiness.Start()
-
-	// Start db health check and notify readiness subsystem
-	// go s.db.RunReadinessCheck(s.readiness.GetChannel())
-
-	startWebAdmin(&s, applicationName, *disableAPIAuthentication)
-}
-
-// startWebAdmin starts the admin web UI
-func startWebAdmin(s *server, applicationName string, enableAPIAuthentication bool) {
-
 	webAdminLogger := shared.NewLogger(&s.config.WebAdmin.Logger)
 	s.webadmin = webadmin.New(s.config.WebAdmin, applicationName, webAdminLogger)
+	s.webadmin.Router.Use(s.metrics.Middleware())
 
-	// Enable showing indexpage on / that shows all possible routes
 	s.webadmin.Router.GET("/", webadmin.ShowAllRoutes(s.webadmin.Router, applicationName))
 	s.webadmin.Router.GET(webadmin.LivenessCheckPath, webadmin.LivenessProbe)
-	s.webadmin.Router.GET(webadmin.ReadinessCheckPath, s.readiness.ReadinessProbe)
-	s.webadmin.Router.GET(webadmin.MetricsPath, gin.WrapH(promhttp.Handler()))
+	s.webadmin.Router.GET(webadmin.MetricsPath, s.metrics.GinHandler())
 	s.webadmin.Router.GET(webadmin.ConfigDumpPath, webadmin.ShowStartupConfiguration(s.config))
 
-	s.webadmin.Router.GET("/docs/", shared.ServeEmbedFile(apiDocFiles, "apidocs/index.htm"))
-	s.webadmin.Router.GET("/docs/:path", shared.ServeEmbedDirectory(apiDocFiles, "apidocs"))
-
 	auditLogLogger := shared.NewLogger(&s.config.Audit.Logger)
-	service := service.New(s.db, auditLogLogger)
-	s.handler = handler.NewHandler(s.webadmin.Router, s.db, service,
-		applicationName, enableAPIAuthentication, webAdminLogger)
+	auditlog := audit.NewAuditlog(s.db, auditLogLogger)
+	service := service.New(s.db, auditlog)
+
+	s.handler = handler.New(s.webadmin.Router, s.db, service,
+		applicationName, *disableAPIAuthentication, webAdminLogger)
 
 	s.webadmin.Start()
 }
