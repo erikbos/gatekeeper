@@ -3,6 +3,7 @@ package service
 import (
 	"fmt"
 
+	"github.com/erikbos/gatekeeper/pkg/audit"
 	"github.com/erikbos/gatekeeper/pkg/db"
 	"github.com/erikbos/gatekeeper/pkg/shared"
 	"github.com/erikbos/gatekeeper/pkg/types"
@@ -11,11 +12,11 @@ import (
 // RouteService is
 type RouteService struct {
 	db    *db.Database
-	audit *Auditlog
+	audit *audit.Audit
 }
 
 // NewRoute returns a new route instance
-func NewRoute(database *db.Database, a *Auditlog) *RouteService {
+func NewRoute(database *db.Database, a *audit.Audit) *RouteService {
 
 	return &RouteService{
 		db:    database,
@@ -56,7 +57,7 @@ func (rs *RouteService) GetAttribute(routeName, attributeName string) (value str
 }
 
 // Create creates an route
-func (rs *RouteService) Create(newRoute types.Route, who Requester) (*types.Route, types.Error) {
+func (rs *RouteService) Create(newRoute types.Route, who audit.Requester) (*types.Route, types.Error) {
 
 	if _, err := rs.db.Route.Get(newRoute.Name); err == nil {
 		return nil, types.NewBadRequestError(
@@ -75,7 +76,7 @@ func (rs *RouteService) Create(newRoute types.Route, who Requester) (*types.Rout
 
 // Update updates an existing route
 func (rs *RouteService) Update(updatedRoute types.Route,
-	who Requester) (*types.Route, types.Error) {
+	who audit.Requester) (*types.Route, types.Error) {
 
 	currentRoute, err := rs.db.Route.Get(updatedRoute.Name)
 	if err != nil {
@@ -94,7 +95,7 @@ func (rs *RouteService) Update(updatedRoute types.Route,
 }
 
 // updateRoute updates last-modified field(s) and updates route in database
-func (rs *RouteService) updateRoute(updatedRoute *types.Route, who Requester) types.Error {
+func (rs *RouteService) updateRoute(updatedRoute *types.Route, who audit.Requester) types.Error {
 
 	updatedRoute.Attributes.Tidy()
 	updatedRoute.LastModifiedAt = shared.GetCurrentTimeMilliseconds()
@@ -107,7 +108,7 @@ func (rs *RouteService) updateRoute(updatedRoute *types.Route, who Requester) ty
 }
 
 // Delete deletes an route
-func (rs *RouteService) Delete(routeName string, who Requester) (e types.Error) {
+func (rs *RouteService) Delete(routeName string, who audit.Requester) (e types.Error) {
 
 	route, err := rs.db.Route.Get(routeName)
 	if err != nil {

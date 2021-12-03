@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/erikbos/gatekeeper/pkg/audit"
 	"github.com/erikbos/gatekeeper/pkg/db"
 	"github.com/erikbos/gatekeeper/pkg/shared"
 	"github.com/erikbos/gatekeeper/pkg/types"
@@ -13,11 +14,11 @@ import (
 // DeveloperAppService is
 type DeveloperAppService struct {
 	db    *db.Database
-	audit *Auditlog
+	audit *audit.Audit
 }
 
 // NewDeveloperApp returns a new developerApp instance
-func NewDeveloperApp(database *db.Database, a *Auditlog) *DeveloperAppService {
+func NewDeveloperApp(database *db.Database, a *audit.Audit) *DeveloperAppService {
 
 	return &DeveloperAppService{
 		db:    database,
@@ -59,7 +60,7 @@ func (das *DeveloperAppService) GetByID(organizationName, developerAppID string)
 
 // Create creates a new developerApp
 func (das *DeveloperAppService) Create(organizationName, developerEmail string,
-	newDeveloperApp types.DeveloperApp, who Requester) (*types.DeveloperApp, types.Error) {
+	newDeveloperApp types.DeveloperApp, who audit.Requester) (*types.DeveloperApp, types.Error) {
 
 	developer, err := das.db.Developer.GetByEmail(organizationName, developerEmail)
 	if err != nil {
@@ -97,7 +98,7 @@ func (das *DeveloperAppService) Create(organizationName, developerEmail string,
 
 // Update updates an existing developerApp
 func (das *DeveloperAppService) Update(organizationName, developerEmail string, updatedDeveloperApp types.DeveloperApp,
-	who Requester) (*types.DeveloperApp, types.Error) {
+	who audit.Requester) (*types.DeveloperApp, types.Error) {
 
 	currentDeveloperApp, err := das.db.DeveloperApp.GetByName(organizationName, developerEmail, updatedDeveloperApp.Name)
 	if err != nil {
@@ -120,7 +121,7 @@ func (das *DeveloperAppService) Update(organizationName, developerEmail string, 
 
 // updateDeveloperApp updates last-modified field(s) and updates developer app in database
 func (das *DeveloperAppService) updateDeveloperApp(organizationName string,
-	updatedDeveloperApp *types.DeveloperApp, who Requester) types.Error {
+	updatedDeveloperApp *types.DeveloperApp, who audit.Requester) types.Error {
 
 	updatedDeveloperApp.Attributes.Tidy()
 	updatedDeveloperApp.LastModifiedAt = shared.GetCurrentTimeMilliseconds()
@@ -134,7 +135,7 @@ func (das *DeveloperAppService) updateDeveloperApp(organizationName string,
 
 // Delete deletes an developerApp
 func (das *DeveloperAppService) Delete(organizationName, developerEmail, developerAppName string,
-	who Requester) (e types.Error) {
+	who audit.Requester) (e types.Error) {
 
 	developer, err := das.db.Developer.GetByEmail(organizationName, developerEmail)
 	if err != nil {

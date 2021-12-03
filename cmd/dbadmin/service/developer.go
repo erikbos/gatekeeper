@@ -6,6 +6,7 @@ import (
 
 	"github.com/dchest/uniuri"
 
+	"github.com/erikbos/gatekeeper/pkg/audit"
 	"github.com/erikbos/gatekeeper/pkg/db"
 	"github.com/erikbos/gatekeeper/pkg/shared"
 	"github.com/erikbos/gatekeeper/pkg/types"
@@ -14,11 +15,11 @@ import (
 // DeveloperService is
 type DeveloperService struct {
 	db    *db.Database
-	audit *Auditlog
+	audit *audit.Audit
 }
 
 // NewDeveloper returns a new developer instance
-func NewDeveloper(database *db.Database, a *Auditlog) *DeveloperService {
+func NewDeveloper(database *db.Database, a *audit.Audit) *DeveloperService {
 
 	return &DeveloperService{
 		db:    database,
@@ -43,7 +44,7 @@ func (ds *DeveloperService) Get(organizationName, developerName string) (develop
 
 // Create creates a new developer
 func (ds *DeveloperService) Create(organizationName string, newDeveloper types.Developer,
-	who Requester) (*types.Developer, types.Error) {
+	who audit.Requester) (*types.Developer, types.Error) {
 
 	if _, err := ds.Get(organizationName, newDeveloper.Email); err == nil {
 		return nil, types.NewBadRequestError(
@@ -63,7 +64,7 @@ func (ds *DeveloperService) Create(organizationName string, newDeveloper types.D
 }
 
 // Update updates an existing developer
-func (ds *DeveloperService) Update(organizationName, developerEmail string, updatedDeveloper types.Developer, who Requester) (
+func (ds *DeveloperService) Update(organizationName, developerEmail string, updatedDeveloper types.Developer, who audit.Requester) (
 	*types.Developer, types.Error) {
 
 	currentDeveloper, err := ds.db.Developer.GetByEmail(organizationName, developerEmail)
@@ -86,7 +87,7 @@ func (ds *DeveloperService) Update(organizationName, developerEmail string, upda
 
 // updateDeveloper updates last-modified field(s) and updates developer in database
 func (ds *DeveloperService) updateDeveloper(organizationName string,
-	updatedDeveloper *types.Developer, who Requester) types.Error {
+	updatedDeveloper *types.Developer, who audit.Requester) types.Error {
 
 	updatedDeveloper.Attributes.Tidy()
 	updatedDeveloper.LastModifiedAt = shared.GetCurrentTimeMilliseconds()
@@ -99,7 +100,7 @@ func (ds *DeveloperService) updateDeveloper(organizationName string,
 }
 
 // Delete deletes an developer
-func (ds *DeveloperService) Delete(organizationName, developerName string, who Requester) (e types.Error) {
+func (ds *DeveloperService) Delete(organizationName, developerName string, who audit.Requester) (e types.Error) {
 
 	developer, err := ds.Get(organizationName, developerName)
 	if err != nil {

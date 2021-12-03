@@ -5,6 +5,7 @@ import (
 
 	"github.com/dchest/uniuri"
 
+	"github.com/erikbos/gatekeeper/pkg/audit"
 	"github.com/erikbos/gatekeeper/pkg/db"
 	"github.com/erikbos/gatekeeper/pkg/shared"
 	"github.com/erikbos/gatekeeper/pkg/types"
@@ -13,11 +14,11 @@ import (
 // KeyService is
 type KeyService struct {
 	db    *db.Database
-	audit *Auditlog
+	audit *audit.Audit
 }
 
 // NewKey returns a new key instance
-func NewKey(database *db.Database, a *Auditlog) *KeyService {
+func NewKey(database *db.Database, a *audit.Audit) *KeyService {
 
 	return &KeyService{
 		db:    database,
@@ -39,7 +40,7 @@ func (ks *KeyService) GetByDeveloperAppID(organizationName, developerAppID strin
 
 // Create creates a key
 func (ks *KeyService) Create(organizationName string, newKey types.Key, developerApp *types.DeveloperApp,
-	who Requester) (*types.Key, types.Error) {
+	who audit.Requester) (*types.Key, types.Error) {
 
 	if _, err := ks.db.Key.GetByKey(&organizationName, &newKey.ConsumerKey); err == nil {
 		return nil, types.NewBadRequestError(
@@ -76,7 +77,7 @@ func (ks *KeyService) Create(organizationName string, newKey types.Key, develope
 
 // Update updates an existing key
 func (ks *KeyService) Update(organizationName, consumerKey string, updatedKey types.Key,
-	who Requester) (*types.Key, types.Error) {
+	who audit.Requester) (*types.Key, types.Error) {
 
 	currentKey, err := ks.db.Key.GetByKey(&organizationName, &updatedKey.ConsumerKey)
 	if err != nil {
@@ -103,7 +104,7 @@ func (ks *KeyService) Update(organizationName, consumerKey string, updatedKey ty
 }
 
 // Delete deletes a key
-func (ks *KeyService) Delete(organizationName, consumerKey string, who Requester) (e types.Error) {
+func (ks *KeyService) Delete(organizationName, consumerKey string, who audit.Requester) (e types.Error) {
 
 	key, err := ks.db.Key.GetByKey(&organizationName, &consumerKey)
 	if err != nil {

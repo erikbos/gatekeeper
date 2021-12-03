@@ -3,6 +3,7 @@ package service
 import (
 	"fmt"
 
+	"github.com/erikbos/gatekeeper/pkg/audit"
 	"github.com/erikbos/gatekeeper/pkg/db"
 	"github.com/erikbos/gatekeeper/pkg/shared"
 	"github.com/erikbos/gatekeeper/pkg/types"
@@ -11,11 +12,11 @@ import (
 // RoleService is
 type RoleService struct {
 	db    *db.Database
-	audit *Auditlog
+	audit *audit.Audit
 }
 
 // NewRole returns a new role instance
-func NewRole(database *db.Database, a *Auditlog) *RoleService {
+func NewRole(database *db.Database, a *audit.Audit) *RoleService {
 
 	return &RoleService{
 		db:    database,
@@ -36,7 +37,7 @@ func (rs *RoleService) Get(roleName string) (role *types.Role, err types.Error) 
 }
 
 // Create creates an role
-func (rs *RoleService) Create(newRole types.Role, who Requester) (*types.Role, types.Error) {
+func (rs *RoleService) Create(newRole types.Role, who audit.Requester) (*types.Role, types.Error) {
 
 	if _, err := rs.db.Role.Get(newRole.Name); err == nil {
 		return nil, types.NewBadRequestError(
@@ -54,7 +55,7 @@ func (rs *RoleService) Create(newRole types.Role, who Requester) (*types.Role, t
 }
 
 // Update updates an existing role
-func (rs *RoleService) Update(updatedRole types.Role, who Requester) (*types.Role, types.Error) {
+func (rs *RoleService) Update(updatedRole types.Role, who audit.Requester) (*types.Role, types.Error) {
 
 	currentRole, err := rs.db.Role.Get(updatedRole.Name)
 	if err != nil {
@@ -73,7 +74,7 @@ func (rs *RoleService) Update(updatedRole types.Role, who Requester) (*types.Rol
 }
 
 // updateRole updates last-modified field(s) and updates role in database
-func (rs *RoleService) updateRole(updatedRole *types.Role, who Requester) types.Error {
+func (rs *RoleService) updateRole(updatedRole *types.Role, who audit.Requester) types.Error {
 
 	updatedRole.LastModifiedAt = shared.GetCurrentTimeMilliseconds()
 	updatedRole.LastModifiedBy = who.User
@@ -85,7 +86,7 @@ func (rs *RoleService) updateRole(updatedRole *types.Role, who Requester) types.
 }
 
 // Delete deletes a role
-func (rs *RoleService) Delete(roleName string, who Requester) (e types.Error) {
+func (rs *RoleService) Delete(roleName string, who audit.Requester) (e types.Error) {
 
 	role, err := rs.db.Role.Get(roleName)
 	if err != nil {

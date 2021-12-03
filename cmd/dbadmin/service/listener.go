@@ -3,6 +3,7 @@ package service
 import (
 	"fmt"
 
+	"github.com/erikbos/gatekeeper/pkg/audit"
 	"github.com/erikbos/gatekeeper/pkg/db"
 	"github.com/erikbos/gatekeeper/pkg/shared"
 	"github.com/erikbos/gatekeeper/pkg/types"
@@ -11,11 +12,11 @@ import (
 // ListenerService is
 type ListenerService struct {
 	db    *db.Database
-	audit *Auditlog
+	audit *audit.Audit
 }
 
 // NewListener returns a new listener instance
-func NewListener(database *db.Database, a *Auditlog) *ListenerService {
+func NewListener(database *db.Database, a *audit.Audit) *ListenerService {
 
 	return &ListenerService{
 		db:    database,
@@ -36,7 +37,7 @@ func (ls *ListenerService) Get(listenerName string) (listener *types.Listener, e
 }
 
 // Create creates an listener
-func (ls *ListenerService) Create(newListener types.Listener, who Requester) (*types.Listener, types.Error) {
+func (ls *ListenerService) Create(newListener types.Listener, who audit.Requester) (*types.Listener, types.Error) {
 
 	if _, err := ls.db.Listener.Get(newListener.Name); err == nil {
 		return nil, types.NewBadRequestError(
@@ -54,7 +55,7 @@ func (ls *ListenerService) Create(newListener types.Listener, who Requester) (*t
 }
 
 // Update updates an existing listener
-func (ls *ListenerService) Update(updatedListener types.Listener, who Requester) (*types.Listener, types.Error) {
+func (ls *ListenerService) Update(updatedListener types.Listener, who audit.Requester) (*types.Listener, types.Error) {
 
 	currentListener, err := ls.db.Listener.Get(updatedListener.Name)
 	if err != nil {
@@ -73,7 +74,7 @@ func (ls *ListenerService) Update(updatedListener types.Listener, who Requester)
 }
 
 // updateListener updates last-modified field(s) and updates cluster in database
-func (ls *ListenerService) updateListener(updatedListener *types.Listener, who Requester) types.Error {
+func (ls *ListenerService) updateListener(updatedListener *types.Listener, who audit.Requester) types.Error {
 
 	updatedListener.Attributes.Tidy()
 	updatedListener.LastModifiedAt = shared.GetCurrentTimeMilliseconds()
@@ -86,7 +87,7 @@ func (ls *ListenerService) updateListener(updatedListener *types.Listener, who R
 }
 
 // Delete deletes an listener
-func (ls *ListenerService) Delete(listenerName string, who Requester) (e types.Error) {
+func (ls *ListenerService) Delete(listenerName string, who audit.Requester) (e types.Error) {
 
 	listener, err := ls.db.Listener.Get(listenerName)
 	if err != nil {

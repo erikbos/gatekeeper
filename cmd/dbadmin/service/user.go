@@ -5,6 +5,7 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 
+	"github.com/erikbos/gatekeeper/pkg/audit"
 	"github.com/erikbos/gatekeeper/pkg/db"
 	"github.com/erikbos/gatekeeper/pkg/shared"
 	"github.com/erikbos/gatekeeper/pkg/types"
@@ -13,11 +14,11 @@ import (
 // UserService is
 type UserService struct {
 	db    *db.Database
-	audit *Auditlog
+	audit *audit.Audit
 }
 
 // NewUser returns a new user instance
-func NewUser(database *db.Database, a *Auditlog) *UserService {
+func NewUser(database *db.Database, a *audit.Audit) *UserService {
 
 	return &UserService{
 		db:    database,
@@ -60,7 +61,7 @@ func (us *UserService) GetUsersByRole(roleName string) ([]string, types.Error) {
 }
 
 // Create creates an user
-func (us *UserService) Create(newUser types.User, who Requester) (*types.User, types.Error) {
+func (us *UserService) Create(newUser types.User, who audit.Requester) (*types.User, types.Error) {
 
 	if _, err := us.db.User.Get(newUser.Name); err == nil {
 		return nil, types.NewBadRequestError(
@@ -86,7 +87,7 @@ func (us *UserService) Create(newUser types.User, who Requester) (*types.User, t
 
 // Update updates an existing user
 func (us *UserService) Update(updatedUser types.User,
-	who Requester) (*types.User, types.Error) {
+	who audit.Requester) (*types.User, types.Error) {
 
 	currentUser, err := us.db.User.Get(updatedUser.Name)
 	if err != nil {
@@ -114,7 +115,7 @@ func (us *UserService) Update(updatedUser types.User,
 }
 
 // updateUser updates last-modified field(s) and updates user in database
-func (us *UserService) updateUser(updatedUser *types.User, who Requester) types.Error {
+func (us *UserService) updateUser(updatedUser *types.User, who audit.Requester) types.Error {
 
 	updatedUser.LastModifiedAt = shared.GetCurrentTimeMilliseconds()
 	updatedUser.LastModifiedBy = who.User
@@ -126,7 +127,7 @@ func (us *UserService) updateUser(updatedUser *types.User, who Requester) types.
 }
 
 // Delete deletes an user
-func (us *UserService) Delete(userName string, who Requester) (e types.Error) {
+func (us *UserService) Delete(userName string, who audit.Requester) (e types.Error) {
 
 	user, err := us.db.User.Get(userName)
 	if err != nil {

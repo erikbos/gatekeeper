@@ -3,6 +3,7 @@ package service
 import (
 	"fmt"
 
+	"github.com/erikbos/gatekeeper/pkg/audit"
 	"github.com/erikbos/gatekeeper/pkg/db"
 	"github.com/erikbos/gatekeeper/pkg/shared"
 	"github.com/erikbos/gatekeeper/pkg/types"
@@ -11,11 +12,11 @@ import (
 // OrganizationService is
 type OrganizationService struct {
 	db    *db.Database
-	audit *Auditlog
+	audit *audit.Audit
 }
 
 // NewOrganization returns a new organization instance
-func NewOrganization(database *db.Database, a *Auditlog) *OrganizationService {
+func NewOrganization(database *db.Database, a *audit.Audit) *OrganizationService {
 
 	return &OrganizationService{
 		db:    database,
@@ -36,7 +37,7 @@ func (os *OrganizationService) Get(organizationName string) (organization *types
 }
 
 // Create creates an organization
-func (os *OrganizationService) Create(newOrganization types.Organization, who Requester) (*types.Organization, types.Error) {
+func (os *OrganizationService) Create(newOrganization types.Organization, who audit.Requester) (*types.Organization, types.Error) {
 
 	if _, err := os.db.Organization.Get(newOrganization.Name); err == nil {
 		return nil, types.NewBadRequestError(
@@ -54,7 +55,7 @@ func (os *OrganizationService) Create(newOrganization types.Organization, who Re
 }
 
 // Update updates an existing organization
-func (os *OrganizationService) Update(updatedOrganization types.Organization, who Requester) (*types.Organization, types.Error) {
+func (os *OrganizationService) Update(updatedOrganization types.Organization, who audit.Requester) (*types.Organization, types.Error) {
 
 	currentOrganization, err := os.db.Organization.Get(updatedOrganization.Name)
 	if err != nil {
@@ -73,7 +74,7 @@ func (os *OrganizationService) Update(updatedOrganization types.Organization, wh
 }
 
 // updateOrganization updates last-modified field(s) and updates cluster in database
-func (os *OrganizationService) updateOrganization(updatedOrganization *types.Organization, who Requester) types.Error {
+func (os *OrganizationService) updateOrganization(updatedOrganization *types.Organization, who audit.Requester) types.Error {
 
 	updatedOrganization.Attributes.Tidy()
 	updatedOrganization.LastModifiedAt = shared.GetCurrentTimeMilliseconds()
@@ -86,7 +87,7 @@ func (os *OrganizationService) updateOrganization(updatedOrganization *types.Org
 }
 
 // Delete deletes an organization
-func (os *OrganizationService) Delete(organizationName string, who Requester) (e types.Error) {
+func (os *OrganizationService) Delete(organizationName string, who audit.Requester) (e types.Error) {
 
 	organization, err := os.db.Organization.Get(organizationName)
 	if err != nil {

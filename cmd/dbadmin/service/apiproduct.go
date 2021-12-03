@@ -3,6 +3,7 @@ package service
 import (
 	"fmt"
 
+	"github.com/erikbos/gatekeeper/pkg/audit"
 	"github.com/erikbos/gatekeeper/pkg/db"
 	"github.com/erikbos/gatekeeper/pkg/shared"
 	"github.com/erikbos/gatekeeper/pkg/types"
@@ -11,11 +12,11 @@ import (
 // APIProductService is
 type APIProductService struct {
 	db    *db.Database
-	audit *Auditlog
+	audit *audit.Audit
 }
 
 // NewAPIProduct returns a new apiproduct instance
-func NewAPIProduct(database *db.Database, a *Auditlog) *APIProductService {
+func NewAPIProduct(database *db.Database, a *audit.Audit) *APIProductService {
 
 	return &APIProductService{
 		db:    database,
@@ -37,7 +38,7 @@ func (ds *APIProductService) Get(organizationName, apiproductName string) (apipr
 
 // Create creates a new apiproduct
 func (ds *APIProductService) Create(organizationName string, newAPIProduct types.APIProduct,
-	who Requester) (*types.APIProduct, types.Error) {
+	who audit.Requester) (*types.APIProduct, types.Error) {
 
 	if _, err := ds.Get(organizationName, newAPIProduct.Name); err == nil {
 		return nil, types.NewBadRequestError(
@@ -60,7 +61,7 @@ func (ds *APIProductService) Create(organizationName string, newAPIProduct types
 
 // Update updates an existing apiproduct
 func (ds *APIProductService) Update(organizationName string, updatedAPIProduct types.APIProduct,
-	who Requester) (*types.APIProduct, types.Error) {
+	who audit.Requester) (*types.APIProduct, types.Error) {
 
 	currentAPIProduct, err := ds.db.APIProduct.Get(organizationName, updatedAPIProduct.Name)
 	if err != nil {
@@ -81,7 +82,7 @@ func (ds *APIProductService) Update(organizationName string, updatedAPIProduct t
 
 // updateAPIProduct updates last-modified field(s) and updates apiproduct in database
 func (ds *APIProductService) updateAPIProduct(organizationName string,
-	updatedAPIProduct *types.APIProduct, who Requester) types.Error {
+	updatedAPIProduct *types.APIProduct, who audit.Requester) types.Error {
 
 	updatedAPIProduct.Attributes.Tidy()
 	updatedAPIProduct.LastModifiedAt = shared.GetCurrentTimeMilliseconds()
@@ -95,7 +96,7 @@ func (ds *APIProductService) updateAPIProduct(organizationName string,
 
 // Delete deletes an apiproduct
 func (ds *APIProductService) Delete(organizationName, apiproductName string,
-	who Requester) (e types.Error) {
+	who audit.Requester) (e types.Error) {
 
 	apiproduct, err := ds.Get(organizationName, apiproductName)
 	if err != nil {
