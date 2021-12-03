@@ -2,7 +2,7 @@ package main
 
 import (
 	"flag"
-	"fmt"
+	"log"
 	"os"
 
 	"go.uber.org/zap"
@@ -51,8 +51,7 @@ func main() {
 	var s server
 	var err error
 	if s.config, err = loadConfiguration(filename); err != nil {
-		fmt.Print("Cannot parse configuration file:")
-		os.Exit(1)
+		log.Fatalf("Cannot parse configuration file: (%s)", err)
 	}
 
 	logConfig := &shared.Logger{
@@ -67,7 +66,7 @@ func main() {
 
 	s.metrics = metrics.New(applicationName)
 
-	// Connect to db
+	// Connect to database
 	db, err := cassandra.New(s.config.Database, applicationName,
 		s.logger, *createSchema, *replicaCount)
 	if err != nil {
@@ -81,6 +80,15 @@ func main() {
 	// 	s.logger.Fatal("Database cache setup failed", zap.Error(err))
 	// }
 
+	// Connect to audit database
+	auditLogLogger := shared.NewLogger(&s.config.Audit.Logger)
+	auditDb, err := cassandra.New(s.config.Audit.Database, applicationName+"_audit",
+		auditLogLogger, *createSchema, *replicaCount)
+	if err != nil {
+		s.logger.Fatal("Audit database connect failed", zap.Error(err))
+	}
+	auditlog := audit.New(auditDb, auditLogLogger)
+
 	webAdminLogger := shared.NewLogger(&s.config.WebAdmin.Logger)
 	s.webadmin = webadmin.New(s.config.WebAdmin, applicationName, webAdminLogger)
 	s.webadmin.Router.Use(s.metrics.Middleware())
@@ -90,10 +98,7 @@ func main() {
 	s.webadmin.Router.GET(webadmin.MetricsPath, s.metrics.GinHandler())
 	s.webadmin.Router.GET(webadmin.ConfigDumpPath, webadmin.ShowStartupConfiguration(s.config))
 
-	auditLogLogger := shared.NewLogger(&s.config.Audit.Logger)
-	auditlog := audit.NewAuditlog(s.db, auditLogLogger)
 	service := service.New(s.db, auditlog)
-
 	s.handler = handler.New(s.webadmin.Router, s.db, service,
 		applicationName, *disableAPIAuthentication, webAdminLogger)
 

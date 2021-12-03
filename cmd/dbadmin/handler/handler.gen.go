@@ -148,6 +148,11 @@ type Attributes struct {
 	Attribute *[]Attribute `json:"attribute,omitempty"`
 }
 
+// Array of audit records.
+type Audits struct {
+	Organization *[]Audits `json:"organization,omitempty"`
+}
+
 // Cluster defines model for Cluster.
 type Cluster struct {
 	// User who last updated this cluster.
@@ -803,6 +808,15 @@ type PostV1UsersUserNameJSONRequestBody PostV1UsersUserNameJSONBody
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// Retrieve audit records of organization.
+	// (GET /v1/audit/{organization_name})
+	GetV1AuditOrganizationName(c *gin.Context, organizationName OrganizationName)
+	// Retrieve audit records of organization
+	// (GET /v1/audit/{organization_name}/developers/{developer_emailaddress})
+	GetV1AuditOrganizationNameDevelopersDeveloperEmailaddress(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress)
+	// Retrieve audit records of user
+	// (GET /v1/audit/{organization_name}/users/{user_name})
+	GetV1AuditOrganizationNameUsersUserName(c *gin.Context, organizationName OrganizationName, userName UserName)
 	// Retrieve clusters
 	// (GET /v1/clusters)
 	GetV1Clusters(c *gin.Context)
@@ -1085,6 +1099,93 @@ type ServerInterfaceWrapper struct {
 }
 
 type MiddlewareFunc func(c *gin.Context)
+
+// GetV1AuditOrganizationName operation middleware
+func (siw *ServerInterfaceWrapper) GetV1AuditOrganizationName(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "organization_name" -------------
+	var organizationName OrganizationName
+
+	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		return
+	}
+
+	c.Set(BasicAuthScopes, []string{""})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.GetV1AuditOrganizationName(c, organizationName)
+}
+
+// GetV1AuditOrganizationNameDevelopersDeveloperEmailaddress operation middleware
+func (siw *ServerInterfaceWrapper) GetV1AuditOrganizationNameDevelopersDeveloperEmailaddress(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "organization_name" -------------
+	var organizationName OrganizationName
+
+	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "developer_emailaddress" -------------
+	var developerEmailaddress DeveloperEmailaddress
+
+	err = runtime.BindStyledParameter("simple", false, "developer_emailaddress", c.Param("developer_emailaddress"), &developerEmailaddress)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
+		return
+	}
+
+	c.Set(BasicAuthScopes, []string{""})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.GetV1AuditOrganizationNameDevelopersDeveloperEmailaddress(c, organizationName, developerEmailaddress)
+}
+
+// GetV1AuditOrganizationNameUsersUserName operation middleware
+func (siw *ServerInterfaceWrapper) GetV1AuditOrganizationNameUsersUserName(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "organization_name" -------------
+	var organizationName OrganizationName
+
+	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "user_name" -------------
+	var userName UserName
+
+	err = runtime.BindStyledParameter("simple", false, "user_name", c.Param("user_name"), &userName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter user_name: %s", err)})
+		return
+	}
+
+	c.Set(BasicAuthScopes, []string{""})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.GetV1AuditOrganizationNameUsersUserName(c, organizationName, userName)
+}
 
 // GetV1Clusters operation middleware
 func (siw *ServerInterfaceWrapper) GetV1Clusters(c *gin.Context) {
@@ -4094,6 +4195,12 @@ func RegisterHandlersWithOptions(router *gin.Engine, si ServerInterface, options
 		Handler:            si,
 		HandlerMiddlewares: options.Middlewares,
 	}
+
+	router.GET(options.BaseURL+"/v1/audit/:organization_name", wrapper.GetV1AuditOrganizationName)
+
+	router.GET(options.BaseURL+"/v1/audit/:organization_name/developers/:developer_emailaddress", wrapper.GetV1AuditOrganizationNameDevelopersDeveloperEmailaddress)
+
+	router.GET(options.BaseURL+"/v1/audit/:organization_name/users/:user_name", wrapper.GetV1AuditOrganizationNameUsersUserName)
 
 	router.GET(options.BaseURL+"/v1/clusters", wrapper.GetV1Clusters)
 

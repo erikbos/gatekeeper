@@ -23,11 +23,11 @@ const (
 
 // DBAdminConfig contains our startup configuration data
 type DBAdminConfig struct {
-	Logger   shared.Logger            `yaml:"logging"`   // log configuration of application
-	WebAdmin webadmin.Config          `yaml:"webadmin"`  // Admin web interface configuration
-	Audit    audit.Config             `yaml:"changelog"` // Audit configuration
-	Database cassandra.DatabaseConfig `yaml:"database"`  // Database configuration
-	Cache    cache.Config             `yaml:"cache"`     // Cache configuration
+	Logger   shared.Logger            `yaml:"logging"`  // log configuration of application
+	WebAdmin webadmin.Config          `yaml:"webadmin"` // Admin web interface configuration
+	Audit    audit.Config             `yaml:"audit"`    // Audit configuration
+	Database cassandra.DatabaseConfig `yaml:"database"` // Database configuration
+	Cache    cache.Config             `yaml:"cache"`    // Cache configuration
 }
 
 // String() return our startup configuration as YAML

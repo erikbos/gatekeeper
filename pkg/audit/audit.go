@@ -39,8 +39,8 @@ type (
 	}
 )
 
-// NewAuditlog returns a new Auditlog instance which audit events to logfile and/or audit database.
-func NewAuditlog(database *db.Database, logger *zap.Logger) *Audit {
+// New returns a new Auditlog instance which audit events to logfile and/or audit database.
+func New(database *db.Database, logger *zap.Logger) *Audit {
 
 	return &Audit{
 		db:     database,
@@ -87,7 +87,7 @@ func (al *Audit) log(eType eventType, entityType, entityId string, old, new inte
 		log.Printf("ERROR %s", err)
 	}
 
-	al.logger.Info("changelog",
+	al.logger.Info("audit",
 		zap.String("eventType", eType.String()),
 		zap.String("entityType", entityType),
 		zap.String("entityId", entityId),
