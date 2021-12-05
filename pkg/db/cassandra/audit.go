@@ -5,14 +5,15 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
+	"github.com/erikbos/gatekeeper/pkg/db"
 	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
 const (
 	// List of audit columns we use
-	auditColumns = `id,
+	auditColumns = `audit_id,
+audit_type,
 timestamp,
-change_type,
 entity_type,
 entity_id,
 ipaddress,
@@ -42,30 +43,44 @@ func NewAuditStore(database *Database) *AuditStore {
 	}
 }
 
-// Get retrieves a audit
-func (s *AuditStore) Get(auditName string) (types.Audits, types.Error) {
+// GetOrganization retrieves audit records of an organization
+func (s *AuditStore) GetOrganization(organizationName string, params db.AuditFilterParams) (types.Audits, types.Error) {
 
-	query := "SELECT " + auditColumns + " FROM audits WHERE name = ? LIMIT 1"
-	audits, err := s.runGetAuditQuery(query, auditName)
-	if err != nil {
-		s.db.metrics.QueryFailed(auditMetricLabel)
-		return nil, types.NewDatabaseError(err)
+	query := "SELECT " + auditColumns + " FROM audits WHERE organization = ? AND timestamp > ? AND timestamp < ? LIMIT ?"
+	return s.runGetAuditQuery(query, organizationName, params.StartTime, params.EndTime, params.Count)
+}
 
-	}
+// GetAPIProduct retrieves audit records of an apiproduct
+func (s *AuditStore) GetAPIProduct(organizationName, apiproductName string, params db.AuditFilterParams) (types.Audits, types.Error) {
 
-	if len(audits) == 0 {
-		s.db.metrics.QueryNotFound(auditMetricLabel)
-		return nil, types.NewItemNotFoundError(
-			fmt.Errorf("can not find audit '%s'", auditName))
-	}
+	query := "SELECT " + auditColumns + " FROM audits WHERE entity_type = ? AND entity_id = ? AND timestamp > ? AND timestamp < ? LIMIT ?"
+	return s.runGetAuditQuery(query, apiproductName, apiproductName, params.StartTime, params.EndTime, params.Count)
+}
 
-	s.db.metrics.QuerySuccessful(auditMetricLabel)
-	return audits, nil
+// GetDeveloper retrieves audit records of a developer
+func (s *AuditStore) GetDeveloper(organizationName, developerID string, params db.AuditFilterParams) (types.Audits, types.Error) {
+
+	query := "SELECT " + auditColumns + " FROM audits WHERE organization = ? AND developer_id = ? AND timestamp > ? AND timestamp < ? LIMIT ?"
+	return s.runGetAuditQuery(query, organizationName, developerID, params.StartTime, params.EndTime, params.Count)
+}
+
+// GetApplication retrieves audit records of an application
+func (s *AuditStore) GetApplication(organizationName, developerID, appID string, params db.AuditFilterParams) (types.Audits, types.Error) {
+
+	query := "SELECT " + auditColumns + " FROM audits WHERE organization = ? AND developer_id = ? AND app_id = ? AND timestamp > ? AND timestamp < ? LIMIT ?"
+	return s.runGetAuditQuery(query, organizationName, developerID, appID, params.StartTime, params.EndTime, params.Count)
+}
+
+// GetUser retrieves audit records of an application
+func (s *AuditStore) GetUser(userName string, params db.AuditFilterParams) (types.Audits, types.Error) {
+
+	query := "SELECT " + auditColumns + " FROM audits WHERE user = ? AND timestamp > ? AND timestamp < ? LIMIT ?"
+	return s.runGetAuditQuery(query, userName, params.StartTime, params.EndTime, params.Count)
 }
 
 // runGetAuditQuery executes CQL query and returns resultset
 func (s *AuditStore) runGetAuditQuery(query string,
-	queryParameters ...interface{}) (types.Audits, error) {
+	queryParameters ...interface{}) (types.Audits, types.Error) {
 
 	timer := prometheus.NewTimer(s.db.metrics.queryHistogram)
 	defer timer.ObserveDuration()
@@ -76,11 +91,11 @@ func (s *AuditStore) runGetAuditQuery(query string,
 	m := make(map[string]interface{})
 	for iter.MapScan(m) {
 		audits = append(audits, types.Audit{
-			Id:           columnToString(m, "id"),
+			ID:           columnToString(m, "audit_id"),
+			AuditType:    columnToString(m, "audit_type"),
 			Timestamp:    columnToInt64(m, "timestamp"),
-			ChangeType:   columnToString(m, "change_type"),
 			EntityType:   columnToString(m, "entity_type"),
-			EntityId:     columnToString(m, "entity_id"),
+			EntityID:     columnToString(m, "entity_id"),
 			IPaddress:    columnToString(m, "ipaddress"),
 			RequestID:    columnToString(m, "request_id"),
 			User:         columnToString(m, "user"),
@@ -96,20 +111,22 @@ func (s *AuditStore) runGetAuditQuery(query string,
 	}
 	// In case query failed we return query error
 	if err := iter.Close(); err != nil {
-		return types.Audits{}, err
+		s.db.metrics.QueryFailed(auditMetricLabel)
+		return types.Audits{}, types.NewDatabaseError(err)
 	}
+	s.db.metrics.QuerySuccessful(auditMetricLabel)
 	return audits, nil
 }
 
 // Write an entry in audit log
 func (s *AuditStore) Write(a *types.Audit) types.Error {
 
-	query := "INSERT INTO audits (" + auditColumns + ") VALUES(uuid(),?,?,?,?, ?,?,?,?,?, ?,?,?,?,?)"
+	query := "INSERT INTO audits (" + auditColumns + ") VALUES(uuid(),?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
 	if err := s.db.CassandraSession.Query(query,
+		a.AuditType,
 		a.Timestamp,
-		a.ChangeType,
 		a.EntityType,
-		a.EntityId,
+		a.EntityID,
 		a.IPaddress,
 		a.RequestID,
 		a.User,

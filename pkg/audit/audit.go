@@ -14,7 +14,7 @@ import (
 )
 
 type (
-	// onfig holds configuration of an auditlog
+	// Config holds configuration of an auditlog
 	Config struct {
 		// Database configuration
 		Database cassandra.DatabaseConfig `yaml:"database"`
@@ -79,9 +79,9 @@ func (al *Audit) Delete(old interface{}, who Requester) {
 }
 
 // log logs the changed entity to auditlog
-func (al *Audit) log(eType eventType, entityType, entityId string, old, new interface{}, who Requester) {
+func (al *Audit) log(eType eventType, entityType, entityID string, old, new interface{}, who Requester) {
 
-	auditEntry := genAudit(eType, entityType, entityId, old, new, who)
+	auditEntry := genAudit(eType, entityType, entityID, old, new, who)
 	err := al.db.Audit.Write(auditEntry)
 	if err != nil {
 		log.Printf("ERROR %s", err)
@@ -90,7 +90,7 @@ func (al *Audit) log(eType eventType, entityType, entityId string, old, new inte
 	al.logger.Info("audit",
 		zap.String("eventType", eType.String()),
 		zap.String("entityType", entityType),
-		zap.String("entityId", entityId),
+		zap.String("entityId", entityID),
 		zap.Any("who", map[string]interface{}{
 			"user":      who.User,
 			"role":      who.Role,
@@ -123,9 +123,9 @@ func genAudit(eType eventType, entityType, entityId string, old, new interface{}
 
 	return &types.Audit{
 		Timestamp:    shared.GetCurrentTimeMilliseconds(),
-		ChangeType:   eType.String(),
+		AuditType:    eType.String(),
 		EntityType:   entityType,
-		EntityId:     entityId,
+		EntityID:     entityId,
 		IPaddress:    who.RemoteAddr,
 		RequestID:    who.RequestID,
 		User:         who.User,

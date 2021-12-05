@@ -157,7 +157,16 @@ type (
 		Delete(roleName string, who audit.Requester) (e types.Error)
 	}
 
+	// Audit is the service interface to retrieve audit records
 	Audit interface {
-		GetAll(organizationName string) (audits types.Audits, err types.Error)
+		GetOrganization(organizationName string, params AuditQueryParams) (audits types.Audits, err types.Error)
+
+		GetAPIProduct(organizationName, apiproductName string, params AuditQueryParams) (audits types.Audits, err types.Error)
+
+		GetDeveloper(organizationName, developerEmailaddress string, params AuditQueryParams) (audits types.Audits, err types.Error)
+
+		GetApplication(organizationName, developerEmailaddress, appName string, params AuditQueryParams) (audits types.Audits, err types.Error)
+
+		GetUser(userName string, params AuditQueryParams) (audits types.Audits, err types.Error)
 	}
 )

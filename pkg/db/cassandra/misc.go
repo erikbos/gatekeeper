@@ -1,6 +1,8 @@
 package cassandra
 
 import (
+	"github.com/gocql/gocql"
+
 	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
@@ -9,7 +11,12 @@ func columnToString(m map[string]interface{}, columnName string) string {
 
 	if m != nil {
 		if val, ok := m[columnName]; ok {
-			return val.(string)
+			switch columnValue := val.(type) {
+			case string:
+				return columnValue
+			case gocql.UUID:
+				return columnValue.String()
+			}
 		}
 	}
 	return ""
@@ -48,7 +55,7 @@ func columnToStringSlice(m map[string]interface{}, columnName string) []string {
 	return []string{}
 }
 
-// columnToAttributes changes Cassandra column type "map<text, text>" returned
+// columnToAttributes converts Cassandra column type "map<text, text>" returned
 // by gocql as map[string]string into types.Attributes
 func columnToAttributes(m map[string]interface{}, columnName string) types.Attributes {
 
