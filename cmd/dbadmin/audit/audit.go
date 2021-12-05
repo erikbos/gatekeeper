@@ -2,9 +2,9 @@ package audit
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 
 	"github.com/erikbos/gatekeeper/pkg/db"
@@ -48,16 +48,16 @@ func New(database *db.Database, logger *zap.Logger) *Audit {
 	}
 }
 
-type eventType string
+type auditType string
 
-func (c eventType) String() string {
+func (c auditType) String() string {
 	return string(c)
 }
 
 const (
-	eventCreate eventType = "create"
-	eventUpdate eventType = "update"
-	eventDelete eventType = "delete"
+	eventCreate auditType = "create"
+	eventUpdate auditType = "update"
+	eventDelete auditType = "delete"
 )
 
 // Create logs a created entity to auditlog
@@ -78,54 +78,15 @@ func (al *Audit) Delete(old interface{}, who Requester) {
 	al.log(eventDelete, types.NameOf(old), types.IDOf(old), old, nil, who)
 }
 
-// log logs the changed entity to auditlog
-func (al *Audit) log(eType eventType, entityType, entityID string, old, new interface{}, who Requester) {
+// log logs the changed entity to auditlog and database
+func (al *Audit) log(aType auditType, entityType, entityID string, oldValue, newValue interface{}, who Requester) {
 
-	auditEntry := genAudit(eType, entityType, entityID, old, new, who)
-	err := al.db.Audit.Write(auditEntry)
-	if err != nil {
-		log.Printf("ERROR %s", err)
-	}
-
-	al.logger.Info("audit",
-		zap.String("eventType", eType.String()),
-		zap.String("entityType", entityType),
-		zap.String("entityId", entityID),
-		zap.Any("who", map[string]interface{}{
-			"user":      who.User,
-			"role":      who.Role,
-			"requestId": who.RequestID,
-			"address":   who.RemoteAddr,
-			"userAgent": who.Header.Get("User-Agent"),
-		}),
-		zap.Any("old", map[string]interface{}{
-			entityType: clearSensitiveFields(old),
-		}),
-		zap.Any("new", map[string]interface{}{
-			entityType: clearSensitiveFields(new),
-		}),
-	)
-}
-
-func genAudit(eType eventType, entityType, entityId string, old, new interface{}, who Requester) *types.Audit {
-
-	var oldValue, newValue []byte
-	var err error
-
-	oldValue, err = json.Marshal(old)
-	if err != nil {
-		oldValue = []byte{}
-	}
-	newValue, err = json.Marshal(new)
-	if err != nil {
-		newValue = []byte{}
-	}
-
-	return &types.Audit{
+	auditEntry := &types.Audit{
+		ID:           uuid.New().String(),
 		Timestamp:    shared.GetCurrentTimeMilliseconds(),
-		AuditType:    eType.String(),
+		AuditType:    aType.String(),
 		EntityType:   entityType,
-		EntityID:     entityId,
+		EntityID:     entityID,
 		IPaddress:    who.RemoteAddr,
 		RequestID:    who.RequestID,
 		User:         who.User,
@@ -134,8 +95,13 @@ func genAudit(eType eventType, entityType, entityId string, old, new interface{}
 		Organization: "",
 		DeveloperID:  "",
 		AppID:        "",
-		Old:          string(oldValue),
-		New:          string(newValue),
+		OldValue:     convertInterfaceMapString(clearSensitiveFields(oldValue)),
+		NewValue:     convertInterfaceMapString(clearSensitiveFields(newValue)),
+	}
+
+	al.logger.Info("audit", zap.Any("audit", auditEntry))
+	if err := al.db.Audit.Write(auditEntry); err != nil {
+		al.logger.Error("audit", zap.Any("error", err))
 	}
 }
 
@@ -154,4 +120,16 @@ func clearSensitiveFields(m interface{}) interface{} {
 		// Do not modify other types, return as is
 		return m
 	}
+}
+
+// convertInterfaceMapString converts interface{} to *map[string]interface{}
+func convertInterfaceMapString(m interface{}) map[string]interface{} {
+
+	var data []byte
+	var mapString map[string]interface{}
+
+	data, _ = json.Marshal(m)
+	json.Unmarshal(data, &mapString)
+
+	return mapString
 }

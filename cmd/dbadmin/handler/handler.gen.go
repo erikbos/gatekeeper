@@ -164,10 +164,17 @@ type Audit struct {
 
 // AuditEntity defines model for AuditEntity.
 type AuditEntity struct {
-	Id       *string `json:"id,omitempty"`
-	NewValue *string `json:"newValue,omitempty"`
-	OldValue *string `json:"oldValue,omitempty"`
-	Type     *string `json:"type,omitempty"`
+	// Id of entity.
+	Id *string `json:"id,omitempty"`
+
+	// New value of entity.
+	NewValue *map[string]interface{} `json:"newValue,omitempty"`
+
+	// Old value of entity.
+	OldValue *map[string]interface{} `json:"oldValue,omitempty"`
+
+	// Type of entity. (developer, app, key, etc.)
+	Type *string `json:"type,omitempty"`
 }
 
 // AuditRequestor defines model for AuditRequestor.

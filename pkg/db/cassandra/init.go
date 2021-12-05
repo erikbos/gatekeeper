@@ -91,15 +91,15 @@ var createTablesCQL = [...]string{
 	`INSERT INTO roles (name,permissions,created_by,created_at,lastmodified_at) VALUES('admin','[{"methods":["GET","POST","DELETE"],"paths":["/v1/**"]}]','initdb',toUnixTimestamp(now()),toUnixTimestamp(now())) IF NOT EXISTS`,
 
 	`CREATE TABLE audits (
-        audit_id uuid PRIMARY KEY,
+        audit_id text PRIMARY KEY,
         audit_type text,
         app_id text,
         developer_id text,
         entity_id text,
         entity_type text,
         ipaddress inet,
-        new text,
-        old text,
+        new_value text,
+        old_value text,
         organization text,
         request_id text,
         role text,

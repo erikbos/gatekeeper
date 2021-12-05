@@ -1,7 +1,7 @@
 package service
 
 import (
-	"github.com/erikbos/gatekeeper/pkg/audit"
+	"github.com/erikbos/gatekeeper/cmd/dbadmin/audit"
 	"github.com/erikbos/gatekeeper/pkg/types"
 )
 

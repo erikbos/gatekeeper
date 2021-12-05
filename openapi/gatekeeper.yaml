@@ -3015,12 +3015,16 @@ components:
       properties:
         type:
           type: string
+          description: Type of entity. (developer, app, key, etc.)
         id:
           type: string
+          description: Id of entity.
         oldValue:
-          type: string
+          type: object
+          description: Old value of entity.
         newValue:
-          type: string
+          type: object
+          description: New value of entity.
     Audits:
       type: object
       readOnly: true

@@ -3,7 +3,7 @@ package service
 import (
 	"fmt"
 
-	"github.com/erikbos/gatekeeper/pkg/audit"
+	"github.com/erikbos/gatekeeper/cmd/dbadmin/audit"
 	"github.com/erikbos/gatekeeper/pkg/db"
 	"github.com/erikbos/gatekeeper/pkg/shared"
 	"github.com/erikbos/gatekeeper/pkg/types"

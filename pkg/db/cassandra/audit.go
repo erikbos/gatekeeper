@@ -24,8 +24,8 @@ user_agent,
 organization,
 developer_id,
 app_id,
-old,
-new`
+old_value,
+new_value`
 
 	// Prometheus label for metrics of db interactions
 	auditMetricLabel = "audits"
@@ -46,35 +46,35 @@ func NewAuditStore(database *Database) *AuditStore {
 // GetOrganization retrieves audit records of an organization
 func (s *AuditStore) GetOrganization(organizationName string, params db.AuditFilterParams) (types.Audits, types.Error) {
 
-	query := "SELECT " + auditColumns + " FROM audits WHERE organization = ? AND timestamp > ? AND timestamp < ? LIMIT ?"
+	query := "SELECT " + auditColumns + " FROM audits WHERE organization = ? AND timestamp >= ? AND timestamp <= ? LIMIT ?"
 	return s.runGetAuditQuery(query, organizationName, params.StartTime, params.EndTime, params.Count)
 }
 
 // GetAPIProduct retrieves audit records of an apiproduct
 func (s *AuditStore) GetAPIProduct(organizationName, apiproductName string, params db.AuditFilterParams) (types.Audits, types.Error) {
 
-	query := "SELECT " + auditColumns + " FROM audits WHERE entity_type = ? AND entity_id = ? AND timestamp > ? AND timestamp < ? LIMIT ?"
+	query := "SELECT " + auditColumns + " FROM audits WHERE entity_type = ? AND entity_id = ? AND timestamp >= ? AND timestamp <= ? LIMIT ?"
 	return s.runGetAuditQuery(query, apiproductName, apiproductName, params.StartTime, params.EndTime, params.Count)
 }
 
 // GetDeveloper retrieves audit records of a developer
 func (s *AuditStore) GetDeveloper(organizationName, developerID string, params db.AuditFilterParams) (types.Audits, types.Error) {
 
-	query := "SELECT " + auditColumns + " FROM audits WHERE organization = ? AND developer_id = ? AND timestamp > ? AND timestamp < ? LIMIT ?"
+	query := "SELECT " + auditColumns + " FROM audits WHERE organization = ? AND developer_id = ? AND timestamp >= ? AND timestamp <= ? LIMIT ?"
 	return s.runGetAuditQuery(query, organizationName, developerID, params.StartTime, params.EndTime, params.Count)
 }
 
 // GetApplication retrieves audit records of an application
 func (s *AuditStore) GetApplication(organizationName, developerID, appID string, params db.AuditFilterParams) (types.Audits, types.Error) {
 
-	query := "SELECT " + auditColumns + " FROM audits WHERE organization = ? AND developer_id = ? AND app_id = ? AND timestamp > ? AND timestamp < ? LIMIT ?"
+	query := "SELECT " + auditColumns + " FROM audits WHERE organization = ? AND developer_id = ? AND app_id = ? AND timestamp >= ? AND timestamp <= ? LIMIT ?"
 	return s.runGetAuditQuery(query, organizationName, developerID, appID, params.StartTime, params.EndTime, params.Count)
 }
 
-// GetUser retrieves audit records of an application
+// GetUser retrieves audit records of a user
 func (s *AuditStore) GetUser(userName string, params db.AuditFilterParams) (types.Audits, types.Error) {
 
-	query := "SELECT " + auditColumns + " FROM audits WHERE user = ? AND timestamp > ? AND timestamp < ? LIMIT ?"
+	query := "SELECT " + auditColumns + " FROM audits WHERE user = ? AND timestamp >= ? AND timestamp <= ? LIMIT ?"
 	return s.runGetAuditQuery(query, userName, params.StartTime, params.EndTime, params.Count)
 }
 
@@ -104,8 +104,8 @@ func (s *AuditStore) runGetAuditQuery(query string,
 			Organization: columnToString(m, "organization"),
 			DeveloperID:  columnToString(m, "developer_id"),
 			AppID:        columnToString(m, "app_id"),
-			Old:          columnToString(m, "old"),
-			New:          columnToString(m, "new"),
+			OldValue:     columnToMapString(m, "old_value"),
+			NewValue:     columnToMapString(m, "new_value"),
 		})
 		m = map[string]interface{}{}
 	}
@@ -121,8 +121,9 @@ func (s *AuditStore) runGetAuditQuery(query string,
 // Write an entry in audit log
 func (s *AuditStore) Write(a *types.Audit) types.Error {
 
-	query := "INSERT INTO audits (" + auditColumns + ") VALUES(uuid(),?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+	query := "INSERT INTO audits (" + auditColumns + ") VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
 	if err := s.db.CassandraSession.Query(query,
+		a.ID,
 		a.AuditType,
 		a.Timestamp,
 		a.EntityType,
@@ -135,8 +136,8 @@ func (s *AuditStore) Write(a *types.Audit) types.Error {
 		a.Organization,
 		a.DeveloperID,
 		a.AppID,
-		a.Old,
-		a.New).Exec(); err != nil {
+		valueToJSON(a.OldValue),
+		valueToJSON(a.NewValue)).Exec(); err != nil {
 
 		s.db.metrics.QueryFailed(auditMetricLabel)
 		return types.NewDatabaseError(

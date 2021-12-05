@@ -22,8 +22,8 @@ type (
 
 		EntityType string
 		EntityID   string
-		Old        string
-		New        string
+		OldValue   map[string]interface{}
+		NewValue   map[string]interface{}
 	}
 
 	// Audits holds one or more audits

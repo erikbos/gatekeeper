@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -161,7 +162,7 @@ func (h *Handler) responseAudits(c *gin.Context, audits types.Audits) {
 
 func (h *Handler) ToAuditResponse(a *types.Audit) Audit {
 
-	return Audit{
+	audit := Audit{
 		AuditId:   &a.ID,
 		AuditType: &a.AuditType,
 		Timestamp: &a.Timestamp,
@@ -175,11 +176,24 @@ func (h *Handler) ToAuditResponse(a *types.Audit) Audit {
 		Entity: &AuditEntity{
 			Type:     &a.EntityType,
 			Id:       &a.EntityID,
-			OldValue: &a.Old,
-			NewValue: &a.New,
+			OldValue: convertInterfaceMapString(&a.OldValue),
+			NewValue: convertInterfaceMapString(&a.NewValue),
 		},
 		// Organization: &a.Organization,
 		// DeveloperId:  &a.DeveloperID,
 		// AppId:        &a.AppID,
 	}
+	return audit
+}
+
+// convertInterfaceMapString converts interface{} to *map[string]interface{}
+func convertInterfaceMapString(m interface{}) *map[string]interface{} {
+
+	var data []byte
+	var mapString map[string]interface{}
+
+	data, _ = json.Marshal(m)
+	json.Unmarshal(data, &mapString)
+
+	return &mapString
 }

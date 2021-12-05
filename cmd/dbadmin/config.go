@@ -3,7 +3,7 @@ package main
 import (
 	"gopkg.in/yaml.v2"
 
-	"github.com/erikbos/gatekeeper/pkg/audit"
+	"github.com/erikbos/gatekeeper/cmd/dbadmin/audit"
 	"github.com/erikbos/gatekeeper/pkg/db/cache"
 	"github.com/erikbos/gatekeeper/pkg/db/cassandra"
 	"github.com/erikbos/gatekeeper/pkg/shared"

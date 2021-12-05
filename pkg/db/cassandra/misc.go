@@ -1,6 +1,8 @@
 package cassandra
 
 import (
+	"encoding/json"
+
 	"github.com/gocql/gocql"
 
 	"github.com/erikbos/gatekeeper/pkg/types"
@@ -55,6 +57,19 @@ func columnToStringSlice(m map[string]interface{}, columnName string) []string {
 	return []string{}
 }
 
+// columnToMapString returns key in map (encoding as JSON) as map[string]interface, if key exists
+func columnToMapString(m map[string]interface{}, columnName string) map[string]interface{} {
+
+	if m != nil {
+		if val, ok := m[columnName]; ok {
+			var v map[string]interface{}
+			_ = json.Unmarshal([]byte(val.(string)), &v)
+			return v
+		}
+	}
+	return map[string]interface{}{}
+}
+
 // columnToAttributes converts Cassandra column type "map<text, text>" returned
 // by gocql as map[string]string into types.Attributes
 func columnToAttributes(m map[string]interface{}, columnName string) types.Attributes {
@@ -80,4 +95,13 @@ func attributesToColumn(attributes types.Attributes) map[string]string {
 		a[attributes[i].Name] = attributes[i].Value
 	}
 	return a
+}
+
+func valueToJSON(s interface{}) string {
+
+	jsonEncoded, err := json.Marshal(s)
+	if err == nil {
+		return string(jsonEncoded)
+	}
+	return ""
 }
