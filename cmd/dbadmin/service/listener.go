@@ -50,7 +50,7 @@ func (ls *ListenerService) Create(newListener types.Listener, who audit.Requeste
 	if err := ls.updateListener(&newListener, who); err != nil {
 		return nil, err
 	}
-	ls.audit.Create(newListener, who)
+	ls.audit.Create(newListener, nil, who)
 	return &newListener, nil
 }
 
@@ -69,7 +69,7 @@ func (ls *ListenerService) Update(updatedListener types.Listener, who audit.Requ
 	if err = ls.updateListener(&updatedListener, who); err != nil {
 		return nil, err
 	}
-	ls.audit.Update(currentListener, updatedListener, who)
+	ls.audit.Update(currentListener, updatedListener, nil, who)
 	return &updatedListener, nil
 }
 
@@ -96,6 +96,6 @@ func (ls *ListenerService) Delete(listenerName string, who audit.Requester) (e t
 	if err = ls.db.Listener.Delete(listenerName); err != nil {
 		return err
 	}
-	ls.audit.Delete(listener, who)
+	ls.audit.Delete(listener, nil, who)
 	return nil
 }

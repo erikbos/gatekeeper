@@ -61,7 +61,7 @@ func (cs *ClusterService) Create(newCluster types.Cluster, who audit.Requester) 
 	if err := cs.updateCluster(&newCluster, who); err != nil {
 		return nil, err
 	}
-	cs.audit.Create(newCluster, who)
+	cs.audit.Create(newCluster, nil, who)
 	return &newCluster, nil
 }
 
@@ -81,7 +81,7 @@ func (cs *ClusterService) Update(updatedCluster types.Cluster,
 	if err = cs.updateCluster(&updatedCluster, who); err != nil {
 		return nil, err
 	}
-	cs.audit.Update(currentCluster, updatedCluster, who)
+	cs.audit.Update(currentCluster, updatedCluster, nil, who)
 	return &updatedCluster, nil
 }
 
@@ -108,6 +108,6 @@ func (cs *ClusterService) Delete(clusterName string, who audit.Requester) (e typ
 	if err := cs.db.Cluster.Delete(clusterName); err != nil {
 		return err
 	}
-	cs.audit.Delete(cluster, who)
+	cs.audit.Delete(cluster, nil, who)
 	return nil
 }

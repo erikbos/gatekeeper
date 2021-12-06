@@ -81,7 +81,7 @@ func (us *UserService) Create(newUser types.User, who audit.Requester) (*types.U
 	if err := us.updateUser(&newUser, who); err != nil {
 		return nil, err
 	}
-	us.audit.Create(newUser, who)
+	us.audit.Create(newUser, nil, who)
 	return &newUser, nil
 }
 
@@ -110,7 +110,7 @@ func (us *UserService) Update(updatedUser types.User,
 	if err = us.updateUser(&updatedUser, who); err != nil {
 		return nil, err
 	}
-	us.audit.Update(currentUser, updatedUser, who)
+	us.audit.Update(currentUser, updatedUser, nil, who)
 	return &updatedUser, nil
 }
 
@@ -136,7 +136,7 @@ func (us *UserService) Delete(userName string, who audit.Requester) (e types.Err
 	if err = us.db.User.Delete(userName); err != nil {
 		return err
 	}
-	us.audit.Delete(user, who)
+	us.audit.Delete(user, nil, who)
 	return nil
 }
 

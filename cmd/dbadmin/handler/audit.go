@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 
 	"github.com/erikbos/gatekeeper/cmd/dbadmin/service"
 	"github.com/erikbos/gatekeeper/pkg/shared"
@@ -176,24 +177,30 @@ func (h *Handler) ToAuditResponse(a *types.Audit) Audit {
 		Entity: &AuditEntity{
 			Type:     &a.EntityType,
 			Id:       &a.EntityID,
-			OldValue: convertInterfaceMapString(&a.OldValue),
-			NewValue: convertInterfaceMapString(&a.NewValue),
+			OldValue: h.convertInterfaceMapString(&a.OldValue),
+			NewValue: h.convertInterfaceMapString(&a.NewValue),
 		},
-		// Organization: &a.Organization,
-		// DeveloperId:  &a.DeveloperID,
-		// AppId:        &a.AppID,
+		Organization: &a.Organization,
+		DeveloperId:  &a.DeveloperID,
+		AppId:        &a.AppID,
 	}
 	return audit
 }
 
 // convertInterfaceMapString converts interface{} to *map[string]interface{}
-func convertInterfaceMapString(m interface{}) *map[string]interface{} {
+func (h *Handler) convertInterfaceMapString(m interface{}) *map[string]interface{} {
 
 	var data []byte
 	var mapString map[string]interface{}
+	var err error
 
-	data, _ = json.Marshal(m)
-	json.Unmarshal(data, &mapString)
+	data, err = json.Marshal(m)
+	if err != nil {
+		h.logger.Fatal("Cannot marshal", zap.Any("InterfaceStringMap", m))
+	}
+	if err = json.Unmarshal(data, &mapString); err != nil {
+		h.logger.Fatal("Cannot unmarshal", zap.Binary("InterfaceStringMap", data))
+	}
 
 	return &mapString
 }

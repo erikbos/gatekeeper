@@ -70,7 +70,7 @@ func (rs *RouteService) Create(newRoute types.Route, who audit.Requester) (*type
 	if err := rs.updateRoute(&newRoute, who); err != nil {
 		return nil, err
 	}
-	rs.audit.Create(newRoute, who)
+	rs.audit.Create(newRoute, nil, who)
 	return &newRoute, nil
 }
 
@@ -90,7 +90,7 @@ func (rs *RouteService) Update(updatedRoute types.Route,
 	if err = rs.updateRoute(&updatedRoute, who); err != nil {
 		return nil, err
 	}
-	rs.audit.Update(currentRoute, updatedRoute, who)
+	rs.audit.Update(currentRoute, updatedRoute, nil, who)
 	return &updatedRoute, nil
 }
 
@@ -118,6 +118,6 @@ func (rs *RouteService) Delete(routeName string, who audit.Requester) (e types.E
 	if err != nil {
 		return err
 	}
-	rs.audit.Delete(route, who)
+	rs.audit.Delete(route, nil, who)
 	return nil
 }

@@ -109,11 +109,11 @@ type (
 
 		GetByDeveloperAppID(organizationName, developerAppID string) (keys types.Keys, err types.Error)
 
-		Create(organizationName string, newKey types.Key, developerApp *types.DeveloperApp, who audit.Requester) (*types.Key, types.Error)
+		Create(organizationName, developerEmail, developerAppName string, newKey types.Key, who audit.Requester) (*types.Key, types.Error)
 
-		Update(organizationName, consumerKey string, updateKey types.Key, who audit.Requester) (*types.Key, types.Error)
+		Update(organizationName, developerEmail, developerAppName string, consumerKey string, updateKey types.Key, who audit.Requester) (*types.Key, types.Error)
 
-		Delete(organizationName, consumerKey string, who audit.Requester) (e types.Error)
+		Delete(organizationName, developerEmail, developerAppName string, consumerKey string, who audit.Requester) (e types.Error)
 	}
 
 	// APIProduct is the service interface to manipulate APIProduct entities

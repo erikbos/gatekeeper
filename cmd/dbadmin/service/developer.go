@@ -59,7 +59,11 @@ func (ds *DeveloperService) Create(organizationName string, newDeveloper types.D
 	if err := ds.updateDeveloper(organizationName, &newDeveloper, who); err != nil {
 		return nil, err
 	}
-	ds.audit.Create(newDeveloper, who)
+	env := &audit.Environment{
+		Organization: organizationName,
+		DeveloperID:  newDeveloper.DeveloperID,
+	}
+	ds.audit.Create(newDeveloper, env, who)
 	return &newDeveloper, nil
 }
 
@@ -81,7 +85,11 @@ func (ds *DeveloperService) Update(organizationName, developerEmail string, upda
 	if err = ds.updateDeveloper(organizationName, &updatedDeveloper, who); err != nil {
 		return nil, err
 	}
-	ds.audit.Update(currentDeveloper, updatedDeveloper, who)
+	env := &audit.Environment{
+		Organization: organizationName,
+		DeveloperID:  updatedDeveloper.DeveloperID,
+	}
+	ds.audit.Update(currentDeveloper, updatedDeveloper, env, who)
 	return &updatedDeveloper, nil
 }
 
@@ -118,7 +126,11 @@ func (ds *DeveloperService) Delete(organizationName, developerName string, who a
 	if err := ds.db.Developer.DeleteByID(organizationName, developer.DeveloperID); err != nil {
 		return err
 	}
-	ds.audit.Delete(developer, who)
+	env := &audit.Environment{
+		Organization: organizationName,
+		DeveloperID:  developer.DeveloperID,
+	}
+	ds.audit.Delete(developer, env, who)
 	return nil
 }
 

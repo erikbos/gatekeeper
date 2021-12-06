@@ -50,7 +50,7 @@ func (rs *RoleService) Create(newRole types.Role, who audit.Requester) (*types.R
 	if err := rs.updateRole(&newRole, who); err != nil {
 		return nil, err
 	}
-	rs.audit.Create(newRole, who)
+	rs.audit.Create(newRole, nil, who)
 	return &newRole, nil
 }
 
@@ -69,7 +69,7 @@ func (rs *RoleService) Update(updatedRole types.Role, who audit.Requester) (*typ
 	if err = rs.updateRole(&updatedRole, who); err != nil {
 		return nil, err
 	}
-	rs.audit.Update(currentRole, updatedRole, who)
+	rs.audit.Update(currentRole, updatedRole, nil, who)
 	return &updatedRole, nil
 }
 
@@ -101,7 +101,7 @@ func (rs *RoleService) Delete(roleName string, who audit.Requester) (e types.Err
 	if err = rs.db.Role.Delete(roleName); err != nil {
 		return err
 	}
-	rs.audit.Delete(role, who)
+	rs.audit.Delete(role, nil, who)
 	return nil
 }
 

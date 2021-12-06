@@ -28,6 +28,13 @@ type (
 		logger *zap.Logger
 	}
 
+	// Details of organization, developer and app this audit change applies to
+	Environment struct {
+		Organization string
+		DeveloperID  string
+		AppID        string
+	}
+
 	// Requester stores the identity and connection details of an authenticated dbadmin API user
 	// who is requesting a change.
 	Requester struct {
@@ -61,25 +68,25 @@ const (
 )
 
 // Create logs a created entity to auditlog
-func (al *Audit) Create(new interface{}, who Requester) {
+func (al *Audit) Create(new interface{}, e *Environment, who Requester) {
 
-	al.log(eventCreate, types.NameOf(new), types.IDOf(new), nil, new, who)
+	al.log(eventCreate, types.NameOf(new), types.IDOf(new), nil, new, e, who)
 }
 
 // Update logs an updated entity to auditlog
-func (al *Audit) Update(old, new interface{}, who Requester) {
+func (al *Audit) Update(old, new interface{}, e *Environment, who Requester) {
 
-	al.log(eventUpdate, types.NameOf(old), types.IDOf(old), old, new, who)
+	al.log(eventUpdate, types.NameOf(old), types.IDOf(old), old, new, e, who)
 }
 
 // Delete logs a deleted entity to auditlog
-func (al *Audit) Delete(old interface{}, who Requester) {
+func (al *Audit) Delete(old interface{}, e *Environment, who Requester) {
 
-	al.log(eventDelete, types.NameOf(old), types.IDOf(old), old, nil, who)
+	al.log(eventDelete, types.NameOf(old), types.IDOf(old), old, nil, e, who)
 }
 
 // log logs the changed entity to auditlog and database
-func (al *Audit) log(aType auditType, entityType, entityID string, oldValue, newValue interface{}, who Requester) {
+func (al *Audit) log(aType auditType, entityType, entityID string, oldValue, newValue interface{}, e *Environment, who Requester) {
 
 	auditEntry := &types.Audit{
 		ID:           uuid.New().String(),
@@ -92,11 +99,11 @@ func (al *Audit) log(aType auditType, entityType, entityID string, oldValue, new
 		User:         who.User,
 		Role:         who.Role,
 		UserAgent:    who.Header.Get("User-Agent"),
-		Organization: "",
-		DeveloperID:  "",
-		AppID:        "",
-		OldValue:     convertInterfaceMapString(clearSensitiveFields(oldValue)),
-		NewValue:     convertInterfaceMapString(clearSensitiveFields(newValue)),
+		Organization: e.Organization,
+		DeveloperID:  e.DeveloperID,
+		AppID:        e.AppID,
+		OldValue:     al.convertInterfaceMapString(clearSensitiveFields(oldValue)),
+		NewValue:     al.convertInterfaceMapString(clearSensitiveFields(newValue)),
 	}
 
 	al.logger.Info("audit", zap.Any("audit", auditEntry))
@@ -123,13 +130,20 @@ func clearSensitiveFields(m interface{}) interface{} {
 }
 
 // convertInterfaceMapString converts interface{} to *map[string]interface{}
-func convertInterfaceMapString(m interface{}) map[string]interface{} {
+func (al *Audit) convertInterfaceMapString(m interface{}) map[string]interface{} {
 
 	var data []byte
 	var mapString map[string]interface{}
+	var err error
 
-	data, _ = json.Marshal(m)
-	json.Unmarshal(data, &mapString)
+	data, err = json.Marshal(m)
+	if err != nil {
+		al.logger.Fatal("Cannot marshal", zap.Any("InterfaceStringMap", m))
+	}
+
+	if err = json.Unmarshal(data, &mapString); err != nil {
+		al.logger.Fatal("Cannot unmarshal", zap.Binary("InterfaceStringMap", data))
+	}
 
 	return mapString
 }

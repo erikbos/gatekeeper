@@ -50,7 +50,10 @@ func (os *OrganizationService) Create(newOrganization types.Organization, who au
 	if err := os.updateOrganization(&newOrganization, who); err != nil {
 		return nil, err
 	}
-	os.audit.Create(newOrganization, who)
+	env := &audit.Environment{
+		Organization: newOrganization.Name,
+	}
+	os.audit.Create(newOrganization, env, who)
 	return &newOrganization, nil
 }
 
@@ -69,7 +72,10 @@ func (os *OrganizationService) Update(updatedOrganization types.Organization, wh
 	if err = os.updateOrganization(&updatedOrganization, who); err != nil {
 		return nil, err
 	}
-	os.audit.Update(currentOrganization, updatedOrganization, who)
+	env := &audit.Environment{
+		Organization: updatedOrganization.Name,
+	}
+	os.audit.Update(currentOrganization, updatedOrganization, env, who)
 	return &updatedOrganization, nil
 }
 
@@ -96,6 +102,9 @@ func (os *OrganizationService) Delete(organizationName string, who audit.Request
 	if err = os.db.Organization.Delete(organizationName); err != nil {
 		return err
 	}
-	os.audit.Delete(organization, who)
+	env := &audit.Environment{
+		Organization: organizationName,
+	}
+	os.audit.Delete(organization, env, who)
 	return nil
 }

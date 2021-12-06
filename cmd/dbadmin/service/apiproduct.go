@@ -55,7 +55,10 @@ func (ds *APIProductService) Create(organizationName string, newAPIProduct types
 	if err := ds.updateAPIProduct(organizationName, &newAPIProduct, who); err != nil {
 		return nil, err
 	}
-	ds.audit.Create(newAPIProduct, who)
+	env := &audit.Environment{
+		Organization: organizationName,
+	}
+	ds.audit.Create(newAPIProduct, env, who)
 	return &newAPIProduct, nil
 }
 
@@ -76,7 +79,10 @@ func (ds *APIProductService) Update(organizationName string, updatedAPIProduct t
 	if err = ds.updateAPIProduct(organizationName, &updatedAPIProduct, who); err != nil {
 		return nil, err
 	}
-	ds.audit.Update(currentAPIProduct, updatedAPIProduct, who)
+	env := &audit.Environment{
+		Organization: organizationName,
+	}
+	ds.audit.Update(currentAPIProduct, updatedAPIProduct, env, who)
 	return &updatedAPIProduct, nil
 }
 
@@ -114,6 +120,9 @@ func (ds *APIProductService) Delete(organizationName, apiproductName string,
 	if err := ds.db.APIProduct.Delete(organizationName, apiproductName); err != nil {
 		return err
 	}
-	ds.audit.Delete(apiproduct, who)
+	env := &audit.Environment{
+		Organization: organizationName,
+	}
+	ds.audit.Delete(apiproduct, env, who)
 	return nil
 }

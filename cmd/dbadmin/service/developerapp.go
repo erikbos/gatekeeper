@@ -85,7 +85,12 @@ func (das *DeveloperAppService) Create(organizationName, developerEmail string,
 	if err = das.updateDeveloperApp(organizationName, &newDeveloperApp, who); err != nil {
 		return nil, err
 	}
-	das.audit.Create(newDeveloperApp, who)
+	env := &audit.Environment{
+		Organization: organizationName,
+		DeveloperID:  developer.DeveloperID,
+		AppID:        newDeveloperApp.AppID,
+	}
+	das.audit.Create(newDeveloperApp, env, who)
 
 	// Add app to the apps field in developer entity
 	developer.Apps = append(developer.Apps, newDeveloperApp.Name)
@@ -115,7 +120,12 @@ func (das *DeveloperAppService) Update(organizationName, developerEmail string, 
 	if err = das.updateDeveloperApp(organizationName, &updatedDeveloperApp, who); err != nil {
 		return nil, err
 	}
-	das.audit.Update(currentDeveloperApp, updatedDeveloperApp, who)
+	env := &audit.Environment{
+		Organization: organizationName,
+		DeveloperID:  currentDeveloperApp.DeveloperID,
+		AppID:        updatedDeveloperApp.AppID,
+	}
+	das.audit.Update(currentDeveloperApp, updatedDeveloperApp, env, who)
 	return &updatedDeveloperApp, nil
 }
 
@@ -170,7 +180,12 @@ func (das *DeveloperAppService) Delete(organizationName, developerEmail, develop
 	if err := das.db.Developer.Update(organizationName, developer); err != nil {
 		return err
 	}
-	das.audit.Delete(developerApp, who)
+	env := &audit.Environment{
+		Organization: organizationName,
+		DeveloperID:  developer.DeveloperID,
+		AppID:        developerApp.AppID,
+	}
+	das.audit.Delete(developerApp, env, who)
 	return nil
 }
 
