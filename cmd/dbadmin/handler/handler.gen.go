@@ -525,6 +525,9 @@ type Count int
 // DeveloperEmailaddress defines model for developer_emailaddress.
 type DeveloperEmailaddress string
 
+// DeveloperId defines model for developer_id.
+type DeveloperId string
+
 // EndTime defines model for end_time.
 type EndTime int
 
@@ -601,8 +604,8 @@ type GetV1AuditOrganizationsOrganizationNameApiproductsApiproductNameParams stru
 	Count *Count `json:"count,omitempty"`
 }
 
-// GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperEmailaddressParams defines parameters for GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperEmailaddress.
-type GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperEmailaddressParams struct {
+// GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperIdParams defines parameters for GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperId.
+type GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperIdParams struct {
 	// Start timestamp in milliseconds since epoch.
 	StartTime *StartTime `json:"startTime,omitempty"`
 
@@ -613,8 +616,8 @@ type GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperEmailaddressParam
 	Count *Count `json:"count,omitempty"`
 }
 
-// GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameParams defines parameters for GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppName.
-type GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameParams struct {
+// GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperIdAppsAppIdParams defines parameters for GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperIdAppsAppId.
+type GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperIdAppsAppIdParams struct {
 	// Start timestamp in milliseconds since epoch.
 	StartTime *StartTime `json:"startTime,omitempty"`
 
@@ -922,11 +925,11 @@ type ServerInterface interface {
 	// (GET /v1/audit/organizations/{organization_name}/apiproducts/{apiproduct_name})
 	GetV1AuditOrganizationsOrganizationNameApiproductsApiproductName(c *gin.Context, organizationName OrganizationName, apiproductName ApiproductName, params GetV1AuditOrganizationsOrganizationNameApiproductsApiproductNameParams)
 	// Retrieve audit records of developer.
-	// (GET /v1/audit/organizations/{organization_name}/developers/{developer_emailaddress})
-	GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperEmailaddress(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, params GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperEmailaddressParams)
+	// (GET /v1/audit/organizations/{organization_name}/developers/{developer_id})
+	GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperId(c *gin.Context, organizationName OrganizationName, developerId DeveloperId, params GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperIdParams)
 	// Retrieve audit records of application.
-	// (GET /v1/audit/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name})
-	GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, params GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameParams)
+	// (GET /v1/audit/organizations/{organization_name}/developers/{developer_id}/apps/{app_id})
+	GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperIdAppsAppId(c *gin.Context, organizationName OrganizationName, developerId DeveloperId, appId AppId, params GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperIdAppsAppIdParams)
 	// Retrieve audit records of user
 	// (GET /v1/audit/users/{user_name})
 	GetV1AuditUsersUserName(c *gin.Context, userName UserName, params GetV1AuditUsersUserNameParams)
@@ -1340,8 +1343,8 @@ func (siw *ServerInterfaceWrapper) GetV1AuditOrganizationsOrganizationNameApipro
 	siw.Handler.GetV1AuditOrganizationsOrganizationNameApiproductsApiproductName(c, organizationName, apiproductName, params)
 }
 
-// GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperEmailaddress operation middleware
-func (siw *ServerInterfaceWrapper) GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperEmailaddress(c *gin.Context) {
+// GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperId operation middleware
+func (siw *ServerInterfaceWrapper) GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperId(c *gin.Context) {
 
 	var err error
 
@@ -1354,19 +1357,19 @@ func (siw *ServerInterfaceWrapper) GetV1AuditOrganizationsOrganizationNameDevelo
 		return
 	}
 
-	// ------------- Path parameter "developer_emailaddress" -------------
-	var developerEmailaddress DeveloperEmailaddress
+	// ------------- Path parameter "developer_id" -------------
+	var developerId DeveloperId
 
-	err = runtime.BindStyledParameter("simple", false, "developer_emailaddress", c.Param("developer_emailaddress"), &developerEmailaddress)
+	err = runtime.BindStyledParameter("simple", false, "developer_id", c.Param("developer_id"), &developerId)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_id: %s", err)})
 		return
 	}
 
 	c.Set(BasicAuthScopes, []string{""})
 
 	// Parameter object where we will unmarshal all parameters from the context
-	var params GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperEmailaddressParams
+	var params GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperIdParams
 
 	// ------------- Optional query parameter "startTime" -------------
 	if paramValue := c.Query("startTime"); paramValue != "" {
@@ -1405,11 +1408,11 @@ func (siw *ServerInterfaceWrapper) GetV1AuditOrganizationsOrganizationNameDevelo
 		middleware(c)
 	}
 
-	siw.Handler.GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperEmailaddress(c, organizationName, developerEmailaddress, params)
+	siw.Handler.GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperId(c, organizationName, developerId, params)
 }
 
-// GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppName operation middleware
-func (siw *ServerInterfaceWrapper) GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppName(c *gin.Context) {
+// GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperIdAppsAppId operation middleware
+func (siw *ServerInterfaceWrapper) GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperIdAppsAppId(c *gin.Context) {
 
 	var err error
 
@@ -1422,28 +1425,28 @@ func (siw *ServerInterfaceWrapper) GetV1AuditOrganizationsOrganizationNameDevelo
 		return
 	}
 
-	// ------------- Path parameter "developer_emailaddress" -------------
-	var developerEmailaddress DeveloperEmailaddress
+	// ------------- Path parameter "developer_id" -------------
+	var developerId DeveloperId
 
-	err = runtime.BindStyledParameter("simple", false, "developer_emailaddress", c.Param("developer_emailaddress"), &developerEmailaddress)
+	err = runtime.BindStyledParameter("simple", false, "developer_id", c.Param("developer_id"), &developerId)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_id: %s", err)})
 		return
 	}
 
-	// ------------- Path parameter "app_name" -------------
-	var appName AppName
+	// ------------- Path parameter "app_id" -------------
+	var appId AppId
 
-	err = runtime.BindStyledParameter("simple", false, "app_name", c.Param("app_name"), &appName)
+	err = runtime.BindStyledParameter("simple", false, "app_id", c.Param("app_id"), &appId)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_id: %s", err)})
 		return
 	}
 
 	c.Set(BasicAuthScopes, []string{""})
 
 	// Parameter object where we will unmarshal all parameters from the context
-	var params GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameParams
+	var params GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperIdAppsAppIdParams
 
 	// ------------- Optional query parameter "startTime" -------------
 	if paramValue := c.Query("startTime"); paramValue != "" {
@@ -1482,7 +1485,7 @@ func (siw *ServerInterfaceWrapper) GetV1AuditOrganizationsOrganizationNameDevelo
 		middleware(c)
 	}
 
-	siw.Handler.GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppName(c, organizationName, developerEmailaddress, appName, params)
+	siw.Handler.GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperIdAppsAppId(c, organizationName, developerId, appId, params)
 }
 
 // GetV1AuditUsersUserName operation middleware
@@ -4557,9 +4560,9 @@ func RegisterHandlersWithOptions(router *gin.Engine, si ServerInterface, options
 
 	router.GET(options.BaseURL+"/v1/audit/organizations/:organization_name/apiproducts/:apiproduct_name", wrapper.GetV1AuditOrganizationsOrganizationNameApiproductsApiproductName)
 
-	router.GET(options.BaseURL+"/v1/audit/organizations/:organization_name/developers/:developer_emailaddress", wrapper.GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperEmailaddress)
+	router.GET(options.BaseURL+"/v1/audit/organizations/:organization_name/developers/:developer_id", wrapper.GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperId)
 
-	router.GET(options.BaseURL+"/v1/audit/organizations/:organization_name/developers/:developer_emailaddress/apps/:app_name", wrapper.GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppName)
+	router.GET(options.BaseURL+"/v1/audit/organizations/:organization_name/developers/:developer_id/apps/:app_id", wrapper.GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperIdAppsAppId)
 
 	router.GET(options.BaseURL+"/v1/audit/users/:user_name", wrapper.GetV1AuditUsersUserName)
 

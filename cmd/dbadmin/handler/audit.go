@@ -36,11 +36,11 @@ func (h *Handler) GetV1AuditOrganizationsOrganizationNameApiproductsApiproductNa
 	h.responseAudits(c, audits)
 }
 
-// GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperEmailaddress retrieves audit records of developer
-// (GET /v1/audit/organizations/{organization_name}/developers/{developer_emailaddress})
-func (h *Handler) GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperEmailaddress(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, params GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperEmailaddressParams) {
+// GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperId retrieve audit records of developer.
+// (GET /v1/audit/organizations/{organization_name}/developers/{developer_id})
+func (h *Handler) GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperId(c *gin.Context, organizationName OrganizationName, developerId DeveloperId, params GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperIdParams) {
 
-	audits, err := h.service.Audit.GetDeveloper(string(organizationName), string(developerEmailaddress), parseQueryParams(params))
+	audits, err := h.service.Audit.GetDeveloper(string(organizationName), string(developerId), parseQueryParams(params))
 	if err != nil {
 		responseError(c, err)
 		return
@@ -48,11 +48,11 @@ func (h *Handler) GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperEmai
 	h.responseAudits(c, audits)
 }
 
-// GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppName retrieves audit records of application.
-// (GET /v1/audit/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name})
-func (h *Handler) GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, params GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameParams) {
+// Retrieve audit records of application.
+// (GET /v1/audit/organizations/{organization_name}/developers/{developer_id}/apps/{app_id})
+func (h *Handler) GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperIdAppsAppId(c *gin.Context, organizationName OrganizationName, developerId DeveloperId, appId AppId, params GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperIdAppsAppIdParams) {
 
-	audits, err := h.service.Audit.GetApplication(string(organizationName), string(developerEmailaddress), string(appName), parseQueryParams(params))
+	audits, err := h.service.Audit.GetApplication(string(organizationName), string(developerId), string(appId), parseQueryParams(params))
 	if err != nil {
 		responseError(c, err)
 		return
@@ -99,7 +99,7 @@ func parseQueryParams(queryParams interface{}) service.AuditQueryParams {
 			auditQuery.Count = int64(*p.Count)
 		}
 
-	case GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperEmailaddressParams:
+	case GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperIdParams:
 		if p.StartTime != nil {
 			auditQuery.StartTime = int64(*p.StartTime)
 		}
@@ -109,7 +109,7 @@ func parseQueryParams(queryParams interface{}) service.AuditQueryParams {
 		if p.Count != nil {
 			auditQuery.Count = int64(*p.Count)
 		}
-	case GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameParams:
+	case GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperIdAppsAppIdParams:
 		if p.StartTime != nil {
 			auditQuery.StartTime = int64(*p.StartTime)
 		}

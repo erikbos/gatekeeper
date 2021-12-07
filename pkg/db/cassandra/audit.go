@@ -53,8 +53,8 @@ func (s *AuditStore) GetOrganization(organizationName string, params db.AuditFil
 // GetAPIProduct retrieves audit records of an apiproduct
 func (s *AuditStore) GetAPIProduct(organizationName, apiproductName string, params db.AuditFilterParams) (types.Audits, types.Error) {
 
-	query := "SELECT " + auditColumns + " FROM audits WHERE entity_type = ? AND entity_id = ? AND timestamp >= ? AND timestamp <= ? LIMIT ?"
-	return s.runGetAuditQuery(query, apiproductName, apiproductName, params.StartTime, params.EndTime, params.Count)
+	query := "SELECT " + auditColumns + " FROM audits WHERE organization = ? AND entity_type = ? AND entity_id = ? AND timestamp >= ? AND timestamp <= ? LIMIT ?"
+	return s.runGetAuditQuery(query, organizationName, types.TypeAPIProductName, apiproductName, params.StartTime, params.EndTime, params.Count)
 }
 
 // GetDeveloper retrieves audit records of a developer
