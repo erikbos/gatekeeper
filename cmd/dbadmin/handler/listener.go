@@ -17,7 +17,7 @@ func (h *Handler) GetV1Listeners(c *gin.Context) {
 		responseError(c, err)
 		return
 	}
-	h.responseListenerss(c, listeners)
+	h.responseListeners(c, listeners)
 }
 
 // creates a new listener
@@ -51,7 +51,7 @@ func (h *Handler) DeleteV1ListenersListenerName(c *gin.Context, listenerName Lis
 		responseError(c, err)
 		return
 	}
-	h.responseListeners(c, listener)
+	h.responseListener(c, listener)
 }
 
 // returns full details of one listener
@@ -63,7 +63,7 @@ func (h *Handler) GetV1ListenersListenerName(c *gin.Context, listenerName Listen
 		responseError(c, err)
 		return
 	}
-	h.responseListeners(c, listener)
+	h.responseListener(c, listener)
 }
 
 // Updates existing listener
@@ -192,7 +192,7 @@ func (h *Handler) PostV1ListenersListenerNameAttributesAttributeName(c *gin.Cont
 
 // API responses
 
-func (h *Handler) responseListenerss(c *gin.Context, listeners types.Listeners) {
+func (h *Handler) responseListeners(c *gin.Context, listeners types.Listeners) {
 
 	all_listeners := make([]Listener, len(listeners))
 	for i := range listeners {
@@ -203,7 +203,7 @@ func (h *Handler) responseListenerss(c *gin.Context, listeners types.Listeners) 
 	})
 }
 
-func (h *Handler) responseListeners(c *gin.Context, listener *types.Listener) {
+func (h *Handler) responseListener(c *gin.Context, listener *types.Listener) {
 
 	c.IndentedJSON(http.StatusOK, h.ToListenerResponse(listener))
 }

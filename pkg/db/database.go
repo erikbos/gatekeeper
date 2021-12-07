@@ -6,6 +6,7 @@ import (
 )
 
 type (
+
 	// Database is our overall database interface
 	Database struct {
 		Listener
@@ -19,6 +20,7 @@ type (
 		OAuth
 		User
 		Role
+		Audit
 		Readiness
 	}
 
@@ -199,14 +201,43 @@ type (
 		// GetAll retrieves all roles
 		GetAll() (types.Roles, types.Error)
 
-		// Get retrieves a role from database
+		// Get retrieves a role
 		Get(roleName string) (*types.Role, types.Error)
 
-		// Update UPSERTs a role in database
+		// Update UPSERTs a role
 		Update(c *types.Role) types.Error
 
-		// Update UPSERTs a role in database
+		// Delete removes a role
 		Delete(roleToDelete string) types.Error
+	}
+
+	Audit interface {
+		// GetOrganization retrieves audit records of an organization
+		GetOrganization(organizationName string, params AuditFilterParams) (types.Audits, types.Error)
+
+		// GetAPIProduct retrieves audit records of an apiproduct
+		GetAPIProduct(organizationName, apiproductName string, params AuditFilterParams) (types.Audits, types.Error)
+
+		// GetDeveloper retrieves audit records of a developer
+		GetDeveloper(organizationName, developerID string, params AuditFilterParams) (types.Audits, types.Error)
+
+		// GetApplication retrieves audit records of an application
+		GetApplication(organizationName, developerID, appID string, params AuditFilterParams) (types.Audits, types.Error)
+
+		// GetUser retrieves audit records of a user
+		GetUser(auditName string, params AuditFilterParams) (types.Audits, types.Error)
+
+		// Write inserts an audit record
+		Write(l *types.Audit) types.Error
+	}
+
+	AuditFilterParams struct {
+		// Start timestamp in epoch milliseconds
+		StartTime int64
+		// End timestamp in epoch milliseconds
+		EndTime int64
+		// Maximum number of entities to return
+		Count int64
 	}
 
 	// Readiness the readiness storage interface

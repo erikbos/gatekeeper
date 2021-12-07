@@ -36,8 +36,10 @@ tags:
 
   - name: User
     description: Operations on users.
-  - name: Roles
+  - name: Role
     description: Operations on roles.
+  - name: Audit
+    description: Audit retrieval operations.
 
 x-tagGroups:
   - name: Gatekeeper
@@ -55,6 +57,7 @@ x-tagGroups:
       - Admin
       - User
       - Role
+      - Audit
 
 paths:
   /v1/organizations:
@@ -211,6 +214,7 @@ paths:
                 $ref: '#/components/schemas/Developer'
         '400':
           $ref: '#/components/responses/BadRequest'
+
   /v1/organizations/{organization_name}/developers/{developer_emailaddress}:
     get:
       summary: Retrieve developer
@@ -2030,6 +2034,116 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorMessage'
 
+  /v1/audit/organizations/{organization_name}:
+    get:
+      summary: Retrieve audit records of organization.
+      tags:
+        - Audit
+      parameters:
+        - $ref: '#/components/parameters/organization_name'
+        - $ref: '#/components/parameters/start_time'
+        - $ref: '#/components/parameters/end_time'
+        - $ref: '#/components/parameters/count'
+      responses:
+        '200':
+          description: Successfully retrieved audit records.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Audits'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: organization does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorMessage'
+
+  /v1/audit/organizations/{organization_name}/apiproducts/{apiproduct_name}:
+    get:
+      summary: Retrieve audit records of apiproduct.
+      tags:
+        - Audit
+      parameters:
+        - $ref: '#/components/parameters/organization_name'
+        - $ref: '#/components/parameters/apiproduct_name'
+        - $ref: '#/components/parameters/start_time'
+        - $ref: '#/components/parameters/end_time'
+        - $ref: '#/components/parameters/count'
+      responses:
+        '200':
+          description: Successfully retrieved audit records.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Audits'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /v1/audit/organizations/{organization_name}/developers/{developer_id}:
+    get:
+      summary: Retrieve audit records of developer.
+      tags:
+        - Audit
+      parameters:
+        - $ref: '#/components/parameters/organization_name'
+        - $ref: '#/components/parameters/developer_id'
+        - $ref: '#/components/parameters/start_time'
+        - $ref: '#/components/parameters/end_time'
+        - $ref: '#/components/parameters/count'
+      responses:
+        '200':
+          description: Successfully retrieved audit records.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Audits'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /v1/audit/organizations/{organization_name}/developers/{developer_id}/apps/{app_id}:
+    get:
+      summary: Retrieve audit records of application.
+      tags:
+        - Audit
+      parameters:
+        - $ref: '#/components/parameters/organization_name'
+        - $ref: '#/components/parameters/developer_id'
+        - $ref: '#/components/parameters/app_id'
+        - $ref: '#/components/parameters/start_time'
+        - $ref: '#/components/parameters/end_time'
+        - $ref: '#/components/parameters/count'
+      responses:
+        '200':
+          description: Successfully retrieved audit records.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Audits'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /v1/audit/users/{user_name}:
+    get:
+      summary: Retrieve audit records of user
+      tags:
+        - Audit
+      parameters:
+        - $ref: '#/components/parameters/user_name'
+        - $ref: '#/components/parameters/start_time'
+        - $ref: '#/components/parameters/end_time'
+        - $ref: '#/components/parameters/count'
+      responses:
+        '200':
+          description: Successfully retrieved audit records.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Audits'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
 components:
   securitySchemes:
     BasicAuth:
@@ -2124,7 +2238,7 @@ components:
       required: true
       schema:
         type: string
-      description: Application id.
+      description: Application ID.
 
     app_name:
       name: app_name
@@ -2174,6 +2288,14 @@ components:
         type: string
       description: Email address of developer.
 
+    developer_id:
+      name: developer_id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Developer ID.
+
     listener_name:
       name: listener_name
       in: path
@@ -2213,6 +2335,38 @@ components:
       schema:
         type: string
       description: Name of attribute.
+
+    start_time:
+      name: startTime
+      in: query
+      description: Start timestamp in milliseconds since epoch.
+      required: false
+      schema:
+        type: integer
+
+    end_time:
+      name: endTime
+      in: query
+      description: End timestamp in milliseconds since epoch.
+      required: false
+      schema:
+        type: integer
+
+    count:
+      name: count
+      in: query
+      description: Maximum number of elements to return.
+      required: false
+      schema:
+        type: integer
+
+    expand:
+      name: expand
+      in: query
+      description: Boolean switch to return expanded details.
+      required: false
+      schema:
+        type: boolean
 
   schemas:
     Organization:
@@ -2827,6 +2981,67 @@ components:
           type: string
       description: Array of users assigned to role.
 
+    Audit:
+      type: object
+      readOnly: true
+      properties:
+        auditId:
+          type: string
+        auditType:
+          type: string
+        timestamp:
+          type: integer
+          format: int64
+          description: Timestamp of audit record in milliseconds since epoch.
+        requestor:
+          type: object
+          $ref: "#/components/schemas/AuditRequestor"
+        entity:
+          type: object
+          $ref: "#/components/schemas/AuditEntity"
+        organization:
+          type: string
+        developerId:
+          type: string
+        appId:
+          type: string
+    AuditRequestor:
+      type: object
+      properties:
+        user:
+          type: string
+        role:
+          type: string
+        ipaddress:
+          type: string
+        userAgent:
+          type: string
+        requestId:
+          type: string
+    AuditEntity:
+      type: object
+      properties:
+        type:
+          type: string
+          description: Type of entity. (developer, app, key, etc.)
+        id:
+          type: string
+          description: Id of entity.
+        oldValue:
+          type: object
+          description: Old value of entity.
+        newValue:
+          type: object
+          description: New value of entity.
+    Audits:
+      type: object
+      readOnly: true
+      properties:
+        audit:
+          type: array
+          items:
+            $ref: "#/components/schemas/Audit"
+      description: Array of audit records.
 
     Attribute:
       type: object

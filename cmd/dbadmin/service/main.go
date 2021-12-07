@@ -1,15 +1,13 @@
 package service
 
 import (
-	"go.uber.org/zap"
-
+	"github.com/erikbos/gatekeeper/cmd/dbadmin/audit"
 	"github.com/erikbos/gatekeeper/pkg/db"
 )
 
 // New sets up services for all entities
-func New(database *db.Database, auditlogLogger *zap.Logger) *Service {
+func New(database *db.Database, auditlog *audit.Audit) *Service {
 
-	auditlog := NewAuditlog(database, auditlogLogger)
 	return &Service{
 		Listener:     NewListener(database, auditlog),
 		Route:        NewRoute(database, auditlog),
@@ -21,5 +19,6 @@ func New(database *db.Database, auditlogLogger *zap.Logger) *Service {
 		APIProduct:   NewAPIProduct(database, auditlog),
 		User:         NewUser(database, auditlog),
 		Role:         NewRole(database, auditlog),
+		Audit:        NewAudit(database, auditlog),
 	}
 }

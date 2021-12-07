@@ -148,6 +148,49 @@ type Attributes struct {
 	Attribute *[]Attribute `json:"attribute,omitempty"`
 }
 
+// Audit defines model for Audit.
+type Audit struct {
+	AppId        *string         `json:"appId,omitempty"`
+	AuditId      *string         `json:"auditId,omitempty"`
+	AuditType    *string         `json:"auditType,omitempty"`
+	DeveloperId  *string         `json:"developerId,omitempty"`
+	Entity       *AuditEntity    `json:"entity,omitempty"`
+	Organization *string         `json:"organization,omitempty"`
+	Requestor    *AuditRequestor `json:"requestor,omitempty"`
+
+	// Timestamp of audit record in milliseconds since epoch.
+	Timestamp *int64 `json:"timestamp,omitempty"`
+}
+
+// AuditEntity defines model for AuditEntity.
+type AuditEntity struct {
+	// Id of entity.
+	Id *string `json:"id,omitempty"`
+
+	// New value of entity.
+	NewValue *map[string]interface{} `json:"newValue,omitempty"`
+
+	// Old value of entity.
+	OldValue *map[string]interface{} `json:"oldValue,omitempty"`
+
+	// Type of entity. (developer, app, key, etc.)
+	Type *string `json:"type,omitempty"`
+}
+
+// AuditRequestor defines model for AuditRequestor.
+type AuditRequestor struct {
+	Ipaddress *string `json:"ipaddress,omitempty"`
+	RequestId *string `json:"requestId,omitempty"`
+	Role      *string `json:"role,omitempty"`
+	User      *string `json:"user,omitempty"`
+	UserAgent *string `json:"userAgent,omitempty"`
+}
+
+// Array of audit records.
+type Audits struct {
+	Audit *[]Audit `json:"audit,omitempty"`
+}
+
 // Cluster defines model for Cluster.
 type Cluster struct {
 	// User who last updated this cluster.
@@ -476,8 +519,17 @@ type ClusterName string
 // ConsumerKey defines model for consumer_key.
 type ConsumerKey string
 
+// Count defines model for count.
+type Count int
+
 // DeveloperEmailaddress defines model for developer_emailaddress.
 type DeveloperEmailaddress string
+
+// DeveloperId defines model for developer_id.
+type DeveloperId string
+
+// EndTime defines model for end_time.
+type EndTime int
 
 // KeyAction defines model for key_action.
 type KeyAction string
@@ -493,6 +545,9 @@ type RoleName string
 
 // RouteName defines model for route_name.
 type RouteName string
+
+// StartTime defines model for start_time.
+type StartTime int
 
 // UserName defines model for user_name.
 type UserName string
@@ -524,6 +579,66 @@ type AttributesUpdated struct {
 
 // BadRequest defines model for BadRequest.
 type BadRequest ErrorMessage
+
+// GetV1AuditOrganizationsOrganizationNameParams defines parameters for GetV1AuditOrganizationsOrganizationName.
+type GetV1AuditOrganizationsOrganizationNameParams struct {
+	// Start timestamp in milliseconds since epoch.
+	StartTime *StartTime `json:"startTime,omitempty"`
+
+	// End timestamp in milliseconds since epoch.
+	EndTime *EndTime `json:"endTime,omitempty"`
+
+	// Maximum number of elements to return.
+	Count *Count `json:"count,omitempty"`
+}
+
+// GetV1AuditOrganizationsOrganizationNameApiproductsApiproductNameParams defines parameters for GetV1AuditOrganizationsOrganizationNameApiproductsApiproductName.
+type GetV1AuditOrganizationsOrganizationNameApiproductsApiproductNameParams struct {
+	// Start timestamp in milliseconds since epoch.
+	StartTime *StartTime `json:"startTime,omitempty"`
+
+	// End timestamp in milliseconds since epoch.
+	EndTime *EndTime `json:"endTime,omitempty"`
+
+	// Maximum number of elements to return.
+	Count *Count `json:"count,omitempty"`
+}
+
+// GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperIdParams defines parameters for GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperId.
+type GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperIdParams struct {
+	// Start timestamp in milliseconds since epoch.
+	StartTime *StartTime `json:"startTime,omitempty"`
+
+	// End timestamp in milliseconds since epoch.
+	EndTime *EndTime `json:"endTime,omitempty"`
+
+	// Maximum number of elements to return.
+	Count *Count `json:"count,omitempty"`
+}
+
+// GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperIdAppsAppIdParams defines parameters for GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperIdAppsAppId.
+type GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperIdAppsAppIdParams struct {
+	// Start timestamp in milliseconds since epoch.
+	StartTime *StartTime `json:"startTime,omitempty"`
+
+	// End timestamp in milliseconds since epoch.
+	EndTime *EndTime `json:"endTime,omitempty"`
+
+	// Maximum number of elements to return.
+	Count *Count `json:"count,omitempty"`
+}
+
+// GetV1AuditUsersUserNameParams defines parameters for GetV1AuditUsersUserName.
+type GetV1AuditUsersUserNameParams struct {
+	// Start timestamp in milliseconds since epoch.
+	StartTime *StartTime `json:"startTime,omitempty"`
+
+	// End timestamp in milliseconds since epoch.
+	EndTime *EndTime `json:"endTime,omitempty"`
+
+	// Maximum number of elements to return.
+	Count *Count `json:"count,omitempty"`
+}
 
 // PostV1ClustersJSONBody defines parameters for PostV1Clusters.
 type PostV1ClustersJSONBody Cluster
@@ -803,6 +918,21 @@ type PostV1UsersUserNameJSONRequestBody PostV1UsersUserNameJSONBody
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// Retrieve audit records of organization.
+	// (GET /v1/audit/organizations/{organization_name})
+	GetV1AuditOrganizationsOrganizationName(c *gin.Context, organizationName OrganizationName, params GetV1AuditOrganizationsOrganizationNameParams)
+	// Retrieve audit records of apiproduct.
+	// (GET /v1/audit/organizations/{organization_name}/apiproducts/{apiproduct_name})
+	GetV1AuditOrganizationsOrganizationNameApiproductsApiproductName(c *gin.Context, organizationName OrganizationName, apiproductName ApiproductName, params GetV1AuditOrganizationsOrganizationNameApiproductsApiproductNameParams)
+	// Retrieve audit records of developer.
+	// (GET /v1/audit/organizations/{organization_name}/developers/{developer_id})
+	GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperId(c *gin.Context, organizationName OrganizationName, developerId DeveloperId, params GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperIdParams)
+	// Retrieve audit records of application.
+	// (GET /v1/audit/organizations/{organization_name}/developers/{developer_id}/apps/{app_id})
+	GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperIdAppsAppId(c *gin.Context, organizationName OrganizationName, developerId DeveloperId, appId AppId, params GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperIdAppsAppIdParams)
+	// Retrieve audit records of user
+	// (GET /v1/audit/users/{user_name})
+	GetV1AuditUsersUserName(c *gin.Context, userName UserName, params GetV1AuditUsersUserNameParams)
 	// Retrieve clusters
 	// (GET /v1/clusters)
 	GetV1Clusters(c *gin.Context)
@@ -1085,6 +1215,337 @@ type ServerInterfaceWrapper struct {
 }
 
 type MiddlewareFunc func(c *gin.Context)
+
+// GetV1AuditOrganizationsOrganizationName operation middleware
+func (siw *ServerInterfaceWrapper) GetV1AuditOrganizationsOrganizationName(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "organization_name" -------------
+	var organizationName OrganizationName
+
+	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		return
+	}
+
+	c.Set(BasicAuthScopes, []string{""})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetV1AuditOrganizationsOrganizationNameParams
+
+	// ------------- Optional query parameter "startTime" -------------
+	if paramValue := c.Query("startTime"); paramValue != "" {
+
+	}
+
+	err = runtime.BindQueryParameter("form", true, false, "startTime", c.Request.URL.Query(), &params.StartTime)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter startTime: %s", err)})
+		return
+	}
+
+	// ------------- Optional query parameter "endTime" -------------
+	if paramValue := c.Query("endTime"); paramValue != "" {
+
+	}
+
+	err = runtime.BindQueryParameter("form", true, false, "endTime", c.Request.URL.Query(), &params.EndTime)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter endTime: %s", err)})
+		return
+	}
+
+	// ------------- Optional query parameter "count" -------------
+	if paramValue := c.Query("count"); paramValue != "" {
+
+	}
+
+	err = runtime.BindQueryParameter("form", true, false, "count", c.Request.URL.Query(), &params.Count)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter count: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.GetV1AuditOrganizationsOrganizationName(c, organizationName, params)
+}
+
+// GetV1AuditOrganizationsOrganizationNameApiproductsApiproductName operation middleware
+func (siw *ServerInterfaceWrapper) GetV1AuditOrganizationsOrganizationNameApiproductsApiproductName(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "organization_name" -------------
+	var organizationName OrganizationName
+
+	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "apiproduct_name" -------------
+	var apiproductName ApiproductName
+
+	err = runtime.BindStyledParameter("simple", false, "apiproduct_name", c.Param("apiproduct_name"), &apiproductName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter apiproduct_name: %s", err)})
+		return
+	}
+
+	c.Set(BasicAuthScopes, []string{""})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetV1AuditOrganizationsOrganizationNameApiproductsApiproductNameParams
+
+	// ------------- Optional query parameter "startTime" -------------
+	if paramValue := c.Query("startTime"); paramValue != "" {
+
+	}
+
+	err = runtime.BindQueryParameter("form", true, false, "startTime", c.Request.URL.Query(), &params.StartTime)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter startTime: %s", err)})
+		return
+	}
+
+	// ------------- Optional query parameter "endTime" -------------
+	if paramValue := c.Query("endTime"); paramValue != "" {
+
+	}
+
+	err = runtime.BindQueryParameter("form", true, false, "endTime", c.Request.URL.Query(), &params.EndTime)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter endTime: %s", err)})
+		return
+	}
+
+	// ------------- Optional query parameter "count" -------------
+	if paramValue := c.Query("count"); paramValue != "" {
+
+	}
+
+	err = runtime.BindQueryParameter("form", true, false, "count", c.Request.URL.Query(), &params.Count)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter count: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.GetV1AuditOrganizationsOrganizationNameApiproductsApiproductName(c, organizationName, apiproductName, params)
+}
+
+// GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperId operation middleware
+func (siw *ServerInterfaceWrapper) GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperId(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "organization_name" -------------
+	var organizationName OrganizationName
+
+	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "developer_id" -------------
+	var developerId DeveloperId
+
+	err = runtime.BindStyledParameter("simple", false, "developer_id", c.Param("developer_id"), &developerId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_id: %s", err)})
+		return
+	}
+
+	c.Set(BasicAuthScopes, []string{""})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperIdParams
+
+	// ------------- Optional query parameter "startTime" -------------
+	if paramValue := c.Query("startTime"); paramValue != "" {
+
+	}
+
+	err = runtime.BindQueryParameter("form", true, false, "startTime", c.Request.URL.Query(), &params.StartTime)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter startTime: %s", err)})
+		return
+	}
+
+	// ------------- Optional query parameter "endTime" -------------
+	if paramValue := c.Query("endTime"); paramValue != "" {
+
+	}
+
+	err = runtime.BindQueryParameter("form", true, false, "endTime", c.Request.URL.Query(), &params.EndTime)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter endTime: %s", err)})
+		return
+	}
+
+	// ------------- Optional query parameter "count" -------------
+	if paramValue := c.Query("count"); paramValue != "" {
+
+	}
+
+	err = runtime.BindQueryParameter("form", true, false, "count", c.Request.URL.Query(), &params.Count)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter count: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperId(c, organizationName, developerId, params)
+}
+
+// GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperIdAppsAppId operation middleware
+func (siw *ServerInterfaceWrapper) GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperIdAppsAppId(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "organization_name" -------------
+	var organizationName OrganizationName
+
+	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "developer_id" -------------
+	var developerId DeveloperId
+
+	err = runtime.BindStyledParameter("simple", false, "developer_id", c.Param("developer_id"), &developerId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_id: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "app_id" -------------
+	var appId AppId
+
+	err = runtime.BindStyledParameter("simple", false, "app_id", c.Param("app_id"), &appId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_id: %s", err)})
+		return
+	}
+
+	c.Set(BasicAuthScopes, []string{""})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperIdAppsAppIdParams
+
+	// ------------- Optional query parameter "startTime" -------------
+	if paramValue := c.Query("startTime"); paramValue != "" {
+
+	}
+
+	err = runtime.BindQueryParameter("form", true, false, "startTime", c.Request.URL.Query(), &params.StartTime)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter startTime: %s", err)})
+		return
+	}
+
+	// ------------- Optional query parameter "endTime" -------------
+	if paramValue := c.Query("endTime"); paramValue != "" {
+
+	}
+
+	err = runtime.BindQueryParameter("form", true, false, "endTime", c.Request.URL.Query(), &params.EndTime)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter endTime: %s", err)})
+		return
+	}
+
+	// ------------- Optional query parameter "count" -------------
+	if paramValue := c.Query("count"); paramValue != "" {
+
+	}
+
+	err = runtime.BindQueryParameter("form", true, false, "count", c.Request.URL.Query(), &params.Count)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter count: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperIdAppsAppId(c, organizationName, developerId, appId, params)
+}
+
+// GetV1AuditUsersUserName operation middleware
+func (siw *ServerInterfaceWrapper) GetV1AuditUsersUserName(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "user_name" -------------
+	var userName UserName
+
+	err = runtime.BindStyledParameter("simple", false, "user_name", c.Param("user_name"), &userName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter user_name: %s", err)})
+		return
+	}
+
+	c.Set(BasicAuthScopes, []string{""})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetV1AuditUsersUserNameParams
+
+	// ------------- Optional query parameter "startTime" -------------
+	if paramValue := c.Query("startTime"); paramValue != "" {
+
+	}
+
+	err = runtime.BindQueryParameter("form", true, false, "startTime", c.Request.URL.Query(), &params.StartTime)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter startTime: %s", err)})
+		return
+	}
+
+	// ------------- Optional query parameter "endTime" -------------
+	if paramValue := c.Query("endTime"); paramValue != "" {
+
+	}
+
+	err = runtime.BindQueryParameter("form", true, false, "endTime", c.Request.URL.Query(), &params.EndTime)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter endTime: %s", err)})
+		return
+	}
+
+	// ------------- Optional query parameter "count" -------------
+	if paramValue := c.Query("count"); paramValue != "" {
+
+	}
+
+	err = runtime.BindQueryParameter("form", true, false, "count", c.Request.URL.Query(), &params.Count)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter count: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.GetV1AuditUsersUserName(c, userName, params)
+}
 
 // GetV1Clusters operation middleware
 func (siw *ServerInterfaceWrapper) GetV1Clusters(c *gin.Context) {
@@ -4094,6 +4555,16 @@ func RegisterHandlersWithOptions(router *gin.Engine, si ServerInterface, options
 		Handler:            si,
 		HandlerMiddlewares: options.Middlewares,
 	}
+
+	router.GET(options.BaseURL+"/v1/audit/organizations/:organization_name", wrapper.GetV1AuditOrganizationsOrganizationName)
+
+	router.GET(options.BaseURL+"/v1/audit/organizations/:organization_name/apiproducts/:apiproduct_name", wrapper.GetV1AuditOrganizationsOrganizationNameApiproductsApiproductName)
+
+	router.GET(options.BaseURL+"/v1/audit/organizations/:organization_name/developers/:developer_id", wrapper.GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperId)
+
+	router.GET(options.BaseURL+"/v1/audit/organizations/:organization_name/developers/:developer_id/apps/:app_id", wrapper.GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperIdAppsAppId)
+
+	router.GET(options.BaseURL+"/v1/audit/users/:user_name", wrapper.GetV1AuditUsersUserName)
 
 	router.GET(options.BaseURL+"/v1/clusters", wrapper.GetV1Clusters)
 

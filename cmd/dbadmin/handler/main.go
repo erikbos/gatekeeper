@@ -1,19 +1,26 @@
 package handler
 
 import (
+	"embed"
 	"errors"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
-	"github.com/erikbos/gatekeeper/cmd/dbadmin/handler/status"
+	"github.com/erikbos/gatekeeper/cmd/dbadmin/handler/statuspage"
 	"github.com/erikbos/gatekeeper/cmd/dbadmin/service"
 	"github.com/erikbos/gatekeeper/pkg/db"
+	"github.com/erikbos/gatekeeper/pkg/shared"
 	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
 // Generate REST API handlers from OpenAPI specification
 //go:generate oapi-codegen -package handler -generate types,gin -o handler.gen.go ../../../openapi/gatekeeper.yaml
+
+// Copy openapi spec file from /openapi/ so Go can embed it
+//go:generate cp ../../../openapi/gatekeeper.yaml apidocs/
+//go:embed apidocs/*
+var apiDocFiles embed.FS
 
 // Handler has implements all methods of oapi-codegen's ServiceInterface
 type Handler struct {
@@ -25,8 +32,8 @@ var (
 	errFieldMisMatch = errors.New("path and name field value mismatch")
 )
 
-// NewHandler sets up all API endpoint routes
-func NewHandler(router *gin.Engine, db *db.Database, s *service.Service,
+// New sets up all API endpoint routes
+func New(router *gin.Engine, db *db.Database, s *service.Service,
 	applicationName string, disableAPIAuthentication bool, logger *zap.Logger) *Handler {
 
 	handler := &Handler{
@@ -34,10 +41,10 @@ func NewHandler(router *gin.Engine, db *db.Database, s *service.Service,
 		logger:  logger,
 	}
 
-	registerMetricsRoute(router, applicationName)
-
-	status := status.New(s)
-	status.RegisterRoutes(router)
+	router.GET("/apidocs/", shared.ServeEmbedFile(apiDocFiles, "apidocs/index.htm"))
+	router.GET("/apidocs/:path", shared.ServeEmbedDirectory(apiDocFiles, "apidocs"))
+	statuspage := statuspage.New(s)
+	statuspage.RegisterRoutes(router)
 
 	// Register routes and add authentication middleware
 	auth := newAuth(s.User, s.Role, logger)
@@ -45,6 +52,7 @@ func NewHandler(router *gin.Engine, db *db.Database, s *service.Service,
 
 	RegisterHandlersWithOptions(router, handler, GinServerOptions{
 		// TODO specifying auth.AuthenticateAndAuthorize as middleware here does not work
+		// bug: https://github.com/deepmap/oapi-codegen/issues/485
 		// Middlewares: []MiddlewareFunc{
 		// 	auth.AuthenticateAndAuthorize,
 		// },

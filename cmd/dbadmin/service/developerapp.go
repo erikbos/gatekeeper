@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/erikbos/gatekeeper/cmd/dbadmin/audit"
 	"github.com/erikbos/gatekeeper/pkg/db"
 	"github.com/erikbos/gatekeeper/pkg/shared"
 	"github.com/erikbos/gatekeeper/pkg/types"
@@ -13,11 +14,11 @@ import (
 // DeveloperAppService is
 type DeveloperAppService struct {
 	db    *db.Database
-	audit *Auditlog
+	audit *audit.Audit
 }
 
 // NewDeveloperApp returns a new developerApp instance
-func NewDeveloperApp(database *db.Database, a *Auditlog) *DeveloperAppService {
+func NewDeveloperApp(database *db.Database, a *audit.Audit) *DeveloperAppService {
 
 	return &DeveloperAppService{
 		db:    database,
@@ -59,7 +60,7 @@ func (das *DeveloperAppService) GetByID(organizationName, developerAppID string)
 
 // Create creates a new developerApp
 func (das *DeveloperAppService) Create(organizationName, developerEmail string,
-	newDeveloperApp types.DeveloperApp, who Requester) (*types.DeveloperApp, types.Error) {
+	newDeveloperApp types.DeveloperApp, who audit.Requester) (*types.DeveloperApp, types.Error) {
 
 	developer, err := das.db.Developer.GetByEmail(organizationName, developerEmail)
 	if err != nil {
@@ -84,7 +85,12 @@ func (das *DeveloperAppService) Create(organizationName, developerEmail string,
 	if err = das.updateDeveloperApp(organizationName, &newDeveloperApp, who); err != nil {
 		return nil, err
 	}
-	das.audit.Create(newDeveloperApp, who)
+	env := &audit.Environment{
+		Organization: organizationName,
+		DeveloperID:  developer.DeveloperID,
+		AppID:        newDeveloperApp.AppID,
+	}
+	das.audit.Create(newDeveloperApp, env, who)
 
 	// Add app to the apps field in developer entity
 	developer.Apps = append(developer.Apps, newDeveloperApp.Name)
@@ -97,7 +103,7 @@ func (das *DeveloperAppService) Create(organizationName, developerEmail string,
 
 // Update updates an existing developerApp
 func (das *DeveloperAppService) Update(organizationName, developerEmail string, updatedDeveloperApp types.DeveloperApp,
-	who Requester) (*types.DeveloperApp, types.Error) {
+	who audit.Requester) (*types.DeveloperApp, types.Error) {
 
 	currentDeveloperApp, err := das.db.DeveloperApp.GetByName(organizationName, developerEmail, updatedDeveloperApp.Name)
 	if err != nil {
@@ -114,13 +120,18 @@ func (das *DeveloperAppService) Update(organizationName, developerEmail string, 
 	if err = das.updateDeveloperApp(organizationName, &updatedDeveloperApp, who); err != nil {
 		return nil, err
 	}
-	das.audit.Update(currentDeveloperApp, updatedDeveloperApp, who)
+	env := &audit.Environment{
+		Organization: organizationName,
+		DeveloperID:  currentDeveloperApp.DeveloperID,
+		AppID:        updatedDeveloperApp.AppID,
+	}
+	das.audit.Update(currentDeveloperApp, updatedDeveloperApp, env, who)
 	return &updatedDeveloperApp, nil
 }
 
 // updateDeveloperApp updates last-modified field(s) and updates developer app in database
 func (das *DeveloperAppService) updateDeveloperApp(organizationName string,
-	updatedDeveloperApp *types.DeveloperApp, who Requester) types.Error {
+	updatedDeveloperApp *types.DeveloperApp, who audit.Requester) types.Error {
 
 	updatedDeveloperApp.Attributes.Tidy()
 	updatedDeveloperApp.LastModifiedAt = shared.GetCurrentTimeMilliseconds()
@@ -134,7 +145,7 @@ func (das *DeveloperAppService) updateDeveloperApp(organizationName string,
 
 // Delete deletes an developerApp
 func (das *DeveloperAppService) Delete(organizationName, developerEmail, developerAppName string,
-	who Requester) (e types.Error) {
+	who audit.Requester) (e types.Error) {
 
 	developer, err := das.db.Developer.GetByEmail(organizationName, developerEmail)
 	if err != nil {
@@ -169,7 +180,12 @@ func (das *DeveloperAppService) Delete(organizationName, developerEmail, develop
 	if err := das.db.Developer.Update(organizationName, developer); err != nil {
 		return err
 	}
-	das.audit.Delete(developerApp, who)
+	env := &audit.Environment{
+		Organization: organizationName,
+		DeveloperID:  developer.DeveloperID,
+		AppID:        developerApp.AppID,
+	}
+	das.audit.Delete(developerApp, env, who)
 	return nil
 }
 

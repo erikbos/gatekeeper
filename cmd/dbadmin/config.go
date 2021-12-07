@@ -3,7 +3,7 @@ package main
 import (
 	"gopkg.in/yaml.v2"
 
-	"github.com/erikbos/gatekeeper/cmd/dbadmin/service"
+	"github.com/erikbos/gatekeeper/cmd/dbadmin/audit"
 	"github.com/erikbos/gatekeeper/pkg/db/cache"
 	"github.com/erikbos/gatekeeper/pkg/db/cassandra"
 	"github.com/erikbos/gatekeeper/pkg/shared"
@@ -23,11 +23,11 @@ const (
 
 // DBAdminConfig contains our startup configuration data
 type DBAdminConfig struct {
-	Logger   shared.Logger            `yaml:"logging"`   // log configuration of application
-	WebAdmin webadmin.Config          `yaml:"webadmin"`  // Admin web interface configuration
-	Audit    service.AuditConfig      `yaml:"changelog"` // Audit configuration
-	Database cassandra.DatabaseConfig `yaml:"database"`  // Database configuration
-	Cache    cache.Config             `yaml:"cache"`     // Cache configuration
+	Logger   shared.Logger            `yaml:"logging"`  // log configuration of application
+	WebAdmin webadmin.Config          `yaml:"webadmin"` // Admin web interface configuration
+	Audit    audit.Config             `yaml:"audit"`    // Audit configuration
+	Database cassandra.DatabaseConfig `yaml:"database"` // Database configuration
+	Cache    cache.Config             `yaml:"cache"`    // Cache configuration
 }
 
 // String() return our startup configuration as YAML
@@ -58,7 +58,7 @@ func loadConfiguration(filename *string) (*DBAdminConfig, error) {
 				Filename: defaultWebAdminLogFileName,
 			},
 		},
-		Audit: service.AuditConfig{
+		Audit: audit.Config{
 			Logger: shared.Logger{
 				Level:    defaultLogLevel,
 				Filename: defaultAuditLogFileName,

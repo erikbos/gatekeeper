@@ -79,7 +79,7 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 		return
 	}
 
-	createdKey, err := h.service.Key.Create(string(organizationName), types.NullDeveloperAppKey, createdApp, h.who(c))
+	createdKey, err := h.service.Key.Create(string(organizationName), string(developerEmailaddress), createdApp.Name, types.NullDeveloperAppKey, h.who(c))
 	if err != nil {
 		responseError(c, err)
 		return
@@ -195,14 +195,14 @@ func (h *Handler) PutV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddr
 	}
 	// In case apiproduct(s) were provided we create a new key with all apiproducts assigned
 	if receivedApplicationUpdate.ApiProducts != nil {
-		createdKey, err := h.service.Key.Create(string(organizationName), types.NullDeveloperAppKey, app, h.who(c))
+		createdKey, err := h.service.Key.Create(string(organizationName), string(developerEmailaddress), string(appName), types.NullDeveloperAppKey, h.who(c))
 		if err != nil {
 			responseError(c, err)
 			return
 		}
 		createdKey.APIProducts = createdKey.APIProducts.AddProducts(receivedApplicationUpdate.ApiProducts)
 		_, err = h.service.Key.Update(
-			string(organizationName), string(createdKey.ConsumerKey), *createdKey, h.who(c))
+			string(organizationName), string(developerEmailaddress), string(appName), string(createdKey.ConsumerKey), *createdKey, h.who(c))
 		if err != nil {
 			responseError(c, err)
 			return

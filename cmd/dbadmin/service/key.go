@@ -5,6 +5,7 @@ import (
 
 	"github.com/dchest/uniuri"
 
+	"github.com/erikbos/gatekeeper/cmd/dbadmin/audit"
 	"github.com/erikbos/gatekeeper/pkg/db"
 	"github.com/erikbos/gatekeeper/pkg/shared"
 	"github.com/erikbos/gatekeeper/pkg/types"
@@ -13,11 +14,11 @@ import (
 // KeyService is
 type KeyService struct {
 	db    *db.Database
-	audit *Auditlog
+	audit *audit.Audit
 }
 
 // NewKey returns a new key instance
-func NewKey(database *db.Database, a *Auditlog) *KeyService {
+func NewKey(database *db.Database, a *audit.Audit) *KeyService {
 
 	return &KeyService{
 		db:    database,
@@ -38,9 +39,12 @@ func (ks *KeyService) GetByDeveloperAppID(organizationName, developerAppID strin
 }
 
 // Create creates a key
-func (ks *KeyService) Create(organizationName string, newKey types.Key, developerApp *types.DeveloperApp,
-	who Requester) (*types.Key, types.Error) {
+func (ks *KeyService) Create(organizationName, developerEmail, developerAppName string, newKey types.Key, who audit.Requester) (*types.Key, types.Error) {
 
+	developer, developerApp, err := ks.getDevApp(organizationName, developerEmail, developerAppName)
+	if err != nil {
+		return nil, err
+	}
 	if _, err := ks.db.Key.GetByKey(&organizationName, &newKey.ConsumerKey); err == nil {
 		return nil, types.NewBadRequestError(
 			fmt.Errorf("consumerKey '%s' already exists", newKey.ConsumerKey))
@@ -70,14 +74,23 @@ func (ks *KeyService) Create(organizationName string, newKey types.Key, develope
 	if err := ks.db.Key.UpdateByKey(organizationName, &newKey); err != nil {
 		return nil, err
 	}
-	ks.audit.Create(newKey, who)
+	env := &audit.Environment{
+		Organization: organizationName,
+		DeveloperID:  developer.DeveloperID,
+		AppID:        developerApp.AppID,
+	}
+	ks.audit.Create(newKey, env, who)
 	return &newKey, nil
 }
 
 // Update updates an existing key
-func (ks *KeyService) Update(organizationName, consumerKey string, updatedKey types.Key,
-	who Requester) (*types.Key, types.Error) {
+func (ks *KeyService) Update(organizationName, developerEmail, developerAppName string,
+	consumerKey string, updatedKey types.Key, who audit.Requester) (*types.Key, types.Error) {
 
+	developer, developerApp, err := ks.getDevApp(organizationName, developerEmail, developerAppName)
+	if err != nil {
+		return nil, err
+	}
 	currentKey, err := ks.db.Key.GetByKey(&organizationName, &updatedKey.ConsumerKey)
 	if err != nil {
 		return nil, err
@@ -98,13 +111,23 @@ func (ks *KeyService) Update(organizationName, consumerKey string, updatedKey ty
 	if err = ks.db.Key.UpdateByKey(organizationName, &updatedKey); err != nil {
 		return nil, err
 	}
-	ks.audit.Update(currentKey, updatedKey, who)
+	env := &audit.Environment{
+		Organization: organizationName,
+		DeveloperID:  developer.DeveloperID,
+		AppID:        developerApp.AppID,
+	}
+	ks.audit.Update(currentKey, updatedKey, env, who)
 	return &updatedKey, nil
 }
 
 // Delete deletes a key
-func (ks *KeyService) Delete(organizationName, consumerKey string, who Requester) (e types.Error) {
+func (ks *KeyService) Delete(organizationName, developerEmail, developerAppName,
+	consumerKey string, who audit.Requester) (e types.Error) {
 
+	developer, developerApp, err := ks.getDevApp(organizationName, developerEmail, developerAppName)
+	if err != nil {
+		return err
+	}
 	key, err := ks.db.Key.GetByKey(&organizationName, &consumerKey)
 	if err != nil {
 		return err
@@ -112,8 +135,28 @@ func (ks *KeyService) Delete(organizationName, consumerKey string, who Requester
 	if err = ks.db.Key.DeleteByKey(organizationName, consumerKey); err != nil {
 		return err
 	}
-	ks.audit.Delete(key, who)
+	env := &audit.Environment{
+		Organization: organizationName,
+		DeveloperID:  developer.DeveloperID,
+		AppID:        developerApp.AppID,
+	}
+	ks.audit.Delete(key, env, who)
 	return nil
+}
+
+// getDevApp gets developer and application
+func (ks *KeyService) getDevApp(organizationName, developerEmailaddress, appName string) (
+	developer *types.Developer, application *types.DeveloperApp, err types.Error) {
+
+	developer, err = ks.db.Developer.GetByEmail(organizationName, developerEmailaddress)
+	if err != nil {
+		return nil, nil, err
+	}
+	application, err = ks.db.DeveloperApp.GetByName(organizationName, developerEmailaddress, appName)
+	if err != nil {
+		return nil, nil, err
+	}
+	return
 }
 
 // generateConsumerKey returns a random string to be used as apikey (32 character base62)

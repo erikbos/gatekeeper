@@ -3,6 +3,7 @@ package service
 import (
 	"fmt"
 
+	"github.com/erikbos/gatekeeper/cmd/dbadmin/audit"
 	"github.com/erikbos/gatekeeper/pkg/db"
 	"github.com/erikbos/gatekeeper/pkg/shared"
 	"github.com/erikbos/gatekeeper/pkg/types"
@@ -11,13 +12,16 @@ import (
 // ClusterService is
 type ClusterService struct {
 	db    *db.Database
-	audit *Auditlog
+	audit *audit.Audit
 }
 
 // NewCluster returns a new cluster instance
-func NewCluster(database *db.Database, a *Auditlog) *ClusterService {
+func NewCluster(database *db.Database, a *audit.Audit) *ClusterService {
 
-	return &ClusterService{db: database, audit: a}
+	return &ClusterService{
+		db:    database,
+		audit: a,
+	}
 }
 
 // GetAll returns all clusters
@@ -43,7 +47,7 @@ func (cs *ClusterService) GetAttribute(clusterName, attributeName string) (value
 }
 
 // Create creates an cluster
-func (cs *ClusterService) Create(newCluster types.Cluster, who Requester) (
+func (cs *ClusterService) Create(newCluster types.Cluster, who audit.Requester) (
 	*types.Cluster, types.Error) {
 
 	if _, err := cs.db.Cluster.Get(newCluster.Name); err == nil {
@@ -57,13 +61,13 @@ func (cs *ClusterService) Create(newCluster types.Cluster, who Requester) (
 	if err := cs.updateCluster(&newCluster, who); err != nil {
 		return nil, err
 	}
-	cs.audit.Create(newCluster, who)
+	cs.audit.Create(newCluster, nil, who)
 	return &newCluster, nil
 }
 
 // Update updates an existing cluster
 func (cs *ClusterService) Update(updatedCluster types.Cluster,
-	who Requester) (*types.Cluster, types.Error) {
+	who audit.Requester) (*types.Cluster, types.Error) {
 
 	currentCluster, err := cs.db.Cluster.Get(updatedCluster.Name)
 	if err != nil {
@@ -77,12 +81,12 @@ func (cs *ClusterService) Update(updatedCluster types.Cluster,
 	if err = cs.updateCluster(&updatedCluster, who); err != nil {
 		return nil, err
 	}
-	cs.audit.Update(currentCluster, updatedCluster, who)
+	cs.audit.Update(currentCluster, updatedCluster, nil, who)
 	return &updatedCluster, nil
 }
 
 // updateCluster updates last-modified field(s) and updates cluster in database
-func (cs *ClusterService) updateCluster(updatedCluster *types.Cluster, who Requester) types.Error {
+func (cs *ClusterService) updateCluster(updatedCluster *types.Cluster, who audit.Requester) types.Error {
 
 	updatedCluster.Attributes.Tidy()
 	updatedCluster.LastModifiedAt = shared.GetCurrentTimeMilliseconds()
@@ -95,7 +99,7 @@ func (cs *ClusterService) updateCluster(updatedCluster *types.Cluster, who Reque
 }
 
 // Delete deletes an cluster
-func (cs *ClusterService) Delete(clusterName string, who Requester) (e types.Error) {
+func (cs *ClusterService) Delete(clusterName string, who audit.Requester) (e types.Error) {
 
 	cluster, err := cs.db.Cluster.Get(clusterName)
 	if err != nil {
@@ -104,6 +108,6 @@ func (cs *ClusterService) Delete(clusterName string, who Requester) (e types.Err
 	if err := cs.db.Cluster.Delete(clusterName); err != nil {
 		return err
 	}
-	cs.audit.Delete(cluster, who)
+	cs.audit.Delete(cluster, nil, who)
 	return nil
 }

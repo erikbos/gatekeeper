@@ -1,10 +1,11 @@
-package service
+package audit
 
 import (
 	"testing"
 
-	"github.com/erikbos/gatekeeper/pkg/types"
 	"github.com/stretchr/testify/require"
+
+	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
 func Test_clearSensitiveFields(t *testing.T) {

@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
+	"github.com/erikbos/gatekeeper/cmd/dbadmin/audit"
 	"github.com/erikbos/gatekeeper/cmd/dbadmin/service"
 	"github.com/erikbos/gatekeeper/pkg/types"
 	"github.com/erikbos/gatekeeper/pkg/webadmin"
@@ -112,10 +113,10 @@ func abortAuthorizationRequired(c *gin.Context, errorDetails types.Error) {
 }
 
 // who returns name of authenticated user requesting this API call
-func (h *Handler) who(c *gin.Context) service.Requester {
+func (h *Handler) who(c *gin.Context) audit.Requester {
 
 	// Store details, changelog will use these values
-	return service.Requester{
+	return audit.Requester{
 		RemoteAddr: c.ClientIP(),
 		Header:     c.Request.Header,
 		User:       webadmin.GetUser(c),
