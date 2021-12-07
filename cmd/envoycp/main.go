@@ -4,8 +4,6 @@ import (
 	"flag"
 	"fmt"
 
-	"github.com/gin-gonic/gin"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 
 	"github.com/erikbos/gatekeeper/cmd/envoycp/metrics"
@@ -53,8 +51,8 @@ func main() {
 		zap.String("version", version),
 		zap.String("buildtime", buildTime))
 
-	s.metrics = metrics.New()
-	s.metrics.RegisterWithPrometheus(applicationName)
+	s.metrics = metrics.New(applicationName)
+	s.metrics.RegisterWithPrometheus()
 
 	if s.db, err = cassandra.New(s.config.Database, applicationName, s.logger, false, 0); err != nil {
 		s.logger.Fatal("Database connect failed", zap.Error(err))
@@ -93,7 +91,7 @@ func startWebAdmin(s *server, applicationName string) {
 	s.webadmin.Router.GET("/", webadmin.ShowAllRoutes(s.webadmin.Router, applicationName))
 	s.webadmin.Router.GET(webadmin.LivenessCheckPath, webadmin.LivenessProbe)
 	s.webadmin.Router.GET(webadmin.ReadinessCheckPath, s.readiness.ReadinessProbe)
-	s.webadmin.Router.GET(webadmin.MetricsPath, gin.WrapH(promhttp.Handler()))
+	s.webadmin.Router.GET(webadmin.MetricsPath, s.metrics.GinHandler())
 	s.webadmin.Router.GET(webadmin.ConfigDumpPath, webadmin.ShowStartupConfiguration(s.config))
 
 	s.webadmin.Start()

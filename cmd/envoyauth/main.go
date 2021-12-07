@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gin-gonic/gin"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 
 	"github.com/erikbos/gatekeeper/cmd/envoyauth/metrics"
@@ -60,8 +58,8 @@ func main() {
 		zap.String("version", version),
 		zap.String("buildtime", buildTime))
 
-	a.metrics = metrics.New()
-	a.metrics.RegisterWithPrometheus(applicationName)
+	a.metrics = metrics.New(applicationName)
+	a.metrics.RegisterWithPrometheus()
 
 	database, err := cassandra.New(a.config.Database, applicationName, a.logger, false, 0)
 	if err != nil {
@@ -123,7 +121,7 @@ func startWebAdmin(s *server, applicationName string) {
 	s.webadmin.Router.GET("/", webadmin.ShowAllRoutes(s.webadmin.Router, applicationName))
 	s.webadmin.Router.GET(webadmin.LivenessCheckPath, webadmin.LivenessProbe)
 	s.webadmin.Router.GET(webadmin.ReadinessCheckPath, s.readiness.ReadinessProbe)
-	s.webadmin.Router.GET(webadmin.MetricsPath, gin.WrapH(promhttp.Handler()))
+	s.webadmin.Router.GET(webadmin.MetricsPath, s.metrics.GinHandler())
 	s.webadmin.Router.GET(webadmin.ConfigDumpPath, webadmin.ShowStartupConfiguration(s.config))
 
 	s.webadmin.Start()

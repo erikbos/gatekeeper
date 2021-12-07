@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 
-	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
 	"github.com/erikbos/gatekeeper/cmd/envoyals/metrics"
@@ -47,8 +46,8 @@ func main() {
 		zap.String("version", version),
 		zap.String("buildtime", buildTime))
 
-	s.metrics = metrics.New()
-	s.metrics.RegisterWithPrometheus(applicationName)
+	s.metrics = metrics.New(applicationName)
+	s.metrics.RegisterWithPrometheus()
 
 	go startWebAdmin(&s, applicationName)
 
@@ -69,7 +68,7 @@ func startWebAdmin(s *server, applicationName string) {
 	s.webadmin.Router.GET("/", webadmin.ShowAllRoutes(s.webadmin.Router, applicationName))
 	s.webadmin.Router.GET(webadmin.LivenessCheckPath, webadmin.LivenessProbe)
 	// s.webadmin.Router.GET(webadmin.ReadinessCheckPath, s.readiness.ReadinessProbe)
-	s.webadmin.Router.GET(webadmin.MetricsPath, gin.WrapH(metrics.Handler()))
+	s.webadmin.Router.GET(webadmin.MetricsPath, s.metrics.GinHandler())
 	s.webadmin.Router.GET(webadmin.ConfigDumpPath, webadmin.ShowStartupConfiguration(s.config))
 
 	s.webadmin.Start()

@@ -1,37 +1,41 @@
 package metrics
 
 import (
-	"net/http"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 // Metrics holds all our metrics
 type Metrics struct {
+	applicationName    string
 	accessLogNodeHits  *prometheus.CounterVec
 	accessLogVHostHits *prometheus.CounterVec
 	accessLogLatency   prometheus.Summary
 }
 
 // New returns a new Metrics instance
-func New() *Metrics {
+func New(applicationName string) *Metrics {
 
-	return &Metrics{}
+	return &Metrics{
+		applicationName: applicationName,
+	}
 }
 
-// Handler returns HTTP handler function that exposes metrics
-func Handler() http.Handler {
-	return promhttp.Handler()
+// GinHandler returns a Gin handler for Prometheus metrics endpoint
+func (m *Metrics) GinHandler() gin.HandlerFunc {
+
+	return gin.WrapH(promhttp.Handler())
 }
 
 // RegisterWithPrometheus registers our operational metrics
-func (m *Metrics) RegisterWithPrometheus(metricNamespace string) {
+func (m *Metrics) RegisterWithPrometheus() {
 
 	m.accessLogNodeHits = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Namespace: metricNamespace,
+			Namespace: m.applicationName,
 			Name:      "accesslog_received_node_total",
 			Help:      "Total number of access log entries per node received.",
 		}, []string{"id", "cluster"})
@@ -39,7 +43,7 @@ func (m *Metrics) RegisterWithPrometheus(metricNamespace string) {
 
 	m.accessLogVHostHits = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Namespace: metricNamespace,
+			Namespace: m.applicationName,
 			Name:      "accesslog_received_vhost_total",
 			Help:      "Total number of access log entries per vhost received.",
 		}, []string{"hostname"})
@@ -47,7 +51,7 @@ func (m *Metrics) RegisterWithPrometheus(metricNamespace string) {
 
 	m.accessLogLatency = prometheus.NewSummary(
 		prometheus.SummaryOpts{
-			Namespace: metricNamespace,
+			Namespace: m.applicationName,
 			Name:      "accesslog_latency",
 			Help:      "Access logging latency in seconds.",
 			Objectives: map[float64]float64{
