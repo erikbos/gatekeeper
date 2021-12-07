@@ -257,12 +257,12 @@ func (h *Handler) responseDeveloperEmailAddresses(c *gin.Context, developers typ
 
 func (h *Handler) responseDevelopers(c *gin.Context, developers types.Developers) {
 
-	all_developers := make([]Developer, len(developers))
+	allDevelopers := make([]Developer, len(developers))
 	for i := range developers {
-		all_developers[i] = h.ToDeveloperResponse(&developers[i])
+		allDevelopers[i] = h.ToDeveloperResponse(&developers[i])
 	}
 	c.IndentedJSON(http.StatusOK, Developers{
-		Developer: &all_developers,
+		Developer: &allDevelopers,
 	})
 }
 

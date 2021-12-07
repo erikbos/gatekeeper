@@ -364,12 +364,12 @@ func (h *Handler) responseDeveloperAppNames(c *gin.Context, developerapps types.
 
 func (h *Handler) responseDeveloperAllApps(c *gin.Context, developerapps types.DeveloperApps) {
 
-	all_apps := make([]Application, len(developerapps))
+	allApps := make([]Application, len(developerapps))
 	for i := range developerapps {
-		all_apps[i] = ToApplicationResponse(&developerapps[i], nil)
+		allApps[i] = ToApplicationResponse(&developerapps[i], nil)
 	}
 	c.IndentedJSON(http.StatusOK, Applications{
-		Application: &all_apps,
+		Application: &allApps,
 	})
 }
 
@@ -393,7 +393,7 @@ func ToApplicationResponse(d *types.DeveloperApp, k *types.Keys) Application {
 
 	app := Application{
 		AppId:          &d.AppID,
-		CallbackUrl:    &d.CallbackUrl,
+		CallbackUrl:    &d.CallbackURL,
 		Attributes:     toAttributesResponse(d.Attributes),
 		CreatedAt:      &d.CreatedAt,
 		CreatedBy:      &d.CreatedBy,
@@ -425,7 +425,7 @@ func fromApplication(a Application) types.DeveloperApp {
 		app.Attributes = fromAttributesRequest(a.Attributes)
 	}
 	if a.CallbackUrl != nil {
-		app.CallbackUrl = *a.CallbackUrl
+		app.CallbackURL = *a.CallbackUrl
 	}
 	if a.CreatedAt != nil {
 		app.CreatedAt = *a.CreatedAt

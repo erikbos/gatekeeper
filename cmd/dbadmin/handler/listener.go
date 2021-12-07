@@ -194,12 +194,12 @@ func (h *Handler) PostV1ListenersListenerNameAttributesAttributeName(c *gin.Cont
 
 func (h *Handler) responseListeners(c *gin.Context, listeners types.Listeners) {
 
-	all_listeners := make([]Listener, len(listeners))
+	allListeners := make([]Listener, len(listeners))
 	for i := range listeners {
-		all_listeners[i] = h.ToListenerResponse(&listeners[i])
+		allListeners[i] = h.ToListenerResponse(&listeners[i])
 	}
 	c.IndentedJSON(http.StatusOK, Listeners{
-		Listeners: &all_listeners,
+		Listeners: &allListeners,
 	})
 }
 

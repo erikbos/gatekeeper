@@ -48,11 +48,11 @@ func (s *KeyCache) GetByDeveloperAppID(organizationName, developerAppID string) 
 // GetCountByAPIProductName counts the number of times an apiproduct has been assigned to keys
 func (s *KeyCache) GetCountByAPIProductName(organizationName, apiProductName string) (int, types.Error) {
 
-	getCountOfApiProduct := func() (interface{}, types.Error) {
+	getCountOfAPIProduct := func() (interface{}, types.Error) {
 		return s.key.GetCountByAPIProductName(organizationName, apiProductName)
 	}
 	var apiProductCount int
-	if err := s.cache.fetchEntity(types.TypeKeyName, apiProductName, &apiProductCount, getCountOfApiProduct); err != nil {
+	if err := s.cache.fetchEntity(types.TypeKeyName, apiProductName, &apiProductCount, getCountOfAPIProduct); err != nil {
 		return 0, err
 	}
 	return apiProductCount, nil

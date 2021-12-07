@@ -213,12 +213,12 @@ func (h *Handler) responseAPIproductNames(c *gin.Context, apiproducts types.APIP
 
 func (h *Handler) responseAPIproducts(c *gin.Context, apiproducts types.APIProducts) {
 
-	all_apiproducts := make([]APIProduct, len(apiproducts))
+	allApiproducts := make([]APIProduct, len(apiproducts))
 	for i := range apiproducts {
-		all_apiproducts[i] = h.ToAPIproductResponse(&apiproducts[i])
+		allApiproducts[i] = h.ToAPIproductResponse(&apiproducts[i])
 	}
 	c.IndentedJSON(http.StatusOK, APIProducts{
-		ApiProduct: &all_apiproducts,
+		ApiProduct: &allApiproducts,
 	})
 }
 

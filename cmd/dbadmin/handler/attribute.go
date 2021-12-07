@@ -43,14 +43,14 @@ func (h *Handler) responseAttributeDeleted(c *gin.Context, attribute *types.Attr
 
 func toAttributesResponse(attributes types.Attributes) *[]Attribute {
 
-	all_attributes := make([]Attribute, len(attributes))
+	allAttributes := make([]Attribute, len(attributes))
 	for i := range attributes {
-		all_attributes[i] = Attribute{
+		allAttributes[i] = Attribute{
 			Name:  &attributes[i].Name,
 			Value: &attributes[i].Value,
 		}
 	}
-	return &all_attributes
+	return &allAttributes
 }
 
 func ToAttributeResponse(attribute *types.Attribute) Attribute {
@@ -66,11 +66,11 @@ func fromAttributesRequest(attributes *[]Attribute) types.Attributes {
 	if attributes == nil {
 		return types.Attributes{}
 	}
-	all_attributes := make([]types.Attribute, len(*attributes))
+	allAttributes := make([]types.Attribute, len(*attributes))
 	for i, a := range *attributes {
-		all_attributes[i] = fromAttributeRequest(a)
+		allAttributes[i] = fromAttributeRequest(a)
 	}
-	return all_attributes
+	return allAttributes
 }
 
 func fromAttributeRequest(attribute Attribute) types.Attribute {

@@ -109,12 +109,12 @@ func (h *Handler) GetV1RolesRoleNameUsers(c *gin.Context, roleName RoleName) {
 
 func (h *Handler) responseRoles(c *gin.Context, roles types.Roles) {
 
-	all_roles := make([]Role, len(roles))
+	allRoles := make([]Role, len(roles))
 	for i, v := range roles {
-		all_roles[i] = h.ToRoleResponse(&v)
+		allRoles[i] = h.ToRoleResponse(&v)
 	}
 	c.IndentedJSON(http.StatusOK, Roles{
-		Role: &all_roles,
+		Role: &allRoles,
 	})
 }
 
@@ -153,14 +153,14 @@ func (h *Handler) ToRoleResponse(l *types.Role) Role {
 
 func ToRolePermissionsResponse(permissions types.Permissions) *[]RolePermissions {
 
-	allowed_paths := make([]RolePermissions, len(permissions))
+	allowedPaths := make([]RolePermissions, len(permissions))
 	for i := range permissions {
-		allowed_paths[i] = RolePermissions{
+		allowedPaths[i] = RolePermissions{
 			Methods: &permissions[i].Methods,
 			Paths:   &permissions[i].Paths,
 		}
 	}
-	return &allowed_paths
+	return &allowedPaths
 }
 
 func fromRole(u Role) types.Role {
@@ -195,12 +195,12 @@ func fromRolePermissions(a *[]RolePermissions) types.Permissions {
 	if a == nil {
 		return types.NullPermissions
 	}
-	all_attributes := make([]types.Permission, len(*a))
+	allAttributes := make([]types.Permission, len(*a))
 	for i, a := range *a {
-		all_attributes[i] = types.Permission{
+		allAttributes[i] = types.Permission{
 			Methods: *a.Methods,
 			Paths:   *a.Paths,
 		}
 	}
-	return all_attributes
+	return allAttributes
 }

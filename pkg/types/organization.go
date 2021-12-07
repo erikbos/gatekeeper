@@ -2,8 +2,7 @@ package types
 
 import "github.com/go-playground/validator/v10"
 
-// Organization
-// Field validation (binding) is done using https://godoc.org/github.com/go-playground/validator
+// Organization holds details of an organization
 type (
 	Organization struct {
 		// Name of organization (not changable)

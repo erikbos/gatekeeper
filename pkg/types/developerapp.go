@@ -27,7 +27,7 @@ type (
 		Scopes []string
 
 		// OAuth call back URL
-		CallbackUrl string
+		CallbackURL string
 
 		// Created at timestamp in epoch milliseconds
 		CreatedAt int64

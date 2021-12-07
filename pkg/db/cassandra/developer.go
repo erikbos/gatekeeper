@@ -170,7 +170,7 @@ func (s *DeveloperStore) DeleteByID(organizationName, developerID string) types.
 
 // developerPrimaryKey generates primary key
 // we combine org & developerId to make developerIds unique per organization
-func developerPrimaryKey(organization, developer_id string) string {
+func developerPrimaryKey(organization, developerID string) string {
 
-	return fmt.Sprintf("%s@@@%s", organization, developer_id)
+	return fmt.Sprintf("%s@@@%s", organization, developerID)
 }

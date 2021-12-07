@@ -50,9 +50,9 @@ func NewAttribute(name, value string) *Attribute {
 }
 
 // Get return one named attribute from attributes
-func (attributes *Attributes) Get(name string) (string, Error) {
+func (a *Attributes) Get(name string) (string, Error) {
 
-	for _, element := range *attributes {
+	for _, element := range *a {
 		if element.Name == name {
 			return element.Value, nil
 		}
@@ -61,9 +61,9 @@ func (attributes *Attributes) Get(name string) (string, Error) {
 }
 
 // GetAsString returns attribute value (or provided default if not found) as type string
-func (attributes *Attributes) GetAsString(name, defaultValue string) string {
+func (a *Attributes) GetAsString(name, defaultValue string) string {
 
-	value, err := attributes.Get(name)
+	value, err := a.Get(name)
 	if err != nil {
 		return defaultValue
 	}
@@ -71,9 +71,9 @@ func (attributes *Attributes) GetAsString(name, defaultValue string) string {
 }
 
 // GetAsUInt32 returns attribute value (or provided default) as type integer
-func (attributes *Attributes) GetAsUInt32(name string, defaultValue uint32) uint32 {
+func (a *Attributes) GetAsUInt32(name string, defaultValue uint32) uint32 {
 
-	value, err := attributes.Get(name)
+	value, err := a.Get(name)
 	if err == nil {
 		integer, err := strconv.ParseUint(value, 10, 32)
 		if err == nil {
@@ -84,9 +84,9 @@ func (attributes *Attributes) GetAsUInt32(name string, defaultValue uint32) uint
 }
 
 // GetAsDuration returns attribute value (or provided default) as type time.Duration
-func (attributes *Attributes) GetAsDuration(name string, defaultDuration time.Duration) time.Duration {
+func (a *Attributes) GetAsDuration(name string, defaultDuration time.Duration) time.Duration {
 
-	value, err := attributes.Get(name)
+	value, err := a.Get(name)
 	if err == nil {
 		duration, err := time.ParseDuration(value)
 		if err == nil {
@@ -97,16 +97,16 @@ func (attributes *Attributes) GetAsDuration(name string, defaultDuration time.Du
 }
 
 // Set updates or adds attribute in slice. Returns old value if attribute already existed.
-func (attributes *Attributes) Set(attributeValue *Attribute) Error {
+func (a *Attributes) Set(attributeValue *Attribute) Error {
 
-	if len(*attributes) > MaximumNumberofAttributesAllowed {
+	if len(*a) > MaximumNumberofAttributesAllowed {
 		return errTooManyAttributes
 	}
 
 	updatedAttributes := Attributes{}
 	attributePresent := false
 
-	for _, oldAttribute := range *attributes {
+	for _, oldAttribute := range *a {
 		// In case attribute exists append new value
 		if oldAttribute.Name == attributeValue.Name {
 			attributePresent = true
@@ -120,16 +120,16 @@ func (attributes *Attributes) Set(attributeValue *Attribute) Error {
 		updatedAttributes = append(updatedAttributes, *attributeValue)
 	}
 	// Overwrite existing slice with new slice
-	*attributes = updatedAttributes
+	*a = updatedAttributes
 
 	return nil
 }
 
 // SetMultiple updates or adds multiple attribute. Returns error in case of isses
-func (attributes *Attributes) SetMultiple(attributeValues Attributes) Error {
+func (a *Attributes) SetMultiple(attributeValues Attributes) Error {
 
 	for _, attribute := range attributeValues {
-		if err := attributes.Set(&attribute); err != nil {
+		if err := a.Set(&attribute); err != nil {
 			return err
 		}
 	}
@@ -137,13 +137,13 @@ func (attributes *Attributes) SetMultiple(attributeValues Attributes) Error {
 }
 
 // Tidy removes duplicate, trims all names & values and sorts attribute by name
-func (attributes *Attributes) Tidy() {
+func (a *Attributes) Tidy() {
 	// Use map to record duplicates as we find them.
 	encountered := map[string]bool{}
 	updatedAttributes := Attributes{}
 
 	// Remove dups & trim
-	for _, attribute := range *attributes {
+	for _, attribute := range *a {
 		if encountered[strings.TrimSpace(attribute.Name)] {
 			// Do not add duplicate.
 		} else {
@@ -157,17 +157,17 @@ func (attributes *Attributes) Tidy() {
 		}
 	}
 	updatedAttributes.Sort()
-	*attributes = updatedAttributes
+	*a = updatedAttributes
 }
 
 // Delete removes attribute from slice. Returns delete status and deleted attribute's value
-func (attributes *Attributes) Delete(name string) (valueOfDeletedAttribute string, e Error) {
+func (a *Attributes) Delete(name string) (valueOfDeletedAttribute string, e Error) {
 
 	updatedAttributes := Attributes{}
 
 	var attributeDeleted bool
 
-	for _, attribute := range *attributes {
+	for _, attribute := range *a {
 		if attribute.Name == name {
 			valueOfDeletedAttribute = attribute.Value
 			attributeDeleted = true
@@ -176,7 +176,7 @@ func (attributes *Attributes) Delete(name string) (valueOfDeletedAttribute strin
 			updatedAttributes = append(updatedAttributes, attribute)
 		}
 	}
-	*attributes = updatedAttributes
+	*a = updatedAttributes
 
 	if attributeDeleted {
 		return valueOfDeletedAttribute, nil
@@ -185,11 +185,11 @@ func (attributes *Attributes) Delete(name string) (valueOfDeletedAttribute strin
 }
 
 // Sort slice by attribute name
-func (attributes Attributes) Sort() {
+func (a Attributes) Sort() {
 
 	// Sort slice by attribute name
-	sort.SliceStable(attributes, func(i, j int) bool {
-		return attributes[i].Name < attributes[j].Name
+	sort.SliceStable(a, func(i, j int) bool {
+		return a[i].Name < a[j].Name
 	})
 }
 
@@ -201,7 +201,7 @@ func (a *Attribute) Validate() error {
 }
 
 // Validate checks if field values are set correct and are allowed
-func (a *Attributes) Validate() error {
+func (a Attributes) Validate() error {
 
 	validate := validator.New()
 	return validate.Struct(a)

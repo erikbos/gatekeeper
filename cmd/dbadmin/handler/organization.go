@@ -97,12 +97,12 @@ func (h *Handler) DeleteV1OrganizationsOrganizationName(c *gin.Context, organiza
 
 func (h *Handler) responseOrganizations(c *gin.Context, organizations types.Organizations) {
 
-	all_organizations := make([]Organization, len(organizations))
+	allOrganizations := make([]Organization, len(organizations))
 	for i := range organizations {
-		all_organizations[i] = h.ToOrganizationResponse(&organizations[i])
+		allOrganizations[i] = h.ToOrganizationResponse(&organizations[i])
 	}
 	c.IndentedJSON(http.StatusOK, Organizations{
-		Organization: &all_organizations,
+		Organization: &allOrganizations,
 	})
 }
 

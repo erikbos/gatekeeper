@@ -193,12 +193,12 @@ func (h *Handler) PostV1ClustersClusterNameAttributesAttributeName(
 
 func (h *Handler) responseClusterss(c *gin.Context, clusters types.Clusters) {
 
-	all_clusters := make([]Cluster, len(clusters))
+	allClusters := make([]Cluster, len(clusters))
 	for i := range clusters {
-		all_clusters[i] = h.ToClusterResponse(&clusters[i])
+		allClusters[i] = h.ToClusterResponse(&clusters[i])
 	}
 	c.IndentedJSON(http.StatusOK, Clusters{
-		Clusters: &all_clusters,
+		Clusters: &allClusters,
 	})
 }
 

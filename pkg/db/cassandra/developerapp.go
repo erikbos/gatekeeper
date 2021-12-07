@@ -133,7 +133,7 @@ func (s *DeveloperAppStore) runGetDeveloperAppQuery(query string, queryParameter
 		developerapps = append(developerapps, types.DeveloperApp{
 			AppID:          columnToString(m, "app_id"),
 			Attributes:     columnToAttributes(m, "attributes"),
-			CallbackUrl:    columnToString(m, "callback_url"),
+			CallbackURL:    columnToString(m, "callback_url"),
 			CreatedAt:      columnToInt64(m, "created_at"),
 			CreatedBy:      columnToString(m, "created_by"),
 			DeveloperID:    columnToString(m, "developer_id"),
@@ -164,7 +164,7 @@ func (s *DeveloperAppStore) Update(organizationName string, app *types.Developer
 		app.DisplayName,
 		attributesToColumn(app.Attributes),
 		app.Status,
-		app.CallbackUrl,
+		app.CallbackURL,
 		app.Scopes,
 		app.CreatedAt,
 		app.CreatedBy,

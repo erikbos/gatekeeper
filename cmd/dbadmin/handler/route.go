@@ -193,12 +193,12 @@ func (h *Handler) PostV1RoutesRouteNameAttributesAttributeName(
 
 func (h *Handler) responseRoutess(c *gin.Context, routes types.Routes) {
 
-	all_routes := make([]Route, len(routes))
+	allRoutes := make([]Route, len(routes))
 	for i := range routes {
-		all_routes[i] = h.ToRouteResponse(&routes[i])
+		allRoutes[i] = h.ToRouteResponse(&routes[i])
 	}
 	c.IndentedJSON(http.StatusOK, Routes{
-		Routes: &all_routes,
+		Routes: &allRoutes,
 	})
 }
 

@@ -72,9 +72,9 @@ func (r *Role) Validate() error {
 }
 
 // IsPathAllowed checks whether role is allowed to access a path
-func (role *Role) IsPathAllowed(requestMethod, requestPath string) bool {
+func (r *Role) IsPathAllowed(requestMethod, requestPath string) bool {
 
-	for _, allow := range role.Permissions {
+	for _, allow := range r.Permissions {
 		if methodMatch(allow.Methods, requestMethod) &&
 			pathMatch(allow.Paths, requestPath) {
 			return true

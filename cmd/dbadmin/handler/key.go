@@ -198,7 +198,7 @@ func (h *Handler) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmaila
 func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKeyApiproductsApiproductName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, consumerKey ConsumerKey, apiproductName ApiproductName, params PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameKeysConsumerKeyApiproductsApiproductNameParams) {
 
 	if params.Action != nil && c.ContentType() == "application/octet-stream" {
-		h.changeKeyApiProductStatus(c, string(organizationName), string(developerEmailaddress),
+		h.changeKeyAPIProductStatus(c, string(organizationName), string(developerEmailaddress),
 			string(appName), string(consumerKey), string(apiproductName), string(*params.Action))
 		return
 	}
@@ -217,7 +217,7 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 }
 
 // change status of apiproduct associated with key
-func (h *Handler) changeKeyApiProductStatus(c *gin.Context, organizationName,
+func (h *Handler) changeKeyAPIProductStatus(c *gin.Context, organizationName,
 	developerEmailaddress, appName, consumerKey, apiproductName, requestedStatus string) {
 
 	key, err := h.service.Key.Get(organizationName, developerEmailaddress, appName, consumerKey)
@@ -369,11 +369,11 @@ func (h *Handler) responseKeyUpdated(c *gin.Context, key *types.Key) {
 
 func ToKeySlice(keys types.Keys) *[]Key {
 
-	all_keys := make([]Key, len(keys))
+	allKeys := make([]Key, len(keys))
 	for i := range keys {
-		all_keys[i] = ToKeyResponse(&keys[i])
+		allKeys[i] = ToKeyResponse(&keys[i])
 	}
-	return &all_keys
+	return &allKeys
 }
 
 func ToKeyResponse(k *types.Key) Key {
@@ -392,14 +392,14 @@ func ToKeyResponse(k *types.Key) Key {
 
 func toKeyAPIProductStatusesResponse(apiProductStatuses types.KeyAPIProductStatuses) *[]KeyProduct {
 
-	product_statuses := make([]KeyProduct, len(apiProductStatuses))
+	productStatuses := make([]KeyProduct, len(apiProductStatuses))
 	for i := range apiProductStatuses {
-		product_statuses[i] = KeyProduct{
+		productStatuses[i] = KeyProduct{
 			Apiproduct: &apiProductStatuses[i].Apiproduct,
 			Status:     &apiProductStatuses[i].Status,
 		}
 	}
-	return &product_statuses
+	return &productStatuses
 }
 
 func fromKey(k Key) types.Key {
