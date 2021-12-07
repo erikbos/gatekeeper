@@ -2034,7 +2034,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorMessage'
 
-  /v1/audit/{organization_name}:
+  /v1/audit/organizations/{organization_name}:
     get:
       summary: Retrieve audit records of organization.
       tags:
@@ -2060,7 +2060,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorMessage'
 
-  /v1/audit/{organization_name}/apiproducts/{apiproduct_name}:
+  /v1/audit/organizations/{organization_name}/apiproducts/{apiproduct_name}:
     get:
       summary: Retrieve audit records of apiproduct.
       tags:
@@ -2081,14 +2081,14 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /v1/audit/{organization_name}/developers/{developer_emailaddress}:
+  /v1/audit/organizations/{organization_name}/developers/{developer_id}:
     get:
       summary: Retrieve audit records of developer.
       tags:
         - Audit
       parameters:
         - $ref: '#/components/parameters/organization_name'
-        - $ref: '#/components/parameters/developer_emailaddress'
+        - $ref: '#/components/parameters/developer_id'
         - $ref: '#/components/parameters/start_time'
         - $ref: '#/components/parameters/end_time'
         - $ref: '#/components/parameters/count'
@@ -2102,15 +2102,15 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
-  /v1/audit/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}:
+  /v1/audit/organizations/{organization_name}/developers/{developer_id}/apps/{app_id}:
     get:
       summary: Retrieve audit records of application.
       tags:
         - Audit
       parameters:
         - $ref: '#/components/parameters/organization_name'
-        - $ref: '#/components/parameters/developer_emailaddress'
-        - $ref: '#/components/parameters/app_name'
+        - $ref: '#/components/parameters/developer_id'
+        - $ref: '#/components/parameters/app_id'
         - $ref: '#/components/parameters/start_time'
         - $ref: '#/components/parameters/end_time'
         - $ref: '#/components/parameters/count'
@@ -2238,7 +2238,7 @@ components:
       required: true
       schema:
         type: string
-      description: Application id.
+      description: Application ID.
 
     app_name:
       name: app_name
@@ -2287,6 +2287,14 @@ components:
       schema:
         type: string
       description: Email address of developer.
+
+    developer_id:
+      name: developer_id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Developer ID.
 
     listener_name:
       name: listener_name

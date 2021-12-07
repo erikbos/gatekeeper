@@ -12,9 +12,9 @@ import (
 	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
-// GetV1AuditOrganizationName retrieves audit records of organization.
-// (GET /v1/audit/{organization_name})
-func (h *Handler) GetV1AuditOrganizationName(c *gin.Context, organizationName OrganizationName, params GetV1AuditOrganizationNameParams) {
+// GetV1AuditOrganizationsOrganizationName retrieves audit records of organization.
+// (GET /v1/audit/organizations/{organization_name})
+func (h *Handler) GetV1AuditOrganizationsOrganizationName(c *gin.Context, organizationName OrganizationName, params GetV1AuditOrganizationsOrganizationNameParams) {
 
 	audits, err := h.service.Audit.GetOrganization(string(organizationName), parseQueryParams(params))
 	if err != nil {
@@ -24,9 +24,9 @@ func (h *Handler) GetV1AuditOrganizationName(c *gin.Context, organizationName Or
 	h.responseAudits(c, audits)
 }
 
-// GetV1AuditOrganizationNameApiproductsApiproductName retrieves audit records of apiproduct.
-// (GET /v1/audit/{organization_name}/apiproducts/{apiproduct_name})
-func (h *Handler) GetV1AuditOrganizationNameApiproductsApiproductName(c *gin.Context, organizationName OrganizationName, apiproductName ApiproductName, params GetV1AuditOrganizationNameApiproductsApiproductNameParams) {
+// GetV1AuditOrganizationsOrganizationNameApiproductsApiproductName retrieves audit records of apiproduct.
+// (GET /v1/audit/organizations/{organization_name}/apiproducts/{apiproduct_name})
+func (h *Handler) GetV1AuditOrganizationsOrganizationNameApiproductsApiproductName(c *gin.Context, organizationName OrganizationName, apiproductName ApiproductName, params GetV1AuditOrganizationsOrganizationNameApiproductsApiproductNameParams) {
 
 	audits, err := h.service.Audit.GetAPIProduct(string(organizationName), string(apiproductName), parseQueryParams(params))
 	if err != nil {
@@ -36,9 +36,9 @@ func (h *Handler) GetV1AuditOrganizationNameApiproductsApiproductName(c *gin.Con
 	h.responseAudits(c, audits)
 }
 
-// GetV1AuditOrganizationNameDevelopersDeveloperEmailaddress retrieves audit records of developer
-// (GET /v1/audit/{organization_name}/developers/{developer_emailaddress})
-func (h *Handler) GetV1AuditOrganizationNameDevelopersDeveloperEmailaddress(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, params GetV1AuditOrganizationNameDevelopersDeveloperEmailaddressParams) {
+// GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperEmailaddress retrieves audit records of developer
+// (GET /v1/audit/organizations/{organization_name}/developers/{developer_emailaddress})
+func (h *Handler) GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperEmailaddress(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, params GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperEmailaddressParams) {
 
 	audits, err := h.service.Audit.GetDeveloper(string(organizationName), string(developerEmailaddress), parseQueryParams(params))
 	if err != nil {
@@ -48,9 +48,9 @@ func (h *Handler) GetV1AuditOrganizationNameDevelopersDeveloperEmailaddress(c *g
 	h.responseAudits(c, audits)
 }
 
-// GetV1AuditOrganizationNameDevelopersDeveloperEmailaddressAppsAppName retrieves audit records of application.
-// (GET /v1/audit/{organization_name}/developers/{developer_emailaddress}/apps/{app_name})
-func (h *Handler) GetV1AuditOrganizationNameDevelopersDeveloperEmailaddressAppsAppName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, params GetV1AuditOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameParams) {
+// GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppName retrieves audit records of application.
+// (GET /v1/audit/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name})
+func (h *Handler) GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppName(c *gin.Context, organizationName OrganizationName, developerEmailaddress DeveloperEmailaddress, appName AppName, params GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameParams) {
 
 	audits, err := h.service.Audit.GetApplication(string(organizationName), string(developerEmailaddress), string(appName), parseQueryParams(params))
 	if err != nil {
@@ -78,7 +78,7 @@ func parseQueryParams(queryParams interface{}) service.AuditQueryParams {
 	var auditQuery service.AuditQueryParams
 
 	switch p := queryParams.(type) {
-	case GetV1AuditOrganizationNameParams:
+	case GetV1AuditOrganizationsOrganizationNameParams:
 		if p.StartTime != nil {
 			auditQuery.StartTime = int64(*p.StartTime)
 		}
@@ -88,7 +88,7 @@ func parseQueryParams(queryParams interface{}) service.AuditQueryParams {
 		if p.Count != nil {
 			auditQuery.Count = int64(*p.Count)
 		}
-	case GetV1AuditOrganizationNameApiproductsApiproductNameParams:
+	case GetV1AuditOrganizationsOrganizationNameApiproductsApiproductNameParams:
 		if p.StartTime != nil {
 			auditQuery.StartTime = int64(*p.StartTime)
 		}
@@ -99,7 +99,7 @@ func parseQueryParams(queryParams interface{}) service.AuditQueryParams {
 			auditQuery.Count = int64(*p.Count)
 		}
 
-	case GetV1AuditOrganizationNameDevelopersDeveloperEmailaddressParams:
+	case GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperEmailaddressParams:
 		if p.StartTime != nil {
 			auditQuery.StartTime = int64(*p.StartTime)
 		}
@@ -109,7 +109,7 @@ func parseQueryParams(queryParams interface{}) service.AuditQueryParams {
 		if p.Count != nil {
 			auditQuery.Count = int64(*p.Count)
 		}
-	case GetV1AuditOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameParams:
+	case GetV1AuditOrganizationsOrganizationNameDevelopersDeveloperEmailaddressAppsAppNameParams:
 		if p.StartTime != nil {
 			auditQuery.StartTime = int64(*p.StartTime)
 		}
@@ -154,7 +154,7 @@ func (h *Handler) responseAudits(c *gin.Context, audits types.Audits) {
 	for i := range audits {
 		allAudits[i] = h.ToAuditResponse(&audits[i])
 	}
-	c.IndentedJSON(http.StatusOK, Audits{
+	c.JSON(http.StatusOK, Audits{
 		Audit: &allAudits,
 	})
 }
