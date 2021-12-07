@@ -16,6 +16,9 @@ import (
 	xds "github.com/envoyproxy/go-control-plane/pkg/server/v3"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/health"
+	"google.golang.org/grpc/health/grpc_health_v1"
+	"google.golang.org/grpc/reflection"
 
 	"github.com/erikbos/gatekeeper/pkg/db"
 	"github.com/erikbos/gatekeeper/pkg/types"
@@ -97,6 +100,9 @@ func (x *XDS) GRPCManagementServer() {
 	clusterservice.RegisterClusterDiscoveryServiceServer(grpcServer, x.xds)
 	routeservice.RegisterRouteDiscoveryServiceServer(grpcServer, x.xds)
 	listenerservice.RegisterListenerDiscoveryServiceServer(grpcServer, x.xds)
+
+	reflection.Register(grpcServer)
+	grpc_health_v1.RegisterHealthServer(grpcServer, health.NewServer())
 
 	if err := grpcServer.Serve(lis); err != nil {
 		x.server.logger.Fatal("failed to start GRPC server", zap.Error(err))

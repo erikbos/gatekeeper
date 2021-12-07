@@ -14,6 +14,9 @@ import (
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/health"
+	"google.golang.org/grpc/health/grpc_health_v1"
+	"google.golang.org/grpc/reflection"
 
 	"github.com/erikbos/gatekeeper/cmd/envoyals/metrics"
 	"github.com/erikbos/gatekeeper/pkg/shared"
@@ -58,6 +61,9 @@ func (a *AccessLogServer) Start(listen string) {
 
 	grpcServer := grpc.NewServer()
 	accesslog.RegisterAccessLogServiceServer(grpcServer, a)
+	reflection.Register(grpcServer)
+	grpc_health_v1.RegisterHealthServer(grpcServer, health.NewServer())
+
 	if err := grpcServer.Serve(lis); err != nil {
 		a.logger.Fatal("failed to start GRPC server", zap.Error(err))
 	}
