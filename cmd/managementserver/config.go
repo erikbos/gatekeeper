@@ -3,7 +3,7 @@ package main
 import (
 	"gopkg.in/yaml.v2"
 
-	"github.com/erikbos/gatekeeper/cmd/dbadmin/audit"
+	"github.com/erikbos/gatekeeper/cmd/managementserver/audit"
 	"github.com/erikbos/gatekeeper/pkg/db/cache"
 	"github.com/erikbos/gatekeeper/pkg/db/cassandra"
 	"github.com/erikbos/gatekeeper/pkg/shared"
@@ -14,15 +14,15 @@ const (
 	defaultLogLevel            = "info"
 	defaultLogFileName         = "/dev/stdout"
 	defaultWebAdminListen      = "0.0.0.0:7777"
-	defaultWebAdminLogFileName = "dbadmin-access.log"
-	defaultAuditLogFileName    = "dbadmin-audit.log"
+	defaultWebAdminLogFileName = "managementserver-access.log"
+	defaultAuditLogFileName    = "managementserver-audit.log"
 	defaultCacheSize           = 100 * 1024 * 1024
 	defaultCacheTTL            = 30
 	defaultCacheNegativeTTL    = 5
 )
 
-// DBAdminConfig contains our startup configuration data
-type DBAdminConfig struct {
+// ManagementServerConfig contains our startup configuration data
+type ManagementServerConfig struct {
 	Logger   shared.Logger            `yaml:"logging"`  // log configuration of application
 	WebAdmin webadmin.Config          `yaml:"webadmin"` // Admin web interface configuration
 	Audit    audit.Config             `yaml:"audit"`    // Audit configuration
@@ -31,7 +31,7 @@ type DBAdminConfig struct {
 }
 
 // String() return our startup configuration as YAML
-func (config *DBAdminConfig) String() string {
+func (config *ManagementServerConfig) String() string {
 
 	// We must remove db password from configuration struct before showing
 	redactedConfig := config
@@ -44,9 +44,9 @@ func (config *DBAdminConfig) String() string {
 	return string(configAsYAML)
 }
 
-func loadConfiguration(filename *string) (*DBAdminConfig, error) {
+func loadConfiguration(filename *string) (*ManagementServerConfig, error) {
 
-	defaultConfig := &DBAdminConfig{
+	defaultConfig := &ManagementServerConfig{
 		Logger: shared.Logger{
 			Level:    defaultLogLevel,
 			Filename: defaultLogFileName,
@@ -75,5 +75,5 @@ func loadConfiguration(filename *string) (*DBAdminConfig, error) {
 	if err != nil {
 		return nil, err
 	}
-	return config.(*DBAdminConfig), nil
+	return config.(*ManagementServerConfig), nil
 }

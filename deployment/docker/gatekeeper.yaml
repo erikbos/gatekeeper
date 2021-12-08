@@ -9,13 +9,13 @@ services:
     volumes:
       - /tmp/cassandra_data:/var/lib/cassandra
 
-  dbadmin:
-    image: gatekeeper/dbadmin:latest
-    container_name: dbadmin
-    entrypoint: ["/app/dbadmin", "--config", "/config/dbadmin.yaml", "--createschema", "--replicacount=1"]
+  managementserver:
+    image: gatekeeper/managementserver:latest
+    container_name: managementserver
+    entrypoint: ["/app/managementserver", "--config", "/config/managementserver.yaml", "--createschema", "--replicacount=1"]
     secrets:
-      - source: dbadmin-config
-        target: /config/dbadmin.yaml
+      - source: managementserver-config
+        target: /config/managementserver.yaml
     ports:
       - 7777:7777
     restart: unless-stopped
@@ -68,8 +68,8 @@ services:
     restart: unless-stopped
 
 secrets:
-  dbadmin-config:
-    file: dbadmin.yaml
+  managementserver-config:
+    file: managementserver.yaml
   envoyauth-config:
     file: envoyauth.yaml
   envoyals-config:

@@ -1,8 +1,8 @@
-# DBAdmin daemon settings
+# managementserver daemon settings
 #
 logging:
   level: info
-  filename: dbadmin-admin.log
+  filename: managementserver-admin.log
 
 # The address to listen on for REST API
 webadmin:
@@ -10,7 +10,7 @@ webadmin:
   ipacl: 0.0.0.0/0
   logging:
     level: info
-    filename: dbadmin-access.log
+    filename: managementserver-access.log
 
 database:
   hostname: cassandra

@@ -51,7 +51,7 @@ The supported fields are:
 | webadmin.tls.certfile        | TLS certificate file                      |                    |
 | webadmin.tls.keyfile         | TLS certificate key file                  |                    |
 | webadmin.logging.level       | logging level of webadmin                 | info / debug       |
-| webadmin.logging.filename    | filename to write web access log to       | dbadmin-access.log |
+| webadmin.logging.filename    | filename to write web access log to       | managementserver-access.log |
 | webadmin.logging.maxsize     | Maximum size in megabytes before rotate   | 100                |
 | webadmin.logging.maxage      | Max days to retain old log files          | 7                  |
 | webadmin.logging.maxbackups  | Maximum number of old log files to retain | 14                 |

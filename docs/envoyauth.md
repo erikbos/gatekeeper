@@ -40,7 +40,7 @@ The following [listener attributes](api/listener.md#Attribute) configure the ("e
 - `ExtAuthzCluster`, *required*, name of cluster which runs envoyauth
 - `ExtAuthzTimeout` optional, maximum allowed duration of authentication requests to envoyauth
 - `ExtAuthzFailureModeAllow` optional, should requests be forwarded or not in case envoyauth is not reachable or does not respond in time
--  `ExtAuthzRequestBodySize` optional, number of bytes of the request body envoyproxy should forward to envoyauth. This is a prerequisite for envoyauth being able to inspect the body of a request.
+- `ExtAuthzRequestBodySize` optional, number of bytes of the request body envoyproxy should forward to envoyauth. This is a prerequisite for envoyauth being able to inspect the body of a request.
 
 ### Enable authentication for a route
 
@@ -136,7 +136,7 @@ The supported fields are:
 | webadmin.tls.certfile       | TLS certificate file                             |                    |
 | webadmin.tls.keyfile        | TLS certificate key file                         |                    |
 | webadmin.logging.level      | Logging level of webadmin                        | info / debug       |
-| webadmin.logging.filename   | Filename to write web access log to              | dbadmin-access.log |
+| webadmin.logging.filename   | Filename to write web access log to              | managementserver-access.log |
 | webadmin.logging.maxsize    | Maximum size in megabytes before rotate          | 100                |
 | webadmin.logging.maxage     | Max days to retain old log files                 | 7                  |
 | webadmin.logging.maxbackups | Maximum number of old log files to retain        | 14                 |
@@ -144,7 +144,7 @@ The supported fields are:
 | oauth.tls.certfile          | TLS certificate file                             |                    |
 | oauth.tls.keyfile           | TLS certificate key file                         |                    |
 | oauth.logging.level         | Logging level of oauth endpoint                  | info / debug       |
-| oauth.logging.filename      | Filename to write oauth token access log to      | dbadmin-access.log |
+| oauth.logging.filename      | Filename to write oauth token access log to      | managementserver-access.log |
 | oauth.logging.maxsize       | Maximum size in megabytes before rotate          | 100                |
 | oauth.logging.maxage        | Max days to retain old log files                 | 7                  |
 | oauth.logging.maxbackups    | Maximum number of old log files to retain        | 14                 |

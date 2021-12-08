@@ -1,6 +1,6 @@
 # Intro
 
-DBadmin provides a REST API to create, read, update, delete entities of Gatekeeper's configuration database.
+managementserver provides a REST API to create, read, update, delete entities of Gatekeeper's configuration database.
 
 For each entity a detailed API description is available:
 
@@ -14,9 +14,9 @@ For each entity a detailed API description is available:
 8. [user](docs/api/user.md)
 9. [role](docs/api/role.md)
 
-## dbadmin endpoints
+## managementserver endpoints
 
-Dbadmin exposes one endpoint:
+managementserver exposes one endpoint:
 
 | name     | scope   | protocol | purpose                                                     |
 | -------- | ------- | -------- | ----------------------------------------------------------- |
@@ -33,11 +33,11 @@ Scope:
 
 ### Configuration
 
-Dbadmin supports the following start up command line arguments:
+managementserver supports the following start up command line arguments:
 
 | argument                 | purpose                                                  | example                                           |
 | ------------------------ | -------------------------------------------------------- | ------------------------------------------------- |
-| config                   | startup configuration file, see below supported fields.  | [dbadmin.yaml](../deployment/docker/dbadmin.yaml) |
+| config                   | startup configuration file, see below supported fields.  | [managementserver.yaml](../deployment/docker/managementserver.yaml) |
 | disableapiauthentication | Disable REST API authentication on /v1 path              |                                                   |
 | showcreateschema         | Show CQL statements to create database                   |                                                   |
 | createschema             | Create database schema and tables, if these do not exist |                                                   |
@@ -45,13 +45,13 @@ Dbadmin supports the following start up command line arguments:
 
 ### Logfiles
 
-Dbadmin writes multiple logfiles, one for each function of dbadmin. All are written as structured JSON, filename rotation schedule can be set via configuration file. The three logfiles are:
+managementserver writes multiple logfiles, one for each function of managementserver. All are written as structured JSON, filename rotation schedule can be set via configuration file. The three logfiles are:
 
 1. `logging.filename` as log for application messages
 2. `webadmin.logging.filename` as access log for all REST API calls
 3. `changelog.logging.filename` as entity changelog, all CRUD-operations, it logs full entity details so it might contain sensitive information!
 
-### Dbadmin configuration file
+### managementserver configuration file
 
 The supported fields are:
 
@@ -67,12 +67,12 @@ The supported fields are:
 | webadmin.tls.certfile        | TLS certificate file                       |                       |
 | webadmin.tls.keyfile         | TLS certificate key file                   |                       |
 | webadmin.logging.level       | Logging level of webadmin                  | info / debug          |
-| webadmin.logging.filename    | Filename to write web access log to        | dbadmin-access.log    |
+| webadmin.logging.filename    | Filename to write web access log to        | managementserver-access.log    |
 | webadmin.logging.maxsize     | Maximum size in megabytes before rotate    | 100                   |
 | webadmin.logging.maxage      | Max days to retain old log files           | 7                     |
 | webadmin.logging.maxbackups  | Maximum number of old log files to retain  | 14                    |
 | changelog.logging.level      | Logging level of changelog                 | info                  |
-| changelog.logging.filename   | Filename to write changed entities to      | dbadmin-changelog.log |
+| changelog.logging.filename   | Filename to write changed entities to      | managementserver-changelog.log |
 | changelog.logging.maxsize    | Maximum size in megabytes before rotate    | 100                   |
 | changelog.logging.maxage     | Max days to retain old log files           | 7                     |
 | changelog.logging.maxbackups | Maximum number of old log files to retain  | 14                    |

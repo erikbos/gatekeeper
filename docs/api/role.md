@@ -1,6 +1,6 @@
 # Role
 
-A role defines an role in the system. `dbadmin` uses both `user` and `role` to determine whether an API call to any endpoint under `/v1/**` endpoint should be allowed or not.
+A role defines an role in the system. `managementserver` uses both `user` and `role` to determine whether an API call to any endpoint under `/v1/**` endpoint should be allowed or not.
 
 ## Supported operations
 
@@ -39,7 +39,7 @@ Role `admin` that allows HTTP method GET, POST or DELETE for all (`**`) paths un
 
 ## Default role
 
-The above role `admin` is created when `dbadmin` is invoked with `createschema`.
+The above role `admin` is created when `managementserver` is invoked with `createschema`.
 
 ## Fields specification
 

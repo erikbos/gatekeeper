@@ -35,7 +35,7 @@ type (
 		AppID        string
 	}
 
-	// Requester stores the identity and connection details of an authenticated dbadmin API user
+	// Requester stores the identity and connection details of an authenticated managementserver API user
 	// who is requesting a change.
 	Requester struct {
 		RemoteAddr string

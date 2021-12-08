@@ -29,13 +29,13 @@ jobs:
     - name: Run unit tests
       run: make test
 
-    - name: Upload coverage to Codecov (dbadmin)
+    - name: Upload coverage to Codecov (managementserver)
       uses: codecov/codecov-action@v1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: tmp/coverage.txt
-        directory: cmd/dbadmin/
-        flags: dbadmin
+        directory: cmd/managementserver/
+        flags: managementserver
 
     - name: Upload coverage to Codecov (envoyals)
       uses: codecov/codecov-action@v1

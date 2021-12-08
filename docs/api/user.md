@@ -1,6 +1,6 @@
 # User
 
-A user defines an user in the system. `dbadmin` uses both `user` and `role` to determine whether an API call to any endpoint under `/v1/**` endpoint should be allowed or not.
+A user defines an user in the system. `managementserver` uses both `user` and `role` to determine whether an API call to any endpoint under `/v1/**` endpoint should be allowed or not.
 
 ## Supported operations
 
@@ -32,7 +32,7 @@ User `admin` with roles `admin` and password 'passwd':
 
 ## Default user
 
-The above role `admin` is created when `dbadmin` is invoked with `createschema`.
+The above role `admin` is created when `managementserver` is invoked with `createschema`.
 
 ## Fields specification
 

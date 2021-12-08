@@ -38,13 +38,13 @@ jobs:
        echo ${{ github.sha }}
        echo $VERSION
 
-       docker tag gatekeeper/dbadmin:$VERSION ${{ secrets.acr_hostname }}/dbadmin
+       docker tag gatekeeper/managementserver:$VERSION ${{ secrets.acr_hostname }}/managementserver
        docker tag gatekeeper/envoyals:$VERSION ${{ secrets.acr_hostname }}/envoyals
        docker tag gatekeeper/envoyauth:$VERSION ${{ secrets.acr_hostname }}/envoyauth
        docker tag gatekeeper/controlplane:$VERSION ${{ secrets.acr_hostname }}/controlplane
        docker tag gatekeeper/testbackend:$VERSION ${{ secrets.acr_hostname }}/testbackend
 
-       docker push ${{ secrets.acr_hostname }}/dbadmin
+       docker push ${{ secrets.acr_hostname }}/managementserver
        docker push ${{ secrets.acr_hostname }}/envoyals
        docker push ${{ secrets.acr_hostname }}/envoyauth
        docker push ${{ secrets.acr_hostname }}/controlplane
@@ -71,7 +71,7 @@ jobs:
       run: |
         kubectl version
 
-        kubectl rollout restart deployment/dbadmin
+        kubectl rollout restart deployment/managementserver
         kubectl rollout restart deployment/envoyals
         kubectl rollout restart deployment/envoyauth
         kubectl rollout restart deployment/controlplane

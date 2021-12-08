@@ -7,10 +7,10 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/erikbos/gatekeeper/cmd/dbadmin/audit"
-	"github.com/erikbos/gatekeeper/cmd/dbadmin/handler"
-	"github.com/erikbos/gatekeeper/cmd/dbadmin/metrics"
-	"github.com/erikbos/gatekeeper/cmd/dbadmin/service"
+	"github.com/erikbos/gatekeeper/cmd/managementserver/audit"
+	"github.com/erikbos/gatekeeper/cmd/managementserver/handler"
+	"github.com/erikbos/gatekeeper/cmd/managementserver/metrics"
+	"github.com/erikbos/gatekeeper/cmd/managementserver/service"
 	"github.com/erikbos/gatekeeper/pkg/db"
 	"github.com/erikbos/gatekeeper/pkg/db/cassandra"
 	"github.com/erikbos/gatekeeper/pkg/shared"
@@ -25,7 +25,7 @@ var (
 // go generate oapi-codegen
 
 type server struct {
-	config   *DBAdminConfig
+	config   *ManagementServerConfig
 	webadmin *webadmin.Webadmin
 	db       *db.Database
 	handler  *handler.Handler
@@ -34,9 +34,9 @@ type server struct {
 }
 
 func main() {
-	const applicationName = "dbadmin"
+	const applicationName = "managementserver"
 
-	filename := flag.String("config", "dbadmin-config.yaml", "Configuration filename")
+	filename := flag.String("config", "managementserver-config.yaml", "Configuration filename")
 	disableAPIAuthentication := flag.Bool("disableapiauthentication", false, "Disable REST API authentication")
 	createSchema := flag.Bool("createschema", false, "Create database schema if it does not exist")
 	replicaCount := flag.Int("replicacount", 3, "Replica count to set for database keyspace")

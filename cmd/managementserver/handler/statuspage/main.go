@@ -10,7 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/erikbos/gatekeeper/cmd/dbadmin/service"
+	"github.com/erikbos/gatekeeper/cmd/managementserver/service"
 	"github.com/erikbos/gatekeeper/pkg/shared"
 	"github.com/erikbos/gatekeeper/pkg/types"
 )

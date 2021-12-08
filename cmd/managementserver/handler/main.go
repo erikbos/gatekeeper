@@ -7,8 +7,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
-	"github.com/erikbos/gatekeeper/cmd/dbadmin/handler/statuspage"
-	"github.com/erikbos/gatekeeper/cmd/dbadmin/service"
+	"github.com/erikbos/gatekeeper/cmd/managementserver/handler/statuspage"
+	"github.com/erikbos/gatekeeper/cmd/managementserver/service"
 	"github.com/erikbos/gatekeeper/pkg/db"
 	"github.com/erikbos/gatekeeper/pkg/shared"
 	"github.com/erikbos/gatekeeper/pkg/types"
