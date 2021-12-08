@@ -197,24 +197,24 @@ func (h *Handler) responseClusterss(c *gin.Context, clusters types.Clusters) {
 	for i := range clusters {
 		allClusters[i] = h.ToClusterResponse(&clusters[i])
 	}
-	c.IndentedJSON(http.StatusOK, Clusters{
+	c.JSON(http.StatusOK, Clusters{
 		Clusters: &allClusters,
 	})
 }
 
 func (h *Handler) responseClusters(c *gin.Context, cluster *types.Cluster) {
 
-	c.IndentedJSON(http.StatusOK, h.ToClusterResponse(cluster))
+	c.JSON(http.StatusOK, h.ToClusterResponse(cluster))
 }
 
 func (h *Handler) responseClusterCreated(c *gin.Context, cluster *types.Cluster) {
 
-	c.IndentedJSON(http.StatusCreated, h.ToClusterResponse(cluster))
+	c.JSON(http.StatusCreated, h.ToClusterResponse(cluster))
 }
 
 func (h *Handler) responseClustersUpdated(c *gin.Context, cluster *types.Cluster) {
 
-	c.IndentedJSON(http.StatusOK, h.ToClusterResponse(cluster))
+	c.JSON(http.StatusOK, h.ToClusterResponse(cluster))
 }
 
 // type conversion

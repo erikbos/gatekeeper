@@ -101,24 +101,24 @@ func (h *Handler) responseUsers(c *gin.Context, users types.Users) {
 	for i, v := range users {
 		allUsers[i] = h.ToUserResponse(&v)
 	}
-	c.IndentedJSON(http.StatusOK, Users{
+	c.JSON(http.StatusOK, Users{
 		User: &allUsers,
 	})
 }
 
 func (h *Handler) responseUser(c *gin.Context, user *types.User) {
 
-	c.IndentedJSON(http.StatusOK, h.ToUserResponse(user))
+	c.JSON(http.StatusOK, h.ToUserResponse(user))
 }
 
 func (h *Handler) responseUserCreated(c *gin.Context, user *types.User) {
 
-	c.IndentedJSON(http.StatusCreated, h.ToUserResponse(user))
+	c.JSON(http.StatusCreated, h.ToUserResponse(user))
 }
 
 func (h *Handler) responseUserUpdated(c *gin.Context, user *types.User) {
 
-	c.IndentedJSON(http.StatusOK, h.ToUserResponse(user))
+	c.JSON(http.StatusOK, h.ToUserResponse(user))
 }
 
 // type conversion

@@ -347,7 +347,7 @@ func (h *Handler) responseDeveloperAppIDs(c *gin.Context, developerapps types.De
 	for i := range developerapps {
 		ApplicationNames[i] = developerapps[i].AppID
 	}
-	c.IndentedJSON(http.StatusOK, ApplicationNames)
+	c.JSON(http.StatusOK, ApplicationNames)
 }
 
 // Returns API response list application names of a developer
@@ -357,7 +357,7 @@ func (h *Handler) responseDeveloperAppNames(c *gin.Context, developerapps types.
 	for i := range developerapps {
 		ApplicationNames[i] = developerapps[i].Name
 	}
-	c.IndentedJSON(http.StatusOK, ApplicationNames)
+	c.JSON(http.StatusOK, ApplicationNames)
 }
 
 // API responses
@@ -368,24 +368,24 @@ func (h *Handler) responseDeveloperAllApps(c *gin.Context, developerapps types.D
 	for i := range developerapps {
 		allApps[i] = ToApplicationResponse(&developerapps[i], nil)
 	}
-	c.IndentedJSON(http.StatusOK, Applications{
+	c.JSON(http.StatusOK, Applications{
 		Application: &allApps,
 	})
 }
 
 func (h *Handler) responseApplication(c *gin.Context, app *types.DeveloperApp, keys *types.Keys) {
 
-	c.IndentedJSON(http.StatusOK, ToApplicationResponse(app, keys))
+	c.JSON(http.StatusOK, ToApplicationResponse(app, keys))
 }
 
 func (h *Handler) responseApplicationCreated(c *gin.Context, app *types.DeveloperApp, keys *types.Keys) {
 
-	c.IndentedJSON(http.StatusCreated, ToApplicationResponse(app, keys))
+	c.JSON(http.StatusCreated, ToApplicationResponse(app, keys))
 }
 
 func (h *Handler) responseApplicationUpdated(c *gin.Context, app *types.DeveloperApp) {
 
-	c.IndentedJSON(http.StatusOK, ToApplicationResponse(app, nil))
+	c.JSON(http.StatusOK, ToApplicationResponse(app, nil))
 }
 
 // type conversion

@@ -113,24 +113,24 @@ func (h *Handler) responseRoles(c *gin.Context, roles types.Roles) {
 	for i, v := range roles {
 		allRoles[i] = h.ToRoleResponse(&v)
 	}
-	c.IndentedJSON(http.StatusOK, Roles{
+	c.JSON(http.StatusOK, Roles{
 		Role: &allRoles,
 	})
 }
 
 func (h *Handler) responseRole(c *gin.Context, user *types.Role) {
 
-	c.IndentedJSON(http.StatusOK, h.ToRoleResponse(user))
+	c.JSON(http.StatusOK, h.ToRoleResponse(user))
 }
 
 func (h *Handler) responseRoleCreated(c *gin.Context, role *types.Role) {
 
-	c.IndentedJSON(http.StatusCreated, h.ToRoleResponse(role))
+	c.JSON(http.StatusCreated, h.ToRoleResponse(role))
 }
 
 func (h *Handler) responseRoleUpdated(c *gin.Context, role *types.Role) {
 
-	c.IndentedJSON(http.StatusOK, h.ToRoleResponse(role))
+	c.JSON(http.StatusOK, h.ToRoleResponse(role))
 }
 
 // type conversion

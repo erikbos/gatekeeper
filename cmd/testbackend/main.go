@@ -55,7 +55,7 @@ func main() {
 }
 
 func getPeople(c *gin.Context) {
-	c.IndentedJSON(http.StatusOK,
+	c.JSON(http.StatusOK,
 		gin.H{
 			"people": people,
 		})
@@ -64,7 +64,7 @@ func getPeople(c *gin.Context) {
 func getPerson(c *gin.Context) {
 	for _, item := range people {
 		if item.ID == c.Param("id") {
-			c.IndentedJSON(http.StatusOK, item)
+			c.JSON(http.StatusOK, item)
 			return
 		}
 	}
@@ -75,13 +75,13 @@ func createPerson(c *gin.Context) {
 	var person Person
 
 	if err := c.ShouldBindJSON(&person); err != nil {
-		c.IndentedJSON(http.StatusBadRequest, err)
+		c.JSON(http.StatusBadRequest, err)
 	}
 	person.ID = c.Param("id")
 
 	people = append(people, person)
 
-	c.IndentedJSON(http.StatusOK, person)
+	c.JSON(http.StatusOK, person)
 }
 
 func deletePerson(c *gin.Context) {
@@ -92,7 +92,7 @@ func deletePerson(c *gin.Context) {
 			deletePerson = people[index]
 			people = append(people[:index], people[index+1:]...)
 
-			c.IndentedJSON(http.StatusOK, deletePerson)
+			c.JSON(http.StatusOK, deletePerson)
 			break
 		}
 	}

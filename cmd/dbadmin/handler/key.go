@@ -345,24 +345,24 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 
 func (h *Handler) responseKeys(c *gin.Context, keys types.Keys) {
 
-	c.IndentedJSON(http.StatusOK, Keys{
+	c.JSON(http.StatusOK, Keys{
 		Key: ToKeySlice(keys),
 	})
 }
 
 func (h *Handler) responseKey(c *gin.Context, key *types.Key) {
 
-	c.IndentedJSON(http.StatusOK, ToKeyResponse(key))
+	c.JSON(http.StatusOK, ToKeyResponse(key))
 }
 
 func (h *Handler) responseKeyCreated(c *gin.Context, key *types.Key) {
 
-	c.IndentedJSON(http.StatusCreated, ToKeyResponse(key))
+	c.JSON(http.StatusCreated, ToKeyResponse(key))
 }
 
 func (h *Handler) responseKeyUpdated(c *gin.Context, key *types.Key) {
 
-	c.IndentedJSON(http.StatusOK, ToKeyResponse(key))
+	c.JSON(http.StatusOK, ToKeyResponse(key))
 }
 
 // type conversion

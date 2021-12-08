@@ -12,14 +12,14 @@ import (
 
 func (h *Handler) responseAttributes(c *gin.Context, attributes types.Attributes) {
 
-	c.IndentedJSON(http.StatusOK, Attributes{
+	c.JSON(http.StatusOK, Attributes{
 		Attribute: toAttributesResponse(attributes),
 	})
 }
 
 func (h *Handler) responseAttributeRetrieved(c *gin.Context, attribute *types.Attribute) {
 
-	c.IndentedJSON(http.StatusOK, AttributeRetrieved{
+	c.JSON(http.StatusOK, AttributeRetrieved{
 		Name:  &attribute.Name,
 		Value: &attribute.Value,
 	})
@@ -27,7 +27,7 @@ func (h *Handler) responseAttributeRetrieved(c *gin.Context, attribute *types.At
 
 func (h *Handler) responseAttributeUpdated(c *gin.Context, attribute *types.Attribute) {
 
-	c.IndentedJSON(http.StatusOK, AttributeUpdated{
+	c.JSON(http.StatusOK, AttributeUpdated{
 		Name:  &attribute.Name,
 		Value: &attribute.Value,
 	})
@@ -35,7 +35,7 @@ func (h *Handler) responseAttributeUpdated(c *gin.Context, attribute *types.Attr
 
 func (h *Handler) responseAttributeDeleted(c *gin.Context, attribute *types.Attribute) {
 
-	c.IndentedJSON(http.StatusOK, AttributeDeleted{
+	c.JSON(http.StatusOK, AttributeDeleted{
 		Name:  &attribute.Name,
 		Value: &attribute.Value,
 	})

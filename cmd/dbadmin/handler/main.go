@@ -77,7 +77,7 @@ func responseError(c *gin.Context, e types.Error) {
 	// Save internal error details in request context so we can write it in access log later
 	_ = c.Error(errors.New(msg))
 
-	c.IndentedJSON(code, ErrorMessage{
+	c.JSON(code, ErrorMessage{
 		Code:    &code,
 		Message: &msg,
 	})

@@ -101,24 +101,24 @@ func (h *Handler) responseOrganizations(c *gin.Context, organizations types.Orga
 	for i := range organizations {
 		allOrganizations[i] = h.ToOrganizationResponse(&organizations[i])
 	}
-	c.IndentedJSON(http.StatusOK, Organizations{
+	c.JSON(http.StatusOK, Organizations{
 		Organization: &allOrganizations,
 	})
 }
 
 func (h *Handler) responseOrganization(c *gin.Context, organization *types.Organization) {
 
-	c.IndentedJSON(http.StatusOK, h.ToOrganizationResponse(organization))
+	c.JSON(http.StatusOK, h.ToOrganizationResponse(organization))
 }
 
 func (h *Handler) responseOrganizationCreated(c *gin.Context, organization *types.Organization) {
 
-	c.IndentedJSON(http.StatusCreated, h.ToOrganizationResponse(organization))
+	c.JSON(http.StatusCreated, h.ToOrganizationResponse(organization))
 }
 
 func (h *Handler) responseOrganizationUpdated(c *gin.Context, organization *types.Organization) {
 
-	c.IndentedJSON(http.StatusOK, h.ToOrganizationResponse(organization))
+	c.JSON(http.StatusOK, h.ToOrganizationResponse(organization))
 }
 
 // type conversion

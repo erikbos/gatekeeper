@@ -115,8 +115,8 @@ func (r *Readiness) ReadinessProbe(c *gin.Context) {
 	}
 
 	if r.status {
-		c.IndentedJSON(http.StatusOK, response)
+		c.JSON(http.StatusOK, response)
 	} else {
-		c.IndentedJSON(http.StatusServiceUnavailable, response)
+		c.JSON(http.StatusServiceUnavailable, response)
 	}
 }

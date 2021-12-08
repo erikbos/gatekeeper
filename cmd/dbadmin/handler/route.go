@@ -197,24 +197,24 @@ func (h *Handler) responseRoutess(c *gin.Context, routes types.Routes) {
 	for i := range routes {
 		allRoutes[i] = h.ToRouteResponse(&routes[i])
 	}
-	c.IndentedJSON(http.StatusOK, Routes{
+	c.JSON(http.StatusOK, Routes{
 		Routes: &allRoutes,
 	})
 }
 
 func (h *Handler) responseRoutes(c *gin.Context, route *types.Route) {
 
-	c.IndentedJSON(http.StatusOK, h.ToRouteResponse(route))
+	c.JSON(http.StatusOK, h.ToRouteResponse(route))
 }
 
 func (h *Handler) responseRouteCreated(c *gin.Context, route *types.Route) {
 
-	c.IndentedJSON(http.StatusCreated, h.ToRouteResponse(route))
+	c.JSON(http.StatusCreated, h.ToRouteResponse(route))
 }
 
 func (h *Handler) responseRoutesUpdated(c *gin.Context, route *types.Route) {
 
-	c.IndentedJSON(http.StatusOK, h.ToRouteResponse(route))
+	c.JSON(http.StatusOK, h.ToRouteResponse(route))
 }
 
 // type conversion

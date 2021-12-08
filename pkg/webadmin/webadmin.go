@@ -217,7 +217,7 @@ func JSONMessage(c *gin.Context, statusCode int, errorMessage error) {
 		_ = c.Error(errorMessage)
 	}
 
-	c.IndentedJSON(statusCode,
+	c.JSON(statusCode,
 		gin.H{
 			"message": fmt.Sprint(errorMessage),
 		})
