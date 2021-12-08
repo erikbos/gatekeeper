@@ -37,9 +37,6 @@ type Webadmin struct {
 
 //
 const (
-	// Path to be used by k8s liveness check
-	LivenessCheckPath = "/liveness"
-
 	// Path to be used by k8s readiness check
 	ReadinessCheckPath = "/readiness"
 
@@ -250,8 +247,8 @@ func LogHTTPRequest(logger *zap.Logger) gin.HandlerFunc {
 
 		requesturi := c.Request.URL.RequestURI()
 
-		// Do not log k8s health probes
-		if requesturi == LivenessCheckPath || requesturi == ReadinessCheckPath {
+		// Do not log k8s readiness probes
+		if requesturi == ReadinessCheckPath {
 			return
 		}
 

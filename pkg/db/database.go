@@ -1,7 +1,6 @@
 package db
 
 import (
-	"github.com/erikbos/gatekeeper/pkg/shared"
 	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
@@ -21,7 +20,6 @@ type (
 		User
 		Role
 		Audit
-		Readiness
 	}
 
 	// Listener is the listener information storage interface
@@ -238,11 +236,5 @@ type (
 		EndTime int64
 		// Maximum number of entities to return
 		Count int64
-	}
-
-	// Readiness the readiness storage interface
-	Readiness interface {
-		// RunReadinessCheck runs a database readiness check continously
-		RunReadinessCheck(chan shared.ReadinessMessage)
 	}
 )

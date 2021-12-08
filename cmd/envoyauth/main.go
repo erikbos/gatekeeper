@@ -30,7 +30,6 @@ type server struct {
 	vhosts     *vhostMapping
 	oauth      *oauth.Server
 	geoip      *policy.Geoip
-	readiness  *shared.Readiness
 	metrics    *metrics.Metrics
 	logger     *zap.Logger
 }
@@ -78,13 +77,6 @@ func main() {
 		}
 	}
 
-	// Start readiness subsystem
-	a.readiness = shared.NewReadiness(applicationName, a.logger)
-	a.readiness.Start()
-
-	// Start db health check and notify readiness subsystem
-	go a.db.RunReadinessCheck(a.readiness.GetChannel())
-
 	go startWebAdmin(&a, applicationName)
 
 	// Start continously loading of virtual host, routes & cluster data
@@ -118,8 +110,7 @@ func startWebAdmin(s *server, applicationName string) {
 
 	// Enable showing indexpage on / that shows all possible routes
 	s.webadmin.Router.GET("/", webadmin.ShowAllRoutes(s.webadmin.Router, applicationName))
-	s.webadmin.Router.GET(webadmin.LivenessCheckPath, webadmin.LivenessProbe)
-	s.webadmin.Router.GET(webadmin.ReadinessCheckPath, s.readiness.ReadinessProbe)
+	s.webadmin.Router.GET(webadmin.ReadinessCheckPath, webadmin.LivenessProbe)
 	s.webadmin.Router.GET(webadmin.MetricsPath, s.metrics.GinHandler())
 	s.webadmin.Router.GET(webadmin.ConfigDumpPath, webadmin.ShowStartupConfiguration(s.config))
 

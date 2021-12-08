@@ -23,7 +23,6 @@ type server struct {
 	webadmin   *webadmin.Webadmin
 	db         *db.Database
 	dbentities *db.EntityCache
-	readiness  *shared.Readiness
 	metrics    *metrics.Metrics
 	logger     *zap.Logger
 }
@@ -57,13 +56,6 @@ func main() {
 		s.logger.Fatal("Database connect failed", zap.Error(err))
 	}
 
-	// Start readiness subsystem
-	s.readiness = shared.NewReadiness(applicationName, s.logger)
-	s.readiness.Start()
-
-	// Start db health check and notify readiness subsystem
-	go s.db.RunReadinessCheck(s.readiness.GetChannel())
-
 	go startWebAdmin(&s, applicationName)
 
 	// Start continously loading of virtual host, routes & cluster data
@@ -88,8 +80,7 @@ func startWebAdmin(s *server, applicationName string) {
 
 	// Enable showing indexpage on / that shows all possible routes
 	s.webadmin.Router.GET("/", webadmin.ShowAllRoutes(s.webadmin.Router, applicationName))
-	s.webadmin.Router.GET(webadmin.LivenessCheckPath, webadmin.LivenessProbe)
-	s.webadmin.Router.GET(webadmin.ReadinessCheckPath, s.readiness.ReadinessProbe)
+	s.webadmin.Router.GET(webadmin.ReadinessCheckPath, webadmin.LivenessProbe)
 	s.webadmin.Router.GET(webadmin.MetricsPath, s.metrics.GinHandler())
 	s.webadmin.Router.GET(webadmin.ConfigDumpPath, webadmin.ShowStartupConfiguration(s.config))
 

@@ -94,7 +94,7 @@ func main() {
 	s.webadmin.Router.Use(s.metrics.Middleware())
 
 	s.webadmin.Router.GET("/", webadmin.ShowAllRoutes(s.webadmin.Router, applicationName))
-	s.webadmin.Router.GET(webadmin.LivenessCheckPath, webadmin.LivenessProbe)
+	s.webadmin.Router.GET(webadmin.ReadinessCheckPath, webadmin.LivenessProbe)
 	s.webadmin.Router.GET(webadmin.MetricsPath, s.metrics.GinHandler())
 	s.webadmin.Router.GET(webadmin.ConfigDumpPath, webadmin.ShowStartupConfiguration(s.config))
 

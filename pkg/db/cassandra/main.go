@@ -91,7 +91,6 @@ func New(config DatabaseConfig, serviceName string, logger *zap.Logger,
 		User:         NewUserStore(&dbConfig),
 		Role:         NewRoleStore(&dbConfig),
 		Audit:        NewAuditStore(&dbConfig),
-		Readiness:    NewReadiness(&dbConfig),
 	}
 	return &database, nil
 }
