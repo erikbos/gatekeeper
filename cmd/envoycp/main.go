@@ -2,7 +2,7 @@ package main
 
 import (
 	"flag"
-	"fmt"
+	"log"
 
 	"go.uber.org/zap"
 
@@ -37,8 +37,7 @@ func main() {
 	var s server
 	var err error
 	if s.config, err = loadConfiguration(filename); err != nil {
-		fmt.Print("Cannot parse configuration file:\n")
-		panic(err)
+		log.Fatalf("Cannot parse configuration file: (%s)", err)
 	}
 
 	logConfig := &shared.Logger{
