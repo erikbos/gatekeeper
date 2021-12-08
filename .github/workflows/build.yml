@@ -41,13 +41,13 @@ jobs:
        docker tag gatekeeper/dbadmin:$VERSION ${{ secrets.acr_hostname }}/dbadmin
        docker tag gatekeeper/envoyals:$VERSION ${{ secrets.acr_hostname }}/envoyals
        docker tag gatekeeper/envoyauth:$VERSION ${{ secrets.acr_hostname }}/envoyauth
-       docker tag gatekeeper/envoycp:$VERSION ${{ secrets.acr_hostname }}/envoycp
+       docker tag gatekeeper/controlplane:$VERSION ${{ secrets.acr_hostname }}/controlplane
        docker tag gatekeeper/testbackend:$VERSION ${{ secrets.acr_hostname }}/testbackend
 
        docker push ${{ secrets.acr_hostname }}/dbadmin
        docker push ${{ secrets.acr_hostname }}/envoyals
        docker push ${{ secrets.acr_hostname }}/envoyauth
-       docker push ${{ secrets.acr_hostname }}/envoycp
+       docker push ${{ secrets.acr_hostname }}/controlplane
        docker push ${{ secrets.acr_hostname }}/testbackend
 
   deploy:
@@ -74,7 +74,7 @@ jobs:
         kubectl rollout restart deployment/dbadmin
         kubectl rollout restart deployment/envoyals
         kubectl rollout restart deployment/envoyauth
-        kubectl rollout restart deployment/envoycp
+        kubectl rollout restart deployment/controlplane
         kubectl rollout restart deployment/testbackend
 
         kubectl get pods

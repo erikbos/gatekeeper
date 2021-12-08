@@ -6,7 +6,7 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/erikbos/gatekeeper/cmd/envoycp/metrics"
+	"github.com/erikbos/gatekeeper/cmd/controlplane/metrics"
 	"github.com/erikbos/gatekeeper/pkg/db"
 	"github.com/erikbos/gatekeeper/pkg/db/cassandra"
 	"github.com/erikbos/gatekeeper/pkg/shared"

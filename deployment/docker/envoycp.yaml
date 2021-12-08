@@ -2,14 +2,14 @@
 
 logging:
   level: info
-  filename: envoycp-admin.log
+  filename: controlplane-admin.log
 
 webadmin:
   listen: 0.0.0.0:9902
   ipacl: 0.0.0.0/0
   logging:
     level: info
-    filename: envoycp-access.log
+    filename: controlplane-access.log
 
 # Cassandra settings
 database:
@@ -26,5 +26,5 @@ database:
 xds:
   listen: 0.0.0.0:9901
   configcompileinterval: 2s
-  cluster: envoycp
+  cluster: controlplane
   timeout: 2s

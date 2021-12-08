@@ -95,7 +95,7 @@ The route options exposed this way are a subset of Envoy's capabilities, in gene
 
 ## Envoycp control plane
 
-Envoycp monitors the database for changed routes at `xds.configcompileinterval` interval. In case of changes envoycp will compile a new Envoy configuration and notify all envoyproxy instances.
+Envoycp monitors the database for changed routes at `xds.configcompileinterval` interval. In case of changes controlplane will compile a new Envoy configuration and notify all envoyproxy instances.
 
 ## Example route configurations
 

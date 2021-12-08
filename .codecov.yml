@@ -12,9 +12,9 @@ coverage:
         flags:
           - envoyauth
           - pkg
-      envoycp:
+      controlplane:
         flags:
-          - envoycp
+          - controlplane
           - pkg
       envoyals:
         flags:
@@ -28,9 +28,9 @@ flags:
   envoyauth:
     paths:
       - cmd/frontend/
-  envoycp:
+  controlplane:
     paths:
-      - cmd/envoycp/
+      - cmd/controlplane/
   envoyals:
     paths:
       - cmd/envoyals/

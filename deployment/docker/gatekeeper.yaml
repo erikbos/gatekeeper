@@ -43,13 +43,13 @@ services:
       - 4000-4001:4001-4001
     restart: unless-stopped
 
-  envoycp:
-    image: gatekeeper/envoycp:latest
-    container_name: envoycp
-    entrypoint: ["/app/envoycp", "--config", "/config/envoycp.yaml"]
+  controlplane:
+    image: gatekeeper/controlplane:latest
+    container_name: controlplane
+    entrypoint: ["/app/controlplane", "--config", "/config/controlplane.yaml"]
     secrets:
-      - source: envoycp-config
-        target: /config/envoycp.yaml
+      - source: controlplane-config
+        target: /config/controlplane.yaml
     ports:
       - 9901-9903:9901-9903
     restart: unless-stopped
@@ -74,7 +74,7 @@ secrets:
     file: envoyauth.yaml
   envoyals-config:
     file: envoyals.yaml
-  envoycp-config:
-    file: envoycp.yaml
+  controlplane-config:
+    file: controlplane.yaml
   envoyproxy-config:
     file: envoyproxy.yaml

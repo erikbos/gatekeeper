@@ -26,11 +26,11 @@ Scope:
 
 ### Configuration
 
-Envoycp requires a starup configuration which needs to be provided as YAML file, see below for the supported fields. For an example configuration file see [envoycp.yaml](../deployment/docker/envoycp.yaml).
+Envoycp requires a starup configuration which needs to be provided as YAML file, see below for the supported fields. For an example configuration file see [controlplane.yaml](../deployment/docker/controlplane.yaml).
 
 ### Logfiles
 
-Envoycp writes multiple logfiles, one for each function of envoycp. All are written as structured JSON, filename rotation schedule can be set via configuration file. The two logfiles are:
+Envoycp writes multiple logfiles, one for each function of controlplane. All are written as structured JSON, filename rotation schedule can be set via configuration file. The two logfiles are:
 
 1. `logging.filename` as log for application messages
 2. `webadmin.logging.filename` as access log for all REST API calls

@@ -87,7 +87,7 @@ The cluster options exposed this way are a subset of Envoy's capabilities, in ge
 
 ## Envoycp control plane
 
-Envoycp monitors the database for changed clusters at `xds.configcompileinterval` interval. In case of changes envoycp will compile a new Envoy configuration and notify all envoyproxy instances.
+Envoycp monitors the database for changed clusters at `xds.configcompileinterval` interval. In case of changes the controlplane will compile a new Envoy configuration and notify all envoyproxy instances.
 
 ## Example cluster configurations
 

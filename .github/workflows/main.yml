@@ -53,13 +53,13 @@ jobs:
         directory: cmd/envoyauth/
         flags: envoyauth
 
-    - name: Upload coverage to Codecov (envoycp)
+    - name: Upload coverage to Codecov (controlplane)
       uses: codecov/codecov-action@v1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: tmp/coverage.txt
-        directory: cmd/envoycp/
-        flags: envoycp
+        directory: cmd/controlplane/
+        flags: controlplane
 
     - name: Upload coverage to Codecov (pkg)
       uses: codecov/codecov-action@v1

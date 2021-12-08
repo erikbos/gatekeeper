@@ -7,8 +7,9 @@ import (
 
 	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	discovery "github.com/envoyproxy/go-control-plane/envoy/service/discovery/v3"
-	"github.com/erikbos/gatekeeper/cmd/envoycp/metrics"
 	"go.uber.org/zap"
+
+	"github.com/erikbos/gatekeeper/cmd/controlplane/metrics"
 )
 
 type callback struct {

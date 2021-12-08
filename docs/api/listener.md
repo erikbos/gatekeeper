@@ -85,7 +85,7 @@ The policies field can contain a comma separate list of policies which will be e
 
 ## Envoycp control plane
 
-Envoycp monitors database for changed listeners at `xds.configcompileinterval` interval. In case of changes envoycp will compile a new Envoy configuration and notify all envoyproxy instances.
+Envoycp monitors database for changed listeners at `xds.configcompileinterval` interval. In case of changes controlplane will compile a new Envoy configuration and notify all envoyproxy instances.
 
 ## Example listener configurations
 
