@@ -342,17 +342,4 @@ func timestampToUnix(ts *timestamp.Timestamp) int64 {
 
 func timestampAddDurationUnix(ts *timestamp.Timestamp, d *duration.Duration) int64 {
 	return (ts.AsTime().UnixNano() + d.AsDuration().Nanoseconds()) / 1000000
-
-	// d1 := d.GetNanos()
-
-	// t, err := ptypes.Timestamp(ts)
-	// if err != nil {
-	// 	a.logger.Error("invalid timestamp", zap.Error(err))
-	// 	return 0
-	// }
-	// du, err := ptypes.Duration(d)
-	// if err != nil {
-	// 	du = 0
-	// }
-	// return t.Add(du).UnixNano() / 1000000
 }
