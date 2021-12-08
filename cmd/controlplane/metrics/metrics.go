@@ -26,7 +26,7 @@ func (m *Metrics) GinHandler() gin.HandlerFunc {
 	return gin.WrapH(promhttp.Handler())
 }
 
-// RegisterWithPrometheus registers envoycp operational metrics
+// RegisterWithPrometheus registers control plane operational metrics
 func (m *Metrics) RegisterWithPrometheus() {
 
 	m.xdsEntities = prometheus.NewGaugeVec(

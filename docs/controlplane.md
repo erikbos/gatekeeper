@@ -1,14 +1,14 @@
 # Intro
 
-Envoycp is the control plane for envoyproxy. It configures all listeners, listeners, routes and their specifics in envoyproxy.
+Controlplane manages the configuration of envoyproxy. It configures all listeners, listeners, routes and their specifics in envoyproxy based upon configuration entities in the database.
 
 ## How does it work
 
-Envoycp continously monitors the database for updates changes to listeners, routes and clusters. In case there is a change a new envoyproxy configuration will be compiled and pushed to all envoyproxy.
+Controlplane continously monitors the database for updates changes to listeners, routes and clusters. In case there is a change a new envoyproxy configuration will be compiled and pushed to all connected envoyproxies.
 
-## Envoycp endpoints
+## Controlplane endpoints
 
-Envoycp exposes two endpoints:
+Controlplane exposes two endpoints:
 
 | name     | scope   | protocol | purpose                                |
 | -------- | ------- | -------- | -------------------------------------- |
@@ -26,16 +26,16 @@ Scope:
 
 ### Configuration
 
-Envoycp requires a starup configuration which needs to be provided as YAML file, see below for the supported fields. For an example configuration file see [controlplane.yaml](../deployment/docker/controlplane.yaml).
+Controlplane requires a starup configuration which needs to be provided as YAML file, see below for the supported fields. For an example configuration file see [controlplane.yaml](../deployment/docker/controlplane.yaml).
 
 ### Logfiles
 
-Envoycp writes multiple logfiles, one for each function of controlplane. All are written as structured JSON, filename rotation schedule can be set via configuration file. The two logfiles are:
+Controlplane writes multiple logfiles, one for each function of controlplane. All are written as structured JSON, filename rotation schedule can be set via configuration file. The two logfiles are:
 
 1. `logging.filename` as log for application messages
 2. `webadmin.logging.filename` as access log for all REST API calls
 
-### Envoycp configuration file
+### Controlplane configuration file
 
 The supported fields are:
 

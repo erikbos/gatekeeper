@@ -83,9 +83,9 @@ The policies field can contain a comma separate list of policies which will be e
 | removeAPIKeyFromQP   | Remove apikey from query parameters                                      |
 | lookupGeoIP          | Set country and state of connecting ip address as [Dynamic Metadata](https://www.envoyproxy.io/docs/envoy/latest/configuration/advanced/well_known_dynamic_metadata) |
 
-## Envoycp control plane
+## Controlplane
 
-Envoycp monitors database for changed listeners at `xds.configcompileinterval` interval. In case of changes controlplane will compile a new Envoy configuration and notify all envoyproxy instances.
+Controlplane monitors database for changed listeners at `xds.configcompileinterval` interval. In case of changes controlplane will compile a new Envoy configuration and notify all envoyproxy instances.
 
 ## Example listener configurations
 

@@ -19,7 +19,7 @@ var (
 )
 
 type server struct {
-	config     *EnvoyCPConfig
+	config     *ControlPlaneConfig
 	webadmin   *webadmin.Webadmin
 	db         *db.Database
 	dbentities *db.EntityCache
@@ -28,9 +28,9 @@ type server struct {
 }
 
 func main() {
-	const applicationName = "envoycp"
+	const applicationName = "controlplane"
 
-	filename := flag.String("config", "envoycp-config.yaml", "Configuration filename")
+	filename := flag.String("config", "controlplane-config.yaml", "Configuration filename")
 	flag.Parse()
 
 	var s server
