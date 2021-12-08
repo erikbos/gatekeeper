@@ -61,7 +61,7 @@ const (
 )
 
 // New returns a new webadmin
-func New(config Config, applicationName string, logger *zap.Logger) *Webadmin {
+func New(config Config, applicationName string) *Webadmin {
 
 	gin.SetMode(gin.ReleaseMode)
 
@@ -71,9 +71,10 @@ func New(config Config, applicationName string, logger *zap.Logger) *Webadmin {
 	router := gin.New()
 
 	// Enable access logging
+	logger := shared.NewLogger("webadmin", &config.Logger)
 	router.Use(LogHTTPRequest(logger))
 
-	// Enable adding setting a request-id per request
+	// Enable setting a request-id per request
 	router.Use(SetRequestID())
 
 	// Enable source ip addressing checking per request
@@ -89,7 +90,7 @@ func New(config Config, applicationName string, logger *zap.Logger) *Webadmin {
 // Start starts a web admin instance
 func (w *Webadmin) Start() {
 
-	w.logger.Info("Webadmin listening on " + w.config.Listen)
+	w.logger.Info("Listening on " + w.config.Listen)
 	if w.config.TLS.CertFile != "" &&
 		w.config.TLS.KeyFile != "" {
 

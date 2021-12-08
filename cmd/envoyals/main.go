@@ -39,9 +39,8 @@ func main() {
 		Level:    s.config.Logger.Level,
 		Filename: s.config.Logger.Filename,
 	}
-	s.logger = shared.NewLogger(logConfig)
+	s.logger = shared.NewLogger(applicationName, logConfig)
 	s.logger.Info("Starting",
-		zap.String("application", applicationName),
 		zap.String("version", version),
 		zap.String("buildtime", buildTime))
 
@@ -50,7 +49,7 @@ func main() {
 
 	go startWebAdmin(&s, applicationName)
 
-	accessLogLogger := shared.NewLogger(&s.config.AccessLogger.Logger)
+	accessLogLogger := shared.NewLogger("als", &s.config.AccessLogger.Logger)
 
 	accessLogServer := NewAccessLogServer(s.config.AccessLogger.MaxStreamDuration,
 		s.metrics, accessLogLogger)
@@ -60,13 +59,11 @@ func main() {
 // startWebAdmin starts the admin web UI
 func startWebAdmin(s *server, applicationName string) {
 
-	webAdminLogger := shared.NewLogger(&s.config.WebAdmin.Logger)
-	s.webadmin = webadmin.New(s.config.WebAdmin, applicationName, webAdminLogger)
+	s.webadmin = webadmin.New(s.config.WebAdmin, applicationName)
 
 	// Enable showing indexpage on / that shows all possible routes
 	s.webadmin.Router.GET("/", webadmin.ShowAllRoutes(s.webadmin.Router, applicationName))
 	s.webadmin.Router.GET(webadmin.ReadinessCheckPath, webadmin.LivenessProbe)
-	// s.webadmin.Router.GET(webadmin.ReadinessCheckPath, s.readiness.ReadinessProbe)
 	s.webadmin.Router.GET(webadmin.MetricsPath, s.metrics.GinHandler())
 	s.webadmin.Router.GET(webadmin.ConfigDumpPath, webadmin.ShowStartupConfiguration(s.config))
 

@@ -38,7 +38,6 @@ func New(router *gin.Engine, db *db.Database, s *service.Service,
 
 	handler := &Handler{
 		service: s,
-		logger:  logger,
 	}
 
 	router.GET("/apidocs/", shared.ServeEmbedFile(apiDocFiles, "apidocs/index.htm"))

@@ -106,9 +106,9 @@ func (al *Audit) log(aType auditType, entityType, entityID string, oldValue, new
 		NewValue:     al.convertInterfaceMapString(clearSensitiveFields(newValue)),
 	}
 
-	al.logger.Info("audit", zap.Any("audit", auditEntry))
+	al.logger.Info("m", zap.Any("record", auditEntry))
 	if err := al.db.Audit.Write(auditEntry); err != nil {
-		al.logger.Error("audit", zap.Any("error", err))
+		al.logger.Error("m", zap.Any("error", err))
 	}
 }
 

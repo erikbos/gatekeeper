@@ -37,7 +37,7 @@ type Logger struct {
 }
 
 // NewLogger returns a new logger
-func NewLogger(config *Logger) *zap.Logger {
+func NewLogger(applicationName string, config *Logger) *zap.Logger {
 
 	// Open file write that can rotates for us
 	config.logger = &lumberjack.Logger{
@@ -53,7 +53,7 @@ func NewLogger(config *Logger) *zap.Logger {
 
 	encoderConfig := zapcore.EncoderConfig{
 		TimeKey:        "t",
-		MessageKey:     "m",
+		MessageKey:     applicationName,
 		NameKey:        "lg",
 		LevelKey:       "l",
 		StacktraceKey:  "s",

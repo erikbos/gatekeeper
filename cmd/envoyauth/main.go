@@ -50,9 +50,8 @@ func main() {
 		Level:    a.config.Logger.Level,
 		Filename: a.config.Logger.Filename,
 	}
-	a.logger = shared.NewLogger(logConfig)
+	a.logger = shared.NewLogger(applicationName, logConfig)
 	a.logger.Info("Starting",
-		zap.String("application", applicationName),
 		zap.String("version", version),
 		zap.String("buildtime", buildTime))
 
@@ -104,9 +103,7 @@ func main() {
 // startWebAdmin starts the admin web UI
 func startWebAdmin(s *server, applicationName string) {
 
-	logger := shared.NewLogger(&s.config.WebAdmin.Logger)
-
-	s.webadmin = webadmin.New(s.config.WebAdmin, applicationName, logger)
+	s.webadmin = webadmin.New(s.config.WebAdmin, applicationName)
 
 	// Enable showing indexpage on / that shows all possible routes
 	s.webadmin.Router.GET("/", webadmin.ShowAllRoutes(s.webadmin.Router, applicationName))

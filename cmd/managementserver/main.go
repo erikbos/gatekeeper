@@ -58,9 +58,8 @@ func main() {
 		Level:    s.config.Logger.Level,
 		Filename: s.config.Logger.Filename,
 	}
-	s.logger = shared.NewLogger(logConfig)
+	s.logger = shared.NewLogger(applicationName, logConfig)
 	s.logger.Info("Starting",
-		zap.String("application", applicationName),
 		zap.String("version", version),
 		zap.String("buildtime", buildTime))
 
@@ -81,16 +80,16 @@ func main() {
 	// }
 
 	// Connect to audit database
-	auditLogLogger := shared.NewLogger(&s.config.Audit.Logger)
 	auditDb, err := cassandra.New(s.config.Audit.Database, applicationName+"_audit",
-		auditLogLogger, *createSchema, *replicaCount)
+		s.logger, *createSchema, *replicaCount)
 	if err != nil {
 		s.logger.Fatal("Audit database connect failed", zap.Error(err))
 	}
+
+	auditLogLogger := shared.NewLogger("audit", &s.config.Audit.Logger)
 	auditlog := audit.New(auditDb, auditLogLogger)
 
-	webAdminLogger := shared.NewLogger(&s.config.WebAdmin.Logger)
-	s.webadmin = webadmin.New(s.config.WebAdmin, applicationName, webAdminLogger)
+	s.webadmin = webadmin.New(s.config.WebAdmin, applicationName)
 	s.webadmin.Router.Use(s.metrics.Middleware())
 
 	s.webadmin.Router.GET("/", webadmin.ShowAllRoutes(s.webadmin.Router, applicationName))
@@ -100,7 +99,7 @@ func main() {
 
 	service := service.New(s.db, auditlog)
 	s.handler = handler.New(s.webadmin.Router, s.db, service,
-		applicationName, *disableAPIAuthentication, webAdminLogger)
+		applicationName, *disableAPIAuthentication, s.logger)
 
 	s.webadmin.Start()
 }
