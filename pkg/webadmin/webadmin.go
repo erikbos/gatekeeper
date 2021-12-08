@@ -313,14 +313,12 @@ table {
 <thead>
 	<th class='home-data'>Method</th>
 	<th class='home-data'>Path</th>
-	<th class='home-data'>Description</th>
 </thead>
 <tbody>
 {{range .Routes}}
 	<tr class='home-row'>
 	<td class='home-data'>{{ .Method }}</td>
 	<td class='home-data'><a href='{{ .Path }}'>{{ .Path }}</a></td>
-	<td class='home-data'></td>
 </tr>
 {{ end }}
 </tbody>
