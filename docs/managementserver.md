@@ -1,6 +1,6 @@
 # Intro
 
-managementserver provides a REST API to create, read, update, delete entities of Gatekeeper's configuration database.
+Managementserver provides a REST API to create, read, update, delete entities of Gatekeeper's configuration database.
 
 For each entity a detailed API description is available:
 
@@ -14,9 +14,9 @@ For each entity a detailed API description is available:
 8. [user](docs/api/user.md)
 9. [role](docs/api/role.md)
 
-## managementserver endpoints
+## Managementserver endpoints
 
-managementserver exposes one endpoint:
+Managementserver exposes one endpoint:
 
 | name     | scope   | protocol | purpose                                                     |
 | -------- | ------- | -------- | ----------------------------------------------------------- |
@@ -33,7 +33,7 @@ Scope:
 
 ### Configuration
 
-managementserver supports the following start up command line arguments:
+Managementserver supports the following start up command line arguments:
 
 | argument                 | purpose                                                  | example                                           |
 | ------------------------ | -------------------------------------------------------- | ------------------------------------------------- |
@@ -43,45 +43,66 @@ managementserver supports the following start up command line arguments:
 | createschema             | Create database schema and tables, if these do not exist |                                                   |
 | replicacount             | Replica count for keyspace when using `createschema`     | 3                                                 |
 
-### Logfiles
+### Application and API request logfiles
 
-managementserver writes multiple logfiles, one for each function of managementserver. All are written as structured JSON, filename rotation schedule can be set via configuration file. The three logfiles are:
+Managementserver writes multiple logfiles, one for each function of managementserver. All are written as structured JSON, filename rotation schedule can be set via configuration file.
 
-1. `logging.filename` as log for application messages
-2. `webadmin.logging.filename` as access log for all REST API calls
-3. `changelog.logging.filename` as entity changelog, all CRUD-operations, it logs full entity details so it might contain sensitive information!
+The following configuration properties control application and API request logging:
 
-### managementserver configuration file
+1. `logging.*` to configure properties of application logging.
+2. `webadmin.logging.*` to configure properties of logging REST API requests.
+
+### Auditlogs
+
+Managementserver keep track of all changes to entities, all create, update and delete operations are logged to a logfile and written to database. An [Audit](audit.md) API is available to retrieve an audit trail.
+
+Both old and new value of a changed entity is logged to have a full detailed changed history.
+
+The following configuration properties control audit logging:
+
+1. `auditlog.logging.*` to configure all audit logfile properties such as filename, log rotation.
+2. `auditlog.database.*` to configure which database to use to write audit log entries to.
+
+### Managementserver configuration file
 
 The supported fields are:
 
-| yaml field                   | purpose                                    | example               |
-| ---------------------------- | ------------------------------------------ | --------------------- |
-| logging.level                | Application log level                      | info / debug          |
-| logging.filename             | Filename to write application log to       | /dev/stdout           |
-| logging.maxsize              | Maximum size in megabytes before rotate    | 100                   |
-| logging.maxage               | Max days to retain old log files           | 7                     |
-| logging.maxbackups           | Maximum number of old log files to retain  | 14                    |
-| webadmin.listen              | Webadmin address and port                  | 0.0.0.0:7777          |
-| webadmin.ipacl               | Webadmin ip acl, without this no access    | 172.16.0.0/19         |
-| webadmin.tls.certfile        | TLS certificate file                       |                       |
-| webadmin.tls.keyfile         | TLS certificate key file                   |                       |
-| webadmin.logging.level       | Logging level of webadmin                  | info / debug          |
-| webadmin.logging.filename    | Filename to write web access log to        | managementserver-access.log    |
-| webadmin.logging.maxsize     | Maximum size in megabytes before rotate    | 100                   |
-| webadmin.logging.maxage      | Max days to retain old log files           | 7                     |
-| webadmin.logging.maxbackups  | Maximum number of old log files to retain  | 14                    |
-| changelog.logging.level      | Logging level of changelog                 | info                  |
-| changelog.logging.filename   | Filename to write changed entities to      | managementserver-changelog.log |
-| changelog.logging.maxsize    | Maximum size in megabytes before rotate    | 100                   |
-| changelog.logging.maxage     | Max days to retain old log files           | 7                     |
-| changelog.logging.maxbackups | Maximum number of old log files to retain  | 14                    |
-| database.hostname            | Cassandra hostname to connect to           | cassandra             |
-| database.port                | Cassandra port to connect on               | 9042 / 10350          |
-| database.tls                 | Enable TLS for database session            | true / false          |
-| database.username            | Database username                          | cassandra             |
-| database.password            | Database password                          | cassandra             |
-| database.keyspace            | Database keyspace for Gatekeeper tables    | gatekeeper            |
-| database.timeout             | Timeout for session                        | 0.5s                  |
-| database.connectattempts     | Number of attempts to establish connection | 5                     |
-| database.queryretries        | Number of times to retry query             | 2                     |
+| yaml field                     | purpose                                    | example                        |
+| ------------------------------ | ------------------------------------------ | ------------------------------ |
+| logging.level                  | Application log level                      | info / debug                   |
+| logging.filename               | Filename to write application log to       | /dev/stdout                    |
+| logging.maxsize                | Maximum size in megabytes before rotate    | 100                            |
+| logging.maxage                 | Max days to retain old log files           | 7                              |
+| logging.maxbackups             | Maximum number of old log files to retain  | 14                             |
+| webadmin.listen                | Webadmin address and port                  | 0.0.0.0:7777                   |
+| webadmin.ipacl                 | Webadmin ip acl, without this no access    | 172.16.0.0/19                  |
+| webadmin.tls.certfile          | TLS certificate file                       |                                |
+| webadmin.tls.keyfile           | TLS certificate key file                   |                                |
+| webadmin.logging.level         | Logging level of webadmin                  | info / debug                   |
+| webadmin.logging.filename      | Filename to write web access log to        | managementserver-access.log    |
+| webadmin.logging.maxsize       | Maximum size in megabytes before rotate    | 100                            |
+| webadmin.logging.maxage        | Max days to retain old log files           | 7                              |
+| webadmin.logging.maxbackups    | Maximum number of old log files to retain  | 14                             |
+| database.hostname              | Cassandra hostname to connect to           | cassandra                      |
+| database.port                  | Cassandra port to connect on               | 9042 / 10350                   |
+| database.tls                   | Enable TLS for database session            | true / false                   |
+| database.username              | Database username                          | cassandra                      |
+| database.password              | Database password                          | cassandra                      |
+| database.keyspace              | Database keyspace for Gatekeeper tables    | gatekeeper                     |
+| database.timeout               | Timeout for session                        | 0.5s                           |
+| database.connectattempts       | Number of attempts to establish connection | 5                              |
+| database.queryretries          | Number of times to retry query             | 2                              |
+| audit.logging.level            | Logging level of changelog                 | info                           |
+| audit.logging.filename         | Filename to write changed entities to      | managementserver-changelog.log |
+| audit.logging.maxsize          | Maximum size in megabytes before rotate    | 100                            |
+| audit.logging.maxage           | Max days to retain old log files           | 7                              |
+| audit.logging.maxbackups       | Maximum number of old log files to retain  | 14                             |
+| audit.database.hostname        | Cassandra hostname to connect to           | cassandra                      |
+| audit.database.port            | Cassandra port to connect on               | 9042 / 10350                   |
+| audit.database.tls             | Enable TLS for database session            | true / false                   |
+| audit.database.username        | Database username                          | cassandra                      |
+| audit.database.password        | Database password                          | cassandra                      |
+| audit.database.keyspace        | Database keyspace for audit table          | gatekeeper                     |
+| audit.database.timeout         | Timeout for session                        | 0.5s                           |
+| audit.database.connectattempts | Number of attempts to establish connection | 5                              |
+| audit.database.queryretries    | Number of times to retry query             | 2                              |
