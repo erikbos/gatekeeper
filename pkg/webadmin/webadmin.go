@@ -37,9 +37,6 @@ type Webadmin struct {
 
 //
 const (
-	// Path to be used by k8s liveness check
-	LivenessCheckPath = "/liveness"
-
 	// Path to be used by k8s readiness check
 	ReadinessCheckPath = "/readiness"
 
@@ -64,7 +61,7 @@ const (
 )
 
 // New returns a new webadmin
-func New(config Config, applicationName string, logger *zap.Logger) *Webadmin {
+func New(config Config, applicationName string) *Webadmin {
 
 	gin.SetMode(gin.ReleaseMode)
 
@@ -74,9 +71,10 @@ func New(config Config, applicationName string, logger *zap.Logger) *Webadmin {
 	router := gin.New()
 
 	// Enable access logging
+	logger := shared.NewLogger("webadmin", &config.Logger)
 	router.Use(LogHTTPRequest(logger))
 
-	// Enable adding setting a request-id per request
+	// Enable setting a request-id per request
 	router.Use(SetRequestID())
 
 	// Enable source ip addressing checking per request
@@ -92,7 +90,7 @@ func New(config Config, applicationName string, logger *zap.Logger) *Webadmin {
 // Start starts a web admin instance
 func (w *Webadmin) Start() {
 
-	w.logger.Info("Webadmin listening on " + w.config.Listen)
+	w.logger.Info("Listening on " + w.config.Listen)
 	if w.config.TLS.CertFile != "" &&
 		w.config.TLS.KeyFile != "" {
 
@@ -217,7 +215,7 @@ func JSONMessage(c *gin.Context, statusCode int, errorMessage error) {
 		_ = c.Error(errorMessage)
 	}
 
-	c.IndentedJSON(statusCode,
+	c.JSON(statusCode,
 		gin.H{
 			"message": fmt.Sprint(errorMessage),
 		})
@@ -250,8 +248,8 @@ func LogHTTPRequest(logger *zap.Logger) gin.HandlerFunc {
 
 		requesturi := c.Request.URL.RequestURI()
 
-		// Do not log k8s health probes
-		if requesturi == LivenessCheckPath || requesturi == ReadinessCheckPath {
+		// Do not log k8s readiness probes
+		if requesturi == ReadinessCheckPath {
 			return
 		}
 
@@ -313,14 +311,12 @@ table {
 <thead>
 	<th class='home-data'>Method</th>
 	<th class='home-data'>Path</th>
-	<th class='home-data'>Description</th>
 </thead>
 <tbody>
 {{range .Routes}}
 	<tr class='home-row'>
 	<td class='home-data'>{{ .Method }}</td>
 	<td class='home-data'><a href='{{ .Path }}'>{{ .Path }}</a></td>
-	<td class='home-data'></td>
 </tr>
 {{ end }}
 </tbody>

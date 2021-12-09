@@ -1,0 +1,42 @@
+# Authserver authentication daemon settings
+#
+logging:
+  level: info
+  filename: authserver-admin.log
+
+# The address to listen on for Admin UI
+webadmin:
+  listen: 0.0.0.0:2113
+  ipacl: 0.0.0.0/0
+  logging:
+    level: info
+    filename: authserver-access.log
+
+# The address to listen on for GRPC requests coming from Envoy
+authserver:
+  listen: 0.0.0.0:4000
+
+# public endpoint for oauth requests
+oauth:
+  listen: 0.0.0.0:4001
+  tokenissuepath: /oauth2/token
+  tokeninfopath: /oauth2/info
+  logging:
+    level: info
+    filename: authserver-oauth.log
+
+database:
+  hostname: cassandra
+  port: 9042
+  tls:
+    enable: false
+  username: cassandra
+  password: cassandra
+  keyspace: gatekeeper
+  timeout: 2s
+  connectattempts: 20     # Will try up to 20 times to connect before giving up. This will allow Cassandra to start up.
+
+cache:
+  size: 1048576         # cache size in bytes
+  ttl: 60               # cache ttl for positive hits
+  negativettl: 15       # cache ttl for failed lookups

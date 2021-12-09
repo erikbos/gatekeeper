@@ -1,4 +1,4 @@
-# dbadmin tests
+# managementserver tests
 
 This directory contains test suite to test developer endpoints.
 
@@ -14,9 +14,9 @@ Environment variable required to be set before running tests:
 
     # Set envs
 
-    cd tests/dbadmin
+    cd tests/managementserver
 
-    export API_URL=<https://dbadmin/v1/organization/default>
+    export API_URL=<https://managementserver/v1/organization/default>
     export API_USERNAME=admin
     export API_PASSWORD=passwd
 

@@ -30,7 +30,7 @@ dynamic_resources:
       transport_api_version: V3
       grpc_services:
         envoy_grpc:
-          cluster_name: envoycp
+          cluster_name: controlplane
       set_node_on_first_message_only: true
 
   cds_config:
@@ -40,12 +40,12 @@ dynamic_resources:
       transport_api_version: V3
       grpc_services:
         envoy_grpc:
-          cluster_name: envoycp
+          cluster_name: controlplane
       set_node_on_first_message_only: true
 
 static_resources:
   clusters:
-  - name: envoycp
+  - name: controlplane
     connect_timeout: 1s
     type: STRICT_DNS
     http2_protocol_options: {}
@@ -58,16 +58,16 @@ static_resources:
         keepalive_time: 10
         keepalive_interval: 10
     load_assignment:
-      cluster_name: envoycp
+      cluster_name: controlplane
       endpoints:
       - lb_endpoints:
         - endpoint:
             address:
               socket_address:
-                address: envoycp
+                address: controlplane
                 port_value: 9901
 
-  - name: envoyauth
+  - name: authserver
     type: STRICT_DNS
     connect_timeout: 1s
     http2_protocol_options: {}
@@ -80,16 +80,16 @@ static_resources:
         keepalive_time: 10
         keepalive_interval: 10
     load_assignment:
-      cluster_name: envoyauth
+      cluster_name: authserver
       endpoints:
       - lb_endpoints:
         - endpoint:
             address:
               socket_address:
-                address: envoyauth
+                address: authserver
                 port_value: 4000
 
-  - name: envoyals
+  - name: accesslogserver
     type: STRICT_DNS
     connect_timeout: 1s
     http2_protocol_options: {}
@@ -102,11 +102,11 @@ static_resources:
         keepalive_time: 10
         keepalive_interval: 10
     load_assignment:
-      cluster_name: envoyals
+      cluster_name: accesslogserver
       endpoints:
       - lb_endpoints:
         - endpoint:
             address:
               socket_address:
-                address: envoyauth
+                address: authserver
                 port_value: 6001

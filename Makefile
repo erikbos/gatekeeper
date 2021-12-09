@@ -5,23 +5,23 @@ BUILDER := $(shell echo "`git config user.name` <`git config user.email`>")
 LDFLAGS := -ldflags "-X main.version=$(VERSION) -X main.buildTime=$(BUILDTIME)"
 BIN = bin
 
-all: dbadmin envoyals envoyauth envoycp testbackend
+all: managementserver accesslogserver authserver controlplane testbackend
 
-dbadmin:
+managementserver:
 	mkdir -p $(BIN)
-	go build -o $(BIN)/dbadmin $(LDFLAGS) cmd/dbadmin/*.go
+	go build -o $(BIN)/managementserver $(LDFLAGS) cmd/managementserver/*.go
 
-envoyals:
+accesslogserver:
 	mkdir -p $(BIN)
-	go build -o $(BIN)/envoyals $(LDFLAGS) cmd/envoyals/*.go
+	go build -o $(BIN)/accesslogserver $(LDFLAGS) cmd/accesslogserver/*.go
 
-envoyauth:
+authserver:
 	mkdir -p $(BIN)
-	go build -o $(BIN)/envoyauth $(LDFLAGS) cmd/envoyauth/*.go
+	go build -o $(BIN)/authserver $(LDFLAGS) cmd/authserver/*.go
 
-envoycp:
+controlplane:
 	mkdir -p $(BIN)
-	go build -o $(BIN)/envoycp $(LDFLAGS) cmd/envoycp/*.go
+	go build -o $(BIN)/controlplane $(LDFLAGS) cmd/controlplane/*.go
 
 testbackend:
 	mkdir -p $(BIN)
@@ -29,26 +29,26 @@ testbackend:
 
 
 docker-images: docker-baseimage \
-				docker-dbadmin \
-				docker-envoyals \
-				docker-envoyauth \
-				docker-envoycp \
+				docker-managementserver \
+				docker-accesslogserver \
+				docker-authserver \
+				docker-controlplane \
 				docker-testbackend
 
 docker-baseimage:
 	 docker build -f build/Dockerfile.baseimage . -t gatekeeper/baseimage
 
-docker-dbadmin:
-	 docker build -f build/Dockerfile.dbadmin . -t gatekeeper/dbadmin:$(VERSION) -t gatekeeper/dbadmin:latest
+docker-managementserver:
+	 docker build -f build/Dockerfile.managementserver . -t gatekeeper/managementserver:$(VERSION) -t gatekeeper/managementserver:latest
 
-docker-envoyals:
-	 docker build -f build/Dockerfile.envoyals . -t gatekeeper/envoyals:$(VERSION) -t gatekeeper/envoyals:latest
+docker-accesslogserver:
+	 docker build -f build/Dockerfile.accesslogserver . -t gatekeeper/accesslogserver:$(VERSION) -t gatekeeper/accesslogserver:latest
 
-docker-envoyauth:
-	 docker build -f build/Dockerfile.envoyauth . -t gatekeeper/envoyauth:$(VERSION) -t gatekeeper/envoyauth:latest
+docker-authserver:
+	 docker build -f build/Dockerfile.authserver . -t gatekeeper/authserver:$(VERSION) -t gatekeeper/authserver:latest
 
-docker-envoycp:
-	 docker build -f build/Dockerfile.envoycp . -t gatekeeper/envoycp:$(VERSION) -t gatekeeper/envoycp:latest
+docker-controlplane:
+	 docker build -f build/Dockerfile.controlplane . -t gatekeeper/controlplane:$(VERSION) -t gatekeeper/controlplane:latest
 
 docker-testbackend:
 	 docker build -f  build/Dockerfile.testbackend . -t gatekeeper/testbackend:$(VERSION) -t gatekeeper/testbackend:latest
@@ -64,4 +64,4 @@ lint:
 
 .PHONY: clean
 clean:
-	rm -f $(BIN)/dbadmin $(BIN)/envoyauth $(BIN)/envoycp $(BIN)/envoyals $(BIN)/testbackend
+	rm -f $(BIN)/managementserver $(BIN)/authserver $(BIN)/controlplane $(BIN)/accesslogserver $(BIN)/testbackend

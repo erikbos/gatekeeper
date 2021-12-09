@@ -29,37 +29,37 @@ jobs:
     - name: Run unit tests
       run: make test
 
-    - name: Upload coverage to Codecov (dbadmin)
+    - name: Upload coverage to Codecov (managementserver)
       uses: codecov/codecov-action@v1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: tmp/coverage.txt
-        directory: cmd/dbadmin/
-        flags: dbadmin
+        directory: cmd/managementserver/
+        flags: managementserver
 
-    - name: Upload coverage to Codecov (envoyals)
+    - name: Upload coverage to Codecov (accesslogserver)
       uses: codecov/codecov-action@v1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: tmp/coverage.txt
-        directory: cmd/envoyals/
-        flags: envoyals
+        directory: cmd/accesslogserver/
+        flags: accesslogserver
 
-    - name: Upload coverage to Codecov (envoyauth)
+    - name: Upload coverage to Codecov (authserver)
       uses: codecov/codecov-action@v1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: tmp/coverage.txt
-        directory: cmd/envoyauth/
-        flags: envoyauth
+        directory: cmd/authserver/
+        flags: authserver
 
-    - name: Upload coverage to Codecov (envoycp)
+    - name: Upload coverage to Codecov (controlplane)
       uses: codecov/codecov-action@v1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: tmp/coverage.txt
-        directory: cmd/envoycp/
-        flags: envoycp
+        directory: cmd/controlplane/
+        flags: controlplane
 
     - name: Upload coverage to Codecov (pkg)
       uses: codecov/codecov-action@v1

@@ -85,9 +85,9 @@ All attributes listed above are mapped onto configuration properties of [Envoy C
 
 The cluster options exposed this way are a subset of Envoy's capabilities, in general any cluster configuration option Envoy supports can be exposed  this way. Feel free to open an issue if you need more of Envoy's functionality exposed.
 
-## Envoycp control plane
+## Controlplane
 
-Envoycp monitors the database for changed clusters at `xds.configcompileinterval` interval. In case of changes envoycp will compile a new Envoy configuration and notify all envoyproxy instances.
+Controlplane monitors the database for changed clusters at `xds.configcompileinterval` interval. In case of changes the controlplane will compile a new Envoy configuration and notify all envoyproxy instances.
 
 ## Example cluster configurations
 

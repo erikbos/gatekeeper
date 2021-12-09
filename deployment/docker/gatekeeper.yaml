@@ -9,47 +9,47 @@ services:
     volumes:
       - /tmp/cassandra_data:/var/lib/cassandra
 
-  dbadmin:
-    image: gatekeeper/dbadmin:latest
-    container_name: dbadmin
-    entrypoint: ["/app/dbadmin", "--config", "/config/dbadmin.yaml", "--createschema", "--replicacount=1"]
+  managementserver:
+    image: gatekeeper/managementserver:latest
+    container_name: managementserver
+    entrypoint: ["/app/managementserver", "--config", "/config/managementserver.yaml", "--createschema", "--replicacount=1"]
     secrets:
-      - source: dbadmin-config
-        target: /config/dbadmin.yaml
+      - source: managementserver-config
+        target: /config/managementserver.yaml
     ports:
       - 7777:7777
     restart: unless-stopped
 
-  envoyals:
-    image: gatekeeper/envoyals:latest
-    container_name: envoyals
-    entrypoint: ["/app/envoyals", "--config", "/config/envoyals.yaml"]
+  accesslogserver:
+    image: gatekeeper/accesslogserver:latest
+    container_name: accesslogserver
+    entrypoint: ["/app/accesslogserver", "--config", "/config/accesslogserver.yaml"]
     secrets:
-      - source: envoyals-config
-        target: /config/envoyals.yaml
+      - source: accesslogserver-config
+        target: /config/accesslogserver.yaml
     ports:
       - 6001-6002:6001-6002
     restart: unless-stopped
 
-  envoyauth:
-    image: gatekeeper/envoyauth:latest
-    container_name: envoyauth
-    entrypoint: ["/app/envoyauth", "--config", "/config/envoyauth.yaml"]
+  authserver:
+    image: gatekeeper/authserver:latest
+    container_name: authserver
+    entrypoint: ["/app/authserver", "--config", "/config/authserver.yaml"]
     secrets:
-      - source: envoyauth-config
-        target: /config/envoyauth.yaml
+      - source: authserver-config
+        target: /config/authserver.yaml
     ports:
       - 2113:2113
       - 4000-4001:4001-4001
     restart: unless-stopped
 
-  envoycp:
-    image: gatekeeper/envoycp:latest
-    container_name: envoycp
-    entrypoint: ["/app/envoycp", "--config", "/config/envoycp.yaml"]
+  controlplane:
+    image: gatekeeper/controlplane:latest
+    container_name: controlplane
+    entrypoint: ["/app/controlplane", "--config", "/config/controlplane.yaml"]
     secrets:
-      - source: envoycp-config
-        target: /config/envoycp.yaml
+      - source: controlplane-config
+        target: /config/controlplane.yaml
     ports:
       - 9901-9903:9901-9903
     restart: unless-stopped
@@ -68,13 +68,13 @@ services:
     restart: unless-stopped
 
 secrets:
-  dbadmin-config:
-    file: dbadmin.yaml
-  envoyauth-config:
-    file: envoyauth.yaml
-  envoyals-config:
-    file: envoyals.yaml
-  envoycp-config:
-    file: envoycp.yaml
+  managementserver-config:
+    file: managementserver.yaml
+  authserver-config:
+    file: authserver.yaml
+  accesslogserver-config:
+    file: accesslogserver.yaml
+  controlplane-config:
+    file: controlplane.yaml
   envoyproxy-config:
     file: envoyproxy.yaml

@@ -51,6 +51,5 @@ func New(config *Config, d *db.Database, applicationName string, logger *zap.Log
 		OAuth:        NewOAuthCache(c, d.OAuth),
 		User:         NewUserCache(c, d.User),
 		Role:         NewRoleCache(c, d.Role),
-		Readiness:    d.Readiness,
 	}, nil
 }

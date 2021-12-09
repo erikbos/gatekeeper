@@ -93,9 +93,9 @@ All attributes listed above are mapped onto configuration properties of [Envoy r
 
 The route options exposed this way are a subset of Envoy's capabilities, in general any route configuration option Envoy supports can be exposed  this way. Feel free to open an issue if you need more of Envoy's functionality exposed.
 
-## Envoycp control plane
+## Controlplane
 
-Envoycp monitors the database for changed routes at `xds.configcompileinterval` interval. In case of changes envoycp will compile a new Envoy configuration and notify all envoyproxy instances.
+Controlplane monitors the database for changed routes at `xds.configcompileinterval` interval. In case of changes controlplane will compile a new Envoy configuration and notify all envoyproxy instances.
 
 ## Example route configurations
 
@@ -242,7 +242,7 @@ Forward `/people` to cluster `people` and configure up to `3` request retries in
 ```
 
 Forward `/people` to cluster `people` remove header `Content-Type` and set header `appid` to the value
-of Metadata key `app.id` (emitted by `envoyauth`)
+of Metadata key `app.id` (emitted by `authserver`)
 
 ```json
 {

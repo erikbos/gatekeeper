@@ -7,10 +7,10 @@ ADD . /build/
 WORKDIR /build
 # static build is required
 ENV CGO_ENABLED=0
-RUN make envoycp
+RUN make controlplane
 
 FROM alpine
 WORKDIR /app/
-COPY --from=build-env /build/bin/envoycp .
+COPY --from=build-env /build/bin/controlplane .
 USER nobody
-CMD ["/app/envoycp"]
+CMD ["/app/controlplane"]
