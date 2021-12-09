@@ -138,11 +138,11 @@ func (al *Audit) convertInterfaceMapString(m interface{}) map[string]interface{}
 
 	data, err = json.Marshal(m)
 	if err != nil {
-		al.logger.Fatal("Cannot marshal", zap.Any("InterfaceStringMap", m))
+		al.logger.Fatal("Cannot marshal", zap.Any("InterfaceStringMap", clearSensitiveFields(m)))
 	}
 
 	if err = json.Unmarshal(data, &mapString); err != nil {
-		al.logger.Fatal("Cannot unmarshal", zap.Binary("InterfaceStringMap", data))
+		al.logger.Fatal("Cannot unmarshal", zap.Any("InterfaceStringMap", clearSensitiveFields(m)))
 	}
 
 	return mapString
