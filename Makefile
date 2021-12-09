@@ -5,15 +5,15 @@ BUILDER := $(shell echo "`git config user.name` <`git config user.email`>")
 LDFLAGS := -ldflags "-X main.version=$(VERSION) -X main.buildTime=$(BUILDTIME)"
 BIN = bin
 
-all: managementserver envoyals envoyauth controlplane testbackend
+all: managementserver accesslogserver envoyauth controlplane testbackend
 
 managementserver:
 	mkdir -p $(BIN)
 	go build -o $(BIN)/managementserver $(LDFLAGS) cmd/managementserver/*.go
 
-envoyals:
+accesslogserver:
 	mkdir -p $(BIN)
-	go build -o $(BIN)/envoyals $(LDFLAGS) cmd/envoyals/*.go
+	go build -o $(BIN)/accesslogserver $(LDFLAGS) cmd/accesslogserver/*.go
 
 envoyauth:
 	mkdir -p $(BIN)
@@ -30,7 +30,7 @@ testbackend:
 
 docker-images: docker-baseimage \
 				docker-managementserver \
-				docker-envoyals \
+				docker-accesslogserver \
 				docker-envoyauth \
 				docker-controlplane \
 				docker-testbackend
@@ -41,8 +41,8 @@ docker-baseimage:
 docker-managementserver:
 	 docker build -f build/Dockerfile.managementserver . -t gatekeeper/managementserver:$(VERSION) -t gatekeeper/managementserver:latest
 
-docker-envoyals:
-	 docker build -f build/Dockerfile.envoyals . -t gatekeeper/envoyals:$(VERSION) -t gatekeeper/envoyals:latest
+docker-accesslogserver:
+	 docker build -f build/Dockerfile.accesslogserver . -t gatekeeper/accesslogserver:$(VERSION) -t gatekeeper/accesslogserver:latest
 
 docker-envoyauth:
 	 docker build -f build/Dockerfile.envoyauth . -t gatekeeper/envoyauth:$(VERSION) -t gatekeeper/envoyauth:latest
@@ -64,4 +64,4 @@ lint:
 
 .PHONY: clean
 clean:
-	rm -f $(BIN)/managementserver $(BIN)/envoyauth $(BIN)/controlplane $(BIN)/envoyals $(BIN)/testbackend
+	rm -f $(BIN)/managementserver $(BIN)/envoyauth $(BIN)/controlplane $(BIN)/accesslogserver $(BIN)/testbackend

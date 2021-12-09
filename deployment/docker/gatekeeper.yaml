@@ -20,13 +20,13 @@ services:
       - 7777:7777
     restart: unless-stopped
 
-  envoyals:
-    image: gatekeeper/envoyals:latest
-    container_name: envoyals
-    entrypoint: ["/app/envoyals", "--config", "/config/envoyals.yaml"]
+  accesslogserver:
+    image: gatekeeper/accesslogserver:latest
+    container_name: accesslogserver
+    entrypoint: ["/app/accesslogserver", "--config", "/config/accesslogserver.yaml"]
     secrets:
-      - source: envoyals-config
-        target: /config/envoyals.yaml
+      - source: accesslogserver-config
+        target: /config/accesslogserver.yaml
     ports:
       - 6001-6002:6001-6002
     restart: unless-stopped
@@ -72,8 +72,8 @@ secrets:
     file: managementserver.yaml
   envoyauth-config:
     file: envoyauth.yaml
-  envoyals-config:
-    file: envoyals.yaml
+  accesslogserver-config:
+    file: accesslogserver.yaml
   controlplane-config:
     file: controlplane.yaml
   envoyproxy-config:

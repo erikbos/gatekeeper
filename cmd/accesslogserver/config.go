@@ -13,21 +13,21 @@ const (
 	defaultLogLevel             = "info"
 	defaultLogFileName          = "/dev/stdout"
 	defaultWebAdminListen       = "0.0.0.0:8888"
-	defaultWebAdminLogFileName  = "envoyals-admin.log"
+	defaultWebAdminLogFileName  = "accesslogserver-admin.log"
 	defaultALSListen            = "0.0.0.0:8001"
 	defaultALSLogFileName       = "envoyproxy.log"
 	defaultALSMaxStreamDuration = 1 * time.Hour
 )
 
-// EnvoyALSConfig contains our startup configuration data
-type EnvoyALSConfig struct {
+// accesslogserverConfig contains our startup configuration data
+type accesslogserverConfig struct {
 	Logger       shared.Logger         `yaml:"logging"`   // log configuration of application
 	WebAdmin     webadmin.Config       `yaml:"webadmin"`  // Admin web interface configuration
 	AccessLogger AccessLogServerConfig `yaml:"accesslog"` // Access logging configuration
 }
 
 // String() return our startup configuration as YAML
-func (config *EnvoyALSConfig) String() string {
+func (config *accesslogserverConfig) String() string {
 
 	configAsYAML, err := yaml.Marshal(config)
 	if err != nil {
@@ -36,9 +36,9 @@ func (config *EnvoyALSConfig) String() string {
 	return string(configAsYAML)
 }
 
-func loadConfiguration(filename *string) (*EnvoyALSConfig, error) {
+func loadConfiguration(filename *string) (*accesslogserverConfig, error) {
 
-	defaultConfig := &EnvoyALSConfig{
+	defaultConfig := &accesslogserverConfig{
 		Logger: shared.Logger{
 			Level:    defaultLogLevel,
 			Filename: defaultLogFileName,
@@ -64,5 +64,5 @@ func loadConfiguration(filename *string) (*EnvoyALSConfig, error) {
 	if err != nil {
 		return nil, err
 	}
-	return config.(*EnvoyALSConfig), nil
+	return config.(*accesslogserverConfig), nil
 }

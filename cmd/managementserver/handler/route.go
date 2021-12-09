@@ -17,7 +17,7 @@ func (h *Handler) GetV1Routes(c *gin.Context) {
 		responseError(c, err)
 		return
 	}
-	h.responseRoutess(c, routes)
+	h.responseRoutes(c, routes)
 }
 
 // creates a new route
@@ -51,7 +51,7 @@ func (h *Handler) DeleteV1RoutesRouteName(c *gin.Context, routeName RouteName) {
 		responseError(c, err)
 		return
 	}
-	h.responseRoutes(c, route)
+	h.responseRoute(c, route)
 }
 
 // returns full details of one route
@@ -63,7 +63,7 @@ func (h *Handler) GetV1RoutesRouteName(c *gin.Context, routeName RouteName) {
 		responseError(c, err)
 		return
 	}
-	h.responseRoutes(c, route)
+	h.responseRoute(c, route)
 }
 
 // (POST /v1/routes/{route_name})
@@ -191,7 +191,7 @@ func (h *Handler) PostV1RoutesRouteNameAttributesAttributeName(
 
 // API responses
 
-func (h *Handler) responseRoutess(c *gin.Context, routes types.Routes) {
+func (h *Handler) responseRoutes(c *gin.Context, routes types.Routes) {
 
 	allRoutes := make([]Route, len(routes))
 	for i := range routes {
@@ -202,7 +202,7 @@ func (h *Handler) responseRoutess(c *gin.Context, routes types.Routes) {
 	})
 }
 
-func (h *Handler) responseRoutes(c *gin.Context, route *types.Route) {
+func (h *Handler) responseRoute(c *gin.Context, route *types.Route) {
 
 	c.JSON(http.StatusOK, h.ToRouteResponse(route))
 }

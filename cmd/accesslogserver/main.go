@@ -6,7 +6,7 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/erikbos/gatekeeper/cmd/envoyals/metrics"
+	"github.com/erikbos/gatekeeper/cmd/accesslogserver/metrics"
 	"github.com/erikbos/gatekeeper/pkg/shared"
 	"github.com/erikbos/gatekeeper/pkg/webadmin"
 )
@@ -17,16 +17,16 @@ var (
 )
 
 type server struct {
-	config   *EnvoyALSConfig
+	config   *accesslogserverConfig
 	webadmin *webadmin.Webadmin
 	metrics  *metrics.Metrics
 	logger   *zap.Logger
 }
 
 func main() {
-	const applicationName = "envoyals"
+	const applicationName = "accesslogserver"
 
-	filename := flag.String("config", "envoyals-config.yaml", "Configuration filename")
+	filename := flag.String("config", "accesslogserver-config.yaml", "Configuration filename")
 	flag.Parse()
 
 	var s server

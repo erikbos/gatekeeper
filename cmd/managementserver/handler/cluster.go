@@ -17,7 +17,7 @@ func (h *Handler) GetV1Clusters(c *gin.Context) {
 		responseError(c, err)
 		return
 	}
-	h.responseClusterss(c, clusters)
+	h.responseClusters(c, clusters)
 }
 
 // creates a new cluster
@@ -51,7 +51,7 @@ func (h *Handler) DeleteV1ClustersClusterName(c *gin.Context, clusterName Cluste
 		responseError(c, err)
 		return
 	}
-	h.responseClusters(c, cluster)
+	h.responseCluster(c, cluster)
 }
 
 // returns full details of one cluster
@@ -63,7 +63,7 @@ func (h *Handler) GetV1ClustersClusterName(c *gin.Context, clusterName ClusterNa
 		responseError(c, err)
 		return
 	}
-	h.responseClusters(c, cluster)
+	h.responseCluster(c, cluster)
 }
 
 // (POST /v1/clusters/{cluster_name})
@@ -191,7 +191,7 @@ func (h *Handler) PostV1ClustersClusterNameAttributesAttributeName(
 
 // API responses
 
-func (h *Handler) responseClusterss(c *gin.Context, clusters types.Clusters) {
+func (h *Handler) responseClusters(c *gin.Context, clusters types.Clusters) {
 
 	allClusters := make([]Cluster, len(clusters))
 	for i := range clusters {
@@ -202,7 +202,7 @@ func (h *Handler) responseClusterss(c *gin.Context, clusters types.Clusters) {
 	})
 }
 
-func (h *Handler) responseClusters(c *gin.Context, cluster *types.Cluster) {
+func (h *Handler) responseCluster(c *gin.Context, cluster *types.Cluster) {
 
 	c.JSON(http.StatusOK, h.ToClusterResponse(cluster))
 }

@@ -1,7 +1,7 @@
 coverage:
   precision: 0
   status:
-    patch: off
+    patch: false
     project:
       default: off
       managementserver:
@@ -16,9 +16,9 @@ coverage:
         flags:
           - controlplane
           - pkg
-      envoyals:
+      accesslogserver:
         flags:
-          - envoyals
+          - accesslogserver
           - pkg
 
 flags:
@@ -31,9 +31,9 @@ flags:
   controlplane:
     paths:
       - cmd/controlplane/
-  envoyals:
+  accesslogserver:
     paths:
-      - cmd/envoyals/
+      - cmd/accesslogserver/
   pkg:
     paths:
       - pkg/

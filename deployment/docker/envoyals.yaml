@@ -1,4 +1,4 @@
-# Envoyals access logging daemon settings
+# accesslogserver access logging daemon settings
 
 logging:
   level: debug
@@ -11,7 +11,7 @@ webadmin:
     level: debug
     filename: /dev/stdout
 #    level: info
-#    filename: envoyals-access.log
+#    filename: accesslogserver-access.log
 
 accesslog:
   listen: 0.0.0.0:6001

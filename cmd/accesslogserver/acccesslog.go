@@ -18,7 +18,7 @@ import (
 	"google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
 
-	"github.com/erikbos/gatekeeper/cmd/envoyals/metrics"
+	"github.com/erikbos/gatekeeper/cmd/accesslogserver/metrics"
 	"github.com/erikbos/gatekeeper/pkg/shared"
 )
 

@@ -89,7 +89,7 @@ static_resources:
                 address: envoyauth
                 port_value: 4000
 
-  - name: envoyals
+  - name: accesslogserver
     type: STRICT_DNS
     connect_timeout: 1s
     http2_protocol_options: {}
@@ -102,7 +102,7 @@ static_resources:
         keepalive_time: 10
         keepalive_interval: 10
     load_assignment:
-      cluster_name: envoyals
+      cluster_name: accesslogserver
       endpoints:
       - lb_endpoints:
         - endpoint:

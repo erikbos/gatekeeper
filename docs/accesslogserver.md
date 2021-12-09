@@ -1,14 +1,14 @@
 # Intro
 
-Envoyals is the access logger receiver for envoyproxy.
+Accesslogserver is the access logger receiver for envoyproxy.
 
 ## how to enable
 
 Set the attribute [AccessLogCluster](api/listener.md#Attribute) on a listener to enable envoyproxy to stream accesslogs.
 
-## Envoyals endpoints
+## accesslogserver endpoints
 
-Envoyals exposes two endpoints:
+Accesslogserver exposes two endpoints:
 
 | name      | scope   | protocol | purpose                                |
 | --------- | ------- | -------- | -------------------------------------- |
@@ -25,17 +25,17 @@ Scope:
 
 ### Configuration
 
-Envoyals requires a starup configuration which needs to be provided as YAML file, see below for the supported fields. For an example configuration file see [envoyals.yaml](../deployment/docker/envoyals.yaml).
+Accesslogserver requires a starup configuration which needs to be provided as YAML file, see below for the supported fields. For an example configuration file see [accesslogserver.yaml](../deployment/docker/accesslogserver.yaml).
 
 ### Logfiles
 
-Envoyals writes multiple logfiles, one for each function of envoyals. All are written as structured JSON, filename rotation schedule can be set via configuration file. The three logfiles are:
+Accesslogserver writes multiple logfiles, one for each function of accesslogserver. All are written as structured JSON, filename rotation schedule can be set via configuration file. The three logfiles are:
 
 1. `logging.filename` as log for application messages
 2. `webadmin.logging.filename` as access log for all REST API calls
 3. `accesslog.logging.filename` as access log entries received from envoy
 
-### Envoyals configuration file
+### Accesslogserver configuration file
 
 The supported fields are:
 
