@@ -242,7 +242,7 @@ Forward `/people` to cluster `people` and configure up to `3` request retries in
 ```
 
 Forward `/people` to cluster `people` remove header `Content-Type` and set header `appid` to the value
-of Metadata key `app.id` (emitted by `envoyauth`)
+of Metadata key `app.id` (emitted by `authserver`)
 
 ```json
 {

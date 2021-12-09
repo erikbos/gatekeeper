@@ -7,10 +7,10 @@ ADD . /build/
 WORKDIR /build
 # static build is required
 ENV CGO_ENABLED=0
-RUN make envoyauth
+RUN make authserver
 
 FROM alpine
 WORKDIR /app/
-COPY --from=build-env /build/bin/envoyauth .
+COPY --from=build-env /build/bin/authserver .
 USER nobody
-CMD ["/app/envoyauth"]
+CMD ["/app/authserver"]

@@ -45,13 +45,13 @@ jobs:
         directory: cmd/accesslogserver/
         flags: accesslogserver
 
-    - name: Upload coverage to Codecov (envoyauth)
+    - name: Upload coverage to Codecov (authserver)
       uses: codecov/codecov-action@v1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: tmp/coverage.txt
-        directory: cmd/envoyauth/
-        flags: envoyauth
+        directory: cmd/authserver/
+        flags: authserver
 
     - name: Upload coverage to Codecov (controlplane)
       uses: codecov/codecov-action@v1

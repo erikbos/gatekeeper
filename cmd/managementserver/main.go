@@ -25,7 +25,7 @@ var (
 // go generate oapi-codegen
 
 type server struct {
-	config   *ManagementServerConfig
+	config   *managementServerConfig
 	webadmin *webadmin.Webadmin
 	db       *db.Database
 	handler  *handler.Handler

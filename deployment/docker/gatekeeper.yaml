@@ -31,13 +31,13 @@ services:
       - 6001-6002:6001-6002
     restart: unless-stopped
 
-  envoyauth:
-    image: gatekeeper/envoyauth:latest
-    container_name: envoyauth
-    entrypoint: ["/app/envoyauth", "--config", "/config/envoyauth.yaml"]
+  authserver:
+    image: gatekeeper/authserver:latest
+    container_name: authserver
+    entrypoint: ["/app/authserver", "--config", "/config/authserver.yaml"]
     secrets:
-      - source: envoyauth-config
-        target: /config/envoyauth.yaml
+      - source: authserver-config
+        target: /config/authserver.yaml
     ports:
       - 2113:2113
       - 4000-4001:4001-4001
@@ -70,8 +70,8 @@ services:
 secrets:
   managementserver-config:
     file: managementserver.yaml
-  envoyauth-config:
-    file: envoyauth.yaml
+  authserver-config:
+    file: authserver.yaml
   accesslogserver-config:
     file: accesslogserver.yaml
   controlplane-config:

@@ -5,7 +5,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
-	"github.com/erikbos/gatekeeper/cmd/envoyauth/request"
+	"github.com/erikbos/gatekeeper/cmd/authserver/request"
 )
 
 // Metrics holds all our metrics

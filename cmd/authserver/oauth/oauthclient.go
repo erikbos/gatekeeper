@@ -7,7 +7,7 @@ import (
 	"gopkg.in/oauth2.v3"
 	"gopkg.in/oauth2.v3/models"
 
-	"github.com/erikbos/gatekeeper/cmd/envoyauth/metrics"
+	"github.com/erikbos/gatekeeper/cmd/authserver/metrics"
 	"github.com/erikbos/gatekeeper/pkg/db"
 )
 

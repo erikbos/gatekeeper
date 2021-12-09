@@ -6,7 +6,7 @@ import (
 	"github.com/bmatcuk/doublestar"
 	"go.uber.org/zap"
 
-	"github.com/erikbos/gatekeeper/cmd/envoyauth/request"
+	"github.com/erikbos/gatekeeper/cmd/authserver/request"
 	"github.com/erikbos/gatekeeper/pkg/types"
 )
 

@@ -67,7 +67,7 @@ static_resources:
                 address: controlplane
                 port_value: 9901
 
-  - name: envoyauth
+  - name: authserver
     type: STRICT_DNS
     connect_timeout: 1s
     http2_protocol_options: {}
@@ -80,13 +80,13 @@ static_resources:
         keepalive_time: 10
         keepalive_interval: 10
     load_assignment:
-      cluster_name: envoyauth
+      cluster_name: authserver
       endpoints:
       - lb_endpoints:
         - endpoint:
             address:
               socket_address:
-                address: envoyauth
+                address: authserver
                 port_value: 4000
 
   - name: accesslogserver
@@ -108,5 +108,5 @@ static_resources:
         - endpoint:
             address:
               socket_address:
-                address: envoyauth
+                address: authserver
                 port_value: 6001

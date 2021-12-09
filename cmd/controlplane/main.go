@@ -19,7 +19,7 @@ var (
 )
 
 type server struct {
-	config     *ControlPlaneConfig
+	config     *controlPlaneConfig
 	webadmin   *webadmin.Webadmin
 	db         *db.Database
 	dbentities *db.EntityCache

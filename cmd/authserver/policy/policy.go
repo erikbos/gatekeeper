@@ -10,7 +10,7 @@ import (
 	"github.com/bmatcuk/doublestar"
 	"go.uber.org/zap"
 
-	"github.com/erikbos/gatekeeper/cmd/envoyauth/request"
+	"github.com/erikbos/gatekeeper/cmd/authserver/request"
 	"github.com/erikbos/gatekeeper/pkg/shared"
 )
 
@@ -212,7 +212,7 @@ func (p *Policy) checkOAuth2(request *request.State) *Response {
 	}
 }
 
-// buildMetadata returns all authentication & apim metadata to be returned by envoyauth
+// buildMetadata returns all authentication & apim metadata to be returned by authserver
 func buildMetadata(request *request.State) map[string]string {
 
 	m := make(map[string]string, 10)
@@ -258,7 +258,7 @@ func (p *Policy) removeAPIKeyFromQP() *Response {
 
 	p.Request.QueryParameters.Del("apikey")
 
-	// We remove query parameters by having envoyauth overwrite the path
+	// We remove query parameters by having authserver overwrite the path
 	return &Response{
 		Headers: map[string]string{
 			":path": p.Request.URL.Path + "?" + p.Request.QueryParameters.Encode(),

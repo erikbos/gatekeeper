@@ -19,15 +19,15 @@ const (
 	defaultALSMaxStreamDuration = 1 * time.Hour
 )
 
-// accesslogserverConfig contains our startup configuration data
-type accesslogserverConfig struct {
+// accessLogServerConfig contains our startup configuration data
+type accessLogServerConfig struct {
 	Logger       shared.Logger         `yaml:"logging"`   // log configuration of application
 	WebAdmin     webadmin.Config       `yaml:"webadmin"`  // Admin web interface configuration
 	AccessLogger AccessLogServerConfig `yaml:"accesslog"` // Access logging configuration
 }
 
 // String() return our startup configuration as YAML
-func (config *accesslogserverConfig) String() string {
+func (config *accessLogServerConfig) String() string {
 
 	configAsYAML, err := yaml.Marshal(config)
 	if err != nil {
@@ -36,9 +36,9 @@ func (config *accesslogserverConfig) String() string {
 	return string(configAsYAML)
 }
 
-func loadConfiguration(filename *string) (*accesslogserverConfig, error) {
+func loadConfiguration(filename *string) (*accessLogServerConfig, error) {
 
-	defaultConfig := &accesslogserverConfig{
+	defaultConfig := &accessLogServerConfig{
 		Logger: shared.Logger{
 			Level:    defaultLogLevel,
 			Filename: defaultLogFileName,
@@ -64,5 +64,5 @@ func loadConfiguration(filename *string) (*accesslogserverConfig, error) {
 	if err != nil {
 		return nil, err
 	}
-	return config.(*accesslogserverConfig), nil
+	return config.(*accessLogServerConfig), nil
 }

@@ -17,7 +17,7 @@ var (
 )
 
 type server struct {
-	config   *accesslogserverConfig
+	config   *accessLogServerConfig
 	webadmin *webadmin.Webadmin
 	metrics  *metrics.Metrics
 	logger   *zap.Logger

@@ -6,9 +6,9 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/erikbos/gatekeeper/cmd/envoyauth/metrics"
-	"github.com/erikbos/gatekeeper/cmd/envoyauth/oauth"
-	"github.com/erikbos/gatekeeper/cmd/envoyauth/request"
+	"github.com/erikbos/gatekeeper/cmd/authserver/metrics"
+	"github.com/erikbos/gatekeeper/cmd/authserver/oauth"
+	"github.com/erikbos/gatekeeper/cmd/authserver/request"
 	"github.com/erikbos/gatekeeper/pkg/db"
 )
 

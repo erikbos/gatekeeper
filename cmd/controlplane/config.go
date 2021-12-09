@@ -18,8 +18,8 @@ const (
 	defaultXDSGRPCListen       = "0.0.0.0:9901"
 )
 
-// ControlPlaneConfig contains our startup configuration data
-type ControlPlaneConfig struct {
+// controlPlaneConfig contains our startup configuration data
+type controlPlaneConfig struct {
 	Logger   shared.Logger            `yaml:"logging"`  // log configuration of application
 	WebAdmin webadmin.Config          `yaml:"webadmin"` // Admin web interface configuration
 	Database cassandra.DatabaseConfig `yaml:"database"` // Database configuration
@@ -31,7 +31,7 @@ const (
 )
 
 // String() return our startup configuration as YAML
-func (config *ControlPlaneConfig) String() string {
+func (config *controlPlaneConfig) String() string {
 
 	// We must remove db password from configuration before showing
 	redactedConfig := config
@@ -44,9 +44,9 @@ func (config *ControlPlaneConfig) String() string {
 	return string(configAsYAML)
 }
 
-func loadConfiguration(filename *string) (*ControlPlaneConfig, error) {
+func loadConfiguration(filename *string) (*controlPlaneConfig, error) {
 
-	defaultConfig := &ControlPlaneConfig{
+	defaultConfig := &controlPlaneConfig{
 		Logger: shared.Logger{
 			Level:    defaultLogLevel,
 			Filename: defaultLogFileName,
@@ -68,5 +68,5 @@ func loadConfiguration(filename *string) (*ControlPlaneConfig, error) {
 	if err != nil {
 		return nil, err
 	}
-	return config.(*ControlPlaneConfig), nil
+	return config.(*controlPlaneConfig), nil
 }

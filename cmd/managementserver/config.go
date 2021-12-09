@@ -21,8 +21,8 @@ const (
 	defaultCacheNegativeTTL    = 5
 )
 
-// ManagementServerConfig contains our startup configuration data
-type ManagementServerConfig struct {
+// managementServerConfig contains our startup configuration data
+type managementServerConfig struct {
 	Logger   shared.Logger            `yaml:"logging"`  // log configuration of application
 	WebAdmin webadmin.Config          `yaml:"webadmin"` // Admin web interface configuration
 	Audit    audit.Config             `yaml:"audit"`    // Audit configuration
@@ -31,7 +31,7 @@ type ManagementServerConfig struct {
 }
 
 // String() return our startup configuration as YAML
-func (config *ManagementServerConfig) String() string {
+func (config *managementServerConfig) String() string {
 
 	// We must remove db password from configuration struct before showing
 	redactedConfig := config
@@ -44,9 +44,9 @@ func (config *ManagementServerConfig) String() string {
 	return string(configAsYAML)
 }
 
-func loadConfiguration(filename *string) (*ManagementServerConfig, error) {
+func loadConfiguration(filename *string) (*managementServerConfig, error) {
 
-	defaultConfig := &ManagementServerConfig{
+	defaultConfig := &managementServerConfig{
 		Logger: shared.Logger{
 			Level:    defaultLogLevel,
 			Filename: defaultLogFileName,
@@ -75,5 +75,5 @@ func loadConfiguration(filename *string) (*ManagementServerConfig, error) {
 	if err != nil {
 		return nil, err
 	}
-	return config.(*ManagementServerConfig), nil
+	return config.(*managementServerConfig), nil
 }

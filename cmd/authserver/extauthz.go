@@ -21,14 +21,14 @@ import (
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/protobuf/types/known/structpb"
 
-	"github.com/erikbos/gatekeeper/cmd/envoyauth/policy"
-	"github.com/erikbos/gatekeeper/cmd/envoyauth/request"
+	"github.com/erikbos/gatekeeper/cmd/authserver/policy"
+	"github.com/erikbos/gatekeeper/cmd/authserver/request"
 	"github.com/erikbos/gatekeeper/pkg/shared"
 )
 
 type envoyAuthConfig struct {
 
-	// GRPC Address and port to listen for control plane
+	// GRPC Address and port to listen for extauthz requests
 	Listen string `yaml:"listen"`
 }
 

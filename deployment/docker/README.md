@@ -15,13 +15,13 @@ Build Gatekeeper images:
 make docker-images
 ```
 
-to build Containers for [managementserver](docs/managementserver.md), [envoyauth](docs/envoyauth.md), [controlplane](docs/controlplane.md) and [testbackend](docs/testbackend.md).
+to build Containers for [managementserver](docs/managementserver.md), [authserver](docs/authserver.md), [controlplane](docs/controlplane.md) and [testbackend](docs/testbackend.md).
 
 ## Deploy Gatekeeper
 
 ### Docker compose
 
-The following starts all containers for Gatekeeper using compose: one-node Cassandra instance, envoyproxy, envoyauth, controlplane and managementserver
+The following starts all containers for Gatekeeper using compose: one-node Cassandra instance, envoyproxy, authserver, controlplane and managementserver
 
 ```sh
 docker-compose -f deployment/docker/gatekeeper.yaml up

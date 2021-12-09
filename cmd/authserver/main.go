@@ -7,9 +7,9 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/erikbos/gatekeeper/cmd/envoyauth/metrics"
-	"github.com/erikbos/gatekeeper/cmd/envoyauth/oauth"
-	"github.com/erikbos/gatekeeper/cmd/envoyauth/policy"
+	"github.com/erikbos/gatekeeper/cmd/authserver/metrics"
+	"github.com/erikbos/gatekeeper/cmd/authserver/oauth"
+	"github.com/erikbos/gatekeeper/cmd/authserver/policy"
 	"github.com/erikbos/gatekeeper/pkg/db"
 	"github.com/erikbos/gatekeeper/pkg/db/cache"
 	"github.com/erikbos/gatekeeper/pkg/db/cassandra"
@@ -23,7 +23,7 @@ var (
 )
 
 type server struct {
-	config     *EnvoyAuthConfig
+	config     *authServerConfig
 	webadmin   *webadmin.Webadmin
 	db         *db.Database
 	dbentities *db.EntityCache
@@ -35,9 +35,9 @@ type server struct {
 }
 
 func main() {
-	const applicationName = "envoyauth"
+	const applicationName = "authserver"
 
-	filename := flag.String("config", "envoyauth-config.yaml", "Configuration filename")
+	filename := flag.String("config", "authserver-config.yaml", "Configuration filename")
 	flag.Parse()
 
 	var a server

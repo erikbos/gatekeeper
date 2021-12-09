@@ -8,9 +8,9 @@ coverage:
         flags:
           - managementserver
           - pkg
-      envoyauth:
+      authserver:
         flags:
-          - envoyauth
+          - authserver
           - pkg
       controlplane:
         flags:
@@ -25,7 +25,7 @@ flags:
   managementserver:
     paths:
       - cmd/managementserver/
-  envoyauth:
+  authserver:
     paths:
       - cmd/frontend/
   controlplane:
