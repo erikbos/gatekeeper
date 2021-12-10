@@ -1,12 +1,13 @@
 package oauth
 
 import (
+	"context"
 	"errors"
 	"time"
 
+	"github.com/go-oauth2/oauth2/v4"
+	"github.com/go-oauth2/oauth2/v4/models"
 	"go.uber.org/zap"
-	"gopkg.in/oauth2.v3"
-	"gopkg.in/oauth2.v3/models"
 
 	"github.com/erikbos/gatekeeper/cmd/authserver/metrics"
 	"github.com/erikbos/gatekeeper/pkg/db"
@@ -33,7 +34,7 @@ func NewTokenStore(database *db.Database, metrics *metrics.Metrics,
 }
 
 // Create stores token in database
-func (tokenstore *TokenStore) Create(info oauth2.TokenInfo) (err error) {
+func (tokenstore *TokenStore) Create(ctx context.Context, info oauth2.TokenInfo) (err error) {
 
 	tokenstore.logger.Debug("Create", zap.String("token", info.GetAccess()))
 	token := types.OAuthAccessToken{
@@ -61,7 +62,7 @@ func (tokenstore *TokenStore) Create(info oauth2.TokenInfo) (err error) {
 }
 
 // GetByAccess gets token by access name
-func (tokenstore *TokenStore) GetByAccess(access string) (oauth2.TokenInfo, error) {
+func (tokenstore *TokenStore) GetByAccess(ctx context.Context, access string) (oauth2.TokenInfo, error) {
 
 	const method string = "access"
 
@@ -80,7 +81,7 @@ func (tokenstore *TokenStore) GetByAccess(access string) (oauth2.TokenInfo, erro
 }
 
 // GetByCode gets token by code name
-func (tokenstore *TokenStore) GetByCode(code string) (oauth2.TokenInfo, error) {
+func (tokenstore *TokenStore) GetByCode(ctx context.Context, code string) (oauth2.TokenInfo, error) {
 
 	const method string = "code"
 
@@ -99,7 +100,7 @@ func (tokenstore *TokenStore) GetByCode(code string) (oauth2.TokenInfo, error) {
 }
 
 // GetByRefresh gets token by refresh name
-func (tokenstore *TokenStore) GetByRefresh(refresh string) (oauth2.TokenInfo, error) {
+func (tokenstore *TokenStore) GetByRefresh(ctx context.Context, refresh string) (oauth2.TokenInfo, error) {
 
 	const method string = "refresh"
 
@@ -138,21 +139,21 @@ func toOAuthTokenStore(token *types.OAuthAccessToken) (oauth2.TokenInfo, error) 
 }
 
 // RemoveByAccess removes token from database
-func (tokenstore *TokenStore) RemoveByAccess(access string) error {
+func (tokenstore *TokenStore) RemoveByAccess(ctx context.Context, access string) error {
 
 	tokenstore.logger.Debug("RemoveByAccess", zap.String("access", access))
 	return tokenstore.db.OAuth.OAuthAccessTokenRemoveByAccess(access)
 }
 
 // RemoveByCode removes token from database
-func (tokenstore *TokenStore) RemoveByCode(code string) (err error) {
+func (tokenstore *TokenStore) RemoveByCode(ctx context.Context, code string) (err error) {
 
 	tokenstore.logger.Debug("RemoveByCode", zap.String("code", code))
 	return tokenstore.db.OAuth.OAuthAccessTokenRemoveByCode(code)
 }
 
 // RemoveByRefresh removes token from database
-func (tokenstore *TokenStore) RemoveByRefresh(refresh string) error {
+func (tokenstore *TokenStore) RemoveByRefresh(ctx context.Context, refresh string) error {
 
 	tokenstore.logger.Debug("RemoveByRefresh", zap.String("refresh", refresh))
 	return tokenstore.db.OAuth.OAuthAccessTokenRemoveByRefresh(refresh)

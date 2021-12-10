@@ -1,15 +1,16 @@
 package oauth
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-oauth2/oauth2/v4"
+	"github.com/go-oauth2/oauth2/v4/manage"
+	"github.com/go-oauth2/oauth2/v4/server"
 	"go.uber.org/zap"
-	"gopkg.in/oauth2.v3"
-	"gopkg.in/oauth2.v3/manage"
-	"gopkg.in/oauth2.v3/server"
 
 	"github.com/erikbos/gatekeeper/cmd/authserver/metrics"
 	"github.com/erikbos/gatekeeper/pkg/db"
@@ -127,9 +128,9 @@ func (oauth *Server) prepareOAuthInstance() {
 }
 
 // LoadAccessToken returns the details of token
-func (oauth *Server) LoadAccessToken(accessToken string) (oauth2.TokenInfo, error) {
+func (oauth *Server) LoadAccessToken(ctx context.Context, accessToken string) (oauth2.TokenInfo, error) {
 
-	return oauth.oauthserver.Manager.LoadAccessToken(accessToken)
+	return oauth.oauthserver.Manager.LoadAccessToken(ctx, accessToken)
 }
 
 // handleTokenIssueRequest handles a POST request for a new OAuth token

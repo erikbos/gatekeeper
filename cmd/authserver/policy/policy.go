@@ -1,6 +1,7 @@
 package policy
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -177,7 +178,7 @@ func (p *Policy) checkOAuth2(request *request.State) *Response {
 	}
 
 	// Load OAuth token details from data store
-	tokenInfo, err := p.config.oauth.LoadAccessToken(accessToken)
+	tokenInfo, err := p.config.oauth.LoadAccessToken(context.Background(), accessToken)
 	if err != nil {
 		return &Response{
 			Denied:           true,
