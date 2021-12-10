@@ -2,8 +2,7 @@ package cassandra
 
 import (
 	"encoding/json"
-
-	"github.com/gocql/gocql"
+	"log"
 
 	"github.com/erikbos/gatekeeper/pkg/types"
 )
@@ -12,12 +11,12 @@ import (
 func columnToString(m map[string]interface{}, columnName string) string {
 
 	if m != nil {
-		if val, ok := m[columnName]; ok {
-			switch columnValue := val.(type) {
+		if columnData, ok := m[columnName]; ok {
+			switch columnValue := columnData.(type) {
 			case string:
 				return columnValue
-			case gocql.UUID:
-				return columnValue.String()
+			default:
+				fatalWrongColumnValueType(columnData, columnName)
 			}
 		}
 	}
@@ -28,8 +27,13 @@ func columnToString(m map[string]interface{}, columnName string) string {
 func columnToInt(m map[string]interface{}, columnName string) int {
 
 	if m != nil {
-		if val, ok := m[columnName]; ok {
-			return val.(int)
+		if columnData, ok := m[columnName]; ok {
+			switch columnValue := columnData.(type) {
+			case int:
+				return columnValue
+			default:
+				fatalWrongColumnValueType(columnData, columnName)
+			}
 		}
 	}
 	return -1
@@ -39,8 +43,13 @@ func columnToInt(m map[string]interface{}, columnName string) int {
 func columnToInt64(m map[string]interface{}, columnName string) int64 {
 
 	if m != nil {
-		if val, ok := m[columnName]; ok {
-			return val.(int64)
+		if columnData, ok := m[columnName]; ok {
+			switch columnValue := columnData.(type) {
+			case int64:
+				return columnValue
+			default:
+				fatalWrongColumnValueType(columnData, columnName)
+			}
 		}
 	}
 	return -1
@@ -50,8 +59,13 @@ func columnToInt64(m map[string]interface{}, columnName string) int64 {
 func columnToStringSlice(m map[string]interface{}, columnName string) []string {
 
 	if m != nil {
-		if val, ok := m[columnName]; ok {
-			return val.([]string)
+		if columnData, ok := m[columnName]; ok {
+			switch columnValue := columnData.(type) {
+			case []string:
+				return columnValue
+			default:
+				fatalWrongColumnValueType(columnData, columnName)
+			}
 		}
 	}
 	return []string{}
@@ -61,13 +75,25 @@ func columnToStringSlice(m map[string]interface{}, columnName string) []string {
 func columnToMapString(m map[string]interface{}, columnName string) map[string]interface{} {
 
 	if m != nil {
-		if val, ok := m[columnName]; ok {
-			var v map[string]interface{}
-			_ = json.Unmarshal([]byte(val.(string)), &v)
-			return v
+		if columnData, ok := m[columnName]; ok {
+			switch columnValue := columnData.(type) {
+			case string:
+				var mapStringString map[string]interface{}
+				if err := json.Unmarshal([]byte(columnValue), &mapStringString); err != nil {
+					log.Fatalf("columnToMapString: cannot unmarshal (%s) in column '%s'", columnValue, columnName)
+				}
+				return mapStringString
+			default:
+				fatalWrongColumnValueType(columnData, columnName)
+			}
 		}
 	}
 	return map[string]interface{}{}
+}
+
+func fatalWrongColumnValueType(columnData interface{}, columnName string) {
+
+	log.Fatalf("columnToMapString: received wrong type (%T) in column '%s'", columnData, columnName)
 }
 
 // columnToAttributes converts Cassandra column type "map<text, text>" returned
@@ -75,12 +101,17 @@ func columnToMapString(m map[string]interface{}, columnName string) map[string]i
 func columnToAttributes(m map[string]interface{}, columnName string) types.Attributes {
 
 	if m != nil {
-		if val, ok := m[columnName]; ok {
-			attributes := types.Attributes{}
-			for name, value := range val.(map[string]string) {
-				attributes = append(attributes, *types.NewAttribute(name, value))
+		if columnData, ok := m[columnName]; ok {
+			switch columnValue := columnData.(type) {
+			case map[string]string:
+				attributes := types.Attributes{}
+				for name, value := range columnValue {
+					attributes = append(attributes, *types.NewAttribute(name, value))
+				}
+				return attributes
+			default:
+				log.Fatalf("columnToAttributes: received wrong type (%T) in column '%s'", columnData, columnName)
 			}
-			return attributes
 		}
 	}
 	return types.NullAttributes
