@@ -61,7 +61,7 @@ func (s *ClusterStore) Get(clusterName string) (*types.Cluster, types.Error) {
 	if len(clusters) == 0 {
 		s.db.metrics.QueryNotFound(clusterMetricLabel)
 		return nil, types.NewItemNotFoundError(
-			fmt.Errorf("can not find cluster (%s)", clusterName))
+			fmt.Errorf("cannot find cluster (%s)", clusterName))
 	}
 
 	s.db.metrics.QuerySuccessful(clusterMetricLabel)

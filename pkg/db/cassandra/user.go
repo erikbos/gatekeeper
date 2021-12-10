@@ -62,7 +62,7 @@ func (s *UserStore) Get(userName string) (*types.User, types.Error) {
 	if len(users) == 0 {
 		s.db.metrics.QueryNotFound(userMetricLabel)
 		return nil, types.NewItemNotFoundError(
-			fmt.Errorf("can not find user '%s'", userName))
+			fmt.Errorf("cannot find user '%s'", userName))
 	}
 
 	s.db.metrics.QuerySuccessful(userMetricLabel)

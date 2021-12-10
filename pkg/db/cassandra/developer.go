@@ -67,7 +67,7 @@ func (s *DeveloperStore) GetByEmail(organizationName, developerEmail string) (*t
 	if len(developers) == 0 {
 		s.db.metrics.QueryNotFound(developerMetricLabel)
 		return nil, types.NewItemNotFoundError(
-			fmt.Errorf("can not find developer '%s'", developerEmail))
+			fmt.Errorf("cannot find developer '%s'", developerEmail))
 	}
 
 	s.db.metrics.QuerySuccessful(developerMetricLabel)
@@ -87,7 +87,7 @@ func (s *DeveloperStore) GetByID(organizationName, developerID string) (*types.D
 	if len(developers) == 0 {
 		s.db.metrics.QueryNotFound(developerMetricLabel)
 		return nil, types.NewItemNotFoundError(
-			fmt.Errorf("can not find developerId '%s'", developerID))
+			fmt.Errorf("cannot find developerId '%s'", developerID))
 	}
 
 	s.db.metrics.QuerySuccessful(developerMetricLabel)

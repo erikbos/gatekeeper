@@ -80,7 +80,7 @@ func (s *DeveloperAppStore) GetByName(organizationName, developerEmail, develope
 	if len(developerapps) == 0 {
 		s.db.metrics.QueryNotFound(developerAppsMetricLabel)
 		return nil, types.NewItemNotFoundError(
-			fmt.Errorf("can not find developer app '%s'", developerAppName))
+			fmt.Errorf("cannot find developer app '%s'", developerAppName))
 	}
 
 	s.db.metrics.QuerySuccessful(developerAppsMetricLabel)
@@ -99,7 +99,7 @@ func (s *DeveloperAppStore) GetByID(organizationName, developerAppID string) (*t
 	if len(developerapps) == 0 {
 		s.db.metrics.QueryNotFound(developerAppsMetricLabel)
 		return nil, types.NewItemNotFoundError(
-			fmt.Errorf("can not find developer app id '%s'", developerAppID))
+			fmt.Errorf("cannot find developer app id '%s'", developerAppID))
 	}
 
 	s.db.metrics.QuerySuccessful(developerAppsMetricLabel)

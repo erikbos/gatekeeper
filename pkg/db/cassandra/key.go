@@ -53,7 +53,7 @@ func (s *KeyStore) GetByKey(organization, key *string) (*types.Key, types.Error)
 	if len(keys) == 0 {
 		s.db.metrics.QueryNotFound(keysMetricLabel)
 		return nil, types.NewItemNotFoundError(
-			fmt.Errorf("can not find apikey '%s'", *key))
+			fmt.Errorf("cannot find apikey '%s'", *key))
 	}
 
 	s.db.metrics.QuerySuccessful(keysMetricLabel)

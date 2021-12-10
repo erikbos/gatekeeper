@@ -62,7 +62,7 @@ func (s *RoleStore) Get(roleName string) (*types.Role, types.Error) {
 	if len(roles) == 0 {
 		s.db.metrics.QueryNotFound(roleMetricLabel)
 		return nil, types.NewItemNotFoundError(
-			fmt.Errorf("can not find role '%s'", roleName))
+			fmt.Errorf("cannot find role '%s'", roleName))
 	}
 
 	s.db.metrics.QuerySuccessful(roleMetricLabel)

@@ -67,7 +67,7 @@ func (s *ListenerStore) Get(listenerName string) (*types.Listener, types.Error) 
 	if len(listeners) == 0 {
 		s.db.metrics.QueryNotFound(listenerMetricLabel)
 		return nil, types.NewItemNotFoundError(
-			fmt.Errorf("can not find listener '%s'", listenerName))
+			fmt.Errorf("cannot find listener '%s'", listenerName))
 	}
 
 	s.db.metrics.QuerySuccessful(listenerMetricLabel)

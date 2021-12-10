@@ -64,7 +64,7 @@ func (s *RouteStore) Get(routeName string) (*types.Route, types.Error) {
 	if len(routes) == 0 {
 		s.db.metrics.QueryNotFound(routeMetricLabel)
 		return nil, types.NewItemNotFoundError(
-			fmt.Errorf("can not find route '%s'", routeName))
+			fmt.Errorf("cannot find route '%s'", routeName))
 	}
 
 	s.db.metrics.QuerySuccessful(routeMetricLabel)

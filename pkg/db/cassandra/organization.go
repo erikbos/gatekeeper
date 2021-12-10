@@ -60,7 +60,7 @@ func (s *OrganizationStore) Get(organizationName string) (*types.Organization, t
 	if len(organizations) == 0 {
 		s.db.metrics.QueryNotFound(organizationMetricLabel)
 		return nil, types.NewItemNotFoundError(
-			fmt.Errorf("can not find organization '%s'", organizationName))
+			fmt.Errorf("cannot find organization '%s'", organizationName))
 	}
 
 	s.db.metrics.QuerySuccessful(organizationMetricLabel)
