@@ -11,7 +11,6 @@ import (
 	envoy_upstreams "github.com/envoyproxy/go-control-plane/envoy/extensions/upstreams/http/v3"
 	envoy_type "github.com/envoyproxy/go-control-plane/envoy/type/v3"
 	cache "github.com/envoyproxy/go-control-plane/pkg/cache/types"
-	"github.com/golang/protobuf/ptypes/duration"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/durationpb"
@@ -76,7 +75,7 @@ func (s *server) buildEnvoyClusterConfig(cluster types.Cluster) *envoy_cluster.C
 	return envoyCluster
 }
 
-func (s *server) clusterConnectTimeout(cluster types.Cluster) *duration.Duration {
+func (s *server) clusterConnectTimeout(cluster types.Cluster) *durationpb.Duration {
 
 	connectTimeout := cluster.Attributes.GetAsDuration(
 		types.AttributeConnectTimeout, types.DefaultClusterConnectTimeout)
@@ -286,7 +285,7 @@ func (s *server) clusterDNSLookupFamily(cluster types.Cluster) envoy_cluster.Clu
 	return envoy_cluster.Cluster_AUTO
 }
 
-func (s *server) clusterDNSRefreshRate(cluster types.Cluster) *duration.Duration {
+func (s *server) clusterDNSRefreshRate(cluster types.Cluster) *durationpb.Duration {
 
 	refreshInterval := cluster.Attributes.GetAsDuration(
 		types.AttributeDNSRefreshRate, types.DefaultDNSRefreshRate)

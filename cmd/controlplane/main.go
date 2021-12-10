@@ -77,7 +77,7 @@ func startWebAdmin(s *server, applicationName string) {
 
 	// Enable showing indexpage on / that shows all possible routes
 	s.webadmin.Router.GET("/", webadmin.ShowAllRoutes(s.webadmin.Router, applicationName))
-	s.webadmin.Router.GET(webadmin.ReadinessCheckPath, webadmin.LivenessProbe)
+	s.webadmin.Router.GET(webadmin.ReadinessCheckPath, webadmin.ReadinessProbe)
 	s.webadmin.Router.GET(webadmin.MetricsPath, s.metrics.GinHandler())
 	s.webadmin.Router.GET(webadmin.ConfigDumpPath, webadmin.ShowStartupConfiguration(s.config))
 

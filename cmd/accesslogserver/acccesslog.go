@@ -10,13 +10,13 @@ import (
 	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	alf "github.com/envoyproxy/go-control-plane/envoy/data/accesslog/v3"
 	accesslog "github.com/envoyproxy/go-control-plane/envoy/service/accesslog/v3"
-	"github.com/golang/protobuf/ptypes/duration"
-	"github.com/golang/protobuf/ptypes/timestamp"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
 	"google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/reflection"
+	"google.golang.org/protobuf/types/known/durationpb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/erikbos/gatekeeper/cmd/accesslogserver/metrics"
 	"github.com/erikbos/gatekeeper/pkg/shared"
@@ -336,10 +336,10 @@ func formatMetadata(m *core.Metadata) interface{} {
 }
 
 // timestampToUnix converts a protobuf time to a UNIX timestamp in milliseconds.
-func timestampToUnix(ts *timestamp.Timestamp) int64 {
+func timestampToUnix(ts *timestamppb.Timestamp) int64 {
 	return ts.AsTime().UnixNano() / 1000000
 }
 
-func timestampAddDurationUnix(ts *timestamp.Timestamp, d *duration.Duration) int64 {
+func timestampAddDurationUnix(ts *timestamppb.Timestamp, d *durationpb.Duration) int64 {
 	return (ts.AsTime().UnixNano() + d.AsDuration().Nanoseconds()) / 1000000
 }

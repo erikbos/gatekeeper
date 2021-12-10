@@ -13,7 +13,6 @@ import (
 	envoy_type "github.com/envoyproxy/go-control-plane/envoy/type/v3"
 	cache "github.com/envoyproxy/go-control-plane/pkg/cache/types"
 	"github.com/envoyproxy/go-control-plane/pkg/wellknown"
-	"github.com/golang/protobuf/ptypes/any"
 	"go.uber.org/zap"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/durationpb"
@@ -613,9 +612,9 @@ func buildStatusCodesSlice(statusCodes string) []uint32 {
 	return statusCodeSlice
 }
 
-func buildPerRouteFilterConfig(route types.Route) map[string]*any.Any {
+func buildPerRouteFilterConfig(route types.Route) map[string]*anypb.Any {
 
-	perRouteFilterConfigMap := make(map[string]*any.Any)
+	perRouteFilterConfigMap := make(map[string]*anypb.Any)
 
 	if authzFilterConfig := perRouteAuthzFilterConfig(route); authzFilterConfig != nil {
 		perRouteFilterConfigMap[wellknown.HTTPExternalAuthorization] = authzFilterConfig

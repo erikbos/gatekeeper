@@ -6,10 +6,10 @@ import (
 
 	envoy_core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	envoy_tls "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/tls/v3"
-	"github.com/golang/protobuf/ptypes/wrappers"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/durationpb"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 
 	"github.com/erikbos/gatekeeper/pkg/types"
 )
@@ -196,20 +196,20 @@ func buildTLSCertificates(attributes types.Attributes) []*envoy_tls.TlsCertifica
 	}
 }
 
-func protoBool(b bool) *wrappers.BoolValue {
+func protoBool(b bool) *wrapperspb.BoolValue {
 
 	if b {
-		return &wrappers.BoolValue{Value: true}
+		return &wrapperspb.BoolValue{Value: true}
 	}
-	return &wrappers.BoolValue{Value: false}
+	return &wrapperspb.BoolValue{Value: false}
 }
 
-func protoUint32(i uint32) *wrappers.UInt32Value {
+func protoUint32(i uint32) *wrapperspb.UInt32Value {
 
-	return &wrappers.UInt32Value{Value: i}
+	return &wrapperspb.UInt32Value{Value: i}
 }
 
-func protoUint32orNil(val uint32) *wrappers.UInt32Value {
+func protoUint32orNil(val uint32) *wrapperspb.UInt32Value {
 
 	if val == 0 {
 		return nil

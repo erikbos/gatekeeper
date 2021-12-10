@@ -6,8 +6,6 @@ import (
 
 	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	tls "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/tls/v3"
-	"github.com/golang/protobuf/ptypes/any"
-	"github.com/golang/protobuf/ptypes/wrappers"
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -519,29 +517,29 @@ func Test_buildTLSCertificates(t *testing.T) {
 
 func Test_protoBool(t *testing.T) {
 
-	require.Equal(t, &wrappers.BoolValue{Value: true},
+	require.Equal(t, &wrapperspb.BoolValue{Value: true},
 		protoBool(true))
-	require.Equal(t, &wrappers.BoolValue{Value: false},
+	require.Equal(t, &wrapperspb.BoolValue{Value: false},
 		protoBool(false))
 
 }
 
 func Test_protoUint32(t *testing.T) {
 
-	require.Equal(t, &wrappers.UInt32Value{Value: 42},
+	require.Equal(t, &wrapperspb.UInt32Value{Value: 42},
 		protoUint32(42))
 }
 
 func Test_protoUint32orNil(t *testing.T) {
 
-	require.Equal(t, &wrappers.UInt32Value{Value: 75},
+	require.Equal(t, &wrapperspb.UInt32Value{Value: 75},
 		protoUint32orNil(75))
 
 	require.Equal(t, (*wrapperspb.UInt32Value)(nil),
 		protoUint32orNil(0))
 }
 
-func mustMarshalAny(src protoreflect.ProtoMessage) *any.Any {
+func mustMarshalAny(src protoreflect.ProtoMessage) *anypb.Any {
 
 	a, err := anypb.New(src)
 	if err != nil {

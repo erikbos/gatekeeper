@@ -10,7 +10,6 @@ import (
 	tls "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/tls/v3"
 	envoyExtensionsUpstreams "github.com/envoyproxy/go-control-plane/envoy/extensions/upstreams/http/v3"
 	envoyType "github.com/envoyproxy/go-control-plane/envoy/type/v3"
-	"github.com/golang/protobuf/ptypes/duration"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest/observer"
@@ -152,7 +151,7 @@ func Test_clusterConnectTimeout(t *testing.T) {
 	tests := []struct {
 		name     string
 		cluster  types.Cluster
-		expected *duration.Duration
+		expected *durationpb.Duration
 	}{
 		{
 			name: "cluster timeout 131s ttl",
@@ -749,7 +748,7 @@ func Test_clusterDNSRefreshRate(t *testing.T) {
 	tests := []struct {
 		name     string
 		cluster  types.Cluster
-		expected *duration.Duration
+		expected *durationpb.Duration
 	}{
 		{
 			name: "31s ttl",

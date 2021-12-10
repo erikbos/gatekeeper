@@ -11,7 +11,6 @@ import (
 	envoy_matcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
 	envoy_type "github.com/envoyproxy/go-control-plane/envoy/type/v3"
 	"github.com/envoyproxy/go-control-plane/pkg/wellknown"
-	"github.com/golang/protobuf/ptypes/any"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/durationpb"
@@ -82,7 +81,7 @@ func Test_buildEnvoyRoute(t *testing.T) {
 							Timeout: durationpb.New(2 * time.Second),
 						},
 					},
-					TypedPerFilterConfig: map[string]*any.Any{
+					TypedPerFilterConfig: map[string]*anypb.Any{
 						wellknown.HTTPExternalAuthorization: mustMarshalAny(&envoy_filter_authz.ExtAuthzPerRoute{
 							Override: &envoy_filter_authz.ExtAuthzPerRoute_Disabled{
 								Disabled: true,
@@ -155,7 +154,7 @@ func Test_buildEnvoyRoute(t *testing.T) {
 							},
 						},
 					},
-					TypedPerFilterConfig: map[string]*any.Any{
+					TypedPerFilterConfig: map[string]*anypb.Any{
 						wellknown.HTTPExternalAuthorization: mustMarshalAny(&envoy_filter_authz.ExtAuthzPerRoute{
 							Override: &envoy_filter_authz.ExtAuthzPerRoute_Disabled{
 								Disabled: true,
@@ -205,7 +204,7 @@ func Test_buildEnvoyRoute(t *testing.T) {
 							},
 						},
 					},
-					TypedPerFilterConfig: map[string]*any.Any{
+					TypedPerFilterConfig: map[string]*anypb.Any{
 						wellknown.HTTPExternalAuthorization: mustMarshalAny(&envoy_filter_authz.ExtAuthzPerRoute{
 							Override: &envoy_filter_authz.ExtAuthzPerRoute_Disabled{
 								Disabled: true,
@@ -1106,7 +1105,7 @@ func Test_buildPerRouteFilterConfig(t *testing.T) {
 	tests := []struct {
 		name     string
 		route    types.Route
-		expected map[string]*any.Any
+		expected map[string]*anypb.Any
 	}{
 		{
 			name: "route auth explicit disabled",
@@ -1118,7 +1117,7 @@ func Test_buildPerRouteFilterConfig(t *testing.T) {
 					},
 				},
 			},
-			expected: map[string]*any.Any{
+			expected: map[string]*anypb.Any{
 				wellknown.HTTPExternalAuthorization: mustMarshalAny(&envoy_filter_authz.ExtAuthzPerRoute{
 					Override: &envoy_filter_authz.ExtAuthzPerRoute_Disabled{
 						Disabled: true,
