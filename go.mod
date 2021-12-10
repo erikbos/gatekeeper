@@ -9,10 +9,10 @@ require (
 	github.com/deepmap/oapi-codegen v1.9.0
 	github.com/envoyproxy/go-control-plane v0.9.9-0.20210512163311-63b5d3c536b0
 	github.com/gin-gonic/gin v1.7.7
+	github.com/go-oauth2/oauth2/v4 v4.4.2
 	github.com/go-playground/validator/v10 v10.9.0
 	github.com/gocql/gocql v0.0.0-20210504150947-558dfae50b5d
 	github.com/gogo/googleapis v1.4.1
-	github.com/golang/protobuf v1.5.2
 	github.com/golang/snappy v0.0.3 // indirect
 	github.com/google/go-cmp v0.5.6
 	github.com/google/uuid v1.3.0
@@ -25,6 +25,5 @@ require (
 	google.golang.org/grpc v1.40.0
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
-	gopkg.in/oauth2.v3 v3.12.0
 	gopkg.in/yaml.v2 v2.4.0
 )

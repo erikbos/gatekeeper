@@ -1,11 +1,12 @@
 package oauth
 
 import (
+	"context"
 	"errors"
 
+	"github.com/go-oauth2/oauth2/v4"
+	"github.com/go-oauth2/oauth2/v4/models"
 	"go.uber.org/zap"
-	"gopkg.in/oauth2.v3"
-	"gopkg.in/oauth2.v3/models"
 
 	"github.com/erikbos/gatekeeper/cmd/authserver/metrics"
 	"github.com/erikbos/gatekeeper/pkg/db"
@@ -30,7 +31,7 @@ func NewClientTokenStore(database *db.Database, metrics *metrics.Metrics,
 }
 
 // GetByID retrieves access token based upon tokenid (which is OAuth consumerkey)
-func (clientstore *ClientTokenStore) GetByID(id string) (oauth2.ClientInfo, error) {
+func (clientstore *ClientTokenStore) GetByID(ctx context.Context, id string) (oauth2.ClientInfo, error) {
 
 	if clientstore == nil || id == "" {
 		return nil, errors.New("cannot handle nil GetByID request")
