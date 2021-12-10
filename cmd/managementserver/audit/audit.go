@@ -88,6 +88,9 @@ func (al *Audit) Delete(old interface{}, e *Environment, who Requester) {
 // log logs the changed entity to auditlog and database
 func (al *Audit) log(aType auditType, entityType, entityID string, oldValue, newValue interface{}, e *Environment, who Requester) {
 
+	if e == nil {
+		e = &Environment{}
+	}
 	auditEntry := &types.Audit{
 		ID:           uuid.New().String(),
 		Timestamp:    shared.GetCurrentTimeMilliseconds(),
