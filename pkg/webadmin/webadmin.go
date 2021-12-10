@@ -235,10 +235,10 @@ func JSONMessageAndAbort(c *gin.Context, statusCode int, errorMessage error) {
 // 		time.Unix(0, timestamp*int64(time.Millisecond)).Format(time.RFC822))
 // }
 
-// LivenessProbe answer with OK
-func LivenessProbe(c *gin.Context) {
+// ReadinessProbe answer with OK
+func ReadinessProbe(c *gin.Context) {
 
-	JSONMessage(c, http.StatusOK, errors.New("liveness OK"))
+	JSONMessage(c, http.StatusOK, errors.New("ready"))
 }
 
 // LogHTTPRequest logs details of an HTTP request
