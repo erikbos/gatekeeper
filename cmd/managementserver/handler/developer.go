@@ -250,7 +250,7 @@ func (h *Handler) responseDeveloperEmailAddresses(c *gin.Context, developers typ
 	for i := range developers {
 		DevelopersEmailAddresses[i] = developers[i].Email
 	}
-	c.JSON(http.StatusOK, DevelopersEmailAddresses)
+	c.IndentedJSON(http.StatusOK, DevelopersEmailAddresses)
 }
 
 // API responses
@@ -261,24 +261,24 @@ func (h *Handler) responseDevelopers(c *gin.Context, developers types.Developers
 	for i := range developers {
 		allDevelopers[i] = h.ToDeveloperResponse(&developers[i])
 	}
-	c.JSON(http.StatusOK, Developers{
+	c.IndentedJSON(http.StatusOK, Developers{
 		Developer: &allDevelopers,
 	})
 }
 
 func (h *Handler) responseDeveloper(c *gin.Context, developer *types.Developer) {
 
-	c.JSON(http.StatusOK, h.ToDeveloperResponse(developer))
+	c.IndentedJSON(http.StatusOK, h.ToDeveloperResponse(developer))
 }
 
 func (h *Handler) responseDeveloperCreated(c *gin.Context, developer *types.Developer) {
 
-	c.JSON(http.StatusCreated, h.ToDeveloperResponse(developer))
+	c.IndentedJSON(http.StatusCreated, h.ToDeveloperResponse(developer))
 }
 
 func (h *Handler) responseDeveloperUpdated(c *gin.Context, developer *types.Developer) {
 
-	c.JSON(http.StatusOK, h.ToDeveloperResponse(developer))
+	c.IndentedJSON(http.StatusOK, h.ToDeveloperResponse(developer))
 }
 
 // type conversion

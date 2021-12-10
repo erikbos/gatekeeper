@@ -1226,7 +1226,7 @@ func (siw *ServerInterfaceWrapper) GetV1AuditOrganizationsOrganizationName(c *gi
 
 	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
 
@@ -1242,7 +1242,7 @@ func (siw *ServerInterfaceWrapper) GetV1AuditOrganizationsOrganizationName(c *gi
 
 	err = runtime.BindQueryParameter("form", true, false, "startTime", c.Request.URL.Query(), &params.StartTime)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter startTime: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter startTime: %s", err)})
 		return
 	}
 
@@ -1253,7 +1253,7 @@ func (siw *ServerInterfaceWrapper) GetV1AuditOrganizationsOrganizationName(c *gi
 
 	err = runtime.BindQueryParameter("form", true, false, "endTime", c.Request.URL.Query(), &params.EndTime)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter endTime: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter endTime: %s", err)})
 		return
 	}
 
@@ -1264,7 +1264,7 @@ func (siw *ServerInterfaceWrapper) GetV1AuditOrganizationsOrganizationName(c *gi
 
 	err = runtime.BindQueryParameter("form", true, false, "count", c.Request.URL.Query(), &params.Count)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter count: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter count: %s", err)})
 		return
 	}
 
@@ -1288,7 +1288,7 @@ func (siw *ServerInterfaceWrapper) GetV1AuditOrganizationsOrganizationNameApipro
 
 	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
 
@@ -1297,7 +1297,7 @@ func (siw *ServerInterfaceWrapper) GetV1AuditOrganizationsOrganizationNameApipro
 
 	err = runtime.BindStyledParameter("simple", false, "apiproduct_name", c.Param("apiproduct_name"), &apiproductName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter apiproduct_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter apiproduct_name: %s", err)})
 		return
 	}
 
@@ -1313,7 +1313,7 @@ func (siw *ServerInterfaceWrapper) GetV1AuditOrganizationsOrganizationNameApipro
 
 	err = runtime.BindQueryParameter("form", true, false, "startTime", c.Request.URL.Query(), &params.StartTime)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter startTime: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter startTime: %s", err)})
 		return
 	}
 
@@ -1324,7 +1324,7 @@ func (siw *ServerInterfaceWrapper) GetV1AuditOrganizationsOrganizationNameApipro
 
 	err = runtime.BindQueryParameter("form", true, false, "endTime", c.Request.URL.Query(), &params.EndTime)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter endTime: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter endTime: %s", err)})
 		return
 	}
 
@@ -1335,7 +1335,7 @@ func (siw *ServerInterfaceWrapper) GetV1AuditOrganizationsOrganizationNameApipro
 
 	err = runtime.BindQueryParameter("form", true, false, "count", c.Request.URL.Query(), &params.Count)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter count: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter count: %s", err)})
 		return
 	}
 
@@ -1359,7 +1359,7 @@ func (siw *ServerInterfaceWrapper) GetV1AuditOrganizationsOrganizationNameDevelo
 
 	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
 
@@ -1368,7 +1368,7 @@ func (siw *ServerInterfaceWrapper) GetV1AuditOrganizationsOrganizationNameDevelo
 
 	err = runtime.BindStyledParameter("simple", false, "developer_id", c.Param("developer_id"), &developerId)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_id: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_id: %s", err)})
 		return
 	}
 
@@ -1384,7 +1384,7 @@ func (siw *ServerInterfaceWrapper) GetV1AuditOrganizationsOrganizationNameDevelo
 
 	err = runtime.BindQueryParameter("form", true, false, "startTime", c.Request.URL.Query(), &params.StartTime)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter startTime: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter startTime: %s", err)})
 		return
 	}
 
@@ -1395,7 +1395,7 @@ func (siw *ServerInterfaceWrapper) GetV1AuditOrganizationsOrganizationNameDevelo
 
 	err = runtime.BindQueryParameter("form", true, false, "endTime", c.Request.URL.Query(), &params.EndTime)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter endTime: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter endTime: %s", err)})
 		return
 	}
 
@@ -1406,7 +1406,7 @@ func (siw *ServerInterfaceWrapper) GetV1AuditOrganizationsOrganizationNameDevelo
 
 	err = runtime.BindQueryParameter("form", true, false, "count", c.Request.URL.Query(), &params.Count)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter count: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter count: %s", err)})
 		return
 	}
 
@@ -1430,7 +1430,7 @@ func (siw *ServerInterfaceWrapper) GetV1AuditOrganizationsOrganizationNameDevelo
 
 	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
 
@@ -1439,7 +1439,7 @@ func (siw *ServerInterfaceWrapper) GetV1AuditOrganizationsOrganizationNameDevelo
 
 	err = runtime.BindStyledParameter("simple", false, "developer_id", c.Param("developer_id"), &developerId)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_id: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_id: %s", err)})
 		return
 	}
 
@@ -1448,7 +1448,7 @@ func (siw *ServerInterfaceWrapper) GetV1AuditOrganizationsOrganizationNameDevelo
 
 	err = runtime.BindStyledParameter("simple", false, "app_id", c.Param("app_id"), &appId)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_id: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_id: %s", err)})
 		return
 	}
 
@@ -1464,7 +1464,7 @@ func (siw *ServerInterfaceWrapper) GetV1AuditOrganizationsOrganizationNameDevelo
 
 	err = runtime.BindQueryParameter("form", true, false, "startTime", c.Request.URL.Query(), &params.StartTime)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter startTime: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter startTime: %s", err)})
 		return
 	}
 
@@ -1475,7 +1475,7 @@ func (siw *ServerInterfaceWrapper) GetV1AuditOrganizationsOrganizationNameDevelo
 
 	err = runtime.BindQueryParameter("form", true, false, "endTime", c.Request.URL.Query(), &params.EndTime)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter endTime: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter endTime: %s", err)})
 		return
 	}
 
@@ -1486,7 +1486,7 @@ func (siw *ServerInterfaceWrapper) GetV1AuditOrganizationsOrganizationNameDevelo
 
 	err = runtime.BindQueryParameter("form", true, false, "count", c.Request.URL.Query(), &params.Count)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter count: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter count: %s", err)})
 		return
 	}
 
@@ -1510,7 +1510,7 @@ func (siw *ServerInterfaceWrapper) GetV1AuditUsersUserName(c *gin.Context) {
 
 	err = runtime.BindStyledParameter("simple", false, "user_name", c.Param("user_name"), &userName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter user_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter user_name: %s", err)})
 		return
 	}
 
@@ -1526,7 +1526,7 @@ func (siw *ServerInterfaceWrapper) GetV1AuditUsersUserName(c *gin.Context) {
 
 	err = runtime.BindQueryParameter("form", true, false, "startTime", c.Request.URL.Query(), &params.StartTime)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter startTime: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter startTime: %s", err)})
 		return
 	}
 
@@ -1537,7 +1537,7 @@ func (siw *ServerInterfaceWrapper) GetV1AuditUsersUserName(c *gin.Context) {
 
 	err = runtime.BindQueryParameter("form", true, false, "endTime", c.Request.URL.Query(), &params.EndTime)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter endTime: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter endTime: %s", err)})
 		return
 	}
 
@@ -1548,7 +1548,7 @@ func (siw *ServerInterfaceWrapper) GetV1AuditUsersUserName(c *gin.Context) {
 
 	err = runtime.BindQueryParameter("form", true, false, "count", c.Request.URL.Query(), &params.Count)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter count: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter count: %s", err)})
 		return
 	}
 
@@ -1602,7 +1602,7 @@ func (siw *ServerInterfaceWrapper) DeleteV1ClustersClusterName(c *gin.Context) {
 
 	err = runtime.BindStyledParameter("simple", false, "cluster_name", c.Param("cluster_name"), &clusterName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter cluster_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter cluster_name: %s", err)})
 		return
 	}
 
@@ -1628,7 +1628,7 @@ func (siw *ServerInterfaceWrapper) GetV1ClustersClusterName(c *gin.Context) {
 
 	err = runtime.BindStyledParameter("simple", false, "cluster_name", c.Param("cluster_name"), &clusterName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter cluster_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter cluster_name: %s", err)})
 		return
 	}
 
@@ -1654,7 +1654,7 @@ func (siw *ServerInterfaceWrapper) PostV1ClustersClusterName(c *gin.Context) {
 
 	err = runtime.BindStyledParameter("simple", false, "cluster_name", c.Param("cluster_name"), &clusterName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter cluster_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter cluster_name: %s", err)})
 		return
 	}
 
@@ -1680,7 +1680,7 @@ func (siw *ServerInterfaceWrapper) GetV1ClustersClusterNameAttributes(c *gin.Con
 
 	err = runtime.BindStyledParameter("simple", false, "cluster_name", c.Param("cluster_name"), &clusterName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter cluster_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter cluster_name: %s", err)})
 		return
 	}
 
@@ -1706,7 +1706,7 @@ func (siw *ServerInterfaceWrapper) PostV1ClustersClusterNameAttributes(c *gin.Co
 
 	err = runtime.BindStyledParameter("simple", false, "cluster_name", c.Param("cluster_name"), &clusterName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter cluster_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter cluster_name: %s", err)})
 		return
 	}
 
@@ -1732,7 +1732,7 @@ func (siw *ServerInterfaceWrapper) DeleteV1ClustersClusterNameAttributesAttribut
 
 	err = runtime.BindStyledParameter("simple", false, "cluster_name", c.Param("cluster_name"), &clusterName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter cluster_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter cluster_name: %s", err)})
 		return
 	}
 
@@ -1741,7 +1741,7 @@ func (siw *ServerInterfaceWrapper) DeleteV1ClustersClusterNameAttributesAttribut
 
 	err = runtime.BindStyledParameter("simple", false, "attribute_name", c.Param("attribute_name"), &attributeName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
 		return
 	}
 
@@ -1767,7 +1767,7 @@ func (siw *ServerInterfaceWrapper) GetV1ClustersClusterNameAttributesAttributeNa
 
 	err = runtime.BindStyledParameter("simple", false, "cluster_name", c.Param("cluster_name"), &clusterName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter cluster_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter cluster_name: %s", err)})
 		return
 	}
 
@@ -1776,7 +1776,7 @@ func (siw *ServerInterfaceWrapper) GetV1ClustersClusterNameAttributesAttributeNa
 
 	err = runtime.BindStyledParameter("simple", false, "attribute_name", c.Param("attribute_name"), &attributeName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
 		return
 	}
 
@@ -1802,7 +1802,7 @@ func (siw *ServerInterfaceWrapper) PostV1ClustersClusterNameAttributesAttributeN
 
 	err = runtime.BindStyledParameter("simple", false, "cluster_name", c.Param("cluster_name"), &clusterName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter cluster_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter cluster_name: %s", err)})
 		return
 	}
 
@@ -1811,7 +1811,7 @@ func (siw *ServerInterfaceWrapper) PostV1ClustersClusterNameAttributesAttributeN
 
 	err = runtime.BindStyledParameter("simple", false, "attribute_name", c.Param("attribute_name"), &attributeName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
 		return
 	}
 
@@ -1867,7 +1867,7 @@ func (siw *ServerInterfaceWrapper) DeleteV1ListenersListenerName(c *gin.Context)
 
 	err = runtime.BindStyledParameter("simple", false, "listener_name", c.Param("listener_name"), &listenerName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter listener_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter listener_name: %s", err)})
 		return
 	}
 
@@ -1893,7 +1893,7 @@ func (siw *ServerInterfaceWrapper) GetV1ListenersListenerName(c *gin.Context) {
 
 	err = runtime.BindStyledParameter("simple", false, "listener_name", c.Param("listener_name"), &listenerName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter listener_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter listener_name: %s", err)})
 		return
 	}
 
@@ -1919,7 +1919,7 @@ func (siw *ServerInterfaceWrapper) PostV1ListenersListenerName(c *gin.Context) {
 
 	err = runtime.BindStyledParameter("simple", false, "listener_name", c.Param("listener_name"), &listenerName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter listener_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter listener_name: %s", err)})
 		return
 	}
 
@@ -1945,7 +1945,7 @@ func (siw *ServerInterfaceWrapper) GetV1ListenersListenerNameAttributes(c *gin.C
 
 	err = runtime.BindStyledParameter("simple", false, "listener_name", c.Param("listener_name"), &listenerName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter listener_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter listener_name: %s", err)})
 		return
 	}
 
@@ -1971,7 +1971,7 @@ func (siw *ServerInterfaceWrapper) PostV1ListenersListenerNameAttributes(c *gin.
 
 	err = runtime.BindStyledParameter("simple", false, "listener_name", c.Param("listener_name"), &listenerName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter listener_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter listener_name: %s", err)})
 		return
 	}
 
@@ -1997,7 +1997,7 @@ func (siw *ServerInterfaceWrapper) DeleteV1ListenersListenerNameAttributesAttrib
 
 	err = runtime.BindStyledParameter("simple", false, "listener_name", c.Param("listener_name"), &listenerName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter listener_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter listener_name: %s", err)})
 		return
 	}
 
@@ -2006,7 +2006,7 @@ func (siw *ServerInterfaceWrapper) DeleteV1ListenersListenerNameAttributesAttrib
 
 	err = runtime.BindStyledParameter("simple", false, "attribute_name", c.Param("attribute_name"), &attributeName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
 		return
 	}
 
@@ -2032,7 +2032,7 @@ func (siw *ServerInterfaceWrapper) GetV1ListenersListenerNameAttributesAttribute
 
 	err = runtime.BindStyledParameter("simple", false, "listener_name", c.Param("listener_name"), &listenerName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter listener_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter listener_name: %s", err)})
 		return
 	}
 
@@ -2041,7 +2041,7 @@ func (siw *ServerInterfaceWrapper) GetV1ListenersListenerNameAttributesAttribute
 
 	err = runtime.BindStyledParameter("simple", false, "attribute_name", c.Param("attribute_name"), &attributeName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
 		return
 	}
 
@@ -2067,7 +2067,7 @@ func (siw *ServerInterfaceWrapper) PostV1ListenersListenerNameAttributesAttribut
 
 	err = runtime.BindStyledParameter("simple", false, "listener_name", c.Param("listener_name"), &listenerName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter listener_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter listener_name: %s", err)})
 		return
 	}
 
@@ -2076,7 +2076,7 @@ func (siw *ServerInterfaceWrapper) PostV1ListenersListenerNameAttributesAttribut
 
 	err = runtime.BindStyledParameter("simple", false, "attribute_name", c.Param("attribute_name"), &attributeName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
 		return
 	}
 
@@ -2132,7 +2132,7 @@ func (siw *ServerInterfaceWrapper) DeleteV1OrganizationsOrganizationName(c *gin.
 
 	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
 
@@ -2158,7 +2158,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationName(c *gin.Con
 
 	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
 
@@ -2184,7 +2184,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationName(c *gin.Co
 
 	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
 
@@ -2210,7 +2210,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameApiproducts
 
 	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
 
@@ -2226,7 +2226,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameApiproducts
 
 	err = runtime.BindQueryParameter("form", true, false, "expand", c.Request.URL.Query(), &params.Expand)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter expand: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter expand: %s", err)})
 		return
 	}
 
@@ -2237,7 +2237,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameApiproducts
 
 	err = runtime.BindQueryParameter("form", true, false, "count", c.Request.URL.Query(), &params.Count)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter count: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter count: %s", err)})
 		return
 	}
 
@@ -2261,7 +2261,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameApiproduct
 
 	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
 
@@ -2287,7 +2287,7 @@ func (siw *ServerInterfaceWrapper) DeleteV1OrganizationsOrganizationNameApiprodu
 
 	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
 
@@ -2296,7 +2296,7 @@ func (siw *ServerInterfaceWrapper) DeleteV1OrganizationsOrganizationNameApiprodu
 
 	err = runtime.BindStyledParameter("simple", false, "apiproduct_name", c.Param("apiproduct_name"), &apiproductName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter apiproduct_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter apiproduct_name: %s", err)})
 		return
 	}
 
@@ -2322,7 +2322,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameApiproducts
 
 	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
 
@@ -2331,7 +2331,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameApiproducts
 
 	err = runtime.BindStyledParameter("simple", false, "apiproduct_name", c.Param("apiproduct_name"), &apiproductName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter apiproduct_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter apiproduct_name: %s", err)})
 		return
 	}
 
@@ -2357,7 +2357,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameApiproduct
 
 	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
 
@@ -2366,7 +2366,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameApiproduct
 
 	err = runtime.BindStyledParameter("simple", false, "apiproduct_name", c.Param("apiproduct_name"), &apiproductName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter apiproduct_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter apiproduct_name: %s", err)})
 		return
 	}
 
@@ -2382,7 +2382,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameApiproduct
 
 	err = runtime.BindQueryParameter("form", true, false, "action", c.Request.URL.Query(), &params.Action)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter action: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter action: %s", err)})
 		return
 	}
 
@@ -2406,7 +2406,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameApiproducts
 
 	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
 
@@ -2415,7 +2415,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameApiproducts
 
 	err = runtime.BindStyledParameter("simple", false, "apiproduct_name", c.Param("apiproduct_name"), &apiproductName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter apiproduct_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter apiproduct_name: %s", err)})
 		return
 	}
 
@@ -2441,7 +2441,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameApiproduct
 
 	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
 
@@ -2450,7 +2450,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameApiproduct
 
 	err = runtime.BindStyledParameter("simple", false, "apiproduct_name", c.Param("apiproduct_name"), &apiproductName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter apiproduct_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter apiproduct_name: %s", err)})
 		return
 	}
 
@@ -2476,7 +2476,7 @@ func (siw *ServerInterfaceWrapper) DeleteV1OrganizationsOrganizationNameApiprodu
 
 	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
 
@@ -2485,7 +2485,7 @@ func (siw *ServerInterfaceWrapper) DeleteV1OrganizationsOrganizationNameApiprodu
 
 	err = runtime.BindStyledParameter("simple", false, "apiproduct_name", c.Param("apiproduct_name"), &apiproductName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter apiproduct_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter apiproduct_name: %s", err)})
 		return
 	}
 
@@ -2494,7 +2494,7 @@ func (siw *ServerInterfaceWrapper) DeleteV1OrganizationsOrganizationNameApiprodu
 
 	err = runtime.BindStyledParameter("simple", false, "attribute_name", c.Param("attribute_name"), &attributeName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
 		return
 	}
 
@@ -2520,7 +2520,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameApiproducts
 
 	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
 
@@ -2529,7 +2529,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameApiproducts
 
 	err = runtime.BindStyledParameter("simple", false, "apiproduct_name", c.Param("apiproduct_name"), &apiproductName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter apiproduct_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter apiproduct_name: %s", err)})
 		return
 	}
 
@@ -2538,7 +2538,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameApiproducts
 
 	err = runtime.BindStyledParameter("simple", false, "attribute_name", c.Param("attribute_name"), &attributeName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
 		return
 	}
 
@@ -2564,7 +2564,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameApiproduct
 
 	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
 
@@ -2573,7 +2573,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameApiproduct
 
 	err = runtime.BindStyledParameter("simple", false, "apiproduct_name", c.Param("apiproduct_name"), &apiproductName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter apiproduct_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter apiproduct_name: %s", err)})
 		return
 	}
 
@@ -2582,7 +2582,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameApiproduct
 
 	err = runtime.BindStyledParameter("simple", false, "attribute_name", c.Param("attribute_name"), &attributeName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
 		return
 	}
 
@@ -2608,7 +2608,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameApps(c *gin
 
 	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
 
@@ -2624,7 +2624,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameApps(c *gin
 
 	err = runtime.BindQueryParameter("form", true, false, "expand", c.Request.URL.Query(), &params.Expand)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter expand: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter expand: %s", err)})
 		return
 	}
 
@@ -2635,7 +2635,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameApps(c *gin
 
 	err = runtime.BindQueryParameter("form", true, false, "rows", c.Request.URL.Query(), &params.Rows)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter rows: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter rows: %s", err)})
 		return
 	}
 
@@ -2659,7 +2659,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameAppsAppId(c
 
 	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
 
@@ -2668,7 +2668,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameAppsAppId(c
 
 	err = runtime.BindStyledParameter("simple", false, "app_id", c.Param("app_id"), &appId)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_id: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_id: %s", err)})
 		return
 	}
 
@@ -2694,7 +2694,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopers(
 
 	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
 
@@ -2710,7 +2710,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopers(
 
 	err = runtime.BindQueryParameter("form", true, false, "expand", c.Request.URL.Query(), &params.Expand)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter expand: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter expand: %s", err)})
 		return
 	}
 
@@ -2721,7 +2721,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopers(
 
 	err = runtime.BindQueryParameter("form", true, false, "count", c.Request.URL.Query(), &params.Count)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter count: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter count: %s", err)})
 		return
 	}
 
@@ -2745,7 +2745,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 
 	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
 
@@ -2771,7 +2771,7 @@ func (siw *ServerInterfaceWrapper) DeleteV1OrganizationsOrganizationNameDevelope
 
 	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
 
@@ -2780,7 +2780,7 @@ func (siw *ServerInterfaceWrapper) DeleteV1OrganizationsOrganizationNameDevelope
 
 	err = runtime.BindStyledParameter("simple", false, "developer_emailaddress", c.Param("developer_emailaddress"), &developerEmailaddress)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
 		return
 	}
 
@@ -2806,7 +2806,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersD
 
 	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
 
@@ -2815,7 +2815,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersD
 
 	err = runtime.BindStyledParameter("simple", false, "developer_emailaddress", c.Param("developer_emailaddress"), &developerEmailaddress)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
 		return
 	}
 
@@ -2841,7 +2841,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 
 	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
 
@@ -2850,7 +2850,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 
 	err = runtime.BindStyledParameter("simple", false, "developer_emailaddress", c.Param("developer_emailaddress"), &developerEmailaddress)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
 		return
 	}
 
@@ -2866,7 +2866,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 
 	err = runtime.BindQueryParameter("form", true, false, "action", c.Request.URL.Query(), &params.Action)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter action: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter action: %s", err)})
 		return
 	}
 
@@ -2890,7 +2890,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersD
 
 	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
 
@@ -2899,7 +2899,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersD
 
 	err = runtime.BindStyledParameter("simple", false, "developer_emailaddress", c.Param("developer_emailaddress"), &developerEmailaddress)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
 		return
 	}
 
@@ -2915,7 +2915,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersD
 
 	err = runtime.BindQueryParameter("form", true, false, "expand", c.Request.URL.Query(), &params.Expand)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter expand: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter expand: %s", err)})
 		return
 	}
 
@@ -2926,7 +2926,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersD
 
 	err = runtime.BindQueryParameter("form", true, false, "count", c.Request.URL.Query(), &params.Count)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter count: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter count: %s", err)})
 		return
 	}
 
@@ -2950,7 +2950,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 
 	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
 
@@ -2959,7 +2959,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 
 	err = runtime.BindStyledParameter("simple", false, "developer_emailaddress", c.Param("developer_emailaddress"), &developerEmailaddress)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
 		return
 	}
 
@@ -2985,7 +2985,7 @@ func (siw *ServerInterfaceWrapper) DeleteV1OrganizationsOrganizationNameDevelope
 
 	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
 
@@ -2994,7 +2994,7 @@ func (siw *ServerInterfaceWrapper) DeleteV1OrganizationsOrganizationNameDevelope
 
 	err = runtime.BindStyledParameter("simple", false, "developer_emailaddress", c.Param("developer_emailaddress"), &developerEmailaddress)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
 		return
 	}
 
@@ -3003,7 +3003,7 @@ func (siw *ServerInterfaceWrapper) DeleteV1OrganizationsOrganizationNameDevelope
 
 	err = runtime.BindStyledParameter("simple", false, "app_name", c.Param("app_name"), &appName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
 		return
 	}
 
@@ -3029,7 +3029,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersD
 
 	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
 
@@ -3038,7 +3038,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersD
 
 	err = runtime.BindStyledParameter("simple", false, "developer_emailaddress", c.Param("developer_emailaddress"), &developerEmailaddress)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
 		return
 	}
 
@@ -3047,7 +3047,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersD
 
 	err = runtime.BindStyledParameter("simple", false, "app_name", c.Param("app_name"), &appName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
 		return
 	}
 
@@ -3073,7 +3073,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 
 	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
 
@@ -3082,7 +3082,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 
 	err = runtime.BindStyledParameter("simple", false, "developer_emailaddress", c.Param("developer_emailaddress"), &developerEmailaddress)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
 		return
 	}
 
@@ -3091,7 +3091,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 
 	err = runtime.BindStyledParameter("simple", false, "app_name", c.Param("app_name"), &appName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
 		return
 	}
 
@@ -3107,7 +3107,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 
 	err = runtime.BindQueryParameter("form", true, false, "action", c.Request.URL.Query(), &params.Action)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter action: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter action: %s", err)})
 		return
 	}
 
@@ -3131,7 +3131,7 @@ func (siw *ServerInterfaceWrapper) PutV1OrganizationsOrganizationNameDevelopersD
 
 	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
 
@@ -3140,7 +3140,7 @@ func (siw *ServerInterfaceWrapper) PutV1OrganizationsOrganizationNameDevelopersD
 
 	err = runtime.BindStyledParameter("simple", false, "developer_emailaddress", c.Param("developer_emailaddress"), &developerEmailaddress)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
 		return
 	}
 
@@ -3149,7 +3149,7 @@ func (siw *ServerInterfaceWrapper) PutV1OrganizationsOrganizationNameDevelopersD
 
 	err = runtime.BindStyledParameter("simple", false, "app_name", c.Param("app_name"), &appName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
 		return
 	}
 
@@ -3165,7 +3165,7 @@ func (siw *ServerInterfaceWrapper) PutV1OrganizationsOrganizationNameDevelopersD
 
 	err = runtime.BindQueryParameter("form", true, false, "action", c.Request.URL.Query(), &params.Action)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter action: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter action: %s", err)})
 		return
 	}
 
@@ -3189,7 +3189,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersD
 
 	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
 
@@ -3198,7 +3198,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersD
 
 	err = runtime.BindStyledParameter("simple", false, "developer_emailaddress", c.Param("developer_emailaddress"), &developerEmailaddress)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
 		return
 	}
 
@@ -3207,7 +3207,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersD
 
 	err = runtime.BindStyledParameter("simple", false, "app_name", c.Param("app_name"), &appName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
 		return
 	}
 
@@ -3233,7 +3233,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 
 	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
 
@@ -3242,7 +3242,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 
 	err = runtime.BindStyledParameter("simple", false, "developer_emailaddress", c.Param("developer_emailaddress"), &developerEmailaddress)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
 		return
 	}
 
@@ -3251,7 +3251,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 
 	err = runtime.BindStyledParameter("simple", false, "app_name", c.Param("app_name"), &appName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
 		return
 	}
 
@@ -3277,7 +3277,7 @@ func (siw *ServerInterfaceWrapper) DeleteV1OrganizationsOrganizationNameDevelope
 
 	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
 
@@ -3286,7 +3286,7 @@ func (siw *ServerInterfaceWrapper) DeleteV1OrganizationsOrganizationNameDevelope
 
 	err = runtime.BindStyledParameter("simple", false, "developer_emailaddress", c.Param("developer_emailaddress"), &developerEmailaddress)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
 		return
 	}
 
@@ -3295,7 +3295,7 @@ func (siw *ServerInterfaceWrapper) DeleteV1OrganizationsOrganizationNameDevelope
 
 	err = runtime.BindStyledParameter("simple", false, "app_name", c.Param("app_name"), &appName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
 		return
 	}
 
@@ -3304,7 +3304,7 @@ func (siw *ServerInterfaceWrapper) DeleteV1OrganizationsOrganizationNameDevelope
 
 	err = runtime.BindStyledParameter("simple", false, "attribute_name", c.Param("attribute_name"), &attributeName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
 		return
 	}
 
@@ -3330,7 +3330,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersD
 
 	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
 
@@ -3339,7 +3339,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersD
 
 	err = runtime.BindStyledParameter("simple", false, "developer_emailaddress", c.Param("developer_emailaddress"), &developerEmailaddress)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
 		return
 	}
 
@@ -3348,7 +3348,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersD
 
 	err = runtime.BindStyledParameter("simple", false, "app_name", c.Param("app_name"), &appName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
 		return
 	}
 
@@ -3357,7 +3357,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersD
 
 	err = runtime.BindStyledParameter("simple", false, "attribute_name", c.Param("attribute_name"), &attributeName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
 		return
 	}
 
@@ -3383,7 +3383,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 
 	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
 
@@ -3392,7 +3392,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 
 	err = runtime.BindStyledParameter("simple", false, "developer_emailaddress", c.Param("developer_emailaddress"), &developerEmailaddress)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
 		return
 	}
 
@@ -3401,7 +3401,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 
 	err = runtime.BindStyledParameter("simple", false, "app_name", c.Param("app_name"), &appName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
 		return
 	}
 
@@ -3410,7 +3410,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 
 	err = runtime.BindStyledParameter("simple", false, "attribute_name", c.Param("attribute_name"), &attributeName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
 		return
 	}
 
@@ -3436,7 +3436,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersD
 
 	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
 
@@ -3445,7 +3445,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersD
 
 	err = runtime.BindStyledParameter("simple", false, "developer_emailaddress", c.Param("developer_emailaddress"), &developerEmailaddress)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
 		return
 	}
 
@@ -3454,7 +3454,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersD
 
 	err = runtime.BindStyledParameter("simple", false, "app_name", c.Param("app_name"), &appName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
 		return
 	}
 
@@ -3480,7 +3480,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 
 	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
 
@@ -3489,7 +3489,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 
 	err = runtime.BindStyledParameter("simple", false, "developer_emailaddress", c.Param("developer_emailaddress"), &developerEmailaddress)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
 		return
 	}
 
@@ -3498,7 +3498,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 
 	err = runtime.BindStyledParameter("simple", false, "app_name", c.Param("app_name"), &appName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
 		return
 	}
 
@@ -3524,7 +3524,7 @@ func (siw *ServerInterfaceWrapper) DeleteV1OrganizationsOrganizationNameDevelope
 
 	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
 
@@ -3533,7 +3533,7 @@ func (siw *ServerInterfaceWrapper) DeleteV1OrganizationsOrganizationNameDevelope
 
 	err = runtime.BindStyledParameter("simple", false, "developer_emailaddress", c.Param("developer_emailaddress"), &developerEmailaddress)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
 		return
 	}
 
@@ -3542,7 +3542,7 @@ func (siw *ServerInterfaceWrapper) DeleteV1OrganizationsOrganizationNameDevelope
 
 	err = runtime.BindStyledParameter("simple", false, "app_name", c.Param("app_name"), &appName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
 		return
 	}
 
@@ -3551,7 +3551,7 @@ func (siw *ServerInterfaceWrapper) DeleteV1OrganizationsOrganizationNameDevelope
 
 	err = runtime.BindStyledParameter("simple", false, "consumer_key", c.Param("consumer_key"), &consumerKey)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter consumer_key: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter consumer_key: %s", err)})
 		return
 	}
 
@@ -3577,7 +3577,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersD
 
 	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
 
@@ -3586,7 +3586,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersD
 
 	err = runtime.BindStyledParameter("simple", false, "developer_emailaddress", c.Param("developer_emailaddress"), &developerEmailaddress)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
 		return
 	}
 
@@ -3595,7 +3595,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersD
 
 	err = runtime.BindStyledParameter("simple", false, "app_name", c.Param("app_name"), &appName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
 		return
 	}
 
@@ -3604,7 +3604,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersD
 
 	err = runtime.BindStyledParameter("simple", false, "consumer_key", c.Param("consumer_key"), &consumerKey)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter consumer_key: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter consumer_key: %s", err)})
 		return
 	}
 
@@ -3630,7 +3630,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 
 	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
 
@@ -3639,7 +3639,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 
 	err = runtime.BindStyledParameter("simple", false, "developer_emailaddress", c.Param("developer_emailaddress"), &developerEmailaddress)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
 		return
 	}
 
@@ -3648,7 +3648,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 
 	err = runtime.BindStyledParameter("simple", false, "app_name", c.Param("app_name"), &appName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
 		return
 	}
 
@@ -3657,7 +3657,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 
 	err = runtime.BindStyledParameter("simple", false, "consumer_key", c.Param("consumer_key"), &consumerKey)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter consumer_key: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter consumer_key: %s", err)})
 		return
 	}
 
@@ -3673,7 +3673,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 
 	err = runtime.BindQueryParameter("form", true, false, "action", c.Request.URL.Query(), &params.Action)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter action: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter action: %s", err)})
 		return
 	}
 
@@ -3697,7 +3697,7 @@ func (siw *ServerInterfaceWrapper) DeleteV1OrganizationsOrganizationNameDevelope
 
 	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
 
@@ -3706,7 +3706,7 @@ func (siw *ServerInterfaceWrapper) DeleteV1OrganizationsOrganizationNameDevelope
 
 	err = runtime.BindStyledParameter("simple", false, "developer_emailaddress", c.Param("developer_emailaddress"), &developerEmailaddress)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
 		return
 	}
 
@@ -3715,7 +3715,7 @@ func (siw *ServerInterfaceWrapper) DeleteV1OrganizationsOrganizationNameDevelope
 
 	err = runtime.BindStyledParameter("simple", false, "app_name", c.Param("app_name"), &appName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
 		return
 	}
 
@@ -3724,7 +3724,7 @@ func (siw *ServerInterfaceWrapper) DeleteV1OrganizationsOrganizationNameDevelope
 
 	err = runtime.BindStyledParameter("simple", false, "consumer_key", c.Param("consumer_key"), &consumerKey)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter consumer_key: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter consumer_key: %s", err)})
 		return
 	}
 
@@ -3733,7 +3733,7 @@ func (siw *ServerInterfaceWrapper) DeleteV1OrganizationsOrganizationNameDevelope
 
 	err = runtime.BindStyledParameter("simple", false, "apiproduct_name", c.Param("apiproduct_name"), &apiproductName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter apiproduct_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter apiproduct_name: %s", err)})
 		return
 	}
 
@@ -3759,7 +3759,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 
 	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
 
@@ -3768,7 +3768,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 
 	err = runtime.BindStyledParameter("simple", false, "developer_emailaddress", c.Param("developer_emailaddress"), &developerEmailaddress)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
 		return
 	}
 
@@ -3777,7 +3777,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 
 	err = runtime.BindStyledParameter("simple", false, "app_name", c.Param("app_name"), &appName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
 		return
 	}
 
@@ -3786,7 +3786,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 
 	err = runtime.BindStyledParameter("simple", false, "consumer_key", c.Param("consumer_key"), &consumerKey)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter consumer_key: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter consumer_key: %s", err)})
 		return
 	}
 
@@ -3795,7 +3795,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 
 	err = runtime.BindStyledParameter("simple", false, "apiproduct_name", c.Param("apiproduct_name"), &apiproductName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter apiproduct_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter apiproduct_name: %s", err)})
 		return
 	}
 
@@ -3811,7 +3811,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 
 	err = runtime.BindQueryParameter("form", true, false, "action", c.Request.URL.Query(), &params.Action)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter action: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter action: %s", err)})
 		return
 	}
 
@@ -3835,7 +3835,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersD
 
 	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
 
@@ -3844,7 +3844,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersD
 
 	err = runtime.BindStyledParameter("simple", false, "developer_emailaddress", c.Param("developer_emailaddress"), &developerEmailaddress)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
 		return
 	}
 
@@ -3853,7 +3853,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersD
 
 	err = runtime.BindStyledParameter("simple", false, "app_name", c.Param("app_name"), &appName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
 		return
 	}
 
@@ -3862,7 +3862,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersD
 
 	err = runtime.BindStyledParameter("simple", false, "consumer_key", c.Param("consumer_key"), &consumerKey)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter consumer_key: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter consumer_key: %s", err)})
 		return
 	}
 
@@ -3888,7 +3888,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 
 	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
 
@@ -3897,7 +3897,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 
 	err = runtime.BindStyledParameter("simple", false, "developer_emailaddress", c.Param("developer_emailaddress"), &developerEmailaddress)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
 		return
 	}
 
@@ -3906,7 +3906,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 
 	err = runtime.BindStyledParameter("simple", false, "app_name", c.Param("app_name"), &appName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
 		return
 	}
 
@@ -3915,7 +3915,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 
 	err = runtime.BindStyledParameter("simple", false, "consumer_key", c.Param("consumer_key"), &consumerKey)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter consumer_key: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter consumer_key: %s", err)})
 		return
 	}
 
@@ -3941,7 +3941,7 @@ func (siw *ServerInterfaceWrapper) DeleteV1OrganizationsOrganizationNameDevelope
 
 	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
 
@@ -3950,7 +3950,7 @@ func (siw *ServerInterfaceWrapper) DeleteV1OrganizationsOrganizationNameDevelope
 
 	err = runtime.BindStyledParameter("simple", false, "developer_emailaddress", c.Param("developer_emailaddress"), &developerEmailaddress)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
 		return
 	}
 
@@ -3959,7 +3959,7 @@ func (siw *ServerInterfaceWrapper) DeleteV1OrganizationsOrganizationNameDevelope
 
 	err = runtime.BindStyledParameter("simple", false, "app_name", c.Param("app_name"), &appName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
 		return
 	}
 
@@ -3968,7 +3968,7 @@ func (siw *ServerInterfaceWrapper) DeleteV1OrganizationsOrganizationNameDevelope
 
 	err = runtime.BindStyledParameter("simple", false, "consumer_key", c.Param("consumer_key"), &consumerKey)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter consumer_key: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter consumer_key: %s", err)})
 		return
 	}
 
@@ -3977,7 +3977,7 @@ func (siw *ServerInterfaceWrapper) DeleteV1OrganizationsOrganizationNameDevelope
 
 	err = runtime.BindStyledParameter("simple", false, "attribute_name", c.Param("attribute_name"), &attributeName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
 		return
 	}
 
@@ -4003,7 +4003,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersD
 
 	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
 
@@ -4012,7 +4012,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersD
 
 	err = runtime.BindStyledParameter("simple", false, "developer_emailaddress", c.Param("developer_emailaddress"), &developerEmailaddress)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
 		return
 	}
 
@@ -4021,7 +4021,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersD
 
 	err = runtime.BindStyledParameter("simple", false, "app_name", c.Param("app_name"), &appName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
 		return
 	}
 
@@ -4030,7 +4030,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersD
 
 	err = runtime.BindStyledParameter("simple", false, "consumer_key", c.Param("consumer_key"), &consumerKey)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter consumer_key: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter consumer_key: %s", err)})
 		return
 	}
 
@@ -4039,7 +4039,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersD
 
 	err = runtime.BindStyledParameter("simple", false, "attribute_name", c.Param("attribute_name"), &attributeName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
 		return
 	}
 
@@ -4065,7 +4065,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 
 	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
 
@@ -4074,7 +4074,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 
 	err = runtime.BindStyledParameter("simple", false, "developer_emailaddress", c.Param("developer_emailaddress"), &developerEmailaddress)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
 		return
 	}
 
@@ -4083,7 +4083,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 
 	err = runtime.BindStyledParameter("simple", false, "app_name", c.Param("app_name"), &appName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter app_name: %s", err)})
 		return
 	}
 
@@ -4092,7 +4092,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 
 	err = runtime.BindStyledParameter("simple", false, "consumer_key", c.Param("consumer_key"), &consumerKey)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter consumer_key: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter consumer_key: %s", err)})
 		return
 	}
 
@@ -4101,7 +4101,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 
 	err = runtime.BindStyledParameter("simple", false, "attribute_name", c.Param("attribute_name"), &attributeName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
 		return
 	}
 
@@ -4127,7 +4127,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersD
 
 	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
 
@@ -4136,7 +4136,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersD
 
 	err = runtime.BindStyledParameter("simple", false, "developer_emailaddress", c.Param("developer_emailaddress"), &developerEmailaddress)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
 		return
 	}
 
@@ -4162,7 +4162,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 
 	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
 
@@ -4171,7 +4171,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 
 	err = runtime.BindStyledParameter("simple", false, "developer_emailaddress", c.Param("developer_emailaddress"), &developerEmailaddress)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
 		return
 	}
 
@@ -4197,7 +4197,7 @@ func (siw *ServerInterfaceWrapper) DeleteV1OrganizationsOrganizationNameDevelope
 
 	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
 
@@ -4206,7 +4206,7 @@ func (siw *ServerInterfaceWrapper) DeleteV1OrganizationsOrganizationNameDevelope
 
 	err = runtime.BindStyledParameter("simple", false, "developer_emailaddress", c.Param("developer_emailaddress"), &developerEmailaddress)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
 		return
 	}
 
@@ -4215,7 +4215,7 @@ func (siw *ServerInterfaceWrapper) DeleteV1OrganizationsOrganizationNameDevelope
 
 	err = runtime.BindStyledParameter("simple", false, "attribute_name", c.Param("attribute_name"), &attributeName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
 		return
 	}
 
@@ -4241,7 +4241,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersD
 
 	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
 
@@ -4250,7 +4250,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersD
 
 	err = runtime.BindStyledParameter("simple", false, "developer_emailaddress", c.Param("developer_emailaddress"), &developerEmailaddress)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
 		return
 	}
 
@@ -4259,7 +4259,7 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameDevelopersD
 
 	err = runtime.BindStyledParameter("simple", false, "attribute_name", c.Param("attribute_name"), &attributeName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
 		return
 	}
 
@@ -4285,7 +4285,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 
 	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
 		return
 	}
 
@@ -4294,7 +4294,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 
 	err = runtime.BindStyledParameter("simple", false, "developer_emailaddress", c.Param("developer_emailaddress"), &developerEmailaddress)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter developer_emailaddress: %s", err)})
 		return
 	}
 
@@ -4303,7 +4303,7 @@ func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameDevelopers
 
 	err = runtime.BindStyledParameter("simple", false, "attribute_name", c.Param("attribute_name"), &attributeName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
 		return
 	}
 
@@ -4359,7 +4359,7 @@ func (siw *ServerInterfaceWrapper) DeleteV1RolesRoleName(c *gin.Context) {
 
 	err = runtime.BindStyledParameter("simple", false, "role_name", c.Param("role_name"), &roleName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter role_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter role_name: %s", err)})
 		return
 	}
 
@@ -4385,7 +4385,7 @@ func (siw *ServerInterfaceWrapper) GetV1RolesRoleName(c *gin.Context) {
 
 	err = runtime.BindStyledParameter("simple", false, "role_name", c.Param("role_name"), &roleName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter role_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter role_name: %s", err)})
 		return
 	}
 
@@ -4411,7 +4411,7 @@ func (siw *ServerInterfaceWrapper) PostV1RolesRoleName(c *gin.Context) {
 
 	err = runtime.BindStyledParameter("simple", false, "role_name", c.Param("role_name"), &roleName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter role_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter role_name: %s", err)})
 		return
 	}
 
@@ -4437,7 +4437,7 @@ func (siw *ServerInterfaceWrapper) GetV1RolesRoleNameUsers(c *gin.Context) {
 
 	err = runtime.BindStyledParameter("simple", false, "role_name", c.Param("role_name"), &roleName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter role_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter role_name: %s", err)})
 		return
 	}
 
@@ -4493,7 +4493,7 @@ func (siw *ServerInterfaceWrapper) DeleteV1RoutesRouteName(c *gin.Context) {
 
 	err = runtime.BindStyledParameter("simple", false, "route_name", c.Param("route_name"), &routeName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter route_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter route_name: %s", err)})
 		return
 	}
 
@@ -4519,7 +4519,7 @@ func (siw *ServerInterfaceWrapper) GetV1RoutesRouteName(c *gin.Context) {
 
 	err = runtime.BindStyledParameter("simple", false, "route_name", c.Param("route_name"), &routeName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter route_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter route_name: %s", err)})
 		return
 	}
 
@@ -4545,7 +4545,7 @@ func (siw *ServerInterfaceWrapper) PostV1RoutesRouteName(c *gin.Context) {
 
 	err = runtime.BindStyledParameter("simple", false, "route_name", c.Param("route_name"), &routeName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter route_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter route_name: %s", err)})
 		return
 	}
 
@@ -4571,7 +4571,7 @@ func (siw *ServerInterfaceWrapper) GetV1RoutesRouteNameAttributes(c *gin.Context
 
 	err = runtime.BindStyledParameter("simple", false, "route_name", c.Param("route_name"), &routeName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter route_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter route_name: %s", err)})
 		return
 	}
 
@@ -4597,7 +4597,7 @@ func (siw *ServerInterfaceWrapper) PostV1RoutesRouteNameAttributes(c *gin.Contex
 
 	err = runtime.BindStyledParameter("simple", false, "route_name", c.Param("route_name"), &routeName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter route_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter route_name: %s", err)})
 		return
 	}
 
@@ -4623,7 +4623,7 @@ func (siw *ServerInterfaceWrapper) DeleteV1RoutesRouteNameAttributesAttributeNam
 
 	err = runtime.BindStyledParameter("simple", false, "route_name", c.Param("route_name"), &routeName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter route_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter route_name: %s", err)})
 		return
 	}
 
@@ -4632,7 +4632,7 @@ func (siw *ServerInterfaceWrapper) DeleteV1RoutesRouteNameAttributesAttributeNam
 
 	err = runtime.BindStyledParameter("simple", false, "attribute_name", c.Param("attribute_name"), &attributeName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
 		return
 	}
 
@@ -4658,7 +4658,7 @@ func (siw *ServerInterfaceWrapper) GetV1RoutesRouteNameAttributesAttributeName(c
 
 	err = runtime.BindStyledParameter("simple", false, "route_name", c.Param("route_name"), &routeName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter route_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter route_name: %s", err)})
 		return
 	}
 
@@ -4667,7 +4667,7 @@ func (siw *ServerInterfaceWrapper) GetV1RoutesRouteNameAttributesAttributeName(c
 
 	err = runtime.BindStyledParameter("simple", false, "attribute_name", c.Param("attribute_name"), &attributeName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
 		return
 	}
 
@@ -4693,7 +4693,7 @@ func (siw *ServerInterfaceWrapper) PostV1RoutesRouteNameAttributesAttributeName(
 
 	err = runtime.BindStyledParameter("simple", false, "route_name", c.Param("route_name"), &routeName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter route_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter route_name: %s", err)})
 		return
 	}
 
@@ -4702,7 +4702,7 @@ func (siw *ServerInterfaceWrapper) PostV1RoutesRouteNameAttributesAttributeName(
 
 	err = runtime.BindStyledParameter("simple", false, "attribute_name", c.Param("attribute_name"), &attributeName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
 		return
 	}
 
@@ -4758,7 +4758,7 @@ func (siw *ServerInterfaceWrapper) DeleteV1UsersUserName(c *gin.Context) {
 
 	err = runtime.BindStyledParameter("simple", false, "user_name", c.Param("user_name"), &userName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter user_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter user_name: %s", err)})
 		return
 	}
 
@@ -4784,7 +4784,7 @@ func (siw *ServerInterfaceWrapper) GetV1UsersUserName(c *gin.Context) {
 
 	err = runtime.BindStyledParameter("simple", false, "user_name", c.Param("user_name"), &userName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter user_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter user_name: %s", err)})
 		return
 	}
 
@@ -4810,7 +4810,7 @@ func (siw *ServerInterfaceWrapper) PostV1UsersUserName(c *gin.Context) {
 
 	err = runtime.BindStyledParameter("simple", false, "user_name", c.Param("user_name"), &userName)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter user_name: %s", err)})
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter user_name: %s", err)})
 		return
 	}
 

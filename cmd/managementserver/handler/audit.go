@@ -154,7 +154,7 @@ func (h *Handler) responseAudits(c *gin.Context, audits types.Audits) {
 	for i := range audits {
 		allAudits[i] = h.ToAuditResponse(&audits[i])
 	}
-	c.JSON(http.StatusOK, Audits{
+	c.IndentedJSON(http.StatusOK, Audits{
 		Audit: &allAudits,
 	})
 }

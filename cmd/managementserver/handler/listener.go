@@ -198,24 +198,24 @@ func (h *Handler) responseListeners(c *gin.Context, listeners types.Listeners) {
 	for i := range listeners {
 		allListeners[i] = h.ToListenerResponse(&listeners[i])
 	}
-	c.JSON(http.StatusOK, Listeners{
+	c.IndentedJSON(http.StatusOK, Listeners{
 		Listeners: &allListeners,
 	})
 }
 
 func (h *Handler) responseListener(c *gin.Context, listener *types.Listener) {
 
-	c.JSON(http.StatusOK, h.ToListenerResponse(listener))
+	c.IndentedJSON(http.StatusOK, h.ToListenerResponse(listener))
 }
 
 func (h *Handler) responseListenerCreated(c *gin.Context, listener *types.Listener) {
 
-	c.JSON(http.StatusCreated, h.ToListenerResponse(listener))
+	c.IndentedJSON(http.StatusCreated, h.ToListenerResponse(listener))
 }
 
 func (h *Handler) responseListenersUpdated(c *gin.Context, listener *types.Listener) {
 
-	c.JSON(http.StatusOK, h.ToListenerResponse(listener))
+	c.IndentedJSON(http.StatusOK, h.ToListenerResponse(listener))
 }
 
 // type conversion

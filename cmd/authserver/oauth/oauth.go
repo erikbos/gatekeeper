@@ -173,5 +173,5 @@ func (oauth *Server) handleTokenInfo(c *gin.Context) {
 			Add(tokenInfo.GetAccessExpiresIn()).UTC().Unix(),
 		Scope: tokenInfo.GetScope(),
 	}
-	c.JSON(http.StatusOK, status)
+	c.IndentedJSON(http.StatusOK, status)
 }

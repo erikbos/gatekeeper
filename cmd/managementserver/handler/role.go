@@ -102,7 +102,7 @@ func (h *Handler) GetV1RolesRoleNameUsers(c *gin.Context, roleName RoleName) {
 		responseError(c, err)
 		return
 	}
-	c.JSON(http.StatusOK, usersWithRole)
+	c.IndentedJSON(http.StatusOK, usersWithRole)
 }
 
 // API responses
@@ -113,24 +113,24 @@ func (h *Handler) responseRoles(c *gin.Context, roles types.Roles) {
 	for i, v := range roles {
 		allRoles[i] = h.ToRoleResponse(&v)
 	}
-	c.JSON(http.StatusOK, Roles{
+	c.IndentedJSON(http.StatusOK, Roles{
 		Role: &allRoles,
 	})
 }
 
 func (h *Handler) responseRole(c *gin.Context, user *types.Role) {
 
-	c.JSON(http.StatusOK, h.ToRoleResponse(user))
+	c.IndentedJSON(http.StatusOK, h.ToRoleResponse(user))
 }
 
 func (h *Handler) responseRoleCreated(c *gin.Context, role *types.Role) {
 
-	c.JSON(http.StatusCreated, h.ToRoleResponse(role))
+	c.IndentedJSON(http.StatusCreated, h.ToRoleResponse(role))
 }
 
 func (h *Handler) responseRoleUpdated(c *gin.Context, role *types.Role) {
 
-	c.JSON(http.StatusOK, h.ToRoleResponse(role))
+	c.IndentedJSON(http.StatusOK, h.ToRoleResponse(role))
 }
 
 // type conversion

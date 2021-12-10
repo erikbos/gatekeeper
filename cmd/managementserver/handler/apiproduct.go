@@ -208,7 +208,7 @@ func (h *Handler) responseAPIproductNames(c *gin.Context, apiproducts types.APIP
 	for i := range apiproducts {
 		APIproductNames[i] = apiproducts[i].Name
 	}
-	c.JSON(http.StatusOK, APIproductNames)
+	c.IndentedJSON(http.StatusOK, APIproductNames)
 }
 
 func (h *Handler) responseAPIproducts(c *gin.Context, apiproducts types.APIProducts) {
@@ -217,24 +217,24 @@ func (h *Handler) responseAPIproducts(c *gin.Context, apiproducts types.APIProdu
 	for i := range apiproducts {
 		allApiproducts[i] = h.ToAPIproductResponse(&apiproducts[i])
 	}
-	c.JSON(http.StatusOK, APIProducts{
+	c.IndentedJSON(http.StatusOK, APIProducts{
 		ApiProduct: &allApiproducts,
 	})
 }
 
 func (h *Handler) responseAPIproduct(c *gin.Context, apiproduct *types.APIProduct) {
 
-	c.JSON(http.StatusOK, h.ToAPIproductResponse(apiproduct))
+	c.IndentedJSON(http.StatusOK, h.ToAPIproductResponse(apiproduct))
 }
 
 func (h *Handler) responseAPIProductCreated(c *gin.Context, apiproduct *types.APIProduct) {
 
-	c.JSON(http.StatusCreated, h.ToAPIproductResponse(apiproduct))
+	c.IndentedJSON(http.StatusCreated, h.ToAPIproductResponse(apiproduct))
 }
 
 func (h *Handler) responseAPIproductUpdated(c *gin.Context, apiproduct *types.APIProduct) {
 
-	c.JSON(http.StatusOK, h.ToAPIproductResponse(apiproduct))
+	c.IndentedJSON(http.StatusOK, h.ToAPIproductResponse(apiproduct))
 }
 
 // type conversion
