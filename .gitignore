@@ -2,7 +2,7 @@
 
 # this file gets copied by go generate from /openapi/ to be embedded in
 # dbadmin
-cmd/dbadmin/handler/apidocs/gatekeeper.yaml
+cmd/managementserver/handler/apidocs/gatekeeper.yaml
 
 # editor
 .vscode/*
