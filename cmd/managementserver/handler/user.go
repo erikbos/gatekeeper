@@ -98,8 +98,8 @@ func (h *Handler) DeleteV1UsersUserName(c *gin.Context, userName UserName) {
 func (h *Handler) responseUsers(c *gin.Context, users types.Users) {
 
 	allUsers := make([]User, len(users))
-	for i, v := range users {
-		allUsers[i] = h.ToUserResponse(&v)
+	for i := range users {
+		allUsers[i] = h.ToUserResponse(&users[i])
 	}
 	c.IndentedJSON(http.StatusOK, Users{
 		User: &allUsers,
@@ -172,6 +172,9 @@ func fromUser(u User) types.User {
 		user.Roles = *u.Roles
 	} else {
 		user.Roles = []string{}
+	}
+	if u.Status != nil {
+		user.Status = *u.Status
 	}
 	return user
 }

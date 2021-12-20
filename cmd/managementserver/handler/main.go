@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/gin-gonic/gin"
+	cors "github.com/rs/cors/wrapper/gin"
 	"go.uber.org/zap"
 
 	"github.com/erikbos/gatekeeper/cmd/managementserver/handler/statuspage"
@@ -46,8 +47,18 @@ func New(router *gin.Engine, db *db.Database, s *service.Service,
 	statuspage.RegisterRoutes(router)
 
 	// Register routes and add authentication middleware
-	auth := newAuth(s.User, s.Role, logger)
-	router.Use(auth.AuthenticateAndAuthorize)
+	if !disableAPIAuthentication {
+		auth := newAuth(s.User, s.Role, logger)
+		router.Use(auth.AuthenticateAndAuthorize)
+	}
+
+	// Insert CORS handling
+	router.Use(cors.New(cors.Options{
+		AllowCredentials: true,
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE"},
+		AllowedOrigins:   []string{"*"},
+		MaxAge:           3600,
+	}))
 
 	RegisterHandlersWithOptions(router, handler, GinServerOptions{
 		// TODO specifying auth.AuthenticateAndAuthorize as middleware here does not work

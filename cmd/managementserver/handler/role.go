@@ -110,8 +110,8 @@ func (h *Handler) GetV1RolesRoleNameUsers(c *gin.Context, roleName RoleName) {
 func (h *Handler) responseRoles(c *gin.Context, roles types.Roles) {
 
 	allRoles := make([]Role, len(roles))
-	for i, v := range roles {
-		allRoles[i] = h.ToRoleResponse(&v)
+	for i := range roles {
+		allRoles[i] = h.ToRoleResponse(&roles[i])
 	}
 	c.IndentedJSON(http.StatusOK, Roles{
 		Role: &allRoles,
