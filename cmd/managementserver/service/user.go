@@ -105,6 +105,8 @@ func (us *UserService) Update(updatedUser types.User,
 			return nil, types.NewUpdateFailureError(encryptError)
 		}
 		updatedUser.Password = encryptedPasswd
+	} else {
+		updatedUser.Password = currentUser.Password
 	}
 
 	if err = us.updateUser(&updatedUser, who); err != nil {
