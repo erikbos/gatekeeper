@@ -24,6 +24,7 @@ import (
 	"github.com/erikbos/gatekeeper/cmd/authserver/policy"
 	"github.com/erikbos/gatekeeper/cmd/authserver/request"
 	"github.com/erikbos/gatekeeper/pkg/shared"
+	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
 type envoyAuthConfig struct {
@@ -76,6 +77,8 @@ func (s *server) Check(ctx context.Context,
 		s.metrics.IncAuthenticationRejected(request)
 		return s.rejectRequest(http.StatusNotFound, nil, nil, "U1nknown vhost")
 	}
+	// FIXME we get get this from vhost lookup
+	request.Organization = &types.Organization{Name: "default"}
 
 	policyConfig := policy.NewChainConfig(s.db, s.oauth, s.geoip, s.metrics, s.logger)
 
