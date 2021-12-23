@@ -100,6 +100,12 @@ func (a *AuthHandler) IsPathAllowedByUser(user *types.User, method, path string)
 			}
 		}
 	}
+
+	// We always permit OPTIONS
+	if method == "OPTIONS" {
+		return "options", nil
+	}
+
 	// in case nothing matched we do not allow access
 	return "", errPathNotAllowed
 }

@@ -80,10 +80,6 @@ func (r *Role) IsPathAllowed(requestMethod, requestPath string) bool {
 			return true
 		}
 	}
-	// We always permit OPTIONS
-	if requestMethod == "OPTIONS" {
-		return true
-	}
 	// by default we do not allow access
 	return false
 }
