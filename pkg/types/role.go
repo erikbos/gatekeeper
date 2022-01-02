@@ -4,7 +4,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/bmatcuk/doublestar"
+	"github.com/bmatcuk/doublestar/v4"
 	"github.com/go-playground/validator/v10"
 )
 
