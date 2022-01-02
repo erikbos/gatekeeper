@@ -9,12 +9,12 @@ import (
 	"net/url"
 	"strconv"
 
-	core "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
-	authservice "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
-	envoytype "github.com/envoyproxy/go-control-plane/envoy/type/v3"
-	"github.com/gogo/googleapis/google/rpc"
+	envoy_config_core_v3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
+	envoy_service_auth_v3 "github.com/envoyproxy/go-control-plane/envoy/service/auth/v3"
+	envoy_type_v3 "github.com/envoyproxy/go-control-plane/envoy/type/v3"
 	"go.uber.org/zap"
-	rpcstatus "google.golang.org/genproto/googleapis/rpc/status"
+	"google.golang.org/genproto/googleapis/rpc/code"
+	"google.golang.org/genproto/googleapis/rpc/status"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
 	"google.golang.org/grpc/health/grpc_health_v1"
@@ -43,7 +43,7 @@ func (s *server) StartAuthorizationServer() {
 	s.logger.Info("GRPC listening on " + s.config.EnvoyAuth.Listen)
 
 	grpcServer := grpc.NewServer()
-	authservice.RegisterAuthorizationServer(grpcServer, s)
+	envoy_service_auth_v3.RegisterAuthorizationServer(grpcServer, s)
 	reflection.Register(grpcServer)
 	grpc_health_v1.RegisterHealthServer(grpcServer, health.NewServer())
 
@@ -54,7 +54,7 @@ func (s *server) StartAuthorizationServer() {
 
 // Check (called by Envoy) to authenticate & authorize a HTTP request
 func (s *server) Check(ctx context.Context,
-	extauthzRequest *authservice.CheckRequest) (*authservice.CheckResponse, error) {
+	extauthzRequest *envoy_service_auth_v3.CheckRequest) (*envoy_service_auth_v3.CheckResponse, error) {
 
 	timer := s.metrics.NewTimerAuthLatency()
 	defer timer.ObserveDuration()
@@ -123,14 +123,14 @@ func (s *server) Check(ctx context.Context,
 
 // allowRequest answers Envoyproxy to authorizates request to go upstream
 func (s *server) allowRequest(headers, metadata map[string]string) (
-	*authservice.CheckResponse, error) {
+	*envoy_service_auth_v3.CheckResponse, error) {
 
-	response := &authservice.CheckResponse{
-		Status: &rpcstatus.Status{
-			Code: int32(rpc.OK),
+	response := &envoy_service_auth_v3.CheckResponse{
+		Status: &status.Status{
+			Code: int32(code.Code_OK),
 		},
-		HttpResponse: &authservice.CheckResponse_OkResponse{
-			OkResponse: &authservice.OkHttpResponse{
+		HttpResponse: &envoy_service_auth_v3.CheckResponse_OkResponse{
+			OkResponse: &envoy_service_auth_v3.OkHttpResponse{
 				Headers: buildHeadersList(headers),
 			},
 		},
@@ -143,28 +143,28 @@ func (s *server) allowRequest(headers, metadata map[string]string) (
 
 // rejectRequest answers Envoyproxy to reject HTTP request
 func (s *server) rejectRequest(statusCode int, headers,
-	metadata map[string]string, message string) (*authservice.CheckResponse, error) {
+	metadata map[string]string, message string) (*envoy_service_auth_v3.CheckResponse, error) {
 
-	var envoyStatusCode envoytype.StatusCode
+	var envoyStatusCode envoy_type_v3.StatusCode
 
 	switch statusCode {
 	case http.StatusUnauthorized:
-		envoyStatusCode = envoytype.StatusCode_Unauthorized
+		envoyStatusCode = envoy_type_v3.StatusCode_Unauthorized
 	case http.StatusForbidden:
-		envoyStatusCode = envoytype.StatusCode_Forbidden
+		envoyStatusCode = envoy_type_v3.StatusCode_Forbidden
 	case http.StatusServiceUnavailable:
-		envoyStatusCode = envoytype.StatusCode_ServiceUnavailable
+		envoyStatusCode = envoy_type_v3.StatusCode_ServiceUnavailable
 	default:
-		envoyStatusCode = envoytype.StatusCode_Forbidden
+		envoyStatusCode = envoy_type_v3.StatusCode_Forbidden
 	}
 
-	response := &authservice.CheckResponse{
-		Status: &rpcstatus.Status{
-			Code: int32(rpc.UNAUTHENTICATED),
+	response := &envoy_service_auth_v3.CheckResponse{
+		Status: &status.Status{
+			Code: int32(code.Code_UNAUTHENTICATED),
 		},
-		HttpResponse: &authservice.CheckResponse_DeniedResponse{
-			DeniedResponse: &authservice.DeniedHttpResponse{
-				Status: &envoytype.HttpStatus{
+		HttpResponse: &envoy_service_auth_v3.CheckResponse_DeniedResponse{
+			DeniedResponse: &envoy_service_auth_v3.DeniedHttpResponse{
+				Status: &envoy_type_v3.HttpStatus{
 					Code: envoyStatusCode,
 				},
 				Headers: buildHeadersList(headers),
@@ -179,16 +179,16 @@ func (s *server) rejectRequest(statusCode int, headers,
 }
 
 // buildHeadersList creates map to hold additional upstream headers
-func buildHeadersList(headers map[string]string) []*core.HeaderValueOption {
+func buildHeadersList(headers map[string]string) []*envoy_config_core_v3.HeaderValueOption {
 
 	if len(headers) == 0 {
 		return nil
 	}
 
-	headerList := make([]*core.HeaderValueOption, 0, len(headers))
+	headerList := make([]*envoy_config_core_v3.HeaderValueOption, 0, len(headers))
 	for key, value := range headers {
-		headerList = append(headerList, &core.HeaderValueOption{
-			Header: &core.HeaderValue{
+		headerList = append(headerList, &envoy_config_core_v3.HeaderValueOption{
+			Header: &envoy_config_core_v3.HeaderValue{
 				Key:   key,
 				Value: value,
 			},
@@ -263,7 +263,7 @@ func buildRateLimiterOveride(metadata map[string]string) *structpb.Value {
 }
 
 // getrequestDetails returns details of an incoming request
-func getrequestDetails(req *authservice.CheckRequest) (*request.State, error) {
+func getrequestDetails(req *envoy_service_auth_v3.CheckRequest) (*request.State, error) {
 
 	r := &request.State{
 		HTTPRequest: req.Attributes.Request.Http,

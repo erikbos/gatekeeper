@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/bmatcuk/doublestar"
+	"github.com/bmatcuk/doublestar/v4"
 	"go.uber.org/zap"
 
 	"github.com/erikbos/gatekeeper/cmd/authserver/request"

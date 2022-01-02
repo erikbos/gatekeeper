@@ -362,6 +362,8 @@ def test_key_attributes():
 
 # test keyexpiresin from developerapp
 
+# test assigning/updating same product multiple times to one key
+
 # test import same key twice
 
 # test key for product with approvalType manual
