@@ -5,6 +5,8 @@ const (
 	TypeListenerName     = "listener"
 	TypeRouteName        = "route"
 	TypeClusterName      = "cluster"
+	TypeOrganizationName = "organization"
+	TypeCompanyName      = "company"
 	TypeDeveloperName    = "developer"
 	TypeDeveloperAppName = "developerapp"
 	TypeAPIProductName   = "apiproduct"
@@ -32,6 +34,16 @@ func NameOf(entity interface{}) string {
 		return TypeClusterName
 	case *Cluster:
 		return TypeClusterName
+
+	case Organization:
+		return TypeOrganizationName
+	case *Organization:
+		return TypeOrganizationName
+
+	case Company:
+		return TypeCompanyName
+	case *Company:
+		return TypeCompanyName
 
 	case Developer:
 		return TypeDeveloperName
@@ -85,6 +97,16 @@ func IDOf(entity interface{}) string {
 	case Cluster:
 		return v.Name
 	case *Cluster:
+		return v.Name
+
+	case Organization:
+		return v.Name
+	case *Organization:
+		return v.Name
+
+	case Company:
+		return v.Name
+	case *Company:
 		return v.Name
 
 	case Developer:
