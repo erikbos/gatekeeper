@@ -1,0 +1,48 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "type": "object",
+    "properties": {
+        "status": {
+            "type": "string",
+            "enum": ["active", "inactive"]
+        },
+        "apps": {
+            "type": "array",
+            "items": [{
+                "type": "string"
+            }]
+        },
+        "attributes": {
+            "type": "array",
+            "items": {
+                "$ref": "attribute.json"
+            }
+        },
+        "name": {
+            "type": "string"
+        },
+        "displayName": {
+            "type": "string"
+        },
+        "createdAt": {
+            "type": "integer"
+        },
+        "createdBy": {
+            "type": "string"
+        },
+        "lastmodifiedAt": {
+            "type": "integer"
+        },
+        "lastmodifiedBy": {
+            "type": "string"
+        }
+    },
+    "required": [
+        "status",
+        "attributes",
+        "name",
+        "displayName",
+        "createdAt",
+        "lastModifiedAt"
+    ]
+}
