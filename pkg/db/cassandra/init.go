@@ -172,12 +172,13 @@ var createTablesCQL = [...]string{
         created_at bigint,
         created_by text,
         display_name text,
+        key text,
         lastmodified_at bigint,
         lastmodified_by text,
         name text,
         organization_name text,
         status text,
-        PRIMARY KEY (name)
+        PRIMARY KEY (key)
         )`,
 
 	`CREATE INDEX IF NOT EXISTS ON companies (organization_name)`,

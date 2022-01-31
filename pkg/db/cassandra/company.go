@@ -10,7 +10,8 @@ import (
 
 const (
 	// List of company columns we use
-	companyColumns = `name,
+	companyColumns = `key,
+name,
 organization_name,
 display_name,
 attributes,
@@ -35,43 +36,44 @@ func NewCompanyStore(database *Database) *CompanyStore {
 	}
 }
 
-// GetAll retrieves all companys
+// GetAll retrieves all companies
 func (s *CompanyStore) GetAll(organizationName string) (types.Companies, types.Error) {
 
-	query := "SELECT " + companyColumns + " FROM companys WHERE organization_name = ?"
-	companys, err := s.runGetCompanyQuery(query, organizationName)
+	query := "SELECT " + companyColumns + " FROM companies WHERE organization_name = ?"
+	companies, err := s.runGetCompanyQuery(query, organizationName)
 	if err != nil {
 		s.db.metrics.QueryFailed(companyMetricLabel)
 		return types.NullCompanies, types.NewDatabaseError(err)
 	}
 
 	s.db.metrics.QuerySuccessful(companyMetricLabel)
-	return companys, nil
+	return companies, nil
 }
 
 // Get retrieves a company from database
 func (s *CompanyStore) Get(organizationName, companyName string) (*types.Company, types.Error) {
 
-	query := "SELECT " + companyColumns + " FROM companys WHERE WHERE organization_name = ? AND name = ? LIMIT 1"
-	companys, err := s.runGetCompanyQuery(query, organizationName, companyName)
+	query := "SELECT " + companyColumns + " FROM companies WHERE key = ? LIMIT 1"
+	key := companyPrimaryKey(organizationName, companyName)
+	companies, err := s.runGetCompanyQuery(query, key)
 	if err != nil {
 		s.db.metrics.QueryFailed(companyMetricLabel)
 		return nil, types.NewDatabaseError(err)
 	}
 
-	if len(companys) == 0 {
+	if len(companies) == 0 {
 		s.db.metrics.QueryNotFound(companyMetricLabel)
 		return nil, types.NewItemNotFoundError(
 			fmt.Errorf("cannot find company '%s'", companyName))
 	}
 
 	s.db.metrics.QuerySuccessful(companyMetricLabel)
-	return &companys[0], nil
+	return &companies[0], nil
 }
 
 // runGetCompanyQuery executes CQL query and returns resultset
 func (s *CompanyStore) runGetCompanyQuery(query string, queryParameters ...interface{}) (types.Companies, error) {
-	var companys types.Companies
+	var companies types.Companies
 
 	timer := prometheus.NewTimer(s.db.metrics.queryHistogram)
 	defer timer.ObserveDuration()
@@ -79,7 +81,7 @@ func (s *CompanyStore) runGetCompanyQuery(query string, queryParameters ...inter
 	iter := s.db.CassandraSession.Query(query, queryParameters...).Iter()
 	m := make(map[string]interface{})
 	for iter.MapScan(m) {
-		companys = append(companys, types.Company{
+		companies = append(companies, types.Company{
 			Name:           columnToString(m, "name"),
 			DisplayName:    columnToString(m, "display_name"),
 			Attributes:     columnToAttributes(m, "attributes"),
@@ -95,14 +97,16 @@ func (s *CompanyStore) runGetCompanyQuery(query string, queryParameters ...inter
 	if err := iter.Close(); err != nil {
 		return types.Companies{}, err
 	}
-	return companys, nil
+	return companies, nil
 }
 
 // Update UPSERTs an company in database
 func (s *CompanyStore) Update(organizationName string, c *types.Company) types.Error {
 
-	query := "INSERT INTO companys (" + companyColumns + ") VALUES(?,?,?,?,?,?,?)"
+	query := "INSERT INTO companies (" + companyColumns + ") VALUES(?,?,?,?,?,?,?,?,?,?)"
+	key := companyPrimaryKey(organizationName, c.Name)
 	if err := s.db.CassandraSession.Query(query,
+		key,
 		c.Name,
 		organizationName,
 		c.DisplayName,
@@ -123,10 +127,18 @@ func (s *CompanyStore) Update(organizationName string, c *types.Company) types.E
 // Delete deletes a company
 func (s *CompanyStore) Delete(organizationName, companyToDelete string) types.Error {
 
-	query := "DELETE FROM companys WHERE organizationName = ? and name = ?"
-	if err := s.db.CassandraSession.Query(query, organizationName, companyToDelete).Exec(); err != nil {
+	query := "DELETE FROM companies WHERE key = ?"
+	key := companyPrimaryKey(organizationName, companyToDelete)
+	if err := s.db.CassandraSession.Query(query, key).Exec(); err != nil {
 		s.db.metrics.QueryFailed(companyMetricLabel)
 		return types.NewDatabaseError(err)
 	}
 	return nil
+}
+
+// companyPrimaryKey generates primary key,
+// based upon combination of organization and companyname to make globally unique key
+func companyPrimaryKey(organization, companyName string) string {
+
+	return fmt.Sprintf("%s@@@%s", organization, companyName)
 }
