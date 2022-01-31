@@ -10,7 +10,7 @@ from httpstatus import HTTP_OK, HTTP_NOT_FOUND, HTTP_CREATED, HTTP_BAD_REQUEST, 
 
 class Company:
     """
-    Company does all REST API operations on companies endpoint
+    Company does all REST API operations on company endpoint
     """
 
     def __init__(self, config, session):
@@ -35,7 +35,7 @@ class Company:
     def _create(self, success_expected, new_company=None):
         """
         Create new company to be used as test subject.
-        If none provided generate API product with random name.
+        If none provided generate company with random name.
         """
 
         if new_company is None:
@@ -73,7 +73,7 @@ class Company:
 
     def create_positive(self, new_company=None):
         """
-        Create new company, if none provided generate API product with random data.
+        Create new company, if none provided generate company with random data.
         """
         return self._create(True, new_company)
 
@@ -198,16 +198,6 @@ class Company:
         Attempt to delete non-existing company, should fail
         """
         return self._delete(company_name, False)
-
-
-    def delete_negative_bad_request(self, company_name):
-        """
-        Attempt to delete product associated with assigned keys, should fail
-        """
-        company_url = self.company_url + '/' + urllib.parse.quote(company_name)
-        response = self.session.delete(company_url)
-        assert_status_code(response, HTTP_BAD_REQUEST)
-        assert_content_type_json(response)
 
 
     def assert_compare(self, company_a, company_b):
