@@ -274,7 +274,7 @@ func (h *Handler) responseCompanyUpdated(c *gin.Context, company *types.Company)
 
 func (h *Handler) ToCompanyResponse(c *types.Company) Company {
 
-	return Company{
+	company := Company{
 		Attributes:     toAttributesResponse(c.Attributes),
 		CreatedAt:      &c.CreatedAt,
 		CreatedBy:      &c.CreatedBy,
@@ -284,6 +284,12 @@ func (h *Handler) ToCompanyResponse(c *types.Company) Company {
 		Name:           &c.Name,
 		Status:         &c.Status,
 	}
+	if c.Apps != nil {
+		company.Apps = &c.Apps
+	} else {
+		company.Apps = &[]string{}
+	}
+	return company
 }
 
 func fromCompany(p Company) types.Company {

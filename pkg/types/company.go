@@ -17,6 +17,9 @@ type (
 		// Status of company
 		Status string
 
+		// Name of applications of this company
+		Apps []string
+
 		// Created at timestamp in epoch milliseconds
 		CreatedAt int64
 
