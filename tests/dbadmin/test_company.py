@@ -87,3 +87,24 @@ def test_company_attributes():
 
     # clean up
     company_api.delete_positive(test_company['name'])
+
+
+def test_company_change_status():
+    """
+    Test changing status of company
+    """
+    company_api = Company(config, session)
+    test_company = company_api.create_positive()
+
+    # Company status should be active after creation
+    assert test_company['status'] == 'active'
+
+    # Change status to inactive & active
+    name = test_company['name']
+    company_api.change_status_inactive_positive(name)
+    assert company_api.get_positive(name)['status'] == 'inactive'
+
+    company_api.change_status_active_positive(name)
+    assert company_api.get_positive(name)['status'] == 'active'
+
+    company_api.delete_positive(name)

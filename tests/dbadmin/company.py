@@ -4,8 +4,8 @@ Company module does all REST API operations on company endpoint
 import random
 import urllib
 from common import assert_status_code, assert_content_type_json, \
-                    load_json_schema, assert_valid_schema
-from httpstatus import HTTP_OK, HTTP_NOT_FOUND, HTTP_CREATED, HTTP_BAD_REQUEST
+                    load_json_schema, assert_valid_schema, assert_valid_schema_error
+from httpstatus import HTTP_OK, HTTP_NOT_FOUND, HTTP_CREATED, HTTP_BAD_REQUEST, HTTP_NO_CONTENT
 
 
 class Company:
@@ -136,6 +136,37 @@ class Company:
         assert_valid_schema(updated_company, self.schemas['company'])
 
         return updated_company
+
+
+    def _change_status(self, company_name, status, expect_success):
+        """
+        Update status of developer
+        """
+        headers = self.session.headers
+        headers['content-type'] = 'application/octet-stream'
+        company_url = self.company_url + '/' + urllib.parse.quote(company_name) + '?action=' + status
+        response = self.session.post(company_url, headers=headers)
+
+        if expect_success:
+            assert_status_code(response, HTTP_NO_CONTENT)
+            assert response.content == b''
+        else:
+            assert_status_code(response, HTTP_BAD_REQUEST)
+            assert_valid_schema_error(response.json())
+
+
+    def change_status_active_positive(self, company_name):
+        """
+        Update status of company to active
+        """
+        self._change_status(company_name, 'active', True)
+
+
+    def change_status_inactive_positive(self, company_name):
+        """
+        Update status of company to inactive
+        """
+        self._change_status(company_name, 'inactive', True)
 
 
     def _delete(self, company_name, expected_success):
