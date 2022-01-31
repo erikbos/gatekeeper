@@ -16,6 +16,7 @@ func New(database *db.Database, auditlog *audit.Audit) *Service {
 		Developer:    NewDeveloper(database, auditlog),
 		DeveloperApp: NewDeveloperApp(database, auditlog),
 		Key:          NewKey(database, auditlog),
+		Company:      NewCompany(database, auditlog),
 		APIProduct:   NewAPIProduct(database, auditlog),
 		User:         NewUser(database, auditlog),
 		Role:         NewRole(database, auditlog),
