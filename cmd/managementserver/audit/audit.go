@@ -31,6 +31,7 @@ type (
 	// Details of organization, developer and app this audit change applies to
 	Environment struct {
 		Organization string
+		Company      string
 		DeveloperID  string
 		AppID        string
 	}
@@ -103,6 +104,7 @@ func (al *Audit) log(aType auditType, entityType, entityID string, oldValue, new
 		Role:         who.Role,
 		UserAgent:    who.Header.Get("User-Agent"),
 		Organization: e.Organization,
+		Company:      e.Company,
 		DeveloperID:  e.DeveloperID,
 		AppID:        e.AppID,
 		OldValue:     al.convertInterfaceMapString(clearSensitiveFields(oldValue)),
