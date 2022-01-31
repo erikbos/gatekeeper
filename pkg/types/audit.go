@@ -17,6 +17,7 @@ type (
 		UserAgent string
 
 		Organization string
+		Company      string
 		DeveloperID  string
 		AppID        string
 
