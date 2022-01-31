@@ -54,8 +54,7 @@ func (s *CompanyStore) GetAll(organizationName string) (types.Companies, types.E
 func (s *CompanyStore) Get(organizationName, companyName string) (*types.Company, types.Error) {
 
 	query := "SELECT " + companyColumns + " FROM companies WHERE key = ? LIMIT 1"
-	key := companyPrimaryKey(organizationName, companyName)
-	companies, err := s.runGetCompanyQuery(query, key)
+	companies, err := s.runGetCompanyQuery(query, companyPrimaryKey(organizationName, companyName))
 	if err != nil {
 		s.db.metrics.QueryFailed(companyMetricLabel)
 		return nil, types.NewDatabaseError(err)
@@ -104,9 +103,8 @@ func (s *CompanyStore) runGetCompanyQuery(query string, queryParameters ...inter
 func (s *CompanyStore) Update(organizationName string, c *types.Company) types.Error {
 
 	query := "INSERT INTO companies (" + companyColumns + ") VALUES(?,?,?,?,?,?,?,?,?,?)"
-	key := companyPrimaryKey(organizationName, c.Name)
 	if err := s.db.CassandraSession.Query(query,
-		key,
+		companyPrimaryKey(organizationName, c.Name),
 		c.Name,
 		organizationName,
 		c.DisplayName,
@@ -136,9 +134,8 @@ func (s *CompanyStore) Delete(organizationName, companyToDelete string) types.Er
 	return nil
 }
 
-// companyPrimaryKey generates primary key,
-// based upon combination of organization and companyname to make globally unique key
+// companyPrimaryKey returns unique primary key based upon organization & companyName
 func companyPrimaryKey(organization, companyName string) string {
-
+	// Combine organization and companyname to make globally unique key
 	return fmt.Sprintf("%s@@@%s", organization, companyName)
 }

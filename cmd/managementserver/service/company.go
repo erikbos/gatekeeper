@@ -90,8 +90,12 @@ func (ds *CompanyService) updateCompany(organizationName string,
 	updatedCompany *types.Company, who audit.Requester) types.Error {
 
 	updatedCompany.Attributes.Tidy()
+	// We always set these value, regardless of whether they were provided as part of update
 	updatedCompany.LastModifiedAt = shared.GetCurrentTimeMilliseconds()
 	updatedCompany.LastModifiedBy = who.User
+	if updatedCompany.Status == "" {
+		updatedCompany.Activate()
+	}
 
 	if err := updatedCompany.Validate(); err != nil {
 		return types.NewBadRequestError(err)
