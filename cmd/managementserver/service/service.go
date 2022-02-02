@@ -14,6 +14,7 @@ type Service struct {
 	Developer
 	DeveloperApp
 	Key
+	Company
 	APIProduct
 	User
 	Role
@@ -114,6 +115,18 @@ type (
 		Update(organizationName, developerEmail, developerAppName string, consumerKey string, updateKey types.Key, who audit.Requester) (*types.Key, types.Error)
 
 		Delete(organizationName, developerEmail, developerAppName string, consumerKey string, who audit.Requester) (e types.Error)
+	}
+
+	Company interface {
+		GetAll(organizationName string) (companys types.Companies, err types.Error)
+
+		Get(organizationName, companyName string) (company *types.Company, err types.Error)
+
+		Create(organizationName string, newCompany types.Company, who audit.Requester) (*types.Company, types.Error)
+
+		Update(organizationName string, updatedCompany types.Company, who audit.Requester) (*types.Company, types.Error)
+
+		Delete(organizationName, companyName string, who audit.Requester) (e types.Error)
 	}
 
 	// APIProduct is the service interface to manipulate APIProduct entities

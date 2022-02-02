@@ -1,0 +1,15 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "type": "object",
+    "properties": {
+        "company": {
+            "type": "array",
+            "items": {
+                "$ref": "company.json"
+            }
+        }
+    },
+    "required": [
+        "company"
+    ]
+}

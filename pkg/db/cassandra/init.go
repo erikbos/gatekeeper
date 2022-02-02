@@ -167,6 +167,32 @@ var createTablesCQL = [...]string{
         PRIMARY KEY (name)
         )`,
 
+	`CREATE TABLE IF NOT EXISTS companies (
+        attributes map<text, text>,
+        created_at bigint,
+        created_by text,
+        display_name text,
+        key text,
+        lastmodified_at bigint,
+        lastmodified_by text,
+        name text,
+        organization_name text,
+        status text,
+        PRIMARY KEY (key)
+        )`,
+
+	`CREATE INDEX IF NOT EXISTS ON companies (organization_name)`,
+
+	`CREATE TABLE IF NOT EXISTS company_developers (
+        company_name text,
+        email text,
+        organization_name text,
+        role text,
+        key text PRIMARY KEY,
+        )`,
+
+	`CREATE INDEX IF NOT EXISTS ON company_developers (email)`,
+
 	`CREATE TABLE IF NOT EXISTS developers (
         apps set<text>,
         attributes map<text, text>,

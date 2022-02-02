@@ -219,6 +219,42 @@ type Clusters struct {
 	Clusters *[]Cluster `json:"clusters,omitempty"`
 }
 
+// Details of all companies.
+type Companies struct {
+	Company *[]Company `json:"company,omitempty"`
+}
+
+// Company defines model for Company.
+type Company struct {
+	// List of application names this company has. (retrieve only)
+	Apps       *[]string    `json:"apps,omitempty"`
+	Attributes *[]Attribute `json:"attributes,omitempty"`
+
+	// Create timestamp in milliseconds since epoch.
+	CreatedAt *int64 `json:"createdAt,omitempty"`
+
+	// User who created this developer.
+	CreatedBy *string `json:"createdBy,omitempty"`
+
+	// Display name of company.
+	DisplayName *string `json:"displayName,omitempty"`
+
+	// Last modified timestamp in milliseconds since epoch.
+	LastModifiedAt *int64 `json:"lastModifiedAt,omitempty"`
+
+	// User who last updated this developer.
+	LastModifiedBy *string `json:"lastModifiedBy,omitempty"`
+
+	// Name of company.
+	Name *string `json:"name,omitempty"`
+
+	// Name of organization. (retrieve only)
+	OrganizationName *string `json:"organizationName,omitempty"`
+
+	// Status of company. Can be 'active' or 'inactive'.
+	Status *string `json:"status,omitempty"`
+}
+
 // Developer defines model for Developer.
 type Developer struct {
 	// List of application names this developer has. (retrieve only)
@@ -518,6 +554,9 @@ type AttributeName string
 // ClusterName defines model for cluster_name.
 type ClusterName string
 
+// CompanyName defines model for company_name.
+type CompanyName string
+
 // ConsumerKey defines model for consumer_key.
 type ConsumerKey string
 
@@ -702,6 +741,33 @@ type GetV1OrganizationsOrganizationNameAppsParams struct {
 	Rows *int32 `json:"rows,omitempty"`
 }
 
+// GetV1OrganizationsOrganizationNameCompaniesParams defines parameters for GetV1OrganizationsOrganizationNameCompanies.
+type GetV1OrganizationsOrganizationNameCompaniesParams struct {
+	// Return full companies details.
+	Expand *bool `json:"expand,omitempty"`
+
+	// maximum number of companies to return.
+	Count *int `json:"count,omitempty"`
+}
+
+// PostV1OrganizationsOrganizationNameCompaniesJSONBody defines parameters for PostV1OrganizationsOrganizationNameCompanies.
+type PostV1OrganizationsOrganizationNameCompaniesJSONBody Company
+
+// PostV1OrganizationsOrganizationNameCompaniesCompanyNameJSONBody defines parameters for PostV1OrganizationsOrganizationNameCompaniesCompanyName.
+type PostV1OrganizationsOrganizationNameCompaniesCompanyNameJSONBody Company
+
+// PostV1OrganizationsOrganizationNameCompaniesCompanyNameParams defines parameters for PostV1OrganizationsOrganizationNameCompaniesCompanyName.
+type PostV1OrganizationsOrganizationNameCompaniesCompanyNameParams struct {
+	// Optional, use 'action' or 'inactive' to status change. Requires Content-type to be set to 'application/octet-stream'.
+	Action *Action `json:"action,omitempty"`
+}
+
+// PostV1OrganizationsOrganizationNameCompaniesCompanyNameAttributesJSONBody defines parameters for PostV1OrganizationsOrganizationNameCompaniesCompanyNameAttributes.
+type PostV1OrganizationsOrganizationNameCompaniesCompanyNameAttributesJSONBody Attributes
+
+// PostV1OrganizationsOrganizationNameCompaniesCompanyNameAttributesAttributeNameJSONBody defines parameters for PostV1OrganizationsOrganizationNameCompaniesCompanyNameAttributesAttributeName.
+type PostV1OrganizationsOrganizationNameCompaniesCompanyNameAttributesAttributeNameJSONBody Attribute
+
 // GetV1OrganizationsOrganizationNameDevelopersParams defines parameters for GetV1OrganizationsOrganizationNameDevelopers.
 type GetV1OrganizationsOrganizationNameDevelopersParams struct {
 	// Return full developer details.
@@ -851,6 +917,18 @@ type PostV1OrganizationsOrganizationNameApiproductsApiproductNameAttributesJSONR
 
 // PostV1OrganizationsOrganizationNameApiproductsApiproductNameAttributesAttributeNameJSONRequestBody defines body for PostV1OrganizationsOrganizationNameApiproductsApiproductNameAttributesAttributeName for application/json ContentType.
 type PostV1OrganizationsOrganizationNameApiproductsApiproductNameAttributesAttributeNameJSONRequestBody PostV1OrganizationsOrganizationNameApiproductsApiproductNameAttributesAttributeNameJSONBody
+
+// PostV1OrganizationsOrganizationNameCompaniesJSONRequestBody defines body for PostV1OrganizationsOrganizationNameCompanies for application/json ContentType.
+type PostV1OrganizationsOrganizationNameCompaniesJSONRequestBody PostV1OrganizationsOrganizationNameCompaniesJSONBody
+
+// PostV1OrganizationsOrganizationNameCompaniesCompanyNameJSONRequestBody defines body for PostV1OrganizationsOrganizationNameCompaniesCompanyName for application/json ContentType.
+type PostV1OrganizationsOrganizationNameCompaniesCompanyNameJSONRequestBody PostV1OrganizationsOrganizationNameCompaniesCompanyNameJSONBody
+
+// PostV1OrganizationsOrganizationNameCompaniesCompanyNameAttributesJSONRequestBody defines body for PostV1OrganizationsOrganizationNameCompaniesCompanyNameAttributes for application/json ContentType.
+type PostV1OrganizationsOrganizationNameCompaniesCompanyNameAttributesJSONRequestBody PostV1OrganizationsOrganizationNameCompaniesCompanyNameAttributesJSONBody
+
+// PostV1OrganizationsOrganizationNameCompaniesCompanyNameAttributesAttributeNameJSONRequestBody defines body for PostV1OrganizationsOrganizationNameCompaniesCompanyNameAttributesAttributeName for application/json ContentType.
+type PostV1OrganizationsOrganizationNameCompaniesCompanyNameAttributesAttributeNameJSONRequestBody PostV1OrganizationsOrganizationNameCompaniesCompanyNameAttributesAttributeNameJSONBody
 
 // PostV1OrganizationsOrganizationNameDevelopersJSONRequestBody defines body for PostV1OrganizationsOrganizationNameDevelopers for application/json ContentType.
 type PostV1OrganizationsOrganizationNameDevelopersJSONRequestBody PostV1OrganizationsOrganizationNameDevelopersJSONBody
@@ -1046,6 +1124,36 @@ type ServerInterface interface {
 	// Retrieve application
 	// (GET /v1/organizations/{organization_name}/apps/{app_id})
 	GetV1OrganizationsOrganizationNameAppsAppId(c *gin.Context, organizationName OrganizationName, appId AppId)
+	// Retrieve companies
+	// (GET /v1/organizations/{organization_name}/companies)
+	GetV1OrganizationsOrganizationNameCompanies(c *gin.Context, organizationName OrganizationName, params GetV1OrganizationsOrganizationNameCompaniesParams)
+	// Create company
+	// (POST /v1/organizations/{organization_name}/companies)
+	PostV1OrganizationsOrganizationNameCompanies(c *gin.Context, organizationName OrganizationName)
+	// Delete company
+	// (DELETE /v1/organizations/{organization_name}/companies/{company_name})
+	DeleteV1OrganizationsOrganizationNameCompaniesCompanyName(c *gin.Context, organizationName OrganizationName, companyName CompanyName)
+	// Retrieve company
+	// (GET /v1/organizations/{organization_name}/companies/{company_name})
+	GetV1OrganizationsOrganizationNameCompaniesCompanyName(c *gin.Context, organizationName OrganizationName, companyName CompanyName)
+	// Update company
+	// (POST /v1/organizations/{organization_name}/companies/{company_name})
+	PostV1OrganizationsOrganizationNameCompaniesCompanyName(c *gin.Context, organizationName OrganizationName, companyName CompanyName, params PostV1OrganizationsOrganizationNameCompaniesCompanyNameParams)
+	// Retrieve company attributes
+	// (GET /v1/organizations/{organization_name}/companies/{company_name}/attributes)
+	GetV1OrganizationsOrganizationNameCompaniesCompanyNameAttributes(c *gin.Context, organizationName OrganizationName, companyName CompanyName)
+	// Replace company attributes
+	// (POST /v1/organizations/{organization_name}/companies/{company_name}/attributes)
+	PostV1OrganizationsOrganizationNameCompaniesCompanyNameAttributes(c *gin.Context, organizationName OrganizationName, companyName CompanyName)
+	// Delete company attribute
+	// (DELETE /v1/organizations/{organization_name}/companies/{company_name}/attributes/{attribute_name})
+	DeleteV1OrganizationsOrganizationNameCompaniesCompanyNameAttributesAttributeName(c *gin.Context, organizationName OrganizationName, companyName CompanyName, attributeName AttributeName)
+	// Retrieve company attribute
+	// (GET /v1/organizations/{organization_name}/companies/{company_name}/attributes/{attribute_name})
+	GetV1OrganizationsOrganizationNameCompaniesCompanyNameAttributesAttributeName(c *gin.Context, organizationName OrganizationName, companyName CompanyName, attributeName AttributeName)
+	// Update company attribute
+	// (POST /v1/organizations/{organization_name}/companies/{company_name}/attributes/{attribute_name})
+	PostV1OrganizationsOrganizationNameCompaniesCompanyNameAttributesAttributeName(c *gin.Context, organizationName OrganizationName, companyName CompanyName, attributeName AttributeName)
 	// Retrieve developers
 	// (GET /v1/organizations/{organization_name}/developers)
 	GetV1OrganizationsOrganizationNameDevelopers(c *gin.Context, organizationName OrganizationName, params GetV1OrganizationsOrganizationNameDevelopersParams)
@@ -2558,6 +2666,374 @@ func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameAppsAppId(c
 	}
 
 	siw.Handler.GetV1OrganizationsOrganizationNameAppsAppId(c, organizationName, appId)
+}
+
+// GetV1OrganizationsOrganizationNameCompanies operation middleware
+func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameCompanies(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "organization_name" -------------
+	var organizationName OrganizationName
+
+	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		return
+	}
+
+	c.Set(BasicAuthScopes, []string{""})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetV1OrganizationsOrganizationNameCompaniesParams
+
+	// ------------- Optional query parameter "expand" -------------
+	if paramValue := c.Query("expand"); paramValue != "" {
+
+	}
+
+	err = runtime.BindQueryParameter("form", true, false, "expand", c.Request.URL.Query(), &params.Expand)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter expand: %s", err)})
+		return
+	}
+
+	// ------------- Optional query parameter "count" -------------
+	if paramValue := c.Query("count"); paramValue != "" {
+
+	}
+
+	err = runtime.BindQueryParameter("form", true, false, "count", c.Request.URL.Query(), &params.Count)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter count: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.GetV1OrganizationsOrganizationNameCompanies(c, organizationName, params)
+}
+
+// PostV1OrganizationsOrganizationNameCompanies operation middleware
+func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameCompanies(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "organization_name" -------------
+	var organizationName OrganizationName
+
+	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		return
+	}
+
+	c.Set(BasicAuthScopes, []string{""})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PostV1OrganizationsOrganizationNameCompanies(c, organizationName)
+}
+
+// DeleteV1OrganizationsOrganizationNameCompaniesCompanyName operation middleware
+func (siw *ServerInterfaceWrapper) DeleteV1OrganizationsOrganizationNameCompaniesCompanyName(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "organization_name" -------------
+	var organizationName OrganizationName
+
+	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "company_name" -------------
+	var companyName CompanyName
+
+	err = runtime.BindStyledParameter("simple", false, "company_name", c.Param("company_name"), &companyName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter company_name: %s", err)})
+		return
+	}
+
+	c.Set(BasicAuthScopes, []string{""})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.DeleteV1OrganizationsOrganizationNameCompaniesCompanyName(c, organizationName, companyName)
+}
+
+// GetV1OrganizationsOrganizationNameCompaniesCompanyName operation middleware
+func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameCompaniesCompanyName(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "organization_name" -------------
+	var organizationName OrganizationName
+
+	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "company_name" -------------
+	var companyName CompanyName
+
+	err = runtime.BindStyledParameter("simple", false, "company_name", c.Param("company_name"), &companyName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter company_name: %s", err)})
+		return
+	}
+
+	c.Set(BasicAuthScopes, []string{""})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.GetV1OrganizationsOrganizationNameCompaniesCompanyName(c, organizationName, companyName)
+}
+
+// PostV1OrganizationsOrganizationNameCompaniesCompanyName operation middleware
+func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameCompaniesCompanyName(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "organization_name" -------------
+	var organizationName OrganizationName
+
+	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "company_name" -------------
+	var companyName CompanyName
+
+	err = runtime.BindStyledParameter("simple", false, "company_name", c.Param("company_name"), &companyName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter company_name: %s", err)})
+		return
+	}
+
+	c.Set(BasicAuthScopes, []string{""})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params PostV1OrganizationsOrganizationNameCompaniesCompanyNameParams
+
+	// ------------- Optional query parameter "action" -------------
+	if paramValue := c.Query("action"); paramValue != "" {
+
+	}
+
+	err = runtime.BindQueryParameter("form", true, false, "action", c.Request.URL.Query(), &params.Action)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter action: %s", err)})
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PostV1OrganizationsOrganizationNameCompaniesCompanyName(c, organizationName, companyName, params)
+}
+
+// GetV1OrganizationsOrganizationNameCompaniesCompanyNameAttributes operation middleware
+func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameCompaniesCompanyNameAttributes(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "organization_name" -------------
+	var organizationName OrganizationName
+
+	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "company_name" -------------
+	var companyName CompanyName
+
+	err = runtime.BindStyledParameter("simple", false, "company_name", c.Param("company_name"), &companyName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter company_name: %s", err)})
+		return
+	}
+
+	c.Set(BasicAuthScopes, []string{""})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.GetV1OrganizationsOrganizationNameCompaniesCompanyNameAttributes(c, organizationName, companyName)
+}
+
+// PostV1OrganizationsOrganizationNameCompaniesCompanyNameAttributes operation middleware
+func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameCompaniesCompanyNameAttributes(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "organization_name" -------------
+	var organizationName OrganizationName
+
+	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "company_name" -------------
+	var companyName CompanyName
+
+	err = runtime.BindStyledParameter("simple", false, "company_name", c.Param("company_name"), &companyName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter company_name: %s", err)})
+		return
+	}
+
+	c.Set(BasicAuthScopes, []string{""})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PostV1OrganizationsOrganizationNameCompaniesCompanyNameAttributes(c, organizationName, companyName)
+}
+
+// DeleteV1OrganizationsOrganizationNameCompaniesCompanyNameAttributesAttributeName operation middleware
+func (siw *ServerInterfaceWrapper) DeleteV1OrganizationsOrganizationNameCompaniesCompanyNameAttributesAttributeName(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "organization_name" -------------
+	var organizationName OrganizationName
+
+	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "company_name" -------------
+	var companyName CompanyName
+
+	err = runtime.BindStyledParameter("simple", false, "company_name", c.Param("company_name"), &companyName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter company_name: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "attribute_name" -------------
+	var attributeName AttributeName
+
+	err = runtime.BindStyledParameter("simple", false, "attribute_name", c.Param("attribute_name"), &attributeName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
+		return
+	}
+
+	c.Set(BasicAuthScopes, []string{""})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.DeleteV1OrganizationsOrganizationNameCompaniesCompanyNameAttributesAttributeName(c, organizationName, companyName, attributeName)
+}
+
+// GetV1OrganizationsOrganizationNameCompaniesCompanyNameAttributesAttributeName operation middleware
+func (siw *ServerInterfaceWrapper) GetV1OrganizationsOrganizationNameCompaniesCompanyNameAttributesAttributeName(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "organization_name" -------------
+	var organizationName OrganizationName
+
+	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "company_name" -------------
+	var companyName CompanyName
+
+	err = runtime.BindStyledParameter("simple", false, "company_name", c.Param("company_name"), &companyName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter company_name: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "attribute_name" -------------
+	var attributeName AttributeName
+
+	err = runtime.BindStyledParameter("simple", false, "attribute_name", c.Param("attribute_name"), &attributeName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
+		return
+	}
+
+	c.Set(BasicAuthScopes, []string{""})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.GetV1OrganizationsOrganizationNameCompaniesCompanyNameAttributesAttributeName(c, organizationName, companyName, attributeName)
+}
+
+// PostV1OrganizationsOrganizationNameCompaniesCompanyNameAttributesAttributeName operation middleware
+func (siw *ServerInterfaceWrapper) PostV1OrganizationsOrganizationNameCompaniesCompanyNameAttributesAttributeName(c *gin.Context) {
+
+	var err error
+
+	// ------------- Path parameter "organization_name" -------------
+	var organizationName OrganizationName
+
+	err = runtime.BindStyledParameter("simple", false, "organization_name", c.Param("organization_name"), &organizationName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter organization_name: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "company_name" -------------
+	var companyName CompanyName
+
+	err = runtime.BindStyledParameter("simple", false, "company_name", c.Param("company_name"), &companyName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter company_name: %s", err)})
+		return
+	}
+
+	// ------------- Path parameter "attribute_name" -------------
+	var attributeName AttributeName
+
+	err = runtime.BindStyledParameter("simple", false, "attribute_name", c.Param("attribute_name"), &attributeName)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"msg": fmt.Sprintf("Invalid format for parameter attribute_name: %s", err)})
+		return
+	}
+
+	c.Set(BasicAuthScopes, []string{""})
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+	}
+
+	siw.Handler.PostV1OrganizationsOrganizationNameCompaniesCompanyNameAttributesAttributeName(c, organizationName, companyName, attributeName)
 }
 
 // GetV1OrganizationsOrganizationNameDevelopers operation middleware
@@ -4641,6 +5117,26 @@ func RegisterHandlersWithOptions(router *gin.Engine, si ServerInterface, options
 	router.GET(options.BaseURL+"/v1/organizations/:organization_name/apps", wrapper.GetV1OrganizationsOrganizationNameApps)
 
 	router.GET(options.BaseURL+"/v1/organizations/:organization_name/apps/:app_id", wrapper.GetV1OrganizationsOrganizationNameAppsAppId)
+
+	router.GET(options.BaseURL+"/v1/organizations/:organization_name/companies", wrapper.GetV1OrganizationsOrganizationNameCompanies)
+
+	router.POST(options.BaseURL+"/v1/organizations/:organization_name/companies", wrapper.PostV1OrganizationsOrganizationNameCompanies)
+
+	router.DELETE(options.BaseURL+"/v1/organizations/:organization_name/companies/:company_name", wrapper.DeleteV1OrganizationsOrganizationNameCompaniesCompanyName)
+
+	router.GET(options.BaseURL+"/v1/organizations/:organization_name/companies/:company_name", wrapper.GetV1OrganizationsOrganizationNameCompaniesCompanyName)
+
+	router.POST(options.BaseURL+"/v1/organizations/:organization_name/companies/:company_name", wrapper.PostV1OrganizationsOrganizationNameCompaniesCompanyName)
+
+	router.GET(options.BaseURL+"/v1/organizations/:organization_name/companies/:company_name/attributes", wrapper.GetV1OrganizationsOrganizationNameCompaniesCompanyNameAttributes)
+
+	router.POST(options.BaseURL+"/v1/organizations/:organization_name/companies/:company_name/attributes", wrapper.PostV1OrganizationsOrganizationNameCompaniesCompanyNameAttributes)
+
+	router.DELETE(options.BaseURL+"/v1/organizations/:organization_name/companies/:company_name/attributes/:attribute_name", wrapper.DeleteV1OrganizationsOrganizationNameCompaniesCompanyNameAttributesAttributeName)
+
+	router.GET(options.BaseURL+"/v1/organizations/:organization_name/companies/:company_name/attributes/:attribute_name", wrapper.GetV1OrganizationsOrganizationNameCompaniesCompanyNameAttributesAttributeName)
+
+	router.POST(options.BaseURL+"/v1/organizations/:organization_name/companies/:company_name/attributes/:attribute_name", wrapper.PostV1OrganizationsOrganizationNameCompaniesCompanyNameAttributesAttributeName)
 
 	router.GET(options.BaseURL+"/v1/organizations/:organization_name/developers", wrapper.GetV1OrganizationsOrganizationNameDevelopers)
 

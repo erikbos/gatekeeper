@@ -14,8 +14,9 @@ type (
 		Organization
 		Developer
 		DeveloperApp
-		APIProduct
 		Key
+		Company
+		APIProduct
 		OAuth
 		User
 		Role
@@ -122,22 +123,7 @@ type (
 		DeleteByID(organizationName, developerAppID string) types.Error
 	}
 
-	// APIProduct the apiproduct information storage interface
-	APIProduct interface {
-		// GetAll retrieves all api products
-		GetAll(organizationName string) (types.APIProducts, types.Error)
-
-		// Get returns an apiproduct
-		Get(organizationName, apiproductName string) (*types.APIProduct, types.Error)
-
-		// Update UPSERTs an apiproduct in database
-		Update(organizationName string, p *types.APIProduct) types.Error
-
-		// Delete deletes an apiproduct
-		Delete(organizationName, apiProduct string) types.Error
-	}
-
-	// Key the cluster information storage interface
+	// Key the key information storage interface
 	Key interface {
 		// GetByKey returns details of a single apikey
 		GetByKey(organizationName, key *string) (*types.Key, types.Error)
@@ -153,6 +139,32 @@ type (
 
 		// DeleteByKey deletes key
 		DeleteByKey(organizationName, consumerKey string) types.Error
+	}
+
+	// Company the company information storage interface
+	Company interface {
+		GetAll(organizationName string) (types.Companies, types.Error)
+
+		Get(organizationName, companyName string) (*types.Company, types.Error)
+
+		Update(organizationName string, c *types.Company) types.Error
+
+		Delete(organizationName, company string) types.Error
+	}
+
+	// APIProduct the apiproduct information storage interface
+	APIProduct interface {
+		// GetAll retrieves all api products
+		GetAll(organizationName string) (types.APIProducts, types.Error)
+
+		// Get returns an apiproduct
+		Get(organizationName, apiproductName string) (*types.APIProduct, types.Error)
+
+		// Update UPSERTs an apiproduct in database
+		Update(organizationName string, p *types.APIProduct) types.Error
+
+		// Delete deletes an apiproduct
+		Delete(organizationName, apiProduct string) types.Error
 	}
 
 	// OAuth the oauth information storage interface
