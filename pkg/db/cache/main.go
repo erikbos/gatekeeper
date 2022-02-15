@@ -9,9 +9,9 @@ import (
 
 // Config contains our start configuration
 type Config struct {
-	Size        int `yaml:"size"`
-	TTL         int `yaml:"ttl"`
-	NegativeTTL int `yaml:"negativettl"`
+	Size        int
+	TTL         int
+	NegativeTTL int
 }
 
 // Cache holds our runtime parameters

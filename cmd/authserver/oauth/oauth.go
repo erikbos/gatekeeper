@@ -20,14 +20,14 @@ import (
 
 // Config contains our configuration
 type Config struct {
-	Logger shared.Logger `yaml:"logging"` // log configuration of webadmin accesslog
-	Listen string        `yaml:"listen"`  // OAuth Address and port to listen
+	Logger shared.Logger // log configuration of webadmin accesslog
+	Listen string        // OAuth Address and port to listen
 	TLS    struct {
-		certFile string `yaml:"certfile"` // TLS certifcate file
-		keyFile  string `yaml:"keyfile"`  // TLS certifcate key file
-	} `yaml:"tls"`
-	TokenIssuePath string `yaml:"tokenissuepath"` // Path to request access tokens (e.g. "/oauth2/token")
-	TokenInfoPath  string `yaml:"tokeninfopath"`  // Path to request info about token (e.g. "/oauth2/info")
+		certFile string // TLS certifcate file
+		keyFile  string // TLS certifcate key file
+	}
+	TokenIssuePath string // Path to request access tokens (e.g. "/oauth2/token")
+	TokenInfoPath  string // Path to request info about token (e.g. "/oauth2/info")
 }
 
 // Server is an oauth server instance

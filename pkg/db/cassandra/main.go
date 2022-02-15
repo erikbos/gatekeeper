@@ -13,18 +13,19 @@ import (
 
 // DatabaseConfig holds database connection configuration
 type DatabaseConfig struct {
-	Hostname string `yaml:"hostname"`
-	Port     int    `yaml:"port"`
+	Hostname string
+	Port     int
 	TLS      struct {
-		Enable bool   `yaml:"enable"`
-		Capath string `yaml:"capath"`
-	} `yaml:"tls"`
-	Username        string        `yaml:"username"`
-	Password        string        `yaml:"password"`
-	Keyspace        string        `yaml:"keyspace"`
-	Timeout         time.Duration `yaml:"timeout"`
-	ConnectAttempts int           `yaml:"connectattempts"`
-	QueryRetries    int           `yaml:"queryretries"`
+		Enable bool
+		Capath string
+	}
+	Username        string
+	Password        string
+	Keyspace        string
+	InitKeyspaces   bool
+	Timeout         time.Duration
+	ConnectAttempts int
+	QueryRetries    int
 }
 
 // Database holds all our database connection information and performance counters
@@ -150,6 +151,10 @@ func connect(cluster *gocql.ClusterConfig, config DatabaseConfig,
 
 		var cassandraSession *gocql.Session
 		cassandraSession, err = cluster.CreateSession()
+		if err != nil {
+			logger.Error(fmt.Sprintf("error occurred while connecting to database: %s", err.Error()))
+		}
+
 		if cassandraSession != nil {
 			logger.Info(fmt.Sprintf("Connected to database as %s to %s",
 				config.Username, config.Hostname))

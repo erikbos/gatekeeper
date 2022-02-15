@@ -23,7 +23,7 @@ var (
 )
 
 type server struct {
-	config     *authServerConfig
+	config     *AuthServerConfig
 	webadmin   *webadmin.Webadmin
 	db         *db.Database
 	dbentities *db.EntityCache
@@ -42,7 +42,7 @@ func main() {
 
 	var a server
 	var err error
-	if a.config, err = loadConfiguration(filename); err != nil {
+	if a.config, err = loadConfiguration(*filename); err != nil {
 		log.Fatalf("Cannot parse configuration file: (%s)", err)
 	}
 
@@ -58,7 +58,7 @@ func main() {
 	a.metrics = metrics.New(applicationName)
 	a.metrics.RegisterWithPrometheus()
 
-	database, err := cassandra.New(a.config.Database, applicationName, a.logger, false, 0)
+	database, err := cassandra.New(a.config.Database, applicationName, a.logger, a.config.Database.InitKeyspaces, 1)
 	if err != nil {
 		a.logger.Fatal("Database connect failed", zap.Error(err))
 	}

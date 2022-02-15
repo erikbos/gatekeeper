@@ -3,11 +3,12 @@ package main
 import (
 	"time"
 
-	"gopkg.in/yaml.v2"
-
+	"github.com/erikbos/gatekeeper/pkg/config"
 	"github.com/erikbos/gatekeeper/pkg/db/cassandra"
 	"github.com/erikbos/gatekeeper/pkg/shared"
 	"github.com/erikbos/gatekeeper/pkg/webadmin"
+	"github.com/spf13/viper"
+	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -18,12 +19,12 @@ const (
 	defaultXDSGRPCListen       = "0.0.0.0:9901"
 )
 
-// controlPlaneConfig contains our startup configuration data
-type controlPlaneConfig struct {
-	Logger   shared.Logger            `yaml:"logging"`  // log configuration of application
-	WebAdmin webadmin.Config          `yaml:"webadmin"` // Admin web interface configuration
-	Database cassandra.DatabaseConfig `yaml:"database"` // Database configuration
-	XDS      xdsConfig                `yaml:"xds"`      // Control plane configuration
+// ControlPlaneConfig contains our startup configuration data
+type ControlPlaneConfig struct {
+	Logger   shared.Logger            // log configuration of application
+	WebAdmin webadmin.Config          // Admin web interface configuration
+	Database cassandra.DatabaseConfig // Database configuration
+	XDS      xdsConfig                // Control plane configuration
 }
 
 const (
@@ -31,7 +32,7 @@ const (
 )
 
 // String() return our startup configuration as YAML
-func (config *controlPlaneConfig) String() string {
+func (config *ControlPlaneConfig) String() string {
 
 	// We must remove db password from configuration before showing
 	redactedConfig := config
@@ -44,9 +45,9 @@ func (config *controlPlaneConfig) String() string {
 	return string(configAsYAML)
 }
 
-func loadConfiguration(filename *string) (*controlPlaneConfig, error) {
+func loadConfiguration(filename string) (*ControlPlaneConfig, error) {
 
-	defaultConfig := &controlPlaneConfig{
+	defaultConfig := &ControlPlaneConfig{
 		Logger: shared.Logger{
 			Level:    defaultLogLevel,
 			Filename: defaultLogFileName,
@@ -64,9 +65,19 @@ func loadConfiguration(filename *string) (*controlPlaneConfig, error) {
 		},
 	}
 
-	config, err := shared.LoadYAMLConfiguration(filename, defaultConfig)
+	viper, err := config.Load(filename)
 	if err != nil {
 		return nil, err
 	}
-	return config.(*controlPlaneConfig), nil
+
+	return toControlPlaneConfig(defaultConfig, *viper)
+}
+
+func toControlPlaneConfig(defaultConfig *ControlPlaneConfig, v viper.Viper) (*ControlPlaneConfig, error) {
+	err := v.Unmarshal(&defaultConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	return defaultConfig, nil
 }

@@ -4,10 +4,12 @@ import (
 	"gopkg.in/yaml.v2"
 
 	"github.com/erikbos/gatekeeper/cmd/managementserver/audit"
+	"github.com/erikbos/gatekeeper/pkg/config"
 	"github.com/erikbos/gatekeeper/pkg/db/cache"
 	"github.com/erikbos/gatekeeper/pkg/db/cassandra"
 	"github.com/erikbos/gatekeeper/pkg/shared"
 	"github.com/erikbos/gatekeeper/pkg/webadmin"
+	"github.com/spf13/viper"
 )
 
 const (
@@ -21,17 +23,17 @@ const (
 	defaultCacheNegativeTTL    = 5
 )
 
-// managementServerConfig contains our startup configuration data
-type managementServerConfig struct {
-	Logger   shared.Logger            `yaml:"logging"`  // log configuration of application
-	WebAdmin webadmin.Config          `yaml:"webadmin"` // Admin web interface configuration
-	Audit    audit.Config             `yaml:"audit"`    // Audit configuration
-	Database cassandra.DatabaseConfig `yaml:"database"` // Database configuration
-	Cache    cache.Config             `yaml:"cache"`    // Cache configuration
+// ManagementServerConfig contains our startup configuration data
+type ManagementServerConfig struct {
+	Logger   shared.Logger            // log configuration of application
+	WebAdmin webadmin.Config          // Admin web interface configuration
+	Audit    audit.Config             // Audit configuration
+	Database cassandra.DatabaseConfig // Database configuration
+	Cache    cache.Config             // Cache configuration
 }
 
 // String() return our startup configuration as YAML
-func (config *managementServerConfig) String() string {
+func (config *ManagementServerConfig) String() string {
 
 	// We must remove db password from configuration struct before showing
 	redactedConfig := config
@@ -44,9 +46,9 @@ func (config *managementServerConfig) String() string {
 	return string(configAsYAML)
 }
 
-func loadConfiguration(filename *string) (*managementServerConfig, error) {
+func loadConfiguration(filename string) (*ManagementServerConfig, error) {
 
-	defaultConfig := &managementServerConfig{
+	defaultConfig := &ManagementServerConfig{
 		Logger: shared.Logger{
 			Level:    defaultLogLevel,
 			Filename: defaultLogFileName,
@@ -71,9 +73,19 @@ func loadConfiguration(filename *string) (*managementServerConfig, error) {
 		},
 	}
 
-	config, err := shared.LoadYAMLConfiguration(filename, defaultConfig)
+	viper, err := config.Load(filename)
 	if err != nil {
 		return nil, err
 	}
-	return config.(*managementServerConfig), nil
+
+	return toManagementServerConfig(defaultConfig, *viper)
+}
+
+func toManagementServerConfig(defaultConfig *ManagementServerConfig, v viper.Viper) (*ManagementServerConfig, error) {
+	err := v.Unmarshal(&defaultConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	return defaultConfig, nil
 }

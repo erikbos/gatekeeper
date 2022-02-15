@@ -74,7 +74,7 @@ var createTablesCQL = [...]string{
 	`CREATE INDEX IF NOT EXISTS ON users (roles)`,
 
 	// Default database user 'admin', password 'passwd', role 'admin'
-	`INSERT INTO users (name,password,status,roles,created_by,created_at,lastmodified_at) VALUES('admin','$2a$07$zWlw6WvswAFGZzNpBJg5qelwyg87NM/w4ypXP.NhfpuYmmv.WPyJO','active','["admin"]','initdb',toUnixTimestamp(now()),toUnixTimestamp(now())) IF NOT EXISTS`,
+	`INSERT INTO users (name,password,status,roles,created_by,created_at,lastmodified_at) VALUES('admin','$2a$07$zWlw6WvswAFGZzNpBJg5qelwyg87NM/w4ypXP.NhfpuYmmv.WPyJO','active',{'admin'},'initdb',toUnixTimestamp(now()),toUnixTimestamp(now())) IF NOT EXISTS`,
 
 	`CREATE TABLE IF NOT EXISTS roles (
         name text,
@@ -90,7 +90,7 @@ var createTablesCQL = [...]string{
 	// Default database role 'admin', allowing GET, POST, DELETE on /v1/* path
 	`INSERT INTO roles (name,permissions,created_by,created_at,lastmodified_at) VALUES('admin','[{"methods":["GET","POST","DELETE"],"paths":["/v1/**"]}]','initdb',toUnixTimestamp(now()),toUnixTimestamp(now())) IF NOT EXISTS`,
 
-	`CREATE TABLE audits (
+	`CREATE TABLE IF NOT EXISTS audits (
         audit_id text PRIMARY KEY,
         audit_type text,
         app_id text,
