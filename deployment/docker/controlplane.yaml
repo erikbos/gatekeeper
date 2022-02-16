@@ -1,13 +1,13 @@
 # Envoy control plane daemon settings
 
-logging:
+logger:
   level: info
   filename: controlplane-admin.log
 
 webadmin:
   listen: 0.0.0.0:9902
   ipacl: 0.0.0.0/0
-  logging:
+  logger:
     level: info
     filename: controlplane-access.log
 

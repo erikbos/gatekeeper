@@ -13,6 +13,20 @@ Gatekeeper consists out of three components (next to Envoyproxy):
 3. [Authserver](authserver.md) is authentication server for Envoyproxy
 4. [Accesslogserver](accesslogserver.md) is access logging server for Envoyproxy
 
+## Variables override
+
+Gatekeeper uses Viper to handle YAML configuration.  
+To override any default value in configuration please use variable separated by underscore.  
+
+Default configuration:
+
+```yaml
+logger:
+    level: debug
+```
+Providing an environment variable `LOGGER_LEVEL: info` will override above defaults.
+
+
 ## Management API
 
 Managementserver provides the [Create Read Update Delete](https://en.wikipedia.org/wiki/Create,_read,_update_and_delete) REST-based management API to manage all entities in the system. All entities are defined using JSON.

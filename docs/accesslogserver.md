@@ -31,9 +31,9 @@ Accesslogserver requires a starup configuration which needs to be provided as YA
 
 Accesslogserver writes multiple logfiles, one for each function of accesslogserver. All are written as structured JSON, filename rotation schedule can be set via configuration file. The three logfiles are:
 
-1. `logging.filename` as log for application messages
-2. `webadmin.logging.filename` as access log for all REST API calls
-3. `accesslog.logging.filename` as access log entries received from envoy
+1. `logger.filename` as log for application messages
+2. `webadmin.logger.filename` as access log for all REST API calls
+3. `accesslog.logger.filename` as access log entries received from envoy
 
 ### Accesslogserver configuration file
 
@@ -41,24 +41,24 @@ The supported fields are:
 
 | yaml field                   | purpose                                   | example            |
 | ---------------------------- | ----------------------------------------- | ------------------ |
-| logging.level                | application log level                     | info / debug       |
-| logging.filename             | filename to write application log to      | /dev/stdout        |
-| logging.maxsize              | Maximum size in megabytes before rotate   | 100                |
-| logging.maxage               | Max days to retain old log files          | 7                  |
-| logging.maxbackups           | Maximum number of old log files to retain | 14                 |
+| logger.level                | application log level                     | info / debug       |
+| logger.filename             | filename to write application log to      | /dev/stdout        |
+| logger.maxsize              | Maximum size in megabytes before rotate   | 100                |
+| logger.maxage               | Max days to retain old log files          | 7                  |
+| logger.maxbackups           | Maximum number of old log files to retain | 14                 |
 | webadmin.listen              | Webadmin address and port                 | 0.0.0.0:6002       |
 | webadmin.ipacl               | Webadmin ip acl, without this no access   | 172.16.0.0/19      |
 | webadmin.tls.certfile        | TLS certificate file                      |                    |
 | webadmin.tls.keyfile         | TLS certificate key file                  |                    |
-| webadmin.logging.level       | logging level of webadmin                 | info / debug       |
-| webadmin.logging.filename    | filename to write web access log to       | managementserver-access.log |
-| webadmin.logging.maxsize     | Maximum size in megabytes before rotate   | 100                |
-| webadmin.logging.maxage      | Max days to retain old log files          | 7                  |
-| webadmin.logging.maxbackups  | Maximum number of old log files to retain | 14                 |
+| webadmin.logger.level       | logging level of webadmin                 | info / debug       |
+| webadmin.logger.filename    | filename to write web access log to       | managementserver-access.log |
+| webadmin.logger.maxsize     | Maximum size in megabytes before rotate   | 100                |
+| webadmin.logger.maxage      | Max days to retain old log files          | 7                  |
+| webadmin.logger.maxbackups  | Maximum number of old log files to retain | 14                 |
 | accesslog.listen             | accesslog address and port                | 0.0.0.0:6001       |
 | accesslog.maxstreamduration  | max envoy stream duration                 | 10m                |
-| accesslog.logging.level      | accesslog log level, not used             | info / debug       |
-| accesslog.logging.filename   | filename to write access log to           | /dev/stdout        |
-| accesslog.logging.maxsize    | Maximum size in megabytes before rotate   | 100                |
-| accesslog.logging.maxage     | Max days to retain old log files          | 7                  |
-| accesslog.logging.maxbackups | Maximum number of old log files to retain | 14                 |
+| accesslog.logger.level      | accesslog log level, not used             | info / debug       |
+| accesslog.logger.filename   | filename to write access log to           | /dev/stdout        |
+| accesslog.logger.maxsize    | Maximum size in megabytes before rotate   | 100                |
+| accesslog.logger.maxage     | Max days to retain old log files          | 7                  |
+| accesslog.logger.maxbackups | Maximum number of old log files to retain | 14                 |

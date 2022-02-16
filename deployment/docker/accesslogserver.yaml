@@ -1,13 +1,13 @@
-# accesslogserver access logging daemon settings
+# accesslogserver access logger daemon settings
 
-logging:
+logger:
   level: debug
   filename: /dev/stdout
 
 webadmin:
   listen: 0.0.0.0:6002
   ipacl: 0.0.0.0/0
-  logging:
+  logger:
     level: debug
     filename: /dev/stdout
 #    level: info
@@ -16,6 +16,6 @@ webadmin:
 accesslog:
   listen: 0.0.0.0:6001
   maxstreamduration: 10m
-  logging:
+  logger:
     filename: /dev/stdout
 #    filename: envoyproxy-access.log

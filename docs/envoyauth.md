@@ -115,9 +115,9 @@ Authserver has a built in-memory cache for retrieved entities from Cassandra. Th
 
 Authserver writes multiple logfiles, one for each function of authserver. All are written as structured JSON, filename rotation schedule can be set via configuration file. The three logfiles are:
 
-1. `logging.filename` as log for application messages
-2. `webadmin.logging.filename` as access log for REST API calls
-3. `oauth2.logging.filename` as access log OAuth2 token calls
+1. `logger.filename` as log for application messages
+2. `webadmin.logger.filename` as access log for REST API calls
+3. `oauth2.logger.filename` as access log OAuth2 token calls
 
 ### Authserver configuration file
 
@@ -125,29 +125,29 @@ The supported fields are:
 
 | yaml field                  | purpose                                          | example            |
 | --------------------------- | ------------------------------------------------ | ------------------ |
-| logging.level               | Application log level                            | info / debug       |
-| logging.filename            | Filename to write application log to             | /dev/stdout        |
-| logging.maxsize             | Maximum size in megabytes before rotate          | 100                |
-| logging.maxage              | Max days to retain old log files                 | 7                  |
-| logging.maxbackups          | Maximum number of old log files to retain        | 14                 |
+| logger.level               | Application log level                            | info / debug       |
+| logger.filename            | Filename to write application log to             | /dev/stdout        |
+| logger.maxsize             | Maximum size in megabytes before rotate          | 100                |
+| logger.maxage              | Max days to retain old log files                 | 7                  |
+| logger.maxbackups          | Maximum number of old log files to retain        | 14                 |
 | authserver.listen            | Address and port for authentication requests     | 0.0.0.0:4000       |
 | webadmin.listen             | Webadmin address and port                        | 0.0.0.0:2113       |
 | webadmin.ipacl              | Webadmin ip acl, without this no access          | 172.16.0.0/19      |
 | webadmin.tls.certfile       | TLS certificate file                             |                    |
 | webadmin.tls.keyfile        | TLS certificate key file                         |                    |
-| webadmin.logging.level      | Logging level of webadmin                        | info / debug       |
-| webadmin.logging.filename   | Filename to write web access log to              | managementserver-access.log |
-| webadmin.logging.maxsize    | Maximum size in megabytes before rotate          | 100                |
-| webadmin.logging.maxage     | Max days to retain old log files                 | 7                  |
-| webadmin.logging.maxbackups | Maximum number of old log files to retain        | 14                 |
+| webadmin.logger.level      | logging level of webadmin                        | info / debug       |
+| webadmin.logger.filename   | Filename to write web access log to              | managementserver-access.log |
+| webadmin.logger.maxsize    | Maximum size in megabytes before rotate          | 100                |
+| webadmin.logger.maxage     | Max days to retain old log files                 | 7                  |
+| webadmin.logger.maxbackups | Maximum number of old log files to retain        | 14                 |
 | oauth.listen                | Listen address and port for OAuth token requests | 0.0.0.0:4001       |
 | oauth.tls.certfile          | TLS certificate file                             |                    |
 | oauth.tls.keyfile           | TLS certificate key file                         |                    |
-| oauth.logging.level         | Logging level of oauth endpoint                  | info / debug       |
-| oauth.logging.filename      | Filename to write oauth token access log to      | managementserver-access.log |
-| oauth.logging.maxsize       | Maximum size in megabytes before rotate          | 100                |
-| oauth.logging.maxage        | Max days to retain old log files                 | 7                  |
-| oauth.logging.maxbackups    | Maximum number of old log files to retain        | 14                 |
+| oauth.logger.level         | logging level of oauth endpoint                  | info / debug       |
+| oauth.logger.filename      | Filename to write oauth token access log to      | managementserver-access.log |
+| oauth.logger.maxsize       | Maximum size in megabytes before rotate          | 100                |
+| oauth.logger.maxage        | Max days to retain old log files                 | 7                  |
+| oauth.logger.maxbackups    | Maximum number of old log files to retain        | 14                 |
 | oauth.tokenissuepath        | Path for OAuth2 token issue requests             | /oauth2/token      |
 | oauth.tokeninfopath         | Path for OAuth2 token info requests              | /oauth2/info       |
 | database.hostname           | Cassandra hostname to connect to                 | cassandra          |
