@@ -32,8 +32,8 @@ Controlplane requires a starup configuration which needs to be provided as YAML 
 
 Controlplane writes multiple logfiles, one for each function of controlplane. All are written as structured JSON, filename rotation schedule can be set via configuration file. The two logfiles are:
 
-1. `logging.filename` as log for application messages
-2. `webadmin.logging.filename` as access log for all REST API calls
+1. `logger.filename` as log for application messages
+2. `webadmin.logger.filename` as access log for all REST API calls
 
 ### Controlplane configuration file
 
@@ -41,20 +41,20 @@ The supported fields are:
 
 | yaml field                  | purpose                                              | example            |
 | --------------------------- | ---------------------------------------------------- | ------------------ |
-| logging.level               | application log level                                | info / debug       |
-| logging.filename            | filename to write application log to                 | /dev/stdout        |
-| logging.maxsize             | Maximum size in megabytes before rotate              | 100                |
-| logging.maxage              | Max days to retain old log files                     | 7                  |
-| logging.maxbackups          | Maximum number of old log files to retain            | 14                 |
+| logger.level               | application log level                                | info / debug       |
+| logger.filename            | filename to write application log to                 | /dev/stdout        |
+| logger.maxsize             | Maximum size in megabytes before rotate              | 100                |
+| logger.maxage              | Max days to retain old log files                     | 7                  |
+| logger.maxbackups          | Maximum number of old log files to retain            | 14                 |
 | webadmin.listen             | Webadmin address and port                            | 0.0.0.0:2113       |
 | webadmin.ipacl              | Webadmin ip acl, without this no access              | 172.16.0.0/19      |
 | webadmin.tls.certfile       | TLS certificate file                                 |                    |
 | webadmin.tls.keyfile        | TLS certificate key file                             |                    |
-| webadmin.logging.level      | logging level of webadmin                            | info / debug       |
-| webadmin.logging.filename   | filename to write web access log to                  | managementserver-access.log |
-| webadmin.logging.maxsize    | Maximum size in megabytes before rotate              | 100                |
-| webadmin.logging.maxage     | Max days to retain old log files                     | 7                  |
-| webadmin.logging.maxbackups | Maximum number of old log files to retain            | 14                 |
+| webadmin.logger.level      | logging level of webadmin                            | info / debug       |
+| webadmin.logger.filename   | filename to write web access log to                  | managementserver-access.log |
+| webadmin.logger.maxsize    | Maximum size in megabytes before rotate              | 100                |
+| webadmin.logger.maxage     | Max days to retain old log files                     | 7                  |
+| webadmin.logger.maxbackups | Maximum number of old log files to retain            | 14                 |
 | database.hostname           | Cassandra hostname to connect to                     | cassandra          |
 | database.port               | Cassandra port to connect on                         | 9042 / 10350       |
 | database.tls                | Enable TLS for database session                      | true / false       |

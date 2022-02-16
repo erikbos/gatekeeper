@@ -19,13 +19,13 @@ import (
 
 // Config holds the configuration of a webadmin
 type Config struct {
-	Logger shared.Logger `yaml:"logging"` // log configuration of webadmin accesslog
-	Listen string        `yaml:"listen"`  // Address and port to listen
-	IPACL  string        `yaml:"ipacl"`   // ip accesslist (e.g. "10.0.0.0/8,192.168.0.0/16")
+	Logger shared.Logger // log configuration of webadmin accesslog
+	Listen string        // Address and port to listen
+	IPACL  string        // ip accesslist (e.g. "10.0.0.0/8,192.168.0.0/16")
 	TLS    struct {
-		CertFile string `yaml:"certfile"` // TLS certifcate file
-		KeyFile  string `yaml:"keyfile"`  // TLS certifcate key file
-	} `yaml:"tls"`
+		CertFile string // TLS certifcate file
+		KeyFile  string // TLS certifcate key file
+	}
 }
 
 // Webadmin is an instance of our admin interface that provides operational information

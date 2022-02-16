@@ -1,6 +1,6 @@
 # Authserver authentication daemon settings
 #
-logging:
+logger:
   level: info
   filename: authserver-admin.log
 
@@ -8,7 +8,7 @@ logging:
 webadmin:
   listen: 0.0.0.0:2113
   ipacl: 0.0.0.0/0
-  logging:
+  logger:
     level: info
     filename: authserver-access.log
 
@@ -21,7 +21,7 @@ oauth:
   listen: 0.0.0.0:4001
   tokenissuepath: /oauth2/token
   tokeninfopath: /oauth2/info
-  logging:
+  logger:
     level: info
     filename: authserver-oauth.log
 

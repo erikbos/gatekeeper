@@ -34,9 +34,9 @@ type AccessLogServer struct {
 
 // AccessLogServerConfig holds our configuration
 type AccessLogServerConfig struct {
-	Listen            string        `yaml:"listen"`            // Access log server listen port grpc
-	Logger            shared.Logger `yaml:"logging"`           // changelog log configuration
-	MaxStreamDuration time.Duration `yaml:"maxstreamduration"` // Max duration of access log session
+	Listen            string        // Access log server listen port grpc
+	Logger            shared.Logger // changelog log configuration
+	MaxStreamDuration time.Duration // Max duration of access log session
 }
 
 // NewAccessLogServer returns a new AccessLogServer instance

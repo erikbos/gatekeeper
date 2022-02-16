@@ -8,7 +8,7 @@ import (
 
 // Geoip hold our configuration
 type Geoip struct {
-	Database string `yaml:"database"`
+	Database string
 	mdb      *maxminddb.Reader
 }
 

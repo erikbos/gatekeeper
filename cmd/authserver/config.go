@@ -1,14 +1,15 @@
 package main
 
 import (
-	"gopkg.in/yaml.v2"
-
 	"github.com/erikbos/gatekeeper/cmd/authserver/oauth"
 	"github.com/erikbos/gatekeeper/cmd/authserver/policy"
+	"github.com/erikbos/gatekeeper/pkg/config"
 	"github.com/erikbos/gatekeeper/pkg/db/cache"
 	"github.com/erikbos/gatekeeper/pkg/db/cassandra"
 	"github.com/erikbos/gatekeeper/pkg/shared"
 	"github.com/erikbos/gatekeeper/pkg/webadmin"
+	"github.com/spf13/viper"
+	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -23,20 +24,19 @@ const (
 	defaultCacheNegativeTTL    = 5
 )
 
-// authServerConfig contains our startup configuration data
-type authServerConfig struct {
-	Logger    shared.Logger            `yaml:"logging"`    // log configuration of application
-	WebAdmin  webadmin.Config          `yaml:"webadmin"`   // Admin web interface configuration
-	EnvoyAuth envoyAuthConfig          `yaml:"authserver"` // Authserver configuration
-	OAuth     oauth.Config             `yaml:"oauth"`      // OAuth configuration
-	Database  cassandra.DatabaseConfig `yaml:"database"`   // Database configuration
-	Cache     cache.Config             `yaml:"cache"`      // Cache configuration
-	Geoip     policy.Geoip             `yaml:"geoip"`      // Geoip lookup configuration
+// AuthServerConfig contains our startup configuration data
+type AuthServerConfig struct {
+	Logger    shared.Logger            // log configuration of application
+	WebAdmin  webadmin.Config          // Admin web interface configuration
+	EnvoyAuth envoyAuthConfig          // Authserver configuration
+	OAuth     oauth.Config             // OAuth configuration
+	Database  cassandra.DatabaseConfig // Database configuration
+	Cache     cache.Config             // Cache configuration
+	Geoip     policy.Geoip             // Geoip lookup configuration
 }
 
-func loadConfiguration(filename *string) (*authServerConfig, error) {
-
-	defaultConfig := &authServerConfig{
+func loadConfiguration(filename string) (*AuthServerConfig, error) {
+	defaultConfig := &AuthServerConfig{
 		Logger: shared.Logger{
 			Level:    defaultLogLevel,
 			Filename: defaultLogFileName,
@@ -61,16 +61,25 @@ func loadConfiguration(filename *string) (*authServerConfig, error) {
 		},
 	}
 
-	config, err := shared.LoadYAMLConfiguration(filename, defaultConfig)
+	viper, err := config.Load(filename)
 	if err != nil {
 		return nil, err
 	}
-	return config.(*authServerConfig), nil
+
+	return toAuthServerConfig(defaultConfig, *viper)
+}
+
+func toAuthServerConfig(defaultConfig *AuthServerConfig, v viper.Viper) (*AuthServerConfig, error) {
+	err := v.Unmarshal(&defaultConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	return defaultConfig, nil
 }
 
 // String() return our startup configuration as YAML
-func (config *authServerConfig) String() string {
-
+func (config *AuthServerConfig) String() string {
 	// We must remove db password from configuration struct before showing
 	redactedConfig := config
 	redactedConfig.Database.Password = "[redacted]"

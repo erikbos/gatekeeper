@@ -31,7 +31,7 @@ func main() {
 
 	var s server
 	var err error
-	if s.config, err = loadConfiguration(filename); err != nil {
+	if s.config, err = loadConfiguration(*filename); err != nil {
 		log.Fatalf("Cannot parse configuration file: (%s)", err)
 	}
 

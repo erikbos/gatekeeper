@@ -30,7 +30,7 @@ import (
 type envoyAuthConfig struct {
 
 	// GRPC Address and port to listen for extauthz requests
-	Listen string `yaml:"listen"`
+	Listen string
 }
 
 // startGRPCAuthorizationServer starts extauthz grpc listener

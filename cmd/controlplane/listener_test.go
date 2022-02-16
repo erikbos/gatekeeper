@@ -370,7 +370,7 @@ func Test_buildRouteSpecifierRDS(t *testing.T) {
 			name:       "RouteSpecificer RDS 1",
 			routeGroup: "routes_747",
 			s: server{
-				config: &controlPlaneConfig{
+				config: &ControlPlaneConfig{
 					XDS: xdsConfig{
 						Cluster: "rds_cluster",
 						Timeout: 12 * time.Second,
@@ -389,7 +389,7 @@ func Test_buildRouteSpecifierRDS(t *testing.T) {
 			name:       "RouteSpecificer RDS 2 (no cluster)",
 			routeGroup: "routes_747",
 			s: server{
-				config: &controlPlaneConfig{
+				config: &ControlPlaneConfig{
 					XDS: xdsConfig{
 						Cluster: "",
 						Timeout: 12 * time.Second,
@@ -402,7 +402,7 @@ func Test_buildRouteSpecifierRDS(t *testing.T) {
 			name:       "RouteSpecificer RDS 3 (no route group)",
 			routeGroup: "",
 			s: server{
-				config: &controlPlaneConfig{
+				config: &ControlPlaneConfig{
 					XDS: xdsConfig{
 						Cluster: "rds_source",
 						Timeout: 12 * time.Second,
