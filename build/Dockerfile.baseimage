@@ -1,8 +1,6 @@
 FROM golang:latest as build-env
 RUN mkdir /build
-ADD . /build/
+
 WORKDIR /build
-
-# Pull in all go modules we need
-RUN go get ./...
-
+COPY go.mod go.sum ./
+RUN go mod download
