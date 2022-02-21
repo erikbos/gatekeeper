@@ -59,7 +59,7 @@ func (s *APIProductStore) GetAll(organizationName string) (types.APIProducts, ty
 // Get returns an apiproduct
 func (s *APIProductStore) Get(organizationName, apiproductName string) (*types.APIProduct, types.Error) {
 
-	query := s.db.conditionalFiltering("SELECT " + apiProductsColumns + " FROM api_products WHERE name = ? LIMIT 1")
+	query := "SELECT " + apiProductsColumns + " FROM api_products WHERE name = ? LIMIT 1 ALLOW FILTERING"
 
 	apiproducts, err := s.runGetAPIProductQuery(query, apiproductName)
 	if err != nil {
