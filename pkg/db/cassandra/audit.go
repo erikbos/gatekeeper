@@ -46,35 +46,35 @@ func NewAuditStore(database *Database) *AuditStore {
 // GetOrganization retrieves audit records of an organization
 func (s *AuditStore) GetOrganization(organizationName string, params db.AuditFilterParams) (types.Audits, types.Error) {
 
-	query := "SELECT " + auditColumns + " FROM audits WHERE organization = ? AND timestamp >= ? AND timestamp <= ? LIMIT ?"
+	query := s.db.conditionalFiltering("SELECT " + auditColumns + " FROM audits WHERE organization = ? AND timestamp >= ? AND timestamp <= ? LIMIT ?")
 	return s.runGetAuditQuery(query, organizationName, params.StartTime, params.EndTime, params.Count)
 }
 
 // GetAPIProduct retrieves audit records of an apiproduct
 func (s *AuditStore) GetAPIProduct(organizationName, apiproductName string, params db.AuditFilterParams) (types.Audits, types.Error) {
 
-	query := "SELECT " + auditColumns + " FROM audits WHERE organization = ? AND entity_type = ? AND entity_id = ? AND timestamp >= ? AND timestamp <= ? LIMIT ?"
+	query := s.db.conditionalFiltering("SELECT " + auditColumns + " FROM audits WHERE organization = ? AND entity_type = ? AND entity_id = ? AND timestamp >= ? AND timestamp <= ? LIMIT ?")
 	return s.runGetAuditQuery(query, organizationName, types.TypeAPIProductName, apiproductName, params.StartTime, params.EndTime, params.Count)
 }
 
 // GetDeveloper retrieves audit records of a developer
 func (s *AuditStore) GetDeveloper(organizationName, developerID string, params db.AuditFilterParams) (types.Audits, types.Error) {
 
-	query := "SELECT " + auditColumns + " FROM audits WHERE organization = ? AND developer_id = ? AND timestamp >= ? AND timestamp <= ? LIMIT ?"
+	query := s.db.conditionalFiltering("SELECT " + auditColumns + " FROM audits WHERE organization = ? AND developer_id = ? AND timestamp >= ? AND timestamp <= ? LIMIT ?")
 	return s.runGetAuditQuery(query, organizationName, developerID, params.StartTime, params.EndTime, params.Count)
 }
 
 // GetApplication retrieves audit records of an application
 func (s *AuditStore) GetApplication(organizationName, developerID, appID string, params db.AuditFilterParams) (types.Audits, types.Error) {
 
-	query := "SELECT " + auditColumns + " FROM audits WHERE organization = ? AND developer_id = ? AND app_id = ? AND timestamp >= ? AND timestamp <= ? LIMIT ?"
+	query := s.db.conditionalFiltering("SELECT " + auditColumns + " FROM audits WHERE organization = ? AND developer_id = ? AND app_id = ? AND timestamp >= ? AND timestamp <= ? LIMIT ?")
 	return s.runGetAuditQuery(query, organizationName, developerID, appID, params.StartTime, params.EndTime, params.Count)
 }
 
 // GetUser retrieves audit records of a user
 func (s *AuditStore) GetUser(userName string, params db.AuditFilterParams) (types.Audits, types.Error) {
 
-	query := "SELECT " + auditColumns + " FROM audits WHERE user = ? AND timestamp >= ? AND timestamp <= ? LIMIT ?"
+	query := s.db.conditionalFiltering("SELECT " + auditColumns + " FROM audits WHERE user = ? AND timestamp >= ? AND timestamp <= ? LIMIT ?")
 	return s.runGetAuditQuery(query, userName, params.StartTime, params.EndTime, params.Count)
 }
 

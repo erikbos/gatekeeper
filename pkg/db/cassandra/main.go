@@ -26,11 +26,13 @@ type DatabaseConfig struct {
 	Timeout         time.Duration
 	ConnectAttempts int
 	QueryRetries    int
+	CassandraType   string
 }
 
 // Database holds all our database connection information and performance counters
 type Database struct {
 	CassandraSession *gocql.Session
+	cassandraType    string
 	metrics          metricsCollection
 }
 
@@ -75,6 +77,7 @@ func New(config DatabaseConfig, serviceName string, logger *zap.Logger,
 	dbConfig := Database{
 		CassandraSession: cassandraSession,
 		metrics:          metricsCollection{},
+		cassandraType:    config.CassandraType,
 	}
 
 	dbConfig.metrics.register(serviceName, config.Hostname)
@@ -95,6 +98,15 @@ func New(config DatabaseConfig, serviceName string, logger *zap.Logger,
 		Audit:        NewAuditStore(&dbConfig),
 	}
 	return &database, nil
+}
+
+// conditionalFiltering if used Open Source Cassandra we must use allow filtering to query non-primary keys
+func (db *Database) conditionalFiltering(query string) string {
+	if db.cassandraType == "oss" {
+		return fmt.Sprintf("%s ALLOW FILTERING", query)
+	}
+
+	return query
 }
 
 func buildClusterConfig(config DatabaseConfig) *gocql.ClusterConfig {
