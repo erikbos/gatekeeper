@@ -181,6 +181,7 @@ var createTablesCQL = [...]string{
         PRIMARY KEY (key)
         )`,
 
+	`CREATE INDEX IF NOT EXISTS ON companies (name)`,
 	`CREATE INDEX IF NOT EXISTS ON companies (organization_name)`,
 
 	`CREATE TABLE IF NOT EXISTS company_developers (
@@ -284,11 +285,16 @@ var createTablesCQL = [...]string{
         created_by text,
         description text,
         display_name text,
+        key text,
         lastmodified_at bigint,
         lastmodified_by text,
+        organization_name text,
         name text,
         policies text,
         route_group text,
-        PRIMARY KEY (name)
+        PRIMARY KEY (key)
 	)`,
+
+	`CREATE INDEX IF NOT EXISTS ON api_products (name)`,
+	`CREATE INDEX IF NOT EXISTS ON api_products (organization_name)`,
 }
