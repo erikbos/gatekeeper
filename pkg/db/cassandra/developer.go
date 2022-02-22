@@ -78,7 +78,7 @@ func (s *DeveloperStore) GetByEmail(organizationName, developerEmail string) (*t
 func (s *DeveloperStore) GetByID(organizationName, developerID string) (*types.Developer, types.Error) {
 
 	query := "SELECT " + developerColumns + " FROM developers WHERE key = ? LIMIT 1"
-	developers, err := s.runGetDeveloperQuery(query, developerPrimaryKey(organizationName, developerID))
+	developers, err := s.runGetDeveloperQuery(query, s.developerPrimaryKey(organizationName, developerID))
 	if err != nil {
 		s.db.metrics.QueryFailed(developerMetricLabel)
 		return nil, types.NewDatabaseError(err)
@@ -134,7 +134,7 @@ func (s *DeveloperStore) Update(organizationName string, d *types.Developer) typ
 
 	query := "INSERT INTO developers (" + developerColumns + ") VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
 	if err := s.db.CassandraSession.Query(query,
-		developerPrimaryKey(organizationName, d.DeveloperID),
+		s.developerPrimaryKey(organizationName, d.DeveloperID),
 		d.DeveloperID,
 		d.Apps,
 		attributesToColumn(d.Attributes),
@@ -161,7 +161,7 @@ func (s *DeveloperStore) DeleteByID(organizationName, developerID string) types.
 
 	query := "DELETE FROM developers WHERE key = ?"
 	if err := s.db.CassandraSession.Query(query,
-		developerPrimaryKey(organizationName, developerID)).Exec(); err != nil {
+		s.developerPrimaryKey(organizationName, developerID)).Exec(); err != nil {
 		s.db.metrics.QueryFailed(developerMetricLabel)
 		return types.NewDatabaseError(err)
 	}
@@ -170,7 +170,7 @@ func (s *DeveloperStore) DeleteByID(organizationName, developerID string) types.
 
 // developerPrimaryKey generates primary key
 // we combine org & developerId to make developerIds unique per organization
-func developerPrimaryKey(organization, developerID string) string {
+func (s *DeveloperStore) developerPrimaryKey(organization, developerID string) string {
 
 	return fmt.Sprintf("%s@@@%s", organization, developerID)
 }

@@ -19,9 +19,11 @@ created_at,
 created_by,
 description,
 display_name,
+key,
 lastmodified_at,
 lastmodified_by,
 name,
+organization_name,
 route_group,
 policies`
 
@@ -44,9 +46,8 @@ func NewAPIProductStore(database *Database) *APIProductStore {
 // GetAll retrieves all api products
 func (s *APIProductStore) GetAll(organizationName string) (types.APIProducts, types.Error) {
 
-	query := "SELECT " + apiProductsColumns + " FROM api_products"
-
-	apiproducts, err := s.runGetAPIProductQuery(query)
+	query := "SELECT " + apiProductsColumns + " FROM api_products WHERE organization_name = ?"
+	apiproducts, err := s.runGetAPIProductQuery(query, organizationName)
 	if err != nil {
 		s.db.metrics.QueryFailed(apiProductsMetricLabel)
 		return types.NullAPIProducts, types.NewDatabaseError(err)
@@ -59,9 +60,8 @@ func (s *APIProductStore) GetAll(organizationName string) (types.APIProducts, ty
 // Get returns an apiproduct
 func (s *APIProductStore) Get(organizationName, apiproductName string) (*types.APIProduct, types.Error) {
 
-	query := "SELECT " + apiProductsColumns + " FROM api_products WHERE name = ? LIMIT 1 ALLOW FILTERING"
-
-	apiproducts, err := s.runGetAPIProductQuery(query, apiproductName)
+	query := "SELECT " + apiProductsColumns + " FROM api_products WHERE key = ? LIMIT 1"
+	apiproducts, err := s.runGetAPIProductQuery(query, s.generatePrimaryKey(organizationName, apiproductName))
 	if err != nil {
 		s.db.metrics.QueryFailed(apiProductsMetricLabel)
 		return nil, types.NewDatabaseError(err)
@@ -124,7 +124,7 @@ func (s *APIProductStore) runGetAPIProductQuery(query string, queryParameters ..
 // Update UPSERTs an apiproduct in database
 func (s *APIProductStore) Update(organizationName string, p *types.APIProduct) types.Error {
 
-	query := "INSERT INTO api_products (" + apiProductsColumns + ") VALUES(?,?,?,?,?,?,?,?,?,?,?,?)"
+	query := "INSERT INTO api_products (" + apiProductsColumns + ") VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
 	if err := s.db.CassandraSession.Query(query,
 		p.ApprovalType,
 		p.APIResources,
@@ -133,15 +133,17 @@ func (s *APIProductStore) Update(organizationName string, p *types.APIProduct) t
 		p.CreatedBy,
 		p.Description,
 		p.DisplayName,
+		s.generatePrimaryKey(organizationName, p.Name),
 		p.LastModifiedAt,
 		p.LastModifiedBy,
 		p.Name,
+		organizationName,
 		p.Policies,
 		p.RouteGroup).Exec(); err != nil {
 
 		s.db.metrics.QueryFailed(apiProductsMetricLabel)
 		return types.NewDatabaseError(
-			fmt.Errorf("cannot update apiproduct '%s'", p.Name))
+			fmt.Errorf("cannot update apiproduct '%s' (%s)", p.Name, err))
 	}
 	return nil
 }
@@ -149,18 +151,19 @@ func (s *APIProductStore) Update(organizationName string, p *types.APIProduct) t
 // Delete deletes an apiproduct
 func (s *APIProductStore) Delete(organizationName, apiProduct string) types.Error {
 
-	// apiproduct, err := s.Get(apiProduct)
-	// if err != nil {
-	// 	s.db.metrics.QueryFailed(apiProductsMetricLabel)
-	// 	return err
-	// }
-
-	query := "DELETE FROM api_products WHERE name = ?"
-	if err := s.db.CassandraSession.Query(query, apiProduct).Exec(); err != nil {
+	query := "DELETE FROM api_products WHERE key = ?"
+	key := s.generatePrimaryKey(organizationName, apiProduct)
+	if err := s.db.CassandraSession.Query(query, key).Exec(); err != nil {
 		s.db.metrics.QueryFailed(apiProductsMetricLabel)
 		return types.NewDatabaseError(err)
 	}
 	return nil
+}
+
+// generatePrimaryKey returns unique primary key based upon organization & apiproduct
+func (s *APIProductStore) generatePrimaryKey(organization, apiProduct string) string {
+	// Combine organization and apiproduct to make globally unique key
+	return fmt.Sprintf("%s@@@%s", organization, apiProduct)
 }
 
 // Unmarshal unpacks a key's product statuses
