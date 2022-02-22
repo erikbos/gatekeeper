@@ -87,8 +87,8 @@ var createTablesCQL = [...]string{
         PRIMARY KEY (name)
         )`,
 
-	// Default database role 'admin', allowing GET, POST, DELETE on /v1/* path
-	`INSERT INTO roles (name,permissions,created_by,created_at,lastmodified_at) VALUES('admin','[{"methods":["GET","POST","DELETE"],"paths":["/v1/**"]}]','initdb',toUnixTimestamp(now()),toUnixTimestamp(now())) IF NOT EXISTS`,
+	// Default database role 'admin', allowing GET, POST, PUT, DELETE on /v1/** path
+	`INSERT INTO roles (name,permissions,created_by,created_at,lastmodified_at) VALUES('admin','[{"methods":["GET","POST","DELETE", "PUT"],"paths":["/v1/**"]}]','initdb',toUnixTimestamp(now()),toUnixTimestamp(now())) IF NOT EXISTS`,
 
 	`CREATE TABLE IF NOT EXISTS audits (
         audit_id text PRIMARY KEY,
@@ -231,6 +231,7 @@ var createTablesCQL = [...]string{
         name text,
         status text,
         scopes set<text>,
+        callback_url text,
         PRIMARY KEY (app_id)
 	)`,
 

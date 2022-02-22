@@ -39,7 +39,7 @@ func main() {
 	filename := flag.String("config", "managementserver-config.yaml", "Configuration filename")
 	disableAPIAuthentication := flag.Bool("disableapiauthentication", false, "Disable REST API authentication")
 	createSchema := flag.Bool("createschema", false, "Create database schema if it does not exist")
-	replicaCount := flag.Int("replicacount", 3, "Replica count to set for database keyspace")
+	replicaCount := flag.Int("replicacount", 1, "Replica count to set for database keyspace")
 	showCreateSchema := flag.Bool("showcreateschema", false, "Show CQL statements to create database")
 	flag.Parse()
 

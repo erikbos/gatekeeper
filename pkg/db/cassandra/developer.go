@@ -43,7 +43,7 @@ func NewDeveloperStore(database *Database) *DeveloperStore {
 // GetAll retrieves all developer
 func (s *DeveloperStore) GetAll(organizationName string) (types.Developers, types.Error) {
 
-	query := "SELECT " + developerColumns + " FROM developers WHERE organization_name = ?"
+	query := "SELECT " + developerColumns + " FROM developers WHERE organization_name = ? ALLOW FILTERING"
 	developers, err := s.runGetDeveloperQuery(query, organizationName)
 	if err != nil {
 		s.db.metrics.QueryNotFound(developerMetricLabel)
@@ -57,7 +57,7 @@ func (s *DeveloperStore) GetAll(organizationName string) (types.Developers, type
 // GetByEmail retrieves a developer from database
 func (s *DeveloperStore) GetByEmail(organizationName, developerEmail string) (*types.Developer, types.Error) {
 
-	query := "SELECT " + developerColumns + " FROM developers WHERE organization_name = ? AND email = ? LIMIT 1"
+	query := "SELECT " + developerColumns + " FROM developers WHERE organization_name = ? AND email = ? LIMIT 1 ALLOW FILTERING"
 	developers, err := s.runGetDeveloperQuery(query, organizationName, developerEmail)
 	if err != nil {
 		s.db.metrics.QueryFailed(developerMetricLabel)

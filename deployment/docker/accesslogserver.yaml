@@ -10,12 +10,9 @@ webadmin:
   logger:
     level: debug
     filename: /dev/stdout
-#    level: info
-#    filename: accesslogserver-access.log
 
 accesslog:
   listen: 0.0.0.0:6001
   maxstreamduration: 10m
   logger:
     filename: /dev/stdout
-#    filename: envoyproxy-access.log
