@@ -54,7 +54,7 @@ func (s *CompanyStore) GetAll(organizationName string) (types.Companies, types.E
 func (s *CompanyStore) Get(organizationName, companyName string) (*types.Company, types.Error) {
 
 	query := "SELECT " + companyColumns + " FROM companies WHERE key = ? LIMIT 1"
-	companies, err := s.runGetCompanyQuery(query, companyPrimaryKey(organizationName, companyName))
+	companies, err := s.runGetCompanyQuery(query, s.generatePrimaryKey(organizationName, companyName))
 	if err != nil {
 		s.db.metrics.QueryFailed(companyMetricLabel)
 		return nil, types.NewDatabaseError(err)
@@ -104,7 +104,7 @@ func (s *CompanyStore) Update(organizationName string, c *types.Company) types.E
 
 	query := "INSERT INTO companies (" + companyColumns + ") VALUES(?,?,?,?,?,?,?,?,?,?)"
 	if err := s.db.CassandraSession.Query(query,
-		companyPrimaryKey(organizationName, c.Name),
+		s.generatePrimaryKey(organizationName, c.Name),
 		c.Name,
 		organizationName,
 		c.DisplayName,
@@ -126,7 +126,7 @@ func (s *CompanyStore) Update(organizationName string, c *types.Company) types.E
 func (s *CompanyStore) Delete(organizationName, companyToDelete string) types.Error {
 
 	query := "DELETE FROM companies WHERE key = ?"
-	key := companyPrimaryKey(organizationName, companyToDelete)
+	key := s.generatePrimaryKey(organizationName, companyToDelete)
 	if err := s.db.CassandraSession.Query(query, key).Exec(); err != nil {
 		s.db.metrics.QueryFailed(companyMetricLabel)
 		return types.NewDatabaseError(err)
@@ -134,8 +134,8 @@ func (s *CompanyStore) Delete(organizationName, companyToDelete string) types.Er
 	return nil
 }
 
-// companyPrimaryKey returns unique primary key based upon organization & companyName
-func companyPrimaryKey(organization, companyName string) string {
+// generatePrimaryKey returns unique primary key based upon organization & companyName
+func (s *CompanyStore) generatePrimaryKey(organization, companyName string) string {
 	// Combine organization and companyname to make globally unique key
 	return fmt.Sprintf("%s@@@%s", organization, companyName)
 }
