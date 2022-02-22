@@ -1,0 +1,58 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: authserver
+  labels:
+    app: authserver
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: authserver
+  template:
+    metadata:
+      labels:
+        app: authserver
+    spec:
+      containers:
+      - name: authserver
+        imagePullPolicy: IfNotPresent
+        image: {{ .Values.repository }}/authserver:{{ .Values.global.images.tag }}
+        command: [ "/app/authserver" ]
+        args: ["--config", "/config/authserver-config.yaml"]
+        env:
+{{- if .Values.global.useLocalCassandra }}
+        - name: DATABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Release.Namespace }}-cassandra
+              key: cassandra-password
+{{- end }}
+        volumeMounts:
+        - name: authserver-cfg
+          mountPath: "/config"
+          readOnly: true
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 250m
+            memory: 256Mi
+        ports:
+        - containerPort: 2113
+        - containerPort: 4000
+        readinessProbe:
+          httpGet:
+            path: /readiness
+            port: 2113
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 2
+          failureThreshold: 3
+          successThreshold: 1
+      volumes:
+      - name: authserver-cfg
+        secret:
+          secretName: authserver-config

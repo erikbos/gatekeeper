@@ -1,0 +1,51 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: controlplane
+  labels:
+    app: controlplane
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: controlplane
+  template:
+    metadata:
+      labels:
+        app: controlplane
+    spec:
+      containers:
+      - name: controlplane
+        imagePullPolicy: IfNotPresent
+        image: {{ .Values.repository }}/controlplane:{{ .Values.global.images.tag }}
+        command: [ "/app/controlplane" ]
+        args: ["--config", "/config/controlplane-config.yaml"]
+        env:
+{{- if .Values.global.useLocalCassandra }}
+        - name: DATABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Release.Namespace }}-cassandra
+              key: cassandra-password
+{{- end }}
+        volumeMounts:
+        - name: controlplane-cfg
+          mountPath: "/config"
+          readOnly: true
+
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 250m
+            memory: 256Mi
+        ports:
+        - containerPort: 9901
+        - containerPort: 9902
+        - containerPort: 9903
+      volumes:
+      - name: controlplane-cfg
+        secret:
+          secretName: controlplane-config

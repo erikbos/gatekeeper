@@ -29,7 +29,7 @@ audit:
     filename: /dev/stdout
 
   database:
-    hostname: localhost
+    hostname: cassandra
     port: 9042
     tls:
       enable: false

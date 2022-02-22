@@ -1,0 +1,36 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: accesslogserver
+  labels:
+    app: accesslogserver
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: accesslogserver
+  template:
+    metadata:
+      annotations:
+        checksum/configmap: {{ include (print $.Template.BasePath "/accesslogserver/configmap.yaml") . | sha256sum }}
+      labels:
+        app: accesslogserver
+    spec:
+      containers:
+      - name: accesslogserver
+        imagePullPolicy: IfNotPresent
+        image: {{ .Values.repository }}/accesslogserver:{{ .Values.global.images.tag }}
+        command: [ "/app/accesslogserver" ]
+        args: ["--config", "/config/accesslogserver-config.yaml"]
+        volumeMounts:
+        - name: accesslogserver-cfg
+          mountPath: "/config"
+          readOnly: true
+        ports:
+        - containerPort: 6001
+        - containerPort: 6002
+      volumes:
+      - name: accesslogserver-cfg
+        configMap:
+          name: accesslogserver-config
