@@ -1,5 +1,3 @@
-.gitignore
-
 # this file gets copied by go generate from /openapi/ to be embedded in
 # dbadmin
 cmd/managementserver/handler/apidocs/gatekeeper.yaml
@@ -25,3 +23,5 @@ run*.sh
 GeoIP2-City.mmdb
 todo.txt
 *.log
+
+.DS_Store

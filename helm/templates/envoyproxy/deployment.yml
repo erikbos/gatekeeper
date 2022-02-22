@@ -1,0 +1,37 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: envoy
+  labels:
+    app: envoy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: envoy
+  template:
+    metadata:
+      labels:
+        app: envoy
+    spec:
+      containers:
+      - name: envoy
+        imagePullPolicy: IfNotPresent
+        image: envoyproxy/envoy:v1.20-latest
+        command:
+          - "/usr/local/bin/envoy"
+        args:
+            - "--config-path /config/envoy.yaml"
+        volumeMounts:
+        - name: envoy-cfg
+          mountPath: "/config"
+          readOnly: true
+        ports:
+        - containerPort: 80
+        - containerPort: 443
+        - containerPort: 9901
+      volumes:
+      - name: envoy-cfg
+        secret:
+          secretName: envoy-config

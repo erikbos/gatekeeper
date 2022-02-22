@@ -1,0 +1,63 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: managementserver
+  labels:
+    app: managementserver
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: managementserver
+  template:
+    metadata:
+      labels:
+        app: managementserver
+    spec:
+      containers:
+      - name: managementserver
+        imagePullPolicy: IfNotPresent
+        image: {{ .Values.repository }}/managementserver:{{ .Values.global.images.tag }}
+        command: [ "/app/managementserver" ]
+        env:
+{{- if .Values.global.useLocalCassandra }}
+        - name: DATABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Release.Namespace }}-cassandra
+              key: cassandra-password
+        - name: AUDIT_DATABASE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .Release.Namespace }}-cassandra
+              key: cassandra-password
+{{- end }}
+        args:
+          - --config=/config/managementserver-config.yaml
+        volumeMounts:
+        - name: managementserver-cfg
+          mountPath: "/config"
+          readOnly: true
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 250m
+            memory: 256Mi
+        ports:
+        - containerPort: 7777
+        readinessProbe:
+          httpGet:
+            path: /readiness
+            port: 7777
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 2
+          failureThreshold: 3
+          successThreshold: 1
+      volumes:
+      - name: managementserver-cfg
+        secret:
+          secretName: managementserver-config

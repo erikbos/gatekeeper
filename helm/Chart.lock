@@ -1,0 +1,9 @@
+dependencies:
+- name: redis
+  repository: https://charts.bitnami.com/bitnami
+  version: 16.4.0
+- name: cassandra
+  repository: https://charts.bitnami.com/bitnami
+  version: 9.1.5
+digest: sha256:727772214a350693c4100d10e4204ca18dd119dd4a8d093373ca6a8942869f49
+generated: "2022-02-16T14:28:46.50849+01:00"

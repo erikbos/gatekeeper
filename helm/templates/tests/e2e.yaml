@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "gatekeeper.fullname" . }}-dbadmin-e2e"
+  labels:
+    {{- include "gatekeeper.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+  containers:
+    - name: dbadmin-e2e
+      imagePullPolicy: IfNotPresent
+      image: {{ .Values.repository }}/dbadmin-test:{{ .Values.global.images.tag }}
+      env:
+      - name: API_USERNAME
+        value: admin
+      - name: API_PASSWORD
+        value: passwd
+      - name: API_URL
+        value: http://managementserver:7777/v1/organizations/default
+  restartPolicy: Never

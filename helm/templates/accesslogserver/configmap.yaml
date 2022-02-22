@@ -1,0 +1,26 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: accesslogserver-config
+data:
+  accesslogserver-config.yaml: |-
+
+    # accesslogserver access logging daemon settings
+
+    logger:
+      level: debug
+      filename: /dev/stdout
+
+    webadmin:
+      listen: 0.0.0.0:6002
+      ipacl: 0.0.0.0/0
+      logger:
+        level: debug
+        filename: /dev/stdout
+
+    accesslog:
+      listen: 0.0.0.0:6001
+      maxstreamduration: 10m
+      logger:
+        filename: /dev/stdout

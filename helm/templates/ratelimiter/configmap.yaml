@@ -1,0 +1,24 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ratelimit-config
+data:
+  config_ratelimiter.yaml: |
+    domain: default
+    ---
+    domain: rl
+    descriptors:
+      - key: source_cluster
+        value: proxy
+        descriptors:
+        - key: destination_cluster
+          value: mock
+          rate_limit:
+            unit: minute
+            requests_per_unit: 1
+#    descriptors:
+#      - key: generic_key
+#        rate_limit:
+#          unit: minute
+#          requests_per_unit: 1

@@ -1,8 +1,5 @@
 FROM gatekeeper/baseimage:latest as build-env
 
-# FROM golang:latest as build-env
-# RUN mkdir /build
-
 ADD . /build/
 WORKDIR /build
 # static build is required

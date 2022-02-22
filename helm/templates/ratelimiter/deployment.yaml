@@ -1,0 +1,59 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ratelimiter
+  labels:
+    app: ratelimiter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ratelimiter
+  template:
+    metadata:
+      labels:
+        app: ratelimiter
+    spec:
+      containers:
+      - name: ratelimiter
+        imagePullPolicy: IfNotPresent
+
+        image: envoyproxy/ratelimit:master
+        command: [ "/bin/ratelimit" ]
+        env:
+            - name: LOG_LEVEL
+              value: "debug"
+        # configuration is loaded from RUNTIME_ROOT  + RUNTIME_SUBDIRECTORY
+            - name: RUNTIME_ROOT
+              value: "/data"
+            - name: RUNTIME_SUBDIRECTORY
+              value: "ratelimiter"
+            - name: USE_STATSD
+              value: "false"
+            - name: REDIS_SOCKET_TYPE
+              value: "tcp"
+            - name: REDIS_URL
+              value: "gatekeeper-redis-master:6379"
+
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        ports:
+        - containerPort: 6070
+        - containerPort: 8080
+        - containerPort: 8081
+
+        volumeMounts:
+        - name: config
+          mountPath: data/ratelimiter/config/config.yaml
+          subPath: config.yaml
+
+      volumes:
+      - name: config
+        configMap:
+          name: ratelimit-config
+          items:
+          - key: config_ratelimiter.yaml
+            path: config.yaml
