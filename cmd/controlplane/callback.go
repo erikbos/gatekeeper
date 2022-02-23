@@ -90,7 +90,7 @@ func (cb *callback) OnStreamRequest(id int64, request *discovery.DiscoveryReques
 }
 
 // OnStreamResponse is called immediately prior to sending a response on a stream.
-func (cb *callback) OnStreamResponse(id int64, request *discovery.DiscoveryRequest, response *discovery.DiscoveryResponse) {
+func (cb *callback) OnStreamResponse(ctx context.Context, id int64, request *discovery.DiscoveryRequest, response *discovery.DiscoveryResponse) {
 
 	cb.logger.Info("OnStreamResponse", zap.Int64("stream", id), zap.String("type", response.TypeUrl))
 	cb.metrics.IncXDSMessageCount("OnStreamResponse")
