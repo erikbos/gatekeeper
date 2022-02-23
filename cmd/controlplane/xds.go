@@ -12,7 +12,9 @@ import (
 	endpointservice "github.com/envoyproxy/go-control-plane/envoy/service/endpoint/v3"
 	listenerservice "github.com/envoyproxy/go-control-plane/envoy/service/listener/v3"
 	routeservice "github.com/envoyproxy/go-control-plane/envoy/service/route/v3"
+	envoy_types "github.com/envoyproxy/go-control-plane/pkg/cache/types"
 	cache "github.com/envoyproxy/go-control-plane/pkg/cache/v3"
+	"github.com/envoyproxy/go-control-plane/pkg/resource/v3"
 	xds "github.com/envoyproxy/go-control-plane/pkg/server/v3"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -118,15 +120,22 @@ func (x *XDS) CreateNewSnapshot(streamCallbacks *callback) {
 
 	x.server.logger.Info("Creating configuration snapshot", zap.String("version", version))
 
-	EnvoyClusters, _ := x.server.getEnvoyClusterConfig()
-	EnvoyRoutes, _ := x.server.getEnvoyRouteConfig()
+	// TODO errors should be handled
 	EnvoyListeners, _ := x.server.getEnvoyListenerConfig()
+	EnvoyRoutes, _ := x.server.getEnvoyRouteConfig()
+	EnvoyClusters, _ := x.server.getEnvoyClusterConfig()
 
-	x.snapshotLatest = cache.NewSnapshot(version, nil, EnvoyClusters, EnvoyRoutes, EnvoyListeners, nil, nil)
+	x.snapshotLatest, _ = cache.NewSnapshot(version,
+		map[resource.Type][]envoy_types.Resource{
+			resource.ListenerType: EnvoyListeners,
+			resource.RouteType:    EnvoyRoutes,
+			resource.ClusterType:  EnvoyClusters,
+		})
 
 	// Update snapshot cache for each connected Envoy we are aware of
+	ctx := context.Background()
 	for _, node := range streamCallbacks.connections {
-		if err := x.snapshotCache.SetSnapshot(node.Id, x.snapshotLatest); err != nil {
+		if err := x.snapshotCache.SetSnapshot(ctx, node.Id, x.snapshotLatest); err != nil {
 			x.server.logger.Info("Cannot set snapshot for node", zap.String("id", node.Id))
 		}
 	}
@@ -146,7 +155,8 @@ func (x *XDS) CompileSnapshotsForNewNodes(signal <-chan newNode) {
 		// provide this Envoy a configuration as its connection was registered by OnStreamRequest().
 		if x.snapshotCacheVersion != 0 {
 			// Update cache for this newly connect Envoy we have not seen before
-			if err := x.snapshotCache.SetSnapshot(newNode.nodeID, x.snapshotLatest); err != nil {
+			ctx := context.Background()
+			if err := x.snapshotCache.SetSnapshot(ctx, newNode.nodeID, x.snapshotLatest); err != nil {
 				x.server.logger.Warn("Cannot set snapshot for node", zap.String("id", newNode.nodeID))
 			}
 		}
