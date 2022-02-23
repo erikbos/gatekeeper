@@ -29,20 +29,15 @@ jobs:
         username: ${{ secrets.acr_username }}
         password: ${{ secrets.acr_password }}
 
-    - name: put git version in env
-      run: |
-       echo "VERSION=`git describe --tags --always --dirty`" >> $GITHUB_ENV
-
     - name: Docker tag & push
       run: |
        echo ${{ github.sha }}
-       echo $VERSION
 
-       docker tag gatekeeper/managementserver:$VERSION ${{ secrets.acr_hostname }}/managementserver
-       docker tag gatekeeper/accesslogserver:$VERSION ${{ secrets.acr_hostname }}/accesslogserver
-       docker tag gatekeeper/authserver:$VERSION ${{ secrets.acr_hostname }}/authserver
-       docker tag gatekeeper/controlplane:$VERSION ${{ secrets.acr_hostname }}/controlplane
-       docker tag gatekeeper/testbackend:$VERSION ${{ secrets.acr_hostname }}/testbackend
+       docker tag gatekeeper/managementserver:latest ${{ secrets.acr_hostname }}/managementserver
+       docker tag gatekeeper/accesslogserver:latest ${{ secrets.acr_hostname }}/accesslogserver
+       docker tag gatekeeper/authserver:latest ${{ secrets.acr_hostname }}/authserver
+       docker tag gatekeeper/controlplane:latest ${{ secrets.acr_hostname }}/controlplane
+       docker tag gatekeeper/testbackend:latest ${{ secrets.acr_hostname }}/testbackend
 
        docker push ${{ secrets.acr_hostname }}/managementserver
        docker push ${{ secrets.acr_hostname }}/accesslogserver
