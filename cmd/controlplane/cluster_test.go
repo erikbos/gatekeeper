@@ -10,7 +10,6 @@ import (
 	tls "github.com/envoyproxy/go-control-plane/envoy/extensions/transport_sockets/tls/v3"
 	envoyExtensionsUpstreams "github.com/envoyproxy/go-control-plane/envoy/extensions/upstreams/http/v3"
 	envoyType "github.com/envoyproxy/go-control-plane/envoy/type/v3"
-	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest/observer"
 	"google.golang.org/protobuf/runtime/protoiface"
@@ -139,7 +138,7 @@ func Test_buildEnvoyClusterConfig(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		require.Equalf(t, test.expected,
+		equalf(t, test.expected,
 			s.buildEnvoyClusterConfig(test.cluster), test.name)
 	}
 }
@@ -174,7 +173,7 @@ func Test_clusterConnectTimeout(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		require.Equalf(t, test.expected,
+		equalf(t, test.expected,
 			s.clusterConnectTimeout(test.cluster), test.name)
 	}
 }
@@ -259,7 +258,7 @@ func Test_clusterLbPolicy(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		require.Equalf(t, test.expected,
+		equalf(t, test.expected,
 			s.clusterLbPolicy(test.cluster), test.name)
 	}
 }
@@ -343,7 +342,7 @@ func Test_clusterLoadAssignment(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		require.Equalf(t, test.expected,
+		equalf(t, test.expected,
 			s.clusterLoadAssignment(test.cluster), test.name)
 	}
 }
@@ -431,7 +430,7 @@ func Test_clusterCircuitBreakers(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		require.Equalf(t, test.expected,
+		equalf(t, test.expected,
 			s.clusterCircuitBreakers(test.cluster), test.name)
 	}
 }
@@ -511,7 +510,7 @@ func Test_clusterHealthChecks(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		require.Equalf(t, test.expected,
+		equalf(t, test.expected,
 			s.clusterHealthChecks(test.cluster), test.name)
 	}
 }
@@ -570,7 +569,7 @@ func Test_clusterHealthCodec(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		require.Equalf(t, test.expected,
+		equalf(t, test.expected,
 			s.clusterHealthCodec(test.cluster), test.name)
 	}
 }
@@ -621,7 +620,7 @@ func Test_clusterTransportSocket(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		require.Equalf(t, test.expected,
+		equalf(t, test.expected,
 			s.clusterTransportSocket(test.cluster), test.name)
 	}
 }
@@ -684,7 +683,7 @@ func Test_clusterSNIHostname(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		require.Equalf(t, test.expected,
+		equalf(t, test.expected,
 			s.clusterSNIHostname(test.cluster), test.name)
 	}
 }
@@ -736,7 +735,7 @@ func Test_clusterDNSLookupFamily(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		require.Equalf(t, test.expected,
+		equalf(t, test.expected,
 			s.clusterDNSLookupFamily(test.cluster), test.name)
 	}
 }
@@ -771,7 +770,7 @@ func Test_clusterDNSRefreshRate(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		require.Equalf(t, test.expected,
+		equalf(t, test.expected,
 			s.clusterDNSRefreshRate(test.cluster), test.name)
 	}
 }
@@ -855,7 +854,7 @@ func Test_clusterDNSResolvers(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		require.Equalf(t, test.expected,
+		equalf(t, test.expected,
 			s.clusterDNSResolvers(test.cluster), test.name)
 	}
 }
@@ -977,7 +976,7 @@ func Test_clusterTypedExtensionProtocolOptions(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		require.Equalf(t, test.expected,
+		equalf(t, test.expected,
 			s.clusterTypedExtensionProtocolOptions(test.cluster), test.name)
 	}
 }

@@ -11,7 +11,6 @@ import (
 	envoy_matcher "github.com/envoyproxy/go-control-plane/envoy/type/matcher/v3"
 	envoy_type "github.com/envoyproxy/go-control-plane/envoy/type/v3"
 	"github.com/envoyproxy/go-control-plane/pkg/wellknown"
-	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
@@ -244,7 +243,7 @@ func Test_buildEnvoyRoute(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		require.Equalf(t, test.expected,
+		equalf(t, test.expected,
 			s.buildEnvoyRoutes(test.RouteGroup, test.routes), test.name)
 	}
 }
@@ -301,8 +300,7 @@ func Test_buildRouteMatch(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		require.Equalf(t, test.expected,
-			buildRouteMatch(test.route), test.name)
+		equalf(t, test.expected, buildRouteMatch(test.route), test.name)
 	}
 }
 
@@ -404,7 +402,7 @@ func Test_buildWeightedClusters(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		require.Equalf(t, test.expected,
+		equalf(t, test.expected,
 			s.buildWeightedClusters(test.route), test.name)
 	}
 }
@@ -511,7 +509,7 @@ func Test_buildRequestMirrorPolicies(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		require.Equalf(t, test.expected,
+		equalf(t, test.expected,
 			s.buildRequestMirrorPolicies(test.route), test.name)
 	}
 }
@@ -610,7 +608,7 @@ func Test_buildCorsPolicy(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		require.Equalf(t, test.expected,
+		equalf(t, test.expected,
 			buildCorsPolicy(test.route), test.name)
 	}
 }
@@ -684,7 +682,7 @@ func Test_buildRouteActionDirectResponse(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		require.Equalf(t, test.expected,
+		equalf(t, test.expected,
 			buildRouteActionDirectResponse(test.route), test.name)
 	}
 }
@@ -821,7 +819,7 @@ func Test_buildRouteActionRedirectResponse(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		require.Equalf(t, test.expected,
+		equalf(t, test.expected,
 			s.buildRouteActionRedirectResponse(test.route), test.name)
 	}
 }
@@ -890,7 +888,7 @@ func Test_buildUpstreamHeadersToAdd(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		require.Equalf(t, test.expected,
+		equalf(t, test.expected,
 			buildUpstreamHeadersToAdd(test.route), test.name)
 	}
 }
@@ -939,7 +937,7 @@ func Test_buildUpstreamHeadersToRemove(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		require.Equalf(t, test.expected,
+		equalf(t, test.expected,
 			buildUpstreamHeadersToRemove(test.route), test.name)
 	}
 }
@@ -972,7 +970,7 @@ func Test_buildHeadersList(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		require.Equalf(t, test.expected,
+		equalf(t, test.expected,
 			buildHeadersList(test.headers), test.name)
 	}
 }
@@ -1066,7 +1064,7 @@ func Test_buildRetryPolicy(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		require.Equalf(t, test.expected,
+		equalf(t, test.expected,
 			buildRetryPolicy(test.route), test.name)
 	}
 }
@@ -1095,7 +1093,7 @@ func Test_buildStatusCodesSlice(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		require.Equalf(t, test.expected,
+		equalf(t, test.expected,
 			buildStatusCodesSlice(test.statusCodes), test.name)
 	}
 }
@@ -1139,7 +1137,7 @@ func Test_buildPerRouteFilterConfig(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		require.Equalf(t, test.expected,
+		equalf(t, test.expected,
 			buildPerRouteFilterConfig(test.route), test.name)
 	}
 }
@@ -1192,7 +1190,7 @@ func Test_perRouteAuthzFilterConfig(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		require.Equalf(t, test.expected,
+		equalf(t, test.expected,
 			perRouteAuthzFilterConfig(test.route), test.name)
 	}
 }
@@ -1247,7 +1245,7 @@ func Test_buildEnvoyVirtualClusters(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		require.Equalf(t, test.expected,
+		equalf(t, test.expected,
 			s.buildEnvoyVirtualClusters(test.RouteGroup, test.routes), test.name)
 	}
 }
@@ -1309,7 +1307,7 @@ func Test_buildEnvoyVirtualClusterPathMatch(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		require.Equalf(t, test.expected,
+		equalf(t, test.expected,
 			buildEnvoyVirtualClusterPathMatch(test.route), test.name)
 	}
 }
