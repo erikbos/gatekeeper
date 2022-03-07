@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -283,9 +284,7 @@ func Test_buildCommonTLSContext(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		// log.Printf("# %+v\n", test.expected)
-		// log.Printf("# %+v\n", buildCommonTLSContext(test.resourceName, test.attributes))
-		RequireEqual(t, test.expected, buildCommonTLSContext(test.resourceName, test.attributes))
+		equal(t, test.expected, buildCommonTLSContext(test.resourceName, test.attributes))
 	}
 }
 
@@ -548,13 +547,22 @@ func mustMarshalAny(src protoreflect.ProtoMessage) *anypb.Any {
 	return a
 }
 
-// RequireEqual will test that want == got for protobufs, call t.fatal if it does not,
-// This mimics the behavior of the testify `require` functions.
-func RequireEqual(t *testing.T, want, got interface{}) {
+// equal will test that want == got for protobufs, call t.fatal if it does not,
+// This mimics the behavior of the testify `require.Equal` function.
+func equal(t *testing.T, want, got interface{}) {
+	equalf(t, want, got, "")
+}
+
+// equalf will test that want == got for protobufs, call t.fatal if it does not,
+// This mimics the behavior of the testify `require.EqualF` function.
+func equalf(t *testing.T, want, got interface{}, msg string, args ...interface{}) {
 	t.Helper()
 
 	diff := cmp.Diff(want, got, protocmp.Transform())
 	if diff != "" {
-		t.Fatal(diff)
+		t.Errorf(fmt.Sprintf("Not equal:\n"+
+			"Delta: %s\n"+
+			"Additional data: %s", diff, msg), args...)
+		t.FailNow()
 	}
 }

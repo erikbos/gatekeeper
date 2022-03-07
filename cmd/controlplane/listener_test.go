@@ -13,7 +13,6 @@ import (
 	ratelimit "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/ratelimit/v3"
 	hcm "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/network/http_connection_manager/v3"
 	"github.com/envoyproxy/go-control-plane/pkg/wellknown"
-	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/structpb"
@@ -44,7 +43,7 @@ func Test_buildConnectionManager(t *testing.T) {
 		ServerName:                "QWERTY",
 	}
 
-	require.Equalf(t, expected1,
+	equalf(t, expected1,
 		s.buildConnectionManager(listener1), "test1")
 }
 
@@ -287,7 +286,7 @@ func Test_buildFilter(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		require.Equalf(t, test.expected,
+		equalf(t, test.expected,
 			test.s.buildFilter(test.listener), test.name)
 	}
 }
@@ -353,7 +352,7 @@ func Test_buildHTTPFilterExtAuthzConfig(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		require.Equalf(t, test.expected,
+		equalf(t, test.expected,
 			test.s.buildHTTPFilterExtAuthzConfig(test.listener), test.name)
 	}
 }
@@ -413,7 +412,7 @@ func Test_buildRouteSpecifierRDS(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		require.Equalf(t, test.expected,
+		equalf(t, test.expected,
 			test.s.buildRouteSpecifierRDS(test.routeGroup), test.name)
 	}
 }
@@ -468,10 +467,7 @@ func Test_buildAccessLog(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		RequireEqual(t, test.expected,
-			s.buildAccessLog(test.listener))
-		// require.Equalf(t, test.expected,
-		// 	buildAccessLog(test.listener), test.name)
+		equal(t, test.expected, s.buildAccessLog(test.listener))
 	}
 }
 
@@ -526,8 +522,7 @@ func Test_buildFileAccessLog(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		RequireEqual(t, test.expected,
-			s.buildFileAccessLog(test.path, test.fields))
+		equal(t, test.expected, s.buildFileAccessLog(test.path, test.fields))
 	}
 }
 
@@ -566,7 +561,7 @@ func Test_buildGRPCAccessLog(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		require.Equalf(t, test.expected,
+		equalf(t, test.expected,
 			s.buildGRPCAccessLog(test.clusterName, test.logName,
 				test.timeout, test.bufferSize), test.name)
 	}
@@ -604,7 +599,7 @@ func Test_buildCommonHTTPProtocolOptions(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		require.Equalf(t, test.expected,
+		equalf(t, test.expected,
 			listenerCommonHTTPProtocolOptions(test.listener), test.name)
 	}
 }
@@ -654,7 +649,7 @@ func Test_buildHTTP2ProtocolOptions(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		require.Equalf(t, test.expected,
+		equalf(t, test.expected,
 			buildHTTP2ProtocolOptions(test.listener), test.name)
 	}
 }
