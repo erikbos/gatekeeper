@@ -29,7 +29,6 @@ jobs:
 
       - uses: medyagh/setup-minikube@master
         with:
-          cpus: 4
           memory: 4000m
 
       - name: Run unit tests
