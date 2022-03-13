@@ -28,9 +28,13 @@ jobs:
             ${{ runner.os }}-go-
 
       - uses: medyagh/setup-minikube@master
+        id: minikube
         with:
           memory: 4000m
 
-      - name: Run unit tests
+      - uses: azure/setup-helm@v1
+        id: install
+
+      - name: Run e2e test
         run: |
           make e2e-actions

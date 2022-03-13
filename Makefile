@@ -105,7 +105,7 @@ minikube-helm-test:
 e2e-local: test docker-images minikube-start minikube-helm-install minikube-helm-test minikube-stop
 
 .PHONY: e2e-actions
-e2e-local: test docker-images minikube-helm-install minikube-helm-test
+e2e-actions: test docker-images minikube-helm-install minikube-helm-test
 
 .PHONY: minikube-start
 minikube-start:
