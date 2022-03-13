@@ -1,7 +1,6 @@
 global:
   e2e: false
   useLocalCassandra: true
-  cassandraType: oss # must be oss or cosmosdb
   images:
     tag: latest
 

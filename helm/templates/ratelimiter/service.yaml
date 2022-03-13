@@ -6,9 +6,7 @@ metadata:
 spec:
   selector:
     app: ratelimiter
-  type: LoadBalancer
-  sessionAffinity: None
-  externalTrafficPolicy: Local
+  type: ClusterIP
   ports:
     - protocol: TCP
       port: 8081
