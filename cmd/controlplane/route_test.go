@@ -1,6 +1,7 @@
 package main
 
 import (
+	"sort"
 	"strings"
 	"testing"
 	"time"
@@ -888,8 +889,17 @@ func Test_buildUpstreamHeadersToAdd(t *testing.T) {
 		},
 	}
 	for _, test := range tests {
-		equalf(t, test.expected,
-			buildUpstreamHeadersToAdd(test.route), test.name)
+		received := buildUpstreamHeadersToAdd(test.route)
+
+		// Sort both maps by Key so compare does not fail
+		sort.Slice(test.expected, func(i, j int) bool {
+			return test.expected[i].Header.Key < test.expected[j].Header.Key
+		})
+		sort.Slice(received, func(i, j int) bool {
+			return received[i].Header.Key < received[j].Header.Key
+		})
+
+		equalf(t, test.expected, received, test.name)
 	}
 }
 
