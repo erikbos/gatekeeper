@@ -19,6 +19,4 @@ spec:
       port: 9903
       targetPort: 9003
       name: xds-http
-  type: LoadBalancer
-  sessionAffinity: None
-  externalTrafficPolicy: Local
+  type: ClusterIP
