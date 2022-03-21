@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/bmatcuk/doublestar/v4 v4.0.2
-	github.com/coocood/freecache v1.2.0
+	github.com/coocood/freecache v1.2.1
 	github.com/dchest/uniuri v0.0.0-20200228104902-7aecb25e1fe5
 	github.com/deepmap/oapi-codegen v1.9.1
 	github.com/envoyproxy/go-control-plane v0.10.1
