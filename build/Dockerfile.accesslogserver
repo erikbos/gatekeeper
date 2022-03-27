@@ -10,6 +10,8 @@ ENV CGO_ENABLED=0
 RUN make accesslogserver
 
 FROM alpine
+LABEL org.opencontainers.image.source=https://github.com/erikbos/gatekeeper
+
 WORKDIR /app/
 COPY --from=build-env /build/bin/accesslogserver .
 USER nobody
