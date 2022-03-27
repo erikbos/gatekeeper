@@ -25,25 +25,25 @@ jobs:
     - name: Docker login
       uses: azure/docker-login@v1
       with:
-        login-server: ${{ secrets.acr_hostname }}
-        username: ${{ secrets.acr_username }}
-        password: ${{ secrets.acr_password }}
+        login-server: ghcr.io
+        username: erikbos
+        password: ${{ secrets.cr_pat }}
 
     - name: Docker tag & push
       run: |
        echo ${{ github.sha }}
 
-       docker tag gatekeeper/managementserver:latest ${{ secrets.acr_hostname }}/managementserver
-       docker tag gatekeeper/accesslogserver:latest ${{ secrets.acr_hostname }}/accesslogserver
-       docker tag gatekeeper/authserver:latest ${{ secrets.acr_hostname }}/authserver
-       docker tag gatekeeper/controlplane:latest ${{ secrets.acr_hostname }}/controlplane
-       docker tag gatekeeper/testbackend:latest ${{ secrets.acr_hostname }}/testbackend
+       docker tag gatekeeper/managementserver:latest ghcr.io/erikbos/gatekeeper-managementserver
+       docker tag gatekeeper/accesslogserver:latest ghcr.io/erikbos/gatekeeper-accesslogserver
+       docker tag gatekeeper/authserver:latest ghcr.io/erikbos/gatekeeper-authserver
+       docker tag gatekeeper/controlplane:latest ghcr.io/erikbos/gatekeeper-controlplane
+       docker tag gatekeeper/testbackend:latest ghcr.io/erikbos/gatekeeper-testbackend
 
-       docker push ${{ secrets.acr_hostname }}/managementserver
-       docker push ${{ secrets.acr_hostname }}/accesslogserver
-       docker push ${{ secrets.acr_hostname }}/authserver
-       docker push ${{ secrets.acr_hostname }}/controlplane
-       docker push ${{ secrets.acr_hostname }}/testbackend
+       docker push ghcr.io/erikbos/gatekeeper-managementserver
+       docker push ghcr.io/erikbos/gatekeeper-accesslogserver
+       docker push ghcr.io/erikbos/gatekeeper-authserver
+       docker push ghcr.io/erikbos/gatekeeper-controlplane
+       docker push ghcr.io/erikbos/gatekeeper-testbackend
 
   deploy:
     name: Deploy containers
