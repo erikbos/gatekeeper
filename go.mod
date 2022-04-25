@@ -8,7 +8,7 @@ require (
 	github.com/cncf/xds/go v0.0.0-20211130200136-a8f946100490 // indirect
 	github.com/coocood/freecache v1.2.1
 	github.com/dchest/uniuri v0.0.0-20200228104902-7aecb25e1fe5
-	github.com/deepmap/oapi-codegen v1.9.1
+	github.com/deepmap/oapi-codegen v1.10.1
 	github.com/envoyproxy/go-control-plane v0.10.1
 	github.com/envoyproxy/protoc-gen-validate v0.6.2 // indirect
 	github.com/gin-gonic/gin v1.7.7
