@@ -12,24 +12,40 @@ import (
 )
 
 type vhostMapping struct {
-	dbentities *db.EntityCache
-	listeners  map[vhostMapEntry]types.Listener
-	logger     *zap.Logger
+	db                  *db.Database
+	vhostListeners      map[vhostMapKey]vhostMapEntry
+	defaultOrganization string
+	logger              *zap.Logger
 }
 
-type vhostMapEntry struct {
+type vhostMapKey struct {
 	vhost string
 	port  int
 }
 
-func newVhostMapping(d *db.EntityCache, logger *zap.Logger) *vhostMapping {
+type vhostMapEntry struct {
+	// Listener associated with this vhost
+	listener types.Listener
+	// Organization to use for lookups when request needs to be evaluated
+	organization types.Organization
+}
 
+func newVhostMapping(db *db.Database, defaultOrganization string, logger *zap.Logger) *vhostMapping {
 	return &vhostMapping{
-		dbentities: d,
-		logger:     logger,
+		db:                  db,
+		defaultOrganization: defaultOrganization,
+		logger:              logger,
 	}
 }
 
+func newVhostMapKey(vhost string, port int) vhostMapKey {
+	return vhostMapKey{
+		vhost: strings.ToLower(vhost),
+		port:  port,
+	}
+}
+
+// WaitFor updates the vhost to listener map after receiving a trigger that listeners in db have changed
 func (v *vhostMapping) WaitFor(entityNotifications chan db.EntityChangeNotification) {
 
 	for changedEntity := range entityNotifications {
@@ -44,44 +60,53 @@ func (v *vhostMapping) WaitFor(entityNotifications chan db.EntityChangeNotificat
 	}
 }
 
-func (v *vhostMapping) buildVhostMap() map[vhostMapEntry]types.Listener {
+func (v *vhostMapping) buildVhostMap() {
 
-	newListeners := make(map[vhostMapEntry]types.Listener)
+	listeners, err := v.db.Listener.GetAll()
+	if err != nil {
+		v.logger.Error("cannot retrieve listeners to build vhost map")
+		return
+	}
 
-	for _, listener := range v.dbentities.GetListeners() {
-		listener.Attributes = types.NullAttributes
-
+	newVHostListeners := make(map[vhostMapKey]vhostMapEntry)
+	for _, listener := range listeners {
 		for _, host := range listener.VirtualHosts {
-			newListeners[vhostMapEntry{strings.ToLower(host), listener.Port}] = listener
+			// Retrieve organization details, based upon Listernet attribute Organization, or use
+			// default organizationName from startup configuration
+			organization, err := v.db.Organization.Get(
+				listener.Attributes.GetAsString(types.AttributeOrganization, v.defaultOrganization))
+			if err != nil {
+				v.logger.Error("cannot retrieve organization details",
+					zap.String("listener", listener.Name))
+				continue
+			}
 
-			v.logger.Info("vhostmap",
-				zap.String("host", host),
-				zap.Int("port", listener.Port))
+			key := newVhostMapKey(host, listener.Port)
+			entry := vhostMapEntry{
+				listener:     listener,
+				organization: *organization,
+			}
+			newVHostListeners[key] = entry
+
+			v.logger.Debug("vhostmap",
+				zap.String("host", key.vhost),
+				zap.Int("port", key.port),
+				zap.String("organization", entry.organization.Name))
 		}
 	}
 
 	var m sync.Mutex
 	m.Lock()
-	v.listeners = newListeners
+	v.vhostListeners = newVHostListeners
 	m.Unlock()
-
-	return newListeners
 }
 
-// FIXME this should be lookup in map instead of for loops
-// FIXXE map should have a key vhost:port
-func (v *vhostMapping) Lookup(hostname, protocol string) (*types.Listener, error) {
+// Lookup return listener and organization details based upon vhost and port
+func (v *vhostMapping) Lookup(vhost string, port int) (*types.Listener, *types.Organization, error) {
 
-	for _, listener := range v.listeners {
-		for _, vhost := range listener.VirtualHosts {
-			if vhost == hostname {
-				if (listener.Port == 80 && protocol == "http") ||
-					(listener.Port == 443 && protocol == "https") {
-					return &listener, nil
-				}
-			}
-		}
+	vhostMapEntry, ok := v.vhostListeners[newVhostMapKey(vhost, port)]
+	if ok {
+		return &vhostMapEntry.listener, &vhostMapEntry.organization, nil
 	}
-
-	return nil, errors.New("vhost not found")
+	return nil, nil, errors.New("vhost not found")
 }
