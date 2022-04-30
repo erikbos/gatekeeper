@@ -170,7 +170,7 @@ func (m *Metrics) RegisterWithPrometheus() {
 }
 
 // IncAuthenticationAccepted counts requests that are accepted
-func (m *Metrics) IncAuthenticationAccepted(r *request.State) {
+func (m *Metrics) IncAuthenticationAccepted(r *request.Request) {
 
 	var product string
 
@@ -186,7 +186,7 @@ func (m *Metrics) IncAuthenticationAccepted(r *request.State) {
 }
 
 // IncAuthenticationRejected counts requests that are rejected
-func (m *Metrics) IncAuthenticationRejected(r *request.State) {
+func (m *Metrics) IncAuthenticationRejected(r *request.Request) {
 
 	var product string
 
@@ -220,7 +220,7 @@ func (m *Metrics) NewTimerAuthLatency() *prometheus.Timer {
 }
 
 // IncUnknownAPIKey increases unknown apikey metric
-func (m *Metrics) IncUnknownAPIKey(r *request.State) {
+func (m *Metrics) IncUnknownAPIKey(r *request.Request) {
 
 	m.UnknownAPIkey.WithLabelValues(
 		r.HTTPRequest.Host,
@@ -229,7 +229,7 @@ func (m *Metrics) IncUnknownAPIKey(r *request.State) {
 }
 
 // IncDatabaseFetchFailure increases database retrieval failure metric
-func (m *Metrics) IncDatabaseFetchFailure(r *request.State) {
+func (m *Metrics) IncDatabaseFetchFailure(r *request.Request) {
 
 	m.UnknownAPIkey.WithLabelValues(
 		r.HTTPRequest.Host,

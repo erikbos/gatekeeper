@@ -2,11 +2,9 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net"
 	"net/http"
-	"net/url"
 	"strconv"
 
 	envoy_config_core_v3 "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
@@ -24,13 +22,13 @@ import (
 	"github.com/erikbos/gatekeeper/cmd/authserver/policy"
 	"github.com/erikbos/gatekeeper/cmd/authserver/request"
 	"github.com/erikbos/gatekeeper/pkg/shared"
-	"github.com/erikbos/gatekeeper/pkg/types"
 )
 
 type envoyAuthConfig struct {
-
 	// GRPC Address and port to listen for extauthz requests
 	Listen string
+	// default Organization to use for authentication of incoming requests
+	defaultOrganization string
 }
 
 // startGRPCAuthorizationServer starts extauthz grpc listener
@@ -59,10 +57,10 @@ func (s *server) Check(ctx context.Context,
 	timer := s.metrics.NewTimerAuthLatency()
 	defer timer.ObserveDuration()
 
-	request, err := getrequestDetails(extauthzRequest)
+	request, err := request.DecodeAuthRequest(extauthzRequest)
 	if err != nil {
 		s.metrics.IncConnectionInfoFailure()
-		return s.rejectRequest(http.StatusBadRequest, nil, nil, fmt.Sprintf("%s", err))
+		return s.rejectRequest(http.StatusServiceUnavailable, nil, nil, err.Error())
 	}
 	request.Timestamp = shared.GetCurrentTimeMilliseconds()
 
@@ -70,18 +68,16 @@ func (s *server) Check(ctx context.Context,
 		zap.String("path", request.HTTPRequest.Path),
 		zap.Any("headers", request.HTTPRequest.Headers))
 
-	// FIXME not sure if x-forwarded-proto the way to determine original tcp port used
-	request.Listener, err = s.vhosts.Lookup(request.HTTPRequest.Host,
-		request.HTTPRequest.Headers["x-forwarded-proto"])
+	// Lookup listener & organization assigned to this vhost
+	request.Listener, request.Organization, err = s.vhosts.Lookup(request.HTTPRequest.Host, request.Port)
 	if err != nil {
 		s.metrics.IncAuthenticationRejected(request)
-		return s.rejectRequest(http.StatusNotFound, nil, nil, "U1nknown vhost")
+		return s.rejectRequest(http.StatusServiceUnavailable, nil, nil, "Unknown vhost/port")
 	}
-	// FIXME we get get this from vhost lookup
-	request.Organization = &types.Organization{Name: "default"}
 
 	policyConfig := policy.NewChainConfig(s.db, s.oauth, s.geoip, s.metrics, s.logger)
 
+	// Evaluate policies, if any, assigned to listener
 	vhostPolicyOut := &policy.ChainOutcome{}
 	if request.Listener != nil && request.Listener.Policies != "" {
 		vhostPolicyOut = policy.NewChain(request,
@@ -90,6 +86,7 @@ func (s *server) Check(ctx context.Context,
 		s.logger.Debug("vhostPolicyOutcome", zap.Reflect("debug", vhostPolicyOut))
 	}
 
+	// Evaluate policies assigned, if any, that are assigned to requested apiproduct
 	APIProductPolicyOut := &policy.ChainOutcome{}
 	if request.APIProduct != nil && request.APIProduct.Policies != "" {
 		APIProductPolicyOut = policy.NewChain(request,
@@ -98,7 +95,7 @@ func (s *server) Check(ctx context.Context,
 		s.logger.Debug("APIProductPolicyOutcome", zap.Reflect("debug", APIProductPolicyOut))
 	}
 
-	// We reject call in case both vhost & apiproduct policy did not authenticate call
+	// We reject request in case both vhost & apiproduct policy did not authenticate request
 	if (vhostPolicyOut != nil && !vhostPolicyOut.Authenticated) &&
 		(APIProductPolicyOut != nil && !APIProductPolicyOut.Authenticated) {
 
@@ -112,6 +109,7 @@ func (s *server) Check(ctx context.Context,
 			vhostPolicyOut.DeniedMessage)
 	}
 
+	// Allow request
 	s.metrics.IncAuthenticationAccepted(request)
 
 	return s.allowRequest(
@@ -260,28 +258,6 @@ func buildRateLimiterOveride(metadata map[string]string) *structpb.Value {
 			},
 		},
 	}
-}
-
-// getrequestDetails returns details of an incoming request
-func getrequestDetails(req *envoy_service_auth_v3.CheckRequest) (*request.State, error) {
-
-	r := &request.State{
-		HTTPRequest: req.Attributes.Request.Http,
-	}
-	if ipaddress, ok := r.HTTPRequest.Headers["x-forwarded-for"]; ok {
-		r.IP = net.ParseIP(ipaddress)
-	}
-
-	var err error
-	if r.URL, err = url.ParseRequestURI(r.HTTPRequest.Path); err != nil {
-		return nil, errors.New("cannot parse url")
-	}
-
-	if r.QueryParameters, err = url.ParseQuery(r.URL.RawQuery); err != nil {
-		return nil, errors.New("cannot parse query parameters")
-	}
-
-	return r, nil
 }
 
 // returns a well structured JSON-formatted message

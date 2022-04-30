@@ -26,7 +26,7 @@ type Chain struct {
 	config *ChainConfig
 
 	// Request information
-	Request *request.State
+	Request *request.Request
 
 	// "vhost" or "apiproduct"
 	scope string
@@ -46,7 +46,7 @@ func NewChainConfig(db *db.Database, oauth *oauth.Server, geo *Geoip,
 }
 
 // NewChain returns a new Chain object
-func NewChain(r *request.State, scope string, config *ChainConfig) *Chain {
+func NewChain(r *request.Request, scope string, config *ChainConfig) *Chain {
 
 	return &Chain{
 		Request: r,

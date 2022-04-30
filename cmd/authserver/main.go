@@ -83,10 +83,10 @@ func main() {
 		RefreshInterval: 3 * time.Second,
 		Notify:          make(chan db.EntityChangeNotification),
 	}
-	a.dbentities = db.NewEntityCache(a.db, entityCacheConf, a.logger)
+	a.dbentities = db.NewEntityCache(database, entityCacheConf, a.logger)
 	a.dbentities.Start()
 
-	a.vhosts = newVhostMapping(a.dbentities, a.logger)
+	a.vhosts = newVhostMapping(database, a.config.EnvoyAuth.defaultOrganization, a.logger)
 	go a.vhosts.WaitFor(entityCacheConf.Notify)
 
 	// // Start service for OAuth2 endpoints

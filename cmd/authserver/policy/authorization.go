@@ -13,7 +13,7 @@ import (
 // CheckProductEntitlement loads developer, dev app, apiproduct details,
 // as input request.apikey must be set
 //
-func (p *Policy) CheckProductEntitlement(request *request.State) error {
+func (p *Policy) CheckProductEntitlement(request *request.Request) error {
 
 	if err := p.getAPIKeyDevDevAppDetails(request); err != nil {
 		return err
@@ -27,7 +27,7 @@ func (p *Policy) CheckProductEntitlement(request *request.State) error {
 }
 
 // getAPIKeyDevDevAppDetails populates apikey, developer and developerapp details
-func (p *Policy) getAPIKeyDevDevAppDetails(request *request.State) error {
+func (p *Policy) getAPIKeyDevDevAppDetails(request *request.Request) error {
 
 	if request == nil {
 		return errors.New("no request details available")
@@ -55,7 +55,7 @@ func (p *Policy) getAPIKeyDevDevAppDetails(request *request.State) error {
 }
 
 // checkDevAndKeyValidity checks devapp approval and expiry status
-func (p *Policy) checkDevAndKeyValidity(request *request.State) error {
+func (p *Policy) checkDevAndKeyValidity(request *request.Request) error {
 
 	if request == nil {
 		return errors.New("no request details available")

@@ -21,7 +21,7 @@ type Policy struct {
 	config *ChainConfig
 
 	// Request information
-	Request *request.State
+	Request *request.Request
 
 	// Current state of policy evaluation
 	*ChainOutcome
@@ -68,7 +68,7 @@ func NewPolicy(config *ChainConfig) *Policy {
 }
 
 // Evaluate executes single policy statement
-func (p *Policy) Evaluate(policy string, request *request.State) *Response {
+func (p *Policy) Evaluate(policy string, request *request.Request) *Response {
 
 	switch policy {
 	case "checkAPIKey":
@@ -100,7 +100,7 @@ func (p *Policy) Evaluate(policy string, request *request.State) *Response {
 }
 
 // checkAPIKey tries to find key in querystring, loads dev app, dev details, and check whether path is allowed
-func (p *Policy) checkAPIKey(request *request.State) *Response {
+func (p *Policy) checkAPIKey(request *request.Request) *Response {
 
 	var err error
 	request.ConsumerKey, err = getAPIkeyFromQueryString(request.QueryParameters)
@@ -160,7 +160,7 @@ func getAPIkeyFromQueryString(queryParameters url.Values) (*string, error) {
 }
 
 // checkOAuth2 tries OAuth authentication, loads dev app, dev details, and check whether path is allowed
-func (p *Policy) checkOAuth2(request *request.State) *Response {
+func (p *Policy) checkOAuth2(request *request.Request) *Response {
 
 	authorizationHeader := request.HTTPRequest.Headers["authorization"]
 	if authorizationHeader == "" {
@@ -214,7 +214,7 @@ func (p *Policy) checkOAuth2(request *request.State) *Response {
 }
 
 // buildMetadata returns all authentication & apim metadata to be returned by authserver
-func buildMetadata(request *request.State) map[string]string {
+func buildMetadata(request *request.Request) map[string]string {
 
 	m := make(map[string]string, 10)
 
@@ -268,7 +268,7 @@ func (p *Policy) removeAPIKeyFromQP() *Response {
 }
 
 // lookupGeoIP lookup requestor's ip address in geoip database
-func (p *Policy) lookupGeoIP(request *request.State) *Response {
+func (p *Policy) lookupGeoIP(request *request.Request) *Response {
 
 	if p.config == nil || p.config.geo == nil {
 		return nil
@@ -292,7 +292,7 @@ func (p *Policy) lookupGeoIP(request *request.State) *Response {
 // policyQPS1 returns QPS quotakey to be used by Lyft ratelimiter
 // QPS set as developer app attribute has priority over quota set as product attribute
 //
-func policyQPS1(request *request.State) *Response {
+func policyQPS1(request *request.Request) *Response {
 
 	if request == nil || request.APIProduct == nil || request.DeveloperApp == nil {
 		return nil
@@ -329,7 +329,7 @@ func policyQPS1(request *request.State) *Response {
 }
 
 // policySendAPIKey adds apikey as an upstream header
-func policySendAPIKey(request *request.State) *Response {
+func policySendAPIKey(request *request.Request) *Response {
 
 	if request != nil && request.ConsumerKey != nil {
 		return &Response{
@@ -342,7 +342,7 @@ func policySendAPIKey(request *request.State) *Response {
 }
 
 // policySendAPIKey adds developer's email address as an upstream header
-func policySendDeveloperEmail(request *request.State) *Response {
+func policySendDeveloperEmail(request *request.Request) *Response {
 
 	if request != nil && request.Developer != nil {
 		return &Response{
@@ -355,7 +355,7 @@ func policySendDeveloperEmail(request *request.State) *Response {
 }
 
 // policySendAPIKey adds developerid as an upstream header
-func policySendDeveloperID(request *request.State) *Response {
+func policySendDeveloperID(request *request.Request) *Response {
 
 	if request != nil && request.Developer != nil {
 		return &Response{
@@ -368,7 +368,7 @@ func policySendDeveloperID(request *request.State) *Response {
 }
 
 // policySendDeveloperAppName adds developer app name as an upstream header
-func policySendDeveloperAppName(request *request.State) *Response {
+func policySendDeveloperAppName(request *request.Request) *Response {
 
 	if request != nil && request.DeveloperApp != nil {
 		return &Response{
@@ -382,7 +382,7 @@ func policySendDeveloperAppName(request *request.State) *Response {
 }
 
 // policySendDeveloperAppID adds developer app id as an upstream header
-func policySendDeveloperAppID(request *request.State) *Response {
+func policySendDeveloperAppID(request *request.Request) *Response {
 
 	if request != nil && request.DeveloperApp != nil {
 		return &Response{
@@ -395,7 +395,7 @@ func policySendDeveloperAppID(request *request.State) *Response {
 }
 
 // policyCheckIPAccessList checks requestor ip against IP ACL defined in developer app
-func policyCheckIPAccessList(request *request.State) *Response {
+func policyCheckIPAccessList(request *request.Request) *Response {
 
 	ipAccessList, err := request.DeveloperApp.Attributes.Get("IPAccessList")
 	if err == nil && ipAccessList != "" {
@@ -414,7 +414,7 @@ func policyCheckIPAccessList(request *request.State) *Response {
 }
 
 // policycheckReferer checks request's Host header against host ACL defined in developer app
-func policycheckReferer(request *request.State) *Response {
+func policycheckReferer(request *request.Request) *Response {
 
 	hostAccessList, err := request.DeveloperApp.Attributes.Get("Referer")
 	if err == nil && hostAccessList != "" {
