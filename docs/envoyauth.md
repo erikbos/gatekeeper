@@ -131,6 +131,7 @@ The supported fields are:
 | logger.maxage              | Max days to retain old log files                 | 7                  |
 | logger.maxbackups          | Maximum number of old log files to retain        | 14                 |
 | authserver.listen            | Address and port for authentication requests     | 0.0.0.0:4000       |
+| authserver.defaultorganization | Organization to use when authentication requests |                 |
 | webadmin.listen             | Webadmin address and port                        | 0.0.0.0:2113       |
 | webadmin.ipacl              | Webadmin ip acl, without this no access          | 172.16.0.0/19      |
 | webadmin.tls.certfile       | TLS certificate file                             |                    |

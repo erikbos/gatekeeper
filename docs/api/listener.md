@@ -45,6 +45,7 @@ HTTP listener on port `80` mapping incoming requests for http virtual host `www.
 | port             | mandatory | Port Envoy needs to listen on                     |
 | routeGroup       | mandatory | Indicate which http routing table will be applied |
 | attributes       | optional  | Specific configuration to apply                   |
+| policies         | optional  | Policies to evaluate by `envoyauth` See [Policy specification](listener.md#policy-specification) |
 
 ## Attribute specification
 
@@ -67,6 +68,7 @@ HTTP listener on port `80` mapping incoming requests for http virtual host `www.
 | MaxConcurrentStreams        | HTTP/2 max concurrent streams per connection       | 10m                          |
 | InitialConnectionWindowSize | HTTP/2 initial connection window size              | 65536                        |
 | InitialStreamWindowSize     | HTTP/2 initial window size                         | 1048576                      |
+| Organization                | Organization to be use by `envoyauth` when evaluate a listener's [policies](listener.md#policy-specification) | |
 
 All attributes listed above are mapped onto configuration properties of [Envoy listener API specifications](https://www.envoyproxy.io/docs/envoy/latest/api-v3/config/listener/v3/listener.proto) for detailed explanation of purpose and allowed value of each attribute.
 
@@ -74,9 +76,10 @@ The listener options exposed this way are a subset of Envoy's capabilities, in g
 
 ## Policy specification
 
-The policies field can contain a comma separate list of policies which will be evaluated.
+A listerner's _policies_ field can contain a comma separate list of policies which will be evaluated.
+If set Envoyauth will evaluate these in sequential order.
 
-| attribute name       | purpose                                                                  |
+| attribpute name       | purpose                                                                  |
 | -------------------- | ------------------------------------------------------------------------ |
 | checkAPIKey          | Verify apikey                                                            |
 | checkOAuth2          | Verify OAuth2 accesstoken                                                |
