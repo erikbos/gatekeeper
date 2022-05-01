@@ -97,6 +97,9 @@ const (
 	// Number of bytes of POST request to include in authentication request
 	AttributeExtAuthzRequestBodySize = "ExtAuthzRequestBodySize"
 
+	// Organization to be used for lookups by envoyauth when authentication requests
+	AttributeOrganization = "Organization"
+
 	// Ratelimiting
 	AttributeRateLimitingCluster = "RateLimitingCluster"
 
@@ -203,6 +206,7 @@ var validListenerAttributes = map[string]bool{
 	AttributeInitialStreamWindowSize:      true,
 	AttributeListenerFilters:              true,
 	AttributeMaxConcurrentStreams:         true,
+	AttributeOrganization:                 true,
 	AttributeRateLimitingCluster:          true,
 	AttributeRateLimitingDomain:           true,
 	AttributeRateLimitingFailureModeAllow: true,

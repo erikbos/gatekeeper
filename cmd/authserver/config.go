@@ -1,6 +1,9 @@
 package main
 
 import (
+	"github.com/spf13/viper"
+	"gopkg.in/yaml.v2"
+
 	"github.com/erikbos/gatekeeper/cmd/authserver/oauth"
 	"github.com/erikbos/gatekeeper/cmd/authserver/policy"
 	"github.com/erikbos/gatekeeper/pkg/config"
@@ -8,8 +11,6 @@ import (
 	"github.com/erikbos/gatekeeper/pkg/db/cassandra"
 	"github.com/erikbos/gatekeeper/pkg/shared"
 	"github.com/erikbos/gatekeeper/pkg/webadmin"
-	"github.com/spf13/viper"
-	"gopkg.in/yaml.v2"
 )
 
 const (
@@ -22,6 +23,7 @@ const (
 	defaultCacheSize           = 100 * 1024 * 1024
 	defaultCacheTTL            = 180
 	defaultCacheNegativeTTL    = 5
+	defaultOrganization        = "default"
 )
 
 // AuthServerConfig contains our startup configuration data
@@ -49,7 +51,8 @@ func loadConfiguration(filename string) (*AuthServerConfig, error) {
 			},
 		},
 		EnvoyAuth: envoyAuthConfig{
-			Listen: defaultExtAuthzListen,
+			Listen:              defaultExtAuthzListen,
+			defaultOrganization: defaultOrganization,
 		},
 		OAuth: oauth.Config{
 			Listen: defaultOAuthListen,
