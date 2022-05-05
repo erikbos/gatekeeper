@@ -24,7 +24,7 @@ to build Containers for [managementserver](docs/managementserver.md), [authserve
 The following starts all containers for Gatekeeper using compose: management server, one-node Cassandra instance, envoyproxy, authserver, controlplane
 
 ```sh
-docker-compose -f deployment/docker/gatekeeper.yaml up
+docker-compose -f deployment/docker/docker-compose.yaml up
 ```
 
 Please note:
