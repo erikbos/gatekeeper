@@ -135,6 +135,7 @@ func (h *Handler) DeleteV1ClustersClusterNameAttributesAttributeName(
 	oldValue, err := cluster.Attributes.Delete(string(attributeName))
 	if err != nil {
 		responseError(c, err)
+		return
 	}
 	_, err = h.service.Cluster.Update(*cluster, h.who(c))
 	if err != nil {

@@ -187,6 +187,7 @@ func (h *Handler) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmaila
 	oldValue, err := developer.Attributes.Delete(string(attributeName))
 	if err != nil {
 		responseError(c, err)
+		return
 	}
 	_, err = h.service.Developer.Update(string(organizationName), string(developerEmailaddress), *developer, h.who(c))
 	if err != nil {
@@ -232,6 +233,7 @@ func (h *Handler) PostV1OrganizationsOrganizationNameDevelopersDeveloperEmailadd
 	newAttribute := types.NewAttribute(string(attributeName), *receivedValue.Value)
 	if err := developer.Attributes.Set(newAttribute); err != nil {
 		responseError(c, err)
+		return
 	}
 	_, err = h.service.Developer.Update(string(organizationName), string(developerEmailaddress), *developer, h.who(c))
 	if err != nil {

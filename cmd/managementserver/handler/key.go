@@ -289,6 +289,7 @@ func (h *Handler) DeleteV1OrganizationsOrganizationNameDevelopersDeveloperEmaila
 	oldValue, err := key.Attributes.Delete(string(attributeName))
 	if err != nil {
 		responseError(c, err)
+		return
 	}
 	_, err = h.service.Key.Update(string(organizationName), string(developerEmailaddress), string(appName), key.ConsumerKey, *key, h.who(c))
 	if err != nil {

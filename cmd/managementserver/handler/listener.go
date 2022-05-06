@@ -136,6 +136,7 @@ func (h *Handler) DeleteV1ListenersListenerNameAttributesAttributeName(c *gin.Co
 	oldValue, err := listener.Attributes.Delete(string(attributeName))
 	if err != nil {
 		responseError(c, err)
+		return
 	}
 	_, err = h.service.Listener.Update(*listener, h.who(c))
 	if err != nil {
