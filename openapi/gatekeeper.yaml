@@ -1335,7 +1335,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/Company'
         '204':
-          description: Succesfully updated company status.
+          description: Succesfully updated status of company.
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':
