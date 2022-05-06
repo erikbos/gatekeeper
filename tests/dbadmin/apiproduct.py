@@ -3,8 +3,7 @@ APIproduct module does all REST API operations on api_product endpoint
 """
 import random
 import urllib
-from common import assert_status_code, assert_content_type_json, \
-                    load_json_schema, assert_valid_schema
+from common import assert_status_code
 from httpstatus import HTTP_OK, HTTP_NOT_FOUND, HTTP_CREATED, HTTP_BAD_REQUEST
 
 
@@ -17,12 +16,6 @@ class APIproduct:
         self.config = config
         self.session = session
         self.api_product_url = config['api_url'] + '/apiproducts'
-        self.schemas = {
-            'api-product': load_json_schema('api-product.json'),
-            'api-products': load_json_schema('api-products.json'),
-            'api-products-names': load_json_schema('api-products-names.json'),
-            'error': load_json_schema('error.json'),
-        }
 
 
     def generate_api_product_name(self, number):
@@ -56,19 +49,14 @@ class APIproduct:
         response = self.session.post(self.api_product_url, json=new_api_product)
         if success_expected:
             assert_status_code(response, HTTP_CREATED)
-            assert_content_type_json(response)
 
             # Check if just created api product matches with what we requested
             created_api_product = response.json()
-            assert_valid_schema(created_api_product, self.schemas['api-product'])
             self.assert_compare(created_api_product, new_api_product)
 
             return created_api_product
 
         assert_status_code(response, HTTP_BAD_REQUEST)
-        assert_content_type_json(response)
-        assert_valid_schema(response.json(), self.schemas['error'])
-
         return response.json()
 
 
@@ -92,8 +80,6 @@ class APIproduct:
         """
         response = self.session.get(self.api_product_url)
         assert_status_code(response, HTTP_OK)
-        assert_content_type_json(response)
-        assert_valid_schema(response.json(), self.schemas['api-products'])
         # TODO filtering on attributename, attributevalue, startKey
 
         return response.json()
@@ -105,8 +91,6 @@ class APIproduct:
         """
         response = self.session.get(self.api_product_url + '?expand=true')
         assert_status_code(response, HTTP_OK)
-        assert_content_type_json(response)
-        assert_valid_schema(response.json(), self.schemas['api-products-names'])
         # TODO filtering on attributename, attributevalue, startKey
 
 
@@ -117,11 +101,7 @@ class APIproduct:
         api_product_url = self.api_product_url + '/' + urllib.parse.quote(api_product)
         response = self.session.get(api_product_url)
         assert_status_code(response, HTTP_OK)
-        assert_content_type_json(response)
-        retrieved_api_product = response.json()
-        assert_valid_schema(retrieved_api_product, self.schemas['api-product'])
-
-        return retrieved_api_product
+        return response.json()
 
 
     def update_positive(self, api_product, updated_api_product):
@@ -131,12 +111,7 @@ class APIproduct:
         api_product_url = self.api_product_url + '/' + urllib.parse.quote(api_product)
         response = self.session.post(api_product_url, json=updated_api_product)
         assert_status_code(response, HTTP_OK)
-        assert_content_type_json(response)
-
-        updated_api_product = response.json()
-        assert_valid_schema(updated_api_product, self.schemas['api-product'])
-
-        return updated_api_product
+        return response.json()
 
 
     def _delete(self, api_product_name, expected_success):
@@ -147,11 +122,6 @@ class APIproduct:
         response = self.session.delete(api_product_url)
         if expected_success:
             assert_status_code(response, HTTP_OK)
-            assert_content_type_json(response)
-            assert_valid_schema(response.json(), self.schemas['api-product'])
-        else:
-            assert_status_code(response, HTTP_NOT_FOUND)
-            assert_content_type_json(response)
 
         return response.json()
 
@@ -177,7 +147,6 @@ class APIproduct:
         api_product_url = self.api_product_url + '/' + urllib.parse.quote(api_product_name)
         response = self.session.delete(api_product_url)
         assert_status_code(response, HTTP_BAD_REQUEST)
-        assert_content_type_json(response)
 
 
     def assert_compare(self, api_product_a, api_product_b):

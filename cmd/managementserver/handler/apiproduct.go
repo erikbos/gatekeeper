@@ -146,6 +146,7 @@ func (h *Handler) DeleteV1OrganizationsOrganizationNameApiproductsApiproductName
 	oldValue, err := apiproduct.Attributes.Delete(string(attributeName))
 	if err != nil {
 		responseError(c, err)
+		return
 	}
 	_, err = h.service.APIProduct.Update(string(organizationName), *apiproduct, h.who(c))
 	if err != nil {
@@ -191,6 +192,7 @@ func (h *Handler) PostV1OrganizationsOrganizationNameApiproductsApiproductNameAt
 	newAttribute := types.NewAttribute(string(attributeName), *receivedValue.Value)
 	if err := apiproduct.Attributes.Set(newAttribute); err != nil {
 		responseError(c, err)
+		return
 	}
 	_, err = h.service.APIProduct.Update(string(organizationName), *apiproduct, h.who(c))
 	if err != nil {
