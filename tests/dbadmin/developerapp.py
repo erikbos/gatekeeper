@@ -3,8 +3,7 @@ Application module does all REST API operations on application endpoint
 """
 import random
 import urllib
-from common import assert_status_code, assert_content_type_json, \
-                    load_json_schema, assert_valid_schema, assert_valid_schema_error
+from common import assert_status_code
 from httpstatus import HTTP_OK, HTTP_NOT_FOUND, HTTP_CREATED, HTTP_BAD_REQUEST, HTTP_NO_CONTENT
 
 
@@ -18,12 +17,6 @@ class Application:
         self.global_application_url = self.config['api_url'] + '/apps'
         if developer_email is not None:
             self.application_url = config['api_url'] + '/developers/' + urllib.parse.quote(developer_email) + '/apps'
-        self.schemas = {
-            'application': load_json_schema('application.json'),
-            'applications': load_json_schema('applications.json'),
-            'applications-uuid': load_json_schema('applications-uuids.json'),
-            'error': load_json_schema('error.json'),
-        }
 
 
     def generate_app_name(self, number):
@@ -55,15 +48,10 @@ class Application:
         response = self.session.post(self.application_url, json=new_application)
         if success_expected:
             assert_status_code(response, HTTP_CREATED)
-            assert_content_type_json(response)
-
             # Check if just created application matches with what we requested
-            assert_valid_schema(response.json(), self.schemas['application'])
             self.assert_compare(response.json(), new_application)
         else:
             assert_status_code(response, HTTP_BAD_REQUEST)
-            assert_content_type_json(response)
-            assert_valid_schema(response.json(), self.schemas['error'])
 
         return response.json()
 
@@ -96,8 +84,6 @@ class Application:
         application_url = self.application_url + '/' + urllib.parse.quote(app_name)
         response = self.session.put(application_url, headers=headers, json=new_key)
         assert_status_code(response, HTTP_OK)
-        assert_content_type_json(response)
-        assert_valid_schema(response.json(), self.schemas['application'])
 
         return response.json()
 
@@ -108,8 +94,6 @@ class Application:
         """
         response = self.session.get(self.global_application_url)
         assert_status_code(response, HTTP_OK)
-        assert_content_type_json(response)
-        assert_valid_schema(response.json(), self.schemas['applications-uuid'])
 
         return response.json()
 
@@ -120,8 +104,6 @@ class Application:
         """
         response = self.session.get(self.global_application_url + '?expand=true')
         assert_status_code(response, HTTP_OK)
-        assert_content_type_json(response)
-        assert_valid_schema(response.json(), self.schemas['applications'])
         # TODO testing of paginating response
         # TODO filtering of apptype, expand, rows, startKey, status queryparameters to filter
 
@@ -132,8 +114,6 @@ class Application:
         """
         response = self.session.get(self.application_url)
         assert_status_code(response, HTTP_OK)
-        assert_content_type_json(response)
-        assert_valid_schema(response.json(), self.schemas['applications'])
 
         return response.json()
 
@@ -145,11 +125,7 @@ class Application:
         application_url = self.application_url + '/' + urllib.parse.quote(app_name)
         response = self.session.get(application_url)
         assert_status_code(response, HTTP_OK)
-        assert_content_type_json(response)
-        retrieved_application = response.json()
-        assert_valid_schema(retrieved_application, self.schemas['application'])
-
-        return retrieved_application
+        return response.json()
 
 
     def get_by_uuid_positive(self, app_uuid):
@@ -159,11 +135,7 @@ class Application:
         application_url = self.global_application_url + '/' + urllib.parse.quote(app_uuid)
         response = self.session.get(application_url)
         assert_status_code(response, HTTP_OK)
-        assert_content_type_json(response)
-        retrieved_application = response.json()
-        assert_valid_schema(retrieved_application, self.schemas['application'])
-
-        return retrieved_application
+        return response.json()
 
 
     def update_positive(self, application):
@@ -173,12 +145,7 @@ class Application:
         application_url = self.application_url + '/' + urllib.parse.quote(application['name'])
         response = self.session.post(application_url, json=application)
         assert_status_code(response, HTTP_OK)
-        assert_content_type_json(response)
-
-        updated_application = response.json()
-        assert_valid_schema(updated_application, self.schemas['application'])
-
-        return updated_application
+        return response.json()
 
 
     def _change_status(self, app_name, status, expect_success):
@@ -196,7 +163,6 @@ class Application:
             assert response.content == b''
         else:
             assert_status_code(response, HTTP_BAD_REQUEST)
-            assert_valid_schema_error(response.json())
 
 
     def change_status_approve_positive(self, app_name):
@@ -220,12 +186,8 @@ class Application:
         response = self.session.delete(self.application_url + '/' + urllib.parse.quote(app_name))
         if expected_success:
             assert_status_code(response, HTTP_OK)
-            assert_content_type_json(response)
-            assert_valid_schema(response.json(), self.schemas['application'])
         else:
             assert_status_code(response, HTTP_NOT_FOUND)
-            assert_content_type_json(response)
-
         return response.json()
 
 
