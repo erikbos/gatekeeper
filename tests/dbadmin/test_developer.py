@@ -3,7 +3,7 @@ Test suite to validate developer endpoints operations
 """
 import copy
 import random
-from common import get_config, get_http_session, API, assert_status_code
+from common import get_config, API, assert_status_code
 from httpstatus import  HTTP_AUTHORIZATION_REQUIRED, HTTP_BAD_CONTENT
 from developer import Developer
 from attribute import run_attribute_tests
@@ -129,7 +129,7 @@ def test_developer_attributes():
 
     test_developer = developer_api.create_positive()
 
-    developer_attributes_url = (developer_api.developer_url +
+    developer_attributes_url = (developer_api.url +
         '/' + test_developer['email'] + '/attributes')
     run_attribute_tests(config, session, developer_attributes_url)
 
@@ -173,7 +173,7 @@ def test_developer_get_all_no_auth():
     """
     developer_api = Developer(config, session)
 
-    response = session.get(developer_api.developer_url, auth=())
+    response = session.get(developer_api.url, auth=())
     assert_status_code(response, HTTP_AUTHORIZATION_REQUIRED)
 
 
@@ -183,7 +183,7 @@ def test_developer_get_no_auth():
     """
     developer_api = Developer(config, session)
 
-    response = session.get(developer_api.developer_url + "/example@test.com", auth=())
+    response = session.get(developer_api.url + "/example@test.com", auth=())
     assert_status_code(response, HTTP_AUTHORIZATION_REQUIRED)
 
 
@@ -194,7 +194,7 @@ def test_developer_get_no_auth():
 #     developer_api = Developer(config, session)
 
 #     wrong_header = {'accept': 'application/unknown'}
-#     response = session.get(developer_api.developer_url, headers=wrong_header)
+#     response = session.get(developer_api.url, headers=wrong_header)
 #     assert_status_code(response, HTTP_BAD_CONTENT)
 
 
@@ -210,7 +210,7 @@ def test_developer_get_no_auth():
 #         "lastName" : "smith"
 #     }
 #     wrong_header = {'accept': 'application/unknown'}
-#     response = session.post(developer_api.developer_url, headers=wrong_header, json=developer)
+#     response = session.post(developer_api.url, headers=wrong_header, json=developer)
 #     assert_status_code(response, HTTP_BAD_CONTENT)
 
 

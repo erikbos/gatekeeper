@@ -15,7 +15,7 @@ class Company:
     def __init__(self, config, session):
         self.config = config
         self.session = session
-        self.company_url = config['api_url'] + '/companies'
+        self.url = config['api_url'] + '/companies'
 
 
     def generate_company_name(self, number):
@@ -45,7 +45,7 @@ class Company:
                 ],
             }
 
-        response = self.session.post(self.company_url, json=new_company)
+        response = self.session.post(self.url, json=new_company)
         if success_expected:
             assert_status_code(response, HTTP_CREATED)
 
@@ -77,7 +77,7 @@ class Company:
         """
         Get all companies
         """
-        response = self.session.get(self.company_url)
+        response = self.session.get(self.url)
         assert_status_code(response, HTTP_OK)
         # TODO filtering on attributename, attributevalue, startKey
 
@@ -88,7 +88,7 @@ class Company:
         """
         Get all companies with full details
         """
-        response = self.session.get(self.company_url + '?expand=true')
+        response = self.session.get(self.url + '?expand=true')
         assert_status_code(response, HTTP_OK)
         # TODO filtering on attributename, attributevalue, startKey
 
@@ -97,8 +97,7 @@ class Company:
         """
         Get existing company
         """
-        company_url = self.company_url + '/' + urllib.parse.quote(company)
-        response = self.session.get(company_url)
+        response = self.session.get(self.url + '/' + urllib.parse.quote(company))
         assert_status_code(response, HTTP_OK)
         return response.json()
 
@@ -107,21 +106,16 @@ class Company:
         """
         Update existing company
         """
-        company_url = self.company_url + '/' + urllib.parse.quote(company)
-        response = self.session.post(company_url, json=updated_company)
+        response = self.session.post(self.url + '/' + urllib.parse.quote(company), json=updated_company)
         assert_status_code(response, HTTP_OK)
         return response.json()
 
 
     def _change_status(self, company_name, status, expect_success):
         """
-        Update status of developer
+        Update status of company
         """
-        headers = self.session.headers
-        headers['content-type'] = 'application/octet-stream'
-        company_url = self.company_url + '/' + urllib.parse.quote(company_name) + '?action=' + status
-        response = self.session.post(company_url, headers=headers)
-
+        response = self.session.change_status(self.url + '/' + urllib.parse.quote(company_name), status)
         if expect_success:
             assert_status_code(response, HTTP_NO_CONTENT)
             assert response.content == b''
@@ -147,7 +141,7 @@ class Company:
         """
         Delete existing company
         """
-        company_url = self.company_url + '/' + urllib.parse.quote(company_name)
+        company_url = self.url + '/' + urllib.parse.quote(company_name)
         response = self.session.delete(company_url)
         if expected_success:
             assert_status_code(response, HTTP_OK)

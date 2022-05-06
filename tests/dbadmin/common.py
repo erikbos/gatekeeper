@@ -3,6 +3,7 @@ Provides common functions
 """
 import os
 import requests
+import urllib
 from openapi_core import create_spec
 from openapi_spec_validator.schemas import read_yaml_file
 from openapi_core.contrib.requests import RequestsOpenAPIRequest, RequestsOpenAPIResponse
@@ -93,7 +94,12 @@ def load_json_schema(filename):
 class API:
     def __init__(self, config, filename):
         self.config = config
-        self.session =  get_http_session(config)
+        self.session = requests.Session()
+        self.session.auth = (config['api_username'], config['api_password'])
+        self.headers = {
+            'accept': 'application/json',
+            'user-agent': 'Gatekeeper testsuite'
+            }
 
         spec = create_spec(read_yaml_file(filename))
         self.request_validator = RequestValidator(spec)
@@ -109,7 +115,7 @@ class API:
         responseOpenAPI = RequestsOpenAPIResponse(response)
 
         # Workaround for https://github.com/p1c2u/openapi-core/issues/378
-        # We override received content-type with the one in OpenAPI specification
+        # We override received content-type with the one in our OpenAPI specification
         if responseOpenAPI.mimetype == 'application/json; charset=utf-8':
             responseOpenAPI.mimetype = 'application/json'
 
@@ -119,11 +125,16 @@ class API:
 
         return response
 
-    def get(self, url):
-        return self._request("GET", url)
+    def get(self, url, **kwargs):
+        return self._request("GET", url, **kwargs)
 
     def post(self, url, **kwargs):
         return self._request("POST", url, **kwargs)
 
     def delete(self, url):
         return self._request("DELETE", url)
+
+    def change_status(self, url, status):
+        headers = self.session.headers
+        headers['content-type'] = 'application/octet-stream'
+        return self.post(url + '?action=' + status, headers=headers)
