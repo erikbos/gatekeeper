@@ -531,6 +531,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Application'
+        '204':
+          description: Succesfully updated status of application.
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -2928,19 +2930,16 @@ components:
       properties:
         name:
           type: string
-          description: Application name. Can only be set when application is created.
+          description: Application name. (read only)
         displayName:
           type: string
-          readOnly: true
           description: Display name of application.
         appId:
           type: string
-          readOnly: true
-          description: ApplicationID of this application.
+          description: ApplicationID of this application. (read only)
         developerId:
           type: string
-          readOnly: true
-          description: DeveloperID of developer that owns this application.
+          description: DeveloperID of developer that owns this application. (read only)
         scopes:
           type: array
           items:
@@ -2960,7 +2959,7 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Key"
-            description: Application credentials (retrieve only)
+            description: Application credentials (read only)
         keyExpiresIn:
           type: integer
           format: int64
@@ -2968,21 +2967,17 @@ components:
         createdAt:
           type: integer
           format: int64
-          readOnly: true
-          description: Create timestamp in milliseconds since epoch.
+          description: Create timestamp in milliseconds since epoch. (read only)
         createdBy:
           type: string
-          readOnly: true
-          description: User who created this application.
+          description: User who created this application. (read only)
         lastModifiedAt:
           type: integer
           format: int64
-          readOnly: true
-          description: Last modified timestamp in milliseconds since epoch.
+          description: Last modified timestamp in milliseconds since epoch. (read only)
         lastModifiedBy:
           type: string
-          readOnly: true
-          description: User who last updated this application.
+          description: User who last updated this application. (read only)
     Applications:
       type: object
       properties:
