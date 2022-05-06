@@ -3,7 +3,7 @@ Test suite to validate key endpoints operations
 """
 import random
 import secrets
-from common import get_config, get_http_session
+from common import get_config, API
 from developer import Developer
 from developerapp import Application
 from key import Key
@@ -11,7 +11,7 @@ from apiproduct import APIproduct
 from attribute import run_attribute_tests
 
 config = get_config()
-session = get_http_session(config)
+session = API(config, '../../openapi/gatekeeper.yaml')
 
 
 def test_key_crud():
@@ -348,7 +348,7 @@ def test_key_attributes():
 
     consumer_key = created_application['credentials'][0]['consumerKey']
 
-    application_attributes_url = (application_api.application_url
+    application_attributes_url = (application_api.url
                                   + '/' + created_application['name']
                                   + '/keys/' + consumer_key
                                   + '/attributes')

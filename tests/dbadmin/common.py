@@ -131,6 +131,9 @@ class API:
     def post(self, url, **kwargs):
         return self._request("POST", url, **kwargs)
 
+    def put(self, url, **kwargs):
+        return self._request("PUT", url, **kwargs)
+
     def delete(self, url):
         return self._request("DELETE", url)
 

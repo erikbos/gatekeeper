@@ -764,6 +764,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Key'
+        '201':
+          description: Succesfully created key.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Key'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -807,7 +813,6 @@ paths:
         - $ref: '#/components/parameters/consumer_key'
         - $ref: '#/components/parameters/key_action'
       requestBody:
-        required: true
         content:
           application/json:
             schema:
@@ -819,6 +824,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Key'
+        '204':
+          description: Succesfully updated status of key.
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -868,7 +875,6 @@ paths:
         - $ref: '#/components/parameters/apiproduct_name'
         - $ref: '#/components/parameters/key_action'
       requestBody:
-        required: true
         content:
           application/json:
             schema:
@@ -880,6 +886,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Key'
+        '204':
+          description: Succesfully updated status of apiproduct assigned to key.
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':

@@ -2,8 +2,7 @@
 Attribute module does all REST API operations on an attribute endpoint
 """
 import urllib
-from common import assert_status_code, assert_content_type_json, \
-                    load_json_schema, assert_valid_schema
+from common import assert_status_code
 from httpstatus import HTTP_OK, HTTP_NOT_FOUND
 
 
@@ -15,11 +14,6 @@ class Attribute:
         self.config = config
         self.session = session
         self.attribute_url = attribute_url
-        self.schemas = {
-            'attribute': load_json_schema('attribute.json'),
-            'attributes': load_json_schema('attributes.json'),
-            'error': load_json_schema('error.json'),
-        }
 
 
     def post(self, attributes):
@@ -28,8 +22,6 @@ class Attribute:
         """
         response = self.session.post(self.attribute_url, json=attributes)
         assert_status_code(response, HTTP_OK)
-        assert_content_type_json(response)
-        assert_valid_schema(response.json(), self.schemas['attributes'])
 
 
     def get_all(self):
@@ -38,12 +30,7 @@ class Attribute:
         """
         response = self.session.get(self.attribute_url)
         assert_status_code(response, HTTP_OK)
-        assert_content_type_json(response)
-
-        retrieved_attributes = response.json()
-        assert_valid_schema(retrieved_attributes, self.schemas['attributes'])
-
-        return retrieved_attributes
+        return response.json()
 
 
     def get_positive(self, attribute_name):
@@ -52,12 +39,7 @@ class Attribute:
         """
         response = self.session.get(self.attribute_url + '/' + urllib.parse.quote(attribute_name))
         assert_status_code(response, HTTP_OK)
-        assert_content_type_json(response)
-
-        retrieved_attribute = response.json()
-        assert_valid_schema(retrieved_attribute, self.schemas['attribute'])
-
-        return retrieved_attribute
+        return response.json()
 
 
     def get_negative(self, attribute_name):
@@ -66,7 +48,6 @@ class Attribute:
         """
         response = self.session.get(self.attribute_url + '/' + urllib.parse.quote(attribute_name))
         assert_status_code(response, HTTP_NOT_FOUND)
-        assert_content_type_json(response)
 
 
     def delete_positive(self, attribute_name):
@@ -75,12 +56,7 @@ class Attribute:
         """
         response = self.session.delete(self.attribute_url + '/' + urllib.parse.quote(attribute_name))
         assert_status_code(response, HTTP_OK)
-        assert_content_type_json(response)
-
-        retrieved_attribute = response.json()
-        assert_valid_schema(retrieved_attribute, self.schemas['attribute'])
-
-        return retrieved_attribute
+        return response.json()
 
 
     def delete_negative(self, attribute_name):
@@ -89,7 +65,6 @@ class Attribute:
         """
         response = self.session.delete(self.attribute_url + '/' + urllib.parse.quote(attribute_name))
         assert_status_code(response, HTTP_NOT_FOUND)
-        assert_content_type_json(response)
 
 
     def compare_sets(self, attribute_response_a, attribute_response_b):
