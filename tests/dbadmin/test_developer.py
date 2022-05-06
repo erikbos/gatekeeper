@@ -4,7 +4,7 @@ Test suite to validate developer endpoints operations
 import copy
 import random
 from common import get_config, API, assert_status_code
-from httpstatus import  HTTP_AUTHORIZATION_REQUIRED, HTTP_BAD_CONTENT
+from httpstatus import HTTP_AUTHORIZATION_REQUIRED
 from developer import Developer
 from attribute import run_attribute_tests
 

@@ -14,9 +14,9 @@ class Application:
     def __init__(self, config, session, developer_email):
         self.config = config
         self.session = session
-        self.global_application_url = self.config['api_url'] + '/apps'
+        self.global_url = self.config['api_url'] + '/apps'
         if developer_email is not None:
-            self.application_url = config['api_url'] + '/developers/' + urllib.parse.quote(developer_email) + '/apps'
+            self.url = config['api_url'] + '/developers/' + urllib.parse.quote(developer_email) + '/apps'
 
 
     def generate_app_name(self, number):
@@ -45,7 +45,7 @@ class Application:
                 ],
             }
 
-        response = self.session.post(self.application_url, json=new_application)
+        response = self.session.post(self.url, json=new_application)
         if success_expected:
             assert_status_code(response, HTTP_CREATED)
             # Check if just created application matches with what we requested
@@ -81,8 +81,8 @@ class Application:
 
         headers = self.session.headers
         headers['content-type'] = 'application/json'
-        application_url = self.application_url + '/' + urllib.parse.quote(app_name)
-        response = self.session.put(application_url, headers=headers, json=new_key)
+        url = self.url + '/' + urllib.parse.quote(app_name)
+        response = self.session.put(url, headers=headers, json=new_key)
         assert_status_code(response, HTTP_OK)
 
         return response.json()
@@ -92,7 +92,7 @@ class Application:
         """
         Get global list of all application uuids
         """
-        response = self.session.get(self.global_application_url)
+        response = self.session.get(self.global_url)
         assert_status_code(response, HTTP_OK)
 
         return response.json()
@@ -102,7 +102,7 @@ class Application:
         """
         Get global list of all application names
         """
-        response = self.session.get(self.global_application_url + '?expand=true')
+        response = self.session.get(self.global_url + '?expand=true')
         assert_status_code(response, HTTP_OK)
         # TODO testing of paginating response
         # TODO filtering of apptype, expand, rows, startKey, status queryparameters to filter
@@ -112,7 +112,7 @@ class Application:
         """
         Get all application names of one developer
         """
-        response = self.session.get(self.application_url)
+        response = self.session.get(self.url)
         assert_status_code(response, HTTP_OK)
 
         return response.json()
@@ -122,8 +122,8 @@ class Application:
         """
         Get existing application
         """
-        application_url = self.application_url + '/' + urllib.parse.quote(app_name)
-        response = self.session.get(application_url)
+        url = self.url + '/' + urllib.parse.quote(app_name)
+        response = self.session.get(url)
         assert_status_code(response, HTTP_OK)
         return response.json()
 
@@ -132,8 +132,8 @@ class Application:
         """
         Get existing application by uuid
         """
-        application_url = self.global_application_url + '/' + urllib.parse.quote(app_uuid)
-        response = self.session.get(application_url)
+        url = self.global_url + '/' + urllib.parse.quote(app_uuid)
+        response = self.session.get(url)
         assert_status_code(response, HTTP_OK)
         return response.json()
 
@@ -142,8 +142,8 @@ class Application:
         """
         Update existing application
         """
-        application_url = self.application_url + '/' + urllib.parse.quote(application['name'])
-        response = self.session.post(application_url, json=application)
+        url = self.url + '/' + urllib.parse.quote(application['name'])
+        response = self.session.post(url, json=application)
         assert_status_code(response, HTTP_OK)
         return response.json()
 
@@ -154,9 +154,9 @@ class Application:
         """
         headers = self.session.headers
         headers['content-type'] = 'application/octet-stream'
-        application_url = (self.application_url + '/' +
+        url = (self.url + '/' +
                     urllib.parse.quote(app_name) + '?action=' + status)
-        response = self.session.post(application_url, headers=headers)
+        response = self.session.post(url, headers=headers)
 
         if expect_success:
             assert_status_code(response, HTTP_NO_CONTENT)
@@ -183,7 +183,7 @@ class Application:
         """
         Delete existing application
         """
-        response = self.session.delete(self.application_url + '/' + urllib.parse.quote(app_name))
+        response = self.session.delete(self.url + '/' + urllib.parse.quote(app_name))
         if expected_success:
             assert_status_code(response, HTTP_OK)
         else:
@@ -211,8 +211,8 @@ class Application:
         """
         for i in range(self.config['entity_count']):
             app_name = self.generate_app_name(i)
-            application_url = self.application_url + '/' + urllib.parse.quote(app_name)
-            self.session.delete(application_url)
+            url = self.url + '/' + urllib.parse.quote(app_name)
+            self.session.delete(url)
 
 
     def assert_compare(self, application_a, application_b):

@@ -3,13 +3,13 @@ Test suite to validate developer application endpoints operations
 """
 import copy
 import random
-from common import get_config, get_http_session
+from common import get_config, API
 from developer import Developer
 from developerapp import Application
 from attribute import run_attribute_tests
 
 config = get_config()
-session = get_http_session(config)
+session = API(config, '../../openapi/gatekeeper.yaml')
 
 
 def test_application_get_all():
@@ -148,7 +148,7 @@ def test_application_attributes():
     application_api = Application(config, session, created_developer['email'])
     created_application = application_api.create_new()
 
-    application_attributes_url = (application_api.application_url +
+    application_attributes_url = (application_api.url +
                                 '/' + created_application['name'] + '/attributes')
     run_attribute_tests(config, session, application_attributes_url)
 
