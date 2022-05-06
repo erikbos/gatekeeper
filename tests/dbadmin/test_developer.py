@@ -9,8 +9,7 @@ from developer import Developer
 from attribute import run_attribute_tests
 
 config = get_config()
-session = get_http_session(config)
-# session = API(config, '../../openapi/gatekeeper.yaml')
+session = API(config, '../../openapi/gatekeeper.yaml')
 
 
 def test_developer_get_all():

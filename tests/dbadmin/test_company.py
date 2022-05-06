@@ -4,12 +4,12 @@ Test suite to validate companies endpoints operations
 import copy
 import random
 import urllib
-from common import get_config, get_http_session
+from common import get_config, API
 from company import Company
 from attribute import run_attribute_tests
 
 config = get_config()
-session = get_http_session(config)
+session = API(config, '../../openapi/gatekeeper.yaml')
 
 
 def test_company_get_all():
@@ -81,7 +81,7 @@ def test_company_attributes():
 
     test_company = company_api.create_positive()
 
-    company_attributes_url = (company_api.company_url +
+    company_attributes_url = (company_api.url +
         '/' + urllib.parse.quote(test_company['name']) + '/attributes')
     run_attribute_tests(config, session, company_attributes_url)
 

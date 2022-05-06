@@ -1334,6 +1334,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Company'
+        '204':
+          description: Succesfully updated company status.
         '400':
           $ref: '#/components/responses/BadRequest'
         '404':

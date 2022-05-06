@@ -3,8 +3,7 @@ Company module does all REST API operations on company endpoint
 """
 import random
 import urllib
-from common import assert_status_code, assert_content_type_json, \
-                    load_json_schema, assert_valid_schema, assert_valid_schema_error
+from common import assert_status_code
 from httpstatus import HTTP_OK, HTTP_NOT_FOUND, HTTP_CREATED, HTTP_BAD_REQUEST, HTTP_NO_CONTENT
 
 
@@ -17,12 +16,6 @@ class Company:
         self.config = config
         self.session = session
         self.company_url = config['api_url'] + '/companies'
-        self.schemas = {
-            'company': load_json_schema('company.json'),
-            'companies': load_json_schema('companies.json'),
-            'company-names': load_json_schema('company-names.json'),
-            'error': load_json_schema('error.json'),
-        }
 
 
     def generate_company_name(self, number):
@@ -55,19 +48,14 @@ class Company:
         response = self.session.post(self.company_url, json=new_company)
         if success_expected:
             assert_status_code(response, HTTP_CREATED)
-            assert_content_type_json(response)
 
             # Check if just created company matches with what we requested
             created_company = response.json()
-            assert_valid_schema(created_company, self.schemas['company'])
             self.assert_compare(created_company, new_company)
 
             return created_company
 
         assert_status_code(response, HTTP_BAD_REQUEST)
-        assert_content_type_json(response)
-        assert_valid_schema(response.json(), self.schemas['error'])
-
         return response.json()
 
 
@@ -91,8 +79,6 @@ class Company:
         """
         response = self.session.get(self.company_url)
         assert_status_code(response, HTTP_OK)
-        assert_content_type_json(response)
-        assert_valid_schema(response.json(), self.schemas['company-names'])
         # TODO filtering on attributename, attributevalue, startKey
 
         return response.json()
@@ -104,8 +90,6 @@ class Company:
         """
         response = self.session.get(self.company_url + '?expand=true')
         assert_status_code(response, HTTP_OK)
-        assert_content_type_json(response)
-        assert_valid_schema(response.json(), self.schemas['companies'])
         # TODO filtering on attributename, attributevalue, startKey
 
 
@@ -116,11 +100,7 @@ class Company:
         company_url = self.company_url + '/' + urllib.parse.quote(company)
         response = self.session.get(company_url)
         assert_status_code(response, HTTP_OK)
-        assert_content_type_json(response)
-        retrieved_company = response.json()
-        assert_valid_schema(retrieved_company, self.schemas['company'])
-
-        return retrieved_company
+        return response.json()
 
 
     def update_positive(self, company, updated_company):
@@ -130,12 +110,7 @@ class Company:
         company_url = self.company_url + '/' + urllib.parse.quote(company)
         response = self.session.post(company_url, json=updated_company)
         assert_status_code(response, HTTP_OK)
-        assert_content_type_json(response)
-
-        updated_company = response.json()
-        assert_valid_schema(updated_company, self.schemas['company'])
-
-        return updated_company
+        return response.json()
 
 
     def _change_status(self, company_name, status, expect_success):
@@ -152,7 +127,6 @@ class Company:
             assert response.content == b''
         else:
             assert_status_code(response, HTTP_BAD_REQUEST)
-            assert_valid_schema_error(response.json())
 
 
     def change_status_active_positive(self, company_name):
@@ -177,11 +151,8 @@ class Company:
         response = self.session.delete(company_url)
         if expected_success:
             assert_status_code(response, HTTP_OK)
-            assert_content_type_json(response)
-            assert_valid_schema(response.json(), self.schemas['company'])
         else:
             assert_status_code(response, HTTP_NOT_FOUND)
-            assert_content_type_json(response)
 
         return response.json()
 

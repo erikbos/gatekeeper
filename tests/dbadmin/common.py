@@ -93,21 +93,15 @@ def load_json_schema(filename):
 class API:
     def __init__(self, config, filename):
         self.config = config
-        self.session = requests.Session()
-
-        self.session.auth = (config['api_username'], config['api_password'])
-        self.session.headers = {
-            'accept': 'application/json',
-            'user-agent': 'Gatekeeper testsuite'
-        }
+        self.session =  get_http_session(config)
 
         spec = create_spec(read_yaml_file(filename))
         self.request_validator = RequestValidator(spec)
         self.response_validator = ResponseValidator(spec)
 
 
-    def _request(self, method, url, *args, **kwargs):
-        request = requests.Request(method, url, *args, **kwargs)
+    def _request(self, method, url, **kwargs):
+        request = requests.Request(method, url, **kwargs)
         result = self.request_validator.validate(RequestsOpenAPIRequest(request))
         result.raise_for_errors()
 
@@ -115,6 +109,7 @@ class API:
         responseOpenAPI = RequestsOpenAPIResponse(response)
 
         # Workaround for https://github.com/p1c2u/openapi-core/issues/378
+        # We override received content-type with the one in OpenAPI specification
         if responseOpenAPI.mimetype == 'application/json; charset=utf-8':
             responseOpenAPI.mimetype = 'application/json'
 
@@ -124,8 +119,11 @@ class API:
 
         return response
 
-    def get(self, url, *args, **kwargs):
-        return self._request("GET", url, args, kwargs)
+    def get(self, url):
+        return self._request("GET", url)
 
-    def post(self, url, *args, **kwargs):
-        return self._request("POST", url, args, kwargs)
+    def post(self, url, **kwargs):
+        return self._request("POST", url, **kwargs)
+
+    def delete(self, url):
+        return self._request("DELETE", url)
