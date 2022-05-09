@@ -53,8 +53,7 @@ docker-testbackend:
 	 docker build -f  build/Dockerfile.testbackend . -t gatekeeper/testbackend:$(VERSION) -t gatekeeper/testbackend:latest
 
 docker-dbadmin-test:
-	cd tests/dbadmin && \
-		docker build . -t gatekeeper/dbadmin-test:$(VERSION)
+	 docker build -f build/Dockerfile.e2e-tests . -t gatekeeper/dbadmin-test:$(VERSION)
 
 .PHONY: test
 test:
