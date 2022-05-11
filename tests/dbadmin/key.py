@@ -20,10 +20,6 @@ class Key:
             self.key_url = (config['api_url'] +
                                     '/developers/' + urllib.parse.quote(developer_email) +
                                     '/apps/' + urllib.parse.quote(app_name) + '/keys')
-        self.schemas = {
-            'key': load_json_schema('key.json'),
-            'error': load_json_schema('error.json'),
-        }
 
 
     def _create(self, new_key, success_expected):
@@ -38,14 +34,11 @@ class Key:
 
             # Check if just created key matches with what we requested
             created_key = response.json()
-            assert_valid_schema(created_key, self.schemas['key'])
             self.assert_compare(created_key, new_key)
 
             return created_key
 
         assert_status_codes(response, [ HTTP_BAD_REQUEST, HTTP_CONFLICT ] )
-        assert_content_type_json(response)
-        assert_valid_schema(response.json(), self.schemas['error'])
 
 
     def create_positive(self, new_key):
@@ -69,10 +62,7 @@ class Key:
         response = self.session.get(self.key_url + '/' + urllib.parse.quote(consumer_key))
         assert_status_code(response, HTTP_OK)
         assert_content_type_json(response)
-        retrieved_key = response.json()
-        assert_valid_schema(retrieved_key, self.schemas['key'])
-
-        return retrieved_key
+        return response.json()
 
 
     def _update(self, consumer_key, updated_key, success_expected):
@@ -89,18 +79,9 @@ class Key:
         print ("res", response.text)
         if success_expected:
             assert_status_code(response, HTTP_OK)
-            assert_content_type_json(response)
-
-            updated_key = response.json()
-            assert_valid_schema(updated_key, self.schemas['key'])
-
-            return updated_key
+            return response.json()
 
         assert_status_codes(response, [ HTTP_BAD_REQUEST ])
-        assert_content_type_json(response)
-
-        updated_key = response.json()
-        assert_valid_schema_error(response.json())
 
 
     def update_positive(self, consumer_key, updated_key):
@@ -132,7 +113,6 @@ class Key:
             assert response.content == b''
         else:
             assert_status_code(response, HTTP_BAD_REQUEST)
-            assert_valid_schema_error(response.json())
 
 
     def change_status_approve_positive(self, consumer_key):
@@ -156,12 +136,8 @@ class Key:
         response = self.session.delete(self.key_url + '/' + urllib.parse.quote(consumer_key))
         if expect_success:
             assert_status_code(response, HTTP_OK)
-            assert_content_type_json(response)
-            assert_valid_schema(response.json(), self.schemas['key'])
         else:
             assert_status_code(response, HTTP_NOT_FOUND)
-            assert_content_type_json(response)
-
         return response.json()
 
 
@@ -202,7 +178,6 @@ class Key:
             assert response.content == b''
         else:
             assert_status_code(response, HTTP_BAD_REQUEST)
-            assert_valid_schema_error(response.json())
 
 
     def _api_product_delete(self, consumer_key, api_product_name, expect_success):
@@ -213,11 +188,9 @@ class Key:
                                             + '/apiproducts/' + urllib.parse.quote(api_product_name))
         response = self.session.delete(key_api_product_url)
         if expect_success:
-            assert_content_type_json(response)
-            assert_valid_schema(response.json(), self.schemas['key'])
+            assert_status_code(response, HTTP_OK)
         else:
             assert_status_code(response, HTTP_BAD_REQUEST)
-            assert_valid_schema_error(response.json())
 
 
     def api_product_delete_positive(self, consumer_key, api_product_name):

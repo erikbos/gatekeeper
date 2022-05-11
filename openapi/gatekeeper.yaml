@@ -3,8 +3,8 @@ info:
   version: 1.0.0
   title: Gatekeeper API
   description: 'Gatekepeer offers an HTTP-based RESTful API. It has predictable URLs for all resources. Payload is formatted as JSON and it returns HTTP status codes to indicate errors.'
-security:
-  - BasicAuth: []
+# security:
+#   - BasicAuth: []
 
 tags:
   - name: Intro
@@ -77,6 +77,8 @@ paths:
                 $ref: '#/components/schemas/Organizations'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
     post:
       summary: Create organization
       tags:
@@ -96,6 +98,8 @@ paths:
                 $ref: '#/components/schemas/Organization'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
 
   /v1/organizations/{organization_name}:
     get:
@@ -113,6 +117,8 @@ paths:
                 $ref: '#/components/schemas/Organization'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: organization to retrieve does not exist.
           content:
@@ -140,6 +146,8 @@ paths:
                 $ref: '#/components/schemas/Organization'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: organization to update does not exist.
           content:
@@ -159,6 +167,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Organization'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: organization to delete does not exist.
           content:
@@ -196,6 +206,8 @@ paths:
                   - $ref: '#/components/schemas/Developers'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
     post:
       summary: Create developer
       tags:
@@ -217,6 +229,8 @@ paths:
                 $ref: '#/components/schemas/Developer'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
 
   /v1/organizations/{organization_name}/developers/{developer_emailaddress}:
     get:
@@ -235,6 +249,8 @@ paths:
                 $ref: '#/components/schemas/Developer'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: Developer to retrieve does not exist.
           content:
@@ -265,8 +281,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Developer'
+        '204':
+          description: Succesfully updated status of developer.
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: Developer to update does not exist.
           content:
@@ -289,6 +309,8 @@ paths:
                 $ref: '#/components/schemas/Developer'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: Developer to delete does not exist.
           content:
@@ -308,6 +330,8 @@ paths:
           $ref: '#/components/responses/AttributesRetrieved'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: developer to Replace all attributes from does not exist.
           content:
@@ -332,6 +356,8 @@ paths:
           $ref: '#/components/responses/AttributesUpdated'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: developer to update does not exist.
           content:
@@ -352,6 +378,8 @@ paths:
           $ref: '#/components/responses/AttributeRetrieved'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/AttributeDoesNotExist'
     post:
@@ -375,6 +403,8 @@ paths:
           $ref: '#/components/responses/AttributeCreated'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/AttributeDoesNotExist'
     delete:
@@ -388,6 +418,8 @@ paths:
       responses:
         '200':
           $ref: '#/components/responses/AttributeDeleted'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/AttributeDoesNotExist'
 
@@ -422,6 +454,8 @@ paths:
                   - $ref: '#/components/schemas/Applications'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
     post:
       summary: Create application
       tags:
@@ -444,6 +478,8 @@ paths:
                 $ref: '#/components/schemas/Application'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}:
     get:
       summary: Retrieve application
@@ -462,6 +498,8 @@ paths:
                 $ref: '#/components/schemas/Application'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: Application to retrieve does not exist.
           content:
@@ -493,8 +531,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Application'
+        '204':
+          description: Succesfully updated status of application.
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: Application to update does not exist.
           content:
@@ -529,6 +571,8 @@ paths:
                 $ref: '#/components/schemas/Application'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: Application to update does not exist.
           content:
@@ -552,6 +596,8 @@ paths:
                 $ref: '#/components/schemas/Application'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: Application to delete does not exist.
           content:
@@ -572,6 +618,8 @@ paths:
           $ref: '#/components/responses/AttributesRetrieved'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: application to replace all attributes from does not exist.
           content:
@@ -597,6 +645,8 @@ paths:
           $ref: '#/components/responses/AttributesUpdated'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: Application to update does not exist.
           content:
@@ -642,6 +692,8 @@ paths:
           $ref: '#/components/responses/AttributeCreated'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/AttributeDoesNotExist'
     delete:
@@ -656,6 +708,8 @@ paths:
       responses:
         '200':
           $ref: '#/components/responses/AttributeDeleted'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/AttributeDoesNotExist'
 
@@ -677,6 +731,8 @@ paths:
                 $ref: '#/components/schemas/Keys'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: Application does not exist.
           content:
@@ -708,8 +764,16 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Key'
+        '201':
+          description: Succesfully created key.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Key'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
 
   /v1/organizations/{organization_name}/developers/{developer_emailaddress}/apps/{app_name}/keys/{consumer_key}:
     get:
@@ -730,6 +794,8 @@ paths:
                 $ref: '#/components/schemas/Key'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: Key does not exist.
           content:
@@ -747,7 +813,6 @@ paths:
         - $ref: '#/components/parameters/consumer_key'
         - $ref: '#/components/parameters/key_action'
       requestBody:
-        required: true
         content:
           application/json:
             schema:
@@ -759,8 +824,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Key'
+        '204':
+          description: Succesfully updated status of key.
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: Key does not exist.
           content:
@@ -783,6 +852,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Key'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: Key does not exist.
           content:
@@ -804,7 +875,6 @@ paths:
         - $ref: '#/components/parameters/apiproduct_name'
         - $ref: '#/components/parameters/key_action'
       requestBody:
-        required: true
         content:
           application/json:
             schema:
@@ -816,8 +886,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Key'
+        '204':
+          description: Succesfully updated status of apiproduct assigned to key.
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: Key does not have apiproduct assigned.
           content:
@@ -842,6 +916,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Key'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: Key does not have apiproduct assigned.
           content:
@@ -864,6 +940,8 @@ paths:
           $ref: '#/components/responses/AttributesRetrieved'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: key to replace all attributes from does not exist.
           content:
@@ -890,6 +968,8 @@ paths:
           $ref: '#/components/responses/AttributesUpdated'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: Key to update does not exist.
           content:
@@ -912,6 +992,8 @@ paths:
           $ref: '#/components/responses/AttributeRetrieved'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/AttributeDoesNotExist'
     post:
@@ -937,6 +1019,8 @@ paths:
           $ref: '#/components/responses/AttributeCreated'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/AttributeDoesNotExist'
     delete:
@@ -952,6 +1036,8 @@ paths:
       responses:
         '200':
           $ref: '#/components/responses/AttributeDeleted'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/AttributeDoesNotExist'
 
@@ -1004,6 +1090,8 @@ paths:
                 $ref: '#/components/schemas/Application'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: Application to retrieve does not exist.
           content:
@@ -1036,9 +1124,14 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIProducts'
+                oneOf:
+                  - $ref: '#/components/schemas/APIProductNames'
+                  - $ref: '#/components/schemas/APIProducts'
+
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
     post:
       parameters:
         - $ref: '#/components/parameters/organization_name'
@@ -1060,6 +1153,8 @@ paths:
                 $ref: '#/components/schemas/APIProduct'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /v1/organizations/{organization_name}/apiproducts/{apiproduct_name}:
     get:
       summary: Retrieve APIProduct
@@ -1131,6 +1226,8 @@ paths:
                 $ref: '#/components/schemas/APIProduct'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: APIProduct to delete does not exist.
           content:
@@ -1150,6 +1247,8 @@ paths:
           $ref: '#/components/responses/AttributesRetrieved'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: APIProduct to replace all attributes from does not exist.
           content:
@@ -1174,6 +1273,8 @@ paths:
           $ref: '#/components/responses/AttributesUpdated'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: APIProduct to update does not exist.
           content:
@@ -1194,6 +1295,8 @@ paths:
           $ref: '#/components/responses/AttributeRetrieved'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/AttributeDoesNotExist'
     post:
@@ -1217,6 +1320,8 @@ paths:
           $ref: '#/components/responses/AttributeCreated'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/AttributeDoesNotExist'
     delete:
@@ -1230,6 +1335,8 @@ paths:
       responses:
         '200':
           $ref: '#/components/responses/AttributeDeleted'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/AttributeDoesNotExist'
 
@@ -1258,9 +1365,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Companies'
+                oneOf:
+                  - $ref: '#/components/schemas/CompanyNames'
+                  - $ref: '#/components/schemas/Companies'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
     post:
       parameters:
         - $ref: '#/components/parameters/organization_name'
@@ -1282,6 +1393,8 @@ paths:
                 $ref: '#/components/schemas/Company'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /v1/organizations/{organization_name}/companies/{company_name}:
     get:
       summary: Retrieve company
@@ -1299,6 +1412,8 @@ paths:
                 $ref: '#/components/schemas/Company'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: Company to retrieve does not exist.
           content:
@@ -1329,8 +1444,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Company'
+        '204':
+          description: Succesfully updated status of company.
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: Company to update does not exist.
           content:
@@ -1353,6 +1472,8 @@ paths:
                 $ref: '#/components/schemas/Company'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: Company to delete does not exist.
           content:
@@ -1372,6 +1493,8 @@ paths:
           $ref: '#/components/responses/AttributesRetrieved'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: Company to replace all attributes from does not exist.
           content:
@@ -1396,6 +1519,8 @@ paths:
           $ref: '#/components/responses/AttributesUpdated'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: Company to update does not exist.
           content:
@@ -1416,6 +1541,8 @@ paths:
           $ref: '#/components/responses/AttributeRetrieved'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/AttributeDoesNotExist'
     post:
@@ -1439,6 +1566,8 @@ paths:
           $ref: '#/components/responses/AttributeCreated'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/AttributeDoesNotExist'
     delete:
@@ -1452,6 +1581,8 @@ paths:
       responses:
         '200':
           $ref: '#/components/responses/AttributeDeleted'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/AttributeDoesNotExist'
 
@@ -1469,6 +1600,8 @@ paths:
                 $ref: '#/components/schemas/Listeners'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
     post:
       summary: Create listener
       tags:
@@ -1488,6 +1621,8 @@ paths:
                 $ref: '#/components/schemas/Listener'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
 
   /v1/listeners/{listener_name}:
     get:
@@ -1505,6 +1640,8 @@ paths:
                 $ref: '#/components/schemas/Listener'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: Listener to retrieve does not exist.
           content:
@@ -1532,6 +1669,8 @@ paths:
                 $ref: '#/components/schemas/Listener'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: Listener to update does not exist.
           content:
@@ -1551,6 +1690,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Listener'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: Listener to delete does not exist.
           content:
@@ -1570,6 +1711,8 @@ paths:
           $ref: '#/components/responses/AttributesRetrieved'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: Listener to replace all attributes from does not exist.
           content:
@@ -1587,6 +1730,8 @@ paths:
           $ref: '#/components/responses/AttributesUpdated'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: Listener to update does not exist.
           content:
@@ -1607,6 +1752,8 @@ paths:
           $ref: '#/components/responses/AttributeRetrieved'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/AttributeDoesNotExist'
     post:
@@ -1629,6 +1776,8 @@ paths:
           $ref: '#/components/responses/AttributeCreated'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/AttributeDoesNotExist'
     delete:
@@ -1641,6 +1790,8 @@ paths:
       responses:
         '200':
           $ref: '#/components/responses/AttributeDeleted'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/AttributeDoesNotExist'
 
@@ -1658,6 +1809,8 @@ paths:
                 $ref: '#/components/schemas/Routes'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
     post:
       summary: Create route
       tags:
@@ -1677,6 +1830,8 @@ paths:
                 $ref: '#/components/schemas/Route'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
 
   /v1/routes/{route_name}:
     get:
@@ -1694,6 +1849,8 @@ paths:
                 $ref: '#/components/schemas/Route'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: Route to retrieve does not exist.
           content:
@@ -1721,6 +1878,8 @@ paths:
                 $ref: '#/components/schemas/Route'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: Route to update does not exist.
           content:
@@ -1740,6 +1899,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Route'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: Route to delete does not exist.
           content:
@@ -1759,6 +1920,8 @@ paths:
           $ref: '#/components/responses/AttributesRetrieved'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: Route to Replace all attributes from does not exist.
           content:
@@ -1782,6 +1945,8 @@ paths:
           $ref: '#/components/responses/AttributesUpdated'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: Route to update does not exist.
           content:
@@ -1802,6 +1967,8 @@ paths:
           $ref: '#/components/responses/AttributeRetrieved'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/AttributeDoesNotExist'
     post:
@@ -1824,6 +1991,8 @@ paths:
           $ref: '#/components/responses/AttributeCreated'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/AttributeDoesNotExist'
     delete:
@@ -1836,6 +2005,8 @@ paths:
       responses:
         '200':
           $ref: '#/components/responses/AttributeDeleted'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/AttributeDoesNotExist'
 
@@ -1853,6 +2024,8 @@ paths:
                 $ref: '#/components/schemas/Clusters'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
     post:
       summary: Create cluster
       tags:
@@ -1872,6 +2045,8 @@ paths:
                 $ref: '#/components/schemas/Cluster'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
 
   /v1/clusters/{cluster_name}:
     get:
@@ -1889,6 +2064,8 @@ paths:
                 $ref: '#/components/schemas/Cluster'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: Cluster to retrieve does not exist.
           content:
@@ -1916,6 +2093,8 @@ paths:
                 $ref: '#/components/schemas/Cluster'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: Cluster to update does not exist.
           content:
@@ -1935,6 +2114,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Cluster'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: Cluster to delete does not exist.
           content:
@@ -1954,6 +2135,8 @@ paths:
           $ref: '#/components/responses/AttributesRetrieved'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: Cluster to Replace all attributes from does not exist.
           content:
@@ -1971,6 +2154,8 @@ paths:
           $ref: '#/components/responses/AttributesUpdated'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: Cluster to update does not exist.
           content:
@@ -1991,6 +2176,8 @@ paths:
           $ref: '#/components/responses/AttributeRetrieved'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/AttributeDoesNotExist'
     post:
@@ -2013,6 +2200,8 @@ paths:
           $ref: '#/components/responses/AttributeCreated'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/AttributeDoesNotExist'
     delete:
@@ -2025,6 +2214,8 @@ paths:
       responses:
         '200':
           $ref: '#/components/responses/AttributeDeleted'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/AttributeDoesNotExist'
 
@@ -2043,6 +2234,8 @@ paths:
                 $ref: '#/components/schemas/Users'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
     post:
       summary: Create user
       description: Create user for the management API.
@@ -2063,6 +2256,8 @@ paths:
                 $ref: '#/components/schemas/User'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
 
   /v1/users/{user_name}:
     get:
@@ -2080,6 +2275,8 @@ paths:
                 $ref: '#/components/schemas/User'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: User to retrieve does not exist.
           content:
@@ -2107,6 +2304,8 @@ paths:
                 $ref: '#/components/schemas/User'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: User to update does not exist.
           content:
@@ -2126,6 +2325,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: User to delete does not exist.
           content:
@@ -2147,6 +2348,8 @@ paths:
                 $ref: '#/components/schemas/Roles'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
     post:
       summary: Create role
       tags:
@@ -2166,6 +2369,8 @@ paths:
                 $ref: '#/components/schemas/Role'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
 
   /v1/roles/{role_name}:
     get:
@@ -2183,6 +2388,8 @@ paths:
                 $ref: '#/components/schemas/Role'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: Role to retrieve does not exist.
           content:
@@ -2210,6 +2417,8 @@ paths:
                 $ref: '#/components/schemas/Role'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: Role to update does not exist.
           content:
@@ -2229,6 +2438,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Role'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: Role to delete does not exist,.
           content:
@@ -2252,6 +2463,8 @@ paths:
                 $ref: '#/components/schemas/RoleUsers'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: Role to retrieve does not exist.
           content:
@@ -2278,6 +2491,8 @@ paths:
                 $ref: '#/components/schemas/Audits'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           description: organization does not exist.
           content:
@@ -2305,6 +2520,8 @@ paths:
                 $ref: '#/components/schemas/Audits'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
 
   /v1/audit/organizations/{organization_name}/developers/{developer_id}:
     get:
@@ -2326,6 +2543,8 @@ paths:
                 $ref: '#/components/schemas/Audits'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
 
   /v1/audit/organizations/{organization_name}/developers/{developer_id}/apps/{app_id}:
     get:
@@ -2348,6 +2567,8 @@ paths:
                 $ref: '#/components/schemas/Audits'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
 
   /v1/audit/users/{user_name}:
     get:
@@ -2368,6 +2589,8 @@ paths:
                 $ref: '#/components/schemas/Audits'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
 
 components:
   securitySchemes:
@@ -2376,6 +2599,13 @@ components:
       type: http
 
   responses:
+    Unauthorized:
+      description: Unauthorized - request lacks valid authentication credentials.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorMessage'
+
     BadRequest:
       description: Bad Request - a problem reading or understanding the request.
       content:
@@ -2650,8 +2880,7 @@ components:
           description: Email address of developer.
         developerId:
           type: string
-          readOnly: true
-          description: DeveloperID of developer. Cannot be updated.
+          description: DeveloperID of developer. Cannot be updated. (read only)
         userName:
           type: string
           description: Username of developer.
@@ -2665,7 +2894,7 @@ components:
           type: array
           items:
             type: string
-          description: List of application names this developer has. (retrieve only)
+          description: List of application names this developer has. (read only)
         attributes:
           type: array
           items:
@@ -2679,21 +2908,17 @@ components:
         createdAt:
           type: integer
           format: int64
-          readOnly: true
-          description: Create timestamp in milliseconds since epoch.
+          description: Create timestamp in milliseconds since epoch. (read only)
         createdBy:
           type: string
-          readOnly: true
-          description: User who created this developer.
+          description: User who created this developer. (read only)
         lastModifiedAt:
           type: integer
           format: int64
-          readOnly: true
-          description: Last modified timestamp in milliseconds since epoch.
+          description: Last modified timestamp in milliseconds since epoch. (read only)
         lastModifiedBy:
           type: string
-          readOnly: true
-          description: User who last updated this developer.
+          description: User who last updated this developer. (read only)
     Developers:
       type: object
       properties:
@@ -2713,19 +2938,16 @@ components:
       properties:
         name:
           type: string
-          description: Application name. Can only be set when application is created.
+          description: Application name. (read only)
         displayName:
           type: string
-          readOnly: true
           description: Display name of application.
         appId:
           type: string
-          readOnly: true
-          description: ApplicationID of this application.
+          description: ApplicationID of this application. (read only)
         developerId:
           type: string
-          readOnly: true
-          description: DeveloperID of developer that owns this application.
+          description: DeveloperID of developer that owns this application. (read only)
         scopes:
           type: array
           items:
@@ -2745,7 +2967,7 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Key"
-            description: Application credentials (retrieve only)
+            description: Application credentials (read only)
         keyExpiresIn:
           type: integer
           format: int64
@@ -2753,21 +2975,17 @@ components:
         createdAt:
           type: integer
           format: int64
-          readOnly: true
-          description: Create timestamp in milliseconds since epoch.
+          description: Create timestamp in milliseconds since epoch. (read only)
         createdBy:
           type: string
-          readOnly: true
-          description: User who created this application.
+          description: User who created this application. (read only)
         lastModifiedAt:
           type: integer
           format: int64
-          readOnly: true
-          description: Last modified timestamp in milliseconds since epoch.
+          description: Last modified timestamp in milliseconds since epoch. (read only)
         lastModifiedBy:
           type: string
-          readOnly: true
-          description: User who last updated this application.
+          description: User who last updated this application. (read only)
     Applications:
       type: object
       properties:
@@ -2892,14 +3110,12 @@ components:
       properties:
         name:
           type: string
-          description: APIProduct name. Can only be set when apiproduct is created
+          description: APIProduct name. (read only)
         displayName:
           type: string
-          readOnly: true
           description: Display name of APIProduct.
         description:
           type: string
-          readOnly: true
           description: Description of APIProduct.
         apiResources:
           type: array
@@ -2919,7 +3135,6 @@ components:
           description: One or more scopes this APIProduct belongs to.
         approvalType:
           type: string
-          readOnly: true
           description: Description of APIProduct.
         attributes:
           type: array
@@ -2928,21 +3143,17 @@ components:
         createdAt:
           type: integer
           format: int64
-          readOnly: true
-          description: Create timestamp in milliseconds since epoch.
+          description: Create timestamp in milliseconds since epoch. (read only)
         createdBy:
           type: string
-          readOnly: true
-          description: User who created this APIProduct.
+          description: User who created this APIProduct. (read only)
         lastModifiedAt:
           type: integer
           format: int64
-          readOnly: true
-          description: Last modified timestamp in milliseconds since epoch.
+          description: Last modified timestamp in milliseconds since epoch. (read only)
         lastModifiedBy:
           type: string
-          readOnly: true
-          description: User who last updated this APIProduct.
+          description: User who last updated this APIProduct. (read only)
     APIProducts:
       type: object
       properties:
@@ -2951,6 +3162,11 @@ components:
           items:
             $ref: "#/components/schemas/APIProduct"
       description: All APIProduct details.
+    APIProductNames:
+      type: array
+      items:
+        type: string
+      description: All APIProduct names.
 
     Listener:
       type: object
@@ -3086,21 +3302,17 @@ components:
         createdAt:
           type: integer
           format: int64
-          readOnly: true
-          description: Create timestamp in milliseconds since epoch.
+          description: Create timestamp in milliseconds since epoch. (read only)
         createdBy:
           type: string
-          readOnly: true
-          description: User who created this developer.
+          description: User who created this developer. (read only)
         lastModifiedAt:
           type: integer
           format: int64
-          readOnly: true
-          description: Last modified timestamp in milliseconds since epoch.
+          description: Last modified timestamp in milliseconds since epoch. (read only)
         lastModifiedBy:
           type: string
-          readOnly: true
-          description: User who last updated this developer.
+          description: User who last updated this developer. (read only)
     Companies:
       type: object
       properties:
@@ -3109,6 +3321,11 @@ components:
           items:
             $ref: "#/components/schemas/Company"
       description: Details of all companies.
+    CompanyNames:
+      type: array
+      items:
+        type: string
+      description: All company names.
 
     Cluster:
       type: object

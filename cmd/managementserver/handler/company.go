@@ -104,7 +104,7 @@ func (h *Handler) PostV1OrganizationsOrganizationNameCompaniesCompanyName(
 	h.responseCompanyUpdated(c, storedCompany)
 }
 
-// change status of devecloper
+// change status of company
 func (h *Handler) changeCompanyStatus(c *gin.Context, organizationName, companyName, requestedStatus string) {
 
 	company, err := h.service.Company.Get(organizationName, companyName)
@@ -179,6 +179,7 @@ func (h *Handler) DeleteV1OrganizationsOrganizationNameCompaniesCompanyNameAttri
 	oldValue, err := company.Attributes.Delete(string(attributeName))
 	if err != nil {
 		responseError(c, err)
+		return
 	}
 	_, err = h.service.Company.Update(string(organizationName), *company, h.who(c))
 	if err != nil {

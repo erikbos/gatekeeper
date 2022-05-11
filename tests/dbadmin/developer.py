@@ -3,8 +3,7 @@ Developer module does all REST API operations on developer endpoint
 """
 import random
 import urllib
-from common import assert_status_code, assert_status_codes, assert_content_type_json, \
-                    load_json_schema, assert_valid_schema, assert_valid_schema_error
+from common import assert_status_code, assert_status_codes, assert_content_type_json
 from httpstatus import HTTP_OK, HTTP_NOT_FOUND, HTTP_CREATED, HTTP_BAD_REQUEST, HTTP_NO_CONTENT
 
 
@@ -16,13 +15,7 @@ class Developer:
     def __init__(self, config, session):
         self.config = config
         self.session = session
-        self.developer_url = config['api_url'] + '/developers'
-        self.schemas = {
-            'developer': load_json_schema('developer.json'),
-            'developers': load_json_schema('developers.json'),
-            'developers_email': load_json_schema('developers-email-addresses.json'),
-            'error': load_json_schema('error.json'),
-        }
+        self.url = config['api_url'] + '/developers'
 
 
     def generate_email_address(self, number):
@@ -56,18 +49,15 @@ class Developer:
         #   or perhaps it sets wrong content-type..
         headers = self.session.headers
         headers['content-type'] = 'application/json'
-        response = self.session.post(self.developer_url, headers=headers, json=new_developer)
+        response = self.session.post(self.url, headers=headers, json=new_developer)
         if success_expected:
             assert_status_code(response, HTTP_CREATED)
             assert_content_type_json(response)
 
             # Check if just created developer matches with what we requested
-            assert_valid_schema(response.json(), self.schemas['developer'])
             self.assert_compare(response.json(), new_developer)
         else:
             assert_status_code(response, HTTP_BAD_REQUEST)
-            assert_content_type_json(response)
-            assert_valid_schema(response.json(), self.schemas['error'])
 
         return response.json()
 
@@ -89,10 +79,8 @@ class Developer:
         """
         Get all developers email addresses
         """
-        response = self.session.get(self.developer_url)
+        response = self.session.get(self.url)
         assert_status_code(response, HTTP_OK)
-        assert_content_type_json(response)
-        assert_valid_schema(response.json(), self.schemas['developers_email'])
         # TODO testing of paginating response
         # TODO filtering on apptype, expand, rows, startKey, status queryparameters to filter
 
@@ -103,10 +91,8 @@ class Developer:
         """
         Get all developers with full details
         """
-        response = self.session.get(self.developer_url + '?expand=true')
+        response = self.session.get(self.url + '?expand=true')
         assert_status_code(response, HTTP_OK)
-        assert_content_type_json(response)
-        assert_valid_schema(response.json(), self.schemas['developers'])
         # TODO testing of paginating response
         # TODO filtering on apptype, expand, rows, startKey, status queryparameters to filter
 
@@ -115,29 +101,20 @@ class Developer:
         """
         Get existing developer
         """
-        developer_url = self.developer_url + '/' + urllib.parse.quote(developer_email)
-        response = self.session.get(developer_url)
+        url = self.url + '/' + urllib.parse.quote(developer_email)
+        response = self.session.get(url)
         assert_status_code(response, HTTP_OK)
-        assert_content_type_json(response)
-        retrieved_developer = response.json()
-        assert_valid_schema(retrieved_developer, self.schemas['developer'])
-
-        return retrieved_developer
+        return response.json()
 
 
     def update_positive(self, developer_email, developer):
         """
         Update existing developer
         """
-        developer_url = self.developer_url + '/' + urllib.parse.quote(developer_email)
-        response = self.session.post(developer_url, json=developer)
+        url = self.url + '/' + urllib.parse.quote(developer_email)
+        response = self.session.post(url, json=developer)
         assert_status_code(response, HTTP_OK)
-        assert_content_type_json(response)
-
-        updated_developer = response.json()
-        assert_valid_schema(updated_developer, self.schemas['developer'])
-
-        return updated_developer
+        return response.json()
 
 
     def _change_status(self, developer_email, status, expect_success):
@@ -146,15 +123,14 @@ class Developer:
         """
         headers = self.session.headers
         headers['content-type'] = 'application/octet-stream'
-        developer_url = self.developer_url + '/' + urllib.parse.quote(developer_email) + '?action=' + status
-        response = self.session.post(developer_url, headers=headers)
+        url = self.url + '/' + urllib.parse.quote(developer_email) + '?action=' + status
+        response = self.session.post(url, headers=headers)
 
         if expect_success:
             assert_status_code(response, HTTP_NO_CONTENT)
             assert response.content == b''
         else:
             assert_status_code(response, HTTP_BAD_REQUEST)
-            assert_valid_schema_error(response.json())
 
 
     def change_status_active_positive(self, developer_email):
@@ -175,17 +151,14 @@ class Developer:
         """
         Delete developer
         """
-        developer_url = self.developer_url + '/' + urllib.parse.quote(developer_email)
-        response = self.session.delete(developer_url)
+        url = self.url + '/' + urllib.parse.quote(developer_email)
+        response = self.session.delete(url)
         if expected_success:
             assert_status_code(response, HTTP_OK)
-            assert_content_type_json(response)
-            assert_valid_schema(response.json(), self.schemas['developer'])
         else:
             assert_status_codes(response, [ HTTP_NOT_FOUND, HTTP_BAD_REQUEST ])
-            assert_content_type_json(response)
-
         return response.json()
+
 
     def delete_positive(self, developer_email):
         """
@@ -203,8 +176,7 @@ class Developer:
 
     def delete_negative_badrequest(self, developer_email):
         """
-        Attempt to delete developer with at least one app assigned,
-        which should fail
+        Attempt to delete developer with at least one app assigned, which should fail
         """
         return self._delete(developer_email, False)
 
@@ -215,8 +187,8 @@ class Developer:
         """
         for i in range(self.config['entity_count']):
             email = self.generate_email_address(i)
-            developer_url = self.developer_url + '/' + urllib.parse.quote(email)
-            self.session.delete(developer_url)
+            url = self.url + '/' + urllib.parse.quote(email)
+            self.session.delete(url)
 
 
     def assert_compare(self, developer_a, developer_b):

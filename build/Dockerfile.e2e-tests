@@ -1,0 +1,11 @@
+FROM python:3.9-slim
+
+COPY tests/dbadmin/requirements.txt /app/testsuite/requirements.txt
+COPY openapi/gatekeeper.yaml /openapi/gatekeeper.yaml
+
+WORKDIR /app/testsuite
+RUN pip install -r requirements.txt
+
+COPY . /app/testsuite
+
+CMD [ "pytest" ]

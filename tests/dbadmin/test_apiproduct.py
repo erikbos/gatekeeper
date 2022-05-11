@@ -3,12 +3,12 @@ Test suite to validate api product endpoints operations
 """
 import copy
 import random
-from common import get_config, get_http_session
+from common import get_config, get_http_session, API
 from apiproduct import APIproduct
 from attribute import run_attribute_tests
 
 config = get_config()
-session = get_http_session(config)
+session = API(config, '../../openapi/gatekeeper.yaml')
 
 
 def test_api_product_get_all():
