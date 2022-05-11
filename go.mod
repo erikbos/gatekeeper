@@ -12,7 +12,7 @@ require (
 	github.com/envoyproxy/go-control-plane v0.10.1
 	github.com/envoyproxy/protoc-gen-validate v0.6.2 // indirect
 	github.com/gin-gonic/gin v1.7.7
-	github.com/go-oauth2/oauth2/v4 v4.4.3
+	github.com/go-oauth2/oauth2/v4 v4.5.0
 	github.com/go-playground/validator/v10 v10.11.0
 	github.com/gocql/gocql v0.0.0-20211222173705-d73e6b1002a7
 	github.com/golang/snappy v0.0.4 // indirect
