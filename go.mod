@@ -16,7 +16,7 @@ require (
 	github.com/go-playground/validator/v10 v10.10.1
 	github.com/gocql/gocql v0.0.0-20211222173705-d73e6b1002a7
 	github.com/golang/snappy v0.0.4 // indirect
-	github.com/google/go-cmp v0.5.7
+	github.com/google/go-cmp v0.5.8
 	github.com/google/uuid v1.3.0
 	github.com/oschwald/maxminddb-golang v1.9.0
 	github.com/pkg/errors v0.9.1
