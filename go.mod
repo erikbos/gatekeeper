@@ -20,7 +20,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/oschwald/maxminddb-golang v1.9.0
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/client_golang v1.12.1
+	github.com/prometheus/client_golang v1.12.2
 	github.com/rs/cors v1.8.2 // indirect
 	github.com/rs/cors/wrapper/gin v0.0.0-20211222042454-bf1dbac76afe
 	github.com/spf13/viper v1.11.0
