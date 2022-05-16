@@ -1,4 +1,4 @@
-FROM python:3.9-slim
+FROM python:3.10.4-slim
 
 COPY tests/dbadmin/requirements.txt /app/testsuite/requirements.txt
 COPY openapi/gatekeeper.yaml /openapi/gatekeeper.yaml
