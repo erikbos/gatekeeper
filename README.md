@@ -19,13 +19,13 @@ Gatekeeper is an API mangement system with rich API entitlement functionality. I
 
 Gatekeeper provides API entitlement management:
 
-* Administration of API [developers](docs/api/developer.md) and their [applications](docs/api/developerapp.md).
+* Administration of [developers](docs/api/developer.md) and their [applications](docs/api/developerapp.md).
 
 * Fine grained access control to backends by defining [API products](docs/api/apiproduct.md).
 
-* Authenticate and authorize developer applications using [API Keys and/or OAuth2](docs/api/key.md).
+* Authenticate and authorize applications using [apikeys or OAuth2](docs/api/key.md).
 
-Gatekeeper offers a simple REST [api](docs/api/README.md) to unlock Envoyproxy's advancing routing capabilities:
+Gatekeeper offers an[api](docs/api/README.md) to unlock Envoyproxy's advancing routing capabilities:
 
 * Gatekeeper supports TLS for [downstream](docs/api/listener.md) and [upstream](docs/api/cluster.md) traffic.
 
@@ -41,9 +41,9 @@ Gatekeeper offers a simple REST [api](docs/api/README.md) to unlock Envoyproxy's
 
 Deployment options:
 
-* Ease to deployment: deploy [using docker compose or helm chart](deployment/docker/README.md).
+* Ease to deployment: deploy locally using [docker compose](deployment/README.md) or in Kubernetes cluster using [helm chart](deployment/README.md).
 
-* Database: any Cassandra-CQL compatible database can act as backend: AWS Keyspaces, Azure CosmosDB and Apache Cassandra.
+* Database: any Cassandra-CQL compatible database can be used: AWS Keyspaces, Azure CosmosDB and Apache Cassandra.
 
 * Designed for multi-region deployment by default.
 
