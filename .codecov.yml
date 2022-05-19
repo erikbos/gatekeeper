@@ -1,9 +1,12 @@
 coverage:
   precision: 0
   status:
-    patch: false
+    patch:
+      default:
+        informational: true
     project:
-      default: off
+      default:
+        informational: true
       managementserver:
         flags:
           - managementserver
