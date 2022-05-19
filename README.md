@@ -4,7 +4,7 @@
 [![codecov](https://codecov.io/gh/erikbos/gatekeeper/branch/main/graph/badge.svg?token=ZNWZ8LDDDU)](https://codecov.io/gh/erikbos/gatekeeper)
 [![Go Report Card](https://goreportcard.com/badge/github.com/erikbos/gatekeeper)](https://goreportcard.com/report/github.com/erikbos/gatekeeper)
 
-Gatekeeper is an Gatekeeper proxy with rich API entitlement functionality. It uses [Envoy](https://www.envoyproxy.io/) as a proxy.
+Gatekeeper is an API mangement system with rich API entitlement functionality. It uses [Envoyproxy](https://www.envoyproxy.io/) as API gateway.
 
 ## Table of Contents
 
@@ -17,6 +17,14 @@ Gatekeeper is an Gatekeeper proxy with rich API entitlement functionality. It us
 
 ## Introduction
 
+Gatekeeper provides API entitlement management:
+
+* Administration of API [developers](docs/api/developer.md) and their [applications](docs/api/developerapp.md).
+
+* Fine grained access control to backends by defining [API products](docs/api/apiproduct.md).
+
+* Authenticate and authorize developer applications using [API Keys and/or OAuth2](docs/api/key.md).
+
 Gatekeeper offers a simple REST [api](docs/api/README.md) to unlock Envoyproxy's advancing routing capabilities:
 
 * Gatekeeper supports TLS for [downstream](docs/api/listener.md) and [upstream](docs/api/cluster.md) traffic.
@@ -27,21 +35,17 @@ Gatekeeper offers a simple REST [api](docs/api/README.md) to unlock Envoyproxy's
 
 * Health Checks: Gatekeeper can actively [monitor](docs/api/cluster.md) backends.
 
-* Gatekeeper's authentication has detailed metrics on authentication and authorization.
+* Gatekeeper's authentication server has detailed metrics on authentication and authorization.
 
-* Envoyproxy offer detailed request metrics on error rates, response latencies, request size.
+* Envoyproxy provides detailed request metrics on error rates, response latencies, request size.
 
-* Ease of deployment: it consists out 3 containers and a Cassandra database as data store.
+Deployment options:
 
-* Designed for multi cloud region deployment by default.
+* Ease to deployment: deploy [using docker compose or helm chart](deployment/docker/README.md).
 
-Gatekeeper provides API entitlement management:
+* Database: any Cassandra-CQL compatible database can act as backend: AWS Keyspaces, Azure CosmosDB and Apache Cassandra.
 
-* Administration of API [developers](docs/api/developer.md) and their [applications](docs/api/developerapp.md).
-
-* Fine grained access control to backends by defining [API products](docs/api/apiproduct.md).
-
-* Authenticate and authorize developer applications using [API Keys and/or OAuth2](docs/api/key.md).
+* Designed for multi-region deployment by default.
 
 ## Repository structure
 
