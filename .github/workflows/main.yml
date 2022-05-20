@@ -28,8 +28,11 @@ jobs:
         echo "GOPATH=$(go env GOPATH)" >> $GITHUB_ENV
         echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
 
-    - name: Lint Go code
-      run: make lint
+    - name: Run Go generate
+      run: make generate-files
+
+    - name: golangci-lint
+      uses: golangci/golangci-lint-action@v2
 
     - name: Test
       run: echo ${{ env.GITHUB_SHA_SHORT }}
