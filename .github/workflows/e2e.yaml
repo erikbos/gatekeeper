@@ -37,6 +37,4 @@ jobs:
 
       - name: Run e2e test
         run: |
-          # We need to be able to run go get'd packages like oapi-codegen
-          export PATH=$PATH:$(go env GOPATH)/bin
           make e2e-actions
