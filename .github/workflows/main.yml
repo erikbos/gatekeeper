@@ -23,13 +23,13 @@ jobs:
     - name: Check out code
       uses: actions/checkout@v2
 
-    - name: Prep Go environment
-      uses: actions/setup-go@v3
+    - name: Set GOPATH and PATH
+      run: |
+        echo "GOPATH=$(go env GOPATH)" >> $GITHUB_ENV
+        echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
 
     - name: Lint Go code
-      run: |
-        echo "PATH=${PATH}:`go env GOPATH`/bin" >> $GITHUB_ENV
-        make lint
+      run: make lint
 
     - name: Test
       run: echo ${{ env.GITHUB_SHA_SHORT }}
