@@ -18,6 +18,14 @@ jobs:
         with:
           go-version: 1.17.5
 
+      - name: Set GOPATH and PATH
+        run: |
+          echo "GOPATH=$(go env GOPATH)" >> $GITHUB_ENV
+          echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+
+      - name: Run Go generate
+        run: make generate-files
+
       - uses: actions/cache@v2
         with:
           path: |
