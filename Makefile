@@ -11,7 +11,7 @@ generate-files:
 	# code for managementserver based upon OpenAPI spec file
 	go install github.com/deepmap/oapi-codegen/cmd/oapi-codegen
 	export PATH=$PATH:$(go env GOPATH)/bin
-	echo $PATH
+	echo "$PATH"
 	go generate ./...
 
 managementserver: generate-files
