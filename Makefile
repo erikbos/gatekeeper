@@ -64,7 +64,7 @@ docker-dbadmin-test:
 	 docker build -f build/Dockerfile.e2e-tests . -t gatekeeper/dbadmin-test:$(VERSION)
 
 .PHONY: test
-test:
+test: generate-files
 	mkdir -p tmp
 	go test -v -coverpkg=./... -covermode=atomic -coverprofile=tmp/coverage.txt ./...
 
