@@ -7,6 +7,7 @@ BIN = bin
 all: managementserver accesslogserver authserver controlplane testbackend
 
 managementserver:
+	go generate ./...
 	mkdir -p $(BIN)
 	go build -o $(BIN)/managementserver cmd/managementserver/*.go
 
