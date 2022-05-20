@@ -8,7 +8,7 @@ info:
 
 tags:
   - name: Intro
-    description: intro here.
+    description: intro here. more text.
 
   - name: Organization
     description: Operations on organizations.
