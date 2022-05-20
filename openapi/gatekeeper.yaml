@@ -2837,7 +2837,7 @@ components:
       properties:
         name:
           type: string
-          description: Name of organization.
+          description: Name of organization. (read only)
         displayName:
           type: string
           description: Display name of organization.
@@ -3173,8 +3173,7 @@ components:
       properties:
         name:
           type: string
-          readOnly: true
-          description: Name of listener. Can only be set when listener is created.
+          description: Name of listener. (read only)
         displayName:
           type: string
           description: Display name of lister.
@@ -3228,8 +3227,7 @@ components:
       properties:
         name:
           type: string
-          readOnly: true
-          description: Name of route. Can only be set when route is created.
+          description: Name of route. (read only)
         displayName:
           type: string
           description: Display name of route.
@@ -3280,7 +3278,7 @@ components:
       properties:
         name:
           type: string
-          description: Name of company.
+          description: Name of company. (read only)
         displayName:
           type: string
           description: Display name of company.
@@ -3332,8 +3330,7 @@ components:
       properties:
         name:
           type: string
-          readOnly: true
-          description: Name of cluster. Can only be set when cluster is created.
+          description: Name of cluster. (read only)
         displayName:
           type: string
           description: Display name of cluster.
@@ -3375,8 +3372,7 @@ components:
       properties:
         name:
           type: string
-          readOnly: true
-          description: Name of user. Can only be set at creation.
+          description: Name of user. (read only)
         displayName:
           type: string
           description: Display name of user.
@@ -3425,8 +3421,7 @@ components:
       properties:
         name:
           type: string
-          readOnly: true
-          description: Name of role. Can only be set at creation.
+          description: Name of role. (read only)
         displayName:
           type: string
           description: Display name of role.
