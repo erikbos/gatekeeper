@@ -7,8 +7,8 @@ BIN = bin
 all: managementserver accesslogserver authserver controlplane testbackend
 
 managementserver:
-	# We need oapi-codegen to generate handler code based upon our OpenAPI spec
-	go get github.com/deepmap/oapi-codegen/cmd/oapi-codegen
+	# We need oapi-codegen, go generate will call it to generate handler code based upon OpenAPI spec file
+	go install github.com/deepmap/oapi-codegen/cmd/oapi-codegen
 	PATH=$PATH:$(go env GOPATH)/bin
 	go generate ./...
 	mkdir -p $(BIN)
