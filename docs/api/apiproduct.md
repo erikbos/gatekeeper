@@ -19,23 +19,24 @@ An apiproduct defines a set paths which are allowed to be accessed. Policies can
 
 * For POST content-type: application/json is required.
 
-## Example developer definition
+## Example API product definition
 
 ```json
 {
-    "name": "VIPTicket",
-    "displayName": "TicketService VIP Inc",
-    "routeGroup": "routes_443",
-    "paths": [
+    "apiResources": [
         "/ticketservice/basic/*",
         "/ticketservice/vip/*"
     ],
     "attributes": [
-    {
-        "name": "VIPTicket_quotaPerSecond",
-        "value": "42"
-    }
+        {
+            "name": "VIPTicket_quotaPerSecond",
+            "value": "42"
+        }
     ],
+    "approvalType": "auto",
+    "name": "VIPTicket",
+    "displayName": "TicketService VIP Inc",
+    "routeGroup": "routes_443",
     "policies": "checkIPAccessList,checkReferer,qps,sendAPIKey,sendDeveloperEmail,sendDeveloperID,sendDeveloperAppID"
 }
 
