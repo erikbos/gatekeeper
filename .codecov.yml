@@ -1,6 +1,8 @@
 coverage:
   precision: 0
   status:
+    patch:
+      informational: true
     project:
       managementserver:
         informational: true
