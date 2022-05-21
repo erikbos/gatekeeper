@@ -1,29 +1,24 @@
 coverage:
   precision: 0
   status:
-    patch:
-      default:
-        target: auto
-        threshold: 5%
-        informational: true
     project:
-      default:
-        target: auto
-        threshold: 5%
-        informational: true
       managementserver:
+        informational: true
         flags:
           - managementserver
           - pkg
       authserver:
+        informational: true
         flags:
           - authserver
           - pkg
       controlplane:
+        informational: true
         flags:
           - controlplane
           - pkg
       accesslogserver:
+        informational: true
         flags:
           - accesslogserver
           - pkg
