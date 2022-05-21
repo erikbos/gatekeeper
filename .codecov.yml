@@ -3,9 +3,13 @@ coverage:
   status:
     patch:
       default:
+        target: auto
+        threshold: 5%
         informational: true
     project:
       default:
+        target: auto
+        threshold: 5%
         informational: true
       managementserver:
         flags:
