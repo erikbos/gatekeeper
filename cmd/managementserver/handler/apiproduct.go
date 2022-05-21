@@ -270,6 +270,12 @@ func (h *Handler) ToAPIproductResponse(a *types.APIProduct) APIProduct {
 func fromAPIproduct(p APIProduct) types.APIProduct {
 
 	product := types.APIProduct{}
+	if p.ApprovalType != nil {
+		product.ApprovalType = *p.ApprovalType
+	}
+	if p.Attributes != nil {
+		product.Attributes = fromAttributesRequest(p.Attributes)
+	}
 	if p.CreatedAt != nil {
 		product.CreatedAt = *p.CreatedAt
 	}
