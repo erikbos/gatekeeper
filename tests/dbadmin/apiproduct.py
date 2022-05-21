@@ -44,6 +44,10 @@ class APIproduct:
                         "value" : f"value{random_int}",
                     }
                 ],
+                "scopes" : [
+                     f"scope{random_int}",
+                     f"another_scope{random_int}",
+                    ],
             }
 
         response = self.session.post(self.api_product_url, json=new_api_product)

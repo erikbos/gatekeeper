@@ -292,6 +292,7 @@ var createTablesCQL = [...]string{
         name text,
         policies text,
         route_group text,
+        scopes set<text>,
         PRIMARY KEY (key)
 	)`,
 
