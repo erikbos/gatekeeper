@@ -12,20 +12,21 @@ import (
 
 const (
 	// List of apiproduct columns we use
-	apiProductsColumns = `approval_type,
+	apiProductsColumns = `key,
+name,
+description,
+display_name,
+organization_name,
+approval_type,
 api_resources,
+route_group,
+scopes,
+policies,
 attributes,
 created_at,
 created_by,
-description,
-display_name,
-key,
 lastmodified_at,
-lastmodified_by,
-name,
-organization_name,
-route_group,
-policies`
+lastmodified_by`
 
 	// Prometheus label for metrics of db interactions
 	apiProductsMetricLabel = "apiproducts"
@@ -98,18 +99,19 @@ func (s *APIProductStore) runGetAPIProductQuery(query string, queryParameters ..
 	m := make(map[string]interface{})
 	for iter.MapScan(m) {
 		apiproducts = append(apiproducts, types.APIProduct{
+			Name:           columnToString(m, "name"),
+			Description:    columnToString(m, "description"),
+			DisplayName:    columnToString(m, "display_name"),
 			ApprovalType:   columnToString(m, "approval_type"),
+			APIResources:   columnToStringSlice(m, "api_resources"),
+			RouteGroup:     columnToString(m, "route_group"),
+			Scopes:         columnToStringSlice(m, "scopes"),
+			Policies:       columnToString(m, "policies"),
 			Attributes:     columnToAttributes(m, "attributes"),
 			CreatedAt:      columnToInt64(m, "created_at"),
 			CreatedBy:      columnToString(m, "created_by"),
-			Description:    columnToString(m, "description"),
-			DisplayName:    columnToString(m, "display_name"),
 			LastModifiedAt: columnToInt64(m, "lastmodified_at"),
 			LastModifiedBy: columnToString(m, "lastmodified_by"),
-			Name:           columnToString(m, "name"),
-			APIResources:   columnToStringSlice(m, "api_resources"),
-			Policies:       columnToString(m, "policies"),
-			RouteGroup:     columnToString(m, "route_group"),
 		})
 		m = map[string]interface{}{}
 	}
@@ -124,22 +126,23 @@ func (s *APIProductStore) runGetAPIProductQuery(query string, queryParameters ..
 // Update UPSERTs an apiproduct in database
 func (s *APIProductStore) Update(organizationName string, p *types.APIProduct) types.Error {
 
-	query := "INSERT INTO api_products (" + apiProductsColumns + ") VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+	query := "INSERT INTO api_products (" + apiProductsColumns + ") VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
 	if err := s.db.CassandraSession.Query(query,
+		s.generatePrimaryKey(organizationName, p.Name),
+		p.Name,
+		p.Description,
+		p.DisplayName,
+		organizationName,
 		p.ApprovalType,
 		p.APIResources,
+		p.RouteGroup,
+		p.Scopes,
+		p.Policies,
 		attributesToColumn(p.Attributes),
 		p.CreatedAt,
 		p.CreatedBy,
-		p.Description,
-		p.DisplayName,
-		s.generatePrimaryKey(organizationName, p.Name),
 		p.LastModifiedAt,
-		p.LastModifiedBy,
-		p.Name,
-		organizationName,
-		p.Policies,
-		p.RouteGroup).Exec(); err != nil {
+		p.LastModifiedBy).Exec(); err != nil {
 
 		s.db.metrics.QueryFailed(apiProductsMetricLabel)
 		return types.NewDatabaseError(
