@@ -3196,27 +3196,23 @@ components:
         createdAt:
           type: integer
           format: int64
-          readOnly: true
-          description: Create timestamp in milliseconds since epoch.
+          description: Create timestamp in milliseconds since epoch. (read only)
         createdBy:
           type: string
-          readOnly: true
-          description: User which created this listener.
+          description: User which created this listener. (read only)
         lastModifiedAt:
           type: integer
           format: int64
-          readOnly: true
-          description: Last modified timestamp in milliseconds since epoch.
+          description: Last modified timestamp in milliseconds since epoch. (read only)
         lastModifiedBy:
           type: string
-          readOnly: true
-          description: User who last updated this listener.
+          description: User who last updated this listener. (read only)
       required:
         - name
     Listeners:
       type: object
       properties:
-        listeners:
+        listener:
           type: array
           items:
             $ref: "#/components/schemas/Listener"
@@ -3247,27 +3243,23 @@ components:
         createdAt:
           type: integer
           format: int64
-          readOnly: true
-          description: Create timestamp in milliseconds since epoch.
+          description: Create timestamp in milliseconds since epoch. (read only)
         createdBy:
           type: string
-          readOnly: true
-          description: User which created this route.
+          description: User which created this route. (read only)
         lastModifiedAt:
           type: integer
           format: int64
-          readOnly: true
-          description: Last modified timestamp in milliseconds since epoch.
+          description: Last modified timestamp in milliseconds since epoch. (read only)
         lastModifiedBy:
           type: string
-          readOnly: true
-          description: User who last updated this route.
+          description: User who last updated this route. (read only)
       required:
         - name
     Routes:
       type: object
       properties:
-        routes:
+        route:
           type: array
           items:
             $ref: "#/components/schemas/Route"
@@ -3341,27 +3333,23 @@ components:
         createdAt:
           type: integer
           format: int64
-          readOnly: true
-          description: Create timestamp in milliseconds since epoch.
+          description: Create timestamp in milliseconds since epoch. (read only)
         createdBy:
           type: string
-          readOnly: true
-          description: User who created this cluster.
+          description: User who created this cluster. (read only)
         lastModifiedAt:
           type: integer
           format: int64
-          readOnly: true
-          description: Last modified timestamp in milliseconds since epoch.
+          description: Last modified timestamp in milliseconds since epoch. (read only)
         lastModifiedBy:
           type: string
-          readOnly: true
-          description: User who last updated this cluster.
+          description: User who last updated this cluster. (read only)
       required:
         - name
     Clusters:
       type: object
       properties:
-        clusters:
+        cluster:
           type: array
           items:
             $ref: "#/components/schemas/Cluster"

@@ -200,7 +200,7 @@ func (h *Handler) responseListeners(c *gin.Context, listeners types.Listeners) {
 		allListeners[i] = h.ToListenerResponse(&listeners[i])
 	}
 	c.IndentedJSON(http.StatusOK, Listeners{
-		Listeners: &allListeners,
+		Listener: &allListeners,
 	})
 }
 

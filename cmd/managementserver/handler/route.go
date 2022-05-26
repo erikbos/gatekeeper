@@ -198,7 +198,7 @@ func (h *Handler) responseRoutes(c *gin.Context, routes types.Routes) {
 		allRoutes[i] = h.ToRouteResponse(&routes[i])
 	}
 	c.IndentedJSON(http.StatusOK, Routes{
-		Routes: &allRoutes,
+		Route: &allRoutes,
 	})
 }
 
