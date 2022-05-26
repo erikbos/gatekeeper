@@ -13,14 +13,14 @@ class Attribute:
     def __init__(self, config, session, attribute_url):
         self.config = config
         self.session = session
-        self.attribute_url = attribute_url
+        self.url = attribute_url
 
 
     def post(self, attributes):
         """
         Update all attributes
         """
-        response = self.session.post(self.attribute_url, json=attributes)
+        response = self.session.post(self.url, json=attributes)
         assert_status_code(response, HTTP_OK)
 
 
@@ -28,7 +28,7 @@ class Attribute:
         """
         Retrieve all attributes
         """
-        response = self.session.get(self.attribute_url)
+        response = self.session.get(self.url)
         assert_status_code(response, HTTP_OK)
         return response.json()
 
@@ -37,7 +37,7 @@ class Attribute:
         """
         Retrieve an existing attribute
         """
-        response = self.session.get(self.attribute_url + '/' + urllib.parse.quote(attribute_name))
+        response = self.session.get(self.url + '/' + urllib.parse.quote(attribute_name))
         assert_status_code(response, HTTP_OK)
         return response.json()
 
@@ -46,7 +46,7 @@ class Attribute:
         """
         Attempt to retrieve a non-existing attribute
         """
-        response = self.session.get(self.attribute_url + '/' + urllib.parse.quote(attribute_name))
+        response = self.session.get(self.url + '/' + urllib.parse.quote(attribute_name))
         assert_status_code(response, HTTP_NOT_FOUND)
 
 
@@ -54,7 +54,7 @@ class Attribute:
         """
         Delete an existing attribute
         """
-        response = self.session.delete(self.attribute_url + '/' + urllib.parse.quote(attribute_name))
+        response = self.session.delete(self.url + '/' + urllib.parse.quote(attribute_name))
         assert_status_code(response, HTTP_OK)
         return response.json()
 
@@ -63,7 +63,7 @@ class Attribute:
         """
         Attempt to delete a non-existing attribute
         """
-        response = self.session.delete(self.attribute_url + '/' + urllib.parse.quote(attribute_name))
+        response = self.session.delete(self.url + '/' + urllib.parse.quote(attribute_name))
         assert_status_code(response, HTTP_NOT_FOUND)
 
 

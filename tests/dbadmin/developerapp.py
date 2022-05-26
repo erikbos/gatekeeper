@@ -14,9 +14,9 @@ class Application:
     def __init__(self, config, session, developer_email):
         self.config = config
         self.session = session
-        self.global_url = self.config['api_url'] + '/apps'
+        self.global_url = config['api_url'] + '/v1/organizations/' + config['api_organization'] + '/apps'
         if developer_email is not None:
-            self.url = config['api_url'] + '/developers/' + urllib.parse.quote(developer_email) + '/apps'
+            self.url = config['api_url'] + '/v1/organizations/' + config['api_organization'] + '/developers/' + urllib.parse.quote(developer_email) + '/apps'
 
 
     def generate_app_name(self, number):

@@ -80,7 +80,7 @@ def test_api_product_attributes():
 
     test_api_product = product_api.create_positive()
 
-    product_attributes_url = (product_api.api_product_url +
+    product_attributes_url = (product_api.url +
         '/' + test_api_product['name'] + '/attributes')
     run_attribute_tests(config, session, product_attributes_url)
 

@@ -15,7 +15,7 @@ class APIproduct:
     def __init__(self, config, session):
         self.config = config
         self.session = session
-        self.api_product_url = config['api_url'] + '/apiproducts'
+        self.url = config['api_url'] + '/v1/organizations/' + config['api_organization'] + '/apiproducts'
 
 
     def generate_api_product_name(self, number):
@@ -50,7 +50,7 @@ class APIproduct:
                     ],
             }
 
-        response = self.session.post(self.api_product_url, json=new_api_product)
+        response = self.session.post(self.url, json=new_api_product)
         if success_expected:
             assert_status_code(response, HTTP_CREATED)
 
@@ -82,7 +82,7 @@ class APIproduct:
         """
         Get all api products
         """
-        response = self.session.get(self.api_product_url)
+        response = self.session.get(self.url)
         assert_status_code(response, HTTP_OK)
         # TODO filtering on attributename, attributevalue, startKey
 
@@ -93,7 +93,7 @@ class APIproduct:
         """
         Get all api products with full details
         """
-        response = self.session.get(self.api_product_url + '?expand=true')
+        response = self.session.get(self.url + '?expand=true')
         assert_status_code(response, HTTP_OK)
         # TODO filtering on attributename, attributevalue, startKey
 
@@ -102,7 +102,7 @@ class APIproduct:
         """
         Get existing api product
         """
-        api_product_url = self.api_product_url + '/' + urllib.parse.quote(api_product)
+        api_product_url = self.url + '/' + urllib.parse.quote(api_product)
         response = self.session.get(api_product_url)
         assert_status_code(response, HTTP_OK)
         return response.json()
@@ -112,7 +112,7 @@ class APIproduct:
         """
         Update existing api product
         """
-        api_product_url = self.api_product_url + '/' + urllib.parse.quote(api_product)
+        api_product_url = self.url + '/' + urllib.parse.quote(api_product)
         response = self.session.post(api_product_url, json=updated_api_product)
         assert_status_code(response, HTTP_OK)
         return response.json()
@@ -122,7 +122,7 @@ class APIproduct:
         """
         Delete existing api product
         """
-        api_product_url = self.api_product_url + '/' + urllib.parse.quote(api_product_name)
+        api_product_url = self.url + '/' + urllib.parse.quote(api_product_name)
         response = self.session.delete(api_product_url)
         if expected_success:
             assert_status_code(response, HTTP_OK)
@@ -148,7 +148,7 @@ class APIproduct:
         """
         Attempt to delete product associated with assigned keys, should fail
         """
-        api_product_url = self.api_product_url + '/' + urllib.parse.quote(api_product_name)
+        api_product_url = self.url + '/' + urllib.parse.quote(api_product_name)
         response = self.session.delete(api_product_url)
         assert_status_code(response, HTTP_BAD_REQUEST)
 

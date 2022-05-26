@@ -3,7 +3,7 @@ Developer module does all REST API operations on developer endpoint
 """
 import random
 import urllib
-from common import assert_status_code, assert_status_codes, assert_content_type_json
+from common import assert_status_code, assert_status_codes
 from httpstatus import HTTP_OK, HTTP_NOT_FOUND, HTTP_CREATED, HTTP_BAD_REQUEST, HTTP_NO_CONTENT
 
 
@@ -15,7 +15,7 @@ class Developer:
     def __init__(self, config, session):
         self.config = config
         self.session = session
-        self.url = config['api_url'] + '/developers'
+        self.url = config['api_url'] + '/v1/organizations/' + config['api_organization'] + '/developers'
 
 
     def generate_email_address(self, number):
@@ -52,8 +52,6 @@ class Developer:
         response = self.session.post(self.url, headers=headers, json=new_developer)
         if success_expected:
             assert_status_code(response, HTTP_CREATED)
-            assert_content_type_json(response)
-
             # Check if just created developer matches with what we requested
             self.assert_compare(response.json(), new_developer)
         else:

@@ -15,7 +15,7 @@ class Company:
     def __init__(self, config, session):
         self.config = config
         self.session = session
-        self.url = config['api_url'] + '/companies'
+        self.url = config['api_url'] + '/v1/organizations/' + config['api_organization'] + '/companies'
 
 
     def generate_company_name(self, number):
