@@ -35,7 +35,7 @@ def test_cluster_crud_lifecycle():
     cluster_api.assert_compare(retrieved_cluster, created_cluster)
 
     # Check if created cluster shows up in global cluster list
-    assert(l for l in cluster_api.get_all()['cluster'] if l['name'] == created_cluster['name'])
+    assert(True for l in cluster_api.get_all()['cluster'] if l['name'] == created_cluster['name'])
 
     # Update to new email address and attributes
     updated_cluster = copy.deepcopy(created_cluster)
@@ -54,7 +54,7 @@ def test_cluster_crud_lifecycle():
     cluster_api.update_positive(created_cluster['name'], updated_cluster)
 
     # Check if updated cluster shows up in global cluster list
-    assert(l for l in cluster_api.get_all()['cluster'] if l['name'] == created_cluster['name'])
+    assert(True for l in cluster_api.get_all()['cluster'] if l['name'] == created_cluster['name'])
 
     # Delete just created cluster
     deleted_cluster = cluster_api.delete_positive(updated_cluster['name'])

@@ -35,7 +35,7 @@ def test_listener_crud_lifecycle():
     listener_api.assert_compare(retrieved_listener, created_listener)
 
     # Check if created listener shows up in global listener list
-    assert(l for l in listener_api.get_all()['listener'] if l['name'] == created_listener['name'])
+    assert(True for l in listener_api.get_all()['listener'] if l['name'] == created_listener['name'])
 
     # Update to new email address and attributes
     updated_listener = copy.deepcopy(created_listener)
@@ -54,7 +54,7 @@ def test_listener_crud_lifecycle():
     listener_api.update_positive(created_listener['name'], updated_listener)
 
     # Check if updated listener shows up in global listener list
-    assert(l for l in listener_api.get_all()['listener'] if l['name'] == created_listener['name'])
+    assert(True for l in listener_api.get_all()['listener'] if l['name'] == created_listener['name'])
 
     # Delete just created listener
     deleted_listener = listener_api.delete_positive(updated_listener['name'])

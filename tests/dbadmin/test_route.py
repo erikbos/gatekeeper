@@ -35,7 +35,7 @@ def test_route_crud_lifecycle():
     route_api.assert_compare(retrieved_route, created_route)
 
     # Check if created route shows up in global route list
-    assert(l for l in route_api.get_all()['route'] if l['name'] == created_route['name'])
+    assert(True for l in route_api.get_all()['route'] if l['name'] == created_route['name'])
 
     # Update to new email address and attributes
     updated_route = copy.deepcopy(created_route)
@@ -50,7 +50,7 @@ def test_route_crud_lifecycle():
     route_api.update_positive(created_route['name'], updated_route)
 
     # Check if updated route shows up in global route list
-    assert(l for l in route_api.get_all()['route'] if l['name'] == created_route['name'])
+    assert(True for l in route_api.get_all()['route'] if l['name'] == created_route['name'])
 
     # Delete just created route
     deleted_route = route_api.delete_positive(updated_route['name'])
