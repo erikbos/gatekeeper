@@ -90,7 +90,7 @@ paths:
             schema:
               $ref: '#/components/schemas/Organization'
       responses:
-        '200':
+        '201':
           description: Successfully created new organization.
           content:
             application/json:
@@ -1613,7 +1613,7 @@ paths:
             schema:
               $ref: '#/components/schemas/Listener'
       responses:
-        '200':
+        '201':
           description: Successfully created new listener.
           content:
             application/json:
@@ -1822,7 +1822,7 @@ paths:
             schema:
               $ref: '#/components/schemas/Route'
       responses:
-        '200':
+        '201':
           description: Successfully created new route.
           content:
             application/json:
@@ -2037,7 +2037,7 @@ paths:
             schema:
               $ref: '#/components/schemas/Cluster'
       responses:
-        '200':
+        '201':
           description: Successfully created new cluster.
           content:
             application/json:
@@ -2248,7 +2248,7 @@ paths:
             schema:
               $ref: '#/components/schemas/User'
       responses:
-        '200':
+        '201':
           description: Successfully created new user.
           content:
             application/json:
@@ -2361,7 +2361,7 @@ paths:
             schema:
               $ref: '#/components/schemas/Role'
       responses:
-        '200':
+        '201':
           description: Successfully created new role.
           content:
             application/json:
