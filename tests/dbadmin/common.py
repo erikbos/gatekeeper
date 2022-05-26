@@ -9,8 +9,6 @@ from openapi_spec_validator.schemas import read_yaml_file
 from openapi_core.contrib.requests import RequestsOpenAPIRequest, RequestsOpenAPIResponse
 from openapi_core.validation.request.validators import RequestValidator
 from openapi_core.validation.response.validators import ResponseValidator
-import jsonref
-import jsonschema
 
 
 def get_config():
@@ -22,10 +20,16 @@ def get_config():
         if var not in os.environ:
             raise EnvironmentError(f'Please set {var} as configuration parameter.')
 
+    if 'API_ORGANIZATION' in os.environ:
+        organization = os.environ['API_ORGANIZATION']
+    else:
+        organization = 'default'
+
     return {
         'api_url': os.environ['API_URL'],
         'api_username': os.environ['API_USERNAME'],
         'api_password': os.environ['API_PASSWORD'],
+        'api_organization': organization,
         'entity_count': 3,
     }
 
@@ -57,39 +61,12 @@ def assert_status_codes(response, status_codes):
     assert [ True for code in status_codes if code == response.status_code]
 
 
-def assert_content_type_json(response):
-    """
-    Checks content-type is json
-    """
-    assert response.headers['content-type'].startswith('application/json')
+# def assert_content_type_json(response):
+#     """
+#     Checks content-type is json
+#     """
+#     assert response.headers['content-type'].startswith('application/json')
 
-
-def assert_valid_schema(data, schema):
-    """
-    Checks whether the given data matches the schema
-    """
-    return jsonschema.validate(data, schema)
-
-
-def assert_valid_schema_error(data):
-    """
-    Checks whether the given data matches the schema
-    """
-    return jsonschema.validate(data, load_json_schema('error.json'))
-
-
-def load_json_schema(filename):
-    """
-    Loads the given schema file
-    """
-    relative_path = os.path.join('schemas', filename)
-    absolute_path = os.path.join(os.path.dirname(__file__), relative_path)
-
-    base_path = os.path.dirname(absolute_path)
-    base_uri = f'file://{base_path}/'
-
-    with open(absolute_path, encoding='utf-8') as schema_file:
-        return jsonref.loads(schema_file.read(), base_uri=base_uri, jsonschema=True)
 
 class API:
     def __init__(self, config, filename):
