@@ -34,19 +34,6 @@ def get_config():
     }
 
 
-def get_http_session(config):
-    """
-    Returns HTTP session for all API requests
-    """
-    session = requests.Session()
-    session.auth = (config['api_username'], config['api_password'])
-    session.headers = {
-        'accept': 'application/json',
-        'user-agent': 'Gatekeeper testsuite'
-        }
-    return session
-
-
 def assert_status_code(response, status_code):
     """
     Checks response status code
@@ -58,14 +45,7 @@ def assert_status_codes(response, status_codes):
     """
     Checks one or more response status codes
     """
-    assert [ True for code in status_codes if code == response.status_code]
-
-
-# def assert_content_type_json(response):
-#     """
-#     Checks content-type is json
-#     """
-#     assert response.headers['content-type'].startswith('application/json')
+    assert(True for code in status_codes if code == response.status_code)
 
 
 class API:

@@ -3,7 +3,7 @@ Test suite to validate api product endpoints operations
 """
 import copy
 import random
-from common import get_config, get_http_session, API
+from common import get_config, API
 from apiproduct import APIproduct
 from attribute import run_attribute_tests
 
@@ -86,3 +86,6 @@ def test_api_product_attributes():
 
     # clean up
     product_api.delete_positive(test_api_product['name'])
+
+
+# TODO add test to attempt to delete apiproduct which is assigned to key
