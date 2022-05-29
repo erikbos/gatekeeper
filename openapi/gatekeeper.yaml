@@ -2848,21 +2848,17 @@ components:
         createdAt:
           type: integer
           format: int64
-          readOnly: true
-          description: Create timestamp in milliseconds since epoch.
+          description: Create timestamp in milliseconds since epoch. (read only)
         createdBy:
           type: string
-          readOnly: true
-          description: User who created this organization.
+          description: User who created this organization. (read only)
         lastModifiedAt:
           type: integer
           format: int64
-          readOnly: true
-          description: Last modified timestamp in milliseconds since epoch.
+          description: Last modified timestamp in milliseconds since epoch. (read only)
         lastModifiedBy:
           type: string
-          readOnly: true
-          description: User who last updated this organization.
+          description: User who last updated this organization. (read only)
     Organizations:
       type: object
       properties:
