@@ -4,7 +4,7 @@ Route module does all REST API operations on route endpoint
 import random
 import urllib
 from common import assert_status_code
-from httpstatus import HTTP_OK, HTTP_NOT_FOUND, HTTP_CREATED, HTTP_BAD_REQUEST, HTTP_NO_CONTENT
+from httpstatus import HTTP_OK, HTTP_NOT_FOUND, HTTP_CREATED, HTTP_BAD_REQUEST
 
 
 class Route:
@@ -107,18 +107,6 @@ class Route:
         response = self.session.post(self.url + '/' + urllib.parse.quote(route), json=updated_route)
         assert_status_code(response, HTTP_OK)
         return response.json()
-
-
-    def _change_status(self, route_name, status, expect_success):
-        """
-        Update status of route
-        """
-        response = self.session.change_status(self.url + '/' + urllib.parse.quote(route_name), status)
-        if expect_success:
-            assert_status_code(response, HTTP_NO_CONTENT)
-            assert response.content == b''
-        else:
-            assert_status_code(response, HTTP_BAD_REQUEST)
 
 
     def _delete(self, route_name, expected_success):
