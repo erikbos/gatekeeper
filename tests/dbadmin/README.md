@@ -9,7 +9,7 @@ Environment variable required to be set before running tests:
 * API_URL, management server URL (e.g. `https://127.0.0.1:7777/`)
 * API_USERNAME, username used for HTTP Basic authentication (default managementserver is 'admin')
 * API_PASSWORD, password used for HTTP Basic authentication (default managementserver is 'passwd')
-* API_ORGANIZATION, optional, if not set 'default' will be used
+* API_ORGANIZATION, optional, which organization to run test in, if not set 'default' will be used
 
 ## Example
 
@@ -23,9 +23,6 @@ Environment variable required to be set before running tests:
 
     # Run all developer related tests
     pytest -v test_developer
-
-    # Run five tests in parallel
-    pytest -n 5 test_developer
 
     # Run one test named 'test_crud_lifecycle_10_developers'
     pytest -k test_get_all_developers_list
