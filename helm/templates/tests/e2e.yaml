@@ -17,5 +17,5 @@ spec:
       - name: API_PASSWORD
         value: passwd
       - name: API_URL
-        value: http://managementserver:7777/v1/organizations/default
+        value: http://managementserver:7777/
   restartPolicy: Never

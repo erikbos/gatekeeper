@@ -26,7 +26,7 @@ def get_config():
         organization = 'default'
 
     return {
-        'api_url': os.environ['API_URL'],
+        'api_url': os.environ['API_URL'].rstrip('/'),
         'api_username': os.environ['API_USERNAME'],
         'api_password': os.environ['API_PASSWORD'],
         'api_organization': organization,
