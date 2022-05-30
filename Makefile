@@ -111,7 +111,7 @@ minikube-helm-diff:
 
 .PHONY: minikube-helm-test
 minikube-helm-test:
-	helm test -n gatekeeper gatekeeper
+	helm test --logs -n gatekeeper gatekeeper
 
 .PHONY: e2e-local
 e2e-local: test docker-images minikube-start minikube-helm-install minikube-helm-test minikube-stop
