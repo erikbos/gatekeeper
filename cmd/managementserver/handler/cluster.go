@@ -199,7 +199,7 @@ func (h *Handler) responseClusters(c *gin.Context, clusters types.Clusters) {
 		allClusters[i] = h.ToClusterResponse(&clusters[i])
 	}
 	c.IndentedJSON(http.StatusOK, Clusters{
-		Clusters: &allClusters,
+		Cluster: &allClusters,
 	})
 }
 

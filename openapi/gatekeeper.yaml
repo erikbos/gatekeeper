@@ -90,7 +90,7 @@ paths:
             schema:
               $ref: '#/components/schemas/Organization'
       responses:
-        '200':
+        '201':
           description: Successfully created new organization.
           content:
             application/json:
@@ -1613,7 +1613,7 @@ paths:
             schema:
               $ref: '#/components/schemas/Listener'
       responses:
-        '200':
+        '201':
           description: Successfully created new listener.
           content:
             application/json:
@@ -1822,7 +1822,7 @@ paths:
             schema:
               $ref: '#/components/schemas/Route'
       responses:
-        '200':
+        '201':
           description: Successfully created new route.
           content:
             application/json:
@@ -2037,7 +2037,7 @@ paths:
             schema:
               $ref: '#/components/schemas/Cluster'
       responses:
-        '200':
+        '201':
           description: Successfully created new cluster.
           content:
             application/json:
@@ -2248,7 +2248,7 @@ paths:
             schema:
               $ref: '#/components/schemas/User'
       responses:
-        '200':
+        '201':
           description: Successfully created new user.
           content:
             application/json:
@@ -2361,7 +2361,7 @@ paths:
             schema:
               $ref: '#/components/schemas/Role'
       responses:
-        '200':
+        '201':
           description: Successfully created new role.
           content:
             application/json:
@@ -2848,21 +2848,17 @@ components:
         createdAt:
           type: integer
           format: int64
-          readOnly: true
-          description: Create timestamp in milliseconds since epoch.
+          description: Create timestamp in milliseconds since epoch. (read only)
         createdBy:
           type: string
-          readOnly: true
-          description: User who created this organization.
+          description: User who created this organization. (read only)
         lastModifiedAt:
           type: integer
           format: int64
-          readOnly: true
-          description: Last modified timestamp in milliseconds since epoch.
+          description: Last modified timestamp in milliseconds since epoch. (read only)
         lastModifiedBy:
           type: string
-          readOnly: true
-          description: User who last updated this organization.
+          description: User who last updated this organization. (read only)
     Organizations:
       type: object
       properties:
@@ -3196,27 +3192,23 @@ components:
         createdAt:
           type: integer
           format: int64
-          readOnly: true
-          description: Create timestamp in milliseconds since epoch.
+          description: Create timestamp in milliseconds since epoch. (read only)
         createdBy:
           type: string
-          readOnly: true
-          description: User which created this listener.
+          description: User which created this listener. (read only)
         lastModifiedAt:
           type: integer
           format: int64
-          readOnly: true
-          description: Last modified timestamp in milliseconds since epoch.
+          description: Last modified timestamp in milliseconds since epoch. (read only)
         lastModifiedBy:
           type: string
-          readOnly: true
-          description: User who last updated this listener.
+          description: User who last updated this listener. (read only)
       required:
         - name
     Listeners:
       type: object
       properties:
-        listeners:
+        listener:
           type: array
           items:
             $ref: "#/components/schemas/Listener"
@@ -3247,27 +3239,23 @@ components:
         createdAt:
           type: integer
           format: int64
-          readOnly: true
-          description: Create timestamp in milliseconds since epoch.
+          description: Create timestamp in milliseconds since epoch. (read only)
         createdBy:
           type: string
-          readOnly: true
-          description: User which created this route.
+          description: User which created this route. (read only)
         lastModifiedAt:
           type: integer
           format: int64
-          readOnly: true
-          description: Last modified timestamp in milliseconds since epoch.
+          description: Last modified timestamp in milliseconds since epoch. (read only)
         lastModifiedBy:
           type: string
-          readOnly: true
-          description: User who last updated this route.
+          description: User who last updated this route. (read only)
       required:
         - name
     Routes:
       type: object
       properties:
-        routes:
+        route:
           type: array
           items:
             $ref: "#/components/schemas/Route"
@@ -3341,27 +3329,23 @@ components:
         createdAt:
           type: integer
           format: int64
-          readOnly: true
-          description: Create timestamp in milliseconds since epoch.
+          description: Create timestamp in milliseconds since epoch. (read only)
         createdBy:
           type: string
-          readOnly: true
-          description: User who created this cluster.
+          description: User who created this cluster. (read only)
         lastModifiedAt:
           type: integer
           format: int64
-          readOnly: true
-          description: Last modified timestamp in milliseconds since epoch.
+          description: Last modified timestamp in milliseconds since epoch. (read only)
         lastModifiedBy:
           type: string
-          readOnly: true
-          description: User who last updated this cluster.
+          description: User who last updated this cluster. (read only)
       required:
         - name
     Clusters:
       type: object
       properties:
-        clusters:
+        cluster:
           type: array
           items:
             $ref: "#/components/schemas/Cluster"

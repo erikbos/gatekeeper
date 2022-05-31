@@ -10,8 +10,7 @@ generate-files:
 	# We need oapi-codegen, go generate will call it to generate handler 
 	# code for managementserver based upon OpenAPI spec file
 	go install github.com/deepmap/oapi-codegen/cmd/oapi-codegen
-	export PATH=$PATH:$(go env GOPATH)/bin
-	echo "$PATH"
+	export PATH=${PATH}:$(go env GOPATH)/bin
 	go generate ./...
 
 managementserver: generate-files
