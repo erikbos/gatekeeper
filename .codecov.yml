@@ -3,6 +3,8 @@ coverage:
   status:
     patch:
       informational: true
+      target: 0%
+      threshold: 0%
     project:
       managementserver:
         informational: true
