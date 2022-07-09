@@ -22,8 +22,6 @@ var (
 	buildTime string // Build time, set by Makefile
 )
 
-// go generate oapi-codegen
-
 type server struct {
 	config   *ManagementServerConfig
 	webadmin *webadmin.Webadmin

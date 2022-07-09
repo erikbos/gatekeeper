@@ -1,0 +1,5 @@
+package: handler
+generate:
+  models: true
+  gin-server: true
+output: handler.gen.go

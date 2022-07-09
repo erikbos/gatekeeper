@@ -16,7 +16,7 @@ import (
 )
 
 // Generate REST API handlers from OpenAPI specification
-//go:generate oapi-codegen -package handler -generate types,gin -o handler.gen.go ../../../openapi/gatekeeper.yaml
+//go:generate oapi-codegen -config oapi-codegen-config.yaml ../../../openapi/gatekeeper.yaml
 
 // Copy openapi spec file from /openapi/ so Go can embed it
 //go:generate cp ../../../openapi/gatekeeper.yaml apidocs/
