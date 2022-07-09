@@ -55,7 +55,7 @@ services:
     restart: unless-stopped
 
   envoyproxy:
-    image: envoyproxy/envoy-alpine:v1.17-latest
+    image: envoyproxy/envoy-alpine:v1.22-latest
     container_name: envoyproxy
     entrypoint: ["/usr/local/bin/envoy", "-c", "/config/envoyproxy.yaml"]
     secrets:
