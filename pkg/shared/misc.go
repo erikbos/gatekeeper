@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 // GetCurrentTimeMilliseconds returns current epoch time in milliseconds
@@ -56,7 +56,7 @@ func LoadYAMLConfiguration(filename *string, config interface{}) (interface{}, e
 	defer file.Close()
 
 	yamlDecoder := yaml.NewDecoder(file)
-	yamlDecoder.SetStrict(true)
+	yamlDecoder.KnownFields(true)
 	if err := yamlDecoder.Decode(config); err != nil {
 		return nil, err
 	}
