@@ -18,7 +18,7 @@ spec:
       containers:
       - name: envoy
         imagePullPolicy: IfNotPresent
-        image: envoyproxy/envoy:v1.20-latest
+        image: envoyproxy/envoy:v1.22-latest
         command:
           - "/usr/local/bin/envoy"
         args:

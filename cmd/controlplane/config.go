@@ -3,12 +3,13 @@ package main
 import (
 	"time"
 
+	"github.com/spf13/viper"
+	"gopkg.in/yaml.v3"
+
 	"github.com/erikbos/gatekeeper/pkg/config"
 	"github.com/erikbos/gatekeeper/pkg/db/cassandra"
 	"github.com/erikbos/gatekeeper/pkg/shared"
 	"github.com/erikbos/gatekeeper/pkg/webadmin"
-	"github.com/spf13/viper"
-	"gopkg.in/yaml.v2"
 )
 
 const (
