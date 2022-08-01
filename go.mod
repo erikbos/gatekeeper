@@ -6,7 +6,6 @@ require (
 	github.com/bmatcuk/doublestar/v4 v4.0.3
 	github.com/coocood/freecache v1.2.1
 	github.com/dchest/uniuri v0.0.0-20200228104902-7aecb25e1fe5
-	github.com/deepmap/oapi-codegen v1.11.0
 	github.com/envoyproxy/go-control-plane v0.10.1
 	github.com/gin-gonic/gin v1.8.1
 	github.com/go-oauth2/oauth2/v4 v4.5.1
@@ -24,7 +23,7 @@ require (
 	golang.org/x/crypto v0.0.0-20220513210258-46612604a0f9
 	google.golang.org/genproto v0.0.0-20220407144326-9054f6ed7bac
 	google.golang.org/grpc v1.45.0
-	google.golang.org/protobuf v1.28.0
+	google.golang.org/protobuf v1.28.1
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	gopkg.in/yaml.v3 v3.0.1
 )
