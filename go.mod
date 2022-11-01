@@ -3,10 +3,9 @@ module github.com/erikbos/gatekeeper
 go 1.18
 
 require (
-	github.com/bmatcuk/doublestar/v4 v4.0.3
+	github.com/bmatcuk/doublestar/v4 v4.3.0
 	github.com/coocood/freecache v1.2.1
 	github.com/dchest/uniuri v0.0.0-20200228104902-7aecb25e1fe5
-	github.com/deepmap/oapi-codegen v1.11.0
 	github.com/envoyproxy/go-control-plane v0.10.1
 	github.com/gin-gonic/gin v1.8.1
 	github.com/go-oauth2/oauth2/v4 v4.5.1
